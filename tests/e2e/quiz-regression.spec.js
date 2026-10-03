@@ -541,8 +541,6 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('#sourceChecks')).toContainText('Combined');
     await expect(page.locator('#sourceChecks')).toContainText('Workstation Hazards');
     await expect(page.locator('#sourceChecks')).toContainText('Classmate Bank');
-    const sourceLabels=await page.locator('#sourceChecks label').allTextContents();
-    expect(sourceLabels.some(x=>x.includes('Classmate Bank'))).toBe(true);
     const selector = await page.evaluate(() => {
       const el=document.getElementById('sourceChecks'),last=el.querySelector('input[type="checkbox"]:last-of-type');
       el.scrollTop=el.scrollHeight;
