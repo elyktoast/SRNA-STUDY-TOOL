@@ -22,10 +22,14 @@ async function list(){
  const rows=await request('object/list/'+BUCKET,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefix:uid+'/',limit:100,offset:0,sortBy:{column:'created_at',order:'desc'}})});
  return (rows||[]).map(x=>({name:String(x.name||'').replace(/^\d+-/,''),objectName:x.name,path:uid+'/'+x.name,createdAt:x.created_at,size:Number(x.metadata?.size||0),type:x.metadata?.mimetype||''}))
 }
+async function file(path,name,type){
+ const s=session(),jwt=s.access_token||'';if(!jwt)throw Error('Sign in to use source material.');if(!cfg.url||!cfg.publishableKey)throw Error('Source material storage is not configured.');const res=await fetch(cfg.url+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{headers:{Authorization:'Bearer '+jwt,apikey:cfg.publishableKey}});
+ if(!res.ok)throw Error('Could not load source material.');const blob=await res.blob();return new File([blob],name||'source-material',{type:type||blob.type||'application/octet-stream'})
+}
 async function download(path,name){
  const s=session(),jwt=s.access_token||'';if(!jwt)throw Error('Sign in to download source material.');if(!cfg.url||!cfg.publishableKey)throw Error('Source material storage is not configured.');const res=await fetch(cfg.url+'/storage/v1/object/authenticated/'+BUCKET+'/'+path,{headers:{Authorization:'Bearer '+jwt,apikey:cfg.publishableKey}});
  if(!res.ok)throw Error('Could not download source material.');const blob=await res.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name||'source-material';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)
 }
 async function remove(path){await request('object/'+BUCKET+'/'+path,{method:'DELETE'});}
-window.MBUSourceMaterialStorage=Object.freeze({save,list,download,remove});
+window.MBUSourceMaterialStorage=Object.freeze({save,list,file,download,remove});
 })();
