@@ -40,12 +40,17 @@ Deno.serve(async(req:Request)=>{
 12. Distractor typology: for single-best-answer items return exactly three distractorTypes, one per distractor in original option order excluding the keyed answer. Each must name its primary error pattern, such as wrong timing, reversed direction, competing physiology, near-miss value, wrong mechanism, wrong context, or sequencing error.
 13. Length-cue protection: keep the key and distractors concise and parallel. The correct option must not be more than about 15% longer than the mean distractor length when options contain enough words for that comparison to be meaningful.
 14. Key position is NOT part of item design. Do not intentionally favor A/B/C/D or create answer-letter patterns; downstream application code will shuffle options and remap the key atomically.\n\nAdditional requirements: favor application/analysis; use plausible distractors that could attract a partially knowledgeable examinee; avoid throwaway, joke, absolute, all/none-of-the-above, combination, grammatical, and length cues; answer contains zero-based option indexes; for multi-select key every correct option; citation should use the supplied citation when available; sourceExcerpt must be a short supporting excerpt or faithful concise source statement from the supplied material. Do not invent facts beyond the source.\n\nSource: ${sourceName||"Provided material"}\nCitation: ${citation||"Provided material"}\n\nSOURCE MATERIAL:\n${material}`;
-  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{
-    method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}})
-  });
-  const data=await response.json().catch(()=>null);
-  if(!response.ok){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",response.status,detail);return json({error:"Gemini generation failed.",status:response.status,detail},502,origin);}
+  const payload=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}});
+  let response:Response,data:any;
+  for(let attempt=0;;attempt++){
+    response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:payload});
+    data=await response.json().catch(()=>null);
+    if(response.ok)break;
+    const retryable=response.status===429||response.status===503;
+    if(!retryable||attempt>=2){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",response.status,detail);return json({error:"Gemini generation failed.",status:response.status,detail,retryable},502,origin)}
+    const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
+    await new Promise(resolve=>setTimeout(resolve,delay));
+  }
   const text=data?.candidates?.[0]?.content?.parts?.map((p:any)=>p?.text||"").join("")||"";
   let questions;try{questions=JSON.parse(text)}catch{return json({error:"Gemini returned invalid structured output."},502,origin)}
   if(!Array.isArray(questions))return json({error:"Gemini returned an invalid question list."},502,origin);
