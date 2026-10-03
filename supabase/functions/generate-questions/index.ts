@@ -64,7 +64,14 @@ Deno.serve(async(req:Request)=>{
   if(geminiUnavailable){
     if(!groqKey)return json({error:"Gemini is temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
     const groqModel=Deno.env.get("GROQ_MODEL")||"openai/gpt-oss-120b";
-    const groqMaterialLimit=24000,groqMaterial=material.length>groqMaterialLimit?material.slice(0,groqMaterialLimit):material;
+    const groqMaterialLimit=24000;
+    const groqMaterial=material.length<=groqMaterialLimit?material:(()=>{
+      const parts=5,chunk=Math.floor(groqMaterialLimit/parts),maxStart=Math.max(0,material.length-chunk);
+      return Array.from({length:parts},(_,i)=>{
+        const start=Math.round(maxStart*i/(parts-1)),end=Math.min(material.length,start+chunk);
+        return `--- SOURCE SAMPLE ${i+1} OF ${parts} · CHARS ${start+1}-${end} OF ${material.length} ---\n${material.slice(start,end)}`
+      }).join("\n\n")
+    })();
     const groqPrompt=prompt.slice(0,prompt.length-material.length)+groqMaterial;
     const groqPayload=JSON.stringify({model:groqModel,messages:[{role:"user",content:groqPrompt}],temperature:.65,reasoning_effort:"medium",response_format:{type:"json_schema",json_schema:{name:"question_bank",strict:true,schema:groqSchema}}});
     let response:Response,data:any;
