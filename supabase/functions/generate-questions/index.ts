@@ -18,7 +18,7 @@ const schema={
     distractorTypes:{type:"array",items:{type:"string"},minItems:3,maxItems:3}
   },required:["stem","options","answer","type","explanation","topic","citation","sourceExcerpt","distractorTypes"]}
 };
-const groqSchema={...schema,items:{...schema.items,additionalProperties:false}};
+const groqSchema={type:"object",properties:{questions:{...schema}},required:["questions"],additionalProperties:false};
 
 Deno.serve(async(req:Request)=>{
   const origin=req.headers.get("Origin")||"";
@@ -75,7 +75,7 @@ Deno.serve(async(req:Request)=>{
       await new Promise(resolve=>setTimeout(resolve,delay));
     }
     const output=data?.choices?.[0]?.message?.content||"";
-    try{questions=JSON.parse(output)}catch{return json({error:"Groq returned invalid structured output."},502,origin)}
+    try{const parsed=JSON.parse(output);questions=parsed?.questions}catch{return json({error:"Groq returned invalid structured output."},502,origin)}
     usedModel=groqModel;provider="groq";
   }
   if(!Array.isArray(questions))return json({error:provider==="groq"?"Groq returned an invalid question list.":"Gemini returned an invalid question list."},502,origin);
