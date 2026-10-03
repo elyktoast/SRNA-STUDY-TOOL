@@ -18,14 +18,15 @@ const schema={
     distractorTypes:{type:"array",items:{type:"string"},minItems:3,maxItems:3}
   },required:["stem","options","answer","type","explanation","topic","citation","sourceExcerpt","distractorTypes"]}
 };
+const groqSchema={...schema,items:{...schema.items,additionalProperties:false}};
 
 Deno.serve(async(req:Request)=>{
   const origin=req.headers.get("Origin")||"";
   if(req.method==="OPTIONS")return new Response("ok",{headers:headers(origin)});
   if(req.method!=="POST")return json({error:"Method not allowed"},405,origin);
   if(!allowed.has(origin))return json({error:"Origin not allowed"},403,origin);
-  const key=Deno.env.get("GEMINI_API_KEY")||"";
-  if(!key)return json({error:"Question generation is not configured."},503,origin);
+  const key=Deno.env.get("GEMINI_API_KEY")||"",groqKey=Deno.env.get("GROQ_API_KEY")||"";
+  if(!key&&!groqKey)return json({error:"Question generation is not configured."},503,origin);
   let body:any;try{body=await req.json()}catch{return json({error:"Invalid JSON body"},400,origin)}
   const material=String(body?.material||"").trim(),sourceName=String(body?.sourceName||"").trim(),citation=String(body?.citation||"").trim();
   const requested=Number(body?.count),count=Math.max(1,Math.min(20,Number.isFinite(requested)?Math.trunc(requested):5));
@@ -40,20 +41,44 @@ Deno.serve(async(req:Request)=>{
 12. Distractor typology: for single-best-answer items return exactly three distractorTypes, one per distractor in original option order excluding the keyed answer. Each must name its primary error pattern, such as wrong timing, reversed direction, competing physiology, near-miss value, wrong mechanism, wrong context, or sequencing error.
 13. Length-cue protection: keep the key and distractors concise and parallel. The correct option must not be more than about 15% longer than the mean distractor length when options contain enough words for that comparison to be meaningful.
 14. Key position is NOT part of item design. Do not intentionally favor A/B/C/D or create answer-letter patterns; downstream application code will shuffle options and remap the key atomically.\n\nAdditional requirements: favor application/analysis; use plausible distractors that could attract a partially knowledgeable examinee; avoid throwaway, joke, absolute, all/none-of-the-above, combination, grammatical, and length cues; answer contains zero-based option indexes; for multi-select key every correct option; citation should use the supplied citation when available; sourceExcerpt must be a short supporting excerpt or faithful concise source statement from the supplied material. Do not invent facts beyond the source.\n\nSource: ${sourceName||"Provided material"}\nCitation: ${citation||"Provided material"}\n\nSOURCE MATERIAL:\n${material}`;
-  const payload=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}});
-  let response:Response,data:any;
-  for(let attempt=0;;attempt++){
-    response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:payload});
-    data=await response.json().catch(()=>null);
-    if(response.ok)break;
-    const retryable=response.status===429||response.status===503;
-    if(!retryable||attempt>=2){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",response.status,detail);return json({error:"Gemini generation failed.",status:response.status,detail,retryable},502,origin)}
-    const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
-    await new Promise(resolve=>setTimeout(resolve,delay));
+  let questions:any,usedModel=model,provider="gemini",geminiUnavailable=false;
+  if(key){
+    const payload=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}});
+    let response:Response,data:any;
+    for(let attempt=0;;attempt++){
+      response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:payload});
+      data=await response.json().catch(()=>null);
+      if(response.ok){
+        const output=data?.candidates?.[0]?.content?.parts?.map((p:any)=>p?.text||"").join("")||"";
+        try{questions=JSON.parse(output)}catch{return json({error:"Gemini returned invalid structured output."},502,origin)}
+        break
+      }
+      const retryable=response.status===429||response.status===503;
+      if(!retryable){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",response.status,detail);return json({error:"Gemini generation failed.",status:response.status,detail,retryable:false},502,origin)}
+      if(attempt>=2){geminiUnavailable=true;console.warn("Gemini temporarily unavailable; trying Groq",response.status,String(data?.error?.message||"").slice(0,500));break}
+      const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
+      await new Promise(resolve=>setTimeout(resolve,delay));
+    }
+  }else geminiUnavailable=true;
+  if(geminiUnavailable){
+    if(!groqKey)return json({error:"Gemini is temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
+    const groqModel=Deno.env.get("GROQ_MODEL")||"openai/gpt-oss-120b";
+    const groqPayload=JSON.stringify({model:groqModel,messages:[{role:"user",content:prompt}],temperature:.65,reasoning_effort:"medium",response_format:{type:"json_schema",json_schema:{name:"question_bank",strict:true,schema:groqSchema}}});
+    let response:Response,data:any;
+    for(let attempt=0;;attempt++){
+      response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${groqKey}`},body:groqPayload});
+      data=await response.json().catch(()=>null);
+      if(response.ok)break;
+      const retryable=response.status===429||response.status===500||response.status===502||response.status===503;
+      if(!retryable||attempt>=1){const detail=String(data?.error?.message||data?.error||"").slice(0,1000);console.error("Groq API error",response.status,detail);return json({error:"Question generation providers are temporarily unavailable.",status:response.status,detail,retryable},502,origin)}
+      const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
+      await new Promise(resolve=>setTimeout(resolve,delay));
+    }
+    const output=data?.choices?.[0]?.message?.content||"";
+    try{questions=JSON.parse(output)}catch{return json({error:"Groq returned invalid structured output."},502,origin)}
+    usedModel=groqModel;provider="groq";
   }
-  const text=data?.candidates?.[0]?.content?.parts?.map((p:any)=>p?.text||"").join("")||"";
-  let questions;try{questions=JSON.parse(text)}catch{return json({error:"Gemini returned invalid structured output."},502,origin)}
-  if(!Array.isArray(questions))return json({error:"Gemini returned an invalid question list."},502,origin);
-  if(questions.length!==count)return json({error:"Gemini returned the wrong number of questions.",detail:`Requested ${count}; received ${questions.length}.`},502,origin);
-  return json({questions,model},200,origin);
+  if(!Array.isArray(questions))return json({error:provider==="groq"?"Groq returned an invalid question list.":"Gemini returned an invalid question list."},502,origin);
+  if(questions.length!==count)return json({error:provider==="groq"?"Groq returned the wrong number of questions.":"Gemini returned the wrong number of questions.",detail:`Requested ${count}; received ${questions.length}.`},502,origin);
+  return json({questions,model:usedModel,provider},200,origin);
 });
