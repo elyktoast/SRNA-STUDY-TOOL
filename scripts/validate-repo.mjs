@@ -730,7 +730,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  try{new Function(genUi)}catch(e){fail('Generator popup JavaScript does not parse: '+e.message)}
  for(const token of ["'material-ingest.js'","'source-material-storage.js'","'source-material-library.js'","loadScript?.('question-generator-ui.js')"])if(!studio.includes(token))fail('Generator lazy-load dependency missing '+token);
  for(const token of ['MAX_FILE_BYTES=40*1024*1024','MAX_CHARS=50000','extractPdf','extractPptx','ocrBlob'])if(!ingest.includes(token))fail('Material ingestion contract missing '+token);
- for(const token of ["BUCKET='source-materials'",'Sign in before saving source material.','x-upsert',"Object.freeze({save,list,download,remove})"])if(!storage.includes(token))fail('Private source-material storage contract missing '+token);
+ for(const token of ["BUCKET='source-materials'",'Sign in before saving source material.','x-upsert',"Object.freeze({save,list,file,download,remove})"])if(!storage.includes(token))fail('Private source-material storage contract missing '+token);
  for(const token of ['storage.list()','storage.download(path,name)','storage.remove(path)'])if(!library.includes(token))fail('Saved source-material library contract missing '+token);
  if(!generator.includes('Generated questions failed quality validation:'))fail('Generated drafts can bypass quality validation before storage');
  if(!edge.includes('questions.length!==count'))fail('Gemini edge response count is not validated');
