@@ -20,7 +20,7 @@ function optionLengthError(q){
   const key=q.answer[0],lens=q.options.map(wordCount),others=lens.filter((_,i)=>i!==key),mean=others.reduce((a,b)=>a+b,0)/others.length;
   return mean>=4&&lens[key]>mean*1.15?'Correct answer is more than 15% longer than the mean distractor length.':''
 }
-function state(){const s=safeJSON(localStorage.getItem(STORE),blank());if(!s||Number(s.schema)!==SCHEMA)return blank();s.classmate=Array.isArray(s.classmate)?s.classmate:[];return s}
+function state(){const s=safeJSON(localStorage.getItem(STORE),blank());if(!s||Number(s.schema)!==SCHEMA)return blank();for(const k of ['drafts','approved','classmate'])s[k]=Array.isArray(s[k])?s[k]:[];return s}
 function save(s){s={...s,schema:SCHEMA,updatedAt:now()};localStorage.setItem(STORE,JSON.stringify(s));window.MBUAppCore?.touchStore?.(STORE);return s}
 function enabled(){
   const f=window.MBU_FEATURES?.questionGenerator;
