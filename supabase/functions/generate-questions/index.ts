@@ -16,7 +16,7 @@ const schema={
     type:{type:"string",enum:["single","multi"]},explanation:{type:"string"},
     topic:{type:"string"},citation:{type:"string"},sourceExcerpt:{type:"string"},
     distractorTypes:{type:"array",items:{type:"string"},minItems:3,maxItems:3}
-  },required:["stem","options","answer","type","explanation","topic","citation","sourceExcerpt","distractorTypes"],additionalProperties:false}
+  },required:["stem","options","answer","type","explanation","topic","citation","sourceExcerpt","distractorTypes"]}
 };
 
 Deno.serve(async(req:Request)=>{
