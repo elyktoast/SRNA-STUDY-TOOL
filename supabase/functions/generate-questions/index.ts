@@ -18,7 +18,8 @@ const schema={
     distractorTypes:{type:"array",items:{type:"string"},minItems:3,maxItems:3}
   },required:["stem","options","answer","type","explanation","topic","citation","sourceExcerpt","distractorTypes"]}
 };
-const groqSchema={type:"object",properties:{questions:{...schema}},required:["questions"],additionalProperties:false};
+const groqQuestionSchema={...schema.items,additionalProperties:false};
+const groqSchema={type:"object",properties:{questions:{type:"array",items:groqQuestionSchema}},required:["questions"],additionalProperties:false};
 
 Deno.serve(async(req:Request)=>{
   const origin=req.headers.get("Origin")||"";
