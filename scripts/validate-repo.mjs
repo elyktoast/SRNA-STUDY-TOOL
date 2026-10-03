@@ -728,6 +728,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  if(!edge.includes('Deno.env.get("GEMINI_API_KEY")')||!edge.includes('allowed.has(origin)')||!edge.includes('material.length>50000')||!edge.includes('Math.min(20'))fail('Gemini edge function security/input guards are incomplete');
  if(!genUi.includes("api.generate('gemini'")||!genUi.includes('approveDraft')||!genUi.includes('rejectDraft'))fail('Gemini draft review workbench is incomplete');
  try{new Function(genUi)}catch(e){fail('Generator popup JavaScript does not parse: '+e.message)}
+ if(!genUi.includes('const ingest=window.MBUMaterialIngest,storage=window.MBUSourceMaterialStorage'))fail('Generator dependencies must remain lexically scoped');
  for(const token of ["'material-ingest.js'","'source-material-storage.js'","'source-material-library.js'","loadScript?.('question-generator-ui.js')"])if(!studio.includes(token))fail('Generator lazy-load dependency missing '+token);
  for(const token of ['MAX_FILE_BYTES=40*1024*1024','MAX_CHARS=50000','extractPdf','extractPptx','ocrBlob'])if(!ingest.includes(token))fail('Material ingestion contract missing '+token);
  for(const token of ["BUCKET='source-materials'",'Sign in before saving source material.','x-upsert',"Object.freeze({save,list,file,download,remove})"])if(!storage.includes(token))fail('Private source-material storage contract missing '+token);
