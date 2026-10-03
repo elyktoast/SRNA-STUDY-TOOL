@@ -4,7 +4,7 @@ const ctx=window.MBU_CONTEXT||{},courseId=String(ctx.courseId||''),examId=String
 const now=()=>Date.now();
 const safeJSON=(raw,fallback)=>{try{return JSON.parse(raw)??fallback}catch{return fallback}};
 const id=()=>{try{return crypto.randomUUID()}catch{return 'gen-'+now().toString(36)+'-'+Math.random().toString(36).slice(2)}};
-const blank=()=>({schema:SCHEMA,updatedAt:0,drafts:[],approved:[]});
+const blank=()=>({schema:SCHEMA,updatedAt:0,drafts:[],approved:[],classmate:[]});
 const numericOption=s=>/^\s*[<>≤≥~≈]?\s*\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?\s*(?:%|mg(?:\/kg)?|mcg(?:\/kg)?|g|mL|L|min|minutes?|sec|seconds?|h|hr|hours?)?\s*$/i.test(String(s||''));
 function shuffleOptions(options,answer){
   if(options.length===4&&options.every(numericOption))return{options:[...options],answer:[...answer]};
@@ -20,7 +20,7 @@ function optionLengthError(q){
   const key=q.answer[0],lens=q.options.map(wordCount),others=lens.filter((_,i)=>i!==key),mean=others.reduce((a,b)=>a+b,0)/others.length;
   return mean>=4&&lens[key]>mean*1.15?'Correct answer is more than 15% longer than the mean distractor length.':''
 }
-function state(){const s=safeJSON(localStorage.getItem(STORE),blank());return s&&Number(s.schema)===SCHEMA?s:blank()}
+function state(){const s=safeJSON(localStorage.getItem(STORE),blank());if(!s||Number(s.schema)!==SCHEMA)return blank();s.classmate=Array.isArray(s.classmate)?s.classmate:[];return s}
 function save(s){s={...s,schema:SCHEMA,updatedAt:now()};localStorage.setItem(STORE,JSON.stringify(s));window.MBUAppCore?.touchStore?.(STORE);return s}
 function enabled(){
   const f=window.MBU_FEATURES?.questionGenerator;
@@ -85,10 +85,13 @@ function approveDraft(questionId){
   if(errors.length)throw Error(errors.join(' '));
   s.drafts.splice(i,1);s.approved.push(q);save(s);return q
 }
+function saveToClassmate(questionId){const s=state(),q=s.approved.find(q=>q.id===questionId)||s.drafts.find(q=>q.id===questionId);if(!q)throw Error('Generated question not found.');if(!s.classmate.some(x=>x.id===q.id))s.classmate.push({...q,status:'classmate'});save(s);return q}
+function removeClassmate(questionId){const s=state(),n=s.classmate.length;s.classmate=s.classmate.filter(q=>q.id!==questionId);if(s.classmate.length===n)return false;save(s);return true}
 function removeApproved(questionId){const s=state(),before=s.approved.length;s.approved=s.approved.filter(q=>q.id!==questionId);if(s.approved.length===before)return false;save(s);return true}
-function list(){const s=state();return{drafts:s.drafts.map(q=>({...q})),approved:s.approved.map(q=>({...q})),updatedAt:s.updatedAt}}
+function list(){const s=state();return{drafts:s.drafts.map(q=>({...q})),approved:s.approved.map(q=>({...q})),classmate:s.classmate.map(q=>({...q})),updatedAt:s.updatedAt}}
 function studioQuestions(){
   return state().approved.map((q,i)=>({...q,id:q.id,set:1,seq:i,topic:q.topic||'Generated',citation:q.citation||q.sourceName||'Generated material'}))
 }
-window.MBUQuestionGenerator={STORE,schema:SCHEMA,enabled,registerProvider,providerNames,generate,addDraft,updateDraft,rejectDraft,approveDraft,removeApproved,list,studioQuestions,validateQuestion};
+function classmateQuestions(){return state().classmate.map((q,i)=>({...q,id:q.id,set:1,seq:i,topic:q.topic||'Classmate',citation:q.citation||q.sourceName||'Generated notes'}))}
+window.MBUQuestionGenerator={STORE,schema:SCHEMA,enabled,registerProvider,providerNames,generate,addDraft,updateDraft,rejectDraft,approveDraft,saveToClassmate,removeClassmate,removeApproved,list,studioQuestions,classmateQuestions,validateQuestion};
 })();
