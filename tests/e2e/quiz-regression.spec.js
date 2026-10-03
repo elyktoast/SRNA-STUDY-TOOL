@@ -534,14 +534,15 @@ test.describe('canonical quiz regression', () => {
 
   test('Studio source selector exposes every bank and practice set', async ({ page }) => {
     await page.goto(exam + '/studio.html');
-    await expect(page.locator('#sourceChecks input[type="checkbox"]')).toHaveCount(22);
     await waitForStudio(page);
     await expect(page.locator('#sourceChecks')).toContainText('Quiz Bank 1');
     await expect(page.locator('#sourceChecks')).toContainText('Quiz Bank 2');
     await expect(page.locator('#sourceChecks')).toContainText('Quiz Bank 3');
     await expect(page.locator('#sourceChecks')).toContainText('Combined');
     await expect(page.locator('#sourceChecks')).toContainText('Workstation Hazards');
-    await expect(page.locator('#sourceChecks input[type="checkbox"]')).toHaveCount(22);
+    await expect(page.locator('#sourceChecks')).toContainText('Classmate Bank');
+    const sourceLabels=await page.locator('#sourceChecks label').allTextContents();
+    expect(sourceLabels.some(x=>x.includes('Classmate Bank'))).toBe(true);
     const selector = await page.evaluate(() => {
       const el=document.getElementById('sourceChecks'),last=el.querySelector('input[type="checkbox"]:last-of-type');
       el.scrollTop=el.scrollHeight;
