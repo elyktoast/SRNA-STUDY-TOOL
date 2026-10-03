@@ -64,7 +64,9 @@ Deno.serve(async(req:Request)=>{
   if(geminiUnavailable){
     if(!groqKey)return json({error:"Gemini is temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
     const groqModel=Deno.env.get("GROQ_MODEL")||"openai/gpt-oss-120b";
-    const groqPayload=JSON.stringify({model:groqModel,messages:[{role:"user",content:prompt}],temperature:.65,reasoning_effort:"medium",response_format:{type:"json_schema",json_schema:{name:"question_bank",strict:true,schema:groqSchema}}});
+    const groqMaterialLimit=24000,groqMaterial=material.length>groqMaterialLimit?material.slice(0,groqMaterialLimit):material;
+    const groqPrompt=prompt.slice(0,prompt.length-material.length)+groqMaterial;
+    const groqPayload=JSON.stringify({model:groqModel,messages:[{role:"user",content:groqPrompt}],temperature:.65,reasoning_effort:"medium",response_format:{type:"json_schema",json_schema:{name:"question_bank",strict:true,schema:groqSchema}}});
     let response:Response,data:any;
     for(let attempt=0;;attempt++){
       response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${groqKey}`},body:groqPayload});
