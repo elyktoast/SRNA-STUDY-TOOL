@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const MAX_FILE_BYTES=40*1024*1024,MAX_CHARS=50000,PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs',PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs',TESS='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',JSZIP='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+const MAX_FILE_BYTES=40*1024*1024,MAX_CHARS=100000,PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs',PDF_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs',TESS='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js',JSZIP='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
 let pdfjsPromise,tessPromise,zipPromise;
 const clean=s=>String(s||'').replace(/\u0000/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
 const meaningful=s=>{s=clean(s);return s.length>=40&&((s.match(/[A-Za-z]/g)||[]).length>=25)};
