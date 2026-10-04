@@ -261,14 +261,14 @@ stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')ret
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
 async function questionExposure(courseId,examId){
-requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Question coverage requires a connection to your account.');
+requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Question coverage requires a connection.');
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
 async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!['viewed','answered'].includes(x.event))return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event}})===true}
 async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
 async function recordQuestionSession(x){
-requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');if(navigator.onLine===false)throw Error('Question coverage requires a connection to your account.');
+requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');if(navigator.onLine===false)throw Error('Question coverage requires a connection.');
 return await api('/rest/v1/rpc/mbu_record_question_session',{method:'POST',body:{p_session_id:x.sessionId,p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_mode:String(x.mode||'custom'),p_items:x.items,p_new_count:Number(x.newCount)||0,p_review_count:Number(x.reviewCount)||0}})===true
 }
 async function adminStatus(){const s=await validSession();if(!s?.access_token||legalAccepted!==true)return{is_admin:false,role:null};return await api('/rest/v1/rpc/snar_admin_status',{method:'POST',body:{}})}
