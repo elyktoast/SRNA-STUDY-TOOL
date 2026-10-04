@@ -24,4 +24,17 @@ assert(mixed.meta.reviewCount>=5&&mixed.meta.reviewCount<=12,'review quota outsi
 assert.equal(mixed.meta.newCount+mixed.meta.reviewCount,50);
 const reviewItems=mixed.meta.items.filter(x=>x.kind==='review');
 assert(reviewItems.every(x=>x.cycle===1),'review item incorrectly consumed the active coverage cycle');
+// Partial exhaustion: all remaining unseen questions must be selected before recycling.
+const partialHistory=new Map();for(const q of questions.slice(0,463)){const v=MBUQuestionCoverage.contentVersion(q),row={question_uid:q.uid,content_version:v,coverage_cycle:1,last_issued_at:'2026-08-01T00:00:00Z'};partialHistory.set(q.uid+'@'+v,row)}
+const partial=MBUQuestionCoverage.select({questions,count:100,history:partialHistory,attempts:()=>null,seed:'partial',now:Date.UTC(2026,9,4)});const remaining=new Set(questions.slice(463).map(q=>q.uid));assert.equal(partial.questions.length,100);assert([...remaining].every(uid=>partial.questions.some(q=>q.uid===uid)),'remaining unseen questions were skipped');
+// Small banks cap at available unique questions.
+const small=MBUQuestionCoverage.select({questions:make(17),count:50,history:new Map(),seed:'small'});assert.equal(small.questions.length,17);assert.equal(new Set(small.questions.map(q=>q.uid)).size,17);
+// Topic balancing: an uneven pool should still include minority topics when available.
+const uneven=[...make(90,'Airway'),...make(10,'Monitoring').map((q,i)=>({...q,uid:'m'+i,stem:'Monitoring '+i}))];const balanced=MBUQuestionCoverage.select({questions:uneven,count:50,history:new Map(),seed:'topics'});assert(balanced.questions.some(q=>q.topic==='Monitoring'),'minority topic disappeared from balanced session');
+// Content-version awareness: rewritten content under the same UID is new coverage.
+const original={uid:'versioned',topic:'Airway',stem:'Original stem',opts:['a','b','c','d'],ans:[0]},rewritten={...original,stem:'Materially rewritten stem'};const oldVersion=MBUQuestionCoverage.contentVersion(original),versionHistory=new Map([[original.uid+'@'+oldVersion,{question_uid:original.uid,content_version:oldVersion,coverage_cycle:1,last_issued_at:'2026-09-01T00:00:00Z'}]]);const versioned=MBUQuestionCoverage.select({questions:[rewritten],count:1,history:versionHistory,seed:'version'});assert.equal(versioned.meta.items[0].kind,'coverage');assert.notEqual(versioned.meta.items[0].version,oldVersion);
+// Exact content duplicates must collapse even with different UIDs.
+const dup=[{uid:'d1',topic:'Airway',stem:'Same fact',opts:['a'],ans:[0]},{uid:'d2',topic:'Airway',stem:'Same fact',opts:['a'],ans:[0]}];assert.equal(MBUQuestionCoverage.select({questions:dup,count:2,seed:'dupe'}).questions.length,1);
+// Recovery/cooldown: a recently answered old miss must not immediately re-enter review.
+const coolQ=questions[0],coolV=MBUQuestionCoverage.contentVersion(coolQ),coolHistory=new Map([[coolQ.uid+'@'+coolV,{question_uid:coolQ.uid,content_version:coolV,coverage_cycle:1,last_issued_at:'2026-10-03T18:00:00Z'}]]);const cool=MBUQuestionCoverage.select({questions:questions.slice(0,50),count:20,history:coolHistory,attempts:uid=>uid===coolQ.uid?{attempts:5,correct:3,incorrect:2,streak:3,lastAt:Date.UTC(2026,9,3,18)}:null,priority:()=>({score:50,due:true}),seed:'cool',now:Date.UTC(2026,9,4)});assert(!cool.meta.items.some(x=>x.uid===coolQ.uid&&x.kind==='review'),'cooldown/recovery failed');
 console.log('Question coverage simulation PASS',JSON.stringify({uniqueBeforeRollover:seen.size,rolloverCycle:rollover.meta.cycle,mixed:mixed.meta.reviewCount+'/'+50}));
