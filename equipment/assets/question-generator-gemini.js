@@ -8,7 +8,8 @@ async function generate(request){
   const response=await fetch(cfg.url+'/functions/v1/generate-questions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+jwt,'apikey':cfg.publishableKey},body:JSON.stringify({material:request.material,sourceName:request.sourceName,citation:request.citation,count:request.count})});
   const data=await response.json().catch(()=>({}));if(!response.ok)throw Error([data.error,data.detail].filter(Boolean).join(' — ')||'Question generation failed.');
   if(!Array.isArray(data.questions))throw Error('Question generation returned invalid data.');
-  request?.onProvider?.(data.provider==='groq'?'Groq':'Gemini');
+  request?.onProvider?.(data.model|| (data.provider==='groq'?'Groq':'Gemini'));
+  request?.onResult?.({provider:data.provider,model:data.model,partial:!!data.partial,requestedCount:data.requestedCount,receivedCount:data.questions.length});
   return data.questions
 }
 if(!window.MBUQuestionGenerator)throw Error('Question generator framework must load before Gemini provider.');
