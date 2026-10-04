@@ -118,7 +118,7 @@ if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGues
 emit('confirmation-required',{email:String(email||'').trim()});return{session:null,confirmationRequired:true}
 }
 function resetCloudSession(){stopAutoSync();saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
-const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect to sign out.');try{await fullSync()}catch{throw Error('Sync failed. Try again online.')}}
+const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect to sign out.');try{await fullSync()}catch{throw Error('Sync failed. Try online.')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
 await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
@@ -261,7 +261,7 @@ stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')ret
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
 async function questionExposure(courseId,examId){
-requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Coverage requires a connection.');
+requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Coverage needs a connection.');
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
