@@ -21,6 +21,7 @@ test.describe('canonical quiz regression', () => {
   test.beforeEach(async ({ page }) => clearAppState(page));
 
   test('Clinical Pharm native matching grades and survives reload', async ({ page }) => {
+    await seedSignedIn(page);
     await page.goto('/pharm/clinical-pharm/studio.html');
     await waitForStudio(page);
     const q=await page.evaluate(()=>ALL.find(x=>x.type==='matching'));
@@ -44,7 +45,7 @@ test.describe('canonical quiz regression', () => {
   });
 
   test('active quiz can be ended without erasing recorded answer history', async ({ page }) => {
-    await useGuestState(page);
+    await seedSignedIn(page);
     await page.goto('/pharm/clinical-pharm/studio.html');
     await waitForStudio(page);
     await page.evaluate(()=>{const q=ALL[0];DB.active={uids:[q.uid],pos:0,answers:{[q.uid]:{ok:true,selected:[q.ans[0]],at:Date.now()}},mode:'custom',updated:Date.now()};DB.agg={answered:1,correct:1};save();renderHome()});
@@ -57,7 +58,7 @@ test.describe('canonical quiz regression', () => {
   });
 
   test('Clinical Pharm exposes 17 topics and defaults an empty filter to all topics', async ({ page }) => {
-    await useGuestState(page);
+    await seedSignedIn(page);
     await page.goto('/pharm/clinical-pharm/studio.html');
     await waitForStudio(page);
     await expect(page.locator('#topicChecks input')).toHaveCount(17);
@@ -69,7 +70,7 @@ test.describe('canonical quiz regression', () => {
   });
 
   test('first-attempt calibration survives a failed submission without being replaced by a later answer', async ({ page }) => {
-    await useGuestState(page);
+    await seedSignedIn(page);
     await page.goto('/equipment/exam-1/studio.html');
     await waitForStudio(page);
     const result=await page.evaluate(async()=>{
