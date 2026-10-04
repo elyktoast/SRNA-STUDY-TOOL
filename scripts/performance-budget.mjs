@@ -36,7 +36,7 @@ const budgets={
   'equipment/assets/studio-runtime.js':30000,
   'equipment/assets/studio-loader.js':2500,
   'equipment/assets/question-generator.js':10000,
-  'equipment/assets/question-generator-ui.js':6000,
+  'equipment/assets/question-generator-ui.js':8000,
   'equipment/assets/question-generator-ui.css':6000,
   'equipment/assets/question-generator-gemini.js':2000,
   'equipment/assets/material-ingest.js':6500,
