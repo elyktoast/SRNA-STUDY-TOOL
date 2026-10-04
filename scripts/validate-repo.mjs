@@ -249,6 +249,7 @@ checkHazardNavigators();
 function checkCanonicalSubmission(){
   const engine=read('equipment/assets/quiz-engine.js');
   const studio=studioSource();
+ for(const token of ['let questionShownAt=0','questionShownAt=Date.now()','responseMs:questionShownAt'])if(!studio.includes(token))fail('Studio response-time instrumentation missing '+token);
   const standard=read('equipment/assets/hazards-standard-engine.js');
   const challenge=read('equipment/assets/hazards-quiz-engine.js');
   for(const bit of [
