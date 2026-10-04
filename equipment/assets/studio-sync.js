@@ -32,9 +32,11 @@
     const n=Number(v.pos),pos=Number.isFinite(n)?Math.max(0,Math.min(Math.trunc(n),uids.length-1)):0,answers={};
     if(plainObject(v.answers))for(const [rawUid,result] of Object.entries(v.answers)){
       const uid=normalizeKey(rawUid);
-      if(!seen.has(uid)||!plainObject(result)||!Array.isArray(result.selected))continue;
-      const selected=[...new Set(result.selected.map(Number).filter(x=>Number.isInteger(x)&&x>=0))].sort((a,b)=>a-b);
-      answers[uid]={ok:!!result.ok,selected,at:Number.isFinite(Number(result.at))?Number(result.at):0}
+      if(!seen.has(uid)||!plainObject(result))continue;
+      const selected=Array.isArray(result.selected)?[...new Set(result.selected.map(Number).filter(x=>Number.isInteger(x)&&x>=0))].sort((a,b)=>a-b):[];
+      const matching=plainObject(result.matching)?Object.fromEntries(Object.entries(result.matching).map(([k,val])=>[String(k),String(val)])) : null;
+      if(!Array.isArray(result.selected)&&!matching)continue;
+      answers[uid]={ok:!!result.ok,selected,...(matching?{matching}:{}),at:Number.isFinite(Number(result.at))?Number(result.at):0}
     }
     const allowedModes=new Set(['custom','smart','due','missed','flagged','weak','adaptive']);const mode=allowedModes.has(String(v.mode||''))?String(v.mode):'',crosses={};
     if(mode==='adaptive'&&plainObject(v.crosses))for(const [rawKey,on] of Object.entries(v.crosses)){if(!on)continue;const cut=rawKey.lastIndexOf(':');if(cut<1)continue;const uid=normalizeKey(rawKey.slice(0,cut)),opt=Number(rawKey.slice(cut+1));if(seen.has(uid)&&Number.isInteger(opt)&&opt>=0)crosses[uid+':'+opt]=true}
@@ -130,8 +132,8 @@
   function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
   function arr(v){return Array.isArray(v)?v:(v===undefined||v===null?[]:[v])}
   function questionMeta(bank,q,extra){
-    const b=normalizeBank(bank),options=arr(q.options??q.c),answer=arr(q.answer??q.correct??q.a).map(Number).filter(Number.isInteger);
-    const selected=arr(extra&&extra.selected).map(Number).filter(Number.isInteger);
+    const b=normalizeBank(bank),isMatching=String(q.type||'').toLowerCase()==='matching',options=arr(q.options??q.c),answer=isMatching?[]:arr(q.answer??q.correct??q.a).map(Number).filter(Number.isInteger);
+    const selected=arr(extra&&extra.selected).map(Number).filter(Number.isInteger),matching=isMatching?{prompts:arr(q.matching?.prompts??q.prompts).map(String),choices:arr(q.matching?.choices??q.choices).map(String),answer:plainObject(q.matching?.answer)?q.matching.answer:(plainObject(q.answer)?q.answer:{}),selected:plainObject(extra&&extra.matching)?extra.matching:{}}:null;
     const sourceRaw=q.citation??q.src??q.ref??'';
     return {
       uid:key(b,q),
@@ -146,6 +148,7 @@
       answerText:answer.map(i=>options[i]).filter(v=>v!==undefined).map(String),
       selectedIndexes:selected,
       selectedText:selected.map(i=>options[i]).filter(v=>v!==undefined).map(String),
+      ...(matching?{matching}:{}),
       explanation:String(q.explanation||q.why||q.exp||''),
       source:Array.isArray(sourceRaw)?sourceRaw.join('; '):String(sourceRaw||''),
       page:String(q.page||''),
