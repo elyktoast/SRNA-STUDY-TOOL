@@ -398,7 +398,7 @@ for(const p of ['equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards
  if(studio.includes("session.map(q=>DB.ans[q.uid]).filter(Boolean)"))fail('Studio: session stats still read cumulative answer history');
  if(!studio.includes('saved=sessionAnswer(q.uid)'))fail('Studio: question renderer still reads cumulative history instead of session state');
  if(!studio.includes('saved&&Array.isArray(saved.selected)'))fail('Studio: saved selections are not restored on navigation');
- if(!studio.includes('graded=!!(saved&&savedSel)'))fail('Studio: revisited answered questions are not restored as graded');
+ if(!studio.includes("graded=matching?!!(saved&&saved.matching):!!(saved&&savedSel)"))fail('Studio: revisited answered questions are not restored as graded for standard and matching items');
  if(!studio.includes("if(q.ans.includes(i))b.classList.add('correct');else if(sel.has(i))b.classList.add('incorrect')"))fail('Studio: revisited answers do not restore correct/incorrect styling');
 }
 
