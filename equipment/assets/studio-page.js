@@ -66,6 +66,15 @@ try{renderHome()}catch(e){}
 renderStudioLoadState();await Promise.all(STUDIO_SOURCES.map(source=>hydrateStudioSource(source,generation)));if(generation!==STUDIO_LOAD_GENERATION)return;if(window.MBUQuestionGenerator?.enabled?.()){
 for(const [key,label,rows,setLabel] of [['generated','Generated Bank',window.MBUQuestionGenerator.studioQuestions(),'Approved Generated Questions'],['classmate','Classmate Bank',window.MBUQuestionGenerator.classmateQuestions(),'Saved Generated Questions']])if(rows.length||key==='classmate'){STUDIO_SOURCE_CATALOG.push({bank:key,label,sets:[1],setLabels:{1:setLabel},count:rows.length});STUDIO_SOURCE_ORDER.push(key);seedStudioSourceCatalog();if(rows.length)addLoadedQuestions(rows.map((q,i)=>norm(q,key,1,i,label)));}
 }
+function refreshGeneratedStudioBanks(){
+  if(!window.MBUQuestionGenerator?.enabled?.())return;
+  const generated=window.MBUQuestionGenerator.studioQuestions(),classmate=window.MBUQuestionGenerator.classmateQuestions();
+  ALL=ALL.filter(q=>q.bank!=='generated'&&q.bank!=='classmate');
+  for(const key of ['generated','classmate']){STUDIO_SOURCE_CATALOG=STUDIO_SOURCE_CATALOG.filter(x=>x.bank!==key);const at=STUDIO_SOURCE_ORDER.indexOf(key);if(at>=0)STUDIO_SOURCE_ORDER.splice(at,1)}
+  for(const [key,label,rows,setLabel] of [['generated','Generated Bank',generated,'Approved Generated Questions'],['classmate','Classmate Bank',classmate,'Saved Generated Questions']])if(rows.length||key==='classmate'){STUDIO_SOURCE_CATALOG.push({bank:key,label,sets:[1],setLabels:{1:setLabel},count:rows.length});STUDIO_SOURCE_ORDER.push(key);if(rows.length)addLoadedQuestions(rows.map((q,i)=>norm(q,key,1,i,label)))}
+  sortLoadedQuestions();syncBankData();seedStudioSourceCatalog();buildTopics();renderHome();
+}
+window.addEventListener('mbu-generated-questions-changed',()=>{try{refreshGeneratedStudioBanks()}catch(e){console.error('Generated bank refresh failed',e)}});
 sortLoadedQuestions();try{
 syncBankData();window.MBUStudyIntelligence?.seedLegacy?.(Object.entries(DB.ans||{}).map(([uid,r])=>({uid,bank:r.bank,bankLabel:STUDIO_BANK_LABELS.get(r.bank)||r.bank,topic:r.topic,at:r.at,ok:r.ok})));window.MBUQuestionSearch?.reset?.();buildTopics();initialStudioBuildMode();const params=new URLSearchParams(location.search),rawQuestion=params.get('question'),question=String(rawQuestion||'').replace(/^bp1-preop-assessment-/i,'preop-assessment-'),requested=params.get('mode');if(question&&ALL_BY_UID.has(question))practiceSearch(question);else if(requested==='hazards-missed')startMode('hazards-missed');else if(requested==='combined-missed')startMode('combined-missed');else if(requested==='due')startMode('due');else if(requested==='weak')startMode('weak');else if(requested==='smart')startMode('smart');else if(requested==='adaptive')openAdaptiveEntry();else if(DB.active?.mode==='adaptive'&&reconcileActiveState())resumeActive();else renderHome()}catch(e){showLoadErrors(['Studio render failed: '+e.message]);console.error(e)}
 renderStudioLoadState()
