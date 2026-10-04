@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 const root=process.cwd(), failures=[], notes=[];
 const quizFiles=['equipment/exam-1/quiz-bank-1.html','equipment/exam-1/quiz-bank-2.html','equipment/exam-1/quiz-bank-3.html','equipment/exam-1/combined.html','equipment/exam-1/hazards-100.html','equipment/exam-1/hazards-bank-2.html','equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards-harder.html','equipment/exam-1/studio.html'];
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const studioSource=()=>read('equipment/assets/studio-page.js')+'\n'+read('equipment/assets/studio-runtime.js');
+const studioSource=()=>['studio-page.js','studio-runtime.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n');
 const exists=p=>fs.existsSync(path.join(root,p));
 const fail=m=>failures.push(m);
 const protectedFacultyNames=['El'+'more','Sto'+'ne','Aco'+'rd','Mc'+'Pherson'];
