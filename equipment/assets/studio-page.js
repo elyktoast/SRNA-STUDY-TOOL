@@ -18,8 +18,8 @@ let nextPos=currentUid?uids.indexOf(currentUid):-1;if(nextPos<0)nextPos=Math.min
 return DB.active
 }
 function resumeActive(){
-if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length)return;const qs=DB.active.uids.map(id=>ALL_BY_UID.get(id)).filter(Boolean);if(qs.length!==DB.active.uids.length){renderHome();return}
-session=qs;pos=Math.min(DB.active.pos||0,session.length-1);showQ()
+const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();const qs=active.uids.map(id=>ALL_BY_UID.get(id)).filter(Boolean);if(qs.length!==active.uids.length){renderHome();return}
+session=qs;pos=Math.min(active.pos||0,session.length-1);showQ()
 }
 function activeButton(){
 let old=byId('resumeActive');if(old)old.remove();if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;const missing=DB.active.uids.some(id=>!ALL_BY_UID.has(id));if(missing&&studioHasFailedSource()){
