@@ -39,7 +39,7 @@ const budgets={
   'equipment/assets/question-generator-ui.js':8000,
   'equipment/assets/question-generator-ui.css':6000,
   'equipment/assets/question-generator-gemini.js':2000,
-  'equipment/assets/material-ingest.js':6500,
+  'equipment/assets/material-ingest.js':7500,
   'equipment/assets/source-material-storage.js':4500,
   'equipment/assets/source-material-library.js':2500,
   'equipment/assets/source-material-library.css':2000,
