@@ -20,10 +20,8 @@ function reviewWeight(q,attempts,priority,now){
 }
 function select({questions,count,history=new Map(),attempts,priority,seed=String(Date.now()),now=Date.now(),reviewRate}){
  const pool=unique(questions),limit=Math.min(Math.max(1,Number(count)||50),pool.length);if(!pool.length)return{questions:[],meta:{newCount:0,reviewCount:0,cycle:1}};
- const histories=pool.map(q=>rowFor(history,q)).filter(Boolean),cycle=Math.max(1,...histories.map(x=>Number(x.coverage_cycle)||1));
- let unseen=pool.filter(q=>{const h=rowFor(history,q);return !h||Number(h.coverage_cycle||0)<cycle});
- if(!unseen.length){unseen=pool.slice();} // caller records cycle+1 below
- const rollover=histories.length>=pool.length&&!pool.some(q=>!rowFor(history,q)),activeCycle=rollover?cycle+1:cycle;
+ const histories=pool.map(q=>rowFor(history,q)).filter(Boolean),cycle=Math.max(1,...histories.map(x=>Number(x.coverage_cycle)||1)),seenThisCycle=pool.filter(q=>Number(rowFor(history,q)?.coverage_cycle||0)>=cycle).length,rollover=seenThisCycle>=pool.length,activeCycle=rollover?cycle+1:cycle;
+ let unseen=rollover?pool.slice():pool.filter(q=>Number(rowFor(history,q)?.coverage_cycle||0)<cycle);
  const rate=clamp(Number.isFinite(reviewRate)?reviewRate:dynamicReviewRate(pool,attempts),.10,.25),targetReview=Math.min(Math.floor(limit*rate),Math.max(0,limit-1));
  const recentCutoff=now-2*DAY;
  const review=pool.map(q=>({q,h:rowFor(history,q),w:reviewWeight(q,attempts,priority,now)}))
