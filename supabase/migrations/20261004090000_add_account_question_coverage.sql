@@ -15,8 +15,10 @@ create table if not exists public.mbu_question_exposure (
 create index if not exists mbu_question_exposure_user_topic_idx on public.mbu_question_exposure(user_id,course_id,exam_id,topic,last_issued_at);
 alter table public.mbu_question_exposure enable row level security;
 revoke all on table public.mbu_question_exposure from anon, authenticated;
-grant select on table public.mbu_question_exposure to authenticated;
+grant select, insert, update on table public.mbu_question_exposure to authenticated;
 create policy "question exposure select own" on public.mbu_question_exposure for select to authenticated using ((select auth.uid())=user_id);
+create policy "question exposure insert own" on public.mbu_question_exposure for insert to authenticated with check ((select auth.uid())=user_id);
+create policy "question exposure update own" on public.mbu_question_exposure for update to authenticated using ((select auth.uid())=user_id) with check ((select auth.uid())=user_id);
 
 create table if not exists public.mbu_question_sessions (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -33,8 +35,9 @@ create table if not exists public.mbu_question_sessions (
 create index if not exists mbu_question_sessions_user_created_idx on public.mbu_question_sessions(user_id,created_at desc);
 alter table public.mbu_question_sessions enable row level security;
 revoke all on table public.mbu_question_sessions from anon, authenticated;
-grant select on table public.mbu_question_sessions to authenticated;
+grant select, insert on table public.mbu_question_sessions to authenticated;
 create policy "question sessions select own" on public.mbu_question_sessions for select to authenticated using ((select auth.uid())=user_id);
+create policy "question sessions insert own" on public.mbu_question_sessions for insert to authenticated with check ((select auth.uid())=user_id);
 
 create or replace function public.mbu_record_question_session(
   p_session_id uuid,
