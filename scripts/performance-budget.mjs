@@ -46,6 +46,7 @@ const budgets={
   'equipment/assets/source-material-library.css':2000,
   'equipment/assets/adaptive-quiz.js':17000,
   'equipment/assets/study-intelligence.js':12000,
+  'equipment/assets/calibration-outbox.js':2500,
   'equipment/assets/question-search.js':8000,
   'equipment/assets/hazards-page.js':5000,
   'equipment/assets/hazards-dashboard.js':6000,
