@@ -2068,6 +2068,7 @@ test.describe('canonical quiz regression', () => {
     await page.selectOption('#count','10');
     await page.locator('#adaptiveToggle').uncheck();
     await page.getByRole('button',{name:'Start Quiz'}).click();
+    await expect(page.locator('#quiz')).toBeVisible();
     await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)?window.session.length:0)).toBeGreaterThan(0);
     const before=await page.evaluate(()=>({uid:session[pos].uid,pos,active:[...DB.active.uids]}));
     await page.setViewportSize({width:768,height:1024});
