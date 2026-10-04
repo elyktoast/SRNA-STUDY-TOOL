@@ -7,5 +7,5 @@ function enqueue(name,uid,payload){name=String(name||'global');uid=String(uid||'
 async function flush(name){const submit=window.MBUSupabase&&window.MBUSupabase.submitItemContribution;if(typeof submit!=='function'||navigator.onLine===false)return false;name=String(name||'global');const data=read(name);for(const uid of Object.keys(data)){try{await submit(data[uid]);const current=read(name);delete current[uid];write(name,current)}catch{}}return Object.keys(read(name)).length===0}
 async function flushAll(){for(const name of names())await flush(name);return true}
 window.addEventListener('online',()=>{flushAll()});
-window.MBUCalibrationOutbox={enqueue,flush,flushAll};
+window.MBUCalibrationOutbox={enqueue,flush,flushAll,prefix:PREFIX};
 })();
