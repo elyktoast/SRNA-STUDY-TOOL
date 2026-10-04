@@ -27,7 +27,7 @@ expires_in:Number(p.get('expires_in')||3600),
 expires_at:Number(p.get('expires_at')||0)
 });
 if(!s)return null;
-s=await hydrateUser(s);saveSession(s);recoveryMode=p.get('type')==='recovery';
+s=await hydrateUser(s);if(!s?.user?.id)throw Error('Could not verify the signed-in account.');recoveryMode=p.get('type')==='recovery';
 history.replaceState(null,'',location.pathname+location.search);
 emit(recoveryMode?'password-recovery':'signed-in',{email:s.user?.email||''});
 return s
@@ -278,7 +278,7 @@ window.addEventListener('focus',()=>{if(session()&&legalAccepted===true&&account
 window.addEventListener('online',()=>{if(session()&&legalAccepted===true&&accountAccess==='active')fullSync().catch(()=>{})});
 async function handleAuthRedirect(){
 const redirected=await consumeAuthRedirect();if(!redirected)return false;
-const switched=await prepareLocalOwner(redirected.user?.id);if(switched)emit('local-owner-changed',{email:redirected.user?.email||''})
+const switched=await prepareLocalOwner(redirected.user.id);saveSession(redirected);if(switched)emit('local-owner-changed',{email:redirected.user?.email||''})
 if(!recoveryMode&&!await refreshLegalAcceptance()){emit('legal-required',{email:redirected.user?.email||''});return true}
 await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:redirected.user?.email||''});return true}
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
