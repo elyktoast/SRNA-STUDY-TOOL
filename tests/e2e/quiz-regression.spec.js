@@ -2064,13 +2064,10 @@ test.describe('canonical quiz regression', () => {
   test('iPad-style rotation and bfcache return preserve an active Studio session', async ({ page }) => {
     await page.setViewportSize({width:1024,height:768});
     await page.goto(exam + '/studio.html');await waitForStudio(page);
-    await page.evaluate(()=>{
-      const inputs=[...document.querySelectorAll('#sourceChecks input[type=checkbox]')];
-      inputs.forEach((input,i)=>input.checked=i===0);
-      document.getElementById('count').value='10';
-      document.getElementById('adaptiveToggle').checked=false;
-      return startMode('custom');
-    });
+    await page.locator('#sourceChecks input[type=checkbox]').first().check();
+    await page.selectOption('#count','10');
+    await page.locator('#adaptiveToggle').uncheck();
+    await page.getByRole('button',{name:'Start Quiz'}).click();
     await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)?window.session.length:0)).toBeGreaterThan(0);
     const before=await page.evaluate(()=>({uid:session[pos].uid,pos,active:[...DB.active.uids]}));
     await page.setViewportSize({width:768,height:1024});
