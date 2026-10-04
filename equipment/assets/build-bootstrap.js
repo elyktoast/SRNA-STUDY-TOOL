@@ -30,7 +30,7 @@ await loadScript('supabase-config.js');
 await loadScript('supabase-sync.js');
 if(window.MBUAuthReady&&typeof window.MBUAuthReady.then==='function')await window.MBUAuthReady;
 await window.MBUCalibrationOutbox?.flushAll?.();
-const ctx=window.MBU_CONTEXT||{},root=new URL('../../',assetsBase),path=location.pathname,published=['equipment/','basic-principles/','pharm/'],protectedCourse=published.some(x=>path.startsWith(root.pathname+x));
+const root=new URL('../../',assetsBase),path=location.pathname,published=['equipment/','basic-principles/','pharm/'],protectedCourse=published.some(x=>path.startsWith(root.pathname+x));
 if(protectedCourse){
   const info=window.MBUSupabase?.status?.()||{};
   if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
