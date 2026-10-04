@@ -922,10 +922,11 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
 
 // Study intelligence is the single source of truth for adaptive review, spaced review, activity, and analytics.
 {
- const boot=read('equipment/assets/build-bootstrap.js'),intel=read('equipment/assets/study-intelligence.js'),search=read('equipment/assets/question-search.js'),studio=studioSource(),dash=read('equipment/assets/exam-dashboard.js'),core=read('equipment/assets/app-core.js');
- if(!boot.includes("loadScript('study-intelligence.js')"))fail('Shared study runtime missing study-intelligence.js');
+ const boot=read('equipment/assets/build-bootstrap.js'),intel=read('equipment/assets/study-intelligence.js'),outbox=read('equipment/assets/calibration-outbox.js'),search=read('equipment/assets/question-search.js'),studio=studioSource(),dash=read('equipment/assets/exam-dashboard.js'),core=read('equipment/assets/app-core.js');
+ if(!boot.includes("loadScript('study-intelligence.js')")||!boot.includes("loadScript('calibration-outbox.js')"))fail('Shared study runtime missing study intelligence or calibration outbox');
  if(boot.includes("loadScript('question-search.js')"))fail('Universal search is eagerly loaded by the bootstrap');
- for(const token of ['mbu_study_intelligence_v1','recordAnswer','smartReview','questionStats','topicStats','due','analytics','mastery','priorityForQuestion','recentActivity','addIssue','firstAttempt=attempts===0','pendingContributions','flushPendingContributions','window.addEventListener(\'online\''])if(!intel.includes(token))fail('Study intelligence contract missing '+token);
+ for(const token of ['mbu_study_intelligence_v1','recordAnswer','smartReview','questionStats','topicStats','due','analytics','mastery','priorityForQuestion','recentActivity','addIssue','firstAttempt=attempts===0','MBUCalibrationOutbox?.enqueue'])if(!intel.includes(token))fail('Study intelligence contract missing '+token);
+ for(const token of ['mbu_calibration_outbox_','enqueue','flush','flushAll',"window.addEventListener('online'"])if(!outbox.includes(token))fail('Calibration outbox contract missing '+token);
  for(const token of ["m==='smart'","m==='custom'","m==='due'","m==='weak'",'adaptiveToggle','Adaptive 2.1','MBUAdaptiveQuiz','analyticsSummary','seedLegacy',"sessionMode:DB.active?.mode||'custom'","requested==='weak'"])if(!studio.includes(token))fail('Studio intelligence integration missing '+token);
  if(!studio.includes('majorityBalancedSample')||!studio.includes('MBUAdaptiveQuiz?.start?.(pool,limit)')||!studio.includes('MBUAdaptiveQuiz?.pick?.(ALL,DB.active.adaptive)'))fail('Studio/CAT selection architecture is incomplete');
  const adaptiveBranch=studio.indexOf('if(adaptive){'),balancedBranch=studio.indexOf('majorityBalancedSample(pool,+n');
