@@ -9,13 +9,14 @@ const uidOf=(bank,q)=>String(q?.uid||((bank||q?.bank||'unknown')+'-'+(q?.id??q?.
 const topicOf=q=>String(q?.topic||q?.lec||q?.concept||'Other').trim()||'Other';
 const bankOf=(bank,q)=>String(bank||q?.bank||'unknown');
 const bankLabelOf=(label,bank,q)=>String(label||q?.bankLabel||bankOf(bank,q));
-const blank=()=>({schema:SCHEMA,updatedAt:0,attempts:{},reviews:{},activity:[],issues:[],seededLegacy:false});
+const blank=()=>({schema:SCHEMA,updatedAt:0,attempts:{},reviews:{},activity:[],issues:[],pendingContributions:{},seededLegacy:false});
 function normalize(raw){
   const d=plain(raw)&&Number(raw.schema)===SCHEMA?raw:blank();
   d.attempts=plain(d.attempts)?d.attempts:{};
   d.reviews=plain(d.reviews)?d.reviews:{};
   d.activity=Array.isArray(d.activity)?d.activity.filter(plain).slice(-MAX_ACTIVITY):[];
   d.issues=Array.isArray(d.issues)?d.issues.filter(plain).slice(-500):[];
+  d.pendingContributions=plain(d.pendingContributions)?d.pendingContributions:{};
   d.seededLegacy=!!d.seededLegacy;
   return d
 }
@@ -33,6 +34,14 @@ function reviewInterval(attempt,ok){
 function questionMeta(bank,q,extra={}){
   return{uid:uidOf(bank,q),courseId,examId,bank:bankOf(bank,q),bankLabel:bankLabelOf(extra.bankLabel,bank,q),set:Number(extra.set??q?.set??q?.setn??1)||1,questionId:String(extra.questionId??q?.id??q?.seq??''),topic:topicOf(q),stem:String(q?.stem||q?.q||'').trim(),href:String(extra.href||location.href)}
 }
+async function flushPendingContributions(){
+  const submit=window.MBUSupabase?.submitItemContribution;if(typeof submit!=='function'||navigator.onLine===false)return false;
+  const d=db(),entries=Object.entries(d.pendingContributions||{});if(!entries.length)return true;
+  for(const [uid,payload] of entries){
+    try{await submit(payload);const live=db();if(live.pendingContributions?.[uid]){delete live.pendingContributions[uid];save(live)}}catch{}
+  }
+  return Object.keys(db().pendingContributions||{}).length===0
+}
 function recordAnswer(bank,q,ok,extra={}){
   const d=db(),meta=questionMeta(bank,q,extra),t=Number(extra.at)||now(),prev=d.attempts[meta.uid]||{},correct=Number(prev.correct)||0,incorrect=Number(prev.incorrect)||0,attempts=Number(prev.attempts)||0,firstAttempt=attempts===0;
   const next={...prev,...meta,attempts:attempts+1,correct:correct+(ok?1:0),incorrect:incorrect+(ok?0:1),lastAt:t,lastCorrect:!!ok,streak:ok?(Number(prev.streak)||0)+1:0};
@@ -40,10 +49,11 @@ function recordAnswer(bank,q,ok,extra={}){
   const days=reviewInterval(next,!!ok);d.reviews[meta.uid]={uid:meta.uid,dueAt:t+days*DAY,intervalDays:days,lastAt:t,lastCorrect:!!ok};
   d.activity.push({id:meta.uid+':'+t,at:t,type:'answer',uid:meta.uid,bank:meta.bank,bankLabel:meta.bankLabel,topic:meta.topic,ok:!!ok,href:meta.href});
   if(d.activity.length>MAX_ACTIVITY)d.activity.splice(0,d.activity.length-MAX_ACTIVITY);
-  save(d);
-  if(firstAttempt)window.MBUSupabase?.submitItemContribution?.({questionId:meta.uid,correct:!!ok,responseMs:extra.responseMs??null,sessionMode:extra.sessionMode||'unknown',courseId:meta.courseId,examId:meta.examId,bankId:meta.bank,topic:meta.topic})?.catch?.(()=>{});
+  if(firstAttempt)d.pendingContributions[meta.uid]={questionId:meta.uid,correct:!!ok,responseMs:extra.responseMs??null,sessionMode:extra.sessionMode||'unknown',courseId:meta.courseId,examId:meta.examId,bankId:meta.bank,topic:meta.topic};
+  save(d);flushPendingContributions().catch(()=>{});
   return next
 }
+window.addEventListener('online',()=>flushPendingContributions().catch(()=>{}));
 function seedLegacy(records=[]){
   const d=db();if(d.seededLegacy)return false;let changed=false;
   for(const r of records){
@@ -127,5 +137,6 @@ function addIssue(bank,q,details={}){
 function issues(){return db().issues.map(x=>({...x}))}
 function closeIssue(id){const d=db(),x=d.issues.find(x=>x.id===id);if(!x)return false;x.status='closed';x.closedAt=now();save(d);return true}
 function clearAll(){localStorage.removeItem(STORE);cache=null;lastSerialized=''}
-window.MBUStudyIntelligence={STORE,schema:SCHEMA,recordAnswer,seedLegacy,due,smartReview,weakReview,questionStats,topicStats,analytics,mastery,priorityForQuestion,recentActivity,recommendation,summary,addIssue,issues,closeIssue,questionMeta,clearAll};
+window.MBUStudyIntelligence={STORE,schema:SCHEMA,recordAnswer,flushPendingContributions,seedLegacy,due,smartReview,weakReview,questionStats,topicStats,analytics,mastery,priorityForQuestion,recentActivity,recommendation,summary,addIssue,issues,closeIssue,questionMeta,clearAll};
+queueMicrotask(()=>flushPendingContributions().catch(()=>{}));
 })();
