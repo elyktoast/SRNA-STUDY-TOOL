@@ -26,8 +26,8 @@ Deno.serve(async(req:Request)=>{
   if(req.method==="OPTIONS")return new Response("ok",{headers:headers(origin)});
   if(req.method!=="POST")return json({error:"Method not allowed"},405,origin);
   if(!allowed.has(origin))return json({error:"Origin not allowed"},403,origin);
-  const key=Deno.env.get("GEMINI_API_KEY")||"",groqKey=Deno.env.get("GROQ_API_KEY")||"";
-  if(!key&&!groqKey)return json({error:"Question generation is not configured."},503,origin);
+  const key=Deno.env.get("GEMINI_API_KEY")||"",cloudflareKey=Deno.env.get("CLOUDFLARE_API_TOKEN")||"",cloudflareAccount=Deno.env.get("CLOUDFLARE_ACCOUNT_ID")||"",groqKey=Deno.env.get("GROQ_API_KEY")||"";
+  if(!key&&!(cloudflareKey&&cloudflareAccount)&&!groqKey)return json({error:"Question generation is not configured."},503,origin);
   let body:any;try{body=await req.json()}catch{return json({error:"Invalid JSON body"},400,origin)}
   const material=String(body?.material||"").trim(),sourceName=String(body?.sourceName||"").trim(),citation=String(body?.citation||"").trim();
   const requested=Number(body?.count),count=Math.max(1,Math.min(20,Number.isFinite(requested)?Math.trunc(requested):5));
@@ -67,8 +67,36 @@ Deno.serve(async(req:Request)=>{
     }
     geminiUnavailable=!questions;
   }else geminiUnavailable=true;
-  if(geminiUnavailable){
-    if(!groqKey)return json({error:"Gemini models are temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
+  if(geminiUnavailable&&cloudflareKey&&cloudflareAccount){
+    const cloudflareModel=Deno.env.get("CLOUDFLARE_MODEL")||"@cf/meta/llama-3.3-70b-instruct-fp8-fast";
+    const cloudflareMaterialLimit=count>=10?30000:count>=7?45000:60000;
+    const cloudflareMaterial=material.length<=cloudflareMaterialLimit?material:(()=>{
+      const parts=5,chunk=Math.floor(cloudflareMaterialLimit/parts),maxStart=Math.max(0,material.length-chunk);
+      return Array.from({length:parts},(_,i)=>{
+        const start=Math.round(maxStart*i/(parts-1)),end=Math.min(material.length,start+chunk);
+        return `--- SOURCE SAMPLE ${i+1} OF ${parts} · CHARS ${start+1}-${end} OF ${material.length} ---\n${material.slice(start,end)}`
+      }).join("\n\n")
+    })();
+    const cloudflarePrompt=prompt.slice(0,prompt.length-material.length)+cloudflareMaterial+"\n\nReturn ONLY valid JSON with this shape: {\"questions\":[...]} matching every requested field.";
+    let response:Response|undefined,data:any,cloudflareDone=false;
+    for(let attempt=0;;attempt++){
+      response=await fetch(`https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(cloudflareAccount)}/ai/run/${cloudflareModel}`,{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${cloudflareKey}`},body:JSON.stringify({prompt:cloudflarePrompt,response_format:{type:"json_schema",json_schema:groqSchema},max_tokens:Math.min(8192,1200+count*650),temperature:.65})});
+      data=await response.json().catch(()=>null);
+      if(response.ok&&data?.success!==false){cloudflareDone=true;break}
+      const status=response.status,detail=String(data?.errors?.[0]?.message||data?.error?.message||data?.error||"").slice(0,1000),retryable=status===429||status===500||status===502||status===503;
+      if(!retryable||attempt>=1){console.warn("Cloudflare Workers AI unavailable",status,detail);break}
+      const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
+      await new Promise(resolve=>setTimeout(resolve,delay));
+    }
+    if(cloudflareDone){
+      const output=data?.result?.response??data?.result;
+      try{const parsed=typeof output==="string"?JSON.parse(output):output;questions=parsed?.questions}catch{console.warn("Cloudflare Workers AI returned invalid structured output")}
+      if(Array.isArray(questions)&&questions.length){usedModel=cloudflareModel;provider="cloudflare"}
+      else questions=undefined;
+    }
+  }
+  if(geminiUnavailable&&!questions){
+    if(!groqKey)return json({error:"Gemini and Cloudflare are temporarily unavailable and no Groq fallback is configured.",retryable:true},502,origin);
     const groqModel=Deno.env.get("GROQ_MODEL")||"openai/gpt-oss-120b";
     const groqMaterialLimit=count>=10?10000:count>=7?14000:18000;
     const groqMaterial=material.length<=groqMaterialLimit?material:(()=>{
@@ -94,8 +122,8 @@ Deno.serve(async(req:Request)=>{
     try{const parsed=JSON.parse(output);questions=parsed?.questions}catch{return json({error:"Groq returned invalid structured output."},502,origin)}
     usedModel=groqModel;provider="groq";
   }
-  if(!Array.isArray(questions))return json({error:provider==="groq"?"Groq returned an invalid question list.":"Gemini returned an invalid question list."},502,origin);
-  if(questions.length<1)return json({error:provider==="groq"?"Groq returned no questions.":"Gemini returned no questions."},502,origin);
+  if(!Array.isArray(questions))return json({error:`${provider} returned an invalid question list.`},502,origin);
+  if(questions.length<1)return json({error:`${provider} returned no questions.`},502,origin);
   if(questions.length>count)questions=questions.slice(0,count);
   const partial=questions.length!==count;
   if(partial)console.warn("Partial generation",provider,usedModel,`requested ${count}; received ${questions.length}`);
