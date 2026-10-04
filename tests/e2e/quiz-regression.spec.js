@@ -79,10 +79,10 @@ test.describe('canonical quiz regression', () => {
       MBUStudyIntelligence.recordAnswer(q.bank,q,false,{bankLabel:q.bankLabel,sessionMode:'standard'});
       await new Promise(r=>setTimeout(r,20));
       MBUStudyIntelligence.recordAnswer(q.bank,q,true,{bankLabel:q.bankLabel,sessionMode:'standard'});
-      await MBUStudyIntelligence.flushPendingContributions();
+      await MBUCalibrationOutbox.flush(MBUStudyIntelligence.STORE);
       const raw=JSON.parse(localStorage.getItem(MBUStudyIntelligence.STORE));
       MBUSupabase.submitItemContribution=original;
-      return{sent,pending:Object.keys(raw.pendingContributions||{}),attempt:raw.attempts[q.uid]};
+      const pending=JSON.parse(localStorage.getItem(MBUCalibrationOutbox.prefix+MBUStudyIntelligence.STORE)||'{}');return{sent,pending:Object.keys(pending),attempt:raw.attempts[q.uid]};
     });
     expect(result.sent.length).toBeGreaterThanOrEqual(2);
     expect(result.sent.every(x=>x.correct===false)).toBeTruthy();
