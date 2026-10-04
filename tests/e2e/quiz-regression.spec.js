@@ -1841,7 +1841,7 @@ test.describe('canonical quiz regression', () => {
     await page.locator('[data-admin-view="system"]').click();
     page.once('dialog',dialog=>dialog.accept());
     await page.locator('[data-retention]').click();
-    await expect(page.locator('#mbu-admin-dashboard [data-account-message]')).toContainText('4 resolved reports removed');
+    await expect(page.locator('#mbu-admin-dashboard [data-account-message]')).toContainText('4 resolved question reports removed');
 
     await page.locator('[data-admin-view="users"]').click();
     await expect(page.locator('[data-admin-view-host]')).toContainText('learner@example.com');
