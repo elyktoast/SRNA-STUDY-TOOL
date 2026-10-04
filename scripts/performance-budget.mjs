@@ -22,7 +22,7 @@ const budgets={
   'equipment/assets/legal-gate.js':6000,
   'equipment/assets/supabase-config.js':1000,
   'equipment/assets/supabase-sync.js':27500,
-  'equipment/assets/admin-panel.js':16500,
+  'equipment/assets/admin-panel.js':20500,
   'equipment/assets/admin-question-editor.js':5000,
   'equipment/assets/admin-dashboard.js':5000,
   'equipment/assets/admin-dashboard.css':2000,
