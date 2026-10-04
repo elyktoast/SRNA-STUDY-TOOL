@@ -1082,7 +1082,7 @@ test.describe('canonical quiz regression', () => {
     expect(submitted.comment).toContain('keyed answer');
     expect(submitted.reporter).toBeUndefined();
     expect(submitted.userAgent).toBeUndefined();
-    expect(submitted.pageUrl).not.toMatch(/[?#]/);
+    expect(submitted.pageUrl).toMatch(/studio\.html\?question=/);
     expect(submitted.uid).toMatch(/^b1-/);
     expect(submitted.stem.length).toBeGreaterThan(0);
     expect(Array.isArray(submitted.options)).toBe(true);
@@ -2069,8 +2069,9 @@ test.describe('canonical quiz regression', () => {
       if(first)first.checked=true;
       document.getElementById('count').value='10';
       document.getElementById('adaptiveToggle').checked=false;
-      startMode('custom');
+      return startMode('custom');
     });
+    await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)&&window.session.length)).toBeGreaterThan(0);
     const before=await page.evaluate(()=>({uid:session[pos].uid,pos,active:[...DB.active.uids]}));
     await page.setViewportSize({width:768,height:1024});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
