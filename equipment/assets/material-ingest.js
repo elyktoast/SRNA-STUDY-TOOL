@@ -15,26 +15,17 @@ async function extractPdf(file,onProgress){const p=await pdfjs(),doc=await p.get
   if(text)parts.push(`--- Page ${i} (${method}) ---
 ${text}`);
  }
- return{text:clean(parts.join('
-
-')),detail:`${doc.numPages} PDF page${doc.numPages===1?'':'s'} read; OCR used on ${ocrPages}.`}}
-async function extractDocx(file,onProgress){const Z=await jszip(),zip=await Z.loadAsync(file),parts=[];for(const name of ['word/document.xml','word/footnotes.xml','word/endnotes.xml']){const entry=zip.file(name);if(!entry)continue;onProgress?.({stage:'reading',label:name.replace('word/',''),progress:0});const xml=await entry.async('text'),doc=new DOMParser().parseFromString(xml,'application/xml'),paras=[...doc.getElementsByTagNameNS('*','p')].map(p=>clean([...p.getElementsByTagNameNS('*','t')].map(n=>n.textContent||'').join(' '))).filter(Boolean);if(paras.length)parts.push(paras.join('
-'))}return{text:clean(parts.join('
-
-')),detail:'Word document text read.'}}
+ return{text:clean(parts.join('\\n\\n')),detail:`${doc.numPages} PDF page${doc.numPages===1?'':'s'} read; OCR used on ${ocrPages}.`}}
+async function extractDocx(file,onProgress){const Z=await jszip(),zip=await Z.loadAsync(file),parts=[];for(const name of ['word/document.xml','word/footnotes.xml','word/endnotes.xml']){const entry=zip.file(name);if(!entry)continue;onProgress?.({stage:'reading',label:name.replace('word/',''),progress:0});const xml=await entry.async('text'),doc=new DOMParser().parseFromString(xml,'application/xml'),paras=[...doc.getElementsByTagNameNS('*','p')].map(p=>clean([...p.getElementsByTagNameNS('*','t')].map(n=>n.textContent||'').join(' '))).filter(Boolean);if(paras.length)parts.push(paras.join('\\n'))}return{text:clean(parts.join('\\n\\n')),detail:'Word document text read.'}}
 async function extractPptx(file,onProgress){const Z=await jszip(),zip=await Z.loadAsync(file),slides=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>(+a.match(/\d+/)[0])-(+b.match(/\d+/)[0])),parts=[];let imageOcr=0;
  for(let i=0;i<slides.length;i++){onProgress?.({stage:'reading',label:`slide ${i+1} of ${slides.length}`,progress:i/slides.length});const xml=await zip.file(slides[i]).async('text'),doc=new DOMParser().parseFromString(xml,'application/xml'),text=clean([...doc.getElementsByTagNameNS('*','t')].map(n=>n.textContent||'').join(' '));if(text)parts.push(`--- Slide ${i+1} ---
 ${text}`)}
  const media=Object.keys(zip.files).filter(n=>/^ppt\/media\/.*\.(png|jpe?g|webp)$/i.test(n)).slice(0,30);
  for(let i=0;i<media.length;i++){const blob=await zip.file(media[i]).async('blob'),text=await ocrBlob(blob,onProgress,`slide image ${i+1} of ${media.length}`);if(meaningful(text)){parts.push(`--- Slide image OCR ${i+1} ---
 ${text}`);imageOcr++}}
- return{text:clean(parts.join('
-
-')),detail:`${slides.length} PowerPoint slide${slides.length===1?'':'s'} read; OCR found text in ${imageOcr} embedded image${imageOcr===1?'':'s'}.`}}
+ return{text:clean(parts.join('\\n\\n')),detail:`${slides.length} PowerPoint slide${slides.length===1?'':'s'} read; OCR found text in ${imageOcr} embedded image${imageOcr===1?'':'s'}.`}}
 async function extractSpreadsheet(file,onProgress){const X=await xlsx(),b=X.read(await file.arrayBuffer()),p=[];for(let i=0;i<b.SheetNames.length;i++){const n=b.SheetNames[i];const s=clean(X.utils.sheet_to_csv(b.Sheets[n],{blankrows:false}));if(s)p.push(`--- Sheet: ${n} ---
-${s}`)}return{text:clean(p.join('
-
-')),detail:'Spreadsheet read.'}}
+${s}`)}return{text:clean(p.join('\\n\\n')),detail:'Spreadsheet read.'}}
 async function extract(file,onProgress){if(!file)throw Error('Choose a lecture or source file first.');if(file.size>MAX_FILE_BYTES)throw Error('File is larger than 40 MB.');const name=file.name||'Uploaded material',ext=(name.split('.').pop()||'').toLowerCase(),type=file.type||'';
  let result;
  if(ext==='pdf'||type==='application/pdf')result=await extractPdf(file,onProgress);
