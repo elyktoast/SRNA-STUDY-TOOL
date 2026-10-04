@@ -70,8 +70,11 @@ async function generate(name,request){
   const raw=Array.isArray(out)?out:(out?.questions||[]);
   if(!Array.isArray(raw))throw Error('Generator returned an invalid question list.');
   const drafts=raw.map(q=>normalizeQuestion(q,{provider:name,sourceName:request?.sourceName,difficulty:request?.difficulty,citation:request?.citation}));
-  const invalid=drafts.map((q,i)=>({i,errors:validateQuestion(q)})).filter(x=>x.errors.length);if(invalid.length)throw Error('Generated questions failed quality validation: '+invalid.map(x=>'#'+(x.i+1)+' '+x.errors.join(' ')).join(' | '));
-  const s=state();s.drafts.push(...drafts);save(s);return drafts
+  const checked=drafts.map((q,i)=>({q,i,errors:validateQuestion(q)})),valid=checked.filter(x=>!x.errors.length).map(x=>x.q),invalid=checked.filter(x=>x.errors.length);
+  if(!valid.length)throw Error('Generated questions failed quality validation: '+invalid.map(x=>'#'+(x.i+1)+' '+x.errors.join(' ')).join(' | '));
+  const s=state();s.drafts.push(...valid);save(s);
+  const result=[...valid];Object.defineProperty(result,'generationMeta',{value:{received:drafts.length,accepted:valid.length,rejected:invalid.length,rejectedItems:invalid.map(x=>({number:x.i+1,errors:x.errors}))},enumerable:false});
+  return result
 }
 function addDraft(q,meta={}){const s=state(),draft=normalizeQuestion(q,meta);s.drafts.push(draft);save(s);return draft}
 function updateDraft(questionId,patch={}){
