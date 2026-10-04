@@ -23,12 +23,14 @@ await loadScript('app-core.js');
 await loadScript('legal-gate.js');
 if(window.SRNALegalReady)await window.SRNALegalReady;
 await loadScript('course-context.js');
+await loadScript('calibration-outbox.js');
 await loadScript('study-intelligence.js');
 await loadScript('answer-order.js');
 await loadScript('supabase-config.js');
 await loadScript('supabase-sync.js');
 if(window.MBUAuthReady&&typeof window.MBUAuthReady.then==='function')await window.MBUAuthReady;
-const ctx=window.MBU_CONTEXT||{},root=new URL('../../',assetsBase),path=location.pathname,protectedCourse=['equipment/','basic-principles/'].some(x=>path.startsWith(root.pathname+x));
+await window.MBUCalibrationOutbox?.flushAll?.();
+const ctx=window.MBU_CONTEXT||{},root=new URL('../../',assetsBase),path=location.pathname,protectedCourse=['equipment/','basic-principles/','pharm/'].some(x=>path.startsWith(root.pathname+x));
 if(protectedCourse){
   const info=window.MBUSupabase?.status?.()||{};
   if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
@@ -42,7 +44,7 @@ const postAuthTarget=sessionStorage.getItem('mbu_post_auth_target');
 if(!protectedCourse&&postAuthTarget){
   const info=window.MBUSupabase?.status?.()||{};
   if(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active'&&!info.recoveryMode){
-    let target=null;try{const candidate=new URL(postAuthTarget,location.href);if(candidate.origin===root.origin&&['equipment/','basic-principles/'].some(course=>candidate.pathname.startsWith(root.pathname+course)))target=candidate.href}catch{}
+    let target=null;try{const candidate=new URL(postAuthTarget,location.href);if(candidate.origin===root.origin&&['equipment/','basic-principles/','pharm/'].some(course=>candidate.pathname.startsWith(root.pathname+course)))target=candidate.href}catch{}
     sessionStorage.removeItem('mbu_post_auth_target');
     if(target){location.replace(target);return build}
   }
