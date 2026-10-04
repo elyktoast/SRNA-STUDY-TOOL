@@ -51,6 +51,8 @@ jobs:
         run: npm run test:review-queue
       - name: Simulate precalibration CAT behavior
         run: npm run test:cat
+      - name: Verify account-aware question coverage
+        run: npm run test:coverage
       - name: Build clean question JSON export
         run: node scripts/export-question-data.mjs
       - name: Upload clean question JSON export
