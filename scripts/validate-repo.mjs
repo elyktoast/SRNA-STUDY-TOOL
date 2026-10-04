@@ -602,8 +602,8 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  const b3Payload=JSON.parse(read('equipment/exam-1/data/bank3.json'));if((b3Payload.questions||[]).length!==500)fail('Bank 3: canonical question total is not 500');
  for(const token of [
   'function resumeActive(){',
-  'if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length)return;',
-  'pos=Math.min(DB.active.pos||0,session.length-1);showQ()',
+  'const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();',
+  'pos=Math.min(active.pos||0,session.length-1);showQ()',
   'function studioNav(delta){clearTimeout(autoTimer);autoTimer=null;',
   'pos=n;saveActive();showQ()',
   'function resetStudioCurrent(){clearTimeout(autoTimer);autoTimer=null;',
