@@ -43,28 +43,34 @@ Deno.serve(async(req:Request)=>{
 13. Length-cue protection: keep the key and distractors concise and parallel. The correct option must not be more than about 15% longer than the mean distractor length when options contain enough words for that comparison to be meaningful.
 14. Key position is NOT part of item design. Do not intentionally favor A/B/C/D or create answer-letter patterns; downstream application code will shuffle options and remap the key atomically.\n\nAdditional requirements: favor application/analysis; use plausible distractors that could attract a partially knowledgeable examinee; avoid throwaway, joke, absolute, all/none-of-the-above, combination, grammatical, and length cues; answer contains zero-based option indexes; for multi-select key every correct option; citation should use the supplied citation when available; sourceExcerpt must be a short supporting excerpt or faithful concise source statement from the supplied material. Do not invent facts beyond the source.\n\nSource: ${sourceName||"Provided material"}\nCitation: ${citation||"Provided material"}\n\nSOURCE MATERIAL:\n${material}`;
   let questions:any,usedModel=model,provider="gemini",geminiUnavailable=false;
+  const geminiModels=[model,...(model==="gemini-3.6-flash"?[]:["gemini-3.6-flash"])];
   if(key){
-    const payload=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}});
-    let response:Response,data:any;
-    for(let attempt=0;;attempt++){
-      response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:payload});
-      data=await response.json().catch(()=>null);
-      if(response.ok){
-        const output=data?.candidates?.[0]?.content?.parts?.map((p:any)=>p?.text||"").join("")||"";
-        try{questions=JSON.parse(output)}catch{return json({error:"Gemini returned invalid structured output."},502,origin)}
-        break
+    for(const candidateModel of geminiModels){
+      const payload=JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:"application/json",responseSchema:schema,temperature:.65}});
+      let exhausted=false;
+      for(let attempt=0;;attempt++){
+        const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(candidateModel)}:generateContent`,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:payload});
+        const data=await response.json().catch(()=>null);
+        if(response.ok){
+          const output=data?.candidates?.[0]?.content?.parts?.map((p:any)=>p?.text||"").join("")||"";
+          try{questions=JSON.parse(output)}catch{return json({error:`${candidateModel} returned invalid structured output.`},502,origin)}
+          usedModel=candidateModel;provider="gemini";break
+        }
+        const retryable=response.status===429||response.status===503;
+        if(!retryable){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",candidateModel,response.status,detail);return json({error:`${candidateModel} generation failed.`,status:response.status,detail,retryable:false},502,origin)}
+        if(attempt>=2){exhausted=true;console.warn("Gemini model unavailable",candidateModel,response.status,String(data?.error?.message||"").slice(0,500));break}
+        const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
+        await new Promise(resolve=>setTimeout(resolve,delay));
       }
-      const retryable=response.status===429||response.status===503;
-      if(!retryable){const detail=String(data?.error?.message||"").slice(0,1000);console.error("Gemini API error",response.status,detail);return json({error:"Gemini generation failed.",status:response.status,detail,retryable:false},502,origin)}
-      if(attempt>=2){geminiUnavailable=true;console.warn("Gemini temporarily unavailable; trying Groq",response.status,String(data?.error?.message||"").slice(0,500));break}
-      const retryAfter=Number(response.headers.get("retry-after")),delay=Number.isFinite(retryAfter)&&retryAfter>0?Math.min(retryAfter*1000,10000):1000*(attempt+1);
-      await new Promise(resolve=>setTimeout(resolve,delay));
+      if(questions)break;
+      if(!exhausted)break;
     }
+    geminiUnavailable=!questions;
   }else geminiUnavailable=true;
   if(geminiUnavailable){
-    if(!groqKey)return json({error:"Gemini is temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
+    if(!groqKey)return json({error:"Gemini models are temporarily unavailable and no fallback provider is configured.",retryable:true},502,origin);
     const groqModel=Deno.env.get("GROQ_MODEL")||"openai/gpt-oss-120b";
-    const groqMaterialLimit=24000;
+    const groqMaterialLimit=count>=10?10000:count>=7?14000:18000;
     const groqMaterial=material.length<=groqMaterialLimit?material:(()=>{
       const parts=5,chunk=Math.floor(groqMaterialLimit/parts),maxStart=Math.max(0,material.length-chunk);
       return Array.from({length:parts},(_,i)=>{
@@ -89,6 +95,9 @@ Deno.serve(async(req:Request)=>{
     usedModel=groqModel;provider="groq";
   }
   if(!Array.isArray(questions))return json({error:provider==="groq"?"Groq returned an invalid question list.":"Gemini returned an invalid question list."},502,origin);
-  if(questions.length!==count)return json({error:provider==="groq"?"Groq returned the wrong number of questions.":"Gemini returned the wrong number of questions.",detail:`Requested ${count}; received ${questions.length}.`},502,origin);
-  return json({questions,model:usedModel,provider},200,origin);
+  if(questions.length<1)return json({error:provider==="groq"?"Groq returned no questions.":"Gemini returned no questions."},502,origin);
+  if(questions.length>count)questions=questions.slice(0,count);
+  const partial=questions.length!==count;
+  if(partial)console.warn("Partial generation",provider,usedModel,`requested ${count}; received ${questions.length}`);
+  return json({questions,model:usedModel,provider,requestedCount:count,partial},200,origin);
 });
