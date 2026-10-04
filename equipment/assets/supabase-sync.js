@@ -119,7 +119,7 @@ emit('confirmation-required',{email:String(email||'').trim()});return{session:nu
 }
 function resetCloudSession(){stopAutoSync();saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}
 async function signOut(){
-const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(navigator.onLine===false)throw Error('Reconnect before signing out so your latest study progress can sync safely.');try{await fullSync()}catch{throw Error('Your latest study progress could not sync. Check your connection and try signing out again.')}}
+const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect before signing out so your latest study progress can sync safely.');try{await fullSync()}catch{throw Error('Latest study progress could not sync. Reconnect and try again.')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
 await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
