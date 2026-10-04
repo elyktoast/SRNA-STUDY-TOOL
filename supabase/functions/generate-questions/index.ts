@@ -1,8 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const allowed=new Set(["https://elyktoast.github.io","http://127.0.0.1:4173","http://localhost:4173"]);
+const allowedOrigin=(origin:string)=>allowed.has(origin)||/^https:\/\/srna-study-tool-[a-z0-9-]+\.vercel\.app$/i.test(origin);
 const headers=(origin:string)=>({
-  "Access-Control-Allow-Origin":allowed.has(origin)?origin:"https://elyktoast.github.io",
+  "Access-Control-Allow-Origin":allowedOrigin(origin)?origin:"https://elyktoast.github.io",
   "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods":"POST, OPTIONS",
   "Content-Type":"application/json",
@@ -25,7 +26,7 @@ Deno.serve(async(req:Request)=>{
   const origin=req.headers.get("Origin")||"";
   if(req.method==="OPTIONS")return new Response("ok",{headers:headers(origin)});
   if(req.method!=="POST")return json({error:"Method not allowed"},405,origin);
-  if(!allowed.has(origin))return json({error:"Origin not allowed"},403,origin);
+  if(!allowedOrigin(origin))return json({error:"Origin not allowed"},403,origin);
   const key=Deno.env.get("GEMINI_API_KEY")||"",cloudflareKey=Deno.env.get("CLOUDFLARE_API_TOKEN")||"",cloudflareAccount=Deno.env.get("CLOUDFLARE_ACCOUNT_ID")||"",groqKey=Deno.env.get("GROQ_API_KEY")||"";
   if(!key&&!(cloudflareKey&&cloudflareAccount)&&!groqKey)return json({error:"Question generation is not configured."},503,origin);
   let body:any;try{body=await req.json()}catch{return json({error:"Invalid JSON body"},400,origin)}
