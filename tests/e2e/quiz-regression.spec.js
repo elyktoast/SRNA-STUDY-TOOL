@@ -1708,6 +1708,18 @@ test.describe('canonical quiz regression', () => {
     expect(new URL(page.url()).pathname).toBe('/');
   });
 
+  test('Offline sign out preserves unsynced account study state', async ({ page }) => {
+    await seedSignedIn(page);
+    await page.goto(exam + '/index.html');await page.evaluate(() => MBUPageReady);await waitForAuth(page);
+    await page.evaluate(()=>{localStorage.setItem('mbu_exam1_studio_v1',JSON.stringify({ans:{offline:{ok:true}}}));MBUAppCore.touchStore('mbu_exam1_studio_v1')});
+    await page.context().setOffline(true);
+    const result=await page.evaluate(async()=>{try{await MBUSupabase.signOut();return null}catch(e){return e.message}});
+    expect(result).toContain('Reconnect before signing out');
+    expect(await page.evaluate(()=>localStorage.getItem('mbu_exam1_studio_v1'))).toContain('offline');
+    expect((await page.evaluate(()=>MBUSupabase.status())).signedIn).toBe(true);
+    await page.context().setOffline(false);
+  });
+
   test('Account creation requires adult Terms and Privacy acknowledgement', async ({ page }) => {
     await useGuestState(page);
     const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';let signupCalls=0;
