@@ -21,7 +21,7 @@ function optionLengthError(q){
   return mean>=4&&lens[key]>mean*1.15?'Correct answer is more than 15% longer than the mean distractor length.':''
 }
 function state(){const s=safeJSON(localStorage.getItem(STORE),blank());if(!s||Number(s.schema)!==SCHEMA)return blank();for(const k of ['drafts','approved','classmate'])s[k]=Array.isArray(s[k])?s[k]:[];return s}
-function save(s){s={...s,schema:SCHEMA,updatedAt:now()};localStorage.setItem(STORE,JSON.stringify(s));window.MBUAppCore?.touchStore?.(STORE);return s}
+function save(s){s={...s,schema:SCHEMA,updatedAt:now()};localStorage.setItem(STORE,JSON.stringify(s));window.MBUAppCore?.touchStore?.(STORE);window.dispatchEvent(new CustomEvent('mbu-generated-questions-changed',{detail:{courseId,examId,updatedAt:s.updatedAt}}));return s}
 function enabled(){
   const f=window.MBU_FEATURES?.questionGenerator;
   return f===true||f?.enabled===true
