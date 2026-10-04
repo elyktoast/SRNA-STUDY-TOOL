@@ -1852,6 +1852,23 @@ test.describe('canonical quiz regression', () => {
     await expect.poll(()=>deletedAccount?.p_user_id).toBe('00000000-0000-0000-0000-000000000002');
   });
 
+  test('Admin can open editor for a changed perioperative report', async ({ page }) => {
+    await seedSignedIn(page);
+    const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';
+    await page.unroute(cloud+'/rest/v1/rpc/snar_admin_status');
+    await page.route(cloud+'/rest/v1/rpc/snar_admin_status',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({is_admin:true,role:'operator_admin'})}));
+    for(const [name,body] of [['snar_admin_system_summary',{}],['snar_admin_accounts',[]],['snar_admin_suggestions',[]],['snar_admin_privacy_requests',[]]]) await page.route(cloud+'/rest/v1/rpc/'+name,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)}));
+    await page.route(cloud+'/rest/v1/rpc/snar_admin_question_reports',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:404,reason:'Source / citation issue',status:'new',question_uid:'PRE-404',bank:'preop',bank_label:'Perioperative Assessment & Evaluation',question_number:'404',topic:'',stem:'Historical colonoscopy steroid question',options:['A','B','C','D'],answer_indexes:[0],explanation:'Historical explanation',source:'Historical source',comment:'Procedure classification is wrong',created_at:new Date().toISOString(),updated_at:new Date().toISOString()}])}));
+    await page.goto(exam+'/index.html');await page.evaluate(()=>MBUPageReady);await waitForAuth(page);
+    await page.locator('.mbu-global-nav__cloud').click();await page.locator('[data-admin-open]').click();
+    await page.locator('[data-admin-view="reports"]').click();
+    await page.getByRole('button',{name:'Edit question'}).click();
+    await expect(page.locator('.admin-editor')).toBeVisible();
+    await expect(page.locator('.admin-editor [data-stem]')).toHaveValue(/ginkgo biloba/i);
+    await expect(page.locator('.admin-editor')).toContainText('Save corrected question');
+    await page.locator('.admin-editor [data-close]').click();
+  });
+
   test('Non-admin account never sees or opens the Admin Dashboard', async ({ page }) => {
     await seedSignedIn(page);
     const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';
