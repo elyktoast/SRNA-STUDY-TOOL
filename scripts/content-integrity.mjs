@@ -162,7 +162,7 @@ for(let i=0;i<pharmQs.length;i++){
    const prompts=q.prompts,choices=q.choices,map=q.answer;
    if(!Array.isArray(prompts)||prompts.length<2||new Set(prompts.map(norm)).size!==prompts.length)err(identity+' has invalid or duplicate matching prompts');
    if(!Array.isArray(choices)||choices.length<2||new Set(choices.map(norm)).size!==choices.length)err(identity+' has invalid or duplicate matching choices');
-   if(!map||typeof map!=='object'||Array.isArray(map)||prompts?.some(p=>!Object.prototype.hasOwnProperty.call(map,p)||!choices.includes(map[p])))err(identity+' has invalid matching answer map');
+   if(!map||typeof map!=='object'||Array.isArray(map)||prompts?.some(p=>!Object.prototype.hasOwnProperty.call(map,p)||!choices.includes(map[p])))err(identity+' has invalid matching answer map');\n   else if(new Set(Object.values(map).map(String)).size!==Object.values(map).length)err(identity+' reuses a keyed matching choice');
  }else{
    const opts=q.options,raw=q.answer,ans=(Array.isArray(raw)?raw:[raw]).map(Number);
    if(!['single','multi'].includes(type))err(identity+' has invalid question type '+type);
