@@ -73,6 +73,8 @@
   "uidNamespace": "pharm-clinical",
   "studio": {
     "sourceMode": "unified",
-    "label": "Clinical Pharm"
+    "label": "Clinical Pharm",
+    "topicField": "topic",
+    "emptyTopicsMeansAll": true
   }
 }
