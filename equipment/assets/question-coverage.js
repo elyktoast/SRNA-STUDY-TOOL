@@ -5,6 +5,7 @@ const hash=s=>{let h=2166136261;for(const c of String(s)){h^=c.charCodeAt(0);h=M
 function contentVersion(q){return String(q?.contentVersion||q?.sourceMeta?.contentVersion||hash([q?.stem,(q?.opts||[]).join('|'),(q?.ans||[]).join(',')].join('::')).toString(36))}
 function unique(rows){const u=new Set(),c=new Set(),out=[];for(const q of rows||[]){if(!q?.uid||u.has(q.uid))continue;const ck=window.MBUAdaptiveQuiz?.contentKey?.(q)||String(q.stem||'').trim().toLowerCase();if(ck&&c.has(ck))continue;u.add(q.uid);if(ck)c.add(ck);out.push(q)}return out}
 function seeded(rows,seed){return [...rows].sort((a,b)=>hash(seed+':'+a.uid)-hash(seed+':'+b.uid))}
+function balancedTake(rows,n,seed){const groups=new Map();for(const q of seeded(rows,seed)){const k=String(q.topic||q.bankLabel||'Other');if(!groups.has(k))groups.set(k,[]);groups.get(k).push(q)}if(groups.size<2)return seeded(rows,seed).slice(0,n);const out=[],used=new Set(),target=Math.min(n,Math.floor(n*.8)),lists=[...groups.values()];while(out.length<target){let moved=false;for(const list of lists){const q=list.shift();if(q){out.push(q);used.add(q.uid);moved=true;if(out.length>=target)break}}if(!moved)break}return out.concat(seeded(rows.filter(q=>!used.has(q.uid)),seed+':fill').slice(0,n-out.length))}
 function rowFor(history,q){return history?.get?.(q.uid+'@'+contentVersion(q))||history?.get?.(q.uid)||null}
 function dynamicReviewRate(questions,attempts){
  let answered=0,correct=0;for(const q of questions){const a=attempts?.(q.uid);if(!a?.attempts)continue;answered+=Number(a.attempts)||0;correct+=Number(a.correct)||0}
@@ -29,7 +30,7 @@ function select({questions,count,history=new Map(),attempts,priority,seed=String
    .sort((a,b)=>b.w-a.w||Date.parse(a.h.last_issued_at||0)-Date.parse(b.h.last_issued_at||0));
  const pickedReview=review.slice(0,targetReview).map(x=>x.q),used=new Set(pickedReview.map(q=>q.uid));
  const need=limit-pickedReview.length;
- let coverage=seeded(unseen.filter(q=>!used.has(q.uid)),seed).slice(0,need);
+ let coverage=balancedTake(unseen.filter(q=>!used.has(q.uid)),need,seed);
  if(coverage.length<need){
    const fill=pool.filter(q=>!used.has(q.uid)&&!coverage.some(x=>x.uid===q.uid)).sort((a,b)=>Date.parse(rowFor(history,a)?.last_issued_at||0)-Date.parse(rowFor(history,b)?.last_issued_at||0)||hash(seed+a.uid)-hash(seed+b.uid));
    coverage=coverage.concat(fill.slice(0,need-coverage.length))
