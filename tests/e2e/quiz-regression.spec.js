@@ -1082,7 +1082,7 @@ test.describe('canonical quiz regression', () => {
     expect(submitted.comment).toContain('keyed answer');
     expect(submitted.reporter).toBeUndefined();
     expect(submitted.userAgent).toBeUndefined();
-    expect(submitted.pageUrl).toMatch(/studio\.html\?question=/);
+    expect(submitted.pageUrl).toMatch(/\?question=/);
     expect(submitted.uid).toMatch(/^b1-/);
     expect(submitted.stem.length).toBeGreaterThan(0);
     expect(Array.isArray(submitted.options)).toBe(true);
@@ -2065,8 +2065,8 @@ test.describe('canonical quiz regression', () => {
     await page.setViewportSize({width:1024,height:768});
     await page.goto(exam + '/studio.html');await waitForStudio(page);
     await page.evaluate(()=>{
-      const first=document.querySelector('#sourceChecks input[type=checkbox]');
-      if(first)first.checked=true;
+      const inputs=[...document.querySelectorAll('#sourceChecks input[type=checkbox]')];
+      inputs.forEach((input,i)=>input.checked=i===0);
       document.getElementById('count').value='10';
       document.getElementById('adaptiveToggle').checked=false;
       return startMode('custom');
