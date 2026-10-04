@@ -28,7 +28,9 @@ test.describe('canonical quiz regression', () => {
     await page.evaluate(uid=>{const q=ALL_BY_UID.get(uid);session=[q];pos=0;DB.active={uids:[uid],pos:0,answers:{},mode:'custom',updated:Date.now()};save();showQ()},q.uid);
     const selects=page.locator('#opts .mbu-match-select');
     await expect(selects).toHaveCount(q.matching.prompts.length);
-    for(let i=0;i<q.matching.prompts.length;i++)await selects.nth(i).selectOption(q.matching.answer[q.matching.prompts[i]]);
+    await selects.first().selectOption(q.matching.answer[q.matching.prompts[0]]);
+    if(q.matching.prompts.length>1)await expect(selects.nth(1).locator('option[value="'+q.matching.answer[q.matching.prompts[0]].replace(/"/g,'\\\"')+'"]')).toBeDisabled();
+    for(let i=1;i<q.matching.prompts.length;i++)await selects.nth(i).selectOption(q.matching.answer[q.matching.prompts[i]]);
     await page.locator('#submit').click();
     await expect(selects.first()).toHaveClass(/correct/);
     const before=await page.evaluate(uid=>DB.active.answers[uid],q.uid);
@@ -39,6 +41,18 @@ test.describe('canonical quiz regression', () => {
     await page.evaluate(()=>resumeActive());
     await expect(page.locator('#opts .mbu-match-select').first()).toBeDisabled();
     await expect(page.locator('#fb')).toBeVisible();
+  });
+
+  test('Clinical Pharm exposes 17 topics and defaults an empty filter to all topics', async ({ page }) => {
+    await useGuestState(page);
+    await page.goto('/pharm/clinical-pharm/studio.html');
+    await waitForStudio(page);
+    await expect(page.locator('#topicChecks input')).toHaveCount(17);
+    expect(await page.locator('#topicChecks input:checked').count()).toBe(0);
+    await page.locator('#count').selectOption('10');
+    await page.evaluate(()=>startMode('custom'));
+    await expect.poll(()=>page.evaluate(()=>session.length)).toBe(10);
+    expect(await page.evaluate(()=>new Set(session.map(q=>q.topic)).size)).toBeGreaterThan(1);
   });
 
   test('Studio persists normalized legacy keys and removes false flag entries', async ({ page }) => {
