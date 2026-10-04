@@ -156,6 +156,7 @@ test.describe('multi-course foundation', () => {
     expect(await page.locator('#topicChecks').textContent()).toContain('(500)');
     await page.selectOption('#count', '10');
     await page.getByRole('button', { name: 'Start Quiz' }).click();
+    await expect(page.locator('#quiz')).toBeVisible();
     await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)?window.session.length:0)).toBe(10);
     expect(await page.evaluate(() => [...new Set(session.map(q => q.bankLabel))])).toEqual([topic]);
   });
