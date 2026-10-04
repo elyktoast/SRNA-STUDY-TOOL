@@ -1,3 +1,3 @@
 {
-  "build": "2026-10-04-idempotent-account-coverage"
+  "build": "2026-10-04-account-teardown-race-fix"
 }
