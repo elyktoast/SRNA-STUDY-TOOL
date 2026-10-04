@@ -43,7 +43,7 @@ MBUQuestionGenerator.registerProvider(name, {
 });
 ```
 
-The request may eventually include source material, source name, question count, difficulty, question type, and style. The framework does not assume whether the provider is Ollama, another local model, a browser model, or a hosted service.
+The request includes source material, source name, citation, and question count. The browser provider calls the authenticated Supabase Edge Function, which handles provider fallback without exposing API credentials.
 
 ## Required review metadata
 

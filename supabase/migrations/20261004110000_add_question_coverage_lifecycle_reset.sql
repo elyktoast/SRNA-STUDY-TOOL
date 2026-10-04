@@ -1,0 +1,14 @@
+alter table public.mbu_question_exposure add column if not exists first_viewed_at timestamptz, add column if not exists last_viewed_at timestamptz, add column if not exists times_viewed integer not null default 0 check(times_viewed>=0), add column if not exists first_answered_at timestamptz, add column if not exists last_answered_at timestamptz, add column if not exists times_answered integer not null default 0 check(times_answered>=0);
+create or replace function public.mbu_mark_question_lifecycle(p_course_id text,p_exam_id text,p_question_uid text,p_content_version text,p_event text) returns boolean language plpgsql security invoker set search_path='' as $$
+begin if (select auth.uid()) is null then raise exception 'authentication required'; end if; if p_event not in ('viewed','answered') then raise exception 'invalid lifecycle event'; end if;
+if p_event='viewed' then update public.mbu_question_exposure set first_viewed_at=coalesce(first_viewed_at,now()),last_viewed_at=now(),times_viewed=times_viewed+1 where user_id=(select auth.uid()) and course_id=p_course_id and exam_id=p_exam_id and question_uid=p_question_uid and content_version=p_content_version;
+else update public.mbu_question_exposure set first_answered_at=coalesce(first_answered_at,now()),last_answered_at=now(),times_answered=times_answered+1 where user_id=(select auth.uid()) and course_id=p_course_id and exam_id=p_exam_id and question_uid=p_question_uid and content_version=p_content_version; end if; return found; end $$;
+revoke all on function public.mbu_mark_question_lifecycle(text,text,text,text,text) from public,anon; grant execute on function public.mbu_mark_question_lifecycle(text,text,text,text,text) to authenticated;
+grant delete on table public.mbu_question_exposure,public.mbu_question_sessions to authenticated;
+create policy "question exposure delete own" on public.mbu_question_exposure for delete to authenticated using ((select auth.uid())=user_id);
+create policy "question sessions delete own" on public.mbu_question_sessions for delete to authenticated using ((select auth.uid())=user_id);
+create or replace function public.mbu_reset_question_coverage(p_course_id text,p_exam_id text) returns integer language plpgsql security invoker set search_path='' as $$
+declare n integer; begin if (select auth.uid()) is null then raise exception 'authentication required'; end if;
+delete from public.mbu_question_sessions where user_id=(select auth.uid()) and course_id=p_course_id and exam_id=p_exam_id;
+delete from public.mbu_question_exposure where user_id=(select auth.uid()) and course_id=p_course_id and exam_id=p_exam_id; get diagnostics n=row_count; return n; end $$;
+revoke all on function public.mbu_reset_question_coverage(text,text) from public,anon; grant execute on function public.mbu_reset_question_coverage(text,text) to authenticated;

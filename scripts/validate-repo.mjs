@@ -602,8 +602,8 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  const b3Payload=JSON.parse(read('equipment/exam-1/data/bank3.json'));if((b3Payload.questions||[]).length!==500)fail('Bank 3: canonical question total is not 500');
  for(const token of [
   'function resumeActive(){',
-  'if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length)return;',
-  'pos=Math.min(DB.active.pos||0,session.length-1);showQ()',
+  'const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();',
+  'pos=Math.min(active.pos||0,session.length-1);showQ()',
   'function studioNav(delta){clearTimeout(autoTimer);autoTimer=null;',
   'pos=n;saveActive();showQ()',
   'function resetStudioCurrent(){clearTimeout(autoTimer);autoTimer=null;',
@@ -732,6 +732,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  for(const token of ['saveToClassmate','classmateQuestions','Classmate Bank'])if(!studioSource().includes(token)&&!genUi.includes(token)&&!read('equipment/assets/question-generator.js').includes(token))fail('Classmate Bank contract missing: '+token);
  for(const token of ["'material-ingest.js'","'source-material-storage.js'","'source-material-library.js'","loadScript?.('question-generator-ui.js')"])if(!studio.includes(token))fail('Generator lazy-load dependency missing '+token);
  for(const token of ['MAX_FILE_BYTES=40*1024*1024','MAX_CHARS=100000','extractPdf','extractPptx','ocrBlob'])if(!ingest.includes(token))fail('Material ingestion contract missing '+token);
+ for(const token of ['extractSpreadsheet','xlsx','xls','xlsm','csv','sheet_to_json','header:1','defval:\'\''])if(!ingest.includes(token))fail('Spreadsheet ingestion contract missing '+token);
  for(const token of ["BUCKET='source-materials'",'Sign in before saving source material.','x-upsert',"Object.freeze({save,list,file,download,remove})"])if(!storage.includes(token))fail('Private source-material storage contract missing '+token);
  for(const token of ['storage.list()','storage.download(path,name)','storage.remove(path)'])if(!library.includes(token))fail('Saved source-material library contract missing '+token);
  if(!generator.includes('Generated questions failed quality validation:'))fail('Generated drafts can bypass quality validation before storage');
@@ -883,6 +884,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  const inv=JSON.parse(read('legal/data-inventory.json'));
  if(inv.version!=='2026-09-27-v6'||inv.guest_session?.retention_hours!==24||inv.guest_session?.persistent_cross_session!==false)fail('Machine-readable guest metric inventory is incomplete');
  const privacy=read('privacy.html'),terms=read('terms.html'),cloud=read('equipment/assets/supabase-sync.js'),core=read('equipment/assets/app-core.js'),adminPanel=read('equipment/assets/admin-panel.js'),studio=studioSource();
+ try{new Function(adminPanel)}catch(e){fail('Admin panel JavaScript syntax invalid: '+e.message)}
  for(const token of ['random session identifier','approximately 24 hours','operator-admin','raw first-attempt CAT contribution rows'])if(!privacy.includes(token))fail('Privacy v6 disclosure missing '+token);
  if(privacy.includes('Google Apps Script'))fail('Current Privacy Notice still names retired Google Apps Script reporting');
  if(!privacy.includes('private Supabase table')||!privacy.includes('two years'))fail('Privacy v6 question-report disclosure is incomplete');
@@ -890,10 +892,11 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  if(!inv.question_report_inbox||inv.question_report_inbox.stored_account_identifier!==false)fail('Question-report data inventory is incomplete');
  for(const token of ['Account access, suspension, and termination','suspended or re-granted'])if(!terms.includes(token))fail('Terms v6 account-access disclosure missing '+token);
  for(const token of ['snar_guest_heartbeat','snar_account_access_status','adminStatus','adminRpc','guestSessionId','accountAccess'])if(!cloud.includes(token))fail('Admin/guest client contract missing '+token);
- for(const token of ['data-admin-dashboard-content','data-admin-stats','data-admin-accounts','data-admin-delete-account','Question intelligence','Privacy & compliance','Guests active ~15m','CAT users'])if(!adminPanel.includes(token))fail('Admin dashboard contract missing '+token);
+ for(const token of ['admin-workspace','data-admin-view','data-admin-view-host','data-user-search','data-user-filter','data-delete','Question Reports','Question Analytics','Privacy & System','Needs attention','CAT users'])if(!adminPanel.includes(token))fail('Admin workspace contract missing '+token);
  for(const token of ['data-admin-entry','data-admin-open','openAdminDashboard','adminStatus()',"loadScript('admin-dashboard.js')"])if(!core.includes(token))fail('Admin dashboard account gate missing '+token);
  if(core.includes('data-admin-host'))fail('Admin controls are still embedded in the account dashboard');
  const adminDashboard=read('equipment/assets/admin-dashboard.js');for(const token of ['mbu-admin-dashboard','data-admin-dashboard-host','adminStatus()',"loadScript('admin-panel.js')",'Admin access required'])if(!adminDashboard.includes(token))fail('Private admin dashboard shell missing '+token);
+ for(const token of ['data-admin-view-select','admin-mobile-nav'])if(!adminPanel.includes(token))fail('Responsive admin navigation missing '+token);
  if(!studio.includes("status.accessStatus==='active'"))fail('Adaptive Mode does not enforce active account access');
  const suspensionMigration=read('supabase/migrations/20260927124435_enforce_account_suspension_server_side.sql');
  const syncPolicyFix=read('supabase/migrations/20260927131743_fix_account_access_policy_permissions.sql');
@@ -1007,7 +1010,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
 // Phase 3 question analytics must stay admin-only and lazy-loaded.
 {
  const admin=read('equipment/assets/admin-panel.js'),qa=read('equipment/assets/admin-question-analytics.js'),migration=read('supabase/migrations/20260927231413_add_admin_question_analytics.sql'),modeMigration=read('supabase/migrations/20260927231918_add_admin_mode_analytics.sql'),trendMigration=read('supabase/migrations/20260927232519_add_admin_usage_trend.sql');
- for(const token of ['data-admin-analytics-load','admin-question-analytics.js'])if(!admin.includes(token))fail('Admin question analytics launcher missing '+token);
+ for(const token of ["view==='analytics'","loadScript('admin-question-analytics.js')",'data-analytics-host'])if(!admin.includes(token))fail('Admin question analytics workspace missing '+token);
  for(const token of ['question-content-review.json','Content review groups',"filter==='content'",'contentReview'])if(!read('equipment/assets/admin-question-analytics.js').includes(token))fail('Unified Phase 3 review queue missing '+token);
  for(const token of ['snar_admin_question_analytics','snar_admin_mode_analytics','snar_admin_usage_trend','p_limit:2000','p_review_only:false','reports/question-content-review.json','Content review groups','MBUQuestionSearch','Needs review','Open exact question','First-attempt usage by mode','Recent first-attempt activity'])if(!qa.includes(token))fail('Question analytics module missing '+token);
  for(const token of ['private.snar_is_admin(auth.uid())','security definer',"set search_path=''","revoke all on function public.snar_admin_question_analytics(integer,boolean) from public,anon",'grant execute on function public.snar_admin_question_analytics(integer,boolean) to authenticated'])if(!migration.includes(token))fail('Question analytics migration security contract missing '+token);

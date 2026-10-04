@@ -164,7 +164,7 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
     <section class="studio-section">
       <div class="studio-section__head"><div><h2>Progress</h2><p>Your recent performance and review workload.</p></div></div>
       <div class="studio-secondary-grid">
-        <div class="studio-analytics-card"><div id="analyticsSummary" class="studio-analytics-summary"></div><div id="analytics"></div></div>
+        <div class="studio-analytics-card"><div id="analyticsSummary" class="studio-analytics-summary"></div><details class="analytics-group" open><summary>Question Coverage</summary><div id="coverageProgress"><div class="mut">Loading account coverage…</div></div><div style="margin:12px 0 4px"><button class="btn out tiny" id="resetCoverageBtn" type="button" onclick="resetStudioCoverage()" disabled>Start New Coverage Cycle</button></div><div class="mut">Restarts question rotation only. Scores, mastery, missed questions, and analytics are kept.</div></details><div id="analytics"></div></div>
         <aside class="studio-report-card"><h3>Question Reports</h3><div class="mut" id="reportN"></div><button class="btn out" onclick="showReports()">View Reports</button></aside>
       </div>
     </section>

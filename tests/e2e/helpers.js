@@ -7,6 +7,9 @@ async function clearAppState(page) {
   await page.route(cloud+'/rest/v1/rpc/snar_guest_heartbeat', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
   await page.route(cloud+'/rest/v1/rpc/snar_has_current_legal_acceptance', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
   await page.route(cloud+'/rest/v1/rpc/snar_account_access_status', route => route.fulfill({ status:200, contentType:'application/json', body:'"active"' }));
+  await page.route(cloud+'/rest/v1/mbu_question_exposure*', route => route.fulfill({ status:200, contentType:'application/json', body:'[]' }));
+  await page.route(cloud+'/rest/v1/rpc/mbu_record_question_session', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
+  await page.route(cloud+'/rest/v1/rpc/mbu_mark_question_lifecycle', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
   await page.addInitScript(() => {
     if(sessionStorage.getItem('mbu_e2e_initialized')==='1')return;
     localStorage.clear();sessionStorage.clear();
@@ -37,6 +40,9 @@ async function seedSignedIn(page,email='e2e@example.com') {
   await page.route(cloud+'/rest/v1/rpc/snar_account_access_status', route => route.fulfill({status:200,contentType:'application/json',body:'"active"'}));
   await page.route(cloud+'/rest/v1/rpc/snar_admin_status', route => route.fulfill({ status:200, contentType:'application/json', body:JSON.stringify({is_admin:false,role:null}) }));
   await page.route(cloud+'/rest/v1/mbu_item_calibration?*', route => route.fulfill({ status:200, contentType:'application/json', body:'[]' }));
+  await page.route(cloud+'/rest/v1/mbu_question_exposure*', route => route.fulfill({ status:200, contentType:'application/json', body:'[]' }));
+  await page.route(cloud+'/rest/v1/rpc/mbu_record_question_session', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
+  await page.route(cloud+'/rest/v1/rpc/mbu_mark_question_lifecycle', route => route.fulfill({ status:200, contentType:'application/json', body:'true' }));
   await page.addInitScript(email => {
     if(sessionStorage.getItem('mbu_e2e_signed_in_initialized')==='1')return;
     sessionStorage.setItem('mbu_e2e_signed_in_initialized','1');

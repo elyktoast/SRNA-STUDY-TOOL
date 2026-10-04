@@ -130,9 +130,9 @@ function modalFocusable(modal){return [...modal.querySelectorAll('button:not([di
 function trapModalKey(e,modal,close){
 if(e.key==='Escape'){close();return}
 if(e.key!=='Tab')return;
-const f=modalFocusable(modal);if(!f.length)return;const first=f[0],last=f[f.length-1];
-if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
-else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+const f=modalFocusable(modal);if(!f.length)return;const first=f[0],last=f[f.length-1],active=document.activeElement,inside=modal.contains(active);
+if(e.shiftKey&&(!inside||active===first)){e.preventDefault();last.focus()}
+else if(!e.shiftKey&&(!inside||active===last)){e.preventDefault();first.focus()}
 }
 function closeTools(){const modal=$('mbu-app-tools');if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true');B.classList.remove('mbu-modal-open');toolsReturnFocus?.focus?.();toolsReturnFocus=null}
 function closeAccount(){const modal=$('mbu-account-panel');if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true');B.classList.remove('mbu-modal-open');toolsReturnFocus?.focus?.();toolsReturnFocus=null}

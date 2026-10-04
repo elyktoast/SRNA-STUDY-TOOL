@@ -27,7 +27,7 @@ expires_in:Number(p.get('expires_in')||3600),
 expires_at:Number(p.get('expires_at')||0)
 });
 if(!s)return null;
-s=await hydrateUser(s);saveSession(s);recoveryMode=p.get('type')==='recovery';
+s=await hydrateUser(s);if(!s?.user?.id)throw Error('Could not verify the signed-in account.');recoveryMode=p.get('type')==='recovery';
 history.replaceState(null,'',location.pathname+location.search);
 emit(recoveryMode?'password-recovery':'signed-in',{email:s.user?.email||''});
 return s
@@ -117,11 +117,10 @@ const acceptedAt=new Date().toISOString();emit('signing-up');const data=await ra
 if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return{session:s,confirmationRequired:false}}if(!await refreshLegalAcceptance())await acceptCurrentLegal(true);else{await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync()}else emit('access-suspended',{email:s.user?.email||email})}return{session:s,confirmationRequired:false}}
 emit('confirmation-required',{email:String(email||'').trim()});return{session:null,confirmationRequired:true}
 }
-function resetCloudSession(){stopAutoSync();saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}
-async function signOut(){
-const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active')try{await fullSync()}catch{}
+function resetCloudSession(){stopAutoSync();clearTimeout(timer);timer=0;syncQueued=false;saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
+const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect');try{await fullSync()}catch{throw Error('Sync failed')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
-resetCloudSession()
+await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
 async function resendConfirmation(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/resend?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{type:'signup',email:value}});emit('confirmation-required',{email:value});return true}
 async function requestPasswordReset(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:value}});emit('recovery-sent',{email:value});return true}
@@ -261,19 +260,30 @@ function startAutoSync(){
 stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')return;
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
+async function questionExposure(courseId,examId){
+requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Coverage offline');
+const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
+return await api(query)
+}
+async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!x?.sessionId)return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event,p_session_id:x.sessionId}})===true}
+async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
+async function recordQuestionSession(x){
+requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');if(!navigator.onLine)throw Error('Coverage needs a connection.');
+return await api('/rest/v1/rpc/mbu_record_question_session',{method:'POST',body:{p_session_id:x.sessionId,p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_mode:String(x.mode||'custom'),p_items:x.items,p_new_count:Number(x.newCount)||0,p_review_count:Number(x.reviewCount)||0}})===true
+}
 async function adminStatus(){const s=await validSession();if(!s?.access_token||legalAccepted!==true)return{is_admin:false,role:null};return await api('/rest/v1/rpc/snar_admin_status',{method:'POST',body:{}})}
 function status(){const s=session();return{signedIn:!!s?.access_token,email:s?.user?.email||'',state:lastState,lastSyncAt,user:s?.user||null,recoveryMode,legalAccepted,accessStatus:accountAccess,termsVersion:LEGAL_TERMS_VERSION,privacyVersion:LEGAL_PRIVACY_VERSION,autoSyncIntervalMs:AUTO_SYNC_INTERVAL,nextAutoSyncAt:s?.access_token&&legalAccepted===true&&accountAccess==='active'?(lastSyncAt||Date.now())+AUTO_SYNC_INTERVAL:0}}
 window.addEventListener('focus',()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&Date.now()-lastSyncAt>120000)fullSync().catch(()=>{})});
 window.addEventListener('online',()=>{if(session()&&legalAccepted===true&&accountAccess==='active')fullSync().catch(()=>{})});
 async function handleAuthRedirect(){
 const redirected=await consumeAuthRedirect();if(!redirected)return false;
-const switched=await prepareLocalOwner(redirected.user?.id);if(switched)emit('local-owner-changed',{email:redirected.user?.email||''})
+const switched=await prepareLocalOwner(redirected.user.id);saveSession(redirected);if(switched)emit('local-owner-changed',{email:redirected.user?.email||''})
 if(!recoveryMode&&!await refreshLegalAcceptance()){emit('legal-required',{email:redirected.user?.email||''});return true}
 await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:redirected.user?.email||''});return true}
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){

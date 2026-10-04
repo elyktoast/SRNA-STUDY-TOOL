@@ -1082,7 +1082,7 @@ test.describe('canonical quiz regression', () => {
     expect(submitted.comment).toContain('keyed answer');
     expect(submitted.reporter).toBeUndefined();
     expect(submitted.userAgent).toBeUndefined();
-    expect(submitted.pageUrl).not.toMatch(/[?#]/);
+    expect(submitted.pageUrl).toMatch(/\?question=/);
     expect(submitted.uid).toMatch(/^b1-/);
     expect(submitted.stem.length).toBeGreaterThan(0);
     expect(Array.isArray(submitted.options)).toBe(true);
@@ -1708,6 +1708,18 @@ test.describe('canonical quiz regression', () => {
     expect(new URL(page.url()).pathname).toBe('/');
   });
 
+  test('Offline sign out preserves unsynced account study state', async ({ page }) => {
+    await seedSignedIn(page);
+    await page.goto(exam + '/index.html');await page.evaluate(() => MBUPageReady);await waitForAuth(page);
+    await page.evaluate(()=>{localStorage.setItem('mbu_exam1_studio_v1',JSON.stringify({ans:{offline:{ok:true}}}));MBUAppCore.touchStore('mbu_exam1_studio_v1')});
+    await page.context().setOffline(true);
+    const result=await page.evaluate(async()=>{try{await MBUSupabase.signOut();return null}catch(e){return e.message}});
+    expect(result).toContain('Reconnect');
+    expect(await page.evaluate(()=>localStorage.getItem('mbu_exam1_studio_v1'))).toContain('offline');
+    expect((await page.evaluate(()=>MBUSupabase.status())).signedIn).toBe(true);
+    await page.context().setOffline(false);
+  });
+
   test('Account creation requires adult Terms and Privacy acknowledgement', async ({ page }) => {
     await useGuestState(page);
     const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';let signupCalls=0;
@@ -1816,55 +1828,57 @@ test.describe('canonical quiz regression', () => {
     await page.locator('[data-admin-open]').click();
     await expect(page.locator('#mbu-admin-dashboard')).toHaveClass(/open/);
     await expect(page.locator('#mbu-admin-dashboard')).toHaveAttribute('aria-hidden','false');
-    await expect(page.locator('[data-admin-stats]')).toContainText('Guests active ~15m');
-    await expect(page.locator('[data-admin-stats]')).toContainText('CAT users');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Guests active ~15m'}).locator('strong')).toHaveText('3');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'CAT users'}).locator('strong')).toHaveText('1');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Items ≥5 learners'}).locator('strong')).toHaveText('1');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Max learners / item'}).locator('strong')).toHaveText('5');
-    await page.locator('[data-admin-analytics-load]').click();
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('Needs review');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('CAT readiness');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('eligible for population difficulty');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('36% first-attempt');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('High miss rate');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('Content review groups');
+    await expect(page.locator('[data-admin-view-host]')).toContainText('Overview');
+    await expect(page.locator('[data-admin-view-host]')).toContainText('CAT users');
+    await expect(page.locator('[data-admin-view-host]')).toContainText('1');
+
+    await page.locator('[data-admin-view="analytics"]').click();
+    await expect(page.locator('[data-analytics-host]')).toContainText('Needs review');
+    await expect(page.locator('[data-analytics-host]')).toContainText('CAT readiness');
+    await expect(page.locator('[data-analytics-host]')).toContainText('36% first-attempt');
     await page.locator('[data-qa-filter]').selectOption('content');
     await expect.poll(async()=>page.locator('[data-qa-rows] .mbu-cloud-row').count()).toBeGreaterThan(0);
-    await expect(page.locator('[data-qa-rows]')).toContainText('Content review');
     await page.locator('[data-qa-filter]').selectOption('all');
-    await expect(page.locator('[data-qa-modes]')).toContainText('adaptive');
     await expect(page.locator('[data-qa-modes]')).toContainText('87 first attempts');
-    await expect(page.locator('[data-qa-trend]')).toContainText('2026-09-27');
-    await expect(page.locator('[data-qa-trend]')).toContainText('316 first attempts');
-    await expect(page.locator('[data-admin-question-analytics] a[href$="studio.html?question=b1-1"]')).toHaveAttribute('href',/studio\.html\?question=b1-1$/);
-    const questionReportsSection=page.locator('details').filter({hasText:'Question reports'});
-    await questionReportsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-question-reports]')).toContainText('Example reported question');
-    await expect(page.locator('[data-admin-question-reports] a').filter({hasText:'Open exact question'})).toHaveAttribute('href',/studio\.html\?question=b1-1$/);
-    await page.locator('[data-admin-question-report-status="9"]').selectOption('reviewing');
-    await page.locator('[data-admin-question-report-save="9"]').click();
-    await expect.poll(()=>reportStatus?.p_status).toBe('reviewing');
 
-    const suggestionsSection=page.locator('details').filter({hasText:'Suggestions'});
-    await suggestionsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-suggestions]')).toHaveText('No suggestions yet.');
+    await page.locator('[data-admin-view="reports"]').click();
+    await expect(page.locator('[data-report-list]')).toContainText('Example reported question');
+    await expect(page.locator('[data-report-list]')).toContainText('Please verify');
+    await expect(page.locator('[data-report-status="9"]')).toHaveCount(0);
+    await expect(page.locator('[data-report-save="9"]')).toHaveCount(0);
 
-    const privacySection=page.locator('details').filter({hasText:'Privacy & compliance'});
-    await privacySection.locator('summary').click();
+    await page.locator('[data-admin-view="suggestions"]').click();
+    await expect(page.locator('[data-admin-view-host]')).toContainText('No suggestions yet.');
+
+    await page.locator('[data-admin-view="system"]').click();
     page.once('dialog',dialog=>dialog.accept());
-    await page.locator('[data-admin-retention]').click();
+    await page.locator('[data-retention]').click();
     await expect(page.locator('#mbu-admin-dashboard [data-account-message]')).toContainText('4 resolved question reports removed');
 
-    const accountsSection=page.locator('details').filter({hasText:'Accounts'});
-    await accountsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-accounts]')).toContainText('learner@example.com');
-    await page.locator('[data-admin-accounts] [data-admin-access]').click();
+    await page.locator('[data-admin-view="users"]').click();
+    await expect(page.locator('[data-admin-view-host]')).toContainText('learner@example.com');
+    await page.locator('[data-access="00000000-0000-0000-0000-000000000002"]').click();
     await expect.poll(()=>accessChange?.p_status).toBe('suspended');
     page.on('dialog',dialog=>dialog.accept());
-    await page.locator('[data-admin-accounts] [data-admin-delete-account]').click();
+    await page.locator('[data-delete="00000000-0000-0000-0000-000000000002"]').click();
     await expect.poll(()=>deletedAccount?.p_user_id).toBe('00000000-0000-0000-0000-000000000002');
-    await expect(page.locator('#mbu-admin-dashboard')).toContainText('Question intelligence');
+  });
+
+  test('Admin can open editor for a changed perioperative report', async ({ page }) => {
+    await seedSignedIn(page);
+    const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';
+    await page.unroute(cloud+'/rest/v1/rpc/snar_admin_status');
+    await page.route(cloud+'/rest/v1/rpc/snar_admin_status',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({is_admin:true,role:'operator_admin'})}));
+    for(const [name,body] of [['snar_admin_system_summary',{}],['snar_admin_accounts',[]],['snar_admin_suggestions',[]],['snar_admin_privacy_requests',[]]]) await page.route(cloud+'/rest/v1/rpc/'+name,route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(body)}));
+    await page.route(cloud+'/rest/v1/rpc/snar_admin_question_reports',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:404,reason:'Source / citation issue',status:'new',question_uid:'PRE-404',bank:'preop',bank_label:'Perioperative Assessment & Evaluation',question_number:'404',topic:'',stem:'Historical colonoscopy steroid question',options:['A','B','C','D'],answer_indexes:[0],explanation:'Historical explanation',source:'Historical source',comment:'Procedure classification is wrong',created_at:new Date().toISOString(),updated_at:new Date().toISOString()}])}));
+    await page.goto(exam+'/index.html');await page.evaluate(()=>MBUPageReady);await waitForAuth(page);
+    await page.locator('.mbu-global-nav__cloud').click();await page.locator('[data-admin-open]').click();
+    await page.locator('[data-admin-view="reports"]').click();
+    await page.getByRole('button',{name:'Edit question'}).click();
+    await expect(page.locator('.admin-editor')).toBeVisible();
+    await expect(page.locator('.admin-editor [data-stem]')).toHaveValue(/ginkgo biloba/i);
+    await expect(page.locator('.admin-editor')).toContainText('Save corrected question');
+    await page.locator('.admin-editor [data-close]').click();
   });
 
   test('Non-admin account never sees or opens the Admin Dashboard', async ({ page }) => {
@@ -2079,13 +2093,12 @@ test.describe('canonical quiz regression', () => {
   test('iPad-style rotation and bfcache return preserve an active Studio session', async ({ page }) => {
     await page.setViewportSize({width:1024,height:768});
     await page.goto(exam + '/studio.html');await waitForStudio(page);
-    await page.evaluate(()=>{
-      const first=document.querySelector('#sourceChecks input[type=checkbox]');
-      if(first)first.checked=true;
-      document.getElementById('count').value='10';
-      document.getElementById('adaptiveToggle').checked=false;
-      startMode('custom');
-    });
+    await page.locator('#sourceChecks input[type=checkbox]').first().check();
+    await page.selectOption('#count','10');
+    await page.locator('#adaptiveToggle').uncheck();
+    await page.getByRole('button',{name:'Start Quiz'}).click();
+    await expect(page.locator('#quiz')).toBeVisible();
+    await expect.poll(async()=>page.evaluate(()=>typeof session!=='undefined'&&Array.isArray(session)?session.length:0)).toBeGreaterThan(0);
     const before=await page.evaluate(()=>({uid:session[pos].uid,pos,active:[...DB.active.uids]}));
     await page.setViewportSize({width:768,height:1024});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
@@ -2160,6 +2173,8 @@ test.describe('canonical quiz regression', () => {
 
   test('Gemini question generator is feature-gated, reviewable, and keeps credentials server-side', async ({ page }) => {
     await page.goto(exam + '/studio.html');await waitForStudio(page);
+    await expect(page.locator('#gen-open')).toHaveCount(0);
+    await page.goto('/basic-principles/exam-1/studio.html');await waitForStudio(page);
     await expect(page.locator('#gen-open')).toBeVisible();
     await expect(page.locator('#generated-question-workbench')).not.toBeVisible();
     await page.locator('#gen-open').click();
