@@ -34,6 +34,7 @@ const budgets={
   'equipment/assets/quiz-engine.js':30000,
   'equipment/assets/studio-page.js':30000,
   'equipment/assets/studio-runtime.js':30000,
+  'equipment/assets/studio-tools.js':5000,
   'equipment/assets/studio-loader.js':2500,
   'equipment/assets/question-generator.js':10000,
   'equipment/assets/question-generator-ui.js':8000,
@@ -69,7 +70,7 @@ for(const p of appPages){
   if(/[?&]v=\d+/.test(src))fail(p+': manual cache revision returned');
 }
 
-const studio=read('equipment/assets/studio-page.js')+'\n'+read('equipment/assets/studio-runtime.js'),generator=read('equipment/assets/question-generator.js');
+const studio=['studio-page.js','studio-runtime.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n'),generator=read('equipment/assets/question-generator.js');
 if(studio.includes('ALL.find('))fail('Studio: O(n) UID lookup returned');
 if(studio.includes('bank3-images.js')||studio.includes('combined-images.js')||studio.includes('hazards-images.json'))fail('Studio: monolithic image bundle reference returned');
 for(const token of ['registerProvider','generate','approveDraft','validateQuestion','studioQuestions'])if(!generator.includes(token))fail('Question generator framework missing '+token);
