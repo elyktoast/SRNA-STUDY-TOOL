@@ -38,7 +38,7 @@ test.describe('canonical quiz regression', () => {
     expect(after?.ok).toBe(true);expect(after?.matching).toEqual(before.matching);
     await page.evaluate(()=>resumeActive());
     await expect(page.locator('#opts .mbu-match-select').first()).toBeDisabled();
-    await expect(page.locator('#feedback')).toBeVisible();
+    await expect(page.locator('#fb')).toBeVisible();
   });
 
   test('Studio persists normalized legacy keys and removes false flag entries', async ({ page }) => {
