@@ -21,11 +21,9 @@ function resumeActive(){
 const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();const qs=active.uids.map(id=>ALL_BY_UID.get(id)).filter(Boolean);if(qs.length!==active.uids.length){renderHome();return}
 session=qs;pos=Math.min(active.pos||0,session.length-1);showQ()
 }
+function endActiveQuiz(){if(!DB.active)return;clearActive();session=[];pos=0;renderHome()}
 function activeButton(){
-let old=byId('resumeActive');if(old)old.remove();if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;const missing=DB.active.uids.some(id=>!ALL_BY_UID.has(id));if(missing&&studioHasFailedSource()){
-const host=byId('home'),b=document.createElement('button'),anchor=byId('studioQuickModes');b.id='resumeActive';b.className='btn';b.disabled=true;b.textContent='⏸ Resume Active Quiz · retry failed source first';anchor?.parentNode?.insertBefore(b,anchor);return
-}
-const active=reconcileActiveState();if(!active)return;const host=byId('home'),b=document.createElement('button'),anchor=byId('studioQuickModes');b.id='resumeActive';b.className='btn';b.textContent='▶ Resume Active Quiz · Question '+(active.pos+1)+' / '+active.uids.length;b.onclick=resumeActive;anchor?.parentNode?.insertBefore(b,anchor)
+let old=byId('resumeActiveRow');if(old)old.remove();if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;const missing=DB.active.uids.some(id=>!ALL_BY_UID.has(id)),anchor=byId('studioQuickModes'),row=document.createElement('div'),b=document.createElement('button'),end=document.createElement('button');row.id='resumeActiveRow';row.className='resume-active-row';b.id='resumeActive';b.className='btn resume-active-main';end.id='endActiveQuiz';end.className='btn out resume-active-end';end.textContent='End Quiz';end.setAttribute('aria-label','End active quiz');end.onclick=endActiveQuiz;if(missing&&studioHasFailedSource()){b.disabled=true;b.textContent='⏸ Resume Active Quiz · retry failed source first'}else{const active=reconcileActiveState();if(!active)return;b.textContent='▶ Resume Active Quiz · Question '+(active.pos+1)+' / '+active.uids.length;b.onclick=resumeActive}row.append(b,end);anchor?.parentNode?.insertBefore(row,anchor)
 }
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));async function studioFetch(url){const requestUrl=new URL(url,location.href);if(url!=='banks.json'&&window.MBU_BUILD_ID)requestUrl.searchParams.set('b',window.MBU_BUILD_ID);return window.MBUBuild.fetchJSON(requestUrl,{cache:url==='banks.json'?'no-store':'force-cache',timeout:12000})}
 function showLoadErrors(errors){
