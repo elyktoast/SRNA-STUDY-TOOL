@@ -43,6 +43,19 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('#fb')).toBeVisible();
   });
 
+  test('active quiz can be ended without erasing recorded answer history', async ({ page }) => {
+    await useGuestState(page);
+    await page.goto('/pharm/clinical-pharm/studio.html');
+    await waitForStudio(page);
+    await page.evaluate(()=>{const q=ALL[0];DB.active={uids:[q.uid],pos:0,answers:{[q.uid]:{ok:true,selected:[q.ans[0]],at:Date.now()}},mode:'custom',updated:Date.now()};DB.agg={answered:1,correct:1};save();renderHome()});
+    await expect(page.locator('#resumeActive')).toBeVisible();
+    await expect(page.locator('#endActiveQuiz')).toBeVisible();
+    await page.locator('#endActiveQuiz').click();
+    await expect(page.locator('#resumeActiveRow')).toHaveCount(0);
+    expect(await page.evaluate(()=>DB.active)).toBeNull();
+    expect(await page.evaluate(()=>DB.agg)).toEqual({answered:1,correct:1});
+  });
+
   test('Clinical Pharm exposes 17 topics and defaults an empty filter to all topics', async ({ page }) => {
     await useGuestState(page);
     await page.goto('/pharm/clinical-pharm/studio.html');
