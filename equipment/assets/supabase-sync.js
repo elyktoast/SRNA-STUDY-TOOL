@@ -118,7 +118,7 @@ if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGues
 emit('confirmation-required',{email:String(email||'').trim()});return{session:null,confirmationRequired:true}
 }
 function resetCloudSession(){stopAutoSync();clearTimeout(timer);timer=null;syncQueued=false;saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
-const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect to logout');try{await fullSync()}catch{throw Error('Sync failed. Retry')}}
+const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect to log out');try{await fullSync()}catch{throw Error('Sync failed')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
 await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
@@ -265,7 +265,7 @@ requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
-async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!x?.sessionId||!x.event)return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event,p_session_id:x.sessionId}})===true}
+async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!x?.sessionId)return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event,p_session_id:x.sessionId}})===true}
 async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
 async function recordQuestionSession(x){
 requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');if(!navigator.onLine)throw Error('Coverage needs a connection.');
