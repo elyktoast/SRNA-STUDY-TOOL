@@ -266,6 +266,8 @@ requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
+async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!['viewed','answered'].includes(x.event))return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event}})===true}
+async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
 async function recordQuestionSession(x){
 requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');
 return await api('/rest/v1/rpc/mbu_record_question_session',{method:'POST',body:{p_session_id:x.sessionId,p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_mode:String(x.mode||'custom'),p_items:x.items,p_new_count:Number(x.newCount)||0,p_review_count:Number(x.reviewCount)||0}})===true
@@ -282,7 +284,7 @@ await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){
