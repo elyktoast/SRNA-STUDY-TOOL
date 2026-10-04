@@ -2,7 +2,7 @@
 const cfg=window.MBU_SUPABASE_CONFIG||{},sync=window.MBUSync,SESSION_KEY='mbu_supabase_session_v1',OWNER_KEY='mbu_cloud_local_owner_v1',META_KEY='mbu_sync_meta_v1',STATUS_EVENT='mbu:supabase-status',script=document.currentScript,APP_ROOT=new URL('../../',script?.src||location.href).href;
 if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Supabase sync is not configured');return}
 const base=cfg.url.replace(/\/$/,''),REQUEST_TIMEOUT=10000,AUTO_SYNC_INTERVAL=5*60*1000,LEGAL_VERSION='2026-09-27-v6',LEGAL_TERMS_VERSION=LEGAL_VERSION,LEGAL_PRIVACY_VERSION=LEGAL_VERSION;
-let syncing=false,syncQueued=false,lastSyncAt=0,lastState='signed-out',remoteByKey=new Map(),calibrationByKey=new Map(),calibrationFetchedAt=0,timer=null,autoSyncTimer=null,guestTimer=null,recoveryMode=false,legalAccepted=null,accountAccess='signed_out';
+let syncing=false,syncQueued=false,lastSyncAt=0,lastState='signed-out',remoteByKey=new Map(),calibrationByKey=new Map(),calibrationFetchedAt=0,timer=null,autoSyncTimer=null,guestTimer=null,presenceTimer=null,recoveryMode=false,legalAccepted=null,accountAccess='signed_out';
 const safeJSON=(raw,fallback=null)=>{try{return JSON.parse(raw)}catch{return fallback}};
 const session=()=>safeJSON(localStorage.getItem(SESSION_KEY));
 async function clearTrackedLocalData(){for(const key of Object.keys((await sync.exportSnapshot()).stores||{}))localStorage.removeItem(key);localStorage.removeItem(META_KEY)}
@@ -89,6 +89,9 @@ if(session())return false;
 try{return await raw('/rest/v1/rpc/snar_guest_heartbeat',{method:'POST',body:{p_session_id:guestSessionId()}})===true}catch{return false}
 }
 function stopGuestHeartbeat(){if(guestTimer){clearInterval(guestTimer);guestTimer=null}}
+async function userHeartbeat(){if(!session()||legalAccepted!==true||accountAccess!=='active'||navigator.onLine===false)return false;try{return await api('/rest/v1/rpc/snar_user_heartbeat',{method:'POST',body:{}})===true}catch{return false}}
+function stopUserHeartbeat(){if(presenceTimer){clearInterval(presenceTimer);presenceTimer=null}}
+function startUserHeartbeat(){stopUserHeartbeat();if(!session()||legalAccepted!==true||accountAccess!=='active')return;userHeartbeat().catch(()=>{});presenceTimer=setInterval(()=>userHeartbeat().catch(()=>{}),2*60*1000)}
 function startGuestHeartbeat(){
 stopGuestHeartbeat();if(session())return;
 guestHeartbeat().catch(()=>{});
@@ -117,7 +120,7 @@ const acceptedAt=new Date().toISOString();emit('signing-up');const data=await ra
 if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return{session:s,confirmationRequired:false}}if(!await refreshLegalAcceptance())await acceptCurrentLegal(true);else{await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync()}else emit('access-suspended',{email:s.user?.email||email})}return{session:s,confirmationRequired:false}}
 emit('confirmation-required',{email:String(email||'').trim()});return{session:null,confirmationRequired:true}
 }
-function resetCloudSession(){stopAutoSync();clearTimeout(timer);timer=0;syncQueued=false;saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
+function resetCloudSession(){stopAutoSync();stopUserHeartbeat();clearTimeout(timer);timer=0;syncQueued=false;saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
 const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect');try{await fullSync()}catch{throw Error('Sync failed')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
 await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
@@ -258,6 +261,7 @@ function scheduleSync(delay=1500){if(!session()||legalAccepted!==true||accountAc
 function stopAutoSync(){if(autoSyncTimer){clearInterval(autoSyncTimer);autoSyncTimer=null}}
 function startAutoSync(){
 stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')return;
+startUserHeartbeat();
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
 async function questionExposure(courseId,examId){
@@ -273,7 +277,7 @@ return await api('/rest/v1/rpc/mbu_record_question_session',{method:'POST',body:
 }
 async function adminStatus(){const s=await validSession();if(!s?.access_token||legalAccepted!==true)return{is_admin:false,role:null};return await api('/rest/v1/rpc/snar_admin_status',{method:'POST',body:{}})}
 function status(){const s=session();return{signedIn:!!s?.access_token,email:s?.user?.email||'',state:lastState,lastSyncAt,user:s?.user||null,recoveryMode,legalAccepted,accessStatus:accountAccess,termsVersion:LEGAL_TERMS_VERSION,privacyVersion:LEGAL_PRIVACY_VERSION,autoSyncIntervalMs:AUTO_SYNC_INTERVAL,nextAutoSyncAt:s?.access_token&&legalAccepted===true&&accountAccess==='active'?(lastSyncAt||Date.now())+AUTO_SYNC_INTERVAL:0}}
-window.addEventListener('focus',()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&Date.now()-lastSyncAt>120000)fullSync().catch(()=>{})});
+window.addEventListener('focus',()=>{if(session()&&legalAccepted===true&&accountAccess==='active'){userHeartbeat().catch(()=>{});if(Date.now()-lastSyncAt>120000)fullSync().catch(()=>{})}});
 window.addEventListener('online',()=>{if(session()&&legalAccepted===true&&accountAccess==='active')fullSync().catch(()=>{})});
 async function handleAuthRedirect(){
 const redirected=await consumeAuthRedirect();if(!redirected)return false;
