@@ -1714,7 +1714,7 @@ test.describe('canonical quiz regression', () => {
     await page.evaluate(()=>{localStorage.setItem('mbu_exam1_studio_v1',JSON.stringify({ans:{offline:{ok:true}}}));MBUAppCore.touchStore('mbu_exam1_studio_v1')});
     await page.context().setOffline(true);
     const result=await page.evaluate(async()=>{try{await MBUSupabase.signOut();return null}catch(e){return e.message}});
-    expect(result).toContain('Reconnect to logout');
+    expect(result).toContain('Reconnect to log out');
     expect(await page.evaluate(()=>localStorage.getItem('mbu_exam1_studio_v1'))).toContain('offline');
     expect((await page.evaluate(()=>MBUSupabase.status())).signedIn).toBe(true);
     await page.context().setOffline(false);
