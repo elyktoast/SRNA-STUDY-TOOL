@@ -894,7 +894,8 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  for(const token of ['data-admin-entry','data-admin-open','openAdminDashboard','adminStatus()',"loadScript('admin-dashboard.js')"])if(!core.includes(token))fail('Admin dashboard account gate missing '+token);
  if(core.includes('data-admin-host'))fail('Admin controls are still embedded in the account dashboard');
  const adminDashboard=read('equipment/assets/admin-dashboard.js');for(const token of ['mbu-admin-dashboard','data-admin-dashboard-host','adminStatus()',"loadScript('admin-panel.js')",'Admin access required'])if(!adminDashboard.includes(token))fail('Private admin dashboard shell missing '+token);
- for(const token of ['data-admin-view-select','admin-mobile-nav'])if(!adminPanel.includes(token))fail('Responsive admin navigation missing '+token);\n if(!studio.includes("status.accessStatus==='active'"))fail('Adaptive Mode does not enforce active account access');
+ for(const token of ['data-admin-view-select','admin-mobile-nav'])if(!adminPanel.includes(token))fail('Responsive admin navigation missing '+token);
+ if(!studio.includes("status.accessStatus==='active'"))fail('Adaptive Mode does not enforce active account access');
  const suspensionMigration=read('supabase/migrations/20260927124435_enforce_account_suspension_server_side.sql');
  const syncPolicyFix=read('supabase/migrations/20260927131743_fix_account_access_policy_permissions.sql');
  const syncWriteFix=read('supabase/migrations/20260927131123_fix_sync_write_access_status_wrapper.sql');
