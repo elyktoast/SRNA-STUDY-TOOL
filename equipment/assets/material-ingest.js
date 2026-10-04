@@ -14,6 +14,7 @@ async function extractPdf(file,onProgress){const p=await pdfjs(),doc=await p.get
   if(text)parts.push(`--- Page ${i} (${method}) ---\n${text}`);
  }
  return{text:clean(parts.join('\n\n')),detail:`${doc.numPages} PDF page${doc.numPages===1?'':'s'} read; OCR used on ${ocrPages}.`}}
+async function extractDocx(file,onProgress){const Z=await jszip(),zip=await Z.loadAsync(file),parts=[];for(const name of ['word/document.xml','word/footnotes.xml','word/endnotes.xml']){const entry=zip.file(name);if(!entry)continue;onProgress?.({stage:'reading',label:name.replace('word/',''),progress:0});const xml=await entry.async('text'),doc=new DOMParser().parseFromString(xml,'application/xml'),paras=[...doc.getElementsByTagNameNS('*','p')].map(p=>clean([...p.getElementsByTagNameNS('*','t')].map(n=>n.textContent||'').join(' '))).filter(Boolean);if(paras.length)parts.push(paras.join('\n'))}return{text:clean(parts.join('\n\n')),detail:'Word document text read.'}}
 async function extractPptx(file,onProgress){const Z=await jszip(),zip=await Z.loadAsync(file),slides=Object.keys(zip.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>(+a.match(/\d+/)[0])-(+b.match(/\d+/)[0])),parts=[];let imageOcr=0;
  for(let i=0;i<slides.length;i++){onProgress?.({stage:'reading',label:`slide ${i+1} of ${slides.length}`,progress:i/slides.length});const xml=await zip.file(slides[i]).async('text'),doc=new DOMParser().parseFromString(xml,'application/xml'),text=clean([...doc.getElementsByTagNameNS('*','t')].map(n=>n.textContent||'').join(' '));if(text)parts.push(`--- Slide ${i+1} ---\n${text}`)}
  const media=Object.keys(zip.files).filter(n=>/^ppt\/media\/.*\.(png|jpe?g|webp)$/i.test(n)).slice(0,30);
@@ -23,11 +24,12 @@ async function extract(file,onProgress){if(!file)throw Error('Choose a lecture o
  let result;
  if(ext==='pdf'||type==='application/pdf')result=await extractPdf(file,onProgress);
  else if(ext==='pptx')result=await extractPptx(file,onProgress);
+ else if(ext==='docx'||type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document')result=await extractDocx(file,onProgress);
  else if(/^image\//.test(type)||['png','jpg','jpeg','webp'].includes(ext)){result={text:await ocrBlob(file,onProgress,name),detail:'Image processed with OCR.'}}
  else if(['txt','md'].includes(ext)||/^text\//.test(type)){result={text:clean(await file.text()),detail:'Text file read directly.'}}
- else throw Error('Supported uploads: PDF, PPTX, PNG, JPG, WEBP, TXT, and MD.');
+ else throw Error('Supported uploads: PDF, PPTX, DOCX, PNG, JPG, WEBP, TXT, and MD.');
  if(!meaningful(result.text))throw Error('No usable text could be extracted from this file.');
  const original=result.text.length,truncated=original>MAX_CHARS;return{...result,text:result.text.slice(0,MAX_CHARS),sourceName:name,truncated,originalChars:original}
 }
-window.MBUMaterialIngest={extract,maxChars:MAX_CHARS,supported:'.pdf,.pptx,.png,.jpg,.jpeg,.webp,.txt,.md'};
+window.MBUMaterialIngest={extract,maxChars:MAX_CHARS,supported:'.pdf,.pptx,.docx,.png,.jpg,.jpeg,.webp,.txt,.md'};
 })();
