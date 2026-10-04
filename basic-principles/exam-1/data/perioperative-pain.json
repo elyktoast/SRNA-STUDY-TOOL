@@ -133,15 +133,15 @@
       "type": "single",
       "stem": "A patient feels a sharp sting at incision, followed seconds later by a dull, burning ache. Which fibers carry these two sensations?",
       "options": [
-        "Aδ fibers, then C fibers",
-        "C fibers, then Aδ fibers",
-        "Aβ fibers, then Aδ fibers",
-        "Aβ fibers for both"
+        "AÎ´ fibers, then C fibers",
+        "C fibers, then AÎ´ fibers",
+        "AÎ² fibers, then AÎ´ fibers",
+        "AÎ² fibers for both"
       ],
       "answer": [
         0
       ],
-      "explanation": "Thinly myelinated Aδ fibers conduct quickly and carry the sharp, well-localized first pain, while unmyelinated C fibers conduct slowly and carry the dull, burning second pain. Aβ fibers are large myelinated fibers that carry touch and pressure, so they do not carry either sensation of pain.",
+      "explanation": "Thinly myelinated AÎ´ fibers conduct quickly and carry the sharp, well-localized first pain, while unmyelinated C fibers conduct slowly and carry the dull, burning second pain. AÎ² fibers are large myelinated fibers that carry touch and pressure, so they do not carry either sensation of pain.",
       "citation": "",
       "topic": "Pain physiology and definitions",
       "sourceTitle": "Perioperative Pain Management",
@@ -654,7 +654,7 @@
         "NMDA antagonists such as ketamine",
         "Alpha-2 agonists",
         "Benzodiazepines",
-        "α2–δ ligands such as gabapentin"
+        "Î±2âÎ´ ligands such as gabapentin"
       ],
       "answer": [
         2,
@@ -749,7 +749,7 @@
       "type": "single",
       "stem": "A verbal, cognitively intact PACU patient can reliably quantify pain. Which assessment approach provides the strongest standardized measure for serial reassessment?",
       "options": [
-        "A validated 0–10 numeric rating scale",
+        "A validated 0â10 numeric rating scale",
         "A behavioral scale designed for nonverbal patients",
         "Changes in sympathetic vital signs",
         "The clinician's global observation"
@@ -1513,21 +1513,21 @@
       "id": "PAIN-062",
       "set": 1,
       "type": "multi",
-      "stem": "You want a short-acting spinal for an outpatient knee arthroscopy so the patient can walk and void quickly. Which intrathecal local anesthetic doses fit? (Select 3)",
+      "stem": "You want a short-acting spinal anesthetic for an outpatient knee arthroscopy to facilitate early ambulation and voiding. Which of the following low-dose intrathecal regimens represent appropriate choices? (Select 3)",
       "options": [
-        "Lidocaine 30–40 mg",
-        "Bupivacaine 3–10 mg",
-        "Ropivacaine 5–10 mg",
-        "Bupivacaine 20–25 mg",
+        "Hyperbaric bupivacaine 5–7.5 mg",
+        "Chloroprocaine 40–60 mg",
+        "Hyperbaric lidocaine 30–50 mg",
+        "Bupivacaine 15–20 mg",
         "Lidocaine 100 mg",
-        "Ropivacaine 30 mg"
+        "Ropivacaine 20–30 mg"
       ],
       "answer": [
         0,
         1,
         2
       ],
-      "explanation": "Low-dose intrathecal local anesthetic can shorten motor recovery for ambulatory procedures. Agent selection also matters: intrathecal lidocaine has a recognized association with transient neurologic symptoms, so contemporary practice often favors alternatives when appropriate rather than treating these dose examples as interchangeable.",
+      "explanation": "Low-dose intrathecal local anesthetics (such as low-dose bupivacaine, chloroprocaine, or lidocaine) significantly shorten time to motor recovery, spontaneous voiding, and discharge readiness in ambulatory knee arthroscopy. High doses (such as bupivacaine 15-20 mg or lidocaine 100 mg) delay discharge criteria due to prolonged motor block and urinary retention. While spinal lidocaine carries a well-documented risk of transient neurologic symptoms (TNS), low-dose regimens remain a classic textbook category for short-duration spinal anesthesia alongside chloroprocaine and low-dose bupivacaine.",
       "citation": "",
       "topic": "Differentials, routes, and neuraxial analgesia",
       "sourceTitle": "Perioperative Pain Management",
@@ -1545,7 +1545,7 @@
       "options": [
         "Morphine 1 mg or hydromorphone 1 mg",
         "Fentanyl 100 mcg or sufentanil 50 mcg",
-        "Fentanyl 10–25 mcg or sufentanil 5–10 mcg",
+        "Fentanyl 10â25 mcg or sufentanil 5â10 mcg",
         "Fentanyl 1 mcg or sufentanil 0.5 mcg"
       ],
       "answer": [
@@ -4751,7 +4751,7 @@
       "answer": [
         0
       ],
-      "explanation": "Using the conventional limits in the question, 4.5 mg/kg × 70 kg gives 315 mg plain lidocaine and 7 mg/kg × 70 kg gives 490 mg with epinephrine. These calculated maxima do not replace clinical judgment or cumulative-dose tracking.",
+      "explanation": "Using the conventional limits in the question, 4.5 mg/kg Ã 70 kg gives 315 mg plain lidocaine and 7 mg/kg Ã 70 kg gives 490 mg with epinephrine. These calculated maxima do not replace clinical judgment or cumulative-dose tracking.",
       "citation": "",
       "topic": "Adverse effects and reversal",
       "sourceTitle": "Perioperative Pain Management",
@@ -4828,7 +4828,7 @@
       "answer": [
         2
       ],
-      "explanation": "Twenty milliliters of 1% lidocaine is 10 mg/mL × 20 = 200 mg, and with the prior 150 mg the total is 350 mg, above the 4.5 mg/kg × 60 = 270 mg plain limit. Limits apply to the cumulative dose, slow absorption does not change the maximum, and 20 mg is a conversion error.",
+      "explanation": "Twenty milliliters of 1% lidocaine is 10 mg/mL Ã 20 = 200 mg, and with the prior 150 mg the total is 350 mg, above the 4.5 mg/kg Ã 60 = 270 mg plain limit. Limits apply to the cumulative dose, slow absorption does not change the maximum, and 20 mg is a conversion error.",
       "citation": "",
       "topic": "Adverse effects and reversal",
       "sourceTitle": "Perioperative Pain Management",
@@ -7704,7 +7704,7 @@
       "answer": [
         2
       ],
-      "explanation": "Using the stated protocol, 50 mg/kg × 80 kg = 4,000 mg (4 g), and 8 mg/kg/hr × 80 kg = 640 mg/hr. This tests dose calculation; actual magnesium regimens vary and require patient-specific safety assessment.",
+      "explanation": "Using the stated protocol, 50 mg/kg Ã 80 kg = 4,000 mg (4 g), and 8 mg/kg/hr Ã 80 kg = 640 mg/hr. This tests dose calculation; actual magnesium regimens vary and require patient-specific safety assessment.",
       "citation": "",
       "topic": "Surgical and dosing cases",
       "sourceTitle": "Perioperative Pain Management",
@@ -7728,7 +7728,7 @@
       "answer": [
         3
       ],
-      "explanation": "Using the stated protocol, 0.2 mg/kg × 70 kg = 14 mg and 0.15 mg/kg/hr × 70 kg = 10.5 mg/hr. This is a calculation exercise; subanesthetic ketamine regimens vary by indication and protocol.",
+      "explanation": "Using the stated protocol, 0.2 mg/kg Ã 70 kg = 14 mg and 0.15 mg/kg/hr Ã 70 kg = 10.5 mg/hr. This is a calculation exercise; subanesthetic ketamine regimens vary by indication and protocol.",
       "citation": "",
       "topic": "Surgical and dosing cases",
       "sourceTitle": "Perioperative Pain Management",
@@ -7800,7 +7800,7 @@
       "answer": [
         2
       ],
-      "explanation": "Using the conventional 4.5 mg/kg plain-lidocaine ceiling stated in the question, 60 kg × 4.5 mg/kg = 270 mg. This calculated ceiling is a safety guide rather than a guarantee against toxicity and cumulative exposure still matters.",
+      "explanation": "Using the conventional 4.5 mg/kg plain-lidocaine ceiling stated in the question, 60 kg Ã 4.5 mg/kg = 270 mg. This calculated ceiling is a safety guide rather than a guarantee against toxicity and cumulative exposure still matters.",
       "citation": "",
       "topic": "Surgical and dosing cases",
       "sourceTitle": "Perioperative Pain Management",
@@ -8859,7 +8859,7 @@
       "answer": [
         3
       ],
-      "explanation": "A 10-minute lockout allows six 0.2 mg doses per hour, or 24 doses in 4 hours, which is 24 × 0.2 = 4.8 mg. That exceeds the 4 mg limit, so the pump stops at 4 mg. Choosing 2.4 mg uses 2 hours, and 1.2 mg uses 1 hour.",
+      "explanation": "A 10-minute lockout allows six 0.2 mg doses per hour, or 24 doses in 4 hours, which is 24 Ã 0.2 = 4.8 mg. That exceeds the 4 mg limit, so the pump stops at 4 mg. Choosing 2.4 mg uses 2 hours, and 1.2 mg uses 1 hour.",
       "citation": "",
       "topic": "Surgical and dosing cases",
       "sourceTitle": "Perioperative Pain Management",
@@ -10259,7 +10259,7 @@
       "answer": [
         0
       ],
-      "explanation": "The rate is dose × weight: 8 mg/kg/hr × 90 kg = 720 mg/hr. Choosing 72 mg/hr drops a zero, 360 mg/hr uses half the weight, and 1.44 g/hr doubles the result. Magnesium infusions are still adjusted for renal function and monitored for weakness and hypotension.",
+      "explanation": "The rate is dose Ã weight: 8 mg/kg/hr Ã 90 kg = 720 mg/hr. Choosing 72 mg/hr drops a zero, 360 mg/hr uses half the weight, and 1.44 g/hr doubles the result. Magnesium infusions are still adjusted for renal function and monitored for weakness and hypotension.",
       "citation": "",
       "topic": "Multi-step patient scenarios",
       "sourceTitle": "Perioperative Pain Management",
@@ -10331,7 +10331,7 @@
       "answer": [
         2
       ],
-      "explanation": "A 0.5% solution contains 5 mg/mL, so 25 mL × 5 mg/mL = 125 mg, which counts toward the cumulative local anesthetic dose. Choosing 12.5 mg uses 0.5 mg/mL, 250 mg uses 10 mg/mL, and 50 mg uses 2 mg/mL.",
+      "explanation": "A 0.5% solution contains 5 mg/mL, so 25 mL Ã 5 mg/mL = 125 mg, which counts toward the cumulative local anesthetic dose. Choosing 12.5 mg uses 0.5 mg/mL, 250 mg uses 10 mg/mL, and 50 mg uses 2 mg/mL.",
       "citation": "",
       "topic": "Multi-step patient scenarios",
       "sourceTitle": "Perioperative Pain Management",
@@ -10355,7 +10355,7 @@
       "answer": [
         3
       ],
-      "explanation": "A 0.25% solution contains 2.5 mg/mL, so 20 mL × 2.5 mg/mL = 50 mg, which is added to the block dose to check the cumulative total. Choosing 5 mg uses 0.25 mg/mL, 100 mg uses 5 mg/mL, and 25 mg halves the correct answer.",
+      "explanation": "A 0.25% solution contains 2.5 mg/mL, so 20 mL Ã 2.5 mg/mL = 50 mg, which is added to the block dose to check the cumulative total. Choosing 5 mg uses 0.25 mg/mL, 100 mg uses 5 mg/mL, and 25 mg halves the correct answer.",
       "citation": "",
       "topic": "Multi-step patient scenarios",
       "sourceTitle": "Perioperative Pain Management",
@@ -11483,7 +11483,7 @@
       "answer": [
         3
       ],
-      "explanation": "Using the stated protocol: ketamine 0.2 × 60 = 12 mg and 0.15 × 60 = 9 mg/hr; magnesium 50 × 60 = 3,000 mg and 8 × 60 = 480 mg/hr. These are calculations, not universal dosing recommendations.",
+      "explanation": "Using the stated protocol: ketamine 0.2 Ã 60 = 12 mg and 0.15 Ã 60 = 9 mg/hr; magnesium 50 Ã 60 = 3,000 mg and 8 Ã 60 = 480 mg/hr. These are calculations, not universal dosing recommendations.",
       "citation": "",
       "topic": "Multi-step patient scenarios",
       "sourceTitle": "Perioperative Pain Management",
