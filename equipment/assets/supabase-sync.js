@@ -121,7 +121,7 @@ function resetCloudSession(){stopAutoSync();saveSession(null);sessionStorage.rem
 async function signOut(){
 const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active')try{await fullSync()}catch{}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
-resetCloudSession()
+await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
 async function resendConfirmation(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/resend?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{type:'signup',email:value}});emit('confirmation-required',{email:value});return true}
 async function requestPasswordReset(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:value}});emit('recovery-sent',{email:value});return true}
