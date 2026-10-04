@@ -883,6 +883,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  const inv=JSON.parse(read('legal/data-inventory.json'));
  if(inv.version!=='2026-09-27-v6'||inv.guest_session?.retention_hours!==24||inv.guest_session?.persistent_cross_session!==false)fail('Machine-readable guest metric inventory is incomplete');
  const privacy=read('privacy.html'),terms=read('terms.html'),cloud=read('equipment/assets/supabase-sync.js'),core=read('equipment/assets/app-core.js'),adminPanel=read('equipment/assets/admin-panel.js'),studio=studioSource();
+ try{new Function(adminPanel)}catch(e){fail('Admin panel JavaScript syntax invalid: '+e.message)}
  for(const token of ['random session identifier','approximately 24 hours','operator-admin','raw first-attempt CAT contribution rows'])if(!privacy.includes(token))fail('Privacy v6 disclosure missing '+token);
  if(privacy.includes('Google Apps Script'))fail('Current Privacy Notice still names retired Google Apps Script reporting');
  if(!privacy.includes('private Supabase table')||!privacy.includes('two years'))fail('Privacy v6 question-report disclosure is incomplete');
