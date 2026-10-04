@@ -261,6 +261,15 @@ function startAutoSync(){
 stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')return;
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
+async function questionExposure(courseId,examId){
+requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];
+const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
+return await api(query)
+}
+async function recordQuestionSession(x){
+requireAccountAccess();if(!x?.sessionId||!Array.isArray(x.items))throw Error('Invalid question session.');
+return await api('/rest/v1/rpc/mbu_record_question_session',{method:'POST',body:{p_session_id:x.sessionId,p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_mode:String(x.mode||'custom'),p_items:x.items,p_new_count:Number(x.newCount)||0,p_review_count:Number(x.reviewCount)||0}})===true
+}
 async function adminStatus(){const s=await validSession();if(!s?.access_token||legalAccepted!==true)return{is_admin:false,role:null};return await api('/rest/v1/rpc/snar_admin_status',{method:'POST',body:{}})}
 function status(){const s=session();return{signedIn:!!s?.access_token,email:s?.user?.email||'',state:lastState,lastSyncAt,user:s?.user||null,recoveryMode,legalAccepted,accessStatus:accountAccess,termsVersion:LEGAL_TERMS_VERSION,privacyVersion:LEGAL_PRIVACY_VERSION,autoSyncIntervalMs:AUTO_SYNC_INTERVAL,nextAutoSyncAt:s?.access_token&&legalAccepted===true&&accountAccess==='active'?(lastSyncAt||Date.now())+AUTO_SYNC_INTERVAL:0}}
 window.addEventListener('focus',()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&Date.now()-lastSyncAt>120000)fullSync().catch(()=>{})});
@@ -273,7 +282,7 @@ await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){
