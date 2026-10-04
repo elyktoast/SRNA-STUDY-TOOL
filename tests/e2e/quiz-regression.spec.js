@@ -1831,9 +1831,9 @@ test.describe('canonical quiz regression', () => {
 
     await page.locator('[data-admin-view="reports"]').click();
     await expect(page.locator('[data-report-list]')).toContainText('Example reported question');
-    await page.locator('[data-report-status="9"]').selectOption('reviewing');
-    await page.locator('[data-report-save="9"]').click();
-    await expect.poll(()=>reportStatus?.p_status).toBe('reviewing');
+    await expect(page.locator('[data-report-list]')).toContainText('Please verify');
+    await expect(page.locator('[data-report-status="9"]')).toHaveCount(0);
+    await expect(page.locator('[data-report-save="9"]')).toHaveCount(0);
 
     await page.locator('[data-admin-view="suggestions"]').click();
     await expect(page.locator('[data-admin-view-host]')).toContainText('No suggestions yet.');
