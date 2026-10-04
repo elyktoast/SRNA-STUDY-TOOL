@@ -1,0 +1,62 @@
+{
+  "schema": 3,
+  "course": {
+    "id": "pharm",
+    "label": "Pharm"
+  },
+  "exam": {
+    "id": "clinical-pharm",
+    "label": "Clinical Pharm"
+  },
+  "canonicalBank": null,
+  "banks": [],
+  "studioSources": [
+    {
+      "key": "pharm-clinical",
+      "label": "Clinical Pharm",
+      "groupLabel": "Clinical Pharm",
+      "data": "data/clinical-pharm.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Clinical Pharm"
+      },
+      "count": 0,
+      "sourceTitleContract": "Clinical Pharm"
+    }
+  ],
+  "sync": {
+    "schema": 1,
+    "mode": "local-first",
+    "studioStorageKey": "mbu_studio_pharm_clinical-pharm_v1",
+    "metadataKey": "mbu_sync_meta_v1",
+    "deviceKey": "mbu_device_id_v1",
+    "adapterApi": "MBUSync.registerAdapter(name, adapter)"
+  },
+  "features": {
+    "questionGenerator": {
+      "enabled": true,
+      "status": "configured",
+      "storageKey": "mbu_generated_questions_pharm_clinical-pharm_v1",
+      "provider": "gemini"
+    }
+  },
+  "contentTaxonomy": {
+    "topics": [
+      "Clinical Pharm"
+    ],
+    "sourceTitles": [
+      "Clinical Pharm"
+    ]
+  },
+  "sessionEnvironment": "equipment-bank1-practice-set1-v1",
+  "defaultBankEngine": "canonical",
+  "bankPage": "bank.html",
+  "uidNamespace": "pharm-clinical",
+  "studio": {
+    "sourceMode": "unified",
+    "label": "Clinical Pharm"
+  }
+}
