@@ -20,14 +20,14 @@ async function extractPptx(file,onProgress){const Z=await jszip(),zip=await Z.lo
  const media=Object.keys(zip.files).filter(n=>/^ppt\/media\/.*\.(png|jpe?g|webp)$/i.test(n)).slice(0,30);
  for(let i=0;i<media.length;i++){const blob=await zip.file(media[i]).async('blob'),text=await ocrBlob(blob,onProgress,`slide image ${i+1} of ${media.length}`);if(meaningful(text)){parts.push(`--- Slide image OCR ${i+1} ---\n${text}`);imageOcr++}}
  return{text:clean(parts.join('\n\n')),detail:`${slides.length} PowerPoint slide${slides.length===1?'':'s'} read; OCR found text in ${imageOcr} embedded image${imageOcr===1?'':'s'}.`}}
-async function extractSpreadsheet(file,onProgress){const X=await xlsx(),b=X.read(await file.arrayBuffer()),p=[];for(let i=0;i<b.SheetNames.length;i++){const n=b.SheetNames[i];const s=clean(X.utils.sheet_to_csv(b.Sheets[n],{blankrows:false}));if(s)p.push(`--- Sheet: ${n} ---\n${s}`)}return{text:clean(p.join('\n\n')),detail:`${b.SheetNames.length} sheets read.`}}\nasync function extract(file,onProgress){if(!file)throw Error('Choose a lecture or source file first.');if(file.size>MAX_FILE_BYTES)throw Error('File is larger than 40 MB.');const name=file.name||'Uploaded material',ext=(name.split('.').pop()||'').toLowerCase(),type=file.type||'';
+async function extractSpreadsheet(file,onProgress){const X=await xlsx(),b=X.read(await file.arrayBuffer()),p=[];for(let i=0;i<b.SheetNames.length;i++){const n=b.SheetNames[i];const s=clean(X.utils.sheet_to_csv(b.Sheets[n],{blankrows:false}));if(s)p.push(`--- Sheet: ${n} ---\n${s}`)}return{text:clean(p.join('\n\n')),detail:'Spreadsheet read.'}}\nasync function extract(file,onProgress){if(!file)throw Error('Choose a lecture or source file first.');if(file.size>MAX_FILE_BYTES)throw Error('File is larger than 40 MB.');const name=file.name||'Uploaded material',ext=(name.split('.').pop()||'').toLowerCase(),type=file.type||'';
  let result;
  if(ext==='pdf'||type==='application/pdf')result=await extractPdf(file,onProgress);
  else if(ext==='pptx')result=await extractPptx(file,onProgress);
  else if(ext==='docx'||type==='application/vnd.openxmlformats-officedocument.wordprocessingml.document')result=await extractDocx(file,onProgress);\n else if(['xlsx','xls','xlsm','csv'].includes(ext))result=await extractSpreadsheet(file,onProgress);
  else if(/^image\//.test(type)||['png','jpg','jpeg','webp'].includes(ext)){result={text:await ocrBlob(file,onProgress,name),detail:'Image processed with OCR.'}}
  else if(['txt','md'].includes(ext)||/^text\//.test(type)){result={text:clean(await file.text()),detail:'Text file read directly.'}}
- else throw Error('Supported uploads: PDF, PPTX, DOCX, XLSX, XLS, XLSM, CSV, PNG, JPG, WEBP, TXT, and MD.');
+ else throw Error('Unsupported file type.');
  if(!meaningful(result.text))throw Error('No usable text could be extracted from this file.');
  const original=result.text.length,truncated=original>MAX_CHARS;return{...result,text:result.text.slice(0,MAX_CHARS),sourceName:name,truncated,originalChars:original}
 }
