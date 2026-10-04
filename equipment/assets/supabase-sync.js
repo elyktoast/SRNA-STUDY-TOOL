@@ -263,7 +263,7 @@ autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess
 }
 async function questionExposure(courseId,examId){
 requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(typeof navigator!=='undefined'&&navigator.onLine===false)throw Error('Question coverage requires a connection to your account.');
-const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
+const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
 async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!['viewed','answered'].includes(x.event))return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event}})===true}
