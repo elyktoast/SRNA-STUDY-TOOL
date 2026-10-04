@@ -51,6 +51,13 @@ function validateQuestions(label,qs,expected){
     const id=q?.id ?? i+1, opts=q?.options ?? q?.c, ans=q?.answer ?? q?.correct ?? q?.a;
     const identity=String(q?.set??q?.setn??'')+'::'+String(id); if(ids.has(identity)) fail(label+': duplicate question id '+id+' within set '+String(q?.set??q?.setn??'')); ids.add(identity);
     if(!String(q?.stem ?? q?.q ?? '').trim()) fail(label+': question '+id+' has no stem');
+    if(String(q?.type||'').toLowerCase()==='matching'){
+      const prompts=q?.prompts,choices=q?.choices,map=q?.answer;
+      if(!Array.isArray(prompts)||prompts.length<2)fail(label+': matching question '+id+' has fewer than 2 prompts');
+      if(!Array.isArray(choices)||choices.length<2)fail(label+': matching question '+id+' has fewer than 2 choices');
+      if(!map||typeof map!=='object'||Array.isArray(map)||prompts?.some(p=>!Object.prototype.hasOwnProperty.call(map,p)||!choices.includes(map[p])))fail(label+': matching question '+id+' has an invalid answer map');
+      return;
+    }
     if(!Array.isArray(opts)||opts.length<2) fail(label+': question '+id+' has fewer than 2 options');
     const aa=Array.isArray(ans)?ans:[ans];
     if(!aa.length||aa.some(x=>!Number.isInteger(Number(x))||Number(x)<0||Number(x)>=opts.length)) fail(label+': question '+id+' has invalid answer index');
