@@ -23,7 +23,7 @@
       "setLabels": {
         "1": "Clinical Pharm"
       },
-      "count": 0,
+      "count": 800,
       "sourceTitleContract": "Clinical Pharm"
     }
   ],
@@ -45,7 +45,23 @@
   },
   "contentTaxonomy": {
     "topics": [
-      "Clinical Pharm"
+      "Anesthetic Agents & Sedatives",
+      "Opioids & Opioid Pharmacology",
+      "Neuromuscular Blockade & Reversal",
+      "Local Anesthetics & Regional Pharmacology",
+      "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "Antihypertensives & Vasodilators",
+      "Antiarrhythmics & Cardiovascular Pharmacology",
+      "Anticoagulants, Antiplatelets & Hemostasis",
+      "Fluids, Blood Products & Electrolytes",
+      "Analgesic Adjuncts & Multimodal Analgesia",
+      "Antiemetics & Gastrointestinal Drugs",
+      "Antibiotics & Perioperative Anti-Infectives",
+      "Endocrine & Metabolic Pharmacology",
+      "Obstetric Pharmacology",
+      "Respiratory Pharmacology",
+      "CNS & Chronic Medication Interactions",
+      "Toxicology, Emergencies & Special Pharmacology"
     ],
     "sourceTitles": [
       "Clinical Pharm"
