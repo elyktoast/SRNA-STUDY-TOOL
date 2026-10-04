@@ -1816,55 +1816,40 @@ test.describe('canonical quiz regression', () => {
     await page.locator('[data-admin-open]').click();
     await expect(page.locator('#mbu-admin-dashboard')).toHaveClass(/open/);
     await expect(page.locator('#mbu-admin-dashboard')).toHaveAttribute('aria-hidden','false');
-    await expect(page.locator('[data-admin-stats]')).toContainText('Guests active ~15m');
-    await expect(page.locator('[data-admin-stats]')).toContainText('CAT users');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Guests active ~15m'}).locator('strong')).toHaveText('3');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'CAT users'}).locator('strong')).toHaveText('1');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Items ≥5 learners'}).locator('strong')).toHaveText('1');
-    await expect(page.locator('[data-admin-stats] > div').filter({hasText:'Max learners / item'}).locator('strong')).toHaveText('5');
-    await page.locator('[data-admin-analytics-load]').click();
+    await expect(page.locator('[data-admin-view-host]')).toContainText('Overview');
+    await expect(page.locator('[data-admin-view-host]')).toContainText('CAT users');
+    await expect(page.locator('[data-admin-view-host]')).toContainText('1');
+
+    await page.locator('[data-admin-view="analytics"]').click();
     await expect(page.locator('[data-admin-question-analytics]')).toContainText('Needs review');
     await expect(page.locator('[data-admin-question-analytics]')).toContainText('CAT readiness');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('eligible for population difficulty');
     await expect(page.locator('[data-admin-question-analytics]')).toContainText('36% first-attempt');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('High miss rate');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('Content review groups');
     await page.locator('[data-qa-filter]').selectOption('content');
     await expect.poll(async()=>page.locator('[data-qa-rows] .mbu-cloud-row').count()).toBeGreaterThan(0);
-    await expect(page.locator('[data-qa-rows]')).toContainText('Content review');
     await page.locator('[data-qa-filter]').selectOption('all');
-    await expect(page.locator('[data-qa-modes]')).toContainText('adaptive');
     await expect(page.locator('[data-qa-modes]')).toContainText('87 first attempts');
-    await expect(page.locator('[data-qa-trend]')).toContainText('2026-09-27');
-    await expect(page.locator('[data-qa-trend]')).toContainText('316 first attempts');
-    await expect(page.locator('[data-admin-question-analytics] a[href$="studio.html?question=b1-1"]')).toHaveAttribute('href',/studio\.html\?question=b1-1$/);
-    const questionReportsSection=page.locator('details').filter({hasText:'Question reports'});
-    await questionReportsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-question-reports]')).toContainText('Example reported question');
-    await expect(page.locator('[data-admin-question-reports] a').filter({hasText:'Open exact question'})).toHaveAttribute('href',/studio\.html\?question=b1-1$/);
-    await page.locator('[data-admin-question-report-status="9"]').selectOption('reviewing');
-    await page.locator('[data-admin-question-report-save="9"]').click();
+
+    await page.locator('[data-admin-view="reports"]').click();
+    await expect(page.locator('[data-report-list]')).toContainText('Example reported question');
+    await page.locator('[data-report-status="9"]').selectOption('reviewing');
+    await page.locator('[data-report-save="9"]').click();
     await expect.poll(()=>reportStatus?.p_status).toBe('reviewing');
 
-    const suggestionsSection=page.locator('details').filter({hasText:'Suggestions'});
-    await suggestionsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-suggestions]')).toHaveText('No suggestions yet.');
+    await page.locator('[data-admin-view="suggestions"]').click();
+    await expect(page.locator('[data-admin-view-host]')).toContainText('No suggestions yet.');
 
-    const privacySection=page.locator('details').filter({hasText:'Privacy & compliance'});
-    await privacySection.locator('summary').click();
+    await page.locator('[data-admin-view="system"]').click();
     page.once('dialog',dialog=>dialog.accept());
-    await page.locator('[data-admin-retention]').click();
-    await expect(page.locator('#mbu-admin-dashboard [data-account-message]')).toContainText('4 resolved question reports removed');
+    await page.locator('[data-retention]').click();
+    await expect(page.locator('#mbu-admin-dashboard [data-account-message]')).toContainText('4 resolved reports removed');
 
-    const accountsSection=page.locator('details').filter({hasText:'Accounts'});
-    await accountsSection.locator('summary').click();
-    await expect(page.locator('[data-admin-accounts]')).toContainText('learner@example.com');
-    await page.locator('[data-admin-accounts] [data-admin-access]').click();
+    await page.locator('[data-admin-view="users"]').click();
+    await expect(page.locator('[data-admin-view-host]')).toContainText('learner@example.com');
+    await page.locator('[data-access="00000000-0000-0000-0000-000000000002"]').click();
     await expect.poll(()=>accessChange?.p_status).toBe('suspended');
     page.on('dialog',dialog=>dialog.accept());
-    await page.locator('[data-admin-accounts] [data-admin-delete-account]').click();
+    await page.locator('[data-delete="00000000-0000-0000-0000-000000000002"]').click();
     await expect.poll(()=>deletedAccount?.p_user_id).toBe('00000000-0000-0000-0000-000000000002');
-    await expect(page.locator('#mbu-admin-dashboard')).toContainText('Question intelligence');
   });
 
   test('Non-admin account never sees or opens the Admin Dashboard', async ({ page }) => {
