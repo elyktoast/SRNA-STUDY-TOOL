@@ -2741,7 +2741,7 @@ test.describe('canonical quiz regression', () => {
       startMode('custom');
     });
     await expect(page.locator('#qmeta')).toContainText('Adaptive 2.1');
-    await expect(page.locator('#qmeta')).toContainText('Challenge 3/5');
+    await expect(page.locator('#qmeta')).toContainText('Adaptive Difficulty Level 3 of 5');
     await expect(page.locator('#studioPrev')).toBeDisabled();
     await expect(page.locator('#studioNavToggle')).toBeHidden();
     const startTheta=await page.evaluate(()=>DB.active.adaptive.theta);
