@@ -1821,9 +1821,9 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('[data-admin-view-host]')).toContainText('1');
 
     await page.locator('[data-admin-view="analytics"]').click();
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('Needs review');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('CAT readiness');
-    await expect(page.locator('[data-admin-question-analytics]')).toContainText('36% first-attempt');
+    await expect(page.locator('[data-analytics-host]')).toContainText('Needs review');
+    await expect(page.locator('[data-analytics-host]')).toContainText('CAT readiness');
+    await expect(page.locator('[data-analytics-host]')).toContainText('36% first-attempt');
     await page.locator('[data-qa-filter]').selectOption('content');
     await expect.poll(async()=>page.locator('[data-qa-rows] .mbu-cloud-row').count()).toBeGreaterThan(0);
     await page.locator('[data-qa-filter]').selectOption('all');
@@ -2071,7 +2071,7 @@ test.describe('canonical quiz regression', () => {
       document.getElementById('adaptiveToggle').checked=false;
       return startMode('custom');
     });
-    await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)&&window.session.length)).toBeGreaterThan(0);
+    await expect.poll(async()=>page.evaluate(()=>Array.isArray(window.session)?window.session.length:0)).toBeGreaterThan(0);
     const before=await page.evaluate(()=>({uid:session[pos].uid,pos,active:[...DB.active.uids]}));
     await page.setViewportSize({width:768,height:1024});
     expect(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1)).toBe(true);
