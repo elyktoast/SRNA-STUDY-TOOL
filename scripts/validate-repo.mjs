@@ -392,7 +392,7 @@ for(const p of ['equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards
 {
  const studio=studioSource(),sync=read('equipment/assets/studio-sync.js');
  if(!sync.includes('if(q&&q.uid)return normalizeKey(q.uid)'))fail('Studio sync: answer keys do not prefer canonical question UIDs');
- if(!studio.includes('setSessionAnswer(q.uid,{ok,selected,at:Date.now()})'))fail('Studio: graded selections are not persisted in session state');
+ if(!studio.includes('setSessionAnswer(q.uid,{ok,selected,...(matching?{matching:matchSelected}:{}),at:Date.now()})'))fail('Studio: graded selections and matching answers are not persisted in session state');
  if(!studio.includes('function sessionAnswer(uid)'))fail('Studio: session-local answer state is missing');
  if(!studio.includes("answers:{}"))fail('Studio: new sessions do not initialize isolated answer state');
  if(studio.includes("session.map(q=>DB.ans[q.uid]).filter(Boolean)"))fail('Studio: session stats still read cumulative answer history');
@@ -555,7 +555,7 @@ for(const p of ['equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards
 // Studio search should use its normalized one-time search index instead of rebuilding text per query.
 {
  const src=studioSource();
- if(!src.includes("searchText:(stem+' '+topic+' '+exp+' '+src).toLowerCase()"))fail('Studio: normalized questions do not preindex search text');
+ if(!src.includes("searchText:(stem+' '+topic+' '+matchSearch+' '+exp+' '+src).toLowerCase()"))fail('Studio: normalized questions do not preindex search text, including matching content');
  if(!src.includes("sourceTitle:String(q.sourceTitle||'')")||!src.includes("sourceMeta:q.sourceMeta&&typeof q.sourceMeta==='object'?q.sourceMeta:null"))fail('Studio: Adaptive concept metadata is not preserved through normalization');
  if(!src.includes("for(const q of ALL){if(q.searchText.includes(x)){r.push(q);if(r.length===100)break}}"))fail('Studio: search does not stop after the visible result cap');
 }
@@ -618,8 +618,8 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
   'function nextQ(){clearTimeout(autoTimer);autoTimer=null;',
   'else clearActive();session=[]'
  ]) if(!studio.includes(token))fail('Studio: final session lifecycle invariant missing: '+token);
- if(!studio.includes('saved=sessionAnswer(q.uid)')||!studio.includes('graded=!!(saved&&savedSel)'))fail('Studio: revisiting a session question does not restore graded state');
- if(!studio.includes('setSessionAnswer(q.uid,{ok,selected,at:Date.now()})'))fail('Studio: grading does not persist selected answers for resume');
+ if(!studio.includes('saved=sessionAnswer(q.uid)')||!studio.includes("graded=matching?!!(saved&&saved.matching):!!(saved&&savedSel)"))fail('Studio: revisiting a session question does not restore graded state for standard and matching items');
+ if(!studio.includes('setSessionAnswer(q.uid,{ok,selected,...(matching?{matching:matchSelected}:{}),at:Date.now()})'))fail('Studio: grading does not persist standard and matching answers for resume');
 }
 
 // Bank 3 graded-state parity is inherited from the canonical Bank 1 engine and stylesheet.
