@@ -68,6 +68,30 @@ test.describe('canonical quiz regression', () => {
     expect(await page.evaluate(()=>new Set(session.map(q=>q.topic)).size)).toBeGreaterThan(1);
   });
 
+  test('first-attempt calibration survives a failed submission without being replaced by a later answer', async ({ page }) => {
+    await useGuestState(page);
+    await page.goto('/equipment/exam-1/studio.html');
+    await waitForStudio(page);
+    const result=await page.evaluate(async()=>{
+      const q=ALL[0],sent=[],original=MBUSupabase.submitItemContribution;
+      MBUSupabase.submitItemContribution=async payload=>{sent.push({...payload});if(sent.length===1)throw new Error('offline simulation');return true};
+      MBUStudyIntelligence.clearAll();
+      MBUStudyIntelligence.recordAnswer(q.bank,q,false,{bankLabel:q.bankLabel,sessionMode:'standard'});
+      await new Promise(r=>setTimeout(r,20));
+      MBUStudyIntelligence.recordAnswer(q.bank,q,true,{bankLabel:q.bankLabel,sessionMode:'standard'});
+      await MBUStudyIntelligence.flushPendingContributions();
+      const raw=JSON.parse(localStorage.getItem(MBUStudyIntelligence.STORE));
+      MBUSupabase.submitItemContribution=original;
+      return{sent,pending:Object.keys(raw.pendingContributions||{}),attempt:raw.attempts[q.uid]};
+    });
+    expect(result.sent.length).toBeGreaterThanOrEqual(2);
+    expect(result.sent.every(x=>x.correct===false)).toBeTruthy();
+    expect(result.pending).toEqual([]);
+    expect(result.attempt.attempts).toBe(2);
+    expect(result.attempt.correct).toBe(1);
+    expect(result.attempt.incorrect).toBe(1);
+  });
+
   test('Studio persists normalized legacy keys and removes false flag entries', async ({ page }) => {
     await page.goto(exam + '/studio.html');
     await page.evaluate(() => localStorage.setItem('mbu_exam1_studio_v1', JSON.stringify({
