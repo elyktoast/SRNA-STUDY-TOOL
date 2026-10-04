@@ -20,6 +20,27 @@ async function clickIndexes(locator, indexes) {
 test.describe('canonical quiz regression', () => {
   test.beforeEach(async ({ page }) => clearAppState(page));
 
+  test('Clinical Pharm native matching grades and survives reload', async ({ page }) => {
+    await page.goto('/pharm/clinical-pharm/studio.html');
+    await waitForStudio(page);
+    const q=await page.evaluate(()=>ALL.find(x=>x.type==='matching'));
+    expect(q).toBeTruthy();
+    await page.evaluate(uid=>{const q=ALL_BY_UID.get(uid);session=[q];pos=0;DB.active={uids:[uid],pos:0,answers:{},mode:'custom',updated:Date.now()};save();showQ()},q.uid);
+    const selects=page.locator('#opts .mbu-match-select');
+    await expect(selects).toHaveCount(q.matching.prompts.length);
+    for(let i=0;i<q.matching.prompts.length;i++)await selects.nth(i).selectOption(q.matching.answer[q.matching.prompts[i]]);
+    await page.locator('#submit').click();
+    await expect(selects.first()).toHaveClass(/correct/);
+    const before=await page.evaluate(uid=>DB.active.answers[uid],q.uid);
+    expect(before.ok).toBe(true);expect(before.matching).toBeTruthy();
+    await page.reload();await waitForStudio(page);
+    const after=await page.evaluate(uid=>DB.active?.answers?.[uid],q.uid);
+    expect(after?.ok).toBe(true);expect(after?.matching).toEqual(before.matching);
+    await page.evaluate(()=>resumeActive());
+    await expect(page.locator('#opts .mbu-match-select').first()).toBeDisabled();
+    await expect(page.locator('#feedback')).toBeVisible();
+  });
+
   test('Studio persists normalized legacy keys and removes false flag entries', async ({ page }) => {
     await page.goto(exam + '/studio.html');
     await page.evaluate(() => localStorage.setItem('mbu_exam1_studio_v1', JSON.stringify({
