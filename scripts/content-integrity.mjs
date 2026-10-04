@@ -175,6 +175,22 @@ for(let i=0;i<pharmQs.length;i++){
  }
 }
 if(pharmSeen.size!==800)err('Clinical Pharm: question IDs are not unique ('+pharmSeen.size+'/800 unique)');
+
+const calibrationIds=new Map();
+function registerCalibrationIds(course,rootDir,courseManifest){
+ for(const source of courseManifest.studioSources||[]){
+   const payload=read(rootDir+source.data),allQs=Array.isArray(payload)?payload:(payload.questions||[]),qs=source.setFilter?allQs.filter(q=>Number(q.set??q.setn??1)===Number(source.setFilter)):allQs;
+   for(const q of qs){
+     const raw=String(q.id??q.seq??'unknown'),uid=String(q.uid||source.key+'-'+raw),prior=calibrationIds.get(uid);
+     if(prior)err('CAT calibration UID collision: '+uid+' is shared by '+prior+' and '+course+'/'+source.key+'/'+raw);
+     else calibrationIds.set(uid,course+'/'+source.key+'/'+raw);
+   }
+ }
+}
+registerCalibrationIds('equipment','equipment/exam-1/',manifest);
+registerCalibrationIds('basic-principles',bpRoot,bpManifest);
+registerCalibrationIds('pharm',pharmRoot,pharmManifest);
+if(calibrationIds.size!==6300)err('CAT calibration UID inventory '+calibrationIds.size+' != expected 6300');
 const figureRoot=path.join(root,bpRoot,'figures'),diskFigures=[];
 for(const dirent of fs.readdirSync(figureRoot,{withFileTypes:true}))if(dirent.isDirectory())for(const file of fs.readdirSync(path.join(figureRoot,dirent.name)))diskFigures.push('figures/'+dirent.name+'/'+file);
 for(const figure of bpFigurePaths)if(!diskFigures.includes(figure))err('Basic Principles: referenced figure is outside canonical figure inventory '+figure);
