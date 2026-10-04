@@ -261,7 +261,7 @@ stopAutoSync();if(!session()||legalAccepted!==true||accountAccess!=='active')ret
 autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess==='active'&&navigator.onLine)fullSync({reloadOnImport:false}).catch(()=>{})},AUTO_SYNC_INTERVAL)
 }
 async function questionExposure(courseId,examId){
-requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Question coverage requires a connection.');
+requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Coverage requires a connection.');
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
 return await api(query)
 }
