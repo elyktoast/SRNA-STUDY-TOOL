@@ -1774,7 +1774,7 @@
       "answer": [
         1
       ],
-      "explanation": "One MET is about 3.5 mL/kg/min of oxygen, which for 70 kg is 3.5 × 70 = 245 mL/min. An activity using 1,000 mL/min is 1,000 ÷ 245, or about 4 METs, roughly climbing a flight of stairs. Choosing 1 or 2 METs underestimates the ratio, and 10 METs would need about 2,450 mL/min.",
+      "explanation": "One MET is about 3.5 mL/kg/min of oxygen, which for 70 kg is 3.5 Ã 70 = 245 mL/min. An activity using 1,000 mL/min is 1,000 Ã· 245, or about 4 METs, roughly climbing a flight of stairs. Choosing 1 or 2 METs underestimates the ratio, and 10 METs would need about 2,450 mL/min.",
       "citation": "",
       "topic": "Functional capacity and METs",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -2396,7 +2396,7 @@
         "Well-controlled hypothyroidism",
         "Type 2 diabetes",
         "Peripheral vascular disease",
-        "BMI of 24 kg/m²",
+        "BMI of 24 kg/mÂ²",
         "Total cholesterol of 160 mg/dL",
         "40 pack-year smoking history"
       ],
@@ -3041,7 +3041,7 @@
       "answer": [
         0
       ],
-      "explanation": "Severe aortic stenosis, with a valve area under 1 cm², carries the greatest risk of perioperative hemodynamic collapse because the fixed obstruction limits cardiac output and the hypertrophied ventricle depends on coronary perfusion pressure. Mild MR, moderate AR, and mitral valve prolapse are generally well tolerated.",
+      "explanation": "Severe aortic stenosis, with a valve area under 1 cmÂ², carries the greatest risk of perioperative hemodynamic collapse because the fixed obstruction limits cardiac output and the hypertrophied ventricle depends on coronary perfusion pressure. Mild MR, moderate AR, and mitral valve prolapse are generally well tolerated.",
       "citation": "",
       "topic": "Valves, LV dysfunction, and RCRI",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -3055,7 +3055,7 @@
       "id": "PRE-126",
       "set": 1,
       "type": "single",
-      "stem": "An echocardiogram shows aortic valve area 0.8 cm², mean gradient 44 mmHg, and peak velocity 4.2 m/s. Which interpretation best connects the measurements to perioperative risk?",
+      "stem": "An echocardiogram shows aortic valve area 0.8 cmÂ², mean gradient 44 mmHg, and peak velocity 4.2 m/s. Which interpretation best connects the measurements to perioperative risk?",
       "options": [
         "The findings represent moderate aortic stenosis with low perioperative risk",
         "The findings meet severe aortic stenosis criteria and indicate high perioperative risk",
@@ -3065,7 +3065,7 @@
       "answer": [
         1
       ],
-      "explanation": "A valve area under 1.0 cm², a mean gradient of 40 mmHg or more, and a peak velocity of 4 m/s or more each meet criteria for severe aortic stenosis. Severe AS carries a high risk of hypotension, ischemia, and sudden death under anesthesia, so it usually prompts cardiology review before elective surgery.",
+      "explanation": "A valve area under 1.0 cmÂ², a mean gradient of 40 mmHg or more, and a peak velocity of 4 m/s or more each meet criteria for severe aortic stenosis. Severe AS carries a high risk of hypotension, ischemia, and sudden death under anesthesia, so it usually prompts cardiology review before elective surgery.",
       "citation": "",
       "topic": "Valves, LV dysfunction, and RCRI",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -3103,7 +3103,7 @@
       "id": "PRE-128",
       "set": 1,
       "type": "single",
-      "stem": "An echocardiogram shows aortic jet velocity 3.4 m/s, mean gradient 28 mmHg, and valve area 1.2 cm². Which severity category is most consistent across all three measurements?",
+      "stem": "An echocardiogram shows aortic jet velocity 3.4 m/s, mean gradient 28 mmHg, and valve area 1.2 cmÂ². Which severity category is most consistent across all three measurements?",
       "options": [
         "Critical aortic stenosis",
         "Mild aortic stenosis",
@@ -3113,7 +3113,7 @@
       "answer": [
         3
       ],
-      "explanation": "Moderate aortic stenosis is defined by a jet velocity of 3.0 to 3.9 m/s, a mean gradient of 20 to 39 mmHg, and a valve area of 1.0 to 1.5 cm², so all three values agree here. Severe AS requires a velocity of 4 m/s or more, a gradient of 40 mmHg or more, or an area under 1.0 cm².",
+      "explanation": "Moderate aortic stenosis is defined by a jet velocity of 3.0 to 3.9 m/s, a mean gradient of 20 to 39 mmHg, and a valve area of 1.0 to 1.5 cmÂ², so all three values agree here. Severe AS requires a velocity of 4 m/s or more, a gradient of 40 mmHg or more, or an area under 1.0 cmÂ².",
       "citation": "",
       "topic": "Valves, LV dysfunction, and RCRI",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -6541,7 +6541,7 @@
       "id": "PRE-268",
       "set": 1,
       "type": "single",
-      "stem": "A cirrhotic patient has hemoglobin 9.8 g/dL and platelets 62,000/µL without acute bleeding. Which mechanism best explains this pattern?",
+      "stem": "A cirrhotic patient has hemoglobin 9.8 g/dL and platelets 62,000/ÂµL without acute bleeding. Which mechanism best explains this pattern?",
       "options": [
         "Splenic sequestration from cirrhosis",
         "Acute surgical blood loss",
@@ -7815,7 +7815,7 @@
       "id": "PRE-320",
       "set": 1,
       "type": "single",
-      "stem": "A patient has BMI 41 kg/m² but no other diagnosed disease. According to ASA physical status examples, which class applies?",
+      "stem": "A patient has BMI 41 kg/mÂ² but no other diagnosed disease. According to ASA physical status examples, which class applies?",
       "options": [
         "ASA I",
         "ASA II",
@@ -8155,7 +8155,7 @@
       "id": "PRE-334",
       "set": 1,
       "type": "single",
-      "stem": "A patient has BMI 33 kg/m² with no other medical conditions and normal exercise tolerance. Which ASA class applies?",
+      "stem": "A patient has BMI 33 kg/mÂ² with no other medical conditions and normal exercise tolerance. Which ASA class applies?",
       "options": [
         "ASA II",
         "ASA I",
@@ -8229,10 +8229,10 @@
       "type": "single",
       "stem": "A 110-kg patient is 1.75 m tall. Which calculation should most influence obesity-related preoperative risk stratification?",
       "options": [
-        "BMI ≈62.9 kg/m², obesity class III",
-        "BMI ≈31.4 kg/m², obesity class I",
-        "BMI ≈35.9 kg/m², obesity class II",
-        "BMI ≈40.2 kg/m², obesity class III"
+        "BMI â62.9 kg/mÂ², obesity class III",
+        "BMI â31.4 kg/mÂ², obesity class I",
+        "BMI â35.9 kg/mÂ², obesity class II",
+        "BMI â40.2 kg/mÂ², obesity class III"
       ],
       "answer": [
         2
@@ -8253,10 +8253,10 @@
       "type": "single",
       "stem": "A patient weighs 200 lb and is 70 inches tall. Which BMI is closest?",
       "options": [
-        "40.8 kg/m²",
-        "20.0 kg/m²",
-        "34.5 kg/m²",
-        "28.7 kg/m²"
+        "40.8 kg/mÂ²",
+        "20.0 kg/mÂ²",
+        "34.5 kg/mÂ²",
+        "28.7 kg/mÂ²"
       ],
       "answer": [
         3
@@ -8277,10 +8277,10 @@
       "type": "single",
       "stem": "A patient weighs 100 kg and is 1.80 m tall. Which BMI is closest?",
       "options": [
-        "30.9 kg/m²",
-        "25.0 kg/m²",
-        "35.6 kg/m²",
-        "28.4 kg/m²"
+        "30.9 kg/mÂ²",
+        "25.0 kg/mÂ²",
+        "35.6 kg/mÂ²",
+        "28.4 kg/mÂ²"
       ],
       "answer": [
         0
@@ -8299,7 +8299,7 @@
       "id": "PRE-340",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 35 kg/m² has loud snoring, daytime somnolence, and hypertension. Which issue is most important to assess before ambulatory anesthesia?",
+      "stem": "A patient with BMI 35 kg/mÂ² has loud snoring, daytime somnolence, and hypertension. Which issue is most important to assess before ambulatory anesthesia?",
       "options": [
         "Whether obesity requires an arterial line",
         "OSA risk and postoperative monitoring plan",
@@ -8323,7 +8323,7 @@
       "id": "PRE-341",
       "set": 1,
       "type": "single",
-      "stem": "A patient has BMI 37.4 kg/m² with no other data yet available. Which obesity category should frame the subsequent comorbidity and airway screening?",
+      "stem": "A patient has BMI 37.4 kg/mÂ² with no other data yet available. Which obesity category should frame the subsequent comorbidity and airway screening?",
       "options": [
         "Obesity class III",
         "Obesity class I",
@@ -8347,7 +8347,7 @@
       "id": "PRE-342",
       "set": 1,
       "type": "single",
-      "stem": "A BMI of 31.2 kg/m² falls into which category?",
+      "stem": "A BMI of 31.2 kg/mÂ² falls into which category?",
       "options": [
         "Obesity class III",
         "Overweight",
@@ -8395,7 +8395,7 @@
       "id": "PRE-344",
       "set": 1,
       "type": "single",
-      "stem": "An ambulatory center screens obese patients more carefully above a BMI of 30 kg/m². A patient has BMI 31 kg/m². Which interpretation is correct?",
+      "stem": "An ambulatory center screens obese patients more carefully above a BMI of 30 kg/mÂ². A patient has BMI 31 kg/mÂ². Which interpretation is correct?",
       "options": [
         "Closer screening is needed",
         "Screening starts above BMI 35",
@@ -8419,7 +8419,7 @@
       "id": "PRE-345",
       "set": 1,
       "type": "single",
-      "stem": "A patient has BMI 46 kg/m². Which conclusion is most appropriate for anesthesia planning?",
+      "stem": "A patient has BMI 46 kg/mÂ². Which conclusion is most appropriate for anesthesia planning?",
       "options": [
         "Risk rises for laparoscopic cases alone",
         "Severe obesity itself adds risk",
@@ -8491,7 +8491,7 @@
       "id": "PRE-348",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 48 kg/m² needs rapid sequence induction. Which weight is generally used to dose succinylcholine?",
+      "stem": "A patient with BMI 48 kg/mÂ² needs rapid sequence induction. Which weight is generally used to dose succinylcholine?",
       "options": [
         "Total body weight",
         "Ideal body weight",
@@ -8515,7 +8515,7 @@
       "id": "PRE-349",
       "set": 1,
       "type": "single",
-      "stem": "A patient with obesity has total body weight 120 kg and ideal body weight 60 kg. A drug protocol specifies adjusted body weight = IBW + 0.4(TBW − IBW). What adjusted body weight should be used?",
+      "stem": "A patient with obesity has total body weight 120 kg and ideal body weight 60 kg. A drug protocol specifies adjusted body weight = IBW + 0.4(TBW â IBW). What adjusted body weight should be used?",
       "options": [
         "60 kg",
         "72 kg",
@@ -8525,7 +8525,7 @@
       "answer": [
         2
       ],
-      "explanation": "Adjusted body weight = 60 + 0.4(120 − 60) = 60 + 24 = 84 kg. This calculation illustrates why some drug protocols use a scalar between ideal and total body weight rather than either value alone.",
+      "explanation": "Adjusted body weight = 60 + 0.4(120 â 60) = 60 + 24 = 84 kg. This calculation illustrates why some drug protocols use a scalar between ideal and total body weight rather than either value alone.",
       "citation": "",
       "topic": "Obesity, BMI, IBW, and Apfel",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -8909,7 +8909,7 @@
       "id": "PRE-365",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 43 kg/m² presents for ambulatory surgery. Which classification best communicates the severity of obesity during risk assessment?",
+      "stem": "A patient with BMI 43 kg/mÂ² presents for ambulatory surgery. Which classification best communicates the severity of obesity during risk assessment?",
       "options": [
         "Obesity class III",
         "Obesity class II",
@@ -8933,7 +8933,7 @@
       "id": "PRE-366",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 27.3 kg/m² has hypertension and suspected obstructive sleep apnea. Which statement best interprets the BMI during preoperative assessment?",
+      "stem": "A patient with BMI 27.3 kg/mÂ² has hypertension and suspected obstructive sleep apnea. Which statement best interprets the BMI during preoperative assessment?",
       "options": [
         "The BMI establishes ASA III by itself",
         "Overweight; comorbidities matter more",
@@ -10743,7 +10743,7 @@
       "answer": [
         0
       ],
-      "explanation": "Using traditional STOP-BANG thresholds, snoring, tiredness, observed apnea, and BMI >35 score 4. Age <50, female sex, neck ≤40 cm, and no hypertension add no points; 3–4 is intermediate risk.",
+      "explanation": "Using traditional STOP-BANG thresholds, snoring, tiredness, observed apnea, and BMI >35 score 4. Age <50, female sex, neck â¤40 cm, and no hypertension add no points; 3â4 is intermediate risk.",
       "citation": "",
       "topic": "Integrated preop cases",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -10877,7 +10877,7 @@
       "id": "PRE-447",
       "set": 1,
       "type": "single",
-      "stem": "An asymptomatic patient has an aortic valve area of 1.7 cm² and mean gradient 18 mmHg. Which severity category best matches both measurements?",
+      "stem": "An asymptomatic patient has an aortic valve area of 1.7 cmÂ² and mean gradient 18 mmHg. Which severity category best matches both measurements?",
       "options": [
         "Severe aortic stenosis",
         "Moderate aortic stenosis",
@@ -10887,7 +10887,7 @@
       "answer": [
         2
       ],
-      "explanation": "A valve area above 1.5 cm² with a mean gradient below 20 mmHg indicates mild aortic stenosis. Moderate AS has an area of 1.0 to 1.5 cm² and gradient of 20 to 39 mmHg, and severe AS has an area below 1.0 cm² or gradient of 40 mmHg or more.",
+      "explanation": "A valve area above 1.5 cmÂ² with a mean gradient below 20 mmHg indicates mild aortic stenosis. Moderate AS has an area of 1.0 to 1.5 cmÂ² and gradient of 20 to 39 mmHg, and severe AS has an area below 1.0 cmÂ² or gradient of 40 mmHg or more.",
       "citation": "",
       "topic": "Integrated preop cases",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -11789,7 +11789,7 @@
       "id": "PRE-485",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 29 kg/m² has no diagnosed comorbidities. Which weight category should be documented before evaluating additional risk factors?",
+      "stem": "A patient with BMI 29 kg/mÂ² has no diagnosed comorbidities. Which weight category should be documented before evaluating additional risk factors?",
       "options": [
         "Overweight",
         "Normal weight",
@@ -11799,7 +11799,7 @@
       "answer": [
         0
       ],
-      "explanation": "A BMI of 25 to 29.9 kg/m² is classified as overweight, so 29 is overweight rather than obese. Obesity class I begins at 30, class II at 35, and class III at 40. Documenting the category first lets later risk factors, such as OSA screening, be added to an accurate baseline.",
+      "explanation": "A BMI of 25 to 29.9 kg/mÂ² is classified as overweight, so 29 is overweight rather than obese. Obesity class I begins at 30, class II at 35, and class III at 40. Documenting the category first lets later risk factors, such as OSA screening, be added to an accurate baseline.",
       "citation": "",
       "topic": "Integrated preop cases",
       "sourceTitle": "Perioperative Assessment & Evaluation",
@@ -11813,7 +11813,7 @@
       "id": "PRE-486",
       "set": 1,
       "type": "single",
-      "stem": "A patient with BMI 55 kg/m² needs tracheal intubation. Which positioning best improves the laryngoscopic view and apnea tolerance?",
+      "stem": "A patient with BMI 55 kg/mÂ² needs tracheal intubation. Which positioning best improves the laryngoscopic view and apnea tolerance?",
       "options": [
         "Flat supine with one pillow",
         "Trendelenburg to raise venous return",
