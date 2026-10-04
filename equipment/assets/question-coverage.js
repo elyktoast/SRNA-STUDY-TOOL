@@ -27,7 +27,7 @@ function select({questions,count,history=new Map(),attempts,priority,seed=String
  const review=pool.map(q=>({q,h:rowFor(history,q),w:reviewWeight(q,attempts,priority,now)}))
    .filter(x=>x.h&&x.w>0&&Date.parse(x.h.last_issued_at||0)<recentCutoff)
    .sort((a,b)=>b.w-a.w||Date.parse(a.h.last_issued_at||0)-Date.parse(b.h.last_issued_at||0));
- const pickedReview=review.slice(0,targetReview).map(x=>x.q),used=new Set(pickedReview.map(q=>q.uid));
+ const pickedReview=balancedTake(review.slice(0,Math.max(targetReview*4,targetReview)).map(x=>x.q),targetReview,seed+':review'),used=new Set(pickedReview.map(q=>q.uid));
  const need=limit-pickedReview.length;
  let coverage=shapedTake(unseen.filter(q=>!used.has(q.uid)),need,seed);
  if(coverage.length<need){
