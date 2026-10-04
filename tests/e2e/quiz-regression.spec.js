@@ -93,6 +93,29 @@ test.describe('canonical quiz regression', () => {
     expect(result.attempt.incorrect).toBe(1);
   });
 
+  test('calibration retries never cross account ownership on a shared browser', async ({ page }) => {
+    await seedSignedIn(page);
+    await page.goto('/equipment/exam-1/studio.html');await waitForStudio(page);
+    const result=await page.evaluate(async()=>{
+      const q=ALL[0],sent=[],originalSubmit=MBUSupabase.submitItemContribution,originalUser=MBUSupabase.currentUser;
+      MBUSupabase.submitItemContribution=async payload=>{sent.push(payload);return true};
+      const ownerA=originalUser()?.id;MBUStudyIntelligence.clearAll();
+      Object.defineProperty(MBUSupabase,'submitItemContribution',{value:async()=>{throw new Error('offline simulation')},writable:true,configurable:true});
+      MBUStudyIntelligence.recordAnswer(q.bank,q,false,{bankLabel:q.bankLabel,sessionMode:'standard'});
+      await new Promise(r=>setTimeout(r,20));
+      Object.defineProperty(MBUSupabase,'submitItemContribution',{value:async payload=>{sent.push(payload);return true},writable:true,configurable:true});
+      Object.defineProperty(MBUSupabase,'currentUser',{value:()=>({id:'different-user'}),writable:true,configurable:true});
+      await MBUCalibrationOutbox.flush(MBUStudyIntelligence.STORE);const afterOther=sent.length;
+      Object.defineProperty(MBUSupabase,'currentUser',{value:()=>({id:ownerA}),writable:true,configurable:true});
+      await MBUCalibrationOutbox.flush(MBUStudyIntelligence.STORE);const afterOwner=sent.length;
+      Object.defineProperty(MBUSupabase,'submitItemContribution',{value:originalSubmit,writable:true,configurable:true});
+      Object.defineProperty(MBUSupabase,'currentUser',{value:originalUser,writable:true,configurable:true});
+      return{afterOther,afterOwner};
+    });
+    expect(result.afterOther).toBe(0);
+    expect(result.afterOwner).toBe(1);
+  });
+
   test('Studio persists normalized legacy keys and removes false flag entries', async ({ page }) => {
     await page.goto(exam + '/studio.html');
     await page.evaluate(() => localStorage.setItem('mbu_exam1_studio_v1', JSON.stringify({
