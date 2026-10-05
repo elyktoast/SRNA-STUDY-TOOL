@@ -1,9 +1,7 @@
 name: Quality gates
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 concurrency:
   group: snar-quality-gates-${{ github.ref }}
@@ -91,34 +89,3 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-
-  pages:
-    name: Publish verified site
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: browser
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-      - name: Stamp deployed build with commit SHA
-        shell: bash
-        run: |
-          rm -rf _site
-          mkdir _site
-          rsync -a --exclude '.git' --exclude '_site' ./ _site/
-          printf '{"build":"%s"}\n' "${GITHUB_SHA}" > _site/equipment/build.json
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-      - name: Upload verified site
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-      - name: Deploy verified site
-        id: deployment
-        uses: actions/deploy-pages@v4
