@@ -1,0 +1,3396 @@
+{
+  "id": "ambulatory-oba",
+  "title": "Ambulatory & Office-Based Anesthesia",
+  "count": 129,
+  "questions": [
+    {
+      "id": "PACU-AMB-001",
+      "set": 1,
+      "type": "single",
+      "stem": "52-year-old with well-controlled hypertension and type 2 diabetes (A1C 6.8%) is scheduled for knee arthroscopy at a freestanding surgery center. What is the BEST assessment?",
+      "options": [
+        "Appropriate if his conditions stay medically stable",
+        "Appropriate if he is reclassified as ASA 1",
+        "Inappropriate because diabetes excludes ambulatory care",
+        "Inappropriate because ASA 3 patients need a hospital"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Ambulatory surgery mostly serves ASA 1 and 2 patients, and ASA 3 or 4 patients are acceptable when their systemic disease is medically stable. Stable diabetes and hypertension don't exclude him. Reclassifying an ASA status doesn't change risk, and no rule bars ASA 3 patients from surgery centers.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-002",
+      "set": 1,
+      "type": "single",
+      "stem": "Which case is BEST suited to a freestanding ambulatory surgery center?",
+      "options": [
+        "Open colectomy needing overnight pain control",
+        "Elective carpal tunnel release in an ASA 2 adult",
+        "Emergency appendectomy in a septic patient",
+        "Scheduled cesarean delivery in a healthy parturient"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Ambulatory cases are elective, carry low rates of postoperative complications, and don't need an overnight stay. Obstetric cases are excluded from ambulatory settings. An open colectomy needs inpatient care, and an emergency in a septic patient needs hospital resources.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-003",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are recognized advantages of ambulatory surgery centers? (Select 3)",
+      "options": [
+        "Wider presence in rural and inner-city areas",
+        "More predictable scheduling",
+        "More charity and government-subsidized care",
+        "Broader access for uninsured patients",
+        "Lower costs because they don't subsidize costlier hospital services",
+        "Faster turnover between cases"
+      ],
+      "answer": [
+        1,
+        4,
+        5
+      ],
+      "explanation": "ASCs avoid subsidizing expensive hospital services, schedule more predictably, and turn rooms over faster, which also saves Medicare money. They tend to serve insured patients, for-profit centers rarely provide charity or subsidized care, and they are seldom located in rural or inner-city areas.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-004",
+      "set": 1,
+      "type": "multi",
+      "stem": "A hospital lost emergency coverage for one surgical specialty after that group moved to a freestanding center. Which disadvantages of ASCs does this illustrate or accompany? (Select 2)",
+      "options": [
+        "Slower turnover between cases",
+        "Less predictable scheduling than hospitals",
+        "Higher overall cost per case than hospitals",
+        "Higher Medicare spending per case",
+        "Loss of specialty coverage for the hospital's emergency department",
+        "Preference for insured over uninsured patients"
+      ],
+      "answer": [
+        4,
+        5
+      ],
+      "explanation": "A specialty working only in a freestanding center can leave the hospital ED without coverage, and ASCs tend to serve insured patients rather than uninsured ones. Lower cost, predictable scheduling, fast turnover, and Medicare savings are advantages, not disadvantages.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-005",
+      "set": 1,
+      "type": "single",
+      "stem": "48-year-old with diagnosed severe OSA on home CPAP is scheduled for carpal tunnel release under a regional block at an ASC. What is the BEST assessment?",
+      "options": [
+        "Unacceptable because severe OSA excludes ambulatory surgery",
+        "Unacceptable unless the AHI has improved on recent sleep study",
+        "Acceptable for this kind of case and technique",
+        "Acceptable if converted to general anesthesia"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "For patients with OSA, a procedure typically done as an outpatient under local or regional anesthesia is acceptable for an ASC. Severe OSA alone doesn't exclude him. General anesthesia raises airway and opioid risk rather than lowering it. A repeat sleep study isn't required for this decision.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-006",
+      "set": 1,
+      "type": "single",
+      "stem": "Infant born at 34 weeks' gestation is now 18 weeks old and scheduled for hernia repair. What is the postconceptual age, and what does it imply?",
+      "options": [
+        "52 weeks; same-day discharge is appropriate",
+        "46 weeks; monitor 12 hr after surgery for apnea",
+        "18 weeks; no extra monitoring is needed",
+        "52 weeks; monitor 12 hr after surgery for apnea"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Postconceptual age = gestational age at birth + postnatal age: 34 + 18 = 52 weeks. For preterm infants, PCA under 60 weeks warrants 12 hr of postoperative monitoring for apnea. 46 weeks uses the term-infant cutoff as if it were the age. Postnatal age alone ignores prematurity.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-007",
+      "set": 1,
+      "type": "single",
+      "stem": "Term infant (born at 40 weeks) is now 4 weeks old and scheduled for circumcision. Which statement is BEST?",
+      "options": [
+        "PCA 44 weeks; monitor for 12 hr postop",
+        "PCA 56 weeks; monitor because he is under 60 weeks",
+        "PCA 44 weeks; discharge after standard PACU criteria",
+        "PCA 4 weeks; discharge is acceptable"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "40 + 4 = 44 weeks. Term infants under 46 weeks PCA need about 12 hr of monitoring for apnea. Standard discharge ignores apnea risk. Postnatal age alone isn't the measure. The 60-week cutoff applies to preterm infants, and 56 is a miscalculation.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-008",
+      "set": 1,
+      "type": "single",
+      "stem": "Infant born at 39 weeks is now 10 weeks old for an outpatient procedure. What is the BEST plan regarding apnea monitoring?",
+      "options": [
+        "PCA 49 weeks; monitor for 12 hr",
+        "PCA 49 weeks; routine care",
+        "PCA 49 weeks; cancel until 60 weeks",
+        "PCA 10 weeks; monitor for 12 hr"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "39 + 10 = 49 weeks, which is past the 46-week threshold for term infants, so extended apnea monitoring isn't routinely needed. The 60-week threshold applies to preterm infants. Postnatal age alone ignores gestation.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-009",
+      "set": 1,
+      "type": "single",
+      "stem": "Infant born at 30 weeks is now 26 weeks old and scheduled for eye examination under anesthesia as an outpatient. What does PCA imply?",
+      "options": [
+        "PCA 66 weeks; monitor 12 hr for apnea",
+        "PCA 26 weeks; routine discharge is reasonable",
+        "PCA 56 weeks; monitor 12 hr for apnea",
+        "PCA 56 weeks; routine discharge is reasonable"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "30 + 26 = 56 weeks, under the 60-week threshold for preterm infants, so 12 hr of monitoring is indicated. 66 is an arithmetic error. Postnatal age alone misses the prematurity risk.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-010",
+      "set": 1,
+      "type": "multi",
+      "stem": "4-year-old with a runny nose is scheduled for ear tubes. Which factors are independent risks for adverse respiratory events with a URI? (Select 4)",
+      "options": [
+        "Parents who smoke",
+        "History of prematurity",
+        "Clear rhinorrhea with normal activity",
+        "Copious secretions with nasal congestion",
+        "Endotracheal tube rather than a face mask or LMA",
+        "Surgery on the extremities"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "explanation": "ETT use, prematurity, reactive airway disease, parental smoking, airway surgery, and copious secretions or congestion independently raise risk. Clear rhinorrhea in an active child isn't on the list. Extremity surgery isn't airway surgery.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-011",
+      "set": 1,
+      "type": "single",
+      "stem": "3-year-old for tympanostomy has clear rhinorrhea, eats and plays normally, temp 37.0 °C, RR 24, and looks well. What is the BEST plan?",
+      "options": [
+        "Proceed with a planned endotracheal tube",
+        "Cancel and obtain a chest X-ray first",
+        "Cancel and reschedule in 6 weeks",
+        "Proceed with a mask or LMA technique"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "A child with a URI who is afebrile, active, eating normally, with a normal RR, and not ill-appearing can generally proceed, and avoiding an ETT lowers risk. A 6-week delay applies to adults after viral URIs. An ETT is itself a risk factor. A chest film isn't needed.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-012",
+      "set": 1,
+      "type": "single",
+      "stem": "3-year-old for tympanostomy has a URI with temp 38.6 °C, thick green nasal discharge, wet cough, and decreased appetite. What is the BEST plan?",
+      "options": [
+        "Postpone the procedure",
+        "Proceed with glycopyrrolate to dry secretions",
+        "Proceed with an LMA to avoid intubation",
+        "Proceed with deep extubation"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Fever, purulent secretions, cough, and reduced activity or appetite suggest active illness, and postponing is reasonable. An LMA or glycopyrrolate reduces some risk but doesn't make an ill child an appropriate elective candidate. Deep extubation adds laryngospasm risk in a child with secretions.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-013",
+      "set": 1,
+      "type": "single",
+      "stem": "35-year-old had a viral URI that resolved 2 weeks ago and is scheduled for elective septoplasty. Which plan BEST reflects airway physiology?",
+      "options": [
+        "Proceed with deep extubation to avoid coughing at emergence",
+        "Consider waiting about 6 weeks",
+        "Delay 1 week until the 3-week mark",
+        "Proceed; symptoms resolved, so reactivity has too"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "In adults, airway hyperreactivity and airflow obstruction persist for up to 6 weeks after a viral URI, so delaying elective airway surgery to that point is reasonable. Symptom resolution doesn't mean reactivity has resolved. Three weeks is too short. Deep extubation doesn't remove the hyperreactivity.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-014",
+      "set": 1,
+      "type": "single",
+      "stem": "Adult had a viral URI ending on March 1 and wants elective sinus surgery as soon as reasonable. Using a 6-week window, what is the earliest date?",
+      "options": [
+        "About May 10",
+        "About March 29",
+        "About April 12",
+        "About March 15"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "6 weeks after March 1 is about April 12. March 15 is 2 weeks, March 29 is 4 weeks, and May 10 is about 10 weeks.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-015",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements about anesthetic technique for ambulatory surgery are accurate? (Select 3)",
+      "options": [
+        "Sore throat is more common after spinal than general",
+        "Regional anesthesia shortens PACU stay compared with general alone",
+        "General, regional, and local anesthesia are comparably safe",
+        "Regional plus general shortens PACU stay compared with general alone",
+        "Spinal anesthesia speeds discharge in ambulatory patients",
+        "Regional anesthesia has no failure rate to plan for"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "All three techniques are considered equally safe, and adding regional shortens PACU stay. Regional blocks have a failure rate that needs a backup plan. Spinal can lengthen discharge if voiding is required. Sore throat and nausea are more common after general anesthesia.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-016",
+      "set": 1,
+      "type": "single",
+      "stem": "30-year-old receives a spinal for outpatient knee arthroscopy. In PACU she meets other discharge criteria but hasn't voided. Which statement BEST reflects current evidence?",
+      "options": [
+        "Voiding is a mandatory criterion after any spinal",
+        "She needs a urinary catheter before discharge",
+        "Discharge is acceptable once motor block wears off, with no further assessment",
+        "Voiding may be required for selected higher-risk patients"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Voiding can delay discharge after spinal anesthesia, but ASA guidance says it shouldn't be a routine discharge requirement; it is reasonable for selected patients, such as those with long-acting spinals, urologic or hernia surgery, or prior retention, who often get a bladder scan. Discrepancy flag: a note in the course materials states a spinal patient has to urinate before discharge, which is stricter than current guidance. Discharge still requires assessment, and a catheter isn't needed in an asymptomatic patient.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-017",
+      "set": 1,
+      "type": "multi",
+      "stem": "Compared with general anesthesia for outpatient surgery, which outcomes favor spinal anesthesia? (Select 2)",
+      "options": [
+        "Less sore throat",
+        "Less postdural puncture headache",
+        "Less nausea",
+        "Faster discharge when voiding is required",
+        "Less backache",
+        "Shorter time to voiding"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Sore throat and nausea are more common after general anesthesia. Spinal carries PDPH risk (similar overall headache rates with small needles), may cause backache, and can delay voiding and discharge.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-018",
+      "set": 1,
+      "type": "single",
+      "stem": "Which patient population should NOT be scheduled at a freestanding ambulatory surgery center?",
+      "options": [
+        "Parturients for obstetric procedures",
+        "Healthy children over 6 months for ear tubes",
+        "Adults with stable hypertension for cataract surgery",
+        "ASA 2 adults for hernia repair"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Obstetric cases and parturients are excluded from ambulatory settings because of the need for maternal and fetal resources. The other patients are typical ambulatory candidates.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-019",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are the two primary anesthetic concerns that drive ambulatory technique choices? (Select 2)",
+      "options": [
+        "Speed of wake-up",
+        "Duration of NPO time",
+        "Incidence of PONV",
+        "Total anesthetic cost",
+        "Need for invasive monitoring",
+        "Surgeon preference"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Fast emergence and low PONV rates are the two main ambulatory priorities. Cost, monitoring, surgeon preference, and fasting matter but aren't the two core concerns.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-020",
+      "set": 1,
+      "type": "single",
+      "stem": "Two ambulatory patients wake within 5 min of the end of surgery. One leaves PACU in 40 min; the other stays 3 hr. Which factor BEST explains the difference?",
+      "options": [
+        "Use of a regional block in the first patient",
+        "Nausea and vomiting in the second patient",
+        "Duration of surgery",
+        "Choice of volatile versus propofol"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Fast wake-up doesn't guarantee a short PACU stay. Nausea, with or without vomiting, is the factor most likely to delay discharge and cause unplanned admission. Anesthetic choice, blocks, and surgery length matter less once both patients are awake.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-021",
+      "set": 1,
+      "type": "single",
+      "stem": "What factor is MOST likely to delay discharge or cause unplanned admission after ambulatory surgery?",
+      "options": [
+        "A small amount of surgical-site discomfort",
+        "A slow but complete emergence",
+        "Nausea with or without vomiting",
+        "Mild postoperative shivering"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Nausea and vomiting are the leading causes of delayed discharge and unanticipated admission after ambulatory surgery. Mild shivering, a slow emergence, and mild pain are usually manageable.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-022",
+      "set": 1,
+      "type": "single",
+      "stem": "Outpatient leaves the surgery center at 4 pm and develops bleeding at 10 pm, after the center closes. What should have been addressed before discharge?",
+      "options": [
+        "A repeat hemoglobin before discharge",
+        "An overnight stay for every ASC patient",
+        "A stronger opioid prescription",
+        "Where to go for after-hours problems"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Most ASCs aren't open around the clock, so patients need clear instructions on where to return or seek care if a complication occurs. An overnight stay isn't required for each patient, and opioids or routine labs don't address the problem.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-023",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement BEST distinguishes wake-up time from discharge time after ambulatory anesthesia?",
+      "options": [
+        "A faster wake-up doesn't by itself shorten PACU stay",
+        "Wake-up time determines discharge in most patients",
+        "Discharge depends mainly on the anesthetic agent used",
+        "Discharge time is fixed at twice the wake-up time"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Wake-up and discharge are distinct; pain and PONV control drive faster recovery and discharge more than emergence speed. The other statements overstate the link.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-024",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which measures BEST support faster recovery and discharge after ambulatory surgery? (Select 3)",
+      "options": [
+        "Long-acting opioids as the main analgesic",
+        "Good pain control",
+        "Routine overnight observation",
+        "Regional techniques where appropriate",
+        "Deeper anesthesia to blunt emergence",
+        "PONV prophylaxis in at-risk patients"
+      ],
+      "answer": [
+        1,
+        3,
+        5
+      ],
+      "explanation": "Pain control, PONV prevention, and regional techniques shorten recovery. Deeper anesthesia, routine overnight stays, and long-acting opioids work against fast discharge.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-025",
+      "set": 1,
+      "type": "single",
+      "stem": "Which BEST defines ambulatory anesthesia?",
+      "options": [
+        "Anesthesia delivered with local or regional techniques",
+        "Same-day arrival, anesthesia, and discharge",
+        "Anesthesia delivered outside a hospital building",
+        "Anesthesia delivered by a single provider without assistance"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Ambulatory anesthesia means same-day arrival and discharge from the surgical venue, which may be hospital-based, freestanding, or office-based. Location outside a hospital defines OBA or freestanding centers, not ambulatory care itself.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-026",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement about ASC locations is MOST accurate?",
+      "options": [
+        "They're limited to sites inside a licensed hospital",
+        "They can't be affiliated with a parent hospital",
+        "They may be hospital-based or freestanding",
+        "They are office-based practices"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "ASCs can be hospital-based or freestanding satellite facilities affiliated with or independent of a hospital, often on or near the hospital campus. NORA refers to sites inside a hospital outside the OR. Office-based practices are a separate category.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-027",
+      "set": 1,
+      "type": "single",
+      "stem": "Obese patient (BMI 44) with untreated suspected OSA is scheduled for laparoscopic cholecystectomy under GA at a freestanding center. What is the BEST plan?",
+      "options": [
+        "Cancel permanently; obese patients can't have ambulatory surgery",
+        "Proceed; obesity isn't a factor in ambulatory outcomes",
+        "Proceed and plan opioid-based analgesia",
+        "Assess OSA risk; consider a monitored setting"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Obese patients are more likely to have adverse outcomes and OSA, so risk assessment, optimization, and possibly a setting with postoperative monitoring are needed. Obesity does affect outcomes. Opioid-heavy plans raise risk. Obesity alone doesn't permanently exclude ambulatory surgery.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-028",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which children with URI symptoms have additional risk for perioperative respiratory events? (Select 3)",
+      "options": [
+        "Child with clear rhinorrhea, afebrile, and active",
+        "Child with asthma",
+        "Child having inguinal hernia repair under a caudal block and mask",
+        "Child having adenoidectomy",
+        "Former 28-week preterm infant",
+        "Child with a nonsmoking family"
+      ],
+      "answer": [
+        1,
+        3,
+        4
+      ],
+      "explanation": "Reactive airway disease, prematurity, and airway surgery are independent risk factors. A well-appearing child, nonsmoking household, and a mask-based technique for non-airway surgery lower risk.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-029",
+      "set": 1,
+      "type": "single",
+      "stem": "Which technique change MOST lowers respiratory risk for a child with a URI having a short, non-airway procedure?",
+      "options": [
+        "Using an LMA or face mask instead of an ETT",
+        "Giving a larger opioid dose to blunt airway reflexes",
+        "Using an ETT to protect the airway from secretions",
+        "Deep extubation of an ETT to avoid coughing"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Endotracheal intubation is an independent risk factor, so an LMA or mask lowers risk. Deep extubation and larger opioid doses don't reduce the URI-related risk and may increase it.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-030",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement about ASC patient selection by age is MOST accurate?",
+      "options": [
+        "No pediatric patients can have ambulatory surgery",
+        "Infant PCA guides postop monitoring",
+        "Age over 80 excludes ambulatory surgery",
+        "Adults under 40 need extended monitoring"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Age matters most for infants, where postconceptual age determines apnea risk and monitoring. Children and older adults routinely have ambulatory surgery when otherwise appropriate.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-031",
+      "set": 1,
+      "type": "single",
+      "stem": "Why do former preterm infants have a higher postconceptual age threshold for apnea monitoring than term infants?",
+      "options": [
+        "They metabolize volatile agents faster than term infants",
+        "They have larger airways",
+        "Their respiratory control is less mature",
+        "They have higher hemoglobin levels"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Immature brainstem control of breathing makes former preterm infants prone to postoperative apnea up to a higher PCA (under 60 weeks). The other statements don't explain apnea risk.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-032",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which findings support proceeding with elective surgery in a child with a mild URI? (Select 4)",
+      "options": [
+        "Wheezing on exam",
+        "Afebrile",
+        "Doesn't appear ill",
+        "Normal respiratory rate",
+        "Normal appetite and activity",
+        "Purulent nasal discharge"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "explanation": "A well-appearing, afebrile child with normal activity, appetite, and RR can generally proceed. Wheezing and purulent secretions suggest lower airway involvement or bacterial infection.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-033",
+      "set": 1,
+      "type": "single",
+      "stem": "ASA 4 patient with unstable angina is scheduled for cystoscopy at a freestanding surgery center. What is the BEST assessment?",
+      "options": [
+        "Appropriate if the patient has an escort",
+        "Appropriate under MAC with no extra preparation",
+        "Appropriate because the procedure is minor",
+        "Not until his cardiac status is stabilized"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "ASA 3 or 4 patients are acceptable only when their systemic disease is medically stable. Unstable angina isn't stable. A minor procedure or MAC doesn't remove the cardiac risk. An escort is required but doesn't address stability.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-034",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement BEST describes the speaker-note findings comparing spinal and general anesthesia for outpatients?",
+      "options": [
+        "Spinal had lower cost and length of stay in those studies",
+        "Headache was much more common after spinal with small needles",
+        "Spinal had higher cost because of longer PACU stays",
+        "Nausea was more common after spinal"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Spinal anesthesia was associated with lower costs and length of stay. With small needles, headache incidence is similar after either technique. Nausea and sore throat are more common after general anesthesia.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-035",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient with a history of severe PONV is having outpatient breast surgery. Which approach BEST serves the main ambulatory goals?",
+      "options": [
+        "Opioid analgesia without a block",
+        "Regional block, propofol TIVA, and multimodal prophylaxis",
+        "Deep volatile anesthetic to ensure no recall",
+        "Volatile anesthetic with long-acting opioids for postoperative comfort"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Regional techniques, propofol-based anesthesia, and multimodal prophylaxis reduce PONV and speed discharge. Volatiles and opioids raise PONV risk.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-036",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient has an ASC procedure that typically requires an overnight stay for pain control. Which statement is MOST accurate?",
+      "options": [
+        "It is acceptable for ASA 1 patients",
+        "It is acceptable if a family member stays overnight with the patient",
+        "It isn't appropriate for a freestanding ambulatory center",
+        "It is acceptable if a long-acting block is placed"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Ambulatory procedures shouldn't require an overnight stay; those that do belong in a setting that provides one. A family member, block, or ASA class doesn't change the inpatient need.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-037",
+      "set": 1,
+      "type": "single",
+      "stem": "Which payment advantage is attributed to ambulatory surgery centers?",
+      "options": [
+        "They are reimbursed by private insurers alone",
+        "They receive higher Medicare rates than hospitals",
+        "They don't bill Medicare",
+        "Medicare saves money on procedures done there"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "ASCs lower costs, and Medicare saves money on procedures performed there. They do bill Medicare, typically at lower rates than hospital outpatient departments.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-038",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient with a URI 3 weeks ago has persistent mild cough and is scheduled for elective bronchoscopy. Which concern is MOST relevant?",
+      "options": [
+        "Ongoing airway hyperreactivity",
+        "Higher risk of postoperative urinary retention",
+        "Increased risk of malignant hyperthermia",
+        "Increased sensitivity to neuromuscular blockers"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Airway hyperreactivity persists for weeks after a viral URI and increases bronchospasm and laryngospasm risk, especially with airway instrumentation. The other concerns aren't linked to URIs.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-039",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which characteristics define an appropriate ambulatory surgical procedure? (Select 3)",
+      "options": [
+        "Requires inpatient IV analgesia",
+        "Low rate of postoperative complications",
+        "Major blood loss expected",
+        "Requires postoperative ICU admission",
+        "Generally elective",
+        "No need for an overnight stay"
+      ],
+      "answer": [
+        1,
+        4,
+        5
+      ],
+      "explanation": "Ambulatory procedures are elective, have low complication rates, pose little safety risk, and don't require an overnight stay. ICU admission, major blood loss, and inpatient analgesia point to inpatient surgery.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-040",
+      "set": 1,
+      "type": "single",
+      "stem": "Ambulatory patient received a regional block plus light general anesthesia. Compared with general anesthesia alone, what PACU outcome should you expect?",
+      "options": [
+        "Longer PACU stay because of the block",
+        "Shorter PACU length of stay",
+        "No difference in PACU stay",
+        "Longer stay because of block-related nausea"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Regional plus general anesthesia shortens PACU stay compared with general alone, largely through better analgesia and less opioid use. Blocks don't typically cause nausea.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-041",
+      "set": 1,
+      "type": "single",
+      "stem": "Which pediatric URI finding MOST strongly suggests postponing elective surgery?",
+      "options": [
+        "Mild sneezing",
+        "Mild nasal congestion without fever or cough",
+        "Fever with purulent secretions",
+        "Clear rhinorrhea"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Fever and purulent secretions suggest more significant illness. Clear rhinorrhea, sneezing, and mild congestion in an otherwise well child generally allow proceeding.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-042",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient with poorly controlled asthma had a viral URI 10 days ago and is scheduled for elective hernia repair. What is the BEST approach?",
+      "options": [
+        "Proceed with an ETT to secure the airway",
+        "Proceed with desflurane for faster recovery",
+        "Proceed after a single albuterol treatment",
+        "Delay and optimize first"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Recent URI plus poorly controlled reactive airway disease raises bronchospasm risk; delaying and optimizing is reasonable for elective surgery. An ETT and desflurane increase airway irritation. A single albuterol dose doesn't reverse ongoing hyperreactivity.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-043",
+      "set": 1,
+      "type": "single",
+      "stem": "Which infant is LEAST likely to need extended postoperative apnea monitoring?",
+      "options": [
+        "Term infant at PCA 52 weeks",
+        "Term infant at PCA 44 weeks",
+        "Preterm infant at PCA 55 weeks",
+        "Preterm infant at PCA 58 weeks"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Term infants over 46 weeks PCA don't need routine extended monitoring. Term infants under 46 weeks and preterm infants under 60 weeks do.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-044",
+      "set": 1,
+      "type": "single",
+      "stem": "Why might a for-profit freestanding ASC be absent from a rural community?",
+      "options": [
+        "Rural patients can't have ambulatory surgery",
+        "They locate where insured patients are",
+        "Rural hospitals offer ASC services instead",
+        "Regulations ban ASCs outside cities"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "For-profit facilities tend to locate where insured patients are and seldom serve rural or inner-city areas. No regulation bans rural ASCs, and rural patients can have ambulatory surgery.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-045",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which questions should be asked before scheduling a patient at an ASC? (Select 4)",
+      "options": [
+        "Has the patient had surgery at a hospital before?",
+        "For infants, what is the postconceptual age?",
+        "Is the patient's systemic disease medically stable?",
+        "Does the patient have OSA, and what technique is planned?",
+        "Does the patient prefer morning or afternoon surgery?",
+        "Is the case elective with low complication risk?"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "explanation": "Case type, patient stability, OSA with planned technique, and infant PCA determine ambulatory suitability. Time preference and prior hospital surgery don't.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-046",
+      "set": 1,
+      "type": "single",
+      "stem": "7-year-old with a mild URI, parents who smoke, and asthma is scheduled for adenotonsillectomy. Which plan is MOST reasonable?",
+      "options": [
+        "Proceed with an LMA for tonsillectomy",
+        "Proceed; a URI alone isn't a risk factor",
+        "Consider postponing given multiple risk factors",
+        "Proceed with deep extubation to avoid coughing at emergence"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Parental smoking, reactive airway disease, and airway surgery are independent risk factors that add to URI risk, making postponement reasonable. Deep extubation doesn't remove the risk. An LMA is possible for tonsillectomy but doesn't eliminate the combined risk.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-047",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement BEST explains why spinal anesthesia may lengthen discharge?",
+      "options": [
+        "Longer time to oral intake",
+        "Higher PONV than general anesthesia in outpatients",
+        "Delayed return of consciousness",
+        "The need to confirm voiding in selected patients"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Spinal can delay discharge when voiding is required. Consciousness isn't affected, PONV is lower than with general anesthesia, and oral intake isn't delayed.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-048",
+      "set": 1,
+      "type": "single",
+      "stem": "Which measure BEST reduces unplanned admissions after ambulatory surgery?",
+      "options": [
+        "Effective PONV prevention",
+        "Routine IV opioids in PACU",
+        "Deeper anesthesia during surgery",
+        "Longer PACU observation for everyone"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "PONV is the leading cause of unanticipated admission; preventing and treating it reduces admissions. Longer observation doesn't address the cause. Deeper anesthesia and routine IV opioids worsen PONV.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-049",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which patients are typical ASC candidates by ASA class? (Select 2)",
+      "options": [
+        "ASA 1 patient for hernia repair",
+        "ASA 3 patient with unstable angina",
+        "ASA 4 patient with decompensated heart failure",
+        "ASA 3 patient with poorly controlled diabetes and DKA history this week",
+        "ASA 2 patient with mild asthma for arthroscopy",
+        "ASA 5 patient for any procedure"
+      ],
+      "answer": [
+        0,
+        4
+      ],
+      "explanation": "ASA 1 and 2 patients are typical; ASA 3 and 4 patients qualify only when medically stable. Decompensated, unstable, or poorly controlled disease excludes them.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-050",
+      "set": 1,
+      "type": "single",
+      "stem": "Which ambulatory facility type can be located on or near a hospital campus while operating separately?",
+      "options": [
+        "Office-based procedure room",
+        "Affiliated surgery center",
+        "Inpatient operating room",
+        "NORA suite inside the hospital"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Surgery centers may be outside the hospital but affiliated with it and located near or on the same campus. Office rooms aren't hospital-affiliated, and NORA sites are inside the hospital.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-AMB-051",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which considerations apply to ambulatory surgery in children with recent URI? (Select 2)",
+      "options": [
+        "Parental smoking lowers risk",
+        "URIs don't affect airway reactivity",
+        "An ETT protects better against laryngospasm",
+        "Children with URIs need 6-week delays in every case",
+        "Postponement is reasonable with fever or purulent secretions",
+        "Avoiding an ETT when possible lowers risk"
+      ],
+      "answer": [
+        4,
+        5
+      ],
+      "explanation": "Avoiding intubation lowers risk, and ill-appearing children with fever or purulent secretions should be postponed. The distractors are incorrect or overstated.",
+      "citation": "",
+      "topic": "Ambulatory Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Ambulatory Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-001",
+      "set": 1,
+      "type": "single",
+      "stem": "A plastic surgeon performs liposuction in a freestanding procedure room that isn't accredited as an ASC or hospital. How is this setting classified?",
+      "options": [
+        "Hospital-based ambulatory surgery",
+        "Non-operating room anesthesia within a hospital",
+        "Office-based anesthesia",
+        "Accredited ambulatory surgery center"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "OBA takes place in a freestanding medical or surgical office or procedure room not accredited as an ASC or hospital. NORA refers to sites outside the OR but inside a licensed hospital. The other options require hospital or ASC accreditation.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-002",
+      "set": 1,
+      "type": "single",
+      "stem": "Anesthesia is provided for an MRI in the radiology department of a licensed hospital. How is this setting classified?",
+      "options": [
+        "Office-based anesthesia",
+        "Freestanding ambulatory surgery",
+        "Class A office anesthesia",
+        "Non-operating room anesthesia"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "NORA is any anesthetic outside a traditional OR but within a fully licensed hospital, including MRI, endoscopy, interventional radiology, and ECT. OBA is outside accredited facilities. Class A refers to an office classification.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-003",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which locations are typical NORA sites? (Select 4)",
+      "options": [
+        "Freestanding dental office",
+        "MRI scanner",
+        "Unaccredited cosmetic surgery office",
+        "Endoscopy suite",
+        "Interventional radiology suite",
+        "Electroconvulsive therapy room"
+      ],
+      "answer": [
+        1,
+        3,
+        4,
+        5
+      ],
+      "explanation": "NORA sites lie within a licensed hospital but outside the OR: endoscopy, IR, MRI, and ECT. Freestanding dental or cosmetic offices are office-based settings.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-004",
+      "set": 1,
+      "type": "single",
+      "stem": "Closed claims data compare injuries in offices and ASCs. Which statement is MOST accurate?",
+      "options": [
+        "Office injuries were more often permanent or fatal",
+        "Injury severity was similar in both settings",
+        "Office injuries were mostly temporary and nondisabling",
+        "ASC injuries were more often permanent or fatal"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "About 64% of office injuries were permanent or led to death versus about 21% in ASCs, where 62% were temporary and nondisabling. Office injuries were only 21% temporary.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-005",
+      "set": 1,
+      "type": "single",
+      "stem": "In the office-based closed claims data, about what percentage of reported injuries were temporary and nondisabling?",
+      "options": [
+        "About 64%",
+        "About 21%",
+        "About 34%",
+        "About 62%"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "About 21% of office injuries were temporary and nondisabling and about 64% were permanent or fatal. 62% describes temporary injuries in ASCs. 34% is the fatality share among MAC injuries.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-006",
+      "set": 1,
+      "type": "single",
+      "stem": "In the ASC closed claims data, about what percentage of injuries were permanent or led to death?",
+      "options": [
+        "About 64%",
+        "About 4%",
+        "About 21%",
+        "About 62%"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "In ASCs about 62% of injuries were temporary and nondisabling and about 21% permanent or fatal. 64% is the office figure for permanent or fatal injuries.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-007",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement about injuries during monitored anesthesia care is MOST accurate?",
+      "options": [
+        "Nonfatal MAC injuries were usually temporary",
+        "MAC carried no fatal claims in the database",
+        "MAC injuries were less severe than GA injuries overall",
+        "Nonfatal MAC injuries were more often permanent"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Nonfatal injuries during MAC were more likely to be permanent than those during general anesthesia, and about 34% of MAC injuries were fatalities. The other statements contradict those data.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-008",
+      "set": 1,
+      "type": "single",
+      "stem": "In 1990s ASA closed claims for MAC, what was the MOST common injury type?",
+      "options": [
+        "Death, about 34%",
+        "Nerve damage, about 12%",
+        "Brain damage, about 34%",
+        "Eye damage, about 19%"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Death was most common (about 34%), followed by brain damage (about 19%), eye damage (about 12%), and nerve damage (about 7%). The distractors pair the right injuries with wrong percentages.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-009",
+      "set": 1,
+      "type": "single",
+      "stem": "In 1990s ASA closed claims for MAC, about what share of injuries were brain damage?",
+      "options": [
+        "About 34%",
+        "About 19%",
+        "About 7%",
+        "About 12%"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Brain damage accounted for about 19%. 34% was death, 12% eye damage, and 7% nerve damage.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-010",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which injuries each made up about 4% of MAC closed claims in the 1990s? (Select 5)",
+      "options": [
+        "Aspiration",
+        "Burn",
+        "Stroke",
+        "Emotional distress",
+        "Myocardial infarction",
+        "Eye damage"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "explanation": "MI, stroke, burns, emotional distress, and aspiration each accounted for about 4%. Eye damage was higher at about 12%.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-011",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are the usual causes of morbidity and mortality in office-based anesthesia? (Select 3)",
+      "options": [
+        "Too many staff for the procedure",
+        "Excess regulatory oversight",
+        "Oversedation",
+        "Overuse of pulse oximetry",
+        "Inadequate monitoring",
+        "Thromboembolic events"
+      ],
+      "answer": [
+        2,
+        4,
+        5
+      ],
+      "explanation": "Morbidity and mortality in offices usually result from inadequate monitoring, oversedation, or thromboembolism. Oversight is often too little, not too much. Lack of pulse oximetry is the common monitoring failure.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-012",
+      "set": 1,
+      "type": "single",
+      "stem": "When office-based injuries involve inadequate monitoring, which monitor is MOST commonly missing?",
+      "options": [
+        "Invasive arterial pressure",
+        "Temperature monitoring",
+        "Pulse oximetry",
+        "Capnography"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Inadequate monitoring, most commonly lack of pulse oximetry, is a leading cause of office injuries. Capnography is also important, but pulse oximetry absence is the most commonly cited failure.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-013",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which human-error factors contribute to office-based injuries? (Select 4)",
+      "options": [
+        "Use of standardized checklists",
+        "Lack of experience",
+        "Slow recognition of an event",
+        "Excessive preoperative testing",
+        "Drug overdosage",
+        "Slow response to an event"
+      ],
+      "answer": [
+        1,
+        2,
+        4,
+        5
+      ],
+      "explanation": "Slow recognition, slow response, inexperience, and overdosage are listed human-error causes. Excess testing and checklists aren't causes of injury.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-014",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are recognized causes of injury in office-based practice? (Select 3)",
+      "options": [
+        "Inadequate preoperative or postoperative evaluation",
+        "Overstaffing of recovery areas",
+        "Routine use of capnography",
+        "Inadequate monitoring",
+        "Inadequate resuscitation equipment",
+        "Excessive use of regional anesthesia"
+      ],
+      "answer": [
+        0,
+        3,
+        4
+      ],
+      "explanation": "Inadequate resuscitation equipment, inadequate evaluation, inadequate monitoring, and human error are the listed causes. The distractors describe safe practices or non-issues.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-015",
+      "set": 1,
+      "type": "single",
+      "stem": "ASA 3 patient with severe COPD wants a mole excision in an office. Which plan is MOST appropriate?",
+      "options": [
+        "Deep sedation with a natural airway",
+        "Moderate sedation with careful titration and oxygen",
+        "General anesthesia with an LMA",
+        "Anesthesia consult, then local without sedation"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "ASA 3 patients should undergo office procedures only after an anesthesia consultation and with local anesthesia without sedation. Any sedation adds respiratory risk in this setting.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-016",
+      "set": 1,
+      "type": "single",
+      "stem": "Which patient is the IDEAL candidate for an office-based procedure?",
+      "options": [
+        "ASA 1 adult with an escort and appropriate fasting",
+        "ASA 1 adult with no escort home",
+        "ASA 3 adult with COPD wanting deep sedation for comfort",
+        "ASA 2 adult with severe OSA"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "The ideal office patient is ASA 1 (or 2) with an escort and appropriate fasting. Severe OSA and lack of an escort make a patient unsuitable. ASA 3 patients shouldn't have sedation in an office.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-017",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which patients are UNSUITABLE for an office-based procedure? (Select 5)",
+      "options": [
+        "No escort home",
+        "Severe obstructive sleep apnea",
+        "Poorly controlled diabetes",
+        "Malignant hyperthermia susceptibility",
+        "History of substance abuse",
+        "Well-controlled hypertension"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "explanation": "Poorly controlled diabetes, MH susceptibility, potential difficult airway (morbid obesity, severe OSA), lack of an escort, and substance abuse history are on the unsuitable list. Well-controlled hypertension isn't.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-018",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which patients are UNSUITABLE for an office-based procedure? (Select 4)",
+      "options": [
+        "Significant drug allergies",
+        "Prior adverse outcome from anesthesia",
+        "Seizure disorder",
+        "Ate solid food 5 hr ago",
+        "ASA 2 patient with stable hypothyroidism",
+        "Healthy 30-year-old with mild seasonal allergies"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "explanation": "Seizure disorder, prior adverse anesthetic outcome, significant drug allergies, and solid food within 8 hr are listed contraindications. Stable hypothyroidism is compatible with office care; a minor sensitivity isn't the same as significant drug allergies.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-019",
+      "set": 1,
+      "type": "single",
+      "stem": "Office procedure is scheduled for 1300. The patient ate a full breakfast with bacon at 0700. Under the office fasting criterion of 8 hr for solids, what is the earliest acceptable start?",
+      "options": [
+        "1300",
+        "1500",
+        "1100",
+        "1700"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "0700 + 8 hr = 1500. 1300 is 6 hr, acceptable for a light meal by general ASA fasting guidance but not for the office solid-food criterion or a fatty meal. 1100 is 4 hr. 1700 is 10 hr.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-020",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient had toast and coffee with cream at 0530 and is scheduled for an office procedure. Using the 8-hr solid-food criterion, when is the earliest start?",
+      "options": [
+        "1530",
+        "1130",
+        "1330",
+        "0930"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "0530 + 8 hr = 1330. 1130 uses 6 hr. 1530 uses 10 hr. 0930 uses 4 hr.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "calculation",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-021",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient with a large tongue, BMI 46, and STOP-BANG 6 is scheduled for office-based breast augmentation with sedation. What is the BEST assessment?",
+      "options": [
+        "Suitable if propofol is used instead of midazolam",
+        "Suitable if the procedure is under 1 hr",
+        "Suitable with nasal cannula oxygen",
+        "Unsuitable: potential difficult airway"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Potential difficult airway, including morbid obesity and severe OSA, makes a patient unsuitable for office-based procedures. Drug choice, oxygen, or a short case doesn't remove the risk in a setting with limited backup.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-022",
+      "set": 1,
+      "type": "single",
+      "stem": "Which procedures are MOST commonly done in office-based settings?",
+      "options": [
+        "Plastic, dental, GYN, urology, and GI cases",
+        "Organ transplants and major trauma",
+        "Craniotomies and spine fusions",
+        "Cardiac, thoracic, and major vascular procedures"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Common OBA specialties include urology, gynecology, gastroenterology, ophthalmology, podiatry, dental, and plastic procedures such as liposuction and breast augmentation. The others need hospital resources.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-023",
+      "set": 1,
+      "type": "single",
+      "stem": "Healthy 3-month-old needs a minor procedure, and the surgeon wants to do it in the office. Which statement is MOST accurate?",
+      "options": [
+        "Any infant is acceptable if ASA 1",
+        "No minimum age exists, but over 6 months is often suggested",
+        "Children under 2 years can't have office-based procedures with sedation",
+        "Office-based anesthesia is limited to adults"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "There is no established minimum age, but over 6 months and ASA 1 or 2 is considered reasonable. A 3-month-old is below that suggestion. Children aren't excluded entirely.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-024",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are advantages of office-based anesthesia? (Select 4)",
+      "options": [
+        "Stronger regulatory oversight",
+        "Cost containment",
+        "Privacy",
+        "Reduced nosocomial exposure",
+        "Greater peer review",
+        "Patient and provider convenience"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "explanation": "OBA offers convenience, lower cost, easier scheduling, privacy, and less exposure to hospital infections. Oversight and peer review are often weaker, which is a disadvantage.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-025",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are disadvantages of office-based anesthesia? (Select 4)",
+      "options": [
+        "Little regulation in some regions",
+        "Higher cost than hospitals",
+        "Greater nosocomial exposure",
+        "Patient safety concerns",
+        "Providers navigate legal, billing, and accreditation issues",
+        "Weaker reporting, quality improvement, and peer review"
+      ],
+      "answer": [
+        0,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Safety, reporting, QI, peer review, legal and financial complexity, limited residency training, and variable regulation are disadvantages. OBA is generally cheaper and reduces nosocomial exposure.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-026",
+      "set": 1,
+      "type": "single",
+      "stem": "What standard do the ASA and APSF set for office-based anesthesia quality?",
+      "options": [
+        "Lower than a hospital because cases are minor",
+        "Determined by the surgeon",
+        "No less than a hospital or ASC",
+        "Equal to dental office standards"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "ASA and APSF advocate that the quality of care in office-based practice be no less than that of a hospital or ASC.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-027",
+      "set": 1,
+      "type": "multi",
+      "stem": "An office wants to offer anesthesia safely. Which elements are required? (Select 5)",
+      "options": [
+        "BLS and ACLS capability with AED, bag-valve mask, and LMA",
+        "A plan for transfer to a higher level of care",
+        "Permission to skip accreditation if cases are short",
+        "Fire prevention and preparedness",
+        "Monitoring per ASA standards",
+        "DEA-compliant controlled substance storage and waste"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Monitoring, emergency capability, controlled substance security, a medical director, a transfer plan, fire safety, and accreditation by a recognized agency are expected. Accreditation isn't waived for short cases.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-028",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which items belong on the required equipment list for office-based anesthesia? (Select 5)",
+      "options": [
+        "Cardiopulmonary bypass machine",
+        "Suction equipment",
+        "Video laryngoscope",
+        "Capnography",
+        "Dantrolene and MH supplies when triggers are used",
+        "Cardiac defibrillator"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Required equipment includes monitors, capnography, airway and emergency airway supplies, a video laryngoscope, suction, a defibrillator, ACLS drugs, MH supplies, lipid emulsion if blocks are done, and IV equipment. Bypass isn't expected in an office.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-029",
+      "set": 1,
+      "type": "single",
+      "stem": "An office performs nerve blocks for hand surgery. Which emergency drug must be on hand because of the blocks?",
+      "options": [
+        "Sugammadex",
+        "Dantrolene for MH",
+        "Flumazenil",
+        "20% lipid emulsion"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Intravenous lipid emulsion is required if nerve blocks are performed, to treat local anesthetic toxicity. Dantrolene is required if MH triggers are used. Sugammadex and flumazenil are useful but aren't block-specific requirements.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-030",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which emergency airway items are expected in an office-based anesthesia setting? (Select 4)",
+      "options": [
+        "Transtracheal jet ventilation equipment",
+        "Self-inflating bag-mask device",
+        "Double-lumen tubes",
+        "Laryngeal mask airways",
+        "Cricothyrotomy kit",
+        "Rigid bronchoscope"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        4
+      ],
+      "explanation": "LMAs, a cric kit, jet ventilation equipment, and a bag-mask device are listed. Rigid bronchoscopes and double-lumen tubes aren't expected office equipment.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-031",
+      "set": 1,
+      "type": "single",
+      "stem": "Office uses sevoflurane for a pediatric dental case. Which additional requirement applies?",
+      "options": [
+        "Training and capability to treat MH",
+        "An on-site ICU bed",
+        "A cardiopulmonary bypass machine",
+        "An arterial line for every patient having a block"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "If MH triggers are used, the office must have training and capability, including dantrolene, to treat MH. The other items aren't required.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-032",
+      "set": 1,
+      "type": "single",
+      "stem": "Office provides anesthesia using an oxygen cylinder. Which detail is MOST important to confirm?",
+      "options": [
+        "The cylinder is shared with the dental unit",
+        "The cylinder key and regulator are present",
+        "The cylinder is stored lying flat on the floor",
+        "A pipeline backup isn't needed if the cylinder is full"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Offices may rely on cylinders rather than pipeline oxygen, so the key and regulator must be present and working. Cylinders are secured upright. Backup supply planning is still needed.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-033",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement about capnography for sedation is BEST supported by current ASA guidance?",
+      "options": [
+        "Capnography applies when an anesthesiologist sedates, not others",
+        "Capnography is unnecessary if pulse oximetry is used",
+        "Capnography is recommended for moderate or deeper sedation",
+        "Capnography is required under general anesthesia, not sedation"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "ASA monitoring standards require ventilation monitoring with capnography during moderate or deep sedation by anesthesia professionals, and the 2018 ASA practice guidelines for moderate procedural sedation also recommend capnography for non-anesthesiologists. Discrepancy flag: one slide states ASA requires EtCO2 only for sedation by an anesthesiologist; newer guidance extends the recommendation. Pulse oximetry doesn't detect hypoventilation early.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-034",
+      "set": 1,
+      "type": "single",
+      "stem": "In 2014, which professional group mandated capnography for its members during deep sedation and general anesthesia?",
+      "options": [
+        "American Society of Plastic and Reconstructive Surgeons",
+        "American Academy of Pediatrics",
+        "American College of Surgeons",
+        "American Association of Oral and Maxillofacial Surgeons"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "The AAOMS Board of Trustees mandated capnography for deep sedation and GA in 2014.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-035",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which office requirements relate to staffing and supplies? (Select 3)",
+      "options": [
+        "Equipped, staffed, stocked, and maintained to perform GA",
+        "Supplies for the planned anesthetic alone",
+        "Age- and size-appropriate supplies for the population served",
+        "A minimum of one surgeon and no other staff",
+        "Adult supplies for every age group",
+        "OSHA compliance"
+      ],
+      "answer": [
+        0,
+        2,
+        5
+      ],
+      "explanation": "Offices should be equipped, staffed, and stocked to perform GA, with age-appropriate supplies, and comply with OSHA. Minimal staffing and limited or adult-only supplies don't meet the standard.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-036",
+      "set": 1,
+      "type": "single",
+      "stem": "Under the ASA office classification, an office that performs minor procedures with local infiltration and no sedation is which class?",
+      "options": [
+        "Class A",
+        "Class D",
+        "Class C",
+        "Class B"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Class A offices perform minor procedures with local, topical, or infiltration anesthesia and no sedation. Class B uses sedation; Class C uses GA or major conduction blocks.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-037",
+      "set": 1,
+      "type": "single",
+      "stem": "An office performs liposuction with oral and IV sedation, including ketamine. What ASA office class applies?",
+      "options": [
+        "Class A",
+        "Class B",
+        "Class D",
+        "Class C"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Class B includes minor or major procedures with oral, rectal, or IV sedation and analgesic or dissociative drugs. Class A uses no sedation. Class C uses GA or major conduction block.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-038",
+      "set": 1,
+      "type": "single",
+      "stem": "An office performs breast augmentation under general anesthesia. What ASA office class applies?",
+      "options": [
+        "Class B",
+        "Class D",
+        "Class C",
+        "Class A"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Class C covers minor or major procedures under GA or major conduction block anesthesia.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-039",
+      "set": 1,
+      "type": "single",
+      "stem": "An office performs foot surgery under a popliteal sciatic block with no sedation. Which class fits BEST?",
+      "options": [
+        "Class A",
+        "Class B",
+        "Class D",
+        "Class C"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Class C includes major conduction block anesthesia, which includes plexus and major peripheral nerve blocks. Class A is limited to local, topical, or infiltration without sedation. Class B involves sedation.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-040",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which features define a Class B office? (Select 2)",
+      "options": [
+        "No sedation pre- or intraoperatively",
+        "General anesthesia",
+        "Major conduction block anesthesia",
+        "Oral, rectal, or IV sedation",
+        "Analgesic or dissociative drugs",
+        "Topical anesthesia alone"
+      ],
+      "answer": [
+        3,
+        4
+      ],
+      "explanation": "Class B offices use sedation by oral, rectal, or IV routes and analgesic or dissociative drugs. GA and major conduction blocks define Class C. No sedation defines Class A.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-041",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements describe office-based anesthesia? (Select 2)",
+      "options": [
+        "It occurs in settings not accredited as an ASC or hospital",
+        "It's limited to dental procedures",
+        "It's a subset of ambulatory anesthesia",
+        "It takes place inside a licensed hospital",
+        "It's regulated identically in every state",
+        "It requires an inpatient bed"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "OBA is a subset of ambulatory anesthesia in settings not accredited as ASCs or hospitals. Regulation varies by region.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-042",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement BEST explains why closed claims data label MAC as more dangerous in office settings?",
+      "options": [
+        "Limited backup magnifies oversedation",
+        "Office patients are older",
+        "MAC uses more drug than GA in most cases",
+        "MAC is longer in offices"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Offices often have a provider working alone with limited backup, so oversedation and airway events progress before rescue.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-043",
+      "set": 1,
+      "type": "single",
+      "stem": "An office lacks pulse oximetry for a \"quick\" sedation case. Which cause of office injury does this illustrate?",
+      "options": [
+        "Inadequate postoperative evaluation",
+        "Inadequate monitoring",
+        "Thromboembolism",
+        "Human error from drug overdosage"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Lack of pulse oximetry is the most commonly cited monitoring failure in office injuries.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-044",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient undergoes office liposuction lasting 4 hr and develops sudden dyspnea and hypoxemia the next day. Which cause of office morbidity is MOST likely?",
+      "options": [
+        "Oversedation",
+        "Local anesthetic allergy",
+        "Thromboembolic event",
+        "Inadequate monitoring"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Thromboembolism is one of the main causes of office morbidity and mortality, especially after long procedures such as liposuction.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-045",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements about office anesthesia oversight are accurate? (Select 2)",
+      "options": [
+        "Accreditation is prohibited for offices",
+        "Federal law regulates every office identically",
+        "Regulation varies and may be minimal in some regions",
+        "Office quality standards are lower by design",
+        "Accreditation by a recognized agency is recommended",
+        "Peer review is stronger than in hospitals"
+      ],
+      "answer": [
+        2,
+        4
+      ],
+      "explanation": "ASA and APSF recommend accreditation and quality equal to hospitals; regulation varies regionally.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-OBA-046",
+      "set": 1,
+      "type": "single",
+      "stem": "Which patient is the BEST candidate for an office-based procedure with sedation?",
+      "options": [
+        "ASA 1 adult who ate breakfast 3 hr ago",
+        "ASA 3 adult wanting moderate sedation",
+        "ASA 2 adult with MH susceptibility using volatile agents",
+        "ASA 2, controlled HTN, fasted, escorted"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Healthy ASA 1–2 patients who are fasted and have an escort are ideal. ASA 3 patients shouldn't receive sedation in offices, recent solids disqualify, and MH susceptibility is unsuitable.",
+      "citation": "",
+      "topic": "Office-Based Anesthesia",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Office-Based Anesthesia"
+      }
+    },
+    {
+      "id": "PACU-SED-001",
+      "set": 1,
+      "type": "single",
+      "stem": "During colonoscopy, a patient responds purposefully to verbal commands with light tactile stimulation, maintains a patent airway, and breathes adequately. What level of sedation is this?",
+      "options": [
+        "Moderate sedation",
+        "Deep sedation",
+        "General anesthesia",
+        "Minimal sedation"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Purposeful response to verbal commands, alone or with light touch, with an intact airway and spontaneous ventilation, defines moderate sedation. Minimal sedation responds normally to verbal commands. Deep sedation requires repeated or painful stimulation. GA isn't arousable to pain.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-002",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient responds normally to voice, is a little slow to answer questions, and breathes normally after oral diazepam. What level of sedation is this?",
+      "options": [
+        "General anesthesia",
+        "Minimal sedation",
+        "Deep sedation",
+        "Moderate sedation"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Minimal sedation (anxiolysis) means normal response to verbal commands; cognition and coordination may be impaired, while ventilation and circulation are unaffected.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-003",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient during propofol sedation can't be easily roused but withdraws and moans purposefully to repeated painful stimulation. A jaw thrust is needed to keep the airway open. What level of sedation is this?",
+      "options": [
+        "Moderate sedation",
+        "Minimal sedation",
+        "Deep sedation",
+        "General anesthesia"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Deep sedation means the patient can't be easily roused but responds purposefully to repeated or painful stimulation, and airway support may be needed. Reflex withdrawal alone isn't purposeful; if the patient weren't arousable to pain, it would be GA.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-004",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient during propofol infusion doesn't respond to a firm trapezius squeeze, and the ventilator is needed for adequate breathing. What level of anesthesia is this?",
+      "options": [
+        "Moderate sedation",
+        "Deep sedation",
+        "Minimal sedation",
+        "General anesthesia"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Loss of consciousness without arousal to painful stimulation, with impaired ventilation often needing positive pressure, defines GA. Deep sedation still allows purposeful response to repeated or painful stimulation.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-005",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements describe deep sedation? (Select 3)",
+      "options": [
+        "Positive pressure ventilation is often required",
+        "Not arousable even to painful stimulation",
+        "May need help maintaining a patent airway",
+        "Not easily roused but responds purposefully to repeated or painful stimulation",
+        "Responds normally to verbal commands",
+        "Cardiovascular function is usually maintained"
+      ],
+      "answer": [
+        2,
+        3,
+        5
+      ],
+      "explanation": "Deep sedation features arousal only with repeated or painful stimulation, possible airway support, possibly inadequate spontaneous ventilation, and usually maintained circulation. Normal response to voice is minimal sedation. Unarousable patients needing PPV are under GA.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-006",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements describe general anesthesia? (Select 4)",
+      "options": [
+        "Ventilatory function is often impaired",
+        "Cardiovascular function may be impaired",
+        "Patient responds purposefully to light touch",
+        "Not arousable by painful stimulation",
+        "Spontaneous ventilation is reliably adequate",
+        "Positive pressure ventilation is often required"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        5
+      ],
+      "explanation": "GA means drug-induced loss of consciousness without arousal to pain, often impaired ventilation and neuromuscular function, frequent need for PPV, and possible cardiovascular impairment. Responding to light touch is moderate sedation.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-007",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient getting moderate sedation for endoscopy now requires a chin lift to stop obstruction and responds only to a firm sternal rub. Which statement BEST describes what happened?",
+      "options": [
+        "Sedation has deepened beyond the intended level",
+        "This is general anesthesia because airway support is needed",
+        "This is still moderate sedation",
+        "This is minimal sedation with a positional airway"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Needing airway support and responding only to painful stimulation signals deep sedation. Sedation is a continuum, so providers must be able to rescue patients from deeper levels than intended. GA would mean no purposeful response to pain.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-008",
+      "set": 1,
+      "type": "single",
+      "stem": "At which level of sedation is cardiovascular function described as \"maintained,\" with a patent airway and adequate spontaneous ventilation?",
+      "options": [
+        "General anesthesia",
+        "Moderate sedation",
+        "Minimal sedation alone",
+        "Deep sedation"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Moderate sedation maintains airway patency, spontaneous ventilation, and cardiovascular function. In deep sedation cardiovascular function is \"usually\" maintained, and in GA it may be impaired.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-009",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which findings fit minimal sedation (anxiolysis)? (Select 3)",
+      "options": [
+        "Needs light tactile stimulation to respond",
+        "Ventilation and circulation unaffected",
+        "Normal response to verbal commands",
+        "Possible impairment of cognition and coordination",
+        "Needs airway support",
+        "Responds to painful stimulation"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "Anxiolysis preserves normal responses to voice and normal ventilation and circulation, though cognition and coordination may be impaired. Needing touch to respond is moderate sedation. Airway support and pain-only response describe deeper levels.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-010",
+      "set": 1,
+      "type": "single",
+      "stem": "Which finding is NOT considered a purposeful response when judging sedation depth?",
+      "options": [
+        "Following a command to squeeze a hand",
+        "Pushing the provider's hand away from the face",
+        "Reflex withdrawal from a painful stimulus",
+        "Opening the eyes to voice"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Reflex withdrawal from pain isn't a purposeful response; purposeful responses include following commands or reaching to push away a stimulus. Distinguishing these separates deep sedation from GA.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-011",
+      "set": 1,
+      "type": "single",
+      "stem": "Endoscopist without anesthesia training wants to give propofol for \"light sedation\" in an office. What is the main concern?",
+      "options": [
+        "Propofol has no respiratory effects at low doses",
+        "Propofol can't produce sedation lighter than GA",
+        "Propofol is reversed easily with flumazenil",
+        "Propofol can quickly produce deep sedation or GA"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Propofol has a narrow margin and can move a patient from intended sedation to deep sedation or GA rapidly, requiring rescue skills. Low doses can sedate lightly, but respiratory depression occurs, and there is no reversal agent.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-012",
+      "set": 1,
+      "type": "multi",
+      "stem": "For which sedation levels is airway intervention possibly needed? (Select 2)",
+      "options": [
+        "Moderate sedation",
+        "General anesthesia",
+        "Minimal sedation",
+        "Topical anesthesia alone",
+        "Anxiolysis with oral premedication",
+        "Deep sedation"
+      ],
+      "answer": [
+        1,
+        5
+      ],
+      "explanation": "Deep sedation may require airway support, and GA often does. Minimal and moderate sedation maintain a patent airway by definition.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-013",
+      "set": 1,
+      "type": "single",
+      "stem": "In which setting does closed claims data suggest MAC is especially dangerous?",
+      "options": [
+        "Office-based practice working remotely with limited backup",
+        "University teaching hospitals",
+        "Hospital ORs with full staffing",
+        "ICU settings with continuous monitoring by dedicated nurses"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "MAC injuries were frequently permanent or fatal, and office settings add isolation and limited backup, making oversedation more dangerous there. Hospital settings provide more support.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-014",
+      "set": 1,
+      "type": "single",
+      "stem": "Why might nonfatal injuries during MAC be more likely to be permanent than those during GA?",
+      "options": [
+        "MAC uses higher drug doses than GA",
+        "Unprotected airways allow hypoxic injury",
+        "GA patients are healthier than MAC patients",
+        "MAC is given by non-anesthesia providers"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Oversedation with respiratory depression and an unprotected airway can lead to hypoxic brain injury, which is often permanent. MAC doesn't use higher doses, patient health doesn't explain it, and anesthesia professionals frequently provide MAC.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-015",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which elements of governance should an office anesthesia practice have? (Select 3)",
+      "options": [
+        "A medical director",
+        "A requirement that surgeons give their own sedation",
+        "Exemption from fire safety planning",
+        "Reporting fatal events alone",
+        "Policies for escalation and transfer",
+        "Accreditation by a nationally recognized agency"
+      ],
+      "answer": [
+        0,
+        4,
+        5
+      ],
+      "explanation": "A medical director, accreditation, and escalation and transfer plans are expected. Surgeons giving their own sedation, skipping fire safety, and limited reporting weaken safety.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-016",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient in an office develops refractory hypotension after a block. Which preparation would have mattered MOST?",
+      "options": [
+        "A backup local anesthetic vial",
+        "A second surgeon in the room",
+        "A plan for transfer to a higher level of care",
+        "A prescription for oral analgesics before discharge"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Offices need a defined process for escalation and transfer to a hospital. The other items don't address deteriorating patients.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-017",
+      "set": 1,
+      "type": "single",
+      "stem": "Why is office-based anesthesia NOT typically part of residency training?",
+      "options": [
+        "Office cases are too complex for trainees",
+        "Office anesthesia doesn't require special knowledge",
+        "Office anesthesia is illegal for trainees",
+        "Most programs train in hospitals and ASCs"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Training programs center on hospitals and ASCs, so OBA practice issues (regulation, staffing, billing, accreditation) are often learned after training. It isn't illegal or excessively complex, and it does require specific knowledge.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-018",
+      "set": 1,
+      "type": "single",
+      "stem": "A colleague says an office procedure is \"just a Class A case.\" Which plan is consistent with that class?",
+      "options": [
+        "Local infiltration with no sedation",
+        "Propofol infusion with spontaneous breathing",
+        "IV midazolam and fentanyl titrated",
+        "Oral triazolam as premedication"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Class A offices use only local, topical, or infiltration anesthesia without pre- or intraoperative sedation. Any sedation, including oral premedication, moves it to Class B.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-019",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement about office classes is MOST accurate?",
+      "options": [
+        "Class A offices may provide general anesthesia if brief",
+        "Class reflects the deepest anesthesia allowed",
+        "Class C is limited to topical anesthesia",
+        "Class B offices may perform major conduction blocks"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "ASA classes stratify offices by the depth of anesthesia they may provide. Class A has no sedation; Class B allows sedation; Class C allows GA and major conduction blocks. Discrepancy flag: a note in the course materials pairs Class A with office settings and Classes B and C with surgery centers or hospitals; the classification itself applies to offices, which may qualify for any class if properly equipped and accredited.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-020",
+      "set": 1,
+      "type": "single",
+      "stem": "During an office case under moderate sedation, SpO2 drops from 98% to 89%. Capnography shows a flat line, and there is no chest rise. What is the FIRST action?",
+      "options": [
+        "Increase nasal cannula oxygen to 6 L/min and observe",
+        "Give naloxone and wait for response",
+        "Stop the infusion, open the airway, ventilate",
+        "Recheck the pulse oximeter probe"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "A flat capnogram with no chest movement means apnea or complete obstruction; airway maneuvers and positive pressure ventilation come first. Increasing oxygen or rechecking equipment delays rescue. Reversal agents can follow once ventilation is restored.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-021",
+      "set": 1,
+      "type": "single",
+      "stem": "Which monitoring change would MOST likely have detected hypoventilation earliest during office sedation with supplemental oxygen?",
+      "options": [
+        "Temperature monitoring",
+        "Pulse oximetry",
+        "Blood pressure every 5 min",
+        "Capnography"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Supplemental oxygen delays desaturation, so capnography reveals hypoventilation before SpO2 falls. Blood pressure and temperature don't detect ventilatory changes.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-022",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which preparations are reasonable before office-based sedation in a healthy patient? (Select 4)",
+      "options": [
+        "Confirm fasting status",
+        "Skip the airway exam because sedation is planned",
+        "Review prior anesthetic history",
+        "Omit an IV because sedation will be oral",
+        "Confirm an escort home",
+        "Check emergency equipment"
+      ],
+      "answer": [
+        0,
+        2,
+        4,
+        5
+      ],
+      "explanation": "Fasting, escort, prior anesthetic history, and equipment checks are basic safety steps. An airway exam is still needed because sedation can deepen. IV access is standard even with oral sedation in many settings.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-023",
+      "set": 1,
+      "type": "single",
+      "stem": "Which statement BEST explains why office-based injuries tend to be more severe?",
+      "options": [
+        "Limited backup, monitoring, and resources slow rescue",
+        "Office procedures are longer than hospital procedures",
+        "Office patients are sicker than hospital patients",
+        "Office anesthetics use more potent drugs"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "Offices often lack the backup personnel, equipment, and oversight that allow rapid rescue, so events progress further. Office patients are typically healthier.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-024",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which are recognized NORA and office-based safety priorities? (Select 3)",
+      "options": [
+        "Using deep sedation to shorten procedures",
+        "Rescue capability for deeper levels than intended",
+        "Monitoring per ASA standards",
+        "Relying on the surgeon to monitor sedation",
+        "Avoiding capnography to reduce cost",
+        "Appropriate patient selection"
+      ],
+      "answer": [
+        1,
+        2,
+        5
+      ],
+      "explanation": "Patient selection, standard monitoring, and the ability to rescue from deeper sedation are central priorities. The distractors undermine safety.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-025",
+      "set": 1,
+      "type": "multi",
+      "stem": "At which levels is cardiovascular function described as maintained or usually maintained? (Select 3)",
+      "options": [
+        "Deep sedation",
+        "Minimal sedation",
+        "General anesthesia",
+        "Any level when an opioid is given",
+        "Unresponsive patient after propofol bolus with hypotension",
+        "Moderate sedation"
+      ],
+      "answer": [
+        0,
+        1,
+        5
+      ],
+      "explanation": "Minimal and moderate sedation maintain cardiovascular function, and deep sedation usually does. GA may impair it.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-026",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient during sedation needs positive pressure ventilation and doesn't respond to pain. What depth and implication?",
+      "options": [
+        "Moderate sedation; continue the same plan",
+        "GA; manage the airway",
+        "Minimal sedation; no change",
+        "Deep sedation; reduce oxygen"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "Unarousable patients needing PPV are under GA, which requires airway management.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-027",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient sedated for bronchoscopy follows commands slowly but correctly when spoken to, with normal breathing. What level?",
+      "options": [
+        "Deep sedation",
+        "Moderate sedation",
+        "Minimal sedation",
+        "General anesthesia"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Normal response to verbal commands, even if slowed, indicates minimal sedation.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-028",
+      "set": 1,
+      "type": "single",
+      "stem": "Which response best separates moderate from deep sedation?",
+      "options": [
+        "HR above or below 60",
+        "Snoring versus no snoring",
+        "Eye opening versus no eye opening to spoken commands",
+        "Voice or light touch versus repeated or painful stimuli"
+      ],
+      "answer": [
+        3
+      ],
+      "explanation": "Moderate sedation responds to voice or light touch; deep sedation requires repeated or painful stimulation.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-SED-029",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which features separate deep sedation from general anesthesia? (Select 2)",
+      "options": [
+        "Neuromuscular function impaired",
+        "Arousability, though not easily",
+        "Need for positive pressure ventilation",
+        "Purposeful response to repeated or painful stimulation",
+        "Cardiovascular function impaired",
+        "No response to painful stimulation"
+      ],
+      "answer": [
+        1,
+        3
+      ],
+      "explanation": "Deep sedation still allows purposeful response to painful stimulation; GA doesn't.",
+      "citation": "",
+      "topic": "Sedation Levels",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "Sedation Levels"
+      }
+    },
+    {
+      "id": "PACU-NORA-001",
+      "set": 1,
+      "type": "single",
+      "stem": "Patient needs anesthesia for ECT in the psychiatry suite of a licensed hospital. How is this classified?",
+      "options": [
+        "NORA",
+        "Inpatient OR anesthesia",
+        "Office-based anesthesia",
+        "Freestanding ASC care"
+      ],
+      "answer": [
+        0
+      ],
+      "explanation": "ECT within a licensed hospital outside the OR is a NORA location.",
+      "citation": "",
+      "topic": "NORA",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "NORA"
+      }
+    },
+    {
+      "id": "PACU-NORA-002",
+      "set": 1,
+      "type": "multi",
+      "stem": "Which statements about NORA are accurate? (Select 2)",
+      "options": [
+        "It occurs outside a traditional OR",
+        "It excludes imaging suites",
+        "It occurs inside a fully licensed hospital",
+        "It occurs in unaccredited offices",
+        "It occurs in freestanding surgery centers",
+        "It requires general anesthesia"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "NORA occurs outside the OR within a licensed hospital, including imaging and endoscopy suites.",
+      "citation": "",
+      "topic": "NORA",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "application",
+        "originalCategory": "NORA"
+      }
+    },
+    {
+      "id": "PACU-NORA-003",
+      "set": 1,
+      "type": "single",
+      "stem": "Which recovery consideration applies to NORA patients?",
+      "options": [
+        "They don't need recovery",
+        "Care matched to acuity",
+        "They go to the ICU",
+        "They're discharged from the procedure table"
+      ],
+      "answer": [
+        1
+      ],
+      "explanation": "NORA patients recover in a setting appropriate to their acuity.",
+      "citation": "",
+      "topic": "NORA",
+      "sourceTitle": "Ambulatory & Office-Based Anesthesia",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "PACU and Ambulatory / Office-Based Anesthesia: 500-Question Bank",
+        "level": "deep",
+        "originalCategory": "NORA"
+      }
+    }
+  ]
+}
