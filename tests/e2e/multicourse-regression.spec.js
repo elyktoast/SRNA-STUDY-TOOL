@@ -59,18 +59,18 @@ test.describe('multi-course foundation', () => {
     });
   });
 
-  test('Basic Principles manifest exposes one unified 3,500-question Study Studio pool', async ({ page }) => {
+  test('Basic Principles manifest exposes one unified 4,000-question Study Studio pool', async ({ page }) => {
     const response = await page.request.get('/basic-principles/exam-1/banks.json');
     expect(response.ok()).toBeTruthy();
     const manifest = await response.json();
     expect(manifest.course.id).toBe('basic-principles');
     expect(manifest.exam.id).toBe('exam-1');
     expect(manifest.banks).toEqual([]);
-    expect(manifest.studioSources).toHaveLength(7);
-    expect(manifest.studioSources.reduce((sum, source) => sum + source.count, 0)).toBe(3500);
+    expect(manifest.studioSources).toHaveLength(9);
+    expect(manifest.studioSources.reduce((sum, source) => sum + source.count, 0)).toBe(4000);
     expect(manifest.studioSources.every(source => source.key.startsWith('bp1-'))).toBeTruthy();
     expect(new Set(manifest.studioSources.map(source => source.groupLabel))).toEqual(new Set(['Basic Principles Exam 1']));
-    expect(manifest.contentTaxonomy.topics).toHaveLength(7);
+    expect(manifest.contentTaxonomy.topics).toHaveLength(9);
     expect(manifest.sessionEnvironment).toBe('equipment-bank1-practice-set1-v1');
     expect(manifest.defaultBankEngine).toBe('canonical');
     expect(manifest.bankPage).toBe('bank.html');
@@ -105,7 +105,7 @@ test.describe('multi-course foundation', () => {
 
 
 
-  test('Basic Principles Studio loads one unified 3500-question pool', async ({ page }) => {
+  test('Basic Principles Studio loads one unified 4000-question pool', async ({ page }) => {
     await page.goto('/basic-principles/exam-1/studio.html');
     await waitForStudioReady(page);
     await expect(page.locator('#topicPickbox')).toBeVisible();
@@ -113,7 +113,7 @@ test.describe('multi-course foundation', () => {
     await expect(page.locator('#buildSetsBtn')).toHaveCount(0);
     await expect(page.locator('#buildTopicsBtn')).toHaveCount(0);
     await expect(page.locator('#order')).toHaveCount(0);
-    await expect(page.locator('#topicChecks input')).toHaveCount(7);
+    await expect(page.locator('#topicChecks input')).toHaveCount(9);
     const state = await page.evaluate(() => ({
       count: ALL.length,
       uidCount: ALL_BY_UID.size,
@@ -123,12 +123,12 @@ test.describe('multi-course foundation', () => {
       topics: document.querySelectorAll('#topicChecks input').length,
       directImages: ALL.filter(q => q.img && q.img.kind === 'direct').length
     }));
-    expect(state.count).toBe(3500);
-    expect(state.uidCount).toBe(3500);
+    expect(state.count).toBe(4000);
+    expect(state.uidCount).toBe(4000);
     expect(state.unifiedHeading).toBe('Lecture Topics');
     expect(state.sourceChoices).toEqual([]);
     expect(state.sourceText).toBe('');
-    expect(state.topics).toBe(7);
+    expect(state.topics).toBe(9);
     expect(state.directImages).toBeGreaterThanOrEqual(0);
     await expect(page.locator('#mbu-bank-picker')).toHaveCount(0);
     await page.locator('#topicChecks input').first().check();
@@ -152,7 +152,7 @@ test.describe('multi-course foundation', () => {
     const choice = page.locator('#topicChecks input').first();
     await choice.check();
     const topic = await choice.inputValue();
-    expect(await page.locator('#topicChecks input').count()).toBe(7);
+    expect(await page.locator('#topicChecks input').count()).toBe(9);
     expect(await page.locator('#topicChecks').textContent()).toContain('(500)');
     await page.selectOption('#count', '10');
     await page.getByRole('button', { name: 'Start Quiz' }).click();
