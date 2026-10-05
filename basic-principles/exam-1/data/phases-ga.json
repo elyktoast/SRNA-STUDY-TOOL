@@ -429,7 +429,7 @@
       "stem": "A 70-year-old with CAD becomes hypotensive within 90 seconds of propofol induction. Which preinduction monitor setting would best limit delay in recognizing this change?",
       "options": [
         "NIBP cycling every 10 minutes throughout",
-        "NIBP cycling about every 2–3 minutes",
+        "NIBP cycling about every 2â3 minutes",
         "NIBP cycling every 5 minutes as routine",
         "NIBP cycling every 15 minutes to spare the arm"
       ],
@@ -608,7 +608,7 @@
       "answer": [
         0
       ],
-      "explanation": "For a drug explicitly ordered at 1.2 mg/kg using total body weight, 1.2 × 90 = 108 mg and 1.2 × 65 = 78 mg, a 30-mg difference. The stem specifies the dosing scalar so the calculation does not imply that every rocuronium dose in obesity should use total body weight.",
+      "explanation": "For a drug explicitly ordered at 1.2 mg/kg using total body weight, 1.2 Ã 90 = 108 mg and 1.2 Ã 65 = 78 mg, a 30-mg difference. The stem specifies the dosing scalar so the calculation does not imply that every rocuronium dose in obesity should use total body weight.",
       "citation": "",
       "topic": "Immediate pre-anesthesia assessment and pre-induction",
       "sourceTitle": "Phases of General Anesthesia",
@@ -869,7 +869,7 @@
       "options": [
         "Reduce flow below minute ventilation",
         "Increase fresh-gas flow above 10 L/min",
-        "Reduce flow to 4–6 L/min",
+        "Reduce flow to 4â6 L/min",
         "Switch to a larger mask"
       ],
       "answer": [
@@ -894,7 +894,7 @@
         "Room-air vital-capacity breaths for 5 minutes",
         "Loose mask, 100% O2 at 4 L/min for 1 minute",
         "Nasal cannula at 4 L/min as the sole technique for 10 minutes",
-        "Tight mask, 100% O2 at >10 L/min, tidal breathing for 3–5 minutes"
+        "Tight mask, 100% O2 at >10 L/min, tidal breathing for 3â5 minutes"
       ],
       "answer": [
         3
@@ -1168,7 +1168,7 @@
       "id": "PHA-048",
       "set": 1,
       "type": "single",
-      "stem": "An obese patient has dependent atelectasis before induction. Why can 5–10 cmH2O PEEP improve preoxygenation?",
+      "stem": "An obese patient has dependent atelectasis before induction. Why can 5â10 cmH2O PEEP improve preoxygenation?",
       "options": [
         "PEEP lowers the inspired oxygen concentration",
         "PEEP lowers metabolic oxygen consumption",
@@ -2614,21 +2614,21 @@
       "id": "PHA-106",
       "set": 1,
       "type": "multi",
-      "stem": "After two failed laryngoscopy attempts, mask ventilation is becoming more difficult. Which THREE questions should guide the next step? (Select 3)",
+      "stem": "After two failed laryngoscopy attempts, mask ventilation is becoming increasingly difficult. Which THREE clinical considerations or management steps should guide the immediate airway rescue plan? (Select 3)",
       "options": [
-        "Does the airway device or technique need to change?",
-        "Should cricoid pressure be increased?",
-        "Who should make the next attempt?",
-        "Should a larger tube be used next?",
-        "Is mask ventilation getting harder?",
-        "Should paralysis be deepened first?"
+        "Assess the need to transition to an alternative airway device (such as a supraglottic airway or videolaryngoscopy)",
+        "Immediately increase cricoid pressure to maximum force",
+        "Call for senior or experienced anesthesia assistance",
+        "Attempt an immediate surgical airway (cricothyroidotomy) before any other non-invasive rescue",
+        "Evaluate whether face-mask ventilation remains adequate or if the patient is entering a can't-intubate, can't-ventilate (CICV) scenario",
+        "Deepen paralysis with an additional large bolus of neuromuscular blocker without changing technique"
       ],
       "answer": [
         0,
         2,
         4
       ],
-      "explanation": "After failed laryngoscopy, the next step depends on whether oxygenation is getting harder, whether a more experienced operator should take over, and whether to change the device or technique rather than repeat the same approach. More cricoid force, a larger tube, or deeper paralysis do not address why laryngoscopy failed.",
+      "explanation": "According to the ASA Difficult Airway Algorithm, when intubation fails and mask ventilation becomes progressively difficult, the clinical focus must immediately pivot to calling for help (C), evaluating ventilation feasibility/preventing a full CICV emergency (E), and implementing alternative non-invasive rescue devices like supraglottic airways or videolaryngoscopy (A). Blindly increasing cricoid force can obstruct the view or worsen ventilation, immediate surgical cricothyroidotomy is reserved for the final \"cannot ventilate\" emergency step, and repeating failed techniques without changing strategy leads to rapid hypoxemia.",
       "citation": "",
       "topic": "Airway management and post-induction complications",
       "sourceTitle": "Phases of General Anesthesia",
@@ -4080,7 +4080,7 @@
       "id": "PHA-163",
       "set": 1,
       "type": "single",
-      "stem": "Near closure after a long case, esophageal temperature is 35.4 °C despite stable hemodynamics. Which interpretation should drive active warming and emergence planning?",
+      "stem": "Near closure after a long case, esophageal temperature is 35.4 Â°C despite stable hemodynamics. Which interpretation should drive active warming and emergence planning?",
       "options": [
         "Above 35 C, the patient is normothermic",
         "The patient is mildly hyperthermic",
@@ -4104,7 +4104,7 @@
       "id": "PHA-164",
       "set": 1,
       "type": "multi",
-      "stem": "A core temperature of 34.8 °C persists near the end of a long case. Which FOUR complications should be anticipated? (Select 4)",
+      "stem": "A core temperature of 34.8 Â°C persists near the end of a long case. Which FOUR complications should be anticipated? (Select 4)",
       "options": [
         "Increased hepatic drug clearance",
         "Wound infection",
@@ -4205,7 +4205,7 @@
       "id": "PHA-168",
       "set": 1,
       "type": "single",
-      "stem": "Near closure, core temperature is 35.2 °C despite otherwise appropriate anesthetic titration. Which emergence problem becomes more likely?",
+      "stem": "Near closure, core temperature is 35.2 Â°C despite otherwise appropriate anesthetic titration. Which emergence problem becomes more likely?",
       "options": [
         "Delayed emergence from slow clearance",
         "Earlier extubation from lower MAC",
@@ -5145,12 +5145,12 @@
       "id": "PHA-206",
       "set": 1,
       "type": "single",
-      "stem": "A 70-kg patient has partial neuromuscular recovery but requires another hour of surgical relaxation. Using a rocuronium maintenance redose of 0.1–0.2 mg/kg, which range is appropriate?",
+      "stem": "A 70-kg patient has partial neuromuscular recovery but requires another hour of surgical relaxation. Using a rocuronium maintenance redose of 0.1â0.2 mg/kg, which range is appropriate?",
       "options": [
-        "70–105 mg",
-        "42–84 mg",
-        "0.7–1.4 mg",
-        "7–14 mg"
+        "70â105 mg",
+        "42â84 mg",
+        "0.7â1.4 mg",
+        "7â14 mg"
       ],
       "answer": [
         3
@@ -6359,7 +6359,7 @@
       "id": "PHA-255",
       "set": 1,
       "type": "single",
-      "stem": "Near emergence, end-tidal sevoflurane falls to roughly 0.3–0.4 age-adjusted MAC and the patient begins responding to commands. Which MAC concept does this transition approximate?",
+      "stem": "Near emergence, end-tidal sevoflurane falls to roughly 0.3â0.4 age-adjusted MAC and the patient begins responding to commands. Which MAC concept does this transition approximate?",
       "options": [
         "1.0 MAC",
         "MAC-BAR",
@@ -8236,7 +8236,7 @@
       "id": "PHA-329",
       "set": 1,
       "type": "single",
-      "stem": "During a long case, core temperature falls to 35.4 °C while large volumes of unwarmed fluid have been given. Which response best addresses the abnormality?",
+      "stem": "During a long case, core temperature falls to 35.4 Â°C while large volumes of unwarmed fluid have been given. Which response best addresses the abnormality?",
       "options": [
         "Increase volatile anesthetic",
         "Stop warming to reduce sweating",
@@ -9390,7 +9390,7 @@
       "type": "single",
       "stem": "Sustained ETCO2 confirms tracheal ventilation, but breath sounds are markedly reduced on the left after intubation. What is the best immediate maneuver?",
       "options": [
-        "Withdraw 1–2 cm and listen again",
+        "Withdraw 1â2 cm and listen again",
         "Accept the position since ETCO2 is present",
         "Advance the tube farther into the airway",
         "Remove the tube without checking depth"
@@ -10040,7 +10040,7 @@
       "id": "PHA-404",
       "set": 1,
       "type": "single",
-      "stem": "Near emergence, controlled ventilation maintains ETCO2 at 28–30 mmHg while neuromuscular recovery is adequate, yet spontaneous respiratory effort remains absent. Which ventilatory factor may be delaying return of breathing?",
+      "stem": "Near emergence, controlled ventilation maintains ETCO2 at 28â30 mmHg while neuromuscular recovery is adequate, yet spontaneous respiratory effort remains absent. Which ventilatory factor may be delaying return of breathing?",
       "options": [
         "Hypocapnia reducing the CO2 respiratory stimulus",
         "Hypercapnia suppressing respiratory drive",
@@ -10328,7 +10328,7 @@
       "id": "PHA-416",
       "set": 1,
       "type": "single",
-      "stem": "After a long operation, a patient remains slow to awaken with core temperature 34.8 °C despite otherwise reassuring evaluation. Which intervention targets an important reversible contributor to delayed emergence?",
+      "stem": "After a long operation, a patient remains slow to awaken with core temperature 34.8 Â°C despite otherwise reassuring evaluation. Which intervention targets an important reversible contributor to delayed emergence?",
       "options": [
         "Deepening the volatile anesthetic",
         "Naloxone whatever the opioid exposure",
