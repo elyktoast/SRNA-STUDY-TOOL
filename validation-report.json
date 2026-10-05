@@ -1,6 +1,6 @@
 {
-  "totalQuestions": 3500,
-  "uniqueUIDs": 3500,
+  "totalQuestions": 4000,
+  "uniqueUIDs": 4000,
   "topics": [
     {
       "slug": "basic-airway",
@@ -57,6 +57,22 @@
       "figures": 40,
       "figureRefs": 500,
       "subtopics": 14
+    },
+    {
+      "slug": "ambulatory-oba",
+      "label": "Ambulatory & Office-Based Anesthesia",
+      "questions": 129,
+      "figures": 0,
+      "figureRefs": 0,
+      "subtopics": 6
+    },
+    {
+      "slug": "pacu",
+      "label": "Post-Anesthesia Care (PACU)",
+      "questions": 371,
+      "figures": 0,
+      "figureRefs": 0,
+      "subtopics": 18
     }
   ],
   "errors": []
