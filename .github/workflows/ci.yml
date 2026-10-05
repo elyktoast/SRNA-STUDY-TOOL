@@ -1,6 +1,8 @@
 name: Quality gates
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -89,3 +91,32 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+
+
+  pages:
+    name: Deploy verified site
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: browser
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Stamp deployed build
+        shell: bash
+        run: |
+          printf '{"build":"%s"}\n' "${GITHUB_SHA}" > equipment/build.json
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload verified site
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: .
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
