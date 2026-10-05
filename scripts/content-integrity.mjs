@@ -143,8 +143,8 @@ for(const source of bpManifest.studioSources||[]){
     const rawImage=q.img??q.imageSvg??q.image??'',image=String(typeof rawImage==='object'?(rawImage.url||''):rawImage).trim();if(rawImage&&typeof rawImage==='object'&&rawImage.kind!=='direct')err('Basic Principles '+identity+' has unsupported figure object kind '+String(rawImage.kind));if(image){bpImageRefs++;if(image.includes('..')||path.isAbsolute(image))err('Basic Principles '+identity+' has unsafe figure path '+image);else{bpFigurePaths.add(image);const imagePath=path.join(root,bpRoot,image);if(!fs.existsSync(imagePath))err('Basic Principles '+identity+' references missing figure '+image)}}
   }
 }
-if(bpTotal!==3500)err('Basic Principles: total question count '+bpTotal+' != 3500');
-if(bpSeenRawId.size!==3500)err('Basic Principles: global raw question IDs are not unique ('+bpSeenRawId.size+'/3500 unique)');
+if(bpTotal!==4000)err('Basic Principles: total question count '+bpTotal+' != 4000');
+if(bpSeenRawId.size!==4000)err('Basic Principles: global raw question IDs are not unique ('+bpSeenRawId.size+'/4000 unique)');
 
 const pharmManifest=read('pharm/clinical-pharm/banks.json'),pharmRoot='pharm/clinical-pharm/',pharmPayload=read(pharmRoot+'data/clinical-pharm.json'),pharmQs=Array.isArray(pharmPayload)?pharmPayload:(pharmPayload.questions||[]),pharmSeen=new Set(),pharmTopics=new Set(pharmManifest.contentTaxonomy?.topics||[]);
 const pharmSource=(pharmManifest.studioSources||[])[0];
@@ -190,7 +190,7 @@ function registerCalibrationIds(course,rootDir,courseManifest){
 registerCalibrationIds('equipment','equipment/exam-1/',manifest);
 registerCalibrationIds('basic-principles',bpRoot,bpManifest);
 registerCalibrationIds('pharm',pharmRoot,pharmManifest);
-if(calibrationIds.size!==6300)err('CAT calibration UID inventory '+calibrationIds.size+' != expected 6300');
+if(calibrationIds.size!==6800)err('CAT calibration UID inventory '+calibrationIds.size+' != expected 6800');
 const figureRoot=path.join(root,bpRoot,'figures'),diskFigures=[];
 for(const dirent of fs.readdirSync(figureRoot,{withFileTypes:true}))if(dirent.isDirectory())for(const file of fs.readdirSync(path.join(figureRoot,dirent.name)))diskFigures.push('figures/'+dirent.name+'/'+file);
 for(const figure of bpFigurePaths)if(!diskFigures.includes(figure))err('Basic Principles: referenced figure is outside canonical figure inventory '+figure);
