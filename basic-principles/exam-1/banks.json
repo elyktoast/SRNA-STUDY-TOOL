@@ -115,6 +115,36 @@
       },
       "count": 500,
       "sourceTitleContract": "Miscellaneous Topics in Nurse Anesthesia Practice"
+    },
+    {
+      "key": "bp1-ambulatory-oba",
+      "label": "Ambulatory & Office-Based Anesthesia",
+      "groupLabel": "Basic Principles Exam 1",
+      "data": "data/ambulatory-oba.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Ambulatory & Office-Based Anesthesia"
+      },
+      "count": 129,
+      "sourceTitleContract": "Ambulatory & Office-Based Anesthesia"
+    },
+    {
+      "key": "bp1-pacu",
+      "label": "Post-Anesthesia Care (PACU)",
+      "groupLabel": "Basic Principles Exam 1",
+      "data": "data/pacu.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Post-Anesthesia Care (PACU)"
+      },
+      "count": 371,
+      "sourceTitleContract": "Post-Anesthesia Care (PACU)"
     }
   ],
   "sync": {
@@ -141,7 +171,9 @@
       "Phases of General Anesthesia",
       "Sedation, MAC & TIVA",
       "Perioperative Pain Management",
-      "Miscellaneous Topics in Nurse Anesthesia Practice"
+      "Miscellaneous Topics in Nurse Anesthesia Practice",
+      "Ambulatory & Office-Based Anesthesia",
+      "Post-Anesthesia Care (PACU)"
     ],
     "sourceTitles": [
       "Basic Airway Assessment & Management",
@@ -150,7 +182,9 @@
       "Phases of General Anesthesia",
       "Sedation, MAC & TIVA",
       "Perioperative Pain Management",
-      "Miscellaneous Topics in Nurse Anesthesia Practice"
+      "Miscellaneous Topics in Nurse Anesthesia Practice",
+      "Ambulatory & Office-Based Anesthesia",
+      "Post-Anesthesia Care (PACU)"
     ]
   },
   "sessionEnvironment": "equipment-bank1-practice-set1-v1",
