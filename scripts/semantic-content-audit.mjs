@@ -62,7 +62,7 @@ for(const group of bpExact.values()){
  for(const same of sameOptions.values())if(same.length>1&&new Set(same.map(x=>JSON.stringify(x.key))).size>1)failures.push('Basic Principles same stem/options have conflicting keyed answers: '+same.map(x=>x.globalId).join(', '));
 }
 for(const group of bpRecords.values())if(group.length>1){bpDuplicateRecords++;warnings.push('Basic Principles duplicate normalized record: '+group.map(x=>x.globalId).join(', '))}
-if(bpRows.length!==3500)failures.push('Basic Principles semantic audit saw '+bpRows.length+' questions instead of 3500');
+if(bpRows.length!==4000)failures.push('Basic Principles semantic audit saw '+bpRows.length+' questions instead of 4000');
 
 for(const w of warnings.slice(0,50))console.warn('SEMANTIC WARNING: '+w);
 if(failures.length){console.error('\nSEMANTIC CONTENT AUDIT FAILED\n- '+failures.join('\n- '));process.exit(1)}
