@@ -146,35 +146,42 @@ for(const source of bpManifest.studioSources||[]){
 if(bpTotal!==4000)err('Basic Principles: total question count '+bpTotal+' != 4000');
 if(bpSeenRawId.size!==4000)err('Basic Principles: global raw question IDs are not unique ('+bpSeenRawId.size+'/4000 unique)');
 
-const pharmManifest=read('pharm/clinical-pharm/banks.json'),pharmRoot='pharm/clinical-pharm/',pharmPayload=read(pharmRoot+'data/clinical-pharm.json'),pharmQs=Array.isArray(pharmPayload)?pharmPayload:(pharmPayload.questions||[]),pharmSeen=new Set(),pharmTopics=new Set(pharmManifest.contentTaxonomy?.topics||[]);
-const pharmSource=(pharmManifest.studioSources||[])[0];
-if(pharmQs.length!==800)err('Clinical Pharm: total question count '+pharmQs.length+' != 800');
-if(Number(pharmPayload.count)!==pharmQs.length)err('Clinical Pharm: payload count does not match question array');
-if(!pharmSource||Number(pharmSource.count)!==pharmQs.length)err('Clinical Pharm: manifest count does not match question array');
-for(let i=0;i<pharmQs.length;i++){
- const q=pharmQs[i]||{},id=String(q.id||''),identity='Clinical Pharm '+(id||'#'+(i+1)),type=String(q.type||'');
- if(!id)err(identity+' has no id');else if(pharmSeen.has(id))err('Clinical Pharm: duplicate id '+id);else pharmSeen.add(id);
- if(!String(q.stem||'').trim())err(identity+' has no stem');
- if(!String(q.explanation||'').trim())err(identity+' has no explanation');
- if(!pharmTopics.has(String(q.topic||'')))err(identity+' has noncanonical topic '+String(q.topic||''));
- if(String(q.sourceTitle||'')!=='Clinical Pharm')err(identity+' has invalid sourceTitle '+String(q.sourceTitle||''));
- if(type==='matching'){
-   const prompts=q.prompts,choices=q.choices,map=q.answer;
-   if(!Array.isArray(prompts)||prompts.length<2||new Set(prompts.map(norm)).size!==prompts.length)err(identity+' has invalid or duplicate matching prompts');
-   if(!Array.isArray(choices)||choices.length<2||new Set(choices.map(norm)).size!==choices.length)err(identity+' has invalid or duplicate matching choices');
-   if(!map||typeof map!=='object'||Array.isArray(map)||prompts?.some(p=>!Object.prototype.hasOwnProperty.call(map,p)||!choices.includes(map[p])))err(identity+' has invalid matching answer map');
-   else if(new Set(Object.values(map).map(String)).size!==Object.values(map).length)err(identity+' reuses a keyed matching choice');
- }else{
-   const opts=q.options,raw=q.answer,ans=(Array.isArray(raw)?raw:[raw]).map(Number);
-   if(!['single','multi'].includes(type))err(identity+' has invalid question type '+type);
-   if(!Array.isArray(opts)||opts.length<2)err(identity+' has fewer than 2 options');
-   else if(new Set(opts.map(norm)).size!==opts.length)err(identity+' has duplicate answer choices');
-   if(!ans.length||ans.some(x=>!Number.isInteger(x)||x<0||x>=opts.length))err(identity+' has invalid answer indexes');
-   if(type==='single'&&ans.length!==1)err(identity+' is single-answer but keys '+ans.length+' answers');
-   if(type==='multi'&&ans.length<2)err(identity+' is multi-answer but keys fewer than 2 answers');
+const pharmManifest=read('pharm/clinical-pharm/banks.json'),pharmRoot='pharm/clinical-pharm/',pharmSeen=new Set(),pharmTopics=new Set(pharmManifest.contentTaxonomy?.topics||[]),pharmSources=new Set(pharmManifest.contentTaxonomy?.sourceTitles||[]);
+let pharmTotal=0,pharmMatching=0;
+for(const source of pharmManifest.studioSources||[]){
+ const payload=read(pharmRoot+source.data),pharmQs=Array.isArray(payload)?payload:(payload.questions||[]);
+ if(pharmQs.length!==Number(source.count))err('Clinical Pharm '+source.key+': count '+pharmQs.length+' != manifest '+source.count);
+ if(Number(payload.count)!==pharmQs.length)err('Clinical Pharm '+source.key+': payload count does not match question array');
+ for(let i=0;i<pharmQs.length;i++){
+  const q=pharmQs[i]||{},id=String(q.id||''),identity='Clinical Pharm '+source.key+' '+(id||'#'+(i+1)),type=String(q.type||'');
+  pharmTotal++;
+  if(!id)err(identity+' has no id');else if(pharmSeen.has(id))err('Clinical Pharm: duplicate id '+id);else pharmSeen.add(id);
+  if(!String(q.stem||'').trim())err(identity+' has no stem');
+  if(!String(q.explanation||'').trim())err(identity+' has no explanation');
+  if(!pharmTopics.has(String(q.topic||'')))err(identity+' has noncanonical topic '+String(q.topic||''));
+  if(!pharmSources.has(String(q.sourceTitle||'')))err(identity+' has invalid sourceTitle '+String(q.sourceTitle||''));
+  if(source.sourceTitleContract&&String(q.sourceTitle||'')!==String(source.sourceTitleContract))err(identity+' sourceTitle does not match source contract');
+  if(type==='matching'){
+    pharmMatching++;
+    const prompts=q.prompts,choices=q.choices,map=q.answer;
+    if(!Array.isArray(prompts)||prompts.length<2||new Set(prompts.map(norm)).size!==prompts.length)err(identity+' has invalid or duplicate matching prompts');
+    if(!Array.isArray(choices)||choices.length<2||new Set(choices.map(norm)).size!==choices.length)err(identity+' has invalid or duplicate matching choices');
+    if(!map||typeof map!=='object'||Array.isArray(map)||prompts?.some(p=>!Object.prototype.hasOwnProperty.call(map,p)||!choices.includes(map[p])))err(identity+' has invalid matching answer map');
+    else if(new Set(Object.values(map).map(String)).size!==Object.values(map).length)err(identity+' reuses a keyed matching choice');
+  }else{
+    const opts=q.options,raw=q.answer,ans=(Array.isArray(raw)?raw:[raw]).map(Number);
+    if(!['single','multi'].includes(type))err(identity+' has invalid question type '+type);
+    if(!Array.isArray(opts)||opts.length<2)err(identity+' has fewer than 2 options');
+    else if(new Set(opts.map(norm)).size!==opts.length)err(identity+' has duplicate answer choices');
+    if(!ans.length||ans.some(x=>!Number.isInteger(x)||x<0||x>=opts.length))err(identity+' has invalid answer indexes');
+    if(type==='single'&&ans.length!==1)err(identity+' is single-answer but keys '+ans.length+' answers');
+    if(type==='multi'&&ans.length<2)err(identity+' is multi-answer but keys fewer than 2 answers');
+  }
  }
 }
-if(pharmSeen.size!==800)err('Clinical Pharm: question IDs are not unique ('+pharmSeen.size+'/800 unique)');
+const pharmExpected=(pharmManifest.studioSources||[]).reduce((n,s)=>n+Number(s.count||0),0);
+if(pharmTotal!==pharmExpected)err('Clinical Pharm: total question count '+pharmTotal+' != manifest inventory '+pharmExpected);
+if(pharmSeen.size!==pharmTotal)err('Clinical Pharm: question IDs are not unique ('+pharmSeen.size+'/'+pharmTotal+' unique)');
 
 const calibrationIds=new Map();
 function registerCalibrationIds(course,rootDir,courseManifest){
@@ -190,7 +197,7 @@ function registerCalibrationIds(course,rootDir,courseManifest){
 registerCalibrationIds('equipment','equipment/exam-1/',manifest);
 registerCalibrationIds('basic-principles',bpRoot,bpManifest);
 registerCalibrationIds('pharm',pharmRoot,pharmManifest);
-if(calibrationIds.size!==6800)err('CAT calibration UID inventory '+calibrationIds.size+' != expected 6800');
+const expectedCalibration=2000+4000+pharmExpected;if(calibrationIds.size!==expectedCalibration)err('CAT calibration UID inventory '+calibrationIds.size+' != expected '+expectedCalibration);
 const figureRoot=path.join(root,bpRoot,'figures'),diskFigures=[];
 for(const dirent of fs.readdirSync(figureRoot,{withFileTypes:true}))if(dirent.isDirectory())for(const file of fs.readdirSync(path.join(figureRoot,dirent.name)))diskFigures.push('figures/'+dirent.name+'/'+file);
 for(const figure of bpFigurePaths)if(!diskFigures.includes(figure))err('Basic Principles: referenced figure is outside canonical figure inventory '+figure);
@@ -201,4 +208,4 @@ if(errors.length){
   process.exit(1);
 }
 const unusedFigureCount=diskFigures.filter(figure=>!bpFigurePaths.has(figure)).length;
-console.log('Content integrity passed across Equipment, '+(bpManifest.studioSources||[]).length+' Basic Principles sources ('+bpTotal+' questions), and Clinical Pharm ('+pharmQs.length+' questions; '+pharmQs.filter(q=>q.type==='matching').length+' matching). Basic Principles has '+bpImageRefs+' question-to-figure references across '+bpFigurePaths.size+' unique referenced figures; '+unusedFigureCount+' retained figure assets currently unused. Warnings: '+warnings.length+'.');
+console.log('Content integrity passed across Equipment, '+(bpManifest.studioSources||[]).length+' Basic Principles sources ('+bpTotal+' questions), and Clinical Pharm ('+pharmTotal+' questions; '+pharmMatching+' matching). Basic Principles has '+bpImageRefs+' question-to-figure references across '+bpFigurePaths.size+' unique referenced figures; '+unusedFigureCount+' retained figure assets currently unused. Warnings: '+warnings.length+'.');
