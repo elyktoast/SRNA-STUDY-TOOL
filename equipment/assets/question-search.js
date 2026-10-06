@@ -18,9 +18,9 @@ async function buildIndex(){
     {path:'equipment/exam-1/',course:'Equipment & Hazards'},
     {path:'basic-principles/exam-1/',course:'Basic Principles'},
     {path:'pharm/clinical-pharm/',course:'Clinical Pharmacology'}
-  ],rows=[];
-  for(const root of roots){
-    const exam=new URL(root.path,runtime.appRoot||location.href),manifest=await runtime.fetchJSON(new URL('banks.json',exam),{cache:'no-store'}),sources=[],seen=new Set();
+  ];
+  const courseRows=await Promise.all(roots.map(async root=>{
+    const exam=new URL(root.path,runtime.appRoot||location.href),manifest=await runtime.fetchJSON(new URL('banks.json',exam),{cache:'force-cache'}),sources=[],seen=new Set();
     for(const src of manifest.studioSources||[]){const key=src.data+'|'+(src.setFilter||'all');if(seen.has(key))continue;seen.add(key);sources.push(src)}
     const groups=await Promise.all(sources.map(async src=>{
       const payload=await runtime.fetchJSON(new URL(src.data,exam),{cache:'force-cache'}),all=Array.isArray(payload)?payload:(payload.questions||[]),raw=src.setFilter?all.filter(q=>Number(q.set)===Number(src.setFilter)):all;
@@ -28,8 +28,10 @@ async function buildIndex(){
         const bank=src.key,label=src.groupLabel||src.label,set=String(bank).startsWith('h')?1:Number(q.set||1),id=String(q.id??''),uid=bank+'-'+id,stem=String(q.stem||q.q||''),topic=topicOf(q),explanation=String(q.explanation||q.exp||q.why||''),source=sourceText(q),options=Array.isArray(q.options)?q.options:(Array.isArray(q.c)?q.c:[]);
         return{uid,bank,label,course:root.course,examPath:root.path,set,id,stem,topic,source,practiceUrl:new URL('studio.html?question='+encodeURIComponent(uid),exam).href,search:norm([root.course,label,stem,topic,source,explanation,...options].join(' '))}
       })
-    }));rows.push(...groups.flat())
-  }
+    }));
+    return groups.flat()
+  }));
+  const rows=courseRows.flat();
   if(window.MBUQuestionGenerator?.enabled?.())for(const q of window.MBUQuestionGenerator.studioQuestions())rows.push({uid:'generated-'+q.id,bank:'generated',label:'Generated Bank',course:'Generated',set:1,id:String(q.id),stem:String(q.stem),topic:String(q.topic||'Generated'),source:String(q.citation||q.sourceName||''),practiceUrl:'',search:norm([q.stem,q.topic,q.citation,q.sourceName,q.explanation,...(q.options||[])].join(' '))});
   return rows
 }
