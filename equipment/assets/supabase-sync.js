@@ -271,6 +271,11 @@ const query='/rest/v1/mbu_question_exposure?select=course_id,exam_id,question_ui
 for(const r of rows||[]){const key=String(r.course_id||'')+'::'+String(r.exam_id||''),g=groups.get(key)||{courseId:String(r.course_id||''),examId:String(r.exam_id||''),uniqueAnswered:0,totalAttempts:0};g.uniqueAnswered++;g.totalAttempts+=Number(r.times_answered)||0;totalAttempts+=Number(r.times_answered)||0;groups.set(key,g)}
 return{uniqueAnswered:(rows||[]).length,totalAttempts,courses:[...groups.values()]}
 }
+async function accountQuestionInventory(){
+const roots=[{courseId:'equipment',examId:'exam-1',label:'Equipment & Hazards',path:'equipment/exam-1/banks.json'},{courseId:'basic-principles',examId:'exam-1',label:'Basic Principles',path:'basic-principles/exam-1/banks.json'},{courseId:'pharm',examId:'clinical-pharm',label:'Clinical Pharmacology',path:'pharm/clinical-pharm/banks.json'}],out=[];
+for(const x of roots){try{const m=await MBUBuild.fetchJSON(new URL(x.path,APP_ROOT),{cache:'force-cache'}),total=(m.studioSources||[]).reduce((n,s)=>n+Number(s.count||0),0);out.push({...x,total})}catch{}}
+return out
+}
 async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!x?.sessionId)return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event,p_session_id:x.sessionId}})===true}
 async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
 async function recordQuestionSession(x){
@@ -289,7 +294,7 @@ await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,accountQuestionStats,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,accountQuestionStats,accountQuestionInventory,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){
