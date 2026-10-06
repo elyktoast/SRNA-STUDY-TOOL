@@ -25,6 +25,21 @@
       },
       "count": 800,
       "sourceTitleContract": "Clinical Pharm"
+    },
+    {
+      "key": "pharm-top-drawer-dosing",
+      "label": "Top Drawer Drug Dosing",
+      "groupLabel": "Top Drawer Drug Dosing",
+      "data": "data/top-drawer-dosing.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Top Drawer Drug Dosing"
+      },
+      "count": 200,
+      "sourceTitleContract": "Top Drawer Drug Dosing"
     }
   ],
   "sync": {
@@ -64,7 +79,8 @@
       "Toxicology, Emergencies & Special Pharmacology"
     ],
     "sourceTitles": [
-      "Clinical Pharm"
+      "Clinical Pharm",
+      "Top Drawer Drug Dosing"
     ]
   },
   "sessionEnvironment": "equipment-bank1-practice-set1-v1",
