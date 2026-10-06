@@ -1,0 +1,5842 @@
+{
+  "id": "top-drawer-dosing",
+  "title": "Top Drawer Drug Dosing",
+  "count": 200,
+  "questions": [
+    {
+      "id": "DOSE-AA-001",
+      "set": 1,
+      "stem": "Typical etomidate induction dose?",
+      "type": "single",
+      "options": [
+        "0.2–0.3 mg/kg",
+        "2–3 mg/kg",
+        "0.2–0.3 mcg/kg",
+        "0.02–0.03 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Etomidate, induction: 0.2–0.3 mg/kg. 0.2–0.3 mcg/kg uses mcg/kg instead of mg/kg. 2–3 mg/kg is tenfold too high. 0.02–0.03 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-002",
+      "set": 1,
+      "stem": "Typical subanesthetic ketamine bolus for analgesia?",
+      "type": "single",
+      "options": [
+        "0.1–0.5 g/kg",
+        "0.1–0.5 mg/kg",
+        "1–5 mg/kg",
+        "0.1–0.5 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Ketamine, analgesic bolus: 0.1–0.5 mg/kg. 0.1–0.5 g/kg uses g/kg instead of mg/kg. 0.1–0.5 mcg/kg uses mcg/kg instead of mg/kg. 1–5 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-003",
+      "set": 1,
+      "stem": "Typical propofol infusion rate for TIVA maintenance?",
+      "type": "single",
+      "options": [
+        "1,000–2,000 mcg/kg/min",
+        "1,000–2,000 mcg/kg/hr",
+        "100–200 mcg/kg/min",
+        "10,000–20,000 mcg/kg/min"
+      ],
+      "answer": 2,
+      "explanation": "Propofol, TIVA maintenance: 100–200 mcg/kg/min. 1,000–2,000 mcg/kg/min is tenfold too high. 1,000–2,000 mcg/kg/hr uses mcg/kg/hr and is tenfold high. 10,000–20,000 mcg/kg/min is hundredfold too high.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-004",
+      "set": 1,
+      "stem": "Typical IV ketamine induction dose?",
+      "type": "single",
+      "options": [
+        "1–2 g/kg",
+        "1–2 mcg/kg",
+        "10–20 mg/kg",
+        "1–2 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Ketamine, IV induction: 1–2 mg/kg. 10–20 mg/kg is tenfold too high. 1–2 mcg/kg uses mcg/kg instead of mg/kg. 1–2 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-005",
+      "set": 1,
+      "stem": "Typical propofol induction dose for a healthy adult?",
+      "type": "single",
+      "options": [
+        "1.5–2.5 mg/kg",
+        "1.5–2.5 mcg/kg",
+        "0.15–0.25 mg/kg",
+        "15–25 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Propofol, adult induction: 1.5–2.5 mg/kg. 1.5–2.5 mcg/kg uses mcg/kg instead of mg/kg. 15–25 mg/kg is tenfold too high. 0.15–0.25 mg/kg is tenfold too low. Reduce in older or frail patients.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-006",
+      "set": 1,
+      "stem": "Typical propofol infusion rate for MAC sedation?",
+      "type": "single",
+      "options": [
+        "2.5–7.5 mcg/kg/min",
+        "25–75 mcg/kg/min",
+        "25–75 mg/kg/min",
+        "25–75 mcg/kg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Propofol, MAC sedation: 25–75 mcg/kg/min. 25–75 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 2.5–7.5 mcg/kg/min is tenfold too low. 25–75 mg/kg/min uses mg/kg/min instead of mcg/kg/min.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-007",
+      "set": 1,
+      "stem": "Typical subanesthetic ketamine infusion rate?",
+      "type": "single",
+      "options": [
+        "0.01–0.05 mg/kg/min",
+        "1–5 mg/kg/hr",
+        "0.1–0.5 mg/kg/hr",
+        "10–50 mg/kg/hr"
+      ],
+      "answer": 2,
+      "explanation": "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr. 0.01–0.05 mg/kg/min uses mg/kg/min and is tenfold low. 1–5 mg/kg/hr is tenfold too high. 10–50 mg/kg/hr is hundredfold too high. Some PACU protocols use 0.15–0.5 mg/kg/hr.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-008",
+      "set": 1,
+      "stem": "Typical dexmedetomidine loading dose, given over 10 min?",
+      "type": "single",
+      "options": [
+        "10 mcg/kg",
+        "0.1 mcg/kg",
+        "1 mg/kg",
+        "1 mcg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Dexmedetomidine, load: 1 mcg/kg. 1 mg/kg uses mg/kg instead of mcg/kg. 0.1 mcg/kg is tenfold too low. 10 mcg/kg is tenfold too high. Many clinicians skip the load.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-009",
+      "set": 1,
+      "stem": "Typical IM ketamine induction dose?",
+      "type": "single",
+      "options": [
+        "4–6 mg/kg",
+        "0.04–0.06 mg/kg",
+        "4–6 g/kg",
+        "40–60 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Ketamine, IM induction: 4–6 mg/kg. 0.04–0.06 mg/kg is hundredfold too low. 40–60 mg/kg is tenfold too high. 4–6 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-010",
+      "set": 1,
+      "stem": "Typical thiopental induction dose?",
+      "type": "single",
+      "options": [
+        "0.3–0.5 mg/kg",
+        "3–5 mg/kg",
+        "30–50 mg/kg",
+        "3–5 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Thiopental, induction: 3–5 mg/kg. 3–5 mcg/kg uses mcg/kg instead of mg/kg. 30–50 mg/kg is tenfold too high. 0.3–0.5 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-011",
+      "set": 1,
+      "stem": "Induction and sedation agent dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Ketamine, analgesic bolus: 0.01–0.05 mg/kg",
+        "Ketamine, IV induction: 10–20 mg/kg",
+        "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr",
+        "Dexmedetomidine, infusion: 2–7 mcg/kg/hr",
+        "Propofol, MAC sedation: 2.5–7.5 mcg/kg/min",
+        "Dexmedetomidine, load: 1 mcg/kg"
+      ],
+      "answer": [
+        2,
+        5
+      ],
+      "explanation": "Correct: Dexmedetomidine, load 1 mcg/kg; Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr. Incorrect: Ketamine, analgesic bolus is 0.1–0.5 mg/kg, not 0.01–0.05 mg/kg; Propofol, MAC sedation is 25–75 mcg/kg/min, not 2.5–7.5 mcg/kg/min; Ketamine, IV induction is 1–2 mg/kg, not 10–20 mg/kg; Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr, not 2–7 mcg/kg/hr.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-012",
+      "set": 1,
+      "stem": "Induction and sedation agent dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Propofol, MAC sedation: 25–75 mcg/kg/min",
+        "Etomidate, induction: 2–3 mg/kg",
+        "Dexmedetomidine, infusion: 0.2–0.7 mcg/kg/min",
+        "Propofol, adult induction: 1.5–2.5 mg/kg",
+        "Dexmedetomidine, load: 1 mcg/kg",
+        "Ketamine, IM induction: 4–6 mcg/kg"
+      ],
+      "answer": [
+        0,
+        3,
+        4
+      ],
+      "explanation": "Correct: Dexmedetomidine, load 1 mcg/kg; Propofol, adult induction 1.5–2.5 mg/kg; Propofol, MAC sedation 25–75 mcg/kg/min. Incorrect: Etomidate, induction is 0.2–0.3 mg/kg, not 2–3 mg/kg; Ketamine, IM induction is 4–6 mg/kg, not 4–6 mcg/kg; Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr, not 0.2–0.7 mcg/kg/min.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-013",
+      "set": 1,
+      "stem": "Induction and sedation agent dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Ketamine, IM induction: 4–6 mg/kg",
+        "Thiopental, induction: 3–5 mg/kg",
+        "Ketamine, analgesic bolus: 0.01–0.05 mg/kg",
+        "Ketamine, IV induction: 1–2 mg/kg",
+        "Propofol, MAC sedation: 25–75 mcg/kg/hr",
+        "Propofol, TIVA maintenance: 100–200 mcg/kg/min"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        5
+      ],
+      "explanation": "Correct: Thiopental, induction 3–5 mg/kg; Ketamine, IM induction 4–6 mg/kg; Ketamine, IV induction 1–2 mg/kg; Propofol, TIVA maintenance 100–200 mcg/kg/min. Incorrect: Propofol, MAC sedation is 25–75 mcg/kg/min, not 25–75 mcg/kg/hr; Ketamine, analgesic bolus is 0.1–0.5 mg/kg, not 0.01–0.05 mg/kg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-014",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Propofol, TIVA maintenance",
+        "Ketamine, IM induction",
+        "Ketamine, analgesic infusion",
+        "Propofol, MAC sedation"
+      ],
+      "choices": [
+        "4–6 mg/kg",
+        "0.1–0.5 mg/kg/hr",
+        "40–60 mg/kg",
+        "100–200 mcg/kg/min",
+        "25–75 mcg/kg/min"
+      ],
+      "answer": {
+        "Propofol, TIVA maintenance": "100–200 mcg/kg/min",
+        "Ketamine, IM induction": "4–6 mg/kg",
+        "Ketamine, analgesic infusion": "0.1–0.5 mg/kg/hr",
+        "Propofol, MAC sedation": "25–75 mcg/kg/min"
+      },
+      "explanation": "Typical doses: Propofol, TIVA maintenance 100–200 mcg/kg/min; Ketamine, IM induction 4–6 mg/kg; Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr; Propofol, MAC sedation 25–75 mcg/kg/min. The extra choice, 40–60 mg/kg, is the Ketamine, IM induction dose with the decimal moved.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AA-015",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Thiopental, induction",
+        "Ketamine, analgesic bolus",
+        "Etomidate, induction",
+        "Propofol, adult induction"
+      ],
+      "choices": [
+        "0.2–0.3 mg/kg",
+        "0.1–0.5 mg/kg",
+        "3–5 mg/kg",
+        "1.5–2.5 mg/kg",
+        "30–50 mg/kg"
+      ],
+      "answer": {
+        "Thiopental, induction": "3–5 mg/kg",
+        "Ketamine, analgesic bolus": "0.1–0.5 mg/kg",
+        "Etomidate, induction": "0.2–0.3 mg/kg",
+        "Propofol, adult induction": "1.5–2.5 mg/kg"
+      },
+      "explanation": "Typical doses: Thiopental, induction 3–5 mg/kg; Ketamine, analgesic bolus 0.1–0.5 mg/kg; Etomidate, induction 0.2–0.3 mg/kg; Propofol, adult induction 1.5–2.5 mg/kg. The extra choice, 30–50 mg/kg, is the Thiopental, induction dose with the decimal moved.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Anesthetic Agents",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-001",
+      "set": 1,
+      "stem": "Typical intranasal midazolam dose for a child?",
+      "type": "single",
+      "options": [
+        "2–3 mg/kg",
+        "0.2–0.3 g/kg",
+        "0.2–0.3 mg/kg",
+        "0.02–0.03 mg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Midazolam, pediatric intranasal: 0.2–0.3 mg/kg. 0.2–0.3 g/kg uses g/kg instead of mg/kg. 0.02–0.03 mg/kg is tenfold too low. 2–3 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-002",
+      "set": 1,
+      "stem": "Initial remimazolam dose for procedural sedation, given over 1 min?",
+      "type": "single",
+      "options": [
+        "5 g",
+        "5 mcg",
+        "0.5 mg",
+        "5 mg"
+      ],
+      "answer": 3,
+      "explanation": "Remimazolam, initial sedation: 5 mg. 5 mcg uses mcg instead of mg. 0.5 mg is tenfold too low. 5 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-003",
+      "set": 1,
+      "stem": "Benzodiazepine dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Midazolam, pediatric intranasal: 0.02–0.03 mg/kg",
+        "Midazolam, induction: 0.1–0.3 mg/kg",
+        "Lorazepam, status epilepticus: 0.1 mcg/kg",
+        "Midazolam, adult IV premed: 0.1–0.2 mg",
+        "Remimazolam, initial sedation: 5 mg",
+        "Flumazenil, increment: 0.2 mg"
+      ],
+      "answer": [
+        1,
+        4,
+        5
+      ],
+      "explanation": "Correct: Flumazenil, increment 0.2 mg; Midazolam, induction 0.1–0.3 mg/kg; Remimazolam, initial sedation 5 mg. Incorrect: Midazolam, pediatric intranasal is 0.2–0.3 mg/kg, not 0.02–0.03 mg/kg; Midazolam, adult IV premed is 1–2 mg, not 0.1–0.2 mg; Lorazepam, status epilepticus is 0.1 mg/kg, not 0.1 mcg/kg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-004",
+      "set": 1,
+      "stem": "Benzodiazepine dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Midazolam, adult IV premed: 0.1–0.2 mg",
+        "Remimazolam, initial sedation: 5 mcg",
+        "Midazolam, pediatric intranasal: 0.2–0.3 mg/kg",
+        "Lorazepam, status epilepticus: 0.1 mg/kg",
+        "Flumazenil, increment: 0.2 mg",
+        "Midazolam, pediatric oral: 0.5 mg/kg"
+      ],
+      "answer": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Correct: Midazolam, pediatric intranasal 0.2–0.3 mg/kg; Flumazenil, increment 0.2 mg; Midazolam, pediatric oral 0.5 mg/kg; Lorazepam, status epilepticus 0.1 mg/kg. Incorrect: Remimazolam, initial sedation is 5 mg, not 5 mcg; Midazolam, adult IV premed is 1–2 mg, not 0.1–0.2 mg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-005",
+      "set": 1,
+      "stem": "Benzodiazepine dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Midazolam, adult IV premed: 1–2 mg",
+        "Remimazolam, initial sedation: 5 mcg",
+        "Flumazenil, usual cumulative: 1 mg",
+        "Midazolam, pediatric oral: 0.05 mg/kg",
+        "Lorazepam, status epilepticus: 0.01 mg/kg",
+        "Flumazenil, increment: 0.2 mg"
+      ],
+      "answer": [
+        0,
+        2,
+        5
+      ],
+      "explanation": "Correct: Flumazenil, increment 0.2 mg; Midazolam, adult IV premed 1–2 mg; Flumazenil, usual cumulative 1 mg. Incorrect: Lorazepam, status epilepticus is 0.1 mg/kg, not 0.01 mg/kg; Midazolam, pediatric oral is 0.5 mg/kg, not 0.05 mg/kg; Remimazolam, initial sedation is 5 mg, not 5 mcg.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-006",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Remimazolam, initial sedation",
+        "Midazolam, pediatric oral",
+        "Flumazenil, usual cumulative",
+        "Lorazepam, status epilepticus"
+      ],
+      "choices": [
+        "1 mg",
+        "0.5 mg/kg",
+        "0.1 mg/kg",
+        "50 mg",
+        "5 mg"
+      ],
+      "answer": {
+        "Remimazolam, initial sedation": "5 mg",
+        "Midazolam, pediatric oral": "0.5 mg/kg",
+        "Flumazenil, usual cumulative": "1 mg",
+        "Lorazepam, status epilepticus": "0.1 mg/kg"
+      },
+      "explanation": "Typical doses: Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg; Flumazenil, usual cumulative 1 mg; Lorazepam, status epilepticus 0.1 mg/kg. The extra choice, 50 mg, is the Remimazolam, initial sedation dose with the decimal moved.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-BZ-007",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Midazolam, induction",
+        "Midazolam, adult IV premed",
+        "Remimazolam, initial sedation",
+        "Midazolam, pediatric oral"
+      ],
+      "choices": [
+        "50 mg",
+        "0.5 mg/kg",
+        "5 mg",
+        "0.1–0.3 mg/kg",
+        "1–2 mg"
+      ],
+      "answer": {
+        "Midazolam, induction": "0.1–0.3 mg/kg",
+        "Midazolam, adult IV premed": "1–2 mg",
+        "Remimazolam, initial sedation": "5 mg",
+        "Midazolam, pediatric oral": "0.5 mg/kg"
+      },
+      "explanation": "Typical doses: Midazolam, induction 0.1–0.3 mg/kg; Midazolam, adult IV premed 1–2 mg; Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg. The extra choice, 50 mg, is the Remimazolam, initial sedation dose with the decimal moved.",
+      "citation": "",
+      "topic": "Anesthetic Agents & Sedatives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Benzodiazepines",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-001",
+      "set": 1,
+      "stem": "Typical cisatracurium intubating dose?",
+      "type": "single",
+      "options": [
+        "0.15–0.2 mg/kg",
+        "0.15–0.2 g/kg",
+        "0.015–0.02 mcg/kg",
+        "1.5–2 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Cisatracurium, intubation: 0.15–0.2 mg/kg. 0.15–0.2 g/kg uses g/kg instead of mg/kg. 0.015–0.02 mcg/kg uses mcg/kg and is tenfold low. 1.5–2 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-002",
+      "set": 1,
+      "stem": "Typical IM succinylcholine dose when there is no IV?",
+      "type": "single",
+      "options": [
+        "40 mg/kg",
+        "4 mg/kg",
+        "4 mcg/kg",
+        "4 g/kg"
+      ],
+      "answer": 1,
+      "explanation": "Succinylcholine, IM: 4 mg/kg. 4 mcg/kg uses mcg/kg instead of mg/kg. 4 g/kg uses g/kg instead of mg/kg. 40 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-003",
+      "set": 1,
+      "stem": "Typical rocuronium dose for rapid sequence induction?",
+      "type": "single",
+      "options": [
+        "1.2 mcg/kg",
+        "1.2 g/kg",
+        "1.2 mg/kg",
+        "12 mg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Rocuronium, RSI: 1.2 mg/kg. 12 mg/kg is tenfold too high. 1.2 g/kg uses g/kg instead of mg/kg. 1.2 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-004",
+      "set": 1,
+      "stem": "Typical vecuronium maintenance redose?",
+      "type": "single",
+      "options": [
+        "0.0001–0.0002 mg/kg",
+        "0.001–0.002 mg/kg",
+        "0.001–0.002 mcg/kg",
+        "0.01–0.02 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Vecuronium, maintenance: 0.01–0.02 mg/kg. 0.001–0.002 mg/kg is tenfold too low. 0.0001–0.0002 mg/kg is hundredfold too low. 0.001–0.002 mcg/kg uses mcg/kg and is tenfold low.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-005",
+      "set": 1,
+      "stem": "Typical vecuronium intubating dose?",
+      "type": "single",
+      "options": [
+        "0.1 mg/kg",
+        "0.1 g/kg",
+        "0.1 mcg/kg",
+        "1 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Vecuronium, intubation: 0.1 mg/kg. 1 mg/kg is tenfold too high. 0.1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-006",
+      "set": 1,
+      "stem": "Typical adult IV succinylcholine intubating dose?",
+      "type": "single",
+      "options": [
+        "1–1.5 g/kg",
+        "1–1.5 mg/kg",
+        "0.1–0.15 mcg/kg",
+        "10–15 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Succinylcholine, adult IV: 1–1.5 mg/kg. 10–15 mcg/kg uses mcg/kg and is tenfold high. 0.1–0.15 mcg/kg uses mcg/kg and is tenfold low. 1–1.5 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-007",
+      "set": 1,
+      "stem": "Typical IV succinylcholine dose for an infant?",
+      "type": "single",
+      "options": [
+        "20 mg/kg",
+        "2 mcg/kg",
+        "2 mg/kg",
+        "2 g/kg"
+      ],
+      "answer": 2,
+      "explanation": "Succinylcholine, infant IV: 2 mg/kg. 2 mcg/kg uses mcg/kg instead of mg/kg. 20 mg/kg is tenfold too high. 2 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-008",
+      "set": 1,
+      "stem": "Typical rocuronium maintenance redose?",
+      "type": "single",
+      "options": [
+        "1–2 mg/kg",
+        "0.01–0.02 mg/kg",
+        "0.1–0.2 mcg/kg",
+        "0.1–0.2 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Rocuronium, maintenance: 0.1–0.2 mg/kg. 0.1–0.2 mcg/kg uses mcg/kg instead of mg/kg. 0.01–0.02 mg/kg is tenfold too low. 1–2 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-009",
+      "set": 1,
+      "stem": "Typical cisatracurium infusion rate?",
+      "type": "single",
+      "options": [
+        "1–2 mcg/kg/min",
+        "1–2 mg/kg/min",
+        "10–20 mcg/kg/min",
+        "0.1–0.2 mcg/kg/min"
+      ],
+      "answer": 0,
+      "explanation": "Cisatracurium, infusion: 1–2 mcg/kg/min. 1–2 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 10–20 mcg/kg/min is tenfold too high. 0.1–0.2 mcg/kg/min is tenfold too low.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-010",
+      "set": 1,
+      "stem": "Neuromuscular blocker dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Succinylcholine, laryngospasm: 0.1–0.5 mg/kg",
+        "Atracurium, intubation: 0.5 mg/kg",
+        "Rocuronium, maintenance: 0.1–0.2 mg/kg",
+        "Succinylcholine, adult IV: 1–1.5 mcg/kg",
+        "Rocuronium, RSI: 0.12 mg/kg",
+        "Vecuronium, maintenance: 0.01–0.02 mg/kg"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        5
+      ],
+      "explanation": "Correct: Atracurium, intubation 0.5 mg/kg; Rocuronium, maintenance 0.1–0.2 mg/kg; Succinylcholine, laryngospasm 0.1–0.5 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. Incorrect: Succinylcholine, adult IV is 1–1.5 mg/kg, not 1–1.5 mcg/kg; Rocuronium, RSI is 1.2 mg/kg, not 0.12 mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-011",
+      "set": 1,
+      "stem": "Neuromuscular blocker dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Succinylcholine, IM: 4 mcg/kg",
+        "Succinylcholine, infant IV: 20 mg/kg",
+        "Rocuronium, maintenance: 0.1–0.2 g/kg",
+        "Rocuronium, intubation: 0.6 mg/kg",
+        "Cisatracurium, intubation: 0.15–0.2 mg/kg",
+        "Vecuronium, maintenance: 0.01–0.02 g/kg"
+      ],
+      "answer": [
+        3,
+        4
+      ],
+      "explanation": "Correct: Cisatracurium, intubation 0.15–0.2 mg/kg; Rocuronium, intubation 0.6 mg/kg. Incorrect: Succinylcholine, infant IV is 2 mg/kg, not 20 mg/kg; Vecuronium, maintenance is 0.01–0.02 mg/kg, not 0.01–0.02 g/kg; Succinylcholine, IM is 4 mg/kg, not 4 mcg/kg; Rocuronium, maintenance is 0.1–0.2 mg/kg, not 0.1–0.2 g/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-012",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Vecuronium, intubation",
+        "Cisatracurium, infusion",
+        "Atracurium, intubation",
+        "Vecuronium, maintenance"
+      ],
+      "choices": [
+        "1 mg/kg",
+        "1–2 mcg/kg/min",
+        "0.01–0.02 mg/kg",
+        "0.1 mg/kg",
+        "0.5 mg/kg"
+      ],
+      "answer": {
+        "Vecuronium, intubation": "0.1 mg/kg",
+        "Cisatracurium, infusion": "1–2 mcg/kg/min",
+        "Atracurium, intubation": "0.5 mg/kg",
+        "Vecuronium, maintenance": "0.01–0.02 mg/kg"
+      },
+      "explanation": "Typical doses: Vecuronium, intubation 0.1 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Atracurium, intubation 0.5 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. The extra choice, 1 mg/kg, is the Vecuronium, intubation dose with the decimal moved.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-NMB-013",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Rocuronium, intubation",
+        "Atracurium, intubation",
+        "Cisatracurium, infusion",
+        "Succinylcholine, laryngospasm upper limit"
+      ],
+      "choices": [
+        "1–2 mcg/kg/min",
+        "0.5 mg/kg",
+        "0.6 mg/kg",
+        "1 mg/kg",
+        "5 mg/kg"
+      ],
+      "answer": {
+        "Rocuronium, intubation": "0.6 mg/kg",
+        "Atracurium, intubation": "0.5 mg/kg",
+        "Cisatracurium, infusion": "1–2 mcg/kg/min",
+        "Succinylcholine, laryngospasm upper limit": "1 mg/kg"
+      },
+      "explanation": "Typical doses: Rocuronium, intubation 0.6 mg/kg; Atracurium, intubation 0.5 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Succinylcholine, laryngospasm upper limit 1 mg/kg. The extra choice, 5 mg/kg, is the Atracurium, intubation dose with the decimal moved.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Neuromuscular Blockers",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-001",
+      "set": 1,
+      "stem": "Low-dose naloxone infusion rate for neuraxial opioid pruritus?",
+      "type": "single",
+      "options": [
+        "0.025–0.1 mcg/kg/hr",
+        "0.25–1 mcg/kg/hr",
+        "0.25–1 mcg/kg/min",
+        "0.25–1 mg/kg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Naloxone, pruritus infusion: 0.25–1 mcg/kg/hr. 0.025–0.1 mcg/kg/hr is tenfold too low. 0.25–1 mcg/kg/min uses mcg/kg/min instead of mcg/kg/hr. 0.25–1 mg/kg/hr uses mg/kg/hr instead of mcg/kg/hr.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-002",
+      "set": 1,
+      "stem": "Typical neostigmine reversal dose?",
+      "type": "single",
+      "options": [
+        "0.04–0.07 g/kg",
+        "0.4–0.7 mg/kg",
+        "0.04–0.07 mg/kg",
+        "0.04–0.07 mcg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Neostigmine, reversal: 0.04–0.07 mg/kg. 0.4–0.7 mg/kg is tenfold too high. 0.04–0.07 g/kg uses g/kg instead of mg/kg. 0.04–0.07 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-003",
+      "set": 1,
+      "stem": "Usual maximum neostigmine dose for reversal?",
+      "type": "single",
+      "options": [
+        "0.5 mg",
+        "5 mcg",
+        "50 mg",
+        "5 mg"
+      ],
+      "answer": 3,
+      "explanation": "Neostigmine, maximum: 5 mg. 50 mg is tenfold too high. 0.5 mg is tenfold too low. 5 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-004",
+      "set": 1,
+      "stem": "Sugammadex dose for immediate reversal after an RSI dose of rocuronium?",
+      "type": "single",
+      "options": [
+        "16 mg/kg",
+        "160 mg/kg",
+        "16 g/kg",
+        "16 mcg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Sugammadex, immediate reversal: 16 mg/kg. 16 mcg/kg uses mcg/kg instead of mg/kg. 160 mg/kg is tenfold too high. 16 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-005",
+      "set": 1,
+      "stem": "Typical pediatric IV atropine dose?",
+      "type": "single",
+      "options": [
+        "0.02 mcg/kg",
+        "0.02 mg/kg",
+        "0.02 g/kg",
+        "0.002 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Atropine, pediatric: 0.02 mg/kg. 0.02 g/kg uses g/kg instead of mg/kg. 0.02 mcg/kg uses mcg/kg instead of mg/kg. 0.002 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-006",
+      "set": 1,
+      "stem": "Typical adult glycopyrrolate antisialagogue dose?",
+      "type": "single",
+      "options": [
+        "1–2 mcg",
+        "10–20 mg",
+        "0.1–0.2 mg",
+        "0.1–0.2 g"
+      ],
+      "answer": 2,
+      "explanation": "Glycopyrrolate, antisialagogue: 0.1–0.2 mg. 10–20 mg is hundredfold too high. 1–2 mcg uses mcg and is tenfold high. 0.1–0.2 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-007",
+      "set": 1,
+      "stem": "Sugammadex dose for moderate block (TOF count 2)?",
+      "type": "single",
+      "options": [
+        "20 mcg/kg",
+        "0.2 mg/kg",
+        "2 g/kg",
+        "2 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Sugammadex, moderate block: 2 mg/kg. 20 mcg/kg uses mcg/kg and is tenfold high. 0.2 mg/kg is tenfold too low. 2 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-008",
+      "set": 1,
+      "stem": "Typical initial IV naloxone dose for opioid overdose?",
+      "type": "single",
+      "options": [
+        "0.4 mg",
+        "0.04 mg",
+        "0.4 g",
+        "4 mg"
+      ],
+      "answer": 0,
+      "explanation": "Naloxone, IV overdose: 0.4 mg. 4 mg is tenfold too high. 0.4 g uses g instead of mg. 0.04 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-009",
+      "set": 1,
+      "stem": "Atropine dose paired with edrophonium?",
+      "type": "single",
+      "options": [
+        "0.7–1 mcg/kg",
+        "7–10 mcg/kg",
+        "70–100 mcg/kg",
+        "7–10 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Atropine with edrophonium: 7–10 mcg/kg. 70–100 mcg/kg is tenfold too high. 0.7–1 mcg/kg is tenfold too low. 7–10 mg/kg uses mg/kg instead of mcg/kg.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-010",
+      "set": 1,
+      "stem": "Typical naloxone titration dose for postoperative respiratory depression?",
+      "type": "single",
+      "options": [
+        "400 mg",
+        "4 mg",
+        "40 mcg",
+        "40 mg"
+      ],
+      "answer": 2,
+      "explanation": "Naloxone, postop titration: 40 mcg. 4 mg uses mg and is tenfold low. 400 mg uses mg and is tenfold high. 40 mg uses mg instead of mcg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-011",
+      "set": 1,
+      "stem": "Adult ACLS atropine dose for symptomatic bradycardia?",
+      "type": "single",
+      "options": [
+        "0.1 mg",
+        "1 g",
+        "10 mg",
+        "1 mg"
+      ],
+      "answer": 3,
+      "explanation": "Atropine, adult bradycardia: 1 mg. 10 mg is tenfold too high. 1 g uses g instead of mg. 0.1 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-012",
+      "set": 1,
+      "stem": "Typical adult physostigmine dose for central anticholinergic syndrome?",
+      "type": "single",
+      "options": [
+        "0.5–2 mg",
+        "0.5–2 g",
+        "5–20 mg",
+        "0.05–0.2 mg"
+      ],
+      "answer": 0,
+      "explanation": "Physostigmine, adult: 0.5–2 mg. 0.05–0.2 mg is tenfold too low. 0.5–2 g uses g instead of mg. 5–20 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Toxicology, Emergencies & Special Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-013",
+      "set": 1,
+      "stem": "Standard intranasal naloxone dose?",
+      "type": "single",
+      "options": [
+        "40 mg",
+        "4 mg",
+        "4 g",
+        "0.4 mg"
+      ],
+      "answer": 1,
+      "explanation": "Naloxone, intranasal: 4 mg. 40 mg is tenfold too high. 4 g uses g instead of mg. 0.4 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-014",
+      "set": 1,
+      "stem": "Sugammadex dose for deep block (PTC 1–2 or more, TOF 0)?",
+      "type": "single",
+      "options": [
+        "40 mcg/kg",
+        "4 mcg/kg",
+        "4 mg/kg",
+        "4 g/kg"
+      ],
+      "answer": 2,
+      "explanation": "Sugammadex, deep block: 4 mg/kg. 4 g/kg uses g/kg instead of mg/kg. 4 mcg/kg uses mcg/kg instead of mg/kg. 40 mcg/kg uses mcg/kg and is tenfold high.",
+      "citation": "",
+      "topic": "Neuromuscular Blockade & Reversal",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-015",
+      "set": 1,
+      "stem": "Reversal agent dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Glycopyrrolate, antisialagogue: 0.1–0.2 mg",
+        "Neostigmine, maximum: 5 mg",
+        "Naloxone, IV overdose: 0.4 mcg",
+        "Naloxone, postop titration: 40 mcg",
+        "Naloxone, intranasal: 4 mg",
+        "Naloxone, pruritus infusion: 0.25–1 mcg/kg/hr"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Correct: Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Naloxone, intranasal 4 mg; Naloxone, postop titration 40 mcg; Naloxone, pruritus infusion 0.25–1 mcg/kg/hr. Incorrect: Naloxone, IV overdose is 0.4 mg, not 0.4 mcg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-016",
+      "set": 1,
+      "stem": "Reversal agent dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Naloxone, postop titration: 40 mcg",
+        "Naloxone, IV overdose: 0.4 mg",
+        "Atropine, adult bradycardia: 1 mg",
+        "Naloxone, intranasal: 4 mg",
+        "Atropine, pediatric: 0.02 mg/kg",
+        "Sugammadex, deep block: 4 mcg/kg"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "explanation": "Correct: Naloxone, postop titration 40 mcg; Naloxone, intranasal 4 mg; Atropine, adult bradycardia 1 mg; Atropine, pediatric 0.02 mg/kg; Naloxone, IV overdose 0.4 mg. Incorrect: Sugammadex, deep block is 4 mg/kg, not 4 mcg/kg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-017",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Atropine with edrophonium",
+        "Glycopyrrolate, antisialagogue",
+        "Neostigmine, maximum",
+        "Physostigmine, adult"
+      ],
+      "choices": [
+        "0.5–2 mg",
+        "7–10 mcg/kg",
+        "5 mg",
+        "1–2 mg",
+        "0.1–0.2 mg"
+      ],
+      "answer": {
+        "Atropine with edrophonium": "7–10 mcg/kg",
+        "Glycopyrrolate, antisialagogue": "0.1–0.2 mg",
+        "Neostigmine, maximum": "5 mg",
+        "Physostigmine, adult": "0.5–2 mg"
+      },
+      "explanation": "Typical doses: Atropine with edrophonium 7–10 mcg/kg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Physostigmine, adult 0.5–2 mg. The extra choice, 1–2 mg, is the Glycopyrrolate, antisialagogue dose with the decimal moved.",
+      "citation": "",
+      "topic": "Toxicology, Emergencies & Special Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-RV-018",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Glycopyrrolate per 1 mg neostigmine",
+        "Atropine, adult bradycardia",
+        "Glycopyrrolate, antisialagogue",
+        "Neostigmine, maximum"
+      ],
+      "choices": [
+        "0.1–0.2 mg",
+        "0.2 mg",
+        "5 mg",
+        "1 mg",
+        "50 mg"
+      ],
+      "answer": {
+        "Glycopyrrolate per 1 mg neostigmine": "0.2 mg",
+        "Atropine, adult bradycardia": "1 mg",
+        "Glycopyrrolate, antisialagogue": "0.1–0.2 mg",
+        "Neostigmine, maximum": "5 mg"
+      },
+      "explanation": "Typical doses: Glycopyrrolate per 1 mg neostigmine 0.2 mg; Atropine, adult bradycardia 1 mg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg. The extra choice, 50 mg, is the Neostigmine, maximum dose with the decimal moved.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Reversals",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-001",
+      "set": 1,
+      "stem": "Typical remifentanil maintenance infusion with a volatile or propofol?",
+      "type": "single",
+      "options": [
+        "0.005–0.025 mcg/kg/hr",
+        "0.05–0.25 mg/kg/min",
+        "0.0005–0.0025 mcg/kg/min",
+        "0.05–0.25 mcg/kg/min"
+      ],
+      "answer": 3,
+      "explanation": "Remifentanil, infusion: 0.05–0.25 mcg/kg/min. 0.005–0.025 mcg/kg/hr uses mcg/kg/hr and is tenfold low. 0.05–0.25 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 0.0005–0.0025 mcg/kg/min is hundredfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-002",
+      "set": 1,
+      "stem": "Typical IV hydromorphone increment for an opioid-naive adult?",
+      "type": "single",
+      "options": [
+        "0.2–0.5 mg",
+        "0.02–0.05 mg",
+        "0.002–0.005 mg",
+        "0.2–0.5 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Hydromorphone, PACU increment: 0.2–0.5 mg. 0.02–0.05 mg is tenfold too low. 0.2–0.5 mcg uses mcg instead of mg. 0.002–0.005 mg is hundredfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-003",
+      "set": 1,
+      "stem": "Typical fentanyl infusion rate?",
+      "type": "single",
+      "options": [
+        "0.5–2 mcg/kg/min",
+        "0.5–2 mcg/kg/hr",
+        "0.05–0.2 mcg/kg/hr",
+        "5–20 mcg/kg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Fentanyl, infusion: 0.5–2 mcg/kg/hr. 5–20 mcg/kg/hr is tenfold too high. 0.5–2 mcg/kg/min uses mcg/kg/min instead of mcg/kg/hr. 0.05–0.2 mcg/kg/hr is tenfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-004",
+      "set": 1,
+      "stem": "IV meperidine dose range for postoperative shivering?",
+      "type": "single",
+      "options": [
+        "1.25–5 mcg",
+        "1.25–5 mg",
+        "12.5–50 mg",
+        "12.5–50 mcg"
+      ],
+      "answer": 2,
+      "explanation": "Meperidine, shivering: 12.5–50 mg. 12.5–50 mcg uses mcg instead of mg. 1.25–5 mg is tenfold too low. 1.25–5 mcg uses mcg and is tenfold low. The usual single dose is 25 mg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-005",
+      "set": 1,
+      "stem": "Typical IV fentanyl increment in PACU for an opioid-naive adult?",
+      "type": "single",
+      "options": [
+        "25–50 mg",
+        "2.5–5 mcg",
+        "250–500 mcg",
+        "25–50 mcg"
+      ],
+      "answer": 3,
+      "explanation": "Fentanyl, PACU increment: 25–50 mcg. 25–50 mg uses mg instead of mcg. 250–500 mcg is tenfold too high. 2.5–5 mcg is tenfold too low.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-006",
+      "set": 1,
+      "stem": "Usual single IV meperidine dose for postoperative shivering?",
+      "type": "single",
+      "options": [
+        "25 mg",
+        "2.5 mg",
+        "250 mg",
+        "25 g"
+      ],
+      "answer": 0,
+      "explanation": "Meperidine, usual shivering dose: 25 mg. 2.5 mg is tenfold too low. 250 mg is tenfold too high. 25 g uses g instead of mg. The range is 12.5–50 mg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-007",
+      "set": 1,
+      "stem": "Typical alfentanil bolus for a brief procedure?",
+      "type": "single",
+      "options": [
+        "100–200 mcg/kg",
+        "10–20 mcg/kg",
+        "10–20 mg/kg",
+        "1–2 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Alfentanil, bolus: 10–20 mcg/kg. 100–200 mcg/kg is tenfold too high. 1–2 mcg/kg is tenfold too low. 10–20 mg/kg uses mg/kg instead of mcg/kg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-008",
+      "set": 1,
+      "stem": "Typical IV nalbuphine dose for neuraxial opioid pruritus?",
+      "type": "single",
+      "options": [
+        "2.5–5 g",
+        "250–500 mg",
+        "2.5–5 mg",
+        "0.25–0.5 mg"
+      ],
+      "answer": 2,
+      "explanation": "Nalbuphine, pruritus: 2.5–5 mg. 2.5–5 g uses g instead of mg. 0.25–0.5 mg is tenfold too low. 250–500 mg is hundredfold too high.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-009",
+      "set": 1,
+      "stem": "Typical intrathecal morphine dose for cesarean delivery?",
+      "type": "single",
+      "options": [
+        "10–15 mcg",
+        "100–150 mg",
+        "1,000–1,500 mcg",
+        "100–150 mcg"
+      ],
+      "answer": 3,
+      "explanation": "Morphine, intrathecal cesarean: 100–150 mcg. 100–150 mg uses mg instead of mcg. 10–15 mcg is tenfold too low. 1,000–1,500 mcg is tenfold too high. Some centers use 50–100 mcg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-010",
+      "set": 1,
+      "stem": "Typical intrathecal fentanyl dose?",
+      "type": "single",
+      "options": [
+        "10–25 mcg",
+        "10–25 mg",
+        "1–2.5 mcg",
+        "100–250 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Fentanyl, intrathecal: 10–25 mcg. 1–2.5 mcg is tenfold too low. 10–25 mg uses mg instead of mcg. 100–250 mcg is tenfold too high.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-011",
+      "set": 1,
+      "stem": "Typical IV morphine increment for an opioid-naive adult?",
+      "type": "single",
+      "options": [
+        "2–4 mcg",
+        "2–4 mg",
+        "0.2–0.4 mg",
+        "20–40 mg"
+      ],
+      "answer": 1,
+      "explanation": "Morphine, PACU increment: 2–4 mg. 2–4 mcg uses mcg instead of mg. 0.2–0.4 mg is tenfold too low. 20–40 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-012",
+      "set": 1,
+      "stem": "Typical fentanyl dose to blunt laryngoscopy?",
+      "type": "single",
+      "options": [
+        "10–30 mcg/kg",
+        "0.1–0.3 mcg/kg",
+        "1–3 mcg/kg",
+        "1–3 mg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Fentanyl, induction: 1–3 mcg/kg. 0.1–0.3 mcg/kg is tenfold too low. 10–30 mcg/kg is tenfold too high. 1–3 mg/kg uses mg/kg instead of mcg/kg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-013",
+      "set": 1,
+      "stem": "Opioid dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Remifentanil, bolus: 0.5–1 mcg/kg",
+        "Hydromorphone, PACU increment: 0.2–0.5 mg",
+        "Nalbuphine, pruritus: 0.25–0.5 mg",
+        "Methadone, induction: 1–2 mg/kg",
+        "Alfentanil, bolus: 10–20 mcg/kg",
+        "Fentanyl, intrathecal: 100–250 mcg"
+      ],
+      "answer": [
+        0,
+        1,
+        4
+      ],
+      "explanation": "Correct: Alfentanil, bolus 10–20 mcg/kg; Remifentanil, bolus 0.5–1 mcg/kg; Hydromorphone, PACU increment 0.2–0.5 mg. Incorrect: Fentanyl, intrathecal is 10–25 mcg, not 100–250 mcg; Nalbuphine, pruritus is 2.5–5 mg, not 0.25–0.5 mg; Methadone, induction is 0.1–0.2 mg/kg, not 1–2 mg/kg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-014",
+      "set": 1,
+      "stem": "Opioid dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Meperidine, usual shivering dose: 25 mcg",
+        "Morphine, epidural: 2–3 mg",
+        "Fentanyl, PACU increment: 25–50 mcg",
+        "Morphine, intrathecal cesarean: 100–150 mcg",
+        "Hydromorphone, PACU increment: 0.02–0.05 mg",
+        "Fentanyl, intrathecal: 10–25 mcg"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        5
+      ],
+      "explanation": "Correct: Fentanyl, intrathecal 10–25 mcg; Morphine, intrathecal cesarean 100–150 mcg; Morphine, epidural 2–3 mg; Fentanyl, PACU increment 25–50 mcg. Incorrect: Meperidine, usual shivering dose is 25 mg, not 25 mcg; Hydromorphone, PACU increment is 0.2–0.5 mg, not 0.02–0.05 mg.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-015",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Fentanyl, induction",
+        "Sufentanil, induction",
+        "Morphine, PACU increment",
+        "Alfentanil, bolus"
+      ],
+      "choices": [
+        "0.1–0.5 mcg/kg",
+        "1–3 mcg/kg",
+        "2–4 mg",
+        "10–20 mcg/kg",
+        "20–40 mg"
+      ],
+      "answer": {
+        "Fentanyl, induction": "1–3 mcg/kg",
+        "Sufentanil, induction": "0.1–0.5 mcg/kg",
+        "Morphine, PACU increment": "2–4 mg",
+        "Alfentanil, bolus": "10–20 mcg/kg"
+      },
+      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Sufentanil, induction 0.1–0.5 mcg/kg; Morphine, PACU increment 2–4 mg; Alfentanil, bolus 10–20 mcg/kg. The extra choice, 20–40 mg, is the Morphine, PACU increment dose with the decimal moved.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OP-016",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Fentanyl, induction",
+        "Morphine, PACU increment",
+        "Methadone, induction",
+        "Nalbuphine, pruritus"
+      ],
+      "choices": [
+        "2–4 mg",
+        "0.1–0.2 mg/kg",
+        "2.5–5 mg",
+        "1–3 mcg/kg",
+        "1–2 mg/kg"
+      ],
+      "answer": {
+        "Fentanyl, induction": "1–3 mcg/kg",
+        "Morphine, PACU increment": "2–4 mg",
+        "Methadone, induction": "0.1–0.2 mg/kg",
+        "Nalbuphine, pruritus": "2.5–5 mg"
+      },
+      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Morphine, PACU increment 2–4 mg; Methadone, induction 0.1–0.2 mg/kg; Nalbuphine, pruritus 2.5–5 mg. The extra choice, 1–2 mg/kg, is the Methadone, induction dose with the decimal moved.",
+      "citation": "",
+      "topic": "Opioids & Opioid Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Opioids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-001",
+      "set": 1,
+      "stem": "IV amisulpride dose for PONV prophylaxis?",
+      "type": "single",
+      "options": [
+        "5 g",
+        "50 mg",
+        "0.5 mg",
+        "5 mg"
+      ],
+      "answer": 3,
+      "explanation": "Amisulpride, prophylaxis: 5 mg. 5 g uses g instead of mg. 50 mg is tenfold too high. 0.5 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-002",
+      "set": 1,
+      "stem": "Typical haloperidol dose for PONV?",
+      "type": "single",
+      "options": [
+        "0.5–2 mg",
+        "0.05–0.2 mg",
+        "0.5–2 mcg",
+        "0.5–2 g"
+      ],
+      "answer": 0,
+      "explanation": "Haloperidol, PONV: 0.5–2 mg. 0.5–2 mcg uses mcg instead of mg. 0.05–0.2 mg is tenfold too low. 0.5–2 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-003",
+      "set": 1,
+      "stem": "Typical IV famotidine dose for aspiration prophylaxis?",
+      "type": "single",
+      "options": [
+        "20 g",
+        "20 mg",
+        "20 mcg",
+        "2 mg"
+      ],
+      "answer": 1,
+      "explanation": "Famotidine, IV: 20 mg. 2 mg is tenfold too low. 20 mcg uses mcg instead of mg. 20 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-004",
+      "set": 1,
+      "stem": "Adult dexamethasone PONV dose?",
+      "type": "single",
+      "options": [
+        "4–8 mcg",
+        "0.04–0.08 mg",
+        "4–8 mg",
+        "4–8 g"
+      ],
+      "answer": 2,
+      "explanation": "Dexamethasone, adult PONV: 4–8 mg. 0.04–0.08 mg is hundredfold too low. 4–8 mcg uses mcg instead of mg. 4–8 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-005",
+      "set": 1,
+      "stem": "Adult ondansetron PONV dose?",
+      "type": "single",
+      "options": [
+        "0.4 mg",
+        "40 mg",
+        "0.4 mcg",
+        "4 mg"
+      ],
+      "answer": 3,
+      "explanation": "Ondansetron, adult: 4 mg. 0.4 mcg uses mcg and is tenfold low. 40 mg is tenfold too high. 0.4 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-006",
+      "set": 1,
+      "stem": "Typical IV promethazine dose for PONV?",
+      "type": "single",
+      "options": [
+        "6.25–12.5 mg",
+        "6.25–12.5 g",
+        "625–1,250 mg",
+        "0.625–1.25 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Promethazine, PONV: 6.25–12.5 mg. 0.625–1.25 mcg uses mcg and is tenfold low. 625–1,250 mg is hundredfold too high. 6.25–12.5 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-007",
+      "set": 1,
+      "stem": "Typical IV metoclopramide dose before induction?",
+      "type": "single",
+      "options": [
+        "10 g",
+        "10 mg",
+        "1 mg",
+        "0.1 mg"
+      ],
+      "answer": 1,
+      "explanation": "Metoclopramide, IV: 10 mg. 0.1 mg is hundredfold too low. 1 mg is tenfold too low. 10 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-008",
+      "set": 1,
+      "stem": "Typical droperidol dose for PONV?",
+      "type": "single",
+      "options": [
+        "62.5–125 mg",
+        "0.0625–0.125 mg",
+        "0.625–1.25 mg",
+        "0.0625–0.125 mcg"
+      ],
+      "answer": 2,
+      "explanation": "Droperidol, PONV: 0.625–1.25 mg. 62.5–125 mg is hundredfold too high. 0.0625–0.125 mcg uses mcg and is tenfold low. 0.0625–0.125 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-009",
+      "set": 1,
+      "stem": "Pediatric ondansetron dose (max 4 mg)?",
+      "type": "single",
+      "options": [
+        "0.01 mg/kg",
+        "0.1 mcg/kg",
+        "0.001 mg/kg",
+        "0.1 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Ondansetron, pediatric: 0.1 mg/kg. 0.001 mg/kg is hundredfold too low. 0.01 mg/kg is tenfold too low. 0.1 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-010",
+      "set": 1,
+      "stem": "Typical adult IV diphenhydramine dose?",
+      "type": "single",
+      "options": [
+        "25–50 mg",
+        "25–50 mcg",
+        "25–50 g",
+        "250–500 mg"
+      ],
+      "answer": 0,
+      "explanation": "Diphenhydramine, IV: 25–50 mg. 25–50 mcg uses mcg instead of mg. 25–50 g uses g instead of mg. 250–500 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-011",
+      "set": 1,
+      "stem": "Pediatric dexamethasone PONV dose?",
+      "type": "single",
+      "options": [
+        "0.015 mcg/kg",
+        "0.15 mg/kg",
+        "0.15 mcg/kg",
+        "0.0015 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Dexamethasone, pediatric: 0.15 mg/kg. 0.015 mcg/kg uses mcg/kg and is tenfold low. 0.0015 mg/kg is hundredfold too low. 0.15 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-012",
+      "set": 1,
+      "stem": "Oral aprepitant dose for PONV prophylaxis?",
+      "type": "single",
+      "options": [
+        "4 mg",
+        "400 mg",
+        "40 mg",
+        "40 mcg"
+      ],
+      "answer": 2,
+      "explanation": "Aprepitant, PONV: 40 mg. 4 mg is tenfold too low. 400 mg is tenfold too high. 40 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-013",
+      "set": 1,
+      "stem": "Scopolamine transdermal patch strength?",
+      "type": "single",
+      "options": [
+        "15 mg",
+        "1.5 g",
+        "0.15 mg",
+        "1.5 mg"
+      ],
+      "answer": 3,
+      "explanation": "Scopolamine, patch: 1.5 mg. 0.15 mg is tenfold too low. 1.5 g uses g instead of mg. 15 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-014",
+      "set": 1,
+      "stem": "Typical oral sodium citrate volume before cesarean?",
+      "type": "single",
+      "options": [
+        "30 mL",
+        "300 mL",
+        "3 mL",
+        "30 mL/kg"
+      ],
+      "answer": 0,
+      "explanation": "Sodium citrate, oral: 30 mL. 30 mL/kg uses mL/kg instead of mL. 3 mL is tenfold too low. 300 mL is tenfold too high.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-015",
+      "set": 1,
+      "stem": "Antiemetic and GI dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Sodium citrate, oral: 30 mL",
+        "Haloperidol, PONV: 0.5–2 mg",
+        "Dexamethasone, adult PONV: 40–80 mg",
+        "Famotidine, IV: 20 mg",
+        "Dexamethasone, pediatric: 0.15 mcg/kg",
+        "Amisulpride, prophylaxis: 5 mg"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        5
+      ],
+      "explanation": "Correct: Famotidine, IV 20 mg; Sodium citrate, oral 30 mL; Haloperidol, PONV 0.5–2 mg; Amisulpride, prophylaxis 5 mg. Incorrect: Dexamethasone, pediatric is 0.15 mg/kg, not 0.15 mcg/kg; Dexamethasone, adult PONV is 4–8 mg, not 40–80 mg.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-016",
+      "set": 1,
+      "stem": "Antiemetic and GI dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Sodium citrate, oral: 30 mL",
+        "Aprepitant, PONV: 40 mg",
+        "Ondansetron, adult: 4 mg",
+        "Metoclopramide, IV: 1 mg",
+        "Amisulpride, prophylaxis: 5 g",
+        "Famotidine, IV: 200 mg"
+      ],
+      "answer": [
+        0,
+        1,
+        2
+      ],
+      "explanation": "Correct: Sodium citrate, oral 30 mL; Ondansetron, adult 4 mg; Aprepitant, PONV 40 mg. Incorrect: Metoclopramide, IV is 10 mg, not 1 mg; Famotidine, IV is 20 mg, not 200 mg; Amisulpride, prophylaxis is 5 mg, not 5 g.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-017",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Amisulpride, prophylaxis",
+        "Droperidol, PONV",
+        "Aprepitant, PONV",
+        "Scopolamine, patch"
+      ],
+      "choices": [
+        "40 mg",
+        "5 mg",
+        "0.625–1.25 mg",
+        "1.5 mg",
+        "400 mg"
+      ],
+      "answer": {
+        "Amisulpride, prophylaxis": "5 mg",
+        "Droperidol, PONV": "0.625–1.25 mg",
+        "Aprepitant, PONV": "40 mg",
+        "Scopolamine, patch": "1.5 mg"
+      },
+      "explanation": "Typical doses: Amisulpride, prophylaxis 5 mg; Droperidol, PONV 0.625–1.25 mg; Aprepitant, PONV 40 mg; Scopolamine, patch 1.5 mg. The extra choice, 400 mg, is the Aprepitant, PONV dose with the decimal moved.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-GI-018",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Dexamethasone, adult PONV",
+        "Famotidine, IV",
+        "Sodium citrate, oral",
+        "Diphenhydramine, IV"
+      ],
+      "choices": [
+        "4–8 mg",
+        "250–500 mg",
+        "25–50 mg",
+        "20 mg",
+        "30 mL"
+      ],
+      "answer": {
+        "Dexamethasone, adult PONV": "4–8 mg",
+        "Famotidine, IV": "20 mg",
+        "Sodium citrate, oral": "30 mL",
+        "Diphenhydramine, IV": "25–50 mg"
+      },
+      "explanation": "Typical doses: Dexamethasone, adult PONV 4–8 mg; Famotidine, IV 20 mg; Sodium citrate, oral 30 mL; Diphenhydramine, IV 25–50 mg. The extra choice, 250–500 mg, is the Diphenhydramine, IV dose with the decimal moved.",
+      "citation": "",
+      "topic": "Antiemetics & Gastrointestinal Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antiemetics / GI",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-001",
+      "set": 1,
+      "stem": "Maximum dose of plain bupivacaine?",
+      "type": "single",
+      "options": [
+        "25 mg/kg",
+        "2.5 mg/kg",
+        "2.5 g/kg",
+        "0.25 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Bupivacaine plain, max: 2.5 mg/kg. 2.5 g/kg uses g/kg instead of mg/kg. 0.25 mg/kg is tenfold too low. 25 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-002",
+      "set": 1,
+      "stem": "IV lidocaine dose to blunt laryngoscopy?",
+      "type": "single",
+      "options": [
+        "10–15 mg/kg",
+        "1–1.5 mcg/kg",
+        "1–1.5 mg/kg",
+        "0.1–0.15 mg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Lidocaine IV, laryngoscopy: 1–1.5 mg/kg. 10–15 mg/kg is tenfold too high. 1–1.5 mcg/kg uses mcg/kg instead of mg/kg. 0.1–0.15 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-003",
+      "set": 1,
+      "stem": "Typical intraoperative IV lidocaine infusion rate?",
+      "type": "single",
+      "options": [
+        "10–20 mg/kg/hr",
+        "1–2 mcg/kg/hr",
+        "1–2 mg/kg/min",
+        "1–2 mg/kg/hr"
+      ],
+      "answer": 3,
+      "explanation": "Lidocaine, IV infusion: 1–2 mg/kg/hr. 1–2 mg/kg/min uses mg/kg/min instead of mg/kg/hr. 1–2 mcg/kg/hr uses mcg/kg/hr instead of mg/kg/hr. 10–20 mg/kg/hr is tenfold too high.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-004",
+      "set": 1,
+      "stem": "20% lipid emulsion bolus for LAST in a patient over 70 kg?",
+      "type": "single",
+      "options": [
+        "100 mL",
+        "10 mL/kg",
+        "1,000 mL/kg",
+        "10,000 mL"
+      ],
+      "answer": 0,
+      "explanation": "Lipid 20%, bolus over 70 kg: 100 mL. 10 mL/kg uses mL/kg and is tenfold low. 10,000 mL is hundredfold too high. 1,000 mL/kg uses mL/kg and is tenfold high.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-005",
+      "set": 1,
+      "stem": "Maximum dose of plain chloroprocaine?",
+      "type": "single",
+      "options": [
+        "11 g/kg",
+        "11 mg/kg",
+        "1.1 mg/kg",
+        "1,100 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Chloroprocaine plain, max: 11 mg/kg. 1,100 mg/kg is hundredfold too high. 1.1 mg/kg is tenfold too low. 11 g/kg uses g/kg instead of mg/kg. Some references cite 12 mg/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-006",
+      "set": 1,
+      "stem": "Maximum dose of plain lidocaine?",
+      "type": "single",
+      "options": [
+        "45 mg/kg",
+        "45 mcg/kg",
+        "4.5 mg/kg",
+        "4.5 mcg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Lidocaine plain, max: 4.5 mg/kg. 45 mcg/kg uses mcg/kg and is tenfold high. 45 mg/kg is tenfold too high. 4.5 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-007",
+      "set": 1,
+      "stem": "Maximum dose of ropivacaine?",
+      "type": "single",
+      "options": [
+        "0.3 mg/kg",
+        "30 mg/kg",
+        "3 mcg/kg",
+        "3 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Ropivacaine, max: 3 mg/kg. 30 mg/kg is tenfold too high. 0.3 mg/kg is tenfold too low. 3 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-008",
+      "set": 1,
+      "stem": "Typical hyperbaric bupivacaine spinal dose for cesarean delivery?",
+      "type": "single",
+      "options": [
+        "10–15 mg",
+        "10–15 g",
+        "100–150 mg",
+        "1–1.5 mg"
+      ],
+      "answer": 0,
+      "explanation": "Bupivacaine, spinal cesarean: 10–15 mg. 1–1.5 mg is tenfold too low. 10–15 g uses g instead of mg. 100–150 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-009",
+      "set": 1,
+      "stem": "Commonly cited maximum topical lidocaine for awake airway topicalization (lean body weight)?",
+      "type": "single",
+      "options": [
+        "900 mg/kg",
+        "9 mg/kg",
+        "0.9 mg/kg",
+        "0.09 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Lidocaine, topical airway max: 9 mg/kg. 900 mg/kg is hundredfold too high. 0.9 mg/kg is tenfold too low. 0.09 mg/kg is hundredfold too low.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-010",
+      "set": 1,
+      "stem": "20% lipid emulsion bolus for LAST in a patient under 70 kg?",
+      "type": "single",
+      "options": [
+        "1.5 mL",
+        "0.15 mL/kg",
+        "1.5 mL/kg",
+        "1.5 L/kg"
+      ],
+      "answer": 2,
+      "explanation": "Lipid 20%, bolus under 70 kg: 1.5 mL/kg. 1.5 L/kg uses L/kg instead of mL/kg. 0.15 mL/kg is tenfold too low. 1.5 mL uses mL instead of mL/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-011",
+      "set": 1,
+      "stem": "Maximum dose of chloroprocaine with epinephrine?",
+      "type": "single",
+      "options": [
+        "1.4 mg/kg",
+        "140 mg/kg",
+        "14 g/kg",
+        "14 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Chloroprocaine with epi, max: 14 mg/kg. 1.4 mg/kg is tenfold too low. 140 mg/kg is tenfold too high. 14 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-012",
+      "set": 1,
+      "stem": "20% lipid emulsion infusion rate for LAST in a patient under 70 kg?",
+      "type": "single",
+      "options": [
+        "0.25 mL/kg/min",
+        "2.5 mL/kg/min",
+        "0.25 mL/min",
+        "0.25 mL/kg/hr"
+      ],
+      "answer": 0,
+      "explanation": "Lipid 20%, infusion under 70 kg: 0.25 mL/kg/min. 2.5 mL/kg/min is tenfold too high. 0.25 mL/min uses mL/min instead of mL/kg/min. 0.25 mL/kg/hr uses mL/kg/hr instead of mL/kg/min.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-013",
+      "set": 1,
+      "stem": "Epinephrine content of a standard epidural test dose?",
+      "type": "single",
+      "options": [
+        "1.5 mg",
+        "15 mcg",
+        "0.15 mcg",
+        "150 mg"
+      ],
+      "answer": 1,
+      "explanation": "Epinephrine, test dose: 15 mcg. 0.15 mcg is hundredfold too low. 1.5 mg uses mg and is tenfold low. 150 mg uses mg and is tenfold high.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-014",
+      "set": 1,
+      "stem": "Maximum dose of lidocaine with epinephrine?",
+      "type": "single",
+      "options": [
+        "7 mcg/kg",
+        "70 mg/kg",
+        "7 mg/kg",
+        "7 g/kg"
+      ],
+      "answer": 2,
+      "explanation": "Lidocaine with epi, max: 7 mg/kg. 7 mcg/kg uses mcg/kg instead of mg/kg. 70 mg/kg is tenfold too high. 7 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-015",
+      "set": 1,
+      "stem": "Local anesthetic dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Lidocaine, topical airway max: 9 mg/kg",
+        "Lidocaine, IV infusion: 0.1–0.2 mg/kg/hr",
+        "Lidocaine IV, laryngoscopy: 1–1.5 mg/kg",
+        "Ropivacaine, max: 3 mcg/kg",
+        "Epinephrine 1:200,000: 500 mcg/mL",
+        "Bupivacaine, spinal cesarean: 10–15 g"
+      ],
+      "answer": [
+        0,
+        2
+      ],
+      "explanation": "Correct: Lidocaine IV, laryngoscopy 1–1.5 mg/kg; Lidocaine, topical airway max 9 mg/kg. Incorrect: Epinephrine 1:200,000 is 5 mcg/mL, not 500 mcg/mL; Lidocaine, IV infusion is 1–2 mg/kg/hr, not 0.1–0.2 mg/kg/hr; Ropivacaine, max is 3 mg/kg, not 3 mcg/kg; Bupivacaine, spinal cesarean is 10–15 mg, not 10–15 g.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-016",
+      "set": 1,
+      "stem": "Local anesthetic dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Lidocaine with epi, max: 7 mg/kg",
+        "Bupivacaine with epi, max: 30 mg/kg",
+        "Lipid 20%, infusion under 70 kg: 2.5 mL/kg/min",
+        "Lidocaine plain, max: 0.45 mg/kg",
+        "Lidocaine, topical airway max: 9 g/kg",
+        "Lidocaine, IV infusion: 1–2 mg/kg/hr"
+      ],
+      "answer": [
+        0,
+        5
+      ],
+      "explanation": "Correct: Lidocaine with epi, max 7 mg/kg; Lidocaine, IV infusion 1–2 mg/kg/hr. Incorrect: Bupivacaine with epi, max is 3 mg/kg, not 30 mg/kg; Lidocaine plain, max is 4.5 mg/kg, not 0.45 mg/kg; Lipid 20%, infusion under 70 kg is 0.25 mL/kg/min, not 2.5 mL/kg/min; Lidocaine, topical airway max is 9 mg/kg, not 9 g/kg.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-LA-017",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Epinephrine 1:200,000",
+        "Chloroprocaine with epi, max",
+        "Bupivacaine, spinal cesarean",
+        "Lipid 20%, infusion under 70 kg"
+      ],
+      "choices": [
+        "10–15 mg",
+        "14 mg/kg",
+        "140 mg/kg",
+        "5 mcg/mL",
+        "0.25 mL/kg/min"
+      ],
+      "answer": {
+        "Epinephrine 1:200,000": "5 mcg/mL",
+        "Chloroprocaine with epi, max": "14 mg/kg",
+        "Bupivacaine, spinal cesarean": "10–15 mg",
+        "Lipid 20%, infusion under 70 kg": "0.25 mL/kg/min"
+      },
+      "explanation": "Typical doses: Epinephrine 1:200,000 5 mcg/mL; Chloroprocaine with epi, max 14 mg/kg; Bupivacaine, spinal cesarean 10–15 mg; Lipid 20%, infusion under 70 kg 0.25 mL/kg/min. The extra choice, 140 mg/kg, is the Chloroprocaine with epi, max dose with the decimal moved.",
+      "citation": "",
+      "topic": "Local Anesthetics & Regional Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Local Anesthetics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-001",
+      "set": 1,
+      "stem": "IV magnesium dose for torsades?",
+      "type": "single",
+      "options": [
+        "1–2 mg",
+        "1–2 mcg",
+        "10–20 g",
+        "1–2 g"
+      ],
+      "answer": 3,
+      "explanation": "Magnesium, torsades: 1–2 g. 1–2 mcg uses mcg instead of g. 10–20 g is tenfold too high. 1–2 mg uses mg instead of g.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-002",
+      "set": 1,
+      "stem": "Initial IV digoxin loading dose?",
+      "type": "single",
+      "options": [
+        "0.25–0.5 mg",
+        "0.025–0.05 mg",
+        "0.0025–0.005 mg",
+        "0.25–0.5 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Digoxin, initial load: 0.25–0.5 mg. 0.25–0.5 mcg uses mcg instead of mg. 0.0025–0.005 mg is hundredfold too low. 0.025–0.05 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-003",
+      "set": 1,
+      "stem": "Typical norepinephrine infusion rate?",
+      "type": "single",
+      "options": [
+        "0.01–0.5 mcg/kg/hr",
+        "0.01–0.5 mcg/kg/min",
+        "1–50 mcg/kg/min",
+        "0.1–5 mcg/kg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Norepinephrine, infusion: 0.01–0.5 mcg/kg/min. 0.01–0.5 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 1–50 mcg/kg/min is hundredfold too high. 0.1–5 mcg/kg/hr uses mcg/kg/hr and is tenfold high.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-004",
+      "set": 1,
+      "stem": "Typical vasopressin infusion rate in septic shock?",
+      "type": "single",
+      "options": [
+        "0.003–0.004 units/min",
+        "0.03–0.04 units/kg/min",
+        "0.03–0.04 units/min",
+        "3–4 units/min"
+      ],
+      "answer": 2,
+      "explanation": "Vasopressin, infusion: 0.03–0.04 units/min. 3–4 units/min is hundredfold too high. 0.03–0.04 units/kg/min uses units/kg/min instead of units/min. 0.003–0.004 units/min is tenfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-005",
+      "set": 1,
+      "stem": "Amiodarone dose for stable VT, given over 10 min?",
+      "type": "single",
+      "options": [
+        "150 g",
+        "150 mcg",
+        "15 mg",
+        "150 mg"
+      ],
+      "answer": 3,
+      "explanation": "Amiodarone, stable VT: 150 mg. 150 g uses g instead of mg. 15 mg is tenfold too low. 150 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-006",
+      "set": 1,
+      "stem": "Amiodarone first dose in pulseless VF?",
+      "type": "single",
+      "options": [
+        "300 mg",
+        "30 mg",
+        "3,000 mg",
+        "300 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Amiodarone, pulseless: 300 mg. 3,000 mg is tenfold too high. 300 mcg uses mcg instead of mg. 30 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-007",
+      "set": 1,
+      "stem": "Nicardipine starting infusion rate?",
+      "type": "single",
+      "options": [
+        "0.5 mg/hr",
+        "5 mg/hr",
+        "5 mg/min",
+        "50 mg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Nicardipine, start: 5 mg/hr. 5 mg/min uses mg/min instead of mg/hr. 50 mg/hr is tenfold too high. 0.5 mg/hr is tenfold too low.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-008",
+      "set": 1,
+      "stem": "Typical vasopressin bolus for refractory post-induction hypotension?",
+      "type": "single",
+      "options": [
+        "0.5–1 units/kg",
+        "5–10 unit",
+        "0.5–1 unit",
+        "0.5–1 mg"
+      ],
+      "answer": 2,
+      "explanation": "Vasopressin, bolus: 0.5–1 unit. 5–10 unit is tenfold too high. 0.5–1 units/kg uses units/kg instead of unit. 0.5–1 mg uses mg instead of unit.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-009",
+      "set": 1,
+      "stem": "Adult IV epinephrine dose in cardiac arrest?",
+      "type": "single",
+      "options": [
+        "0.1 mcg",
+        "0.1 mg",
+        "100 mg",
+        "1 mg"
+      ],
+      "answer": 3,
+      "explanation": "Epinephrine, cardiac arrest: 1 mg. 100 mg is hundredfold too high. 0.1 mcg uses mcg and is tenfold low. 0.1 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-010",
+      "set": 1,
+      "stem": "Typical milrinone infusion range?",
+      "type": "single",
+      "options": [
+        "0.375–0.75 mcg/kg/min",
+        "37.5–75 mcg/kg/min",
+        "0.0037–0.0075 mcg/kg/min",
+        "0.0375–0.075 mcg/kg/min"
+      ],
+      "answer": 0,
+      "explanation": "Milrinone, infusion: 0.375–0.75 mcg/kg/min. 37.5–75 mcg/kg/min is hundredfold too high. 0.0375–0.075 mcg/kg/min is tenfold too low. 0.0037–0.0075 mcg/kg/min is hundredfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-011",
+      "set": 1,
+      "stem": "First pediatric adenosine dose?",
+      "type": "single",
+      "options": [
+        "0.01 mg/kg",
+        "0.1 mg/kg",
+        "0.1 mcg/kg",
+        "1 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Adenosine, pediatric: 0.1 mg/kg. 1 mg/kg is tenfold too high. 0.01 mg/kg is tenfold too low. 0.1 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-012",
+      "set": 1,
+      "stem": "Phentolamine dose for vasopressor extravasation?",
+      "type": "single",
+      "options": [
+        "50–100 mg",
+        "0.5–1 mg",
+        "5–10 mg",
+        "5–10 g"
+      ],
+      "answer": 2,
+      "explanation": "Phentolamine, extravasation: 5–10 mg. 50–100 mg is tenfold too high. 0.5–1 mg is tenfold too low. 5–10 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-013",
+      "set": 1,
+      "stem": "First peripheral IV adenosine dose?",
+      "type": "single",
+      "options": [
+        "0.6 mg",
+        "60 mg",
+        "6 g",
+        "6 mg"
+      ],
+      "answer": 3,
+      "explanation": "Adenosine, first peripheral: 6 mg. 6 g uses g instead of mg. 0.6 mg is tenfold too low. 60 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-014",
+      "set": 1,
+      "stem": "Pediatric IV epinephrine dose in cardiac arrest?",
+      "type": "single",
+      "options": [
+        "0.01 mg/kg",
+        "0.1 mcg/kg",
+        "1 mg/kg",
+        "0.001 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Epinephrine, pediatric arrest: 0.01 mg/kg. 1 mg/kg is hundredfold too high. 0.1 mcg/kg uses mcg/kg and is tenfold high. 0.001 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-015",
+      "set": 1,
+      "stem": "Typical IV epinephrine bolus for perioperative anaphylaxis, titrated?",
+      "type": "single",
+      "options": [
+        "1–10 mcg",
+        "10–100 mcg",
+        "100–1,000 mcg",
+        "10–100 mg"
+      ],
+      "answer": 1,
+      "explanation": "Epinephrine, anaphylaxis IV: 10–100 mcg. 10–100 mg uses mg instead of mcg. 1–10 mcg is tenfold too low. 100–1,000 mcg is tenfold too high.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-016",
+      "set": 1,
+      "stem": "Typical IV metoprolol increment?",
+      "type": "single",
+      "options": [
+        "25–50 mg",
+        "0.25–0.5 mg",
+        "2.5–5 mg",
+        "2.5–5 mcg"
+      ],
+      "answer": 2,
+      "explanation": "Metoprolol, increment: 2.5–5 mg. 0.25–0.5 mg is tenfold too low. 25–50 mg is tenfold too high. 2.5–5 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-017",
+      "set": 1,
+      "stem": "Second peripheral IV adenosine dose?",
+      "type": "single",
+      "options": [
+        "12 g",
+        "12 mcg",
+        "120 mg",
+        "12 mg"
+      ],
+      "answer": 3,
+      "explanation": "Adenosine, second: 12 mg. 12 g uses g instead of mg. 12 mcg uses mcg instead of mg. 120 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-018",
+      "set": 1,
+      "stem": "Procainamide loading infusion rate?",
+      "type": "single",
+      "options": [
+        "20–50 mg/min",
+        "20–50 mcg/min",
+        "20–50 mg/hr",
+        "2–5 mg/min"
+      ],
+      "answer": 0,
+      "explanation": "Procainamide, rate: 20–50 mg/min. 20–50 mcg/min uses mcg/min instead of mg/min. 2–5 mg/min is tenfold too low. 20–50 mg/hr uses mg/hr instead of mg/min.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-019",
+      "set": 1,
+      "stem": "Nicardipine maximum infusion rate?",
+      "type": "single",
+      "options": [
+        "1.5 mg/hr",
+        "15 mg/hr",
+        "15 mg/min",
+        "150 mg/hr"
+      ],
+      "answer": 1,
+      "explanation": "Nicardipine, max: 15 mg/hr. 150 mg/hr is tenfold too high. 1.5 mg/hr is tenfold too low. 15 mg/min uses mg/min instead of mg/hr.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-020",
+      "set": 1,
+      "stem": "Clevidipine starting infusion rate?",
+      "type": "single",
+      "options": [
+        "1–2 mg/min",
+        "10–20 mg/hr",
+        "1–2 mg/hr",
+        "0.1–0.2 mg/hr"
+      ],
+      "answer": 2,
+      "explanation": "Clevidipine, start: 1–2 mg/hr. 10–20 mg/hr is tenfold too high. 0.1–0.2 mg/hr is tenfold too low. 1–2 mg/min uses mg/min instead of mg/hr.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-021",
+      "set": 1,
+      "stem": "First adenosine dose through a central line?",
+      "type": "single",
+      "options": [
+        "300 mg",
+        "0.03 mg",
+        "3 g",
+        "3 mg"
+      ],
+      "answer": 3,
+      "explanation": "Adenosine, central line: 3 mg. 0.03 mg is hundredfold too low. 3 g uses g instead of mg. 300 mg is hundredfold too high.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-022",
+      "set": 1,
+      "stem": "Typical dobutamine infusion range?",
+      "type": "single",
+      "options": [
+        "2–20 mcg/kg/min",
+        "20–200 mcg/kg/min",
+        "0.2–2 mcg/kg/min",
+        "2–20 mg/kg/min"
+      ],
+      "answer": 0,
+      "explanation": "Dobutamine, infusion: 2–20 mcg/kg/min. 20–200 mcg/kg/min is tenfold too high. 2–20 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 0.2–2 mcg/kg/min is tenfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-023",
+      "set": 1,
+      "stem": "Typical esmolol loading dose?",
+      "type": "single",
+      "options": [
+        "0.05 mg/kg",
+        "0.5 mg/kg",
+        "0.5 mcg/kg",
+        "0.5 g/kg"
+      ],
+      "answer": 1,
+      "explanation": "Esmolol, load: 0.5 mg/kg. 0.05 mg/kg is tenfold too low. 0.5 mcg/kg uses mcg/kg instead of mg/kg. 0.5 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-024",
+      "set": 1,
+      "stem": "Amiodarone infusion rate for the first 6 hr after loading?",
+      "type": "single",
+      "options": [
+        "10 mg/min",
+        "0.1 mg/min",
+        "1 mg/min",
+        "1 mcg/min"
+      ],
+      "answer": 2,
+      "explanation": "Amiodarone, maintenance: 1 mg/min. 1 mcg/min uses mcg/min instead of mg/min. 0.1 mg/min is tenfold too low. 10 mg/min is tenfold too high.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-025",
+      "set": 1,
+      "stem": "Typical ephedrine IV bolus?",
+      "type": "single",
+      "options": [
+        "50–100 mg",
+        "0.5–1 mg",
+        "5–10 mcg",
+        "5–10 mg"
+      ],
+      "answer": 3,
+      "explanation": "Ephedrine, bolus: 5–10 mg. 0.5–1 mg is tenfold too low. 50–100 mg is tenfold too high. 5–10 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-026",
+      "set": 1,
+      "stem": "Typical nitroglycerin infusion rate?",
+      "type": "single",
+      "options": [
+        "10–200 mcg/min",
+        "100–2,000 mcg/min",
+        "100–2,000 mg/min",
+        "1,000–20,000 mcg/min"
+      ],
+      "answer": 0,
+      "explanation": "Nitroglycerin, infusion: 10–200 mcg/min. 100–2,000 mg/min uses mg/min and is tenfold high. 1,000–20,000 mcg/min is hundredfold too high. 100–2,000 mcg/min is tenfold too high.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-027",
+      "set": 1,
+      "stem": "Typical isoproterenol infusion range?",
+      "type": "single",
+      "options": [
+        "2–10 mg/min",
+        "2–10 mcg/min",
+        "2–10 mcg/hr",
+        "20–100 mcg/min"
+      ],
+      "answer": 1,
+      "explanation": "Isoproterenol, infusion: 2–10 mcg/min. 2–10 mg/min uses mg/min instead of mcg/min. 2–10 mcg/hr uses mcg/hr instead of mcg/min. 20–100 mcg/min is tenfold too high.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-028",
+      "set": 1,
+      "stem": "IV nitroglycerin bolus for uterine relaxation?",
+      "type": "single",
+      "options": [
+        "5–10 mcg",
+        "50–100 mg",
+        "50–100 mcg",
+        "5–10 mg"
+      ],
+      "answer": 2,
+      "explanation": "Nitroglycerin, uterine relaxation: 50–100 mcg. 5–10 mg uses mg and is tenfold low. 50–100 mg uses mg instead of mcg. 5–10 mcg is tenfold too low.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-029",
+      "set": 1,
+      "stem": "Typical phenylephrine infusion rate?",
+      "type": "single",
+      "options": [
+        "100–1,000 mcg/min",
+        "10–100 mg/min",
+        "10–100 mcg/hr",
+        "10–100 mcg/min"
+      ],
+      "answer": 3,
+      "explanation": "Phenylephrine, infusion: 10–100 mcg/min. 10–100 mg/min uses mg/min instead of mcg/min. 100–1,000 mcg/min is tenfold too high. 10–100 mcg/hr uses mcg/hr instead of mcg/min.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-030",
+      "set": 1,
+      "stem": "Typical IV hydralazine dose?",
+      "type": "single",
+      "options": [
+        "5–10 mg",
+        "5–10 g",
+        "5–10 mcg",
+        "0.5–1 mg"
+      ],
+      "answer": 0,
+      "explanation": "Hydralazine, IV: 5–10 mg. 5–10 mcg uses mcg instead of mg. 0.5–1 mg is tenfold too low. 5–10 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-031",
+      "set": 1,
+      "stem": "Typical IV calcium chloride dose?",
+      "type": "single",
+      "options": [
+        "10 g/kg",
+        "10 mg/kg",
+        "1 mg/kg",
+        "100 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Calcium chloride: 10 mg/kg. 1 mg/kg is tenfold too low. 100 mg/kg is tenfold too high. 10 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Fluids, Blood Products & Electrolytes",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-032",
+      "set": 1,
+      "stem": "Adult IM epinephrine dose for anaphylaxis?",
+      "type": "single",
+      "options": [
+        "0.3–0.5 mcg",
+        "3–5 mg",
+        "0.3–0.5 mg",
+        "0.03–0.05 mg"
+      ],
+      "answer": 2,
+      "explanation": "Epinephrine, anaphylaxis IM: 0.3–0.5 mg. 0.03–0.05 mg is tenfold too low. 3–5 mg is tenfold too high. 0.3–0.5 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-033",
+      "set": 1,
+      "stem": "Clevidipine maximum labeled infusion rate?",
+      "type": "single",
+      "options": [
+        "3.2 mg/hr",
+        "32 mg/min",
+        "320 mg/hr",
+        "32 mg/hr"
+      ],
+      "answer": 3,
+      "explanation": "Clevidipine, max: 32 mg/hr. 3.2 mg/hr is tenfold too low. 320 mg/hr is tenfold too high. 32 mg/min uses mg/min instead of mg/hr.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-034",
+      "set": 1,
+      "stem": "Nitroprusside infusion range?",
+      "type": "single",
+      "options": [
+        "0.3–10 mcg/kg/min",
+        "0.3–10 mcg/kg/hr",
+        "30–1,000 mcg/kg/min",
+        "0.03–1 mcg/kg/min"
+      ],
+      "answer": 0,
+      "explanation": "Nitroprusside, range: 0.3–10 mcg/kg/min. 30–1,000 mcg/kg/min is hundredfold too high. 0.3–10 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 0.03–1 mcg/kg/min is tenfold too low. Limit the maximum rate to about 10 min.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-035",
+      "set": 1,
+      "stem": "First IV labetalol dose for severe hypertension in pregnancy?",
+      "type": "single",
+      "options": [
+        "20 mcg",
+        "20 mg",
+        "2 mg",
+        "20 g"
+      ],
+      "answer": 1,
+      "explanation": "Labetalol, preeclampsia first dose: 20 mg. 20 g uses g instead of mg. 20 mcg uses mcg instead of mg. 2 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-036",
+      "set": 1,
+      "stem": "First IV diltiazem dose for AF?",
+      "type": "single",
+      "options": [
+        "0.025 mg/kg",
+        "0.25 mcg/kg",
+        "0.25 mg/kg",
+        "0.25 g/kg"
+      ],
+      "answer": 2,
+      "explanation": "Diltiazem, first dose: 0.25 mg/kg. 0.25 g/kg uses g/kg instead of mg/kg. 0.25 mcg/kg uses mcg/kg instead of mg/kg. 0.025 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-037",
+      "set": 1,
+      "stem": "Typical phenylephrine IV bolus?",
+      "type": "single",
+      "options": [
+        "50–200 mg",
+        "500–2,000 mcg",
+        "5–20 mcg",
+        "50–200 mcg"
+      ],
+      "answer": 3,
+      "explanation": "Phenylephrine, bolus: 50–200 mcg. 50–200 mg uses mg instead of mcg. 500–2,000 mcg is tenfold too high. 5–20 mcg is tenfold too low.",
+      "citation": "",
+      "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-038",
+      "set": 1,
+      "stem": "Cardiac and vasoactive dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Amiodarone, stable VT: 150 mg",
+        "Epinephrine, anaphylaxis IV: 10–100 mcg",
+        "Labetalol, increment: 5–20 mg",
+        "Phenylephrine, infusion: 10–100 mcg/hr",
+        "Calcium gluconate: 30 mg/kg",
+        "Dobutamine, infusion: 2–20 mcg/kg/min"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "explanation": "Correct: Calcium gluconate 30 mg/kg; Epinephrine, anaphylaxis IV 10–100 mcg; Labetalol, increment 5–20 mg; Amiodarone, stable VT 150 mg; Dobutamine, infusion 2–20 mcg/kg/min. Incorrect: Phenylephrine, infusion is 10–100 mcg/min, not 10–100 mcg/hr.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-039",
+      "set": 1,
+      "stem": "Cardiac and vasoactive dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Esmolol, load: 5 mg/kg",
+        "Isoproterenol, infusion: 2–10 mcg/min",
+        "Epinephrine, pediatric arrest: 0.01 g/kg",
+        "Digoxin, initial load: 0.25–0.5 mg",
+        "Vasopressin, infusion: 0.03–0.04 units/min",
+        "Clevidipine, max: 32 mcg/hr"
+      ],
+      "answer": [
+        1,
+        3,
+        4
+      ],
+      "explanation": "Correct: Vasopressin, infusion 0.03–0.04 units/min; Digoxin, initial load 0.25–0.5 mg; Isoproterenol, infusion 2–10 mcg/min. Incorrect: Esmolol, load is 0.5 mg/kg, not 5 mg/kg; Clevidipine, max is 32 mg/hr, not 32 mcg/hr; Epinephrine, pediatric arrest is 0.01 mg/kg, not 0.01 g/kg.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-CV-040",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Epinephrine, anaphylaxis IV",
+        "Nitroprusside, range",
+        "Epinephrine, anaphylaxis IM",
+        "Amiodarone, maintenance"
+      ],
+      "choices": [
+        "0.3–10 mcg/kg/min",
+        "10–100 mcg",
+        "0.3–0.5 mg",
+        "100–1,000 mcg",
+        "1 mg/min"
+      ],
+      "answer": {
+        "Epinephrine, anaphylaxis IV": "10–100 mcg",
+        "Nitroprusside, range": "0.3–10 mcg/kg/min",
+        "Epinephrine, anaphylaxis IM": "0.3–0.5 mg",
+        "Amiodarone, maintenance": "1 mg/min"
+      },
+      "explanation": "Typical doses: Epinephrine, anaphylaxis IV 10–100 mcg; Nitroprusside, range 0.3–10 mcg/kg/min; Epinephrine, anaphylaxis IM 0.3–0.5 mg; Amiodarone, maintenance 1 mg/min. The extra choice, 100–1,000 mcg, is the Epinephrine, anaphylaxis IV dose with the decimal moved.",
+      "citation": "",
+      "topic": "Antihypertensives & Vasodilators",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Cardiac",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-001",
+      "set": 1,
+      "stem": "Cefazolin prophylaxis dose for an adult 120 kg or more?",
+      "type": "single",
+      "options": [
+        "3 g",
+        "3 mcg",
+        "30 g",
+        "0.3 g"
+      ],
+      "answer": 0,
+      "explanation": "Cefazolin, adult 120 kg or more: 3 g. 30 g is tenfold too high. 0.3 g is tenfold too low. 3 mcg uses mcg instead of g.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-002",
+      "set": 1,
+      "stem": "Pediatric cefazolin prophylaxis dose?",
+      "type": "single",
+      "options": [
+        "3 mg/kg",
+        "30 mg/kg",
+        "30 g/kg",
+        "30 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Cefazolin, pediatric: 30 mg/kg. 3 mg/kg is tenfold too low. 30 mcg/kg uses mcg/kg instead of mg/kg. 30 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-003",
+      "set": 1,
+      "stem": "Gentamicin prophylaxis dose?",
+      "type": "single",
+      "options": [
+        "5 g/kg",
+        "50 mg/kg",
+        "5 mg/kg",
+        "5 mcg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Gentamicin, prophylaxis: 5 mg/kg. 50 mg/kg is tenfold too high. 5 mcg/kg uses mcg/kg instead of mg/kg. 5 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-004",
+      "set": 1,
+      "stem": "Cefazolin prophylaxis dose for an adult under 120 kg?",
+      "type": "single",
+      "options": [
+        "0.2 g",
+        "2 mg",
+        "2 mcg",
+        "2 g"
+      ],
+      "answer": 3,
+      "explanation": "Cefazolin, adult under 120 kg: 2 g. 2 mg uses mg instead of g. 0.2 g is tenfold too low. 2 mcg uses mcg instead of g. Use 3 g for patients 120 kg or more.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-005",
+      "set": 1,
+      "stem": "Antibiotic dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Metronidazole, adult: 500 mg",
+        "Cefazolin, pediatric: 30 mg/kg",
+        "Cefazolin, adult 120 kg or more: 3 g",
+        "Cefazolin, adult under 120 kg: 2 g",
+        "Clindamycin, adult: 900 g",
+        "Vancomycin, prophylaxis: 150 mg/kg"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "explanation": "Correct: Metronidazole, adult 500 mg; Cefazolin, adult 120 kg or more 3 g; Cefazolin, pediatric 30 mg/kg; Cefazolin, adult under 120 kg 2 g. Incorrect: Vancomycin, prophylaxis is 15 mg/kg, not 150 mg/kg; Clindamycin, adult is 900 mg, not 900 g.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-006",
+      "set": 1,
+      "stem": "Antibiotic dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Cefazolin, pediatric: 30 mg/kg",
+        "Vancomycin, prophylaxis: 15 mg/kg",
+        "Metronidazole, adult: 500 mg",
+        "Cefazolin, adult under 120 kg: 0.2 g",
+        "Gentamicin, prophylaxis: 5 mg/kg",
+        "Clindamycin, adult: 900 g"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "explanation": "Correct: Cefazolin, pediatric 30 mg/kg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg; Vancomycin, prophylaxis 15 mg/kg. Incorrect: Cefazolin, adult under 120 kg is 2 g, not 0.2 g; Clindamycin, adult is 900 mg, not 900 g.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-AB-007",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Cefazolin, adult under 120 kg",
+        "Clindamycin, adult",
+        "Metronidazole, adult",
+        "Gentamicin, prophylaxis"
+      ],
+      "choices": [
+        "500 mg",
+        "2 g",
+        "900 mg",
+        "5 mg/kg",
+        "50 mg/kg"
+      ],
+      "answer": {
+        "Cefazolin, adult under 120 kg": "2 g",
+        "Clindamycin, adult": "900 mg",
+        "Metronidazole, adult": "500 mg",
+        "Gentamicin, prophylaxis": "5 mg/kg"
+      },
+      "explanation": "Typical doses: Cefazolin, adult under 120 kg 2 g; Clindamycin, adult 900 mg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg. The extra choice, 50 mg/kg, is the Gentamicin, prophylaxis dose with the decimal moved.",
+      "citation": "",
+      "topic": "Antibiotics & Perioperative Anti-Infectives",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Antibiotics",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-001",
+      "set": 1,
+      "stem": "Methylergonovine IM dose for atony?",
+      "type": "single",
+      "options": [
+        "0.2 mg",
+        "0.2 g",
+        "0.2 mcg",
+        "0.02 mg"
+      ],
+      "answer": 0,
+      "explanation": "Methylergonovine, IM: 0.2 mg. 0.02 mg is tenfold too low. 0.2 mcg uses mcg instead of mg. 0.2 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-002",
+      "set": 1,
+      "stem": "Typical small IV oxytocin bolus at cesarean delivery?",
+      "type": "single",
+      "options": [
+        "1–3 units/kg",
+        "1–3 units",
+        "0.1–0.3 units",
+        "1–3 mg"
+      ],
+      "answer": 1,
+      "explanation": "Oxytocin, IV bolus: 1–3 units. 0.1–0.3 units is tenfold too low. 1–3 mg uses mg instead of units. 1–3 units/kg uses units/kg instead of units.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-003",
+      "set": 1,
+      "stem": "TXA dose for postpartum hemorrhage, given over 10 min?",
+      "type": "single",
+      "options": [
+        "10 g",
+        "0.1 g",
+        "1 g",
+        "1 mcg"
+      ],
+      "answer": 2,
+      "explanation": "TXA, PPH: 1 g. 1 mcg uses mcg instead of g. 0.1 g is tenfold too low. 10 g is tenfold too high.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-004",
+      "set": 1,
+      "stem": "Magnesium maintenance rate for preeclampsia?",
+      "type": "single",
+      "options": [
+        "0.1–0.2 g/hr",
+        "1–2 g/min",
+        "10–20 g/hr",
+        "1–2 g/hr"
+      ],
+      "answer": 3,
+      "explanation": "Magnesium, preeclampsia maintenance: 1–2 g/hr. 10–20 g/hr is tenfold too high. 1–2 g/min uses g/min instead of g/hr. 0.1–0.2 g/hr is tenfold too low.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-005",
+      "set": 1,
+      "stem": "Terbutaline SC dose for uterine tachysystole?",
+      "type": "single",
+      "options": [
+        "0.25 mg",
+        "0.25 g",
+        "0.025 mg",
+        "2.5 mg"
+      ],
+      "answer": 0,
+      "explanation": "Terbutaline, SC: 0.25 mg. 0.025 mg is tenfold too low. 2.5 mg is tenfold too high. 0.25 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-006",
+      "set": 1,
+      "stem": "Magnesium loading dose for preeclampsia?",
+      "type": "single",
+      "options": [
+        "0.4–0.6 g",
+        "4–6 g",
+        "40–60 g",
+        "4–6 mcg"
+      ],
+      "answer": 1,
+      "explanation": "Magnesium, preeclampsia load: 4–6 g. 40–60 g is tenfold too high. 4–6 mcg uses mcg instead of g. 0.4–0.6 g is tenfold too low.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-007",
+      "set": 1,
+      "stem": "Maximum cumulative carboprost dose?",
+      "type": "single",
+      "options": [
+        "20 mg",
+        "2 mcg",
+        "2 mg",
+        "0.2 mg"
+      ],
+      "answer": 2,
+      "explanation": "Carboprost, cumulative max: 2 mg. 20 mg is tenfold too high. 2 mcg uses mcg instead of mg. 0.2 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-008",
+      "set": 1,
+      "stem": "Obstetric dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Misoprostol, PPH: 60,000–100,000 mcg",
+        "Carboprost, IM: 250 mcg",
+        "Magnesium, preeclampsia maintenance: 1–2 g/hr",
+        "TXA, PPH: 1 g",
+        "Magnesium, preeclampsia load: 4–6 mcg",
+        "Oxytocin, IV bolus: 1–3 units/kg"
+      ],
+      "answer": [
+        1,
+        2,
+        3
+      ],
+      "explanation": "Correct: Carboprost, IM 250 mcg; TXA, PPH 1 g; Magnesium, preeclampsia maintenance 1–2 g/hr. Incorrect: Magnesium, preeclampsia load is 4–6 g, not 4–6 mcg; Oxytocin, IV bolus is 1–3 units, not 1–3 units/kg; Misoprostol, PPH is 600–1,000 mcg, not 60,000–100,000 mcg.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-009",
+      "set": 1,
+      "stem": "Obstetric dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Terbutaline, SC: 0.25 mg",
+        "Carboprost, IM: 250 mcg",
+        "Methylergonovine, IM: 0.2 mg",
+        "TXA, PPH: 1 g",
+        "Misoprostol, PPH: 6,000–10,000 mcg",
+        "Oxytocin, IV bolus: 1–3 units"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        5
+      ],
+      "explanation": "Correct: Carboprost, IM 250 mcg; TXA, PPH 1 g; Methylergonovine, IM 0.2 mg; Terbutaline, SC 0.25 mg; Oxytocin, IV bolus 1–3 units. Incorrect: Misoprostol, PPH is 600–1,000 mcg, not 6,000–10,000 mcg.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-OB-010",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Oxytocin, IV bolus",
+        "Misoprostol, PPH",
+        "TXA, PPH",
+        "Carboprost, cumulative max"
+      ],
+      "choices": [
+        "1–3 units",
+        "1 g",
+        "10–30 units",
+        "600–1,000 mcg",
+        "2 mg"
+      ],
+      "answer": {
+        "Oxytocin, IV bolus": "1–3 units",
+        "Misoprostol, PPH": "600–1,000 mcg",
+        "TXA, PPH": "1 g",
+        "Carboprost, cumulative max": "2 mg"
+      },
+      "explanation": "Typical doses: Oxytocin, IV bolus 1–3 units; Misoprostol, PPH 600–1,000 mcg; TXA, PPH 1 g; Carboprost, cumulative max 2 mg. The extra choice, 10–30 units, is the Oxytocin, IV bolus dose with the decimal moved.",
+      "citation": "",
+      "topic": "Obstetric Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "OB",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-001",
+      "set": 1,
+      "stem": "Heparin dose before vascular cross-clamping?",
+      "type": "single",
+      "options": [
+        "1,000 units/kg",
+        "100 mg/kg",
+        "10 units/kg",
+        "100 units/kg"
+      ],
+      "answer": 3,
+      "explanation": "Heparin, vascular clamp: 100 units/kg. 10 units/kg is tenfold too low. 100 mg/kg uses mg/kg instead of units/kg. 1,000 units/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-002",
+      "set": 1,
+      "stem": "Subcutaneous heparin prophylaxis dose?",
+      "type": "single",
+      "options": [
+        "5,000 units",
+        "5,000 units/kg",
+        "500 units",
+        "50,000 units"
+      ],
+      "answer": 0,
+      "explanation": "Heparin, SC prophylaxis: 5,000 units. 5,000 units/kg uses units/kg instead of units. 500 units is tenfold too low. 50,000 units is tenfold too high.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-003",
+      "set": 1,
+      "stem": "Protamine dose per 100 units of heparin?",
+      "type": "single",
+      "options": [
+        "100 mg",
+        "1 mg",
+        "0.1 mcg",
+        "0.01 mg"
+      ],
+      "answer": 1,
+      "explanation": "Protamine per 100 units heparin: 1 mg. 0.1 mcg uses mcg and is tenfold low. 0.01 mg is hundredfold too low. 100 mg is hundredfold too high.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-004",
+      "set": 1,
+      "stem": "Heparin dose before cardiopulmonary bypass?",
+      "type": "single",
+      "options": [
+        "300–400 mg/kg",
+        "300–400 units",
+        "300–400 units/kg",
+        "30–40 units/kg"
+      ],
+      "answer": 2,
+      "explanation": "Heparin, bypass: 300–400 units/kg. 30–40 units/kg is tenfold too low. 300–400 units uses units instead of units/kg. 300–400 mg/kg uses mg/kg instead of units/kg.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-005",
+      "set": 1,
+      "stem": "Once-daily enoxaparin prophylaxis dose?",
+      "type": "single",
+      "options": [
+        "40 g",
+        "40 mcg",
+        "4 mg",
+        "40 mg"
+      ],
+      "answer": 3,
+      "explanation": "Enoxaparin, prophylaxis: 40 mg. 40 g uses g instead of mg. 40 mcg uses mcg instead of mg. 4 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-006",
+      "set": 1,
+      "stem": "Typical FFP dose?",
+      "type": "single",
+      "options": [
+        "10–15 mL/kg",
+        "10–15 L/kg",
+        "100–150 mL/kg",
+        "1–1.5 mL/kg"
+      ],
+      "answer": 0,
+      "explanation": "FFP, dose: 10–15 mL/kg. 1–1.5 mL/kg is tenfold too low. 10–15 L/kg uses L/kg instead of mL/kg. 100–150 mL/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Fluids, Blood Products & Electrolytes",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-007",
+      "set": 1,
+      "stem": "Enoxaparin treatment dose given every 12 hr?",
+      "type": "single",
+      "options": [
+        "0.1 mg/kg",
+        "1 mg/kg",
+        "1 mcg/kg",
+        "10 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Enoxaparin, treatment: 1 mg/kg. 10 mg/kg is tenfold too high. 1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 mg/kg is tenfold too low.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-008",
+      "set": 1,
+      "stem": "Hematology dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Desmopressin, hemostasis: 0.3 mg/kg",
+        "Vitamin K, warfarin reversal: 5–10 g",
+        "Enoxaparin, prophylaxis: 40 mg",
+        "Enoxaparin, treatment: 10 mg/kg",
+        "Heparin, vascular clamp: 100 units/kg",
+        "Heparin, SC prophylaxis: 500 units"
+      ],
+      "answer": [
+        2,
+        4
+      ],
+      "explanation": "Correct: Enoxaparin, prophylaxis 40 mg; Heparin, vascular clamp 100 units/kg. Incorrect: Enoxaparin, treatment is 1 mg/kg, not 10 mg/kg; Vitamin K, warfarin reversal is 5–10 mg, not 5–10 g; Heparin, SC prophylaxis is 5,000 units, not 500 units; Desmopressin, hemostasis is 0.3 mcg/kg, not 0.3 mg/kg.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-009",
+      "set": 1,
+      "stem": "Hematology dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Vitamin K, warfarin reversal: 50–100 mg",
+        "Enoxaparin, treatment: 1 mg/kg",
+        "4F-PCC, warfarin reversal: 25–50 units",
+        "Heparin, vascular clamp: 100 units/kg",
+        "Heparin, bypass: 300–400 units/kg",
+        "Heparin, SC prophylaxis: 50,000 units"
+      ],
+      "answer": [
+        1,
+        3,
+        4
+      ],
+      "explanation": "Correct: Enoxaparin, treatment 1 mg/kg; Heparin, vascular clamp 100 units/kg; Heparin, bypass 300–400 units/kg. Incorrect: 4F-PCC, warfarin reversal is 25–50 units/kg, not 25–50 units; Vitamin K, warfarin reversal is 5–10 mg, not 50–100 mg; Heparin, SC prophylaxis is 5,000 units, not 50,000 units.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-HEME-010",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "4F-PCC, warfarin reversal",
+        "Heparin, bypass",
+        "Heparin, vascular clamp",
+        "Protamine per 100 units heparin"
+      ],
+      "choices": [
+        "25–50 units/kg",
+        "1 mg",
+        "10 mg",
+        "300–400 units/kg",
+        "100 units/kg"
+      ],
+      "answer": {
+        "4F-PCC, warfarin reversal": "25–50 units/kg",
+        "Heparin, bypass": "300–400 units/kg",
+        "Heparin, vascular clamp": "100 units/kg",
+        "Protamine per 100 units heparin": "1 mg"
+      },
+      "explanation": "Typical doses: 4F-PCC, warfarin reversal 25–50 units/kg; Heparin, bypass 300–400 units/kg; Heparin, vascular clamp 100 units/kg; Protamine per 100 units heparin 1 mg. The extra choice, 10 mg, is the Protamine per 100 units heparin dose with the decimal moved.",
+      "citation": "",
+      "topic": "Anticoagulants, Antiplatelets & Hemostasis",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Heme / Fluids",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-001",
+      "set": 1,
+      "stem": "Hydrocortisone stress dose at induction for major surgery?",
+      "type": "single",
+      "options": [
+        "100 g",
+        "1,000 mg",
+        "100 mg",
+        "100 mcg"
+      ],
+      "answer": 2,
+      "explanation": "Hydrocortisone, major surgery: 100 mg. 100 mcg uses mcg instead of mg. 1,000 mg is tenfold too high. 100 g uses g instead of mg.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-002",
+      "set": 1,
+      "stem": "IV glucagon bolus for beta blocker overdose?",
+      "type": "single",
+      "options": [
+        "30–100 mcg",
+        "300–1,000 mg",
+        "3–10 g",
+        "3–10 mg"
+      ],
+      "answer": 3,
+      "explanation": "Glucagon, beta blocker overdose: 3–10 mg. 30–100 mcg uses mcg and is tenfold high. 3–10 g uses g instead of mg. 300–1,000 mg is hundredfold too high.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-003",
+      "set": 1,
+      "stem": "Hydrocortisone stress dose for minor surgery?",
+      "type": "single",
+      "options": [
+        "25 mg",
+        "250 mg",
+        "25 mcg",
+        "250 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Hydrocortisone, minor surgery: 25 mg. 250 mg is tenfold too high. 25 mcg uses mcg instead of mg. 250 mcg uses mcg and is tenfold high.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-004",
+      "set": 1,
+      "stem": "Glucagon dose for hypoglycemia without IV access?",
+      "type": "single",
+      "options": [
+        "1 g",
+        "1 mg",
+        "10 mg",
+        "1 mcg"
+      ],
+      "answer": 1,
+      "explanation": "Glucagon, hypoglycemia: 1 mg. 10 mg is tenfold too high. 1 g uses g instead of mg. 1 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-005",
+      "set": 1,
+      "stem": "Regular insulin dose for hyperkalemia without ESRD?",
+      "type": "single",
+      "options": [
+        "10 units/kg",
+        "10 mg",
+        "10 units",
+        "1 units"
+      ],
+      "answer": 2,
+      "explanation": "Insulin, hyperkalemia: 10 units. 10 mg uses mg instead of units. 10 units/kg uses units/kg instead of units. 1 units is tenfold too low.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-006",
+      "set": 1,
+      "stem": "Regular insulin dose for hyperkalemia in ESRD?",
+      "type": "single",
+      "options": [
+        "0.5 mg",
+        "5 mg",
+        "5 units/kg",
+        "5 units"
+      ],
+      "answer": 3,
+      "explanation": "Insulin, hyperkalemia in ESRD: 5 units. 5 mg uses mg instead of units. 0.5 mg uses mg and is tenfold low. 5 units/kg uses units/kg instead of units.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-007",
+      "set": 1,
+      "stem": "Endocrine dosing: which doses are correct? (Select 3)",
+      "type": "multi",
+      "options": [
+        "Insulin, hyperkalemia in ESRD: 5 units",
+        "Glucagon, beta blocker overdose: 3–10 mcg",
+        "Insulin, hyperkalemia: 10 units",
+        "Dextrose with insulin: 25 mcg",
+        "Hydrocortisone, major surgery: 100 mg",
+        "Hydrocortisone, minor surgery: 2.5 mg"
+      ],
+      "answer": [
+        0,
+        2,
+        4
+      ],
+      "explanation": "Correct: Insulin, hyperkalemia in ESRD 5 units; Insulin, hyperkalemia 10 units; Hydrocortisone, major surgery 100 mg. Incorrect: Dextrose with insulin is 25 g, not 25 mcg; Glucagon, beta blocker overdose is 3–10 mg, not 3–10 mcg; Hydrocortisone, minor surgery is 25 mg, not 2.5 mg.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-008",
+      "set": 1,
+      "stem": "Endocrine dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Hydrocortisone, major surgery: 100 g",
+        "Hydrocortisone, minor surgery: 25 mg",
+        "Insulin, hyperkalemia: 10 units",
+        "Glucagon, beta blocker overdose: 3–10 mg",
+        "Insulin, hyperkalemia in ESRD: 5 units",
+        "Glucagon, hypoglycemia: 0.1 mg"
+      ],
+      "answer": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "explanation": "Correct: Insulin, hyperkalemia 10 units; Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia in ESRD 5 units; Glucagon, beta blocker overdose 3–10 mg. Incorrect: Hydrocortisone, major surgery is 100 mg, not 100 g; Glucagon, hypoglycemia is 1 mg, not 0.1 mg.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ENDO-009",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Hydrocortisone, minor surgery",
+        "Insulin, hyperkalemia in ESRD",
+        "Hydrocortisone, major surgery",
+        "Glucagon, beta blocker overdose"
+      ],
+      "choices": [
+        "50 units",
+        "100 mg",
+        "5 units",
+        "3–10 mg",
+        "25 mg"
+      ],
+      "answer": {
+        "Hydrocortisone, minor surgery": "25 mg",
+        "Insulin, hyperkalemia in ESRD": "5 units",
+        "Hydrocortisone, major surgery": "100 mg",
+        "Glucagon, beta blocker overdose": "3–10 mg"
+      },
+      "explanation": "Typical doses: Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia in ESRD 5 units; Hydrocortisone, major surgery 100 mg; Glucagon, beta blocker overdose 3–10 mg. The extra choice, 50 units, is the Insulin, hyperkalemia in ESRD dose with the decimal moved.",
+      "citation": "",
+      "topic": "Endocrine & Metabolic Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Endocrine",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-001",
+      "set": 1,
+      "stem": "Pediatric IV ketorolac dose (max 30 mg)?",
+      "type": "single",
+      "options": [
+        "0.5 mg/kg",
+        "5 mcg/kg",
+        "5 mg/kg",
+        "50 mg/kg"
+      ],
+      "answer": 0,
+      "explanation": "Ketorolac, pediatric: 0.5 mg/kg. 5 mg/kg is tenfold too high. 5 mcg/kg uses mcg/kg and is tenfold high. 50 mg/kg is hundredfold too high.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-002",
+      "set": 1,
+      "stem": "Pediatric IV acetaminophen dose?",
+      "type": "single",
+      "options": [
+        "1.5 mg/kg",
+        "15 mg/kg",
+        "15 g/kg",
+        "15 mcg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Acetaminophen, pediatric IV: 15 mg/kg. 1.5 mg/kg is tenfold too low. 15 mcg/kg uses mcg/kg instead of mg/kg. 15 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-003",
+      "set": 1,
+      "stem": "Adult acetaminophen dose every 6 hr (50 kg or more)?",
+      "type": "single",
+      "options": [
+        "10 g",
+        "1 mcg",
+        "1 g",
+        "1 mg"
+      ],
+      "answer": 2,
+      "explanation": "Acetaminophen, adult: 1 g. 1 mg uses mg instead of g. 1 mcg uses mcg instead of g. 10 g is tenfold too high.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-004",
+      "set": 1,
+      "stem": "Typical adult IV ketorolac dose?",
+      "type": "single",
+      "options": [
+        "0.15–0.3 mg",
+        "1.5–3 mg",
+        "150–300 mcg",
+        "15–30 mg"
+      ],
+      "answer": 3,
+      "explanation": "Ketorolac, adult IV: 15–30 mg. 0.15–0.3 mg is hundredfold too low. 1.5–3 mg is tenfold too low. 150–300 mcg uses mcg and is tenfold high.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-005",
+      "set": 1,
+      "stem": "Typical preoperative celecoxib dose?",
+      "type": "single",
+      "options": [
+        "200–400 mg",
+        "2,000–4,000 mg",
+        "200–400 g",
+        "200–400 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Celecoxib, preop: 200–400 mg. 200–400 g uses g instead of mg. 2,000–4,000 mg is tenfold too high. 200–400 mcg uses mcg instead of mg.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-006",
+      "set": 1,
+      "stem": "Typical preoperative gabapentin dose?",
+      "type": "single",
+      "options": [
+        "300–600 g",
+        "300–600 mg",
+        "3,000–6,000 mg",
+        "300–600 mcg"
+      ],
+      "answer": 1,
+      "explanation": "Gabapentin, preop: 300–600 mg. 300–600 mcg uses mcg instead of mg. 300–600 g uses g instead of mg. 3,000–6,000 mg is tenfold too high.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-007",
+      "set": 1,
+      "stem": "Adult daily acetaminophen maximum?",
+      "type": "single",
+      "options": [
+        "40 g",
+        "4 mg",
+        "4 g",
+        "0.4 g"
+      ],
+      "answer": 2,
+      "explanation": "Acetaminophen, adult daily max: 4 g. 0.4 g is tenfold too low. 40 g is tenfold too high. 4 mg uses mg instead of g.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-008",
+      "set": 1,
+      "stem": "Maximum daily ketorolac dose for adults under 65?",
+      "type": "single",
+      "options": [
+        "120 g",
+        "1,200 mg",
+        "12 mg",
+        "120 mg"
+      ],
+      "answer": 3,
+      "explanation": "Ketorolac, adult daily max: 120 mg. 1,200 mg is tenfold too high. 120 g uses g instead of mg. 12 mg is tenfold too low.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-009",
+      "set": 1,
+      "stem": "Analgesic adjunct dosing: which doses are correct? (Select 4)",
+      "type": "multi",
+      "options": [
+        "Ketorolac, pediatric: 0.5 mg/kg",
+        "Ketorolac, adult daily max: 120 mg",
+        "Acetaminophen, pediatric IV: 15 mg/kg",
+        "Pregabalin, preop: 75–150 mg",
+        "Gabapentin, preop: 300–600 g",
+        "Acetaminophen, adult daily max: 40 g"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "explanation": "Correct: Ketorolac, pediatric 0.5 mg/kg; Pregabalin, preop 75–150 mg; Ketorolac, adult daily max 120 mg; Acetaminophen, pediatric IV 15 mg/kg. Incorrect: Acetaminophen, adult daily max is 4 g, not 40 g; Gabapentin, preop is 300–600 mg, not 300–600 g.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-010",
+      "set": 1,
+      "stem": "Analgesic adjunct dosing: which doses are correct? (Select 2)",
+      "type": "multi",
+      "options": [
+        "Ketorolac, adult daily max: 120 g",
+        "Acetaminophen, pediatric IV: 15 mcg/kg",
+        "Pregabalin, preop: 75–150 mg",
+        "Ketorolac, pediatric: 0.5 g/kg",
+        "Acetaminophen, adult: 10 g",
+        "Acetaminophen, adult daily max: 4 g"
+      ],
+      "answer": [
+        2,
+        5
+      ],
+      "explanation": "Correct: Acetaminophen, adult daily max 4 g; Pregabalin, preop 75–150 mg. Incorrect: Ketorolac, pediatric is 0.5 mg/kg, not 0.5 g/kg; Acetaminophen, adult is 1 g, not 10 g; Ketorolac, adult daily max is 120 mg, not 120 g; Acetaminophen, pediatric IV is 15 mg/kg, not 15 mcg/kg.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-ANALG-011",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Celecoxib, preop",
+        "Ketorolac, pediatric",
+        "Acetaminophen, pediatric IV",
+        "Gabapentin, preop"
+      ],
+      "choices": [
+        "2,000–4,000 mg",
+        "200–400 mg",
+        "300–600 mg",
+        "15 mg/kg",
+        "0.5 mg/kg"
+      ],
+      "answer": {
+        "Celecoxib, preop": "200–400 mg",
+        "Ketorolac, pediatric": "0.5 mg/kg",
+        "Acetaminophen, pediatric IV": "15 mg/kg",
+        "Gabapentin, preop": "300–600 mg"
+      },
+      "explanation": "Typical doses: Celecoxib, preop 200–400 mg; Ketorolac, pediatric 0.5 mg/kg; Acetaminophen, pediatric IV 15 mg/kg; Gabapentin, preop 300–600 mg. The extra choice, 2,000–4,000 mg, is the Celecoxib, preop dose with the decimal moved.",
+      "citation": "",
+      "topic": "Analgesic Adjuncts & Multimodal Analgesia",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Analgesic Adjuncts",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-001",
+      "set": 1,
+      "stem": "Albuterol delivered per MDI puff?",
+      "type": "single",
+      "options": [
+        "90 mcg",
+        "900 mcg",
+        "90 mg",
+        "9 mcg"
+      ],
+      "answer": 0,
+      "explanation": "Albuterol MDI, per puff: 90 mcg. 90 mg uses mg instead of mcg. 900 mcg is tenfold too high. 9 mcg is tenfold too low.",
+      "citation": "",
+      "topic": "Respiratory Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-002",
+      "set": 1,
+      "stem": "Mannitol dose for raised ICP?",
+      "type": "single",
+      "options": [
+        "5–10 g/kg",
+        "0.5–1 g/kg",
+        "0.5–1 mg/kg",
+        "0.05–0.1 g/kg"
+      ],
+      "answer": 1,
+      "explanation": "Mannitol, ICP: 0.5–1 g/kg. 0.05–0.1 g/kg is tenfold too low. 0.5–1 mg/kg uses mg/kg instead of g/kg. 5–10 g/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Fluids, Blood Products & Electrolytes",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-003",
+      "set": 1,
+      "stem": "Dantrolene maintenance dose after MH control, every 4–6 hr?",
+      "type": "single",
+      "options": [
+        "0.1 mg/kg",
+        "1 g/kg",
+        "1 mg/kg",
+        "1 mcg/kg"
+      ],
+      "answer": 2,
+      "explanation": "Dantrolene, maintenance: 1 mg/kg. 1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 mg/kg is tenfold too low. 1 g/kg uses g/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Toxicology, Emergencies & Special Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-004",
+      "set": 1,
+      "stem": "Initial dantrolene dose for MH?",
+      "type": "single",
+      "options": [
+        "0.25 mg/kg",
+        "25 mg/kg",
+        "2.5 g/kg",
+        "2.5 mg/kg"
+      ],
+      "answer": 3,
+      "explanation": "Dantrolene, initial: 2.5 mg/kg. 2.5 g/kg uses g/kg instead of mg/kg. 0.25 mg/kg is tenfold too low. 25 mg/kg is tenfold too high.",
+      "citation": "",
+      "topic": "Toxicology, Emergencies & Special Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-005",
+      "set": 1,
+      "stem": "IV magnesium dose for severe bronchospasm?",
+      "type": "single",
+      "options": [
+        "2 g",
+        "2 mg",
+        "0.2 g",
+        "20 g"
+      ],
+      "answer": 0,
+      "explanation": "Magnesium, bronchospasm: 2 g. 0.2 g is tenfold too low. 20 g is tenfold too high. 2 mg uses mg instead of g.",
+      "citation": "",
+      "topic": "Respiratory Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-006",
+      "set": 1,
+      "stem": "Cumulative dantrolene dose after which other diagnoses are reconsidered?",
+      "type": "single",
+      "options": [
+        "10 g/kg",
+        "10 mg/kg",
+        "10 mcg/kg",
+        "1 mg/kg"
+      ],
+      "answer": 1,
+      "explanation": "Dantrolene, cumulative: 10 mg/kg. 1 mg/kg is tenfold too low. 10 g/kg uses g/kg instead of mg/kg. 10 mcg/kg uses mcg/kg instead of mg/kg.",
+      "citation": "",
+      "topic": "Toxicology, Emergencies & Special Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-007",
+      "set": 1,
+      "stem": "Emergency and miscellaneous dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Albuterol MDI, per puff: 90 mcg",
+        "Mannitol, ICP: 0.5–1 g/kg",
+        "Methylene blue: 10–20 mg/kg",
+        "Hydroxocobalamin: 5 g",
+        "Sodium bicarbonate: 1 mEq/kg",
+        "Magnesium, bronchospasm: 2 g"
+      ],
+      "answer": [
+        0,
+        1,
+        3,
+        4,
+        5
+      ],
+      "explanation": "Correct: Magnesium, bronchospasm 2 g; Albuterol MDI, per puff 90 mcg; Hydroxocobalamin 5 g; Sodium bicarbonate 1 mEq/kg; Mannitol, ICP 0.5–1 g/kg. Incorrect: Methylene blue is 1–2 mg/kg, not 10–20 mg/kg.",
+      "citation": "",
+      "topic": "Respiratory Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-008",
+      "set": 1,
+      "stem": "Emergency and miscellaneous dosing: which doses are correct? (Select 5)",
+      "type": "multi",
+      "options": [
+        "Dantrolene, maintenance: 1 mg/kg",
+        "Albuterol MDI, per puff: 90 mcg",
+        "Methylene blue: 1–2 mg/kg",
+        "Sodium bicarbonate: 1 mEq/kg",
+        "Dantrolene, cumulative: 10 mcg/kg",
+        "Dantrolene, initial: 2.5 mg/kg"
+      ],
+      "answer": [
+        0,
+        1,
+        2,
+        3,
+        5
+      ],
+      "explanation": "Correct: Albuterol MDI, per puff 90 mcg; Sodium bicarbonate 1 mEq/kg; Dantrolene, maintenance 1 mg/kg; Methylene blue 1–2 mg/kg; Dantrolene, initial 2.5 mg/kg. Incorrect: Dantrolene, cumulative is 10 mg/kg, not 10 mcg/kg.",
+      "citation": "",
+      "topic": "Respiratory Pharmacology",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    },
+    {
+      "id": "DOSE-MISC-009",
+      "set": 1,
+      "stem": "Match each drug and use to its typical dose.",
+      "type": "matching",
+      "prompts": [
+        "Dantrolene, cumulative",
+        "Methylene blue",
+        "Dantrolene, initial",
+        "Mannitol, ICP"
+      ],
+      "choices": [
+        "10 mg/kg",
+        "1–2 mg/kg",
+        "25 mg/kg",
+        "0.5–1 g/kg",
+        "2.5 mg/kg"
+      ],
+      "answer": {
+        "Dantrolene, cumulative": "10 mg/kg",
+        "Methylene blue": "1–2 mg/kg",
+        "Dantrolene, initial": "2.5 mg/kg",
+        "Mannitol, ICP": "0.5–1 g/kg"
+      },
+      "explanation": "Typical doses: Dantrolene, cumulative 10 mg/kg; Methylene blue 1–2 mg/kg; Dantrolene, initial 2.5 mg/kg; Mannitol, ICP 0.5–1 g/kg. The extra choice, 25 mg/kg, is the Dantrolene, initial dose with the decimal moved.",
+      "citation": "",
+      "topic": "Fluids, Blood Products & Electrolytes",
+      "sourceTitle": "Top Drawer Drug Dosing",
+      "image": null,
+      "sourceMeta": {
+        "sourcePackage": "Top Drawer Drug Dosing Recall",
+        "originalCategory": "Miscellaneous",
+        "level": "recall",
+        "style": "dosing_recall",
+        "caseId": null,
+        "caseTitle": null,
+        "caseStep": null
+      }
+    }
+  ]
+}
