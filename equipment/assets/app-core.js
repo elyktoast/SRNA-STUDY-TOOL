@@ -7,7 +7,7 @@ const safeJSON=(raw,fallback)=>{try{const v=JSON.parse(raw);return v??fallback}c
 function randomId(){try{return crypto.randomUUID()}catch{return 'dev-'+now().toString(36)+'-'+Math.random().toString(36).slice(2)}}
 function deviceId(){let id=localStorage.getItem(DEVICE_KEY);if(!id){id=randomId();localStorage.setItem(DEVICE_KEY,id)}return id}
 function readMeta(){const v=safeJSON(localStorage.getItem(META_KEY),{});return plain(v)?v:{}}
-function writeMeta(meta){if(!plain(meta)||Object.keys(meta).length===0){localStorage.removeItem(META_KEY);return}localStorage.setItem(META_KEY,JSON.stringify(meta))}
+function writeMeta(meta){if(!plain(meta)||!Object.keys(meta).length)return localStorage.removeItem(META_KEY);localStorage.setItem(META_KEY,JSON.stringify(meta))}
 function record(kind,error,detail={}){
 const item={at:new Date().toISOString(),kind:String(kind||'error'),message:String(error?.message||error||'Unknown error'),detail:plain(detail)?detail:{}};
 errors.push(item);if(errors.length>25)errors.shift();return item
