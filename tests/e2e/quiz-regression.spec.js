@@ -2422,6 +2422,19 @@ test.describe('canonical quiz regression', () => {
     expect(out.overall.mastery).toBeGreaterThan(0);
   });
 
+  test('Universal question index includes every published course and exact Studio routes', async ({ page }) => {
+    await page.goto(exam + '/studio.html');await waitForStudio(page);
+    const out=await page.evaluate(async()=>{
+      MBUQuestionSearch?.reset?.();
+      const rows=await MBUQuestionSearch.getIndex(),equipment=rows.find(x=>String(x.uid).startsWith('b1-')),basic=rows.find(x=>String(x.uid).startsWith('bp1-')),pharm=rows.find(x=>String(x.uid).startsWith('pharm-clinical-'));
+      return{count:rows.length,equipment,basic,pharm};
+    });
+    expect(out.count).toBeGreaterThanOrEqual(6800);
+    expect(out.equipment.practiceUrl).toContain('/equipment/exam-1/studio.html?question=');
+    expect(out.basic.practiceUrl).toContain('/basic-principles/exam-1/studio.html?question=');
+    expect(out.pharm.practiceUrl).toContain('/pharm/clinical-pharm/studio.html?question=');
+  });
+
   test('Exam dashboard renders personal mastery without presenting an exam prediction', async ({ page }) => {
     await page.goto(exam + '/index.html');await page.evaluate(() => MBUPageReady);
     await page.evaluate(()=>{
