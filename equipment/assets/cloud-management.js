@@ -1,4 +1,3 @@
-/* Lazy cloud device/history management for SRNA Study Tool. */
 (()=>{'use strict';
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function storeLabel(key){
@@ -35,7 +34,7 @@ async function renderStats(modal){
 }
 async function renderDevices(modal){
   const host=modal.querySelector('[data-cloud-devices]');if(!host)return;
-  host.innerHTML='<div class="mbu-muted">Loading devices…</div>';
+  host.innerHTML='<div class="mbu-muted">Loading…</div>';
   try{
     const rows=await MBUSupabase.listDevices();
     host.innerHTML=rows.map(r=>'<div class="mbu-cloud-row"><div><strong>'+esc(r.current?'This device':(r.device_label||'Browser device'))+'</strong><span>'+esc(relativeTime(r.last_seen_at))+(r.app_build?' · '+esc(r.app_build):'')+'</span></div>'+(r.current?'<span class="mbu-pill">Current</span>':'<button type="button" class="secondary" data-remove-device="'+esc(r.device_id)+'">Forget</button>')+'</div>').join('')||'<div class="mbu-muted">No synced devices found.</div>';
@@ -44,7 +43,7 @@ async function renderDevices(modal){
 }
 async function renderHistory(modal){
   const host=modal.querySelector('[data-cloud-history]');if(!host)return;
-  host.innerHTML='<div class="mbu-muted">Loading restore points…</div>';
+  host.innerHTML='<div class="mbu-muted">Loading…</div>';
   try{
     const rows=await MBUSupabase.listHistory(20);
     if(!rows.length){host.innerHTML='<div class="mbu-muted">No cloud restore points yet. Restore points appear automatically as synced progress changes.</div>';return}
