@@ -3,7 +3,7 @@
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 const href=(uid,m)=>m?.practiceUrl||new URL('equipment/exam-1/studio.html?question='+encodeURIComponent(String(uid||'')),MBUSupabase.appRoot||location.href).href;
 let rows=[],meta=new Map(),contentReview=new Map(),measuredCount=0,reviewGroupCount=0;
-function signal(r){const live=r.review_signal==='reported'?'Reported':r.review_signal==='high_miss'?'High miss rate':r.review_signal==='very_easy'?'Very easy':'',extra=contentReview.get(String(r.question_id))||[];return[live,...extra].filter(Boolean).join(' · ')}
+function reasons(r){const a=[];if(Number(r.report_count||0)>0||r.review_signal==='reported')a.push('Learner report');if(r.review_signal==='high_miss')a.push('High miss rate');if(r.review_signal==='very_easy')a.push('Very easy');for(const x of contentReview.get(String(r.question_id))||[])a.push(x);if(r.needs_review&&!a.length)a.push('Analytics review flag');return[...new Set(a)]}function signal(r){return reasons(r).join(' · ')}
 function needsReview(r){return!!r.needs_review||contentReview.has(String(r.question_id))}
 function matches(r,filter,q){
   if(filter==='review'&&!needsReview(r))return false;
@@ -18,7 +18,7 @@ function draw(host){
   const filter=host.querySelector('[data-qa-filter]')?.value||'all',q=(host.querySelector('[data-qa-search]')?.value||'').trim().toLowerCase(),shown=rows.filter(r=>matches(r,filter,q));
   const out=host.querySelector('[data-qa-rows]');
   out.innerHTML=shown.map(r=>{const m=meta.get(r.question_id)||{},acc=r.first_attempt_accuracy==null?'—':Number(r.first_attempt_accuracy)+'%',sig=signal(r),learners=Number(r.unique_learners||0),reports=Number(r.report_count||0);
-    return '<div class="mbu-cloud-row"><div><strong>'+esc(m.label||r.question_id)+' · '+esc(r.question_id)+(sig?' · '+esc(sig):'')+'</strong><span>'+learners+' learner'+(learners===1?'':'s')+' · '+acc+' first-attempt · '+Number(r.adaptive_first_attempts||0)+' Adaptive · '+esc(r.maturity)+'</span><small>'+esc(m.topic||'Unknown topic')+(m.stem?' · '+esc(m.stem):'')+'</small><small>'+reports+' report'+(reports===1?'':'s')+(r.avg_response_ms?' · avg '+Math.round(Number(r.avg_response_ms)/1000)+'s response':'')+'</small></div><a class="secondary" target="_blank" rel="noopener" href="'+esc(href(r.question_id,m))+'">Open exact question</a></div>'
+    return '<div class="mbu-cloud-row"><div><strong>'+esc(m.label||r.question_id)+' · '+esc(r.question_id)+'</strong><span>'+learners+' learner'+(learners===1?'':'s')+' · '+acc+' first-attempt · '+Number(r.adaptive_first_attempts||0)+' Adaptive · '+esc(r.maturity)+'</span>'+(sig?'<small><b>Why review:</b> '+esc(sig)+'</small>':'')+'<small>'+esc(m.topic||'Unknown topic')+(m.source?' · '+esc(m.source):'')+(m.stem?' · '+esc(m.stem):'')+'</small><small>'+reports+' report'+(reports===1?'':'s')+(r.avg_response_ms?' · avg '+Math.round(Number(r.avg_response_ms)/1000)+'s response':'')+'</small></div><a class="secondary" target="_blank" rel="noopener" href="'+esc(href(r.question_id,m))+'">Open exact question</a></div>'
   }).join('')||'<div class="mbu-muted">No questions match this view.</div>';
   host.querySelector('[data-qa-count]').textContent=shown.length+' shown · '+measuredCount+' measured · '+contentReview.size+' content-review items';
 }
