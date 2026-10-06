@@ -21,6 +21,18 @@ function relativeTime(ts){
   const d=Math.max(0,Date.now()-t),min=Math.floor(d/60000),hr=Math.floor(d/3600000),day=Math.floor(d/86400000);
   return min<1?'Just now':min<60?min+'m ago':hr<24?hr+'h ago':day+'d ago'
 }
+async function accountStats(){
+ const s=MBUSupabase.status(),token=await MBUSupabase.accessToken();if(!s?.signedIn||!token)throw Error('Sign in to view account statistics.');
+ const api=async url=>{const r=await fetch(new URL(url,MBUSupabase.appRoot),{headers:{apikey:window.SRNA_SUPABASE?.anonKey||'',Authorization:'Bearer '+token}});if(!r.ok)throw Error('Statistics could not load ('+r.status+')');return r.json()},rows=await api('https://vqmzhyvrqmboycnyoxcb.supabase.co/rest/v1/mbu_question_exposure?select=course_id,exam_id,question_uid,times_answered,first_answered_at&first_answered_at=not.is.null'),groups=new Map();let totalAttempts=0;
+ for(const r of rows||[]){const k=String(r.course_id||'')+'::'+String(r.exam_id||''),g=groups.get(k)||{courseId:String(r.course_id||''),examId:String(r.exam_id||''),uniqueAnswered:0,totalAttempts:0};g.uniqueAnswered++;g.totalAttempts+=Number(r.times_answered)||0;totalAttempts+=Number(r.times_answered)||0;groups.set(k,g)}
+ const roots=[['equipment','exam-1','Equipment & Hazards','equipment/exam-1/banks.json'],['basic-principles','exam-1','Basic Principles','basic-principles/exam-1/banks.json'],['pharm','clinical-pharm','Clinical Pharmacology','pharm/clinical-pharm/banks.json']],inventory=[];
+ for(const [courseId,examId,label,path] of roots){try{const m=await MBUBuild.fetchJSON(new URL(path,MBUSupabase.appRoot),{cache:'force-cache'});inventory.push({courseId,examId,label,total:(m.studioSources||[]).reduce((n,x)=>n+Number(x.count||0),0)})}catch{}}
+ return{uniqueAnswered:(rows||[]).length,totalAttempts,courses:[...groups.values()],inventory}
+}
+async function renderStats(modal){
+ const host=modal.querySelector('[data-account-stats]');if(!host)return;host.innerHTML='<p>Loading statistics…</p>';
+ try{const s=await accountStats(),byKey=new Map(s.courses.map(x=>[x.courseId+'::'+x.examId,x])),total=s.inventory.reduce((n,x)=>n+x.total,0),answered=Math.min(s.uniqueAnswered,total||Infinity),pct=total?Math.round(answered/total*1000)/10:0;host.innerHTML='<div class="mbu-account-stats-summary"><div><span>Unique answered</span><strong>'+answered.toLocaleString()+' / '+total.toLocaleString()+'</strong><small>'+pct+'% of the current question library</small></div><div><span>Total answers</span><strong>'+s.totalAttempts.toLocaleString()+'</strong><small>Includes repeat practice</small></div></div><div class="mbu-account-progress"><i style="width:'+Math.min(100,pct)+'%"></i></div><div class="mbu-account-stats-courses">'+s.inventory.map(x=>{const g=byKey.get(x.courseId+'::'+x.examId)||{uniqueAnswered:0,totalAttempts:0},u=Math.min(g.uniqueAnswered,x.total),p=x.total?Math.round(u/x.total*1000)/10:0;return '<div class="mbu-account-course-stat"><span><strong>'+esc(x.label)+'</strong><small>'+u.toLocaleString()+' / '+x.total.toLocaleString()+' unique · '+p+'% · '+g.totalAttempts.toLocaleString()+' total answers</small><i><em style="width:'+Math.min(100,p)+'%"></em></i></span><b>'+Math.max(0,x.total-u).toLocaleString()+' left</b></div>'}).join('')+'</div><p class="mbu-account-stats-note">Unique progress counts each canonical question once, even when repeated. New questions automatically increase the available total.</p>'}catch(e){host.innerHTML='<div class="mbu-muted">'+esc(e.message)+'</div>'}
+}
 async function renderDevices(modal){
   const host=modal.querySelector('[data-cloud-devices]');if(!host)return;
   host.innerHTML='<div class="mbu-muted">Loading devices…</div>';
@@ -40,5 +52,5 @@ async function renderHistory(modal){
     host.querySelectorAll('[data-restore-version]').forEach(btn=>btn.onclick=async()=>{if(!confirm('Restore this version? Your current cloud progress is saved first, so you can undo the restore if needed.'))return;btn.disabled=true;const message=modal.querySelector('[data-account-message]');try{message.textContent='Restoring progress…';await MBUSupabase.restoreVersion(Number(btn.dataset.restoreVersion));message.textContent='Restore complete.'}catch(e){message.textContent=e.message;btn.disabled=false}})
   }catch(e){host.innerHTML='<div class="mbu-muted">Could not load restore points: '+esc(e.message)+'</div>'}
 }
-window.SRNACloudManagement={renderDevices,renderHistory};
+window.SRNACloudManagement={renderStats,renderDevices,renderHistory};
 })();
