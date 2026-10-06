@@ -2459,6 +2459,22 @@ test.describe('canonical quiz regression', () => {
     expect(out.profile.version).toBe(3);
   });
 
+  test('Adaptive prefers unseen questions over previously correct not-due questions across sessions', async ({ page }) => {
+    await page.goto(exam + '/studio.html');await waitForStudio(page);
+    const out=await page.evaluate(()=>{
+      MBUStudyIntelligence.clearAll();
+      const correct={uid:'repeat-correct',bank:'b1',topic:'Airway',stem:'Previously correct item',opts:['A','B','C','D'],ans:[0]};
+      MBUStudyIntelligence.recordAnswer('b1',correct,true,{bankLabel:'Quiz Bank 1',at:Date.now()});
+      const unseen=Array.from({length:60},(_,i)=>({uid:'fresh-'+i,bank:'b1',topic:i%2?'Airway':'Monitoring',stem:'Fresh unseen item '+i,opts:['A','B','C','D'],ans:[0]}));
+      const pool=[correct,...unseen],state=MBUAdaptiveQuiz.normalize({theta:0,answered:6,maxQuestions:20,poolUids:pool.map(q=>q.uid),selectionSeed:731},20);
+      const picked=MBUAdaptiveQuiz.pick(pool,state);
+      return{picked:picked.question?.uid,correctStats:MBUStudyIntelligence.questionStats(correct.uid),freshCount:unseen.length};
+    });
+    expect(out.correctStats.lastCorrect).toBe(true);
+    expect(out.freshCount).toBeGreaterThan(20);
+    expect(out.picked).not.toBe('repeat-correct');
+  });
+
   test('Adaptive selection avoids recently seen duplicate-content variants when alternatives exist', async ({ page }) => {
     await page.goto(exam + '/studio.html');
     await waitForStudio(page);
