@@ -17,7 +17,7 @@ const fetchJSON=async(input,{cache='force-cache',timeout=12000}={})=>{
 const loads=new Map(),once=(key,make)=>loads.get(key)||loads.set(key,make()).get(key);
 const loadStyle=src=>{const href=urlFor(src).href;return once('c'+href,()=>new Promise((resolve,reject)=>{const l=document.createElement('link'),timer=setTimeout(()=>{l.remove();reject(Error('Stylesheet timed out: '+src))},ASSET_TIMEOUT);l.rel='stylesheet';l.href=href;l.onload=()=>{clearTimeout(timer);resolve()};l.onerror=()=>{clearTimeout(timer);l.remove();reject(Error('Stylesheet failed: '+src))};document.head.append(l)}))};
 const loadScript=async raw=>{const spec=specOf(raw),url=urlFor(spec.src),data=Object.entries(spec.data||{});await once('j'+url.href+JSON.stringify(data),()=>new Promise((resolve,reject)=>{const s=document.createElement('script'),timer=setTimeout(()=>{s.remove();reject(Error('Script timed out: '+spec.src))},ASSET_TIMEOUT);s.src=url.href;for(const [k,v] of data)s.dataset[k]=String(v);s.onload=()=>{clearTimeout(timer);resolve()};s.onerror=()=>{clearTimeout(timer);s.remove();reject(Error('Script failed: '+spec.src))};document.body.append(s)}));if(spec.waitFor){const ready=window[spec.waitFor];if(ready&&typeof ready.then==='function')await ready}};
-window.MBU_BUILD_ID=build;window.MBUBuild={id:build,assetsBase,buildUrl,urlFor,loadStyle,loadScript,fetchJSON};
+window.MBU_BUILD_ID=build;const appRoot=new URL('../../',assetsBase);window.MBUBuild={id:build,assetsBase,appRoot,buildUrl,urlFor,loadStyle,loadScript,fetchJSON};
 await loadStyle('app-core.css');
 await loadScript('app-core.js');
 await loadScript('legal-gate.js');
