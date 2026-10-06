@@ -1932,10 +1932,13 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('[data-analytics-host]')).toContainText('Needs review');
     await expect(page.locator('[data-analytics-host]')).toContainText('CAT readiness');
     await expect(page.locator('[data-analytics-host]')).toContainText('36% first-attempt');
+    await expect(page.locator('.qa-explorer')).not.toHaveAttribute('open','');
+    await page.locator('.qa-explorer > summary').click();
     await page.locator('[data-qa-filter]').selectOption('content');
     await expect.poll(async()=>page.locator('[data-qa-rows] .mbu-cloud-row').count()).toBeGreaterThan(0);
     await page.locator('[data-qa-filter]').selectOption('all');
-    await expect(page.locator('[data-qa-modes]')).toContainText('87 first attempts');
+    await page.locator('.qa-advanced > summary').click();
+    await expect(page.locator('[data-qa-trend]')).toContainText('316 first attempts');
 
     await page.locator('[data-admin-view="reports"]').click();
     await expect(page.locator('[data-report-list]')).toContainText('Example reported question');
