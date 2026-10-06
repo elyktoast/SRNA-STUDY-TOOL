@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const runtime=window.MBUBuild,APP='SRNA Study Tool',SYNC_SCHEMA=1,DEVICE_KEY='mbu_device_id_v1',META_KEY='mbu_sync_meta_v1',errors=[],adapters=new Map(),ROOT_URL=new URL('../../',runtime.assetsBase);
+const runtime=window.MBUBuild,APP='SRNA Study Tool',SYNC_SCHEMA=1,DEVICE_KEY='mbu_device_id_v1',META_KEY='mbu_sync_meta_v1',errors=[],adapters=new Map(),ROOT_URL=runtime.appRoot;
 let manifestPromise=null,toolsReturnFocus=null;const $=id=>document.getElementById(id),E=t=>document.createElement(t),Q=s=>document.querySelector(s),A=s=>document.querySelectorAll(s),B=document.body;
 const now=()=>Date.now();
 const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -7,7 +7,7 @@ const safeJSON=(raw,fallback)=>{try{const v=JSON.parse(raw);return v??fallback}c
 function randomId(){try{return crypto.randomUUID()}catch{return 'dev-'+now().toString(36)+'-'+Math.random().toString(36).slice(2)}}
 function deviceId(){let id=localStorage.getItem(DEVICE_KEY);if(!id){id=randomId();localStorage.setItem(DEVICE_KEY,id)}return id}
 function readMeta(){const v=safeJSON(localStorage.getItem(META_KEY),{});return plain(v)?v:{}}
-function writeMeta(meta){if(!plain(meta)||!Object.keys(meta).length)return localStorage.removeItem(META_KEY);localStorage.setItem(META_KEY,JSON.stringify(meta))}
+function writeMeta(m){if(!plain(m)||!Object.keys(m).length)return localStorage.removeItem(META_KEY);localStorage.setItem(META_KEY,JSON.stringify(m))}
 function record(kind,error,detail={}){
 const item={at:new Date().toISOString(),kind:String(kind||'error'),message:String(error?.message||error||'Unknown error'),detail:plain(detail)?detail:{}};
 errors.push(item);if(errors.length>25)errors.shift();return item
