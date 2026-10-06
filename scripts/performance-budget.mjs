@@ -78,6 +78,7 @@ for(const token of ['registerProvider','generate','approveDraft','validateQuesti
 const intelligence=read('equipment/assets/study-intelligence.js'),search=read('equipment/assets/question-search.js');
 for(const token of ['recordAnswer','smartReview','analytics','recentActivity','addIssue'])if(!intelligence.includes(token))fail('Study intelligence missing '+token);
 for(const token of ['buildIndex','getIndex','Practice in Studio'])if(!search.includes(token))fail('Universal search missing '+token);
+for(const token of ["equipment/exam-1/","basic-principles/exam-1/","pharm/clinical-pharm/",'practiceUrl'])if(!search.includes(token))fail('Universal search is not cross-course: '+token);
 
 const boot=read('equipment/assets/build-bootstrap.js');
 if(!boot.includes('jsonCache=new Map()')||!boot.includes('fetchJSON'))fail('Build runtime lost shared JSON request deduplication');
