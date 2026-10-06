@@ -1,15 +1,15 @@
 (()=>{'use strict';
 const script=document.currentScript,cfg=window.MBU_BOOT||{},assetsBase=new URL(cfg.assetsBase||'./',script?.src||location.href),buildUrl=new URL(cfg.buildUrl||'../build.json',script?.src||location.href);document.documentElement.dataset.mbuBoot='loading';const gate=document.createElement('style');gate.textContent='html[data-mbu-boot="loading"] body>*:not(#srna-legal-gate){visibility:hidden;pointer-events:none}html[data-mbu-boot="loading"] body>#srna-legal-gate{visibility:visible;pointer-events:auto}';document.head.append(gate);
-const specOf=x=>typeof x==='string'?{src:x}:x||{},REQUEST_TIMEOUT=12000,ASSET_TIMEOUT=15000;
+const specOf=x=>typeof x==='string'?{src:x}:x||{},REQUEST_TIMEOUT=12e3,ASSET_TIMEOUT=15e3;
 const fetchTimed=async(url,opts={},timeout=REQUEST_TIMEOUT)=>{const ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),timeout);try{return await fetch(url,{...opts,signal:ctl.signal})}finally{clearTimeout(timer)}};
 async function start(){
 const response=await fetchTimed(buildUrl.href+'?t='+Date.now(),{cache:'no-store',credentials:'same-origin'});
 if(!response.ok)throw Error('Build manifest HTTP '+response.status);
-const manifest=await response.json(),build=manifest&&typeof manifest.build==='string'?manifest.build.trim():'';
+const manifest=await response.json(),build=typeof manifest?.build==='string'?manifest.build.trim():'';
 if(!build)throw Error('Invalid build manifest');
 const urlFor=src=>{const u=new URL(src,assetsBase);u.searchParams.set('b',build);return u};
 const jsonCache=new Map();
-const fetchJSON=async(input,{cache='force-cache',timeout=12000}={})=>{
+const fetchJSON=async(input,{cache='force-cache',timeout=12e3}={})=>{
   const url=new URL(input,location.href),key=url.href;if(jsonCache.has(key))return jsonCache.get(key);
   const request=(async()=>{const response=await fetchTimed(url,{cache,credentials:'same-origin'},timeout);if(!response.ok)throw Error('HTTP '+response.status+' for '+url.pathname);const text=await response.text();if(!text.trim())throw Error('Empty JSON response for '+url.pathname);try{return JSON.parse(text)}catch(e){throw Error('Invalid JSON at '+url.pathname+': '+e.message)}})();
   jsonCache.set(key,request);try{return await request}catch(e){jsonCache.delete(key);throw e}
@@ -21,7 +21,7 @@ window.MBU_BUILD_ID=build;window.MBUBuild={id:build,assetsBase,appRoot:new URL('
 await loadStyle('app-core.css');
 await loadScript('app-core.js');
 await loadScript('legal-gate.js');
-if(window.SRNALegalReady)await window.SRNALegalReady;
+if(SRNALegalReady)await SRNALegalReady;
 await loadScript('course-context.js');
 await loadScript('calibration-outbox.js');
 await loadScript('study-intelligence.js');
@@ -30,7 +30,7 @@ await loadScript('supabase-config.js');
 await loadScript('supabase-sync.js');
 if(window.MBUAuthReady&&typeof window.MBUAuthReady.then==='function')await window.MBUAuthReady;
 await window.MBUCalibrationOutbox?.flushAll?.();
-const root=new URL('../../',assetsBase),path=location.pathname,published=['equipment/','basic-principles/','pharm/'],protectedCourse=published.some(x=>path.startsWith(root.pathname+x));
+const root=MBUBuild.appRoot,path=location.pathname,published=['equipment/','basic-principles/','pharm/'],protectedCourse=published.some(x=>path.startsWith(root.pathname+x));
 if(protectedCourse){
   const info=window.MBUSupabase?.status?.()||{};
   if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
