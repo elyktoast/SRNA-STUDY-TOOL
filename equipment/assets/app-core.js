@@ -1,8 +1,8 @@
 (()=>{'use strict';
 const runtime=window.MBUBuild,APP='SRNA Study Tool',SYNC_SCHEMA=1,DEVICE_KEY='mbu_device_id_v1',META_KEY='mbu_sync_meta_v1',errors=[],adapters=new Map(),ROOT_URL=runtime.appRoot;
 let manifestPromise=null,toolsReturnFocus=null;const $=id=>document.getElementById(id),E=t=>document.createElement(t),Q=s=>document.querySelector(s),A=s=>document.querySelectorAll(s),B=document.body;
-const now=()=>Date.now();
-const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
+const now=Date.now;
+const plain=v=>v&&typeof v==='object'&&!Array.isArray(v);
 const safeJSON=(raw,fallback)=>{try{const v=JSON.parse(raw);return v??fallback}catch{return fallback}};
 function randomId(){try{return crypto.randomUUID()}catch{return 'dev-'+now().toString(36)+'-'+Math.random().toString(36).slice(2)}}
 function deviceId(){let id=localStorage.getItem(DEVICE_KEY);if(!id){id=randomId();localStorage.setItem(DEVICE_KEY,id)}return id}
