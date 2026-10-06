@@ -22,7 +22,7 @@ function relativeTime(ts){
   return min<1?'Just now':min<60?min+'m ago':hr<24?hr+'h ago':day+'d ago'
 }
 async function accountStats(){
- const token=await MBUSupabase.accessToken();if(!token)throw Error('Sign in to view statistics.');
+ const token=await MBUSupabase.accessToken();if(!token)throw Error('Sign in first.');
  const api=async url=>{const r=await fetch(new URL(url,MBUSupabase.appRoot),{headers:{apikey:window.SRNA_SUPABASE?.anonKey||'',Authorization:'Bearer '+token}});if(!r.ok)throw Error('Stats failed ('+r.status+')');return r.json()},rows=await api('https://vqmzhyvrqmboycnyoxcb.supabase.co/rest/v1/mbu_question_exposure?select=course_id,exam_id,question_uid,times_answered,first_answered_at&first_answered_at=not.is.null'),groups=new Map();let totalAttempts=0;
  for(const r of rows||[]){const k=String(r.course_id||'')+'::'+String(r.exam_id||''),g=groups.get(k)||{courseId:String(r.course_id||''),examId:String(r.exam_id||''),uniqueAnswered:0,totalAttempts:0};g.uniqueAnswered++;g.totalAttempts+=Number(r.times_answered)||0;totalAttempts+=Number(r.times_answered)||0;groups.set(k,g)}
  const roots=[['equipment','exam-1','Equipment','equipment/exam-1/banks.json'],['basic-principles','exam-1','Basic Principles','basic-principles/exam-1/banks.json'],['pharm','clinical-pharm','Clinical Pharm','pharm/clinical-pharm/banks.json']],inventory=[];
@@ -30,7 +30,7 @@ async function accountStats(){
  return{uniqueAnswered:(rows||[]).length,totalAttempts,courses:[...groups.values()],inventory}
 }
 async function renderStats(modal){
- const host=modal.querySelector('[data-account-stats]');if(!host)return;host.textContent='Loading…';
+ const host=modal.querySelector('[data-account-stats]');if(!host)return;host.textContent='Loading';
  try{const s=await accountStats(),byKey=new Map(s.courses.map(x=>[x.courseId+'::'+x.examId,x])),total=s.inventory.reduce((n,x)=>n+x.total,0),answered=Math.min(s.uniqueAnswered,total||Infinity),pct=total?Math.round(answered/total*1000)/10:0;host.innerHTML='<div class="mbu-account-stats-summary"><div><span>Unique answered</span><strong>'+answered.toLocaleString()+' / '+total.toLocaleString()+'</strong><small>'+pct+'% of question library</small></div><div><span>Total answers</span><strong>'+s.totalAttempts.toLocaleString()+'</strong><small>Including repeats</small></div></div><div class="mbu-account-progress"><i style="width:'+Math.min(100,pct)+'%"></i></div><div class="mbu-account-stats-courses">'+s.inventory.map(x=>{const g=byKey.get(x.courseId+'::'+x.examId)||{uniqueAnswered:0,totalAttempts:0},u=Math.min(g.uniqueAnswered,x.total),p=x.total?Math.round(u/x.total*1000)/10:0;return '<div class="mbu-account-course-stat"><span><strong>'+esc(x.label)+'</strong><small>'+u.toLocaleString()+' / '+x.total.toLocaleString()+' unique · '+p+'% · '+g.totalAttempts.toLocaleString()+' answers</small><i><em style="width:'+Math.min(100,p)+'%"></em></i></span><b>'+Math.max(0,x.total-u).toLocaleString()+' left</b></div>'}).join('')+'</div><p class="mbu-account-stats-note">Each question counts once. New questions update the total.</p>'}catch(e){host.innerHTML='<div class="mbu-muted">'+esc(e.message)+'</div>'}
 }
 async function renderDevices(modal){
