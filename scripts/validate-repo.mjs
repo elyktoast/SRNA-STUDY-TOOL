@@ -864,7 +864,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  if(!boot.includes("window.addEventListener('mbu:supabase-status',enforceAccess)")||!boot.includes("window.addEventListener('pageshow',event=>{if(event.persisted)enforceAccess()})"))fail('Bootstrap: protected access is not rechecked after account or browser-history state changes');
  if(!boot.includes("id='mbu-bootstrap-failure'")||!boot.includes("role','alert'")||!boot.includes('Your saved study progress was not changed')||!boot.includes("onclick=()=>location.reload()"))fail('Bootstrap: fatal startup failures do not expose an accessible explicit retry path');
  for(const token of ["LEGAL_VERSION='2026-09-27-v6'","LEGAL_TERMS_VERSION=LEGAL_VERSION","LEGAL_PRIVACY_VERSION=LEGAL_VERSION",'snar_terms_version:LEGAL_TERMS_VERSION','snar_privacy_version:LEGAL_PRIVACY_VERSION','snar_adult_ack:true','snar_has_current_legal_acceptance','snar_accept_current_legal','acceptCurrentLegal','legalAccepted','refreshCalibration(true)'])if(!cloud.includes(token))fail('Account legal acknowledgement contract missing '+token);
- if(!core.includes('data-cloud-reaccept')||!core.includes('Updated account agreement required')||!core.includes("info.legalAccepted!==true?'Action required'")||!core.includes('data-cloud-legal-required'))fail('Authenticated legal re-acceptance UI/state handling is missing');
+ if(!core.includes('data-cloud-reaccept')||!core.includes('Updated agreement required')||!core.includes("info.legalAccepted!==true?'Action required'")||!core.includes('data-cloud-legal-required'))fail('Authenticated legal re-acceptance UI/state handling is missing');
 }
 
 // Privacy/terms and account controls must match the implemented data practices.
