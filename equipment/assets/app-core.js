@@ -213,7 +213,7 @@ modal.querySelector('[data-account-stats-details]').ontoggle=async e=>{if(e.curr
 modal.querySelector('[data-cloud-devices-details]').ontoggle=async e=>{if(e.currentTarget.open)(await loadCloudManagement()).renderDevices(modal)};
 modal.querySelector('[data-cloud-history-details]').ontoggle=async e=>{if(e.currentTarget.open)(await loadCloudManagement()).renderHistory(modal)};
 const adminOpen=modal.querySelector('[data-admin-open]');if(adminOpen)adminOpen.onclick=()=>openAdminDashboard(adminOpen);
-modal.querySelector('[data-account-close]').onclick=closeAccount;modal.onclick=e=>{if(e.target===modal)closeAccount()};modal.onkeydown=e=>{if(e.key==='Enter'&&e.target.matches('input')&&!e.isComposing){e.preventDefault();e.stopPropagation();if(!modal.querySelector('[data-cloud-signed-out]').hidden){const signup=!modal.querySelector('[data-auth-signup]').hidden;(signup?modal.querySelector('[data-cloud-signup]'):modal.querySelector('[data-cloud-signin]')).click()}return}trapModalKey(e,modal,closeAccount)};
+modal.querySelector('[data-account-close]').onclick=closeAccount;modal.onclick=e=>{if(e.target===modal)closeAccount()};modal.onkeydown=e=>{if(e.key==='Enter'&&e.target===password){e.preventDefault();modal.querySelector('[data-cloud-signin]').click()}else trapModalKey(e,modal,closeAccount)};
 }
 async function openAccount(source){
 await ensurePanelStyles();ensureAccountPanel();toolsReturnFocus=source||document.activeElement;const modal=$('mbu-account-panel');B.classList.add('mbu-modal-open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');refreshAccount();
