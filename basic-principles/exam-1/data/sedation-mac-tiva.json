@@ -1176,17 +1176,17 @@
       "id": "SED-049",
       "set": 1,
       "type": "single",
-      "stem": "A calm patient after oral midazolam converses normally and breathes without assistance. Which airway descriptor fits?",
+      "stem": "A calm patient after oral midazolam converses normally and breathes without assistance. Which ASA sedation category and airway status best describes this state?",
       "options": [
-        "No airway intervention is required",
-        "Airway intervention may be required",
-        "The airway is unaffected by the sedation",
-        "Airway intervention is often required"
+        "Minimal sedation",
+        "Moderate sedation",
+        "Deep sedation",
+        "General anesthesia"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "A normal conversational response is minimal sedation, where the airway is described as unaffected. 'No intervention required' is the moderate sedation descriptor. The two sound similar, but 'unaffected' applies only to minimal sedation.",
+      "explanation": "According to the ASA Continuum of Depth of Sedation, minimal sedation (anxiolysis) is a drug-induced state where patients respond normally to verbal commands. Although cognitive function and coordination may be impaired, ventilatory and cardiovascular functions are unaffected, and the airway requires no intervention. Moderate sedation depresses consciousness but preserves purposeful response, whereas deep sedation and general anesthesia carry progressive risks of airway obstruction and loss of spontaneous ventilation.",
       "citation": "",
       "topic": "Sedation continuum",
       "sourceTitle": "Sedation, MAC & TIVA",
@@ -4202,7 +4202,7 @@
       "answer": [
         0
       ],
-      "explanation": "Each centimeter of height difference changes pressure by about 0.75 mmHg (1.36 cmH2O per mmHg). A 20 cm difference is about 15 mmHg, so brain-level MAP is about 70 − 15 = 55 mmHg. Using the cuff value unchanged ignores the gradient, adding 15 reverses its direction, and 40 mmHg comes from using 1.5 mmHg per cm.",
+      "explanation": "Each centimeter of height difference changes pressure by about 0.75 mmHg (1.36 cmH2O per mmHg). A 20 cm difference is about 15 mmHg, so brain-level MAP is about 70 â 15 = 55 mmHg. Using the cuff value unchanged ignores the gradient, adding 15 reverses its direction, and 40 mmHg comes from using 1.5 mmHg per cm.",
       "citation": "",
       "topic": "Procedure selection and positioning",
       "sourceTitle": "Sedation, MAC & TIVA",
@@ -5291,7 +5291,7 @@
       "stem": "Which THREE patient factors most increase risk during MAC? (Select 3)",
       "options": [
         "Well-controlled hypothyroidism",
-        "Age 35 with BMI 29 kg/m²",
+        "Age 35 with BMI 29 kg/mÂ²",
         "Chronic high-dose opioid use",
         "Pulmonary hypertension",
         "Mild intermittent asthma",
@@ -5463,7 +5463,7 @@
       "stem": "Why does a healthy patient still require a meaningful anesthesia preoperative evaluation before MAC?",
       "options": [
         "MAC removes airway risk in healthy patients",
-        "ASA III–IV patients need the evaluation most",
+        "ASA IIIâIV patients need the evaluation most",
         "A brief note suffices for short procedures",
         "Depth can change, so all usual risks still matter"
       ],
@@ -7150,7 +7150,7 @@
       "answer": [
         0
       ],
-      "explanation": "100 mcg/kg/min × 80 kg = 8,000 mcg/min, or 8 mg/min. Over an hour that is 8 × 60 = 480 mg/hr, and at 10 mg/mL the pump rate is 480 ÷ 10 = 48 mL/hr. Choosing 480 mL/hr forgets to divide by concentration, and 8 mL/hr uses mg/min as mL/hr.",
+      "explanation": "100 mcg/kg/min Ã 80 kg = 8,000 mcg/min, or 8 mg/min. Over an hour that is 8 Ã 60 = 480 mg/hr, and at 10 mg/mL the pump rate is 480 Ã· 10 = 48 mL/hr. Choosing 480 mL/hr forgets to divide by concentration, and 8 mL/hr uses mg/min as mL/hr.",
       "citation": "",
       "topic": "Propofol and fospropofol",
       "sourceTitle": "Sedation, MAC & TIVA",
@@ -7318,7 +7318,7 @@
       "answer": [
         3
       ],
-      "explanation": "The load is 1 mcg/kg × 70 kg = 70 mcg, and at 4 mcg/mL that is 70 ÷ 4 = 17.5 mL. Giving 17.5 mL over 10 minutes means 17.5 × 6 = 105 mL/hr for 10 minutes. Choosing 17.5 mL/hr treats the volume as an hourly rate, which would take an hour to give the load.",
+      "explanation": "The load is 1 mcg/kg Ã 70 kg = 70 mcg, and at 4 mcg/mL that is 70 Ã· 4 = 17.5 mL. Giving 17.5 mL over 10 minutes means 17.5 Ã 6 = 105 mL/hr for 10 minutes. Choosing 17.5 mL/hr treats the volume as an hourly rate, which would take an hour to give the load.",
       "citation": "",
       "topic": "Other sedation drugs",
       "sourceTitle": "Sedation, MAC & TIVA",
@@ -9171,7 +9171,7 @@
       "answer": [
         0
       ],
-      "explanation": "Processed-EEG indices near 90–100 are generally consistent with wakefulness, while lower values accompany increasing hypnotic effect. The index is an adjunct and can be affected by artifact, but a calm awake patient near 95 is an expected baseline finding.",
+      "explanation": "Processed-EEG indices near 90â100 are generally consistent with wakefulness, while lower values accompany increasing hypnotic effect. The index is an adjunct and can be affected by artifact, but a calm awake patient near 95 is an expected baseline finding.",
       "citation": "",
       "topic": "TIVA and neuromonitoring",
       "sourceTitle": "Sedation, MAC & TIVA",
