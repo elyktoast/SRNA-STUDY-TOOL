@@ -10,12 +10,12 @@
       "type": "single",
       "options": [
         "0.2–0.3 mg/kg",
-        "2–3 mg/kg",
-        "0.2–0.3 mcg/kg",
-        "0.02–0.03 mg/kg"
+        "1–2 mg/kg",
+        "0.05–0.1 mg/kg",
+        "0.5–0.7 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Etomidate, induction: 0.2–0.3 mg/kg. 0.2–0.3 mcg/kg uses mcg/kg instead of mg/kg. 2–3 mg/kg is tenfold too high. 0.02–0.03 mg/kg is tenfold too low.",
+      "explanation": "Etomidate, induction: 0.2–0.3 mg/kg. 1–2 mg/kg is the ketamine IV induction dose. 0.05–0.1 mg/kg is a sedation-level amount, too low for induction. 0.5–0.7 mg/kg is above the usual etomidate range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -36,13 +36,13 @@
       "stem": "Typical subanesthetic ketamine bolus for analgesia?",
       "type": "single",
       "options": [
-        "0.1–0.5 g/kg",
+        "0.75–1 mg/kg",
         "0.1–0.5 mg/kg",
-        "1–5 mg/kg",
-        "0.1–0.5 mcg/kg"
+        "0.1–0.5 mg/kg/hr",
+        "1–2 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Ketamine, analgesic bolus: 0.1–0.5 mg/kg. 0.1–0.5 g/kg uses g/kg instead of mg/kg. 0.1–0.5 mcg/kg uses mcg/kg instead of mg/kg. 1–5 mg/kg is tenfold too high.",
+      "explanation": "Ketamine, analgesic bolus: 0.1–0.5 mg/kg. 0.75–1 mg/kg is high enough to cause dissociation. 0.1–0.5 mg/kg/hr is the infusion rate, not a bolus. 1–2 mg/kg is the induction dose.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -63,13 +63,13 @@
       "stem": "Typical propofol infusion rate for TIVA maintenance?",
       "type": "single",
       "options": [
-        "1,000–2,000 mcg/kg/min",
-        "1,000–2,000 mcg/kg/hr",
+        "250–300 mcg/kg/min",
+        "10–20 mcg/kg/min",
         "100–200 mcg/kg/min",
-        "10,000–20,000 mcg/kg/min"
+        "25–75 mcg/kg/min"
       ],
       "answer": 2,
-      "explanation": "Propofol, TIVA maintenance: 100–200 mcg/kg/min. 1,000–2,000 mcg/kg/min is tenfold too high. 1,000–2,000 mcg/kg/hr uses mcg/kg/hr and is tenfold high. 10,000–20,000 mcg/kg/min is hundredfold too high.",
+      "explanation": "Propofol, TIVA maintenance: 100–200 mcg/kg/min. 250–300 mcg/kg/min is above usual maintenance. 10–20 mcg/kg/min is too low for general anesthesia. 25–75 mcg/kg/min is the MAC sedation range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -90,13 +90,13 @@
       "stem": "Typical IV ketamine induction dose?",
       "type": "single",
       "options": [
-        "1–2 g/kg",
-        "1–2 mcg/kg",
-        "10–20 mg/kg",
+        "4–6 mg/kg",
+        "2.5–3.5 mg/kg",
+        "0.1–0.5 mg/kg",
         "1–2 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Ketamine, IV induction: 1–2 mg/kg. 10–20 mg/kg is tenfold too high. 1–2 mcg/kg uses mcg/kg instead of mg/kg. 1–2 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Ketamine, IV induction: 1–2 mg/kg. 4–6 mg/kg is the IM induction dose. 2.5–3.5 mg/kg is above the usual IV range. 0.1–0.5 mg/kg is the analgesic bolus.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -118,12 +118,12 @@
       "type": "single",
       "options": [
         "1.5–2.5 mg/kg",
-        "1.5–2.5 mcg/kg",
-        "0.15–0.25 mg/kg",
-        "15–25 mg/kg"
+        "3–4 mg/kg",
+        "0.5–1 mg/kg",
+        "0.2–0.3 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Propofol, adult induction: 1.5–2.5 mg/kg. 1.5–2.5 mcg/kg uses mcg/kg instead of mg/kg. 15–25 mg/kg is tenfold too high. 0.15–0.25 mg/kg is tenfold too low. Reduce in older or frail patients.",
+      "explanation": "Propofol, adult induction: 1.5–2.5 mg/kg. 3–4 mg/kg is more than a healthy adult needs. 0.5–1 mg/kg is a reduced dose for frail patients or deep sedation. 0.2–0.3 mg/kg is the etomidate induction dose. Reduce in older or frail patients.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -144,13 +144,13 @@
       "stem": "Typical propofol infusion rate for MAC sedation?",
       "type": "single",
       "options": [
-        "2.5–7.5 mcg/kg/min",
+        "5–10 mcg/kg/min",
         "25–75 mcg/kg/min",
-        "25–75 mg/kg/min",
-        "25–75 mcg/kg/hr"
+        "0.2–0.7 mcg/kg/hr",
+        "100–200 mcg/kg/min"
       ],
       "answer": 1,
-      "explanation": "Propofol, MAC sedation: 25–75 mcg/kg/min. 25–75 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 2.5–7.5 mcg/kg/min is tenfold too low. 25–75 mg/kg/min uses mg/kg/min instead of mcg/kg/min.",
+      "explanation": "Propofol, MAC sedation: 25–75 mcg/kg/min. 5–10 mcg/kg/min is too low to sedate. 0.2–0.7 mcg/kg/hr is the dexmedetomidine infusion range. 100–200 mcg/kg/min is the TIVA maintenance range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -171,13 +171,13 @@
       "stem": "Typical subanesthetic ketamine infusion rate?",
       "type": "single",
       "options": [
-        "0.01–0.05 mg/kg/min",
-        "1–5 mg/kg/hr",
+        "0.6–1 mg/kg/hr",
+        "1–2 mg/kg/hr",
         "0.1–0.5 mg/kg/hr",
-        "10–50 mg/kg/hr"
+        "0.2–0.7 mcg/kg/hr"
       ],
       "answer": 2,
-      "explanation": "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr. 0.01–0.05 mg/kg/min uses mg/kg/min and is tenfold low. 1–5 mg/kg/hr is tenfold too high. 10–50 mg/kg/hr is hundredfold too high. Some PACU protocols use 0.15–0.5 mg/kg/hr.",
+      "explanation": "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr. 0.6–1 mg/kg/hr is above the analgesic range. 1–2 mg/kg/hr is an anesthetic-level infusion. 0.2–0.7 mcg/kg/hr is the dexmedetomidine infusion. Some PACU protocols use 0.15–0.5 mg/kg/hr.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -198,13 +198,13 @@
       "stem": "Typical dexmedetomidine loading dose, given over 10 min?",
       "type": "single",
       "options": [
-        "10 mcg/kg",
-        "0.1 mcg/kg",
-        "1 mg/kg",
+        "3 mcg/kg",
+        "0.5 mcg/kg",
+        "2 mcg/kg",
         "1 mcg/kg"
       ],
       "answer": 3,
-      "explanation": "Dexmedetomidine, load: 1 mcg/kg. 1 mg/kg uses mg/kg instead of mcg/kg. 0.1 mcg/kg is tenfold too low. 10 mcg/kg is tenfold too high. Many clinicians skip the load.",
+      "explanation": "Dexmedetomidine, load: 1 mcg/kg. 3 mcg/kg is a high load that risks hypertension and bradycardia. 0.5 mcg/kg is half the usual load. 2 mcg/kg is double the usual load. Many clinicians skip the load.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -226,12 +226,12 @@
       "type": "single",
       "options": [
         "4–6 mg/kg",
-        "0.04–0.06 mg/kg",
-        "4–6 g/kg",
-        "40–60 mg/kg"
+        "2–3 mg/kg",
+        "8–10 mg/kg",
+        "1–2 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Ketamine, IM induction: 4–6 mg/kg. 0.04–0.06 mg/kg is hundredfold too low. 40–60 mg/kg is tenfold too high. 4–6 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Ketamine, IM induction: 4–6 mg/kg. 2–3 mg/kg is too low for reliable IM induction. 8–10 mg/kg is above the usual IM range. 1–2 mg/kg is the IV induction dose.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -252,13 +252,13 @@
       "stem": "Typical thiopental induction dose?",
       "type": "single",
       "options": [
-        "0.3–0.5 mg/kg",
+        "1.5–2.5 mg/kg",
         "3–5 mg/kg",
-        "30–50 mg/kg",
-        "3–5 mcg/kg"
+        "6–8 mg/kg",
+        "1–2 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Thiopental, induction: 3–5 mg/kg. 3–5 mcg/kg uses mcg/kg instead of mg/kg. 30–50 mg/kg is tenfold too high. 0.3–0.5 mg/kg is tenfold too low.",
+      "explanation": "Thiopental, induction: 3–5 mg/kg. 1.5–2.5 mg/kg is the propofol induction dose. 6–8 mg/kg is above the usual induction range. 1–2 mg/kg is the ketamine IV induction dose.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -279,18 +279,18 @@
       "stem": "Induction and sedation agent dosing: which doses are correct? (Select 2)",
       "type": "multi",
       "options": [
-        "Ketamine, analgesic bolus: 0.01–0.05 mg/kg",
-        "Ketamine, IV induction: 10–20 mg/kg",
+        "Ketamine, analgesic bolus: 0.75–1 mg/kg",
+        "Ketamine, IV induction: 4–6 mg/kg",
         "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr",
-        "Dexmedetomidine, infusion: 2–7 mcg/kg/hr",
-        "Propofol, MAC sedation: 2.5–7.5 mcg/kg/min",
+        "Dexmedetomidine, infusion: 1.5–2 mcg/kg/hr",
+        "Propofol, MAC sedation: 0.2–0.7 mcg/kg/hr",
         "Dexmedetomidine, load: 1 mcg/kg"
       ],
       "answer": [
         2,
         5
       ],
-      "explanation": "Correct: Dexmedetomidine, load 1 mcg/kg; Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr. Incorrect: Ketamine, analgesic bolus is 0.1–0.5 mg/kg, not 0.01–0.05 mg/kg; Propofol, MAC sedation is 25–75 mcg/kg/min, not 2.5–7.5 mcg/kg/min; Ketamine, IV induction is 1–2 mg/kg, not 10–20 mg/kg; Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr, not 2–7 mcg/kg/hr.",
+      "explanation": "Correct: Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr; Dexmedetomidine, load 1 mcg/kg. Incorrect: Ketamine, analgesic bolus is 0.1–0.5 mg/kg; 0.75–1 mg/kg is high enough to cause dissociation. Ketamine, IV induction is 1–2 mg/kg; 4–6 mg/kg is the IM induction dose. Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr; 1.5–2 mcg/kg/hr is above the usual maximum. Propofol, MAC sedation is 25–75 mcg/kg/min; 0.2–0.7 mcg/kg/hr is the dexmedetomidine infusion range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -312,18 +312,18 @@
       "type": "multi",
       "options": [
         "Propofol, MAC sedation: 25–75 mcg/kg/min",
-        "Etomidate, induction: 2–3 mg/kg",
-        "Dexmedetomidine, infusion: 0.2–0.7 mcg/kg/min",
+        "Etomidate, induction: 0.5–0.7 mg/kg",
+        "Dexmedetomidine, infusion: 0.05–0.1 mcg/kg/hr",
         "Propofol, adult induction: 1.5–2.5 mg/kg",
         "Dexmedetomidine, load: 1 mcg/kg",
-        "Ketamine, IM induction: 4–6 mcg/kg"
+        "Ketamine, IM induction: 8–10 mg/kg"
       ],
       "answer": [
         0,
         3,
         4
       ],
-      "explanation": "Correct: Dexmedetomidine, load 1 mcg/kg; Propofol, adult induction 1.5–2.5 mg/kg; Propofol, MAC sedation 25–75 mcg/kg/min. Incorrect: Etomidate, induction is 0.2–0.3 mg/kg, not 2–3 mg/kg; Ketamine, IM induction is 4–6 mg/kg, not 4–6 mcg/kg; Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr, not 0.2–0.7 mcg/kg/min.",
+      "explanation": "Correct: Propofol, MAC sedation 25–75 mcg/kg/min; Propofol, adult induction 1.5–2.5 mg/kg; Dexmedetomidine, load 1 mcg/kg. Incorrect: Etomidate, induction is 0.2–0.3 mg/kg; 0.5–0.7 mg/kg is above the usual etomidate range. Dexmedetomidine, infusion is 0.2–0.7 mcg/kg/hr; 0.05–0.1 mcg/kg/hr is too low to sedate. Ketamine, IM induction is 4–6 mg/kg; 8–10 mg/kg is above the usual IM range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -346,9 +346,9 @@
       "options": [
         "Ketamine, IM induction: 4–6 mg/kg",
         "Thiopental, induction: 3–5 mg/kg",
-        "Ketamine, analgesic bolus: 0.01–0.05 mg/kg",
+        "Ketamine, analgesic bolus: 1–2 mg/kg",
         "Ketamine, IV induction: 1–2 mg/kg",
-        "Propofol, MAC sedation: 25–75 mcg/kg/hr",
+        "Propofol, MAC sedation: 100–200 mcg/kg/min",
         "Propofol, TIVA maintenance: 100–200 mcg/kg/min"
       ],
       "answer": [
@@ -357,7 +357,7 @@
         3,
         5
       ],
-      "explanation": "Correct: Thiopental, induction 3–5 mg/kg; Ketamine, IM induction 4–6 mg/kg; Ketamine, IV induction 1–2 mg/kg; Propofol, TIVA maintenance 100–200 mcg/kg/min. Incorrect: Propofol, MAC sedation is 25–75 mcg/kg/min, not 25–75 mcg/kg/hr; Ketamine, analgesic bolus is 0.1–0.5 mg/kg, not 0.01–0.05 mg/kg.",
+      "explanation": "Correct: Ketamine, IM induction 4–6 mg/kg; Thiopental, induction 3–5 mg/kg; Ketamine, IV induction 1–2 mg/kg; Propofol, TIVA maintenance 100–200 mcg/kg/min. Incorrect: Ketamine, analgesic bolus is 0.1–0.5 mg/kg; 1–2 mg/kg is the induction dose. Propofol, MAC sedation is 25–75 mcg/kg/min; 100–200 mcg/kg/min is the TIVA maintenance range.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -386,7 +386,7 @@
       "choices": [
         "4–6 mg/kg",
         "0.1–0.5 mg/kg/hr",
-        "40–60 mg/kg",
+        "8–10 mg/kg",
         "100–200 mcg/kg/min",
         "25–75 mcg/kg/min"
       ],
@@ -396,7 +396,7 @@
         "Ketamine, analgesic infusion": "0.1–0.5 mg/kg/hr",
         "Propofol, MAC sedation": "25–75 mcg/kg/min"
       },
-      "explanation": "Typical doses: Propofol, TIVA maintenance 100–200 mcg/kg/min; Ketamine, IM induction 4–6 mg/kg; Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr; Propofol, MAC sedation 25–75 mcg/kg/min. The extra choice, 40–60 mg/kg, is the Ketamine, IM induction dose with the decimal moved.",
+      "explanation": "Typical doses: Propofol, TIVA maintenance 100–200 mcg/kg/min; Ketamine, IM induction 4–6 mg/kg; Ketamine, analgesic infusion 0.1–0.5 mg/kg/hr; Propofol, MAC sedation 25–75 mcg/kg/min. The extra choice, 8–10 mg/kg, is above the usual IM range (a near-miss for Ketamine, IM induction, which is 4–6 mg/kg).",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -427,7 +427,7 @@
         "0.1–0.5 mg/kg",
         "3–5 mg/kg",
         "1.5–2.5 mg/kg",
-        "30–50 mg/kg"
+        "6–8 mg/kg"
       ],
       "answer": {
         "Thiopental, induction": "3–5 mg/kg",
@@ -435,7 +435,7 @@
         "Etomidate, induction": "0.2–0.3 mg/kg",
         "Propofol, adult induction": "1.5–2.5 mg/kg"
       },
-      "explanation": "Typical doses: Thiopental, induction 3–5 mg/kg; Ketamine, analgesic bolus 0.1–0.5 mg/kg; Etomidate, induction 0.2–0.3 mg/kg; Propofol, adult induction 1.5–2.5 mg/kg. The extra choice, 30–50 mg/kg, is the Thiopental, induction dose with the decimal moved.",
+      "explanation": "Typical doses: Thiopental, induction 3–5 mg/kg; Ketamine, analgesic bolus 0.1–0.5 mg/kg; Etomidate, induction 0.2–0.3 mg/kg; Propofol, adult induction 1.5–2.5 mg/kg. The extra choice, 6–8 mg/kg, is above the usual induction range (a near-miss for Thiopental, induction, which is 3–5 mg/kg).",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -456,13 +456,13 @@
       "stem": "Typical intranasal midazolam dose for a child?",
       "type": "single",
       "options": [
-        "2–3 mg/kg",
-        "0.2–0.3 g/kg",
+        "0.05 mg/kg",
+        "0.6–0.8 mg/kg",
         "0.2–0.3 mg/kg",
-        "0.02–0.03 mg/kg"
+        "0.5 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Midazolam, pediatric intranasal: 0.2–0.3 mg/kg. 0.2–0.3 g/kg uses g/kg instead of mg/kg. 0.02–0.03 mg/kg is tenfold too low. 2–3 mg/kg is tenfold too high.",
+      "explanation": "Midazolam, pediatric intranasal: 0.2–0.3 mg/kg. 0.05 mg/kg is an IV sedation-range amount. 0.6–0.8 mg/kg is above the intranasal range. 0.5 mg/kg is the oral dose.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -483,13 +483,13 @@
       "stem": "Initial remimazolam dose for procedural sedation, given over 1 min?",
       "type": "single",
       "options": [
-        "5 g",
-        "5 mcg",
-        "0.5 mg",
+        "2.5 mg",
+        "10 mg",
+        "20 mg",
         "5 mg"
       ],
       "answer": 3,
-      "explanation": "Remimazolam, initial sedation: 5 mg. 5 mcg uses mcg instead of mg. 0.5 mg is tenfold too low. 5 g uses g instead of mg.",
+      "explanation": "Remimazolam, initial sedation: 5 mg. 2.5 mg is the follow-up dose. 10 mg is double the initial dose. 20 mg is far above the labeled start.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -510,10 +510,10 @@
       "stem": "Benzodiazepine dosing: which doses are correct? (Select 3)",
       "type": "multi",
       "options": [
-        "Midazolam, pediatric intranasal: 0.02–0.03 mg/kg",
+        "Midazolam, pediatric intranasal: 0.6–0.8 mg/kg",
         "Midazolam, induction: 0.1–0.3 mg/kg",
-        "Lorazepam, status epilepticus: 0.1 mcg/kg",
-        "Midazolam, adult IV premed: 0.1–0.2 mg",
+        "Lorazepam, status epilepticus: 0.2–0.3 mg/kg",
+        "Midazolam, adult IV premed: 5–10 mg",
         "Remimazolam, initial sedation: 5 mg",
         "Flumazenil, increment: 0.2 mg"
       ],
@@ -522,7 +522,7 @@
         4,
         5
       ],
-      "explanation": "Correct: Flumazenil, increment 0.2 mg; Midazolam, induction 0.1–0.3 mg/kg; Remimazolam, initial sedation 5 mg. Incorrect: Midazolam, pediatric intranasal is 0.2–0.3 mg/kg, not 0.02–0.03 mg/kg; Midazolam, adult IV premed is 1–2 mg, not 0.1–0.2 mg; Lorazepam, status epilepticus is 0.1 mg/kg, not 0.1 mcg/kg.",
+      "explanation": "Correct: Midazolam, induction 0.1–0.3 mg/kg; Remimazolam, initial sedation 5 mg; Flumazenil, increment 0.2 mg. Incorrect: Midazolam, pediatric intranasal is 0.2–0.3 mg/kg; 0.6–0.8 mg/kg is above the intranasal range. Lorazepam, status epilepticus is 0.1 mg/kg; 0.2–0.3 mg/kg is the intranasal midazolam dose. Midazolam, adult IV premed is 1–2 mg; 5–10 mg is an induction-range amount.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -543,8 +543,8 @@
       "stem": "Benzodiazepine dosing: which doses are correct? (Select 4)",
       "type": "multi",
       "options": [
-        "Midazolam, adult IV premed: 0.1–0.2 mg",
-        "Remimazolam, initial sedation: 5 mcg",
+        "Midazolam, adult IV premed: 3–5 mg",
+        "Remimazolam, initial sedation: 2.5 mg",
         "Midazolam, pediatric intranasal: 0.2–0.3 mg/kg",
         "Lorazepam, status epilepticus: 0.1 mg/kg",
         "Flumazenil, increment: 0.2 mg",
@@ -556,7 +556,7 @@
         4,
         5
       ],
-      "explanation": "Correct: Midazolam, pediatric intranasal 0.2–0.3 mg/kg; Flumazenil, increment 0.2 mg; Midazolam, pediatric oral 0.5 mg/kg; Lorazepam, status epilepticus 0.1 mg/kg. Incorrect: Remimazolam, initial sedation is 5 mg, not 5 mcg; Midazolam, adult IV premed is 1–2 mg, not 0.1–0.2 mg.",
+      "explanation": "Correct: Midazolam, pediatric intranasal 0.2–0.3 mg/kg; Lorazepam, status epilepticus 0.1 mg/kg; Flumazenil, increment 0.2 mg; Midazolam, pediatric oral 0.5 mg/kg. Incorrect: Midazolam, adult IV premed is 1–2 mg; 3–5 mg is excessive for premedication. Remimazolam, initial sedation is 5 mg; 2.5 mg is the follow-up dose.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -578,10 +578,10 @@
       "type": "multi",
       "options": [
         "Midazolam, adult IV premed: 1–2 mg",
-        "Remimazolam, initial sedation: 5 mcg",
+        "Remimazolam, initial sedation: 20 mg",
         "Flumazenil, usual cumulative: 1 mg",
-        "Midazolam, pediatric oral: 0.05 mg/kg",
-        "Lorazepam, status epilepticus: 0.01 mg/kg",
+        "Midazolam, pediatric oral: 0.1 mg/kg",
+        "Lorazepam, status epilepticus: 0.02 mg/kg",
         "Flumazenil, increment: 0.2 mg"
       ],
       "answer": [
@@ -589,7 +589,7 @@
         2,
         5
       ],
-      "explanation": "Correct: Flumazenil, increment 0.2 mg; Midazolam, adult IV premed 1–2 mg; Flumazenil, usual cumulative 1 mg. Incorrect: Lorazepam, status epilepticus is 0.1 mg/kg, not 0.01 mg/kg; Midazolam, pediatric oral is 0.5 mg/kg, not 0.05 mg/kg; Remimazolam, initial sedation is 5 mg, not 5 mcg.",
+      "explanation": "Correct: Midazolam, adult IV premed 1–2 mg; Flumazenil, usual cumulative 1 mg; Flumazenil, increment 0.2 mg. Incorrect: Remimazolam, initial sedation is 5 mg; 20 mg is far above the labeled start. Midazolam, pediatric oral is 0.5 mg/kg; 0.1 mg/kg is an IV-range amount, too low by mouth. Lorazepam, status epilepticus is 0.1 mg/kg; 0.02 mg/kg is too low for status epilepticus.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -619,7 +619,7 @@
         "1 mg",
         "0.5 mg/kg",
         "0.1 mg/kg",
-        "50 mg",
+        "0.2 mg",
         "5 mg"
       ],
       "answer": {
@@ -628,7 +628,7 @@
         "Flumazenil, usual cumulative": "1 mg",
         "Lorazepam, status epilepticus": "0.1 mg/kg"
       },
-      "explanation": "Typical doses: Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg; Flumazenil, usual cumulative 1 mg; Lorazepam, status epilepticus 0.1 mg/kg. The extra choice, 50 mg, is the Remimazolam, initial sedation dose with the decimal moved.",
+      "explanation": "Typical doses: Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg; Flumazenil, usual cumulative 1 mg; Lorazepam, status epilepticus 0.1 mg/kg. The extra choice, 0.2 mg, is the single increment (a near-miss for Flumazenil, usual cumulative, which is 1 mg).",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -655,7 +655,7 @@
         "Midazolam, pediatric oral"
       ],
       "choices": [
-        "50 mg",
+        "0.02–0.04 mg/kg",
         "0.5 mg/kg",
         "5 mg",
         "0.1–0.3 mg/kg",
@@ -667,7 +667,7 @@
         "Remimazolam, initial sedation": "5 mg",
         "Midazolam, pediatric oral": "0.5 mg/kg"
       },
-      "explanation": "Typical doses: Midazolam, induction 0.1–0.3 mg/kg; Midazolam, adult IV premed 1–2 mg; Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg. The extra choice, 50 mg, is the Remimazolam, initial sedation dose with the decimal moved.",
+      "explanation": "Typical doses: Midazolam, induction 0.1–0.3 mg/kg; Midazolam, adult IV premed 1–2 mg; Remimazolam, initial sedation 5 mg; Midazolam, pediatric oral 0.5 mg/kg. The extra choice, 0.02–0.04 mg/kg, is the premedication range (a near-miss for Midazolam, induction, which is 0.1–0.3 mg/kg).",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -689,12 +689,12 @@
       "type": "single",
       "options": [
         "0.15–0.2 mg/kg",
-        "0.15–0.2 g/kg",
-        "0.015–0.02 mcg/kg",
-        "1.5–2 mg/kg"
+        "0.02–0.05 mg/kg",
+        "0.6 mg/kg",
+        "0.5 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Cisatracurium, intubation: 0.15–0.2 mg/kg. 0.15–0.2 g/kg uses g/kg instead of mg/kg. 0.015–0.02 mcg/kg uses mcg/kg and is tenfold low. 1.5–2 mg/kg is tenfold too high.",
+      "explanation": "Cisatracurium, intubation: 0.15–0.2 mg/kg. 0.02–0.05 mg/kg is a maintenance-range amount. 0.6 mg/kg is the rocuronium dose. 0.5 mg/kg is the atracurium dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -715,13 +715,13 @@
       "stem": "Typical IM succinylcholine dose when there is no IV?",
       "type": "single",
       "options": [
-        "40 mg/kg",
+        "2 mg/kg",
         "4 mg/kg",
-        "4 mcg/kg",
-        "4 g/kg"
+        "8 mg/kg",
+        "1–1.5 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Succinylcholine, IM: 4 mg/kg. 4 mcg/kg uses mcg/kg instead of mg/kg. 4 g/kg uses g/kg instead of mg/kg. 40 mg/kg is tenfold too high.",
+      "explanation": "Succinylcholine, IM: 4 mg/kg. 2 mg/kg is the infant IV dose. 8 mg/kg is double the IM dose. 1–1.5 mg/kg is the adult IV dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -742,13 +742,13 @@
       "stem": "Typical rocuronium dose for rapid sequence induction?",
       "type": "single",
       "options": [
-        "1.2 mcg/kg",
-        "1.2 g/kg",
+        "0.6 mg/kg",
+        "0.9 mg/kg",
         "1.2 mg/kg",
-        "12 mg/kg"
+        "2 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Rocuronium, RSI: 1.2 mg/kg. 12 mg/kg is tenfold too high. 1.2 g/kg uses g/kg instead of mg/kg. 1.2 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Rocuronium, RSI: 1.2 mg/kg. 0.6 mg/kg is the standard intubating dose. 0.9 mg/kg is between the standard and RSI doses. 2 mg/kg is above the usual RSI dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -769,13 +769,13 @@
       "stem": "Typical vecuronium maintenance redose?",
       "type": "single",
       "options": [
-        "0.0001–0.0002 mg/kg",
-        "0.001–0.002 mg/kg",
-        "0.001–0.002 mcg/kg",
+        "0.1–0.2 mg/kg",
+        "0.1 mg/kg",
+        "0.04–0.05 mg/kg",
         "0.01–0.02 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Vecuronium, maintenance: 0.01–0.02 mg/kg. 0.001–0.002 mg/kg is tenfold too low. 0.0001–0.0002 mg/kg is hundredfold too low. 0.001–0.002 mcg/kg uses mcg/kg and is tenfold low.",
+      "explanation": "Vecuronium, maintenance: 0.01–0.02 mg/kg. 0.1–0.2 mg/kg is the rocuronium redose. 0.1 mg/kg is the intubating dose. 0.04–0.05 mg/kg is above the usual redose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -797,12 +797,12 @@
       "type": "single",
       "options": [
         "0.1 mg/kg",
-        "0.1 g/kg",
-        "0.1 mcg/kg",
-        "1 mg/kg"
+        "0.3 mg/kg",
+        "0.6 mg/kg",
+        "0.01–0.02 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Vecuronium, intubation: 0.1 mg/kg. 1 mg/kg is tenfold too high. 0.1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Vecuronium, intubation: 0.1 mg/kg. 0.3 mg/kg is above the usual intubating dose. 0.6 mg/kg is the rocuronium intubating dose. 0.01–0.02 mg/kg is the maintenance redose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -823,13 +823,13 @@
       "stem": "Typical adult IV succinylcholine intubating dose?",
       "type": "single",
       "options": [
-        "1–1.5 g/kg",
+        "3–4 mg/kg",
         "1–1.5 mg/kg",
-        "0.1–0.15 mcg/kg",
-        "10–15 mcg/kg"
+        "0.6 mg/kg",
+        "2 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Succinylcholine, adult IV: 1–1.5 mg/kg. 10–15 mcg/kg uses mcg/kg and is tenfold high. 0.1–0.15 mcg/kg uses mcg/kg and is tenfold low. 1–1.5 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Succinylcholine, adult IV: 1–1.5 mg/kg. 3–4 mg/kg is the IM dose range. 0.6 mg/kg is the rocuronium intubating dose. 2 mg/kg is the infant dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -850,13 +850,13 @@
       "stem": "Typical IV succinylcholine dose for an infant?",
       "type": "single",
       "options": [
-        "20 mg/kg",
-        "2 mcg/kg",
+        "0.5 mg/kg",
+        "4 mg/kg",
         "2 mg/kg",
-        "2 g/kg"
+        "1 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Succinylcholine, infant IV: 2 mg/kg. 2 mcg/kg uses mcg/kg instead of mg/kg. 20 mg/kg is tenfold too high. 2 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Succinylcholine, infant IV: 2 mg/kg. 0.5 mg/kg is a laryngospasm-range amount. 4 mg/kg is the IM dose. 1 mg/kg is the dose for older children and adults.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -877,13 +877,13 @@
       "stem": "Typical rocuronium maintenance redose?",
       "type": "single",
       "options": [
-        "1–2 mg/kg",
+        "0.3–0.4 mg/kg",
+        "0.6 mg/kg",
         "0.01–0.02 mg/kg",
-        "0.1–0.2 mcg/kg",
         "0.1–0.2 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Rocuronium, maintenance: 0.1–0.2 mg/kg. 0.1–0.2 mcg/kg uses mcg/kg instead of mg/kg. 0.01–0.02 mg/kg is tenfold too low. 1–2 mg/kg is tenfold too high.",
+      "explanation": "Rocuronium, maintenance: 0.1–0.2 mg/kg. 0.3–0.4 mg/kg is above the usual redose. 0.6 mg/kg is the intubating dose. 0.01–0.02 mg/kg is the vecuronium redose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -905,12 +905,12 @@
       "type": "single",
       "options": [
         "1–2 mcg/kg/min",
-        "1–2 mg/kg/min",
-        "10–20 mcg/kg/min",
+        "3–4 mcg/kg/min",
+        "5–10 mcg/kg/min",
         "0.1–0.2 mcg/kg/min"
       ],
       "answer": 0,
-      "explanation": "Cisatracurium, infusion: 1–2 mcg/kg/min. 1–2 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 10–20 mcg/kg/min is tenfold too high. 0.1–0.2 mcg/kg/min is tenfold too low.",
+      "explanation": "Cisatracurium, infusion: 1–2 mcg/kg/min. 3–4 mcg/kg/min is above the usual range. 5–10 mcg/kg/min is an atracurium-range infusion. 0.1–0.2 mcg/kg/min is too low to maintain block.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -934,8 +934,8 @@
         "Succinylcholine, laryngospasm: 0.1–0.5 mg/kg",
         "Atracurium, intubation: 0.5 mg/kg",
         "Rocuronium, maintenance: 0.1–0.2 mg/kg",
-        "Succinylcholine, adult IV: 1–1.5 mcg/kg",
-        "Rocuronium, RSI: 0.12 mg/kg",
+        "Succinylcholine, adult IV: 0.6 mg/kg",
+        "Rocuronium, RSI: 0.6 mg/kg",
         "Vecuronium, maintenance: 0.01–0.02 mg/kg"
       ],
       "answer": [
@@ -944,7 +944,7 @@
         2,
         5
       ],
-      "explanation": "Correct: Atracurium, intubation 0.5 mg/kg; Rocuronium, maintenance 0.1–0.2 mg/kg; Succinylcholine, laryngospasm 0.1–0.5 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. Incorrect: Succinylcholine, adult IV is 1–1.5 mg/kg, not 1–1.5 mcg/kg; Rocuronium, RSI is 1.2 mg/kg, not 0.12 mg/kg.",
+      "explanation": "Correct: Succinylcholine, laryngospasm 0.1–0.5 mg/kg; Atracurium, intubation 0.5 mg/kg; Rocuronium, maintenance 0.1–0.2 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. Incorrect: Succinylcholine, adult IV is 1–1.5 mg/kg; 0.6 mg/kg is the rocuronium intubating dose. Rocuronium, RSI is 1.2 mg/kg; 0.6 mg/kg is the standard intubating dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -965,18 +965,18 @@
       "stem": "Neuromuscular blocker dosing: which doses are correct? (Select 2)",
       "type": "multi",
       "options": [
-        "Succinylcholine, IM: 4 mcg/kg",
-        "Succinylcholine, infant IV: 20 mg/kg",
-        "Rocuronium, maintenance: 0.1–0.2 g/kg",
+        "Succinylcholine, IM: 2 mg/kg",
+        "Succinylcholine, infant IV: 0.5 mg/kg",
+        "Rocuronium, maintenance: 0.6 mg/kg",
         "Rocuronium, intubation: 0.6 mg/kg",
         "Cisatracurium, intubation: 0.15–0.2 mg/kg",
-        "Vecuronium, maintenance: 0.01–0.02 g/kg"
+        "Vecuronium, maintenance: 0.04–0.05 mg/kg"
       ],
       "answer": [
         3,
         4
       ],
-      "explanation": "Correct: Cisatracurium, intubation 0.15–0.2 mg/kg; Rocuronium, intubation 0.6 mg/kg. Incorrect: Succinylcholine, infant IV is 2 mg/kg, not 20 mg/kg; Vecuronium, maintenance is 0.01–0.02 mg/kg, not 0.01–0.02 g/kg; Succinylcholine, IM is 4 mg/kg, not 4 mcg/kg; Rocuronium, maintenance is 0.1–0.2 mg/kg, not 0.1–0.2 g/kg.",
+      "explanation": "Correct: Rocuronium, intubation 0.6 mg/kg; Cisatracurium, intubation 0.15–0.2 mg/kg. Incorrect: Succinylcholine, IM is 4 mg/kg; 2 mg/kg is the infant IV dose. Succinylcholine, infant IV is 2 mg/kg; 0.5 mg/kg is a laryngospasm-range amount. Rocuronium, maintenance is 0.1–0.2 mg/kg; 0.6 mg/kg is the intubating dose. Vecuronium, maintenance is 0.01–0.02 mg/kg; 0.04–0.05 mg/kg is above the usual redose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1003,7 +1003,7 @@
         "Vecuronium, maintenance"
       ],
       "choices": [
-        "1 mg/kg",
+        "0.15–0.2 mg/kg",
         "1–2 mcg/kg/min",
         "0.01–0.02 mg/kg",
         "0.1 mg/kg",
@@ -1015,7 +1015,7 @@
         "Atracurium, intubation": "0.5 mg/kg",
         "Vecuronium, maintenance": "0.01–0.02 mg/kg"
       },
-      "explanation": "Typical doses: Vecuronium, intubation 0.1 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Atracurium, intubation 0.5 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. The extra choice, 1 mg/kg, is the Vecuronium, intubation dose with the decimal moved.",
+      "explanation": "Typical doses: Vecuronium, intubation 0.1 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Atracurium, intubation 0.5 mg/kg; Vecuronium, maintenance 0.01–0.02 mg/kg. The extra choice, 0.15–0.2 mg/kg, is the cisatracurium dose (a near-miss for Atracurium, intubation, which is 0.5 mg/kg).",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1046,7 +1046,7 @@
         "0.5 mg/kg",
         "0.6 mg/kg",
         "1 mg/kg",
-        "5 mg/kg"
+        "0.1–0.2 mcg/kg/min"
       ],
       "answer": {
         "Rocuronium, intubation": "0.6 mg/kg",
@@ -1054,7 +1054,7 @@
         "Cisatracurium, infusion": "1–2 mcg/kg/min",
         "Succinylcholine, laryngospasm upper limit": "1 mg/kg"
       },
-      "explanation": "Typical doses: Rocuronium, intubation 0.6 mg/kg; Atracurium, intubation 0.5 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Succinylcholine, laryngospasm upper limit 1 mg/kg. The extra choice, 5 mg/kg, is the Atracurium, intubation dose with the decimal moved.",
+      "explanation": "Typical doses: Rocuronium, intubation 0.6 mg/kg; Atracurium, intubation 0.5 mg/kg; Cisatracurium, infusion 1–2 mcg/kg/min; Succinylcholine, laryngospasm upper limit 1 mg/kg. The extra choice, 0.1–0.2 mcg/kg/min, is too low to maintain block (a near-miss for Cisatracurium, infusion, which is 1–2 mcg/kg/min).",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1075,13 +1075,13 @@
       "stem": "Low-dose naloxone infusion rate for neuraxial opioid pruritus?",
       "type": "single",
       "options": [
-        "0.025–0.1 mcg/kg/hr",
+        "2.5–5 mg",
         "0.25–1 mcg/kg/hr",
-        "0.25–1 mcg/kg/min",
-        "0.25–1 mg/kg/hr"
+        "3–5 mcg/kg/hr",
+        "1–2 mcg/kg"
       ],
       "answer": 1,
-      "explanation": "Naloxone, pruritus infusion: 0.25–1 mcg/kg/hr. 0.025–0.1 mcg/kg/hr is tenfold too low. 0.25–1 mcg/kg/min uses mcg/kg/min instead of mcg/kg/hr. 0.25–1 mg/kg/hr uses mg/kg/hr instead of mcg/kg/hr.",
+      "explanation": "Naloxone, pruritus infusion: 0.25–1 mcg/kg/hr. 2.5–5 mg is the nalbuphine pruritus dose. 3–5 mcg/kg/hr is enough to reverse analgesia. 1–2 mcg/kg is a bolus for respiratory depression.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1102,13 +1102,13 @@
       "stem": "Typical neostigmine reversal dose?",
       "type": "single",
       "options": [
-        "0.04–0.07 g/kg",
-        "0.4–0.7 mg/kg",
+        "0.01–0.02 mg/kg",
+        "0.5–1 mg/kg",
         "0.04–0.07 mg/kg",
-        "0.04–0.07 mcg/kg"
+        "0.1–0.15 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Neostigmine, reversal: 0.04–0.07 mg/kg. 0.4–0.7 mg/kg is tenfold too high. 0.04–0.07 g/kg uses g/kg instead of mg/kg. 0.04–0.07 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Neostigmine, reversal: 0.04–0.07 mg/kg. 0.01–0.02 mg/kg is closer to the glycopyrrolate pairing dose. 0.5–1 mg/kg is the edrophonium dose. 0.1–0.15 mg/kg is above the ceiling dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1129,13 +1129,13 @@
       "stem": "Usual maximum neostigmine dose for reversal?",
       "type": "single",
       "options": [
-        "0.5 mg",
-        "5 mcg",
-        "50 mg",
+        "7 mg",
+        "10 mg",
+        "2.5 mg",
         "5 mg"
       ],
       "answer": 3,
-      "explanation": "Neostigmine, maximum: 5 mg. 50 mg is tenfold too high. 0.5 mg is tenfold too low. 5 mcg uses mcg instead of mg.",
+      "explanation": "Neostigmine, maximum: 5 mg. 7 mg is above the maximum. 10 mg is double the maximum. 2.5 mg is half the usual maximum.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1157,12 +1157,12 @@
       "type": "single",
       "options": [
         "16 mg/kg",
-        "160 mg/kg",
-        "16 g/kg",
-        "16 mcg/kg"
+        "8 mg/kg",
+        "4 mg/kg",
+        "32 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Sugammadex, immediate reversal: 16 mg/kg. 16 mcg/kg uses mcg/kg instead of mg/kg. 160 mg/kg is tenfold too high. 16 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Sugammadex, immediate reversal: 16 mg/kg. 8 mg/kg is half the immediate dose. 4 mg/kg is the deep block dose. 32 mg/kg is double the immediate dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1183,13 +1183,13 @@
       "stem": "Typical pediatric IV atropine dose?",
       "type": "single",
       "options": [
-        "0.02 mcg/kg",
+        "0.05 mg/kg",
         "0.02 mg/kg",
-        "0.02 g/kg",
-        "0.002 mg/kg"
+        "0.1 mg/kg",
+        "0.01 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Atropine, pediatric: 0.02 mg/kg. 0.02 g/kg uses g/kg instead of mg/kg. 0.02 mcg/kg uses mcg/kg instead of mg/kg. 0.002 mg/kg is tenfold too low.",
+      "explanation": "Atropine, pediatric: 0.02 mg/kg. 0.05 mg/kg is above the usual dose. 0.1 mg/kg is the pediatric adenosine dose. 0.01 mg/kg is the pediatric epinephrine arrest dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1210,13 +1210,13 @@
       "stem": "Typical adult glycopyrrolate antisialagogue dose?",
       "type": "single",
       "options": [
-        "1–2 mcg",
-        "10–20 mg",
+        "1 mg",
+        "0.4–0.6 mg",
         "0.1–0.2 mg",
-        "0.1–0.2 g"
+        "0.02–0.04 mg"
       ],
       "answer": 2,
-      "explanation": "Glycopyrrolate, antisialagogue: 0.1–0.2 mg. 10–20 mg is hundredfold too high. 1–2 mcg uses mcg and is tenfold high. 0.1–0.2 g uses g instead of mg.",
+      "explanation": "Glycopyrrolate, antisialagogue: 0.1–0.2 mg. 1 mg is the atropine bradycardia dose. 0.4–0.6 mg is a reversal-pairing amount. 0.02–0.04 mg is too little to dry secretions.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1237,13 +1237,13 @@
       "stem": "Sugammadex dose for moderate block (TOF count 2)?",
       "type": "single",
       "options": [
-        "20 mcg/kg",
-        "0.2 mg/kg",
-        "2 g/kg",
+        "1 mg/kg",
+        "16 mg/kg",
+        "4 mg/kg",
         "2 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Sugammadex, moderate block: 2 mg/kg. 20 mcg/kg uses mcg/kg and is tenfold high. 0.2 mg/kg is tenfold too low. 2 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Sugammadex, moderate block: 2 mg/kg. 1 mg/kg is half the moderate block dose. 16 mg/kg is the immediate reversal dose. 4 mg/kg is the deep block dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1265,12 +1265,12 @@
       "type": "single",
       "options": [
         "0.4 mg",
-        "0.04 mg",
-        "0.4 g",
+        "40 mcg",
+        "0.1 mg",
         "4 mg"
       ],
       "answer": 0,
-      "explanation": "Naloxone, IV overdose: 0.4 mg. 4 mg is tenfold too high. 0.4 g uses g instead of mg. 0.04 mg is tenfold too low.",
+      "explanation": "Naloxone, IV overdose: 0.4 mg. 40 mcg is the postop titration dose. 0.1 mg is a small titration step. 4 mg is the intranasal dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1291,13 +1291,13 @@
       "stem": "Atropine dose paired with edrophonium?",
       "type": "single",
       "options": [
-        "0.7–1 mcg/kg",
+        "2–3 mcg/kg",
         "7–10 mcg/kg",
-        "70–100 mcg/kg",
-        "7–10 mg/kg"
+        "30–40 mcg/kg",
+        "20 mcg/kg"
       ],
       "answer": 1,
-      "explanation": "Atropine with edrophonium: 7–10 mcg/kg. 70–100 mcg/kg is tenfold too high. 0.7–1 mcg/kg is tenfold too low. 7–10 mg/kg uses mg/kg instead of mcg/kg.",
+      "explanation": "Atropine with edrophonium: 7–10 mcg/kg. 2–3 mcg/kg is too low to offset edrophonium. 30–40 mcg/kg is enough to cause marked tachycardia. 20 mcg/kg is the pediatric bradycardia dose.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1318,13 +1318,13 @@
       "stem": "Typical naloxone titration dose for postoperative respiratory depression?",
       "type": "single",
       "options": [
-        "400 mg",
+        "10 mcg",
         "4 mg",
         "40 mcg",
-        "40 mg"
+        "0.4 mg"
       ],
       "answer": 2,
-      "explanation": "Naloxone, postop titration: 40 mcg. 4 mg uses mg and is tenfold low. 400 mg uses mg and is tenfold high. 40 mg uses mg instead of mcg.",
+      "explanation": "Naloxone, postop titration: 40 mcg. 10 mcg is too small to restore breathing. 4 mg is the intranasal dose. 0.4 mg is the overdose starting dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1345,13 +1345,13 @@
       "stem": "Adult ACLS atropine dose for symptomatic bradycardia?",
       "type": "single",
       "options": [
+        "3 mg",
         "0.1 mg",
-        "1 g",
-        "10 mg",
+        "0.5 mg",
         "1 mg"
       ],
       "answer": 3,
-      "explanation": "Atropine, adult bradycardia: 1 mg. 10 mg is tenfold too high. 1 g uses g instead of mg. 0.1 mg is tenfold too low.",
+      "explanation": "Atropine, adult bradycardia: 1 mg. 3 mg is the cumulative maximum. 0.1 mg is a small amount that can cause paradoxical slowing. 0.5 mg is the older ACLS starting dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1373,12 +1373,12 @@
       "type": "single",
       "options": [
         "0.5–2 mg",
-        "0.5–2 g",
-        "5–20 mg",
-        "0.05–0.2 mg"
+        "0.1–0.2 mg",
+        "4–5 mg",
+        "0.2 mg"
       ],
       "answer": 0,
-      "explanation": "Physostigmine, adult: 0.5–2 mg. 0.05–0.2 mg is tenfold too low. 0.5–2 g uses g instead of mg. 5–20 mg is tenfold too high.",
+      "explanation": "Physostigmine, adult: 0.5–2 mg. 0.1–0.2 mg is too low to reverse the syndrome. 4–5 mg is above the usual dose. 0.2 mg is the flumazenil increment.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1399,13 +1399,13 @@
       "stem": "Standard intranasal naloxone dose?",
       "type": "single",
       "options": [
-        "40 mg",
+        "40 mcg",
         "4 mg",
-        "4 g",
+        "0.2 mg",
         "0.4 mg"
       ],
       "answer": 1,
-      "explanation": "Naloxone, intranasal: 4 mg. 40 mg is tenfold too high. 4 g uses g instead of mg. 0.4 mg is tenfold too low.",
+      "explanation": "Naloxone, intranasal: 4 mg. 40 mcg is the postop IV titration dose. 0.2 mg is the flumazenil increment. 0.4 mg is the IV overdose start.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1426,13 +1426,13 @@
       "stem": "Sugammadex dose for deep block (PTC 1–2 or more, TOF 0)?",
       "type": "single",
       "options": [
-        "40 mcg/kg",
-        "4 mcg/kg",
+        "2 mg/kg",
+        "16 mg/kg",
         "4 mg/kg",
-        "4 g/kg"
+        "8 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Sugammadex, deep block: 4 mg/kg. 4 g/kg uses g/kg instead of mg/kg. 4 mcg/kg uses mcg/kg instead of mg/kg. 40 mcg/kg uses mcg/kg and is tenfold high.",
+      "explanation": "Sugammadex, deep block: 4 mg/kg. 2 mg/kg is the moderate block dose. 16 mg/kg is the immediate reversal dose. 8 mg/kg is between the deep and immediate doses.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1455,7 +1455,7 @@
       "options": [
         "Glycopyrrolate, antisialagogue: 0.1–0.2 mg",
         "Neostigmine, maximum: 5 mg",
-        "Naloxone, IV overdose: 0.4 mcg",
+        "Naloxone, IV overdose: 40 mcg",
         "Naloxone, postop titration: 40 mcg",
         "Naloxone, intranasal: 4 mg",
         "Naloxone, pruritus infusion: 0.25–1 mcg/kg/hr"
@@ -1467,7 +1467,7 @@
         4,
         5
       ],
-      "explanation": "Correct: Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Naloxone, intranasal 4 mg; Naloxone, postop titration 40 mcg; Naloxone, pruritus infusion 0.25–1 mcg/kg/hr. Incorrect: Naloxone, IV overdose is 0.4 mg, not 0.4 mcg.",
+      "explanation": "Correct: Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Naloxone, postop titration 40 mcg; Naloxone, intranasal 4 mg; Naloxone, pruritus infusion 0.25–1 mcg/kg/hr. Incorrect: Naloxone, IV overdose is 0.4 mg; 40 mcg is the postop titration dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1493,7 +1493,7 @@
         "Atropine, adult bradycardia: 1 mg",
         "Naloxone, intranasal: 4 mg",
         "Atropine, pediatric: 0.02 mg/kg",
-        "Sugammadex, deep block: 4 mcg/kg"
+        "Sugammadex, deep block: 16 mg/kg"
       ],
       "answer": [
         0,
@@ -1502,7 +1502,7 @@
         3,
         4
       ],
-      "explanation": "Correct: Naloxone, postop titration 40 mcg; Naloxone, intranasal 4 mg; Atropine, adult bradycardia 1 mg; Atropine, pediatric 0.02 mg/kg; Naloxone, IV overdose 0.4 mg. Incorrect: Sugammadex, deep block is 4 mg/kg, not 4 mcg/kg.",
+      "explanation": "Correct: Naloxone, postop titration 40 mcg; Naloxone, IV overdose 0.4 mg; Atropine, adult bradycardia 1 mg; Naloxone, intranasal 4 mg; Atropine, pediatric 0.02 mg/kg. Incorrect: Sugammadex, deep block is 4 mg/kg; 16 mg/kg is the immediate reversal dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1532,7 +1532,7 @@
         "0.5–2 mg",
         "7–10 mcg/kg",
         "5 mg",
-        "1–2 mg",
+        "0.02–0.04 mg",
         "0.1–0.2 mg"
       ],
       "answer": {
@@ -1541,7 +1541,7 @@
         "Neostigmine, maximum": "5 mg",
         "Physostigmine, adult": "0.5–2 mg"
       },
-      "explanation": "Typical doses: Atropine with edrophonium 7–10 mcg/kg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Physostigmine, adult 0.5–2 mg. The extra choice, 1–2 mg, is the Glycopyrrolate, antisialagogue dose with the decimal moved.",
+      "explanation": "Typical doses: Atropine with edrophonium 7–10 mcg/kg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg; Physostigmine, adult 0.5–2 mg. The extra choice, 0.02–0.04 mg, is too little to dry secretions (a near-miss for Glycopyrrolate, antisialagogue, which is 0.1–0.2 mg).",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1572,7 +1572,7 @@
         "0.2 mg",
         "5 mg",
         "1 mg",
-        "50 mg"
+        "0.5 mg"
       ],
       "answer": {
         "Glycopyrrolate per 1 mg neostigmine": "0.2 mg",
@@ -1580,7 +1580,7 @@
         "Glycopyrrolate, antisialagogue": "0.1–0.2 mg",
         "Neostigmine, maximum": "5 mg"
       },
-      "explanation": "Typical doses: Glycopyrrolate per 1 mg neostigmine 0.2 mg; Atropine, adult bradycardia 1 mg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg. The extra choice, 50 mg, is the Neostigmine, maximum dose with the decimal moved.",
+      "explanation": "Typical doses: Glycopyrrolate per 1 mg neostigmine 0.2 mg; Atropine, adult bradycardia 1 mg; Glycopyrrolate, antisialagogue 0.1–0.2 mg; Neostigmine, maximum 5 mg. The extra choice, 0.5 mg, is the older ACLS starting dose (a near-miss for Atropine, adult bradycardia, which is 1 mg).",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1601,13 +1601,13 @@
       "stem": "Typical remifentanil maintenance infusion with a volatile or propofol?",
       "type": "single",
       "options": [
-        "0.005–0.025 mcg/kg/hr",
-        "0.05–0.25 mg/kg/min",
-        "0.0005–0.0025 mcg/kg/min",
+        "0.5–1 mcg/kg/min",
+        "0.01–0.02 mcg/kg/min",
+        "0.5–2 mcg/kg/hr",
         "0.05–0.25 mcg/kg/min"
       ],
       "answer": 3,
-      "explanation": "Remifentanil, infusion: 0.05–0.25 mcg/kg/min. 0.005–0.025 mcg/kg/hr uses mcg/kg/hr and is tenfold low. 0.05–0.25 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 0.0005–0.0025 mcg/kg/min is hundredfold too low.",
+      "explanation": "Remifentanil, infusion: 0.05–0.25 mcg/kg/min. 0.5–1 mcg/kg/min is above typical maintenance. 0.01–0.02 mcg/kg/min is too low to matter. 0.5–2 mcg/kg/hr is the fentanyl infusion.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1629,12 +1629,12 @@
       "type": "single",
       "options": [
         "0.2–0.5 mg",
-        "0.02–0.05 mg",
-        "0.002–0.005 mg",
-        "0.2–0.5 mcg"
+        "0.05–0.1 mg",
+        "1–2 mg",
+        "2–4 mg"
       ],
       "answer": 0,
-      "explanation": "Hydromorphone, PACU increment: 0.2–0.5 mg. 0.02–0.05 mg is tenfold too low. 0.2–0.5 mcg uses mcg instead of mg. 0.002–0.005 mg is hundredfold too low.",
+      "explanation": "Hydromorphone, PACU increment: 0.2–0.5 mg. 0.05–0.1 mg is too small to help. 1–2 mg is a large dose for an opioid-naive patient. 2–4 mg is the morphine increment.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1655,13 +1655,13 @@
       "stem": "Typical fentanyl infusion rate?",
       "type": "single",
       "options": [
-        "0.5–2 mcg/kg/min",
+        "5–10 mcg/kg/hr",
         "0.5–2 mcg/kg/hr",
-        "0.05–0.2 mcg/kg/hr",
-        "5–20 mcg/kg/hr"
+        "0.1–0.2 mcg/kg/hr",
+        "0.05–0.25 mcg/kg/min"
       ],
       "answer": 1,
-      "explanation": "Fentanyl, infusion: 0.5–2 mcg/kg/hr. 5–20 mcg/kg/hr is tenfold too high. 0.5–2 mcg/kg/min uses mcg/kg/min instead of mcg/kg/hr. 0.05–0.2 mcg/kg/hr is tenfold too low.",
+      "explanation": "Fentanyl, infusion: 0.5–2 mcg/kg/hr. 5–10 mcg/kg/hr is excessive. 0.1–0.2 mcg/kg/hr is too low. 0.05–0.25 mcg/kg/min is the remifentanil infusion.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1682,13 +1682,13 @@
       "stem": "IV meperidine dose range for postoperative shivering?",
       "type": "single",
       "options": [
-        "1.25–5 mcg",
-        "1.25–5 mg",
+        "2.5–5 mg",
+        "150 mg",
         "12.5–50 mg",
-        "12.5–50 mcg"
+        "75–100 mg"
       ],
       "answer": 2,
-      "explanation": "Meperidine, shivering: 12.5–50 mg. 12.5–50 mcg uses mcg instead of mg. 1.25–5 mg is tenfold too low. 1.25–5 mcg uses mcg and is tenfold low. The usual single dose is 25 mg.",
+      "explanation": "Meperidine, shivering: 12.5–50 mg. 2.5–5 mg is the nalbuphine pruritus dose. 150 mg is above any shivering dose. 75–100 mg is an analgesic-range dose. The usual single dose is 25 mg.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1709,13 +1709,13 @@
       "stem": "Typical IV fentanyl increment in PACU for an opioid-naive adult?",
       "type": "single",
       "options": [
-        "25–50 mg",
-        "2.5–5 mcg",
-        "250–500 mcg",
+        "0.2–0.5 mg",
+        "5–10 mcg",
+        "100–150 mcg",
         "25–50 mcg"
       ],
       "answer": 3,
-      "explanation": "Fentanyl, PACU increment: 25–50 mcg. 25–50 mg uses mg instead of mcg. 250–500 mcg is tenfold too high. 2.5–5 mcg is tenfold too low.",
+      "explanation": "Fentanyl, PACU increment: 25–50 mcg. 0.2–0.5 mg is the hydromorphone increment. 5–10 mcg is too small to help. 100–150 mcg is a large bolus for an opioid-naive patient.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1737,12 +1737,12 @@
       "type": "single",
       "options": [
         "25 mg",
-        "2.5 mg",
-        "250 mg",
-        "25 g"
+        "100 mg",
+        "5 mg",
+        "75 mg"
       ],
       "answer": 0,
-      "explanation": "Meperidine, usual shivering dose: 25 mg. 2.5 mg is tenfold too low. 250 mg is tenfold too high. 25 g uses g instead of mg. The range is 12.5–50 mg.",
+      "explanation": "Meperidine, usual shivering dose: 25 mg. 100 mg is excessive for shivering. 5 mg is too small to stop shivering. 75 mg is an analgesic dose. The range is 12.5–50 mg.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1763,13 +1763,13 @@
       "stem": "Typical alfentanil bolus for a brief procedure?",
       "type": "single",
       "options": [
-        "100–200 mcg/kg",
+        "1–3 mcg/kg",
         "10–20 mcg/kg",
-        "10–20 mg/kg",
-        "1–2 mcg/kg"
+        "0.1–0.5 mcg/kg",
+        "50–75 mcg/kg"
       ],
       "answer": 1,
-      "explanation": "Alfentanil, bolus: 10–20 mcg/kg. 100–200 mcg/kg is tenfold too high. 1–2 mcg/kg is tenfold too low. 10–20 mg/kg uses mg/kg instead of mcg/kg.",
+      "explanation": "Alfentanil, bolus: 10–20 mcg/kg. 1–3 mcg/kg is the fentanyl dose. 0.1–0.5 mcg/kg is the sufentanil dose. 50–75 mcg/kg is induction-level alfentanil.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1790,13 +1790,13 @@
       "stem": "Typical IV nalbuphine dose for neuraxial opioid pruritus?",
       "type": "single",
       "options": [
-        "2.5–5 g",
-        "250–500 mg",
+        "10–20 mg",
+        "0.5 mg",
         "2.5–5 mg",
-        "0.25–0.5 mg"
+        "40 mcg"
       ],
       "answer": 2,
-      "explanation": "Nalbuphine, pruritus: 2.5–5 mg. 2.5–5 g uses g instead of mg. 0.25–0.5 mg is tenfold too low. 250–500 mg is hundredfold too high.",
+      "explanation": "Nalbuphine, pruritus: 2.5–5 mg. 10–20 mg is an analgesic dose with more mu reversal. 0.5 mg is too small. 40 mcg is the naloxone titration dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1817,13 +1817,13 @@
       "stem": "Typical intrathecal morphine dose for cesarean delivery?",
       "type": "single",
       "options": [
-        "10–15 mcg",
-        "100–150 mg",
-        "1,000–1,500 mcg",
+        "10–25 mcg",
+        "2–3 mg",
+        "300–500 mcg",
         "100–150 mcg"
       ],
       "answer": 3,
-      "explanation": "Morphine, intrathecal cesarean: 100–150 mcg. 100–150 mg uses mg instead of mcg. 10–15 mcg is tenfold too low. 1,000–1,500 mcg is tenfold too high. Some centers use 50–100 mcg.",
+      "explanation": "Morphine, intrathecal cesarean: 100–150 mcg. 10–25 mcg is the intrathecal fentanyl dose. 2–3 mg is the epidural dose. 300–500 mcg is above the usual range. Some centers use 50–100 mcg.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1845,12 +1845,12 @@
       "type": "single",
       "options": [
         "10–25 mcg",
-        "10–25 mg",
-        "1–2.5 mcg",
-        "100–250 mcg"
+        "100–150 mcg",
+        "2–5 mcg",
+        "50–100 mcg"
       ],
       "answer": 0,
-      "explanation": "Fentanyl, intrathecal: 10–25 mcg. 1–2.5 mcg is tenfold too low. 10–25 mg uses mg instead of mcg. 100–250 mcg is tenfold too high.",
+      "explanation": "Fentanyl, intrathecal: 10–25 mcg. 100–150 mcg is the intrathecal morphine dose. 2–5 mcg is too small. 50–100 mcg is an epidural bolus-range dose.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1871,13 +1871,13 @@
       "stem": "Typical IV morphine increment for an opioid-naive adult?",
       "type": "single",
       "options": [
-        "2–4 mcg",
+        "0.2–0.5 mg",
         "2–4 mg",
-        "0.2–0.4 mg",
-        "20–40 mg"
+        "0.5–1 mg",
+        "8–10 mg"
       ],
       "answer": 1,
-      "explanation": "Morphine, PACU increment: 2–4 mg. 2–4 mcg uses mcg instead of mg. 0.2–0.4 mg is tenfold too low. 20–40 mg is tenfold too high.",
+      "explanation": "Morphine, PACU increment: 2–4 mg. 0.2–0.5 mg is the hydromorphone increment. 0.5–1 mg is too small for most adults. 8–10 mg is a large bolus.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1898,13 +1898,13 @@
       "stem": "Typical fentanyl dose to blunt laryngoscopy?",
       "type": "single",
       "options": [
-        "10–30 mcg/kg",
-        "0.1–0.3 mcg/kg",
+        "0.1–0.5 mcg/kg",
+        "5–10 mcg/kg",
         "1–3 mcg/kg",
-        "1–3 mg/kg"
+        "10–20 mcg/kg"
       ],
       "answer": 2,
-      "explanation": "Fentanyl, induction: 1–3 mcg/kg. 0.1–0.3 mcg/kg is tenfold too low. 10–30 mcg/kg is tenfold too high. 1–3 mg/kg uses mg/kg instead of mcg/kg.",
+      "explanation": "Fentanyl, induction: 1–3 mcg/kg. 0.1–0.5 mcg/kg is the sufentanil range. 5–10 mcg/kg is high-dose cardiac-range dosing. 10–20 mcg/kg is the alfentanil bolus.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1927,17 +1927,17 @@
       "options": [
         "Remifentanil, bolus: 0.5–1 mcg/kg",
         "Hydromorphone, PACU increment: 0.2–0.5 mg",
-        "Nalbuphine, pruritus: 0.25–0.5 mg",
-        "Methadone, induction: 1–2 mg/kg",
+        "Nalbuphine, pruritus: 10–20 mg",
+        "Methadone, induction: 0.5–1 mg/kg",
         "Alfentanil, bolus: 10–20 mcg/kg",
-        "Fentanyl, intrathecal: 100–250 mcg"
+        "Fentanyl, intrathecal: 2–5 mcg"
       ],
       "answer": [
         0,
         1,
         4
       ],
-      "explanation": "Correct: Alfentanil, bolus 10–20 mcg/kg; Remifentanil, bolus 0.5–1 mcg/kg; Hydromorphone, PACU increment 0.2–0.5 mg. Incorrect: Fentanyl, intrathecal is 10–25 mcg, not 100–250 mcg; Nalbuphine, pruritus is 2.5–5 mg, not 0.25–0.5 mg; Methadone, induction is 0.1–0.2 mg/kg, not 1–2 mg/kg.",
+      "explanation": "Correct: Remifentanil, bolus 0.5–1 mcg/kg; Hydromorphone, PACU increment 0.2–0.5 mg; Alfentanil, bolus 10–20 mcg/kg. Incorrect: Nalbuphine, pruritus is 2.5–5 mg; 10–20 mg is an analgesic dose with more mu reversal. Methadone, induction is 0.1–0.2 mg/kg; 0.5–1 mg/kg is excessive. Fentanyl, intrathecal is 10–25 mcg; 2–5 mcg is too small.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1958,11 +1958,11 @@
       "stem": "Opioid dosing: which doses are correct? (Select 4)",
       "type": "multi",
       "options": [
-        "Meperidine, usual shivering dose: 25 mcg",
+        "Meperidine, usual shivering dose: 5 mg",
         "Morphine, epidural: 2–3 mg",
         "Fentanyl, PACU increment: 25–50 mcg",
         "Morphine, intrathecal cesarean: 100–150 mcg",
-        "Hydromorphone, PACU increment: 0.02–0.05 mg",
+        "Hydromorphone, PACU increment: 1–2 mg",
         "Fentanyl, intrathecal: 10–25 mcg"
       ],
       "answer": [
@@ -1971,7 +1971,7 @@
         3,
         5
       ],
-      "explanation": "Correct: Fentanyl, intrathecal 10–25 mcg; Morphine, intrathecal cesarean 100–150 mcg; Morphine, epidural 2–3 mg; Fentanyl, PACU increment 25–50 mcg. Incorrect: Meperidine, usual shivering dose is 25 mg, not 25 mcg; Hydromorphone, PACU increment is 0.2–0.5 mg, not 0.02–0.05 mg.",
+      "explanation": "Correct: Morphine, epidural 2–3 mg; Fentanyl, PACU increment 25–50 mcg; Morphine, intrathecal cesarean 100–150 mcg; Fentanyl, intrathecal 10–25 mcg. Incorrect: Meperidine, usual shivering dose is 25 mg; 5 mg is too small to stop shivering. Hydromorphone, PACU increment is 0.2–0.5 mg; 1–2 mg is a large dose for an opioid-naive patient.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2002,7 +2002,7 @@
         "1–3 mcg/kg",
         "2–4 mg",
         "10–20 mcg/kg",
-        "20–40 mg"
+        "0.2–0.5 mg"
       ],
       "answer": {
         "Fentanyl, induction": "1–3 mcg/kg",
@@ -2010,7 +2010,7 @@
         "Morphine, PACU increment": "2–4 mg",
         "Alfentanil, bolus": "10–20 mcg/kg"
       },
-      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Sufentanil, induction 0.1–0.5 mcg/kg; Morphine, PACU increment 2–4 mg; Alfentanil, bolus 10–20 mcg/kg. The extra choice, 20–40 mg, is the Morphine, PACU increment dose with the decimal moved.",
+      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Sufentanil, induction 0.1–0.5 mcg/kg; Morphine, PACU increment 2–4 mg; Alfentanil, bolus 10–20 mcg/kg. The extra choice, 0.2–0.5 mg, is the hydromorphone increment (a near-miss for Morphine, PACU increment, which is 2–4 mg).",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2041,7 +2041,7 @@
         "0.1–0.2 mg/kg",
         "2.5–5 mg",
         "1–3 mcg/kg",
-        "1–2 mg/kg"
+        "0.1–0.5 mcg/kg"
       ],
       "answer": {
         "Fentanyl, induction": "1–3 mcg/kg",
@@ -2049,7 +2049,7 @@
         "Methadone, induction": "0.1–0.2 mg/kg",
         "Nalbuphine, pruritus": "2.5–5 mg"
       },
-      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Morphine, PACU increment 2–4 mg; Methadone, induction 0.1–0.2 mg/kg; Nalbuphine, pruritus 2.5–5 mg. The extra choice, 1–2 mg/kg, is the Methadone, induction dose with the decimal moved.",
+      "explanation": "Typical doses: Fentanyl, induction 1–3 mcg/kg; Morphine, PACU increment 2–4 mg; Methadone, induction 0.1–0.2 mg/kg; Nalbuphine, pruritus 2.5–5 mg. The extra choice, 0.1–0.5 mcg/kg, is the sufentanil range (a near-miss for Fentanyl, induction, which is 1–3 mcg/kg).",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2070,13 +2070,13 @@
       "stem": "IV amisulpride dose for PONV prophylaxis?",
       "type": "single",
       "options": [
-        "5 g",
-        "50 mg",
-        "0.5 mg",
+        "2.5 mg",
+        "10 mg",
+        "4 mg",
         "5 mg"
       ],
       "answer": 3,
-      "explanation": "Amisulpride, prophylaxis: 5 mg. 5 g uses g instead of mg. 50 mg is tenfold too high. 0.5 mg is tenfold too low.",
+      "explanation": "Amisulpride, prophylaxis: 5 mg. 2.5 mg is half the prophylaxis dose. 10 mg is the rescue dose. 4 mg is the ondansetron dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2098,12 +2098,12 @@
       "type": "single",
       "options": [
         "0.5–2 mg",
-        "0.05–0.2 mg",
-        "0.5–2 mcg",
-        "0.5–2 g"
+        "2.5–5 mg",
+        "4–8 mg",
+        "5–10 mg"
       ],
       "answer": 0,
-      "explanation": "Haloperidol, PONV: 0.5–2 mg. 0.5–2 mcg uses mcg instead of mg. 0.05–0.2 mg is tenfold too low. 0.5–2 g uses g instead of mg.",
+      "explanation": "Haloperidol, PONV: 0.5–2 mg. 2.5–5 mg is above the low-dose antiemetic range. 4–8 mg is the dexamethasone dose. 5–10 mg is an agitation dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2124,13 +2124,13 @@
       "stem": "Typical IV famotidine dose for aspiration prophylaxis?",
       "type": "single",
       "options": [
-        "20 g",
+        "50 mg",
         "20 mg",
-        "20 mcg",
-        "2 mg"
+        "10 mg",
+        "4 mg"
       ],
       "answer": 1,
-      "explanation": "Famotidine, IV: 20 mg. 2 mg is tenfold too low. 20 mcg uses mcg instead of mg. 20 g uses g instead of mg.",
+      "explanation": "Famotidine, IV: 20 mg. 50 mg is the old IV ranitidine dose. 10 mg is the metoclopramide dose. 4 mg is the ondansetron dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2151,13 +2151,13 @@
       "stem": "Adult dexamethasone PONV dose?",
       "type": "single",
       "options": [
-        "4–8 mcg",
-        "0.04–0.08 mg",
+        "1–2 mg",
+        "10–20 mg",
         "4–8 mg",
-        "4–8 g"
+        "0.5–2 mg"
       ],
       "answer": 2,
-      "explanation": "Dexamethasone, adult PONV: 4–8 mg. 0.04–0.08 mg is hundredfold too low. 4–8 mcg uses mcg instead of mg. 4–8 g uses g instead of mg.",
+      "explanation": "Dexamethasone, adult PONV: 4–8 mg. 1–2 mg is too low. 10–20 mg is steroid dosing for airway edema. 0.5–2 mg is the haloperidol PONV dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2178,13 +2178,13 @@
       "stem": "Adult ondansetron PONV dose?",
       "type": "single",
       "options": [
-        "0.4 mg",
-        "40 mg",
-        "0.4 mcg",
+        "10 mg",
+        "8 mg",
+        "0.625 mg",
         "4 mg"
       ],
       "answer": 3,
-      "explanation": "Ondansetron, adult: 4 mg. 0.4 mcg uses mcg and is tenfold low. 40 mg is tenfold too high. 0.4 mg is tenfold too low.",
+      "explanation": "Ondansetron, adult: 4 mg. 10 mg is the metoclopramide dose. 8 mg is double the PONV dose. 0.625 mg is the low droperidol dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2206,12 +2206,12 @@
       "type": "single",
       "options": [
         "6.25–12.5 mg",
-        "6.25–12.5 g",
-        "625–1,250 mg",
-        "0.625–1.25 mcg"
+        "0.5–2 mg",
+        "25–50 mg",
+        "1–2 mg"
       ],
       "answer": 0,
-      "explanation": "Promethazine, PONV: 6.25–12.5 mg. 0.625–1.25 mcg uses mcg and is tenfold low. 625–1,250 mg is hundredfold too high. 6.25–12.5 g uses g instead of mg.",
+      "explanation": "Promethazine, PONV: 6.25–12.5 mg. 0.5–2 mg is the haloperidol dose. 25–50 mg is an older dose with more sedation and tissue risk. 1–2 mg is too low.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2232,13 +2232,13 @@
       "stem": "Typical IV metoclopramide dose before induction?",
       "type": "single",
       "options": [
-        "10 g",
+        "25–50 mg",
         "10 mg",
-        "1 mg",
-        "0.1 mg"
+        "4 mg",
+        "20 mg"
       ],
       "answer": 1,
-      "explanation": "Metoclopramide, IV: 10 mg. 0.1 mg is hundredfold too low. 1 mg is tenfold too low. 10 g uses g instead of mg.",
+      "explanation": "Metoclopramide, IV: 10 mg. 25–50 mg is the diphenhydramine dose. 4 mg is the ondansetron dose. 20 mg is the famotidine dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2259,13 +2259,13 @@
       "stem": "Typical droperidol dose for PONV?",
       "type": "single",
       "options": [
-        "62.5–125 mg",
-        "0.0625–0.125 mg",
+        "2.5–5 mg",
+        "4 mg",
         "0.625–1.25 mg",
-        "0.0625–0.125 mcg"
+        "0.1–0.2 mg"
       ],
       "answer": 2,
-      "explanation": "Droperidol, PONV: 0.625–1.25 mg. 62.5–125 mg is hundredfold too high. 0.0625–0.125 mcg uses mcg and is tenfold low. 0.0625–0.125 mg is tenfold too low.",
+      "explanation": "Droperidol, PONV: 0.625–1.25 mg. 2.5–5 mg is older higher doses with more sedation. 4 mg is the ondansetron dose. 0.1–0.2 mg is too low.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2286,13 +2286,13 @@
       "stem": "Pediatric ondansetron dose (max 4 mg)?",
       "type": "single",
       "options": [
-        "0.01 mg/kg",
-        "0.1 mcg/kg",
-        "0.001 mg/kg",
+        "0.15 mg/kg",
+        "0.05 mg/kg",
+        "0.2 mg/kg",
         "0.1 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Ondansetron, pediatric: 0.1 mg/kg. 0.001 mg/kg is hundredfold too low. 0.01 mg/kg is tenfold too low. 0.1 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Ondansetron, pediatric: 0.1 mg/kg. 0.15 mg/kg is the pediatric dexamethasone dose. 0.05 mg/kg is half the usual dose. 0.2 mg/kg is double the usual dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2314,12 +2314,12 @@
       "type": "single",
       "options": [
         "25–50 mg",
-        "25–50 mcg",
-        "25–50 g",
-        "250–500 mg"
+        "5–10 mg",
+        "6.25–12.5 mg",
+        "100 mg"
       ],
       "answer": 0,
-      "explanation": "Diphenhydramine, IV: 25–50 mg. 25–50 mcg uses mcg instead of mg. 25–50 g uses g instead of mg. 250–500 mg is tenfold too high.",
+      "explanation": "Diphenhydramine, IV: 25–50 mg. 5–10 mg is too low. 6.25–12.5 mg is the promethazine dose. 100 mg is excessive.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2340,13 +2340,13 @@
       "stem": "Pediatric dexamethasone PONV dose?",
       "type": "single",
       "options": [
-        "0.015 mcg/kg",
+        "0.5 mg/kg",
         "0.15 mg/kg",
-        "0.15 mcg/kg",
-        "0.0015 mg/kg"
+        "0.05 mg/kg",
+        "0.1 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Dexamethasone, pediatric: 0.15 mg/kg. 0.015 mcg/kg uses mcg/kg and is tenfold low. 0.0015 mg/kg is hundredfold too low. 0.15 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Dexamethasone, pediatric: 0.15 mg/kg. 0.5 mg/kg is a croup-range dose. 0.05 mg/kg is too low. 0.1 mg/kg is the pediatric ondansetron dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2368,12 +2368,12 @@
       "type": "single",
       "options": [
         "4 mg",
-        "400 mg",
+        "80 mg",
         "40 mg",
-        "40 mcg"
+        "125 mg"
       ],
       "answer": 2,
-      "explanation": "Aprepitant, PONV: 40 mg. 4 mg is tenfold too low. 400 mg is tenfold too high. 40 mcg uses mcg instead of mg.",
+      "explanation": "Aprepitant, PONV: 40 mg. 4 mg is the ondansetron dose. 80 mg is the chemotherapy day 2–3 dose. 125 mg is the chemotherapy day-1 dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2394,13 +2394,13 @@
       "stem": "Scopolamine transdermal patch strength?",
       "type": "single",
       "options": [
-        "15 mg",
-        "1.5 g",
-        "0.15 mg",
+        "0.4 mg",
+        "1 mg",
+        "3 mg",
         "1.5 mg"
       ],
       "answer": 3,
-      "explanation": "Scopolamine, patch: 1.5 mg. 0.15 mg is tenfold too low. 1.5 g uses g instead of mg. 15 mg is tenfold too high.",
+      "explanation": "Scopolamine, patch: 1.5 mg. 0.4 mg is an older IV scopolamine dose. 1 mg is the amount delivered over 72 hr, not the patch content. 3 mg is two patches.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2422,12 +2422,12 @@
       "type": "single",
       "options": [
         "30 mL",
-        "300 mL",
-        "3 mL",
-        "30 mL/kg"
+        "15 mL",
+        "100 mL",
+        "60 mL"
       ],
       "answer": 0,
-      "explanation": "Sodium citrate, oral: 30 mL. 30 mL/kg uses mL/kg instead of mL. 3 mL is tenfold too low. 300 mL is tenfold too high.",
+      "explanation": "Sodium citrate, oral: 30 mL. 15 mL is half the usual volume. 100 mL is a fluid-bolus-size volume. 60 mL is double the usual volume.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2450,9 +2450,9 @@
       "options": [
         "Sodium citrate, oral: 30 mL",
         "Haloperidol, PONV: 0.5–2 mg",
-        "Dexamethasone, adult PONV: 40–80 mg",
+        "Dexamethasone, adult PONV: 0.5–2 mg",
         "Famotidine, IV: 20 mg",
-        "Dexamethasone, pediatric: 0.15 mcg/kg",
+        "Dexamethasone, pediatric: 0.05 mg/kg",
         "Amisulpride, prophylaxis: 5 mg"
       ],
       "answer": [
@@ -2461,7 +2461,7 @@
         3,
         5
       ],
-      "explanation": "Correct: Famotidine, IV 20 mg; Sodium citrate, oral 30 mL; Haloperidol, PONV 0.5–2 mg; Amisulpride, prophylaxis 5 mg. Incorrect: Dexamethasone, pediatric is 0.15 mg/kg, not 0.15 mcg/kg; Dexamethasone, adult PONV is 4–8 mg, not 40–80 mg.",
+      "explanation": "Correct: Sodium citrate, oral 30 mL; Haloperidol, PONV 0.5–2 mg; Famotidine, IV 20 mg; Amisulpride, prophylaxis 5 mg. Incorrect: Dexamethasone, adult PONV is 4–8 mg; 0.5–2 mg is the haloperidol PONV dose. Dexamethasone, pediatric is 0.15 mg/kg; 0.05 mg/kg is too low.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2485,16 +2485,16 @@
         "Sodium citrate, oral: 30 mL",
         "Aprepitant, PONV: 40 mg",
         "Ondansetron, adult: 4 mg",
-        "Metoclopramide, IV: 1 mg",
-        "Amisulpride, prophylaxis: 5 g",
-        "Famotidine, IV: 200 mg"
+        "Metoclopramide, IV: 4 mg",
+        "Amisulpride, prophylaxis: 4 mg",
+        "Famotidine, IV: 4 mg"
       ],
       "answer": [
         0,
         1,
         2
       ],
-      "explanation": "Correct: Sodium citrate, oral 30 mL; Ondansetron, adult 4 mg; Aprepitant, PONV 40 mg. Incorrect: Metoclopramide, IV is 10 mg, not 1 mg; Famotidine, IV is 20 mg, not 200 mg; Amisulpride, prophylaxis is 5 mg, not 5 g.",
+      "explanation": "Correct: Sodium citrate, oral 30 mL; Aprepitant, PONV 40 mg; Ondansetron, adult 4 mg. Incorrect: Metoclopramide, IV is 10 mg; 4 mg is the ondansetron dose. Amisulpride, prophylaxis is 5 mg; 4 mg is the ondansetron dose. Famotidine, IV is 20 mg; 4 mg is the ondansetron dose.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2525,7 +2525,7 @@
         "5 mg",
         "0.625–1.25 mg",
         "1.5 mg",
-        "400 mg"
+        "3 mg"
       ],
       "answer": {
         "Amisulpride, prophylaxis": "5 mg",
@@ -2533,7 +2533,7 @@
         "Aprepitant, PONV": "40 mg",
         "Scopolamine, patch": "1.5 mg"
       },
-      "explanation": "Typical doses: Amisulpride, prophylaxis 5 mg; Droperidol, PONV 0.625–1.25 mg; Aprepitant, PONV 40 mg; Scopolamine, patch 1.5 mg. The extra choice, 400 mg, is the Aprepitant, PONV dose with the decimal moved.",
+      "explanation": "Typical doses: Amisulpride, prophylaxis 5 mg; Droperidol, PONV 0.625–1.25 mg; Aprepitant, PONV 40 mg; Scopolamine, patch 1.5 mg. The extra choice, 3 mg, is two patches (a near-miss for Scopolamine, patch, which is 1.5 mg).",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2561,7 +2561,7 @@
       ],
       "choices": [
         "4–8 mg",
-        "250–500 mg",
+        "15 mL",
         "25–50 mg",
         "20 mg",
         "30 mL"
@@ -2572,7 +2572,7 @@
         "Sodium citrate, oral": "30 mL",
         "Diphenhydramine, IV": "25–50 mg"
       },
-      "explanation": "Typical doses: Dexamethasone, adult PONV 4–8 mg; Famotidine, IV 20 mg; Sodium citrate, oral 30 mL; Diphenhydramine, IV 25–50 mg. The extra choice, 250–500 mg, is the Diphenhydramine, IV dose with the decimal moved.",
+      "explanation": "Typical doses: Dexamethasone, adult PONV 4–8 mg; Famotidine, IV 20 mg; Sodium citrate, oral 30 mL; Diphenhydramine, IV 25–50 mg. The extra choice, 15 mL, is half the usual volume (a near-miss for Sodium citrate, oral, which is 30 mL).",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2593,13 +2593,13 @@
       "stem": "Maximum dose of plain bupivacaine?",
       "type": "single",
       "options": [
-        "25 mg/kg",
+        "3 mg/kg",
         "2.5 mg/kg",
-        "2.5 g/kg",
-        "0.25 mg/kg"
+        "4.5 mg/kg",
+        "1.5 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Bupivacaine plain, max: 2.5 mg/kg. 2.5 g/kg uses g/kg instead of mg/kg. 0.25 mg/kg is tenfold too low. 25 mg/kg is tenfold too high.",
+      "explanation": "Bupivacaine plain, max: 2.5 mg/kg. 3 mg/kg is the maximum with epinephrine. 4.5 mg/kg is the plain lidocaine maximum. 1.5 mg/kg is lower than the cited maximum.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2620,13 +2620,13 @@
       "stem": "IV lidocaine dose to blunt laryngoscopy?",
       "type": "single",
       "options": [
-        "10–15 mg/kg",
-        "1–1.5 mcg/kg",
+        "4.5 mg/kg",
+        "3 mg/kg",
         "1–1.5 mg/kg",
-        "0.1–0.15 mg/kg"
+        "0.5 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Lidocaine IV, laryngoscopy: 1–1.5 mg/kg. 10–15 mg/kg is tenfold too high. 1–1.5 mcg/kg uses mcg/kg instead of mg/kg. 0.1–0.15 mg/kg is tenfold too low.",
+      "explanation": "Lidocaine IV, laryngoscopy: 1–1.5 mg/kg. 4.5 mg/kg is the infiltration maximum. 3 mg/kg is the ropivacaine maximum. 0.5 mg/kg is a lower antiarrhythmic follow-up dose.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2647,13 +2647,13 @@
       "stem": "Typical intraoperative IV lidocaine infusion rate?",
       "type": "single",
       "options": [
-        "10–20 mg/kg/hr",
-        "1–2 mcg/kg/hr",
-        "1–2 mg/kg/min",
+        "3–4 mg/kg/hr",
+        "0.1–0.5 mg/kg/hr",
+        "0.25–0.5 mg/kg/hr",
         "1–2 mg/kg/hr"
       ],
       "answer": 3,
-      "explanation": "Lidocaine, IV infusion: 1–2 mg/kg/hr. 1–2 mg/kg/min uses mg/kg/min instead of mg/kg/hr. 1–2 mcg/kg/hr uses mcg/kg/hr instead of mg/kg/hr. 10–20 mg/kg/hr is tenfold too high.",
+      "explanation": "Lidocaine, IV infusion: 1–2 mg/kg/hr. 3–4 mg/kg/hr is above the usual range. 0.1–0.5 mg/kg/hr is the ketamine analgesic infusion. 0.25–0.5 mg/kg/hr is too low.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2675,12 +2675,12 @@
       "type": "single",
       "options": [
         "100 mL",
-        "10 mL/kg",
-        "1,000 mL/kg",
-        "10,000 mL"
+        "500 mL",
+        "50 mL",
+        "250 mL"
       ],
       "answer": 0,
-      "explanation": "Lipid 20%, bolus over 70 kg: 100 mL. 10 mL/kg uses mL/kg and is tenfold low. 10,000 mL is hundredfold too high. 1,000 mL/kg uses mL/kg and is tenfold high.",
+      "explanation": "Lipid 20%, bolus over 70 kg: 100 mL. 500 mL is above the bolus. 50 mL is half the bolus. 250 mL is the follow-on infusion volume.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2701,13 +2701,13 @@
       "stem": "Maximum dose of plain chloroprocaine?",
       "type": "single",
       "options": [
-        "11 g/kg",
+        "7 mg/kg",
         "11 mg/kg",
-        "1.1 mg/kg",
-        "1,100 mg/kg"
+        "14 mg/kg",
+        "4.5 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Chloroprocaine plain, max: 11 mg/kg. 1,100 mg/kg is hundredfold too high. 1.1 mg/kg is tenfold too low. 11 g/kg uses g/kg instead of mg/kg. Some references cite 12 mg/kg.",
+      "explanation": "Chloroprocaine plain, max: 11 mg/kg. 7 mg/kg is the lidocaine with epinephrine maximum. 14 mg/kg is the maximum with epinephrine. 4.5 mg/kg is the plain lidocaine maximum. Some references cite 12 mg/kg.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2728,13 +2728,13 @@
       "stem": "Maximum dose of plain lidocaine?",
       "type": "single",
       "options": [
-        "45 mg/kg",
-        "45 mcg/kg",
+        "3 mg/kg",
+        "2.5 mg/kg",
         "4.5 mg/kg",
-        "4.5 mcg/kg"
+        "7 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Lidocaine plain, max: 4.5 mg/kg. 45 mcg/kg uses mcg/kg and is tenfold high. 45 mg/kg is tenfold too high. 4.5 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Lidocaine plain, max: 4.5 mg/kg. 3 mg/kg is the ropivacaine maximum. 2.5 mg/kg is the plain bupivacaine maximum. 7 mg/kg is the maximum with epinephrine.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2755,13 +2755,13 @@
       "stem": "Maximum dose of ropivacaine?",
       "type": "single",
       "options": [
-        "0.3 mg/kg",
-        "30 mg/kg",
-        "3 mcg/kg",
+        "5 mg/kg",
+        "2.5 mg/kg",
+        "4.5 mg/kg",
         "3 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Ropivacaine, max: 3 mg/kg. 30 mg/kg is tenfold too high. 0.3 mg/kg is tenfold too low. 3 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Ropivacaine, max: 3 mg/kg. 5 mg/kg is above the ropivacaine maximum. 2.5 mg/kg is the plain bupivacaine maximum. 4.5 mg/kg is the plain lidocaine maximum.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
