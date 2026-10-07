@@ -190,7 +190,8 @@ function checkRuntimeSafety(){
   if(!engine.includes("kind==='bank2'")||!engine.includes("kind==='bank3'")||!engine.includes("kind==='combined'"))fail('Canonical quiz engine: legacy progress migration adapters are incomplete');
   if(/document\.getElementById\(["'][^"']+["']\)\.style/.test(read('equipment/assets/auto-update.js')))fail('Updater: unsafe required DOM access');
   const updater=read('equipment/assets/auto-update.js');
-  if(updater.includes('location.replace(')||updater.includes("searchParams.set('_mbu_reload'"))fail('Updater: background build checks must not reload the active learner page');
+  if(updater.includes('location.replace(')||updater.includes("searchParams.set('_mbu_reload'"))fail('Updater: obsolete forced-reload routing returned');
+  if(!updater.includes('quizSessionActive()')||!updater.includes('safeToReload()')||!updater.includes('INACTIVE_RELOAD_DELAY'))fail('Updater: active quiz sessions are not protected from build reloads');
   if(!updater.includes('sessionStorage.setItem(BUILD_CACHE_KEY, baseline)'))fail('Updater: latest build baseline is not retained without reloading');
   const cloud=read('equipment/assets/supabase-sync.js');
   if(cloud.includes('location.reload()'))fail('Cloud sync/auth: runtime must not reload the active learner page');
