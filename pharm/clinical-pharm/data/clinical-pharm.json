@@ -13387,10 +13387,10 @@
         "Platelet count and bleeding history",
         "Serum potassium and magnesium levels",
         "QT interval on a 12-lead ECG",
-        "Thyroid function"
+        "Liver function tests"
       ],
       "answer": 0,
-      "explanation": "Valproate can cause thrombocytopenia and platelet dysfunction, which matter for neuraxial techniques. Potassium, thyroid function, and QT aren't specific concerns with valproate.",
+      "explanation": "Valproate can cause thrombocytopenia and platelet dysfunction, which matter for neuraxial techniques. It can also affect the liver, but LFTs don't guide neuraxial safety the way platelets do. Potassium and QT aren't specific concerns.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13441,10 +13441,10 @@
         "QT prolongation",
         "Bleeding from platelet dysfunction",
         "Myopathy and rhabdomyolysis",
-        "Severe hypoglycemia"
+        "Gemfibrozil lowering statin levels"
       ],
       "answer": 2,
-      "explanation": "Gemfibrozil raises statin levels and adds its own myopathy risk. The other concerns aren't typical of this combination.",
+      "explanation": "Gemfibrozil raises, rather than lowers, statin levels and adds its own myopathy risk. Bleeding and QT prolongation aren't typical of this combination.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13501,11 +13501,11 @@
       "options": [
         "Higher levels of midazolam and fentanyl",
         "Increased warfarin effect",
-        "Prolonged succinylcholine block",
+        "Increased bleeding from platelet inhibition",
         "Lower levels of midazolam and fentanyl"
       ],
       "answer": 3,
-      "explanation": "St. John's wort induces CYP3A4 and other enzymes, lowering levels of many drugs, including midazolam, fentanyl, and cyclosporine. It decreases warfarin effect and doesn't affect cholinesterase.",
+      "explanation": "St. John's wort induces CYP3A4 and other enzymes, lowering levels of many drugs, including midazolam and fentanyl; it decreases warfarin effect. Platelet-related bleeding is linked to supplements such as ginkgo, garlic, and fish oil.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13529,10 +13529,10 @@
         "A benzodiazepine-like withdrawal",
         "Serotonin syndrome",
         "Rebound hypertension like clonidine",
-        "Adrenal crisis"
+        "Greater sensitivity to benzodiazepines"
       ],
       "answer": 0,
-      "explanation": "Valerian acts on GABA receptors, and abrupt stopping after heavy use can cause benzodiazepine-like withdrawal; tapering is preferred. The other syndromes aren't linked to valerian.",
+      "explanation": "Valerian acts on GABA receptors; abrupt stopping after heavy use can cause benzodiazepine-like withdrawal, and cross-tolerance may raise, not lower, benzodiazepine needs. Tapering is preferred.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13722,13 +13722,13 @@
       "stem": "Why are more puffs of albuterol needed when delivered through an endotracheal tube?",
       "type": "single",
       "options": [
-        "Albuterol is absorbed by the CO2 absorbent",
+        "Intubated patients have downregulated beta-2 receptors",
         "The tube warms albuterol and inactivates it",
         "Most of each puff deposits in the tube",
         "Anesthetics block beta-2 receptors"
       ],
       "answer": 2,
-      "explanation": "Only a small fraction of each puff reaches the distal airways through an ETT, so 8–10 puffs or more may be needed. The other mechanisms aren't correct.",
+      "explanation": "Only a small fraction of each puff reaches the distal airways through an ETT, so 8–10 puffs or more may be needed. Receptor downregulation, warming, or anesthetic blockade isn't the reason.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -13866,10 +13866,10 @@
         "Bronchodilation from loop blockade",
         "Increased myocardial contractility",
         "Venodilation lowers preload",
-        "Rapid sodium shift into cells"
+        "Reduced pulmonary capillary permeability"
       ],
       "answer": 2,
-      "explanation": "Furosemide causes prostaglandin-mediated venodilation that lowers preload before diuresis starts. It doesn't bronchodilate or increase contractility.",
+      "explanation": "Furosemide causes prostaglandin-mediated venodilation that lowers preload before diuresis starts. It doesn't change capillary permeability, bronchodilate, or increase contractility.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -14819,11 +14819,11 @@
       "options": [
         "Cerebral vasodilation can raise ICP",
         "They cause severe bradycardia",
-        "They prolong neuromuscular block",
+        "They raise CMRO2 directly",
         "They lower the seizure threshold in tumor patients"
       ],
       "answer": 0,
-      "explanation": "Nitric oxide donors dilate cerebral vessels, increasing cerebral blood volume and ICP in a patient with reduced compliance. They cause reflex tachycardia, not bradycardia. Seizure threshold and NMB effects aren't the concern.",
+      "explanation": "Nitric oxide donors dilate cerebral vessels, increasing cerebral blood volume and ICP in a patient with reduced compliance. They don't raise cerebral metabolic rate. They cause reflex tachycardia, not bradycardia, and seizure threshold isn't the concern.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
@@ -15012,13 +15012,13 @@
       "stem": "Same aortic patient: protamine is started at the end. How should it be given to reduce hypotension?",
       "type": "single",
       "options": [
-        "Mixed with calcium chloride",
+        "Rapidly, followed by phenylephrine",
         "Rapid push to finish before closure",
         "Slowly over about 10 min",
         "As a double dose to ensure reversal"
       ],
       "answer": 2,
-      "explanation": "Slow administration limits histamine-related hypotension. Rapid push increases reactions. Mixing with calcium isn't standard. Excess protamine has its own anticoagulant effect.",
+      "explanation": "Slow administration over about 10 min limits histamine-related hypotension. Giving it fast and treating the drop with phenylephrine accepts an avoidable reaction. Excess protamine has its own anticoagulant effect.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Clinical Pharm",
@@ -15318,10 +15318,10 @@
         "Abrupt sympathectomy drops SVR and preload",
         "Spinal anesthesia raises HR excessively",
         "Spinal causes dangerous hypercarbia",
-        "Local anesthetic directly depresses the valve"
+        "Bradycardia shortens diastolic filling"
       ],
       "answer": 0,
-      "explanation": "Rapid loss of sympathetic tone lowers SVR and venous return, which a fixed obstruction can't compensate for. A titrated epidural, continuous spinal, or GA with careful induction allows slower change. The other options aren't the mechanism.",
+      "explanation": "Rapid loss of sympathetic tone lowers SVR and venous return, which a fixed obstruction can't compensate for. A titrated epidural, continuous spinal, or GA with careful induction allows slower change. Bradycardia lengthens rather than shortens diastole. Spinal doesn't cause excessive tachycardia or dangerous hypercarbia.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -15484,11 +15484,11 @@
       "options": [
         "Rocuronium 0.6 mg/kg IV with sugammadex ready",
         "Succinylcholine 0.1–0.5 mg/kg",
-        "Naloxone 40 mcg IV",
+        "Propofol 1 mg/kg IV, repeated",
         "Lidocaine 1.5 mg/kg IV"
       ],
       "answer": 1,
-      "explanation": "A small IV succinylcholine dose relaxes the cords within about 30–60 sec. Rocuronium is slower at standard doses. Lidocaine may help prevent laryngospasm but isn't a rescue. Naloxone doesn't treat laryngospasm.",
+      "explanation": "A small IV succinylcholine dose relaxes the cords within about 30–60 sec; doses up to 1 mg/kg can be used. Propofol has already failed, and repeating it while SpO2 falls risks hypotension and apnea without breaking the spasm. Rocuronium is slower at standard doses. Lidocaine may help prevent laryngospasm but isn't a rescue.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -15536,13 +15536,13 @@
       "stem": "Severe asthmatic intubated for respiratory failure: on RR 20, BP falls to 70/40, peak pressure is high, and expiratory flow doesn't return to zero. NEXT step?",
       "type": "single",
       "options": [
-        "Give furosemide for suspected pulmonary edema",
+        "Give a fluid bolus and phenylephrine",
         "Increase RR to clear CO2",
         "Add 10 cm H2O of PEEP",
         "Briefly disconnect to allow exhalation"
       ],
       "answer": 3,
-      "explanation": "Gas trapping (auto-PEEP) raises intrathoracic pressure and blocks venous return. A brief disconnect lets trapped gas escape and BP usually recovers. Faster RR shortens exhalation and worsens trapping. Added PEEP and diuretics don't address the cause.",
+      "explanation": "Gas trapping (auto-PEEP) raises intrathoracic pressure and blocks venous return. A brief disconnect lets trapped gas escape and BP usually recovers. Fluids and a pressor treat the BP without relieving the trapped gas. A faster RR shortens exhalation and worsens trapping, and added PEEP doesn't address the cause.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -15678,13 +15678,13 @@
       "stem": "Same PACU patient with TOF ratio 0.5: why does residual block cause hypoxemia and aspiration risk even when tidal volumes look adequate?",
       "type": "single",
       "options": [
-        "Bronchial smooth muscle stays relaxed",
+        "Upper airway reflexes become hyperactive",
         "Hypoxic ventilatory drive is enhanced by residual block",
         "The diaphragm is fully paralyzed at this level",
         "Pharyngeal muscles stay weak"
       ],
       "answer": 3,
-      "explanation": "Pharyngeal muscles are sensitive to residual block, so airway patency and swallowing remain impaired even with adequate diaphragm function; residual block also blunts the hypoxic ventilatory response. The diaphragm is relatively resistant. Bronchial smooth muscle isn't affected by NMBs.",
+      "explanation": "Pharyngeal muscles are sensitive to residual block, so airway patency and swallowing remain impaired even with adequate diaphragm function, and residual block blunts the hypoxic ventilatory response. Airway reflexes are depressed, not hyperactive. The diaphragm is relatively resistant.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -15705,18 +15705,18 @@
       "stem": "Same PACU patient with residual block. Which intraoperative drugs could have contributed? (Select 2)",
       "type": "multi",
       "options": [
-        "Acetaminophen",
+        "Sugammadex given at closure",
         "Magnesium sulfate",
         "Glycopyrrolate",
         "Gentamicin",
-        "Ondansetron",
+        "Calcium gluconate",
         "Dexamethasone"
       ],
       "answer": [
         1,
         3
       ],
-      "explanation": "Aminoglycosides and magnesium reduce ACh release and potentiate nondepolarizing block. Ondansetron, dexamethasone, acetaminophen, and glycopyrrolate don't potentiate block.",
+      "explanation": "Aminoglycosides and magnesium reduce ACh release and potentiate nondepolarizing block. Sugammadex reverses rather than causes residual block, and calcium partially antagonizes magnesium's effect. Dexamethasone and glycopyrrolate don't potentiate block.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -16537,13 +16537,13 @@
       "stem": "Same patient at 24 weeks needs positioning for surgery. Why is left uterine displacement used?",
       "type": "single",
       "options": [
-        "It reduces placental drug transfer",
+        "It improves maternal FRC",
         "It improves uterine tone",
         "It limits aortocaval compression",
         "It speeds gastric emptying"
       ],
       "answer": 2,
-      "explanation": "After about 20 weeks, the uterus can compress the vena cava and aorta in the supine position, lowering preload and uteroplacental flow. The other options aren't the purpose.",
+      "explanation": "After about 20 weeks, the uterus can compress the vena cava and aorta in the supine position, lowering preload and uteroplacental flow. Tilt doesn't meaningfully restore FRC, change uterine tone, or speed gastric emptying.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -16652,13 +16652,13 @@
       "stem": "Same TBI patient on levetiracetam needs ongoing seizure prophylaxis. Why is levetiracetam often chosen over phenytoin?",
       "type": "single",
       "options": [
-        "It reverses neuromuscular block",
+        "It has stronger evidence for preventing early seizures",
         "Fewer interactions and no levels",
         "Faster onset as an IV push",
         "It also lowers ICP through reduced metabolism"
       ],
       "answer": 1,
-      "explanation": "Levetiracetam lacks phenytoin's enzyme induction, protein binding issues, and narrow therapeutic range, so routine levels aren't needed; that practical advantage drives its use, although the Brain Trauma Foundation 4th edition found insufficient evidence that it is more effective than phenytoin for early seizure prevention. Onset isn't the main advantage. It doesn't lower ICP or affect relaxants.",
+      "explanation": "Levetiracetam lacks phenytoin's enzyme induction, protein binding issues, and narrow therapeutic range, so routine levels aren't needed; that practical advantage drives its use. The Brain Trauma Foundation 4th edition found insufficient evidence that it prevents early seizures better than phenytoin. Onset isn't the main advantage, and it doesn't lower ICP.",
       "citation": "Carney N, Totten AM, O'Reilly C, et al. Guidelines for the management of severe traumatic brain injury, fourth edition. Neurosurgery. 2017;80(1):6-15.",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
