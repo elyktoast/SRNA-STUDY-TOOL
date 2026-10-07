@@ -17908,11 +17908,11 @@
       "options": [
         "Aspirin beforehand",
         "Ondansetron",
-        "Famotidine",
+        "Diphenhydramine beforehand",
         "Metoclopramide 10 mg IV beforehand"
       ],
       "answer": 0,
-      "explanation": "Niacin flushing is prostaglandin-mediated, so a dose of aspirin about 30 min beforehand blunts it. Ondansetron, famotidine, and metoclopramide act on serotonin, histamine H2, and dopamine pathways, none of which drive niacin flushing.",
+      "explanation": "Niacin flushing is prostaglandin-mediated, and aspirin beforehand blunts it. Antihistamines such as diphenhydramine don't target that pathway, and neither do ondansetron or metoclopramide.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -18689,13 +18689,13 @@
       "stem": "Resident's plan for an ESRD patient after surgery: \"Morphine PCA 1 mg every 8 min.\" What is the error?",
       "type": "single",
       "options": [
-        "Morphine is too short-acting for PCA",
+        "The demand dose is too small for ESRD",
         "Its active metabolite accumulates",
         "Morphine PCA needs a basal infusion of 1 mg/hr in ESRD",
         "The lockout should be 1 min"
       ],
       "answer": 1,
-      "explanation": "Morphine's active metabolite accumulates in renal failure and can cause prolonged respiratory depression; fentanyl or hydromorphone with caution are better choices. The other statements aren't the issue.",
+      "explanation": "Morphine's active metabolite, M6G, accumulates in kidney failure and can cause prolonged respiratory depression; fentanyl, or hydromorphone with caution, is better. The problem isn't a dose that's too small, and a basal infusion would add risk.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -18743,13 +18743,13 @@
       "stem": "Resident's plan for a patient on clonazepam with mild oversedation after midazolam: \"Flumazenil 1 mg IV push.\" What is the error?",
       "type": "single",
       "options": [
-        "Flumazenil should be 5 mg",
+        "Flumazenil is safe because clonazepam is long-acting",
         "It should be infused over 1 hr",
         "Naloxone should be given first to exclude opioid effect",
         "Seizure risk and an untitrated dose"
       ],
       "answer": 3,
-      "explanation": "Flumazenil can precipitate seizures in benzodiazepine-dependent patients, and it is titrated in 0.2 mg increments when used. Supportive care is often safer here.",
+      "explanation": "Flumazenil can precipitate seizures in benzodiazepine-dependent patients, and it is titrated in 0.2 mg increments when used at all. Clonazepam's long action doesn't make reversal safer; it raises the chance of resedation and withdrawal. Supportive care is often safer here.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -18797,13 +18797,13 @@
       "stem": "Resident's plan for an ICU patient: \"Dexmedetomidine 1 mcg/kg loading dose over 1 min.\" What is the error?",
       "type": "single",
       "options": [
-        "The dose should be 10 mcg/kg",
+        "The load should be 0.5 mcg/kg over 1 min",
         "The bolus should run over about 10 min",
         "Dex should be loaded at 3 mcg/kg",
         "Dex should be combined with midazolam"
       ],
       "answer": 1,
-      "explanation": "A rapid load can cause hypertension then bradycardia; loading is given over about 10 min, and many skip it. 10 mcg/kg is a tenfold overdose.",
+      "explanation": "A rapid dex load causes hypertension and then bradycardia; the load runs over about 10 min, and many skip it. Halving the dose but keeping a 1-min push keeps the same problem. 3 mcg/kg is excessive.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -18853,11 +18853,11 @@
       "options": [
         "The doses are too low to be effective",
         "The combination needs ondansetron added for 5-HT3 coverage",
-        "Haloperidol should be 10 mg",
+        "Metoclopramide is safe because it acts peripherally",
         "Both block dopamine"
       ],
       "answer": 3,
-      "explanation": "Dopamine antagonists can worsen rigidity and tremor. Ondansetron (if no apomorphine), dexamethasone, or aprepitant are better.",
+      "explanation": "Both drugs block dopamine and can worsen rigidity and tremor; metoclopramide crosses the blood-brain barrier. Ondansetron (if no apomorphine), dexamethasone, or aprepitant are better.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -18935,10 +18935,10 @@
         "Phenylephrine is too weak to raise SVR in pulmonary hypertension",
         "Phenylephrine causes tachycardia",
         "It can raise PVR and strain the RV",
-        "Phenylephrine lowers SVR"
+        "Phenylephrine dilates pulmonary vessels"
       ],
       "answer": 2,
-      "explanation": "Alpha-1 agonists constrict pulmonary vessels as well as systemic ones, which can worsen RV failure. Vasopressin or norepinephrine are often preferred. Phenylephrine raises SVR and slows HR.",
+      "explanation": "Alpha-1 agonists constrict pulmonary as well as systemic vessels, which can worsen RV failure; vasopressin or norepinephrine are often preferred. Phenylephrine doesn't dilate the pulmonary bed, and it slows rather than speeds HR.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
@@ -18959,13 +18959,13 @@
       "stem": "Resident's plan for a patient on SSRIs with vasoplegia after bypass: \"Methylene blue 2 mg/kg.\" What is the error?",
       "type": "single",
       "options": [
-        "The dose should be 20 mg/kg",
+        "Methylene blue causes vasodilation",
         "The dose is too high for vasoplegia",
         "Methylene blue is ineffective in vasoplegia",
         "Serotonin syndrome risk with SSRIs"
       ],
       "answer": 3,
-      "explanation": "Methylene blue is a potent MAO-A inhibitor and can trigger serotonin syndrome with SSRIs; hydroxocobalamin is an alternative for refractory vasoplegia. Methylene blue does raise SVR in vasoplegia, and 1–2 mg/kg (not 20) is the usual dose.",
+      "explanation": "Methylene blue is a potent MAO-A inhibitor and can cause serotonin syndrome with SSRIs; hydroxocobalamin is an alternative. Methylene blue raises SVR by blocking nitric oxide signaling; it doesn't dilate vessels.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19013,13 +19013,13 @@
       "stem": "Resident's plan for an asthmatic with bronchospasm under GA: \"Labetalol 10 mg for the tachycardia from albuterol.\" What is the error?",
       "type": "single",
       "options": [
-        "Labetalol dose should be 50 mg",
+        "Labetalol's alpha blockade offsets beta-2 effects",
         "Beta-2 blockade worsens airway constriction",
         "Esmolol is more bronchospastic than labetalol at equal doses",
         "Labetalol acts too briefly to help"
       ],
       "answer": 1,
-      "explanation": "Labetalol blocks beta-2 receptors and can worsen bronchospasm. If rate control is needed, low-dose esmolol is safer; tachycardia often improves as bronchospasm resolves.",
+      "explanation": "Labetalol blocks beta-2 receptors and can worsen bronchospasm; its alpha blockade doesn't protect the airway. If rate control is needed, low-dose esmolol is safer, and tachycardia often improves as bronchospasm resolves.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
@@ -19067,13 +19067,13 @@
       "stem": "Resident's plan for postoperative AF in a patient with EF 20%: \"Diltiazem infusion.\" What is the error?",
       "type": "single",
       "options": [
-        "Diltiazem doesn't affect the AV node",
+        "Diltiazem raises SVR and afterload",
         "Diltiazem lowers HR too slowly to help in postoperative AF",
         "Diltiazem is first-line for WPW",
         "Negative inotropy"
       ],
       "answer": 3,
-      "explanation": "Non-dihydropyridine calcium channel blockers depress contractility and can tip HFrEF into decompensation; amiodarone or digoxin is preferred. Diltiazem does slow AV conduction promptly, and it is contraindicated, not first-line, in WPW.",
+      "explanation": "Non-dihydropyridine CCBs depress contractility in HFrEF; amiodarone or digoxin are preferred. Diltiazem slows AV conduction and lowers rather than raises SVR.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19148,13 +19148,13 @@
       "stem": "Resident's plan for a burn patient on day 10: \"Succinylcholine 1.5 mg/kg for RSI.\" What is the error?",
       "type": "single",
       "options": [
-        "Succinylcholine is too slow for RSI",
+        "Burns cause resistance, so the dose should be higher",
         "Burns cause sensitivity to succinylcholine, so halve the dose",
         "Hyperkalemia from upregulated receptors",
         "The dose should be 3 mg/kg"
       ],
       "answer": 2,
-      "explanation": "After about 24–48 hr, burn injury upregulates acetylcholine receptors, and succinylcholine can cause hyperkalemic arrest. High-dose rocuronium is used.",
+      "explanation": "After about 24–48 hr, burn injury upregulates acetylcholine receptors, and succinylcholine can cause hyperkalemic arrest; high-dose rocuronium is used. Resistance applies to nondepolarizing relaxants, and a larger succinylcholine dose would raise potassium further.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -19229,13 +19229,13 @@
       "stem": "Resident's plan for a heart transplant patient with HR 45: \"Atropine 1 mg, repeat once.\" What is the error?",
       "type": "single",
       "options": [
-        "Atropine should be given IM",
+        "Epinephrine 1 mg should replace atropine",
         "Atropine needs vagal innervation",
         "Glycopyrrolate should be used instead because it lasts longer",
         "The dose should be 0.1 mg"
       ],
       "answer": 1,
-      "explanation": "Atropine acts through vagal blockade, which isn't present in a denervated heart. Direct beta agonists such as isoproterenol or epinephrine are used. Glycopyrrolate has the same limitation.",
+      "explanation": "Atropine acts through vagal blockade, which a denervated heart lacks; direct beta agonists such as isoproterenol or a low-dose epinephrine infusion are used. 1 mg epinephrine is a cardiac arrest dose. Glycopyrrolate has the same limitation as atropine.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -19257,12 +19257,12 @@
       "type": "single",
       "options": [
         "It triggers adrenal suppression that worsens shock",
-        "It lacks amnesia at induction doses",
+        "It raises HR, increasing O2 demand",
         "It lowers SVR and preload more",
         "It has a slower onset than etomidate in shock states"
       ],
       "answer": 2,
-      "explanation": "Propofol's vasodilation and myocardial depression drop BP in a preload-dependent patient. Its onset isn't slower. It produces amnesia. Adrenal suppression is etomidate's issue.",
+      "explanation": "Propofol's vasodilation and myocardial depression drop BP in a preload-dependent patient. It doesn't raise HR; it tends to blunt it. Its onset isn't slower, and adrenal suppression is etomidate's issue.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19365,12 +19365,12 @@
       "type": "single",
       "options": [
         "It is too short-acting to keep BP controlled for transfer",
-        "It constricts the aorta",
+        "It lowers HR and reduces perfusion",
         "Reflex tachycardia increases shear stress",
         "It directly lowers HR"
       ],
       "answer": 2,
-      "explanation": "Hydralazine dilates arterioles and triggers reflex tachycardia and increased dP/dt, which stresses the dissection. It is long-acting, not short. It doesn't constrict or lower HR.",
+      "explanation": "Hydralazine dilates arterioles and triggers reflex tachycardia and increased dP/dt, which stresses the dissection. It raises rather than lowers HR, and it is long-acting, not short.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
