@@ -225,10 +225,10 @@
       "type": "single",
       "stem": "When comparing historical patient-safety estimates, which annual mortality range belongs specifically to the original IOM report rather than later higher estimates?",
       "options": [
-        "250,000–400,000",
-        "44,000–98,000",
-        "5,000–10,000",
-        "500,000–750,000"
+        "250,000â400,000",
+        "44,000â98,000",
+        "5,000â10,000",
+        "500,000â750,000"
       ],
       "answer": [
         1
@@ -1062,7 +1062,7 @@
       "answer": [
         1
       ],
-      "explanation": "Forty percent of 250 is 0.4 × 250 = 100 measures. The 40% figure comes from the cited AHRQ disparity data for Black, American Indian, and Alaska Native patients and summarizes population-level differences, so it should not be applied to every measure or every encounter. Choosing 40 confuses the percentage with the count.",
+      "explanation": "Forty percent of 250 is 0.4 Ã 250 = 100 measures. The 40% figure comes from the cited AHRQ disparity data for Black, American Indian, and Alaska Native patients and summarizes population-level differences, so it should not be applied to every measure or every encounter. Choosing 40 confuses the percentage with the count.",
       "citation": "",
       "topic": "Social determinants and health equity",
       "sourceTitle": "Miscellaneous Topics in Nurse Anesthesia Practice",
@@ -1333,7 +1333,7 @@
       "answer": [
         1
       ],
-      "explanation": "More than half means a proportion above 50%. Fifty percent of 1,000 is 0.5 × 1,000 = 500, so any proportion above one-half represents more than 500 uninsured patients. About 250 corresponds to one-quarter, and about 100 or 50 to one-tenth or one-twentieth.",
+      "explanation": "More than half means a proportion above 50%. Fifty percent of 1,000 is 0.5 Ã 1,000 = 500, so any proportion above one-half represents more than 500 uninsured patients. About 250 corresponds to one-quarter, and about 100 or 50 to one-tenth or one-twentieth.",
       "citation": "",
       "topic": "Social determinants and health equity",
       "sourceTitle": "Miscellaneous Topics in Nurse Anesthesia Practice",
@@ -3452,7 +3452,7 @@
       "id": "MISC-140",
       "set": 1,
       "type": "single",
-      "stem": "A colectomy patient reaches the end of surgery with a core temperature of 35.7°C (96.3°F). Which SSI-prevention principle is most appropriate?",
+      "stem": "A colectomy patient reaches the end of surgery with a core temperature of 35.7Â°C (96.3Â°F). Which SSI-prevention principle is most appropriate?",
       "options": [
         "Warm actively once it falls below 35 C",
         "Rewarm in PACU; intraop temperature is minor",
@@ -4463,7 +4463,7 @@
         "Systems-focused quality improvement",
         "Just culture coaching of the CRNA",
         "Retraining of the involved CRNA",
-        "Root cause analysis alone"
+        "Root cause analysis"
       ],
       "answer": [
         0
@@ -6432,7 +6432,7 @@
       "type": "single",
       "stem": "Before placing a central line, a CRNA applies alcohol hand rub, rubs for 5 seconds, and gloves while the hands are still wet. What should change?",
       "options": [
-        "Rub 20–30 s until fully dry",
+        "Rub 20â30 s until fully dry",
         "Rub 2 minutes as for a surgical scrub",
         "Wash with soap for 5 minutes first",
         "Glove at once; wet alcohol still works"
@@ -9909,7 +9909,7 @@
       "id": "MISC-406",
       "set": 1,
       "type": "single",
-      "stem": "Which event most directly explains the sharp decline in US life expectancy during 2020–2021?",
+      "stem": "Which event most directly explains the sharp decline in US life expectancy during 2020â2021?",
       "options": [
         "The COVID-19 pandemic",
         "Rising overdose deaths alone",
@@ -11139,7 +11139,7 @@
       "id": "MISC-457",
       "set": 1,
       "type": "single",
-      "stem": "During a 4-hour open abdominal case, the patient's temperature falls to 35.6°C despite warmed IV fluids. Which added measure is most effective?",
+      "stem": "During a 4-hour open abdominal case, the patient's temperature falls to 35.6Â°C despite warmed IV fluids. Which added measure is most effective?",
       "options": [
         "Cotton blankets over exposed limbs",
         "Upper- or lower-body forced-air warming",
@@ -11866,13 +11866,13 @@
       "options": [
         "About 10 per 100,000",
         "About 20 per 100,000",
-        "About 40–60 per 100,000",
-        "About 100–150 per 100,000"
+        "About 40â60 per 100,000",
+        "About 100â150 per 100,000"
       ],
       "answer": [
         2
       ],
-      "explanation": "Two times 20 is 40 and three times 20 is 60, so a two- to threefold higher rate is 40–60 per 100,000 live births. This is a ratio calculation only and should not be mistaken for a current observed rate for any particular demographic group.",
+      "explanation": "Two times 20 is 40 and three times 20 is 60, so a two- to threefold higher rate is 40â60 per 100,000 live births. This is a ratio calculation only and should not be mistaken for a current observed rate for any particular demographic group.",
       "citation": "",
       "topic": "Mixed application",
       "sourceTitle": "Miscellaneous Topics in Nurse Anesthesia Practice",
