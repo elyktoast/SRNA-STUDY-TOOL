@@ -78,3 +78,21 @@ body.mbu-bank1-ui{margin:0;padding:20px;background:var(--bg);color:var(--t);font
   .mbu-bank1-ui .mbu-quiz-stats>div:nth-child(2){border-right:0}.mbu-bank1-ui .mbu-quiz-stats>div:nth-child(-n+2){border-bottom:1px solid #e2e8f0}
   .mbu-bank1-ui .mbu-notes-head{align-items:flex-start}
 }
+
+
+/* Desktop quiz sessions: keep the active question workspace within the viewport when content fits. */
+@media (min-width:701px) and (min-height:760px){
+  body.mbu-bank1-ui{padding-top:12px;padding-bottom:12px}
+  .mbu-bank1-ui .quiz,.mbu-bank1-ui main>.card,.mbu-bank1-ui .qcard{padding-top:16px;padding-bottom:16px}
+  .mbu-bank1-ui .mbu-session-head{gap:8px;padding-bottom:10px;margin-bottom:10px}
+  .mbu-bank1-ui .mbu-session-actions .btn{min-height:34px;padding:6px 11px}
+  .mbu-bank1-ui .mbu-quiz-stats{margin-bottom:10px}
+  .mbu-bank1-ui .mbu-quiz-stats>div{padding:6px 10px}
+  .mbu-bank1-ui .type{margin-bottom:5px}
+  .mbu-bank1-ui .stem{font-size:1.08rem;line-height:1.4;margin-bottom:5px}
+  .mbu-bank1-ui .mbu-crossout-hint{margin-bottom:8px}
+  .mbu-bank1-ui .options{gap:5px;margin-bottom:8px}
+  .mbu-bank1-ui .opt{min-height:40px;padding:7px 12px;line-height:1.4}
+  .mbu-bank1-ui .mbu-choice-row{gap:7px}
+  .mbu-bank1-ui .controls{padding-top:10px;margin-top:10px}
+}
