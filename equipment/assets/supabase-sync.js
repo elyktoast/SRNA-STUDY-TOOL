@@ -3,7 +3,7 @@ const cfg=window.MBU_SUPABASE_CONFIG||{},sync=window.MBUSync,SESSION_KEY='mbu_su
 if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Supabase sync is not configured');return}
 const base=cfg.url.replace(/\/$/,''),REQUEST_TIMEOUT=10000,AUTO_SYNC_INTERVAL=5*60*1000,LEGAL_VERSION='2026-09-27-v6',LEGAL_TERMS_VERSION=LEGAL_VERSION,LEGAL_PRIVACY_VERSION=LEGAL_VERSION;
 let syncing=false,syncQueued=false,lastSyncAt=0,lastState='signed-out',remoteByKey=new Map(),calibrationByKey=new Map(),calibrationFetchedAt=0,timer=null,autoSyncTimer=null,guestTimer=null,recoveryMode=false,legalAccepted=null,accountAccess='signed_out';
-const safeJSON=(raw,fallback=null)=>{try{return JSON.parse(raw)}catch{return fallback}};
+const safeJSON=(raw,fallback=null)=>{try{return JSON.parse(raw)}catch{return fallback}},normalizeEmail=value=>String(value||'').trim().toLowerCase();
 const session=()=>safeJSON(localStorage.getItem(SESSION_KEY));
 async function clearTrackedLocalData(){for(const key of Object.keys((await sync.exportSnapshot()).stores||{}))localStorage.removeItem(key);localStorage.removeItem(META_KEY)}
 async function prepareLocalOwner(userId){const id=String(userId||'');if(!id)return false;const owner=localStorage.getItem(OWNER_KEY),switched=!!owner&&owner!==id;if(switched)await clearTrackedLocalData();if(owner!==id)localStorage.setItem(OWNER_KEY,id);return switched}
@@ -108,22 +108,22 @@ setTimeout(()=>refreshCalibration(true).catch(()=>{}),100);
 return true
 }
 async function signIn(email,password){
-emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{method:'POST',body:{email:String(email||'').trim(),password:String(password||'')}});
+emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{method:'POST',body:{email:normalizeEmail(email),password:String(password||'')}});
 const s=normalizeAuth(data);if(!s)throw Error('Supabase did not return a session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync();return s
 }
 async function signUp(email,password,accepted=false){
 if(accepted!==true)throw Error('You must confirm that you are 18+ and agree to the Terms and Privacy Notice before creating an account.');
-const acceptedAt=new Date().toISOString();emit('signing-up');const data=await raw('/auth/v1/signup?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:String(email||'').trim(),password:String(password||''),data:{snar_terms_version:LEGAL_TERMS_VERSION,snar_privacy_version:LEGAL_PRIVACY_VERSION,snar_adult_ack:true,snar_accepted_at:acceptedAt}}}),s=normalizeAuth(data);
+const acceptedAt=new Date().toISOString();emit('signing-up');const data=await raw('/auth/v1/signup?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:normalizeEmail(email),password:String(password||''),data:{snar_terms_version:LEGAL_TERMS_VERSION,snar_privacy_version:LEGAL_PRIVACY_VERSION,snar_adult_ack:true,snar_accepted_at:acceptedAt}}}),s=normalizeAuth(data);
 if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return{session:s,confirmationRequired:false}}if(!await refreshLegalAcceptance())await acceptCurrentLegal(true);else{await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync()}else emit('access-suspended',{email:s.user?.email||email})}return{session:s,confirmationRequired:false}}
-emit('confirmation-required',{email:String(email||'').trim()});return{session:null,confirmationRequired:true}
+emit('confirmation-required',{email:normalizeEmail(email)});return{session:null,confirmationRequired:true}
 }
 function resetCloudSession(){stopAutoSync();clearTimeout(timer);timer=0;syncQueued=false;saveSession(null);sessionStorage.removeItem('mbu_post_auth_target');legalAccepted=null;accountAccess='signed_out';remoteByKey.clear();calibrationByKey.clear();calibrationFetchedAt=0;emit('signed-out');startGuestHeartbeat()}async function signOut(){
 const s=session();if(s?.access_token&&legalAccepted===true&&accountAccess==='active'){if(!navigator.onLine)throw Error('Reconnect');try{await fullSync()}catch{throw Error('Sync failed')}}
 try{if(s?.access_token)await raw('/auth/v1/logout',{method:'POST',token:s.access_token})}catch{}
 await clearTrackedLocalData();localStorage.removeItem(OWNER_KEY);resetCloudSession()
 }
-async function resendConfirmation(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/resend?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{type:'signup',email:value}});emit('confirmation-required',{email:value});return true}
-async function requestPasswordReset(email){const value=String(email||'').trim();if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:value}});emit('recovery-sent',{email:value});return true}
+async function resendConfirmation(email){const value=normalizeEmail(email);if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/resend?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{type:'signup',email:value}});emit('confirmation-required',{email:value});return true}
+async function requestPasswordReset(email){const value=normalizeEmail(email);if(!value)throw Error('Enter your email address first.');await raw('/auth/v1/recover?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:value}});emit('recovery-sent',{email:value});return true}
 async function updatePassword(password){const value=String(password||'');if(value.length<8)throw Error('Password must be at least 8 characters.');const s=await validSession();if(!s?.access_token)throw Error('Open the password reset link from your email first.');await raw('/auth/v1/user',{method:'PUT',token:s.access_token,body:{password:value}});recoveryMode=false;if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||''});return true}await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||''});startAutoSync()}else emit('access-suspended',{email:s.user?.email||''});return true}
 function currentUser(){return session()?.user||null}
 async function deleteAccount(){
