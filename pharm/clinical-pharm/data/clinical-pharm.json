@@ -198,13 +198,13 @@
       "stem": "35-year-old receives ketamine 2 mg/kg for a closed reduction and becomes agitated with vivid hallucinations in PACU. Most appropriate drug?",
       "type": "single",
       "options": [
-        "Naloxone 0.4 mg IV",
+        "Propofol 1 mg/kg IV bolus",
         "Physostigmine 1 mg IV",
         "Flumazenil 0.2 mg IV, repeated to effect",
         "Midazolam 1–2 mg IV"
       ],
       "answer": 3,
-      "explanation": "Benzodiazepines are first-line for ketamine emergence reactions and reduce their incidence when given beforehand. Physostigmine treats central anticholinergic syndrome. Naloxone doesn't reverse NMDA-mediated dissociation despite ketamine's minor opioid receptor activity. Flumazenil reverses benzodiazepines and could worsen agitation.",
+      "explanation": "Benzodiazepines are first-line for ketamine emergence reactions and reduce their incidence when given beforehand. A propofol bolus would sedate but risks apnea and airway loss in PACU, which is more than a small benzodiazepine dose requires. Physostigmine treats central anticholinergic syndrome, not dissociation. Flumazenil reverses benzodiazepines and could worsen agitation.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -523,12 +523,12 @@
       "type": "single",
       "options": [
         "Increased gastric acid secretion caused by propofol",
-        "Propofol-triggered retching during recovery",
+        "Airway reflexes stay intact until the patient is apneic",
         "Larger gastric volume from the lipid emulsion",
         "Depressed pharyngeal tone and protective reflexes"
       ],
       "answer": 3,
-      "explanation": "Propofol reduces pharyngeal muscle tone and airway reflexes even at sub-hypnotic doses, so a responsive patient can still aspirate. Propofol doesn't increase acid or gastric volume. It is antiemetic, not emetogenic.",
+      "explanation": "Propofol depresses pharyngeal tone and protective reflexes even at sub-hypnotic doses, so a responsive patient can still aspirate. Reflexes are lost well before apnea, which is why the last option is a dangerous misconception. Propofol doesn't increase acid secretion or gastric volume.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Clinical Pharm",
@@ -549,7 +549,7 @@
       "stem": "Which factors help explain why an 84-year-old needs a smaller propofol induction dose than a 30-year-old? (Select 3)",
       "type": "multi",
       "options": [
-        "Higher plasma esterase activity",
+        "Higher hepatic blood flow speeding clearance",
         "Faster redistribution of propofol into muscle",
         "Lower albumin raises the free drug fraction",
         "Larger central compartment volume",
@@ -561,7 +561,7 @@
         4,
         5
       ],
-      "explanation": "Reduced cardiac output delivers a more concentrated bolus to the brain, lower albumin increases free drug, and slower clearance extends effect. Older adults have less muscle mass and slower redistribution, not faster. Propofol is hepatically and extrahepatically metabolized, not by plasma esterases. The central compartment shrinks with age rather than enlarging.",
+      "explanation": "Reduced cardiac output delivers a more concentrated bolus to the brain, lower albumin increases free drug, and slower clearance extends effect. Older adults have lower, not higher, hepatic blood flow. Redistribution to muscle is slower with less muscle mass. The central compartment shrinks with age rather than enlarging.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Clinical Pharm",
@@ -585,10 +585,10 @@
         "Myoclonus from subcortical disinhibition; continue",
         "Generalized seizure; give midazolam and stop the case",
         "Early MH; give dantrolene 2.5 mg/kg",
-        "LAST from the IV flush; start lipid emulsion"
+        "Light anesthesia; give more etomidate"
       ],
       "answer": 0,
-      "explanation": "Etomidate myoclonus is common and comes from subcortical disinhibition rather than cortical seizure activity; small doses of opioid or benzodiazepine beforehand reduce it. Seizure is not the mechanism here. MH doesn't present as limb jerking seconds after induction. Nothing in the flush suggests local anesthetic toxicity.",
+      "explanation": "Etomidate myoclonus is common and comes from subcortical disinhibition rather than cortical seizure activity or inadequate depth; small doses of opioid or benzodiazepine beforehand reduce it. More etomidate isn't the fix, because the movements aren't a sign of light anesthesia. Seizure isn't the mechanism. MH doesn't present as limb jerking seconds after induction.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -637,12 +637,12 @@
       "type": "single",
       "options": [
         "It antagonizes mu receptors to prevent withdrawal",
-        "It shortens opioid elimination half-life",
+        "It increases mu receptor binding of opioids",
         "It limits central sensitization and opioid hyperalgesia",
         "It provides analgesia mainly through GABA-A enhancement"
       ],
       "answer": 2,
-      "explanation": "NMDA antagonism dampens wind-up and opioid-induced hyperalgesia, lowering postop opioid needs in tolerant patients. Ketamine doesn't antagonize mu receptors and wouldn't prevent withdrawal. GABA-A enhancement describes propofol and benzodiazepines. It doesn't change opioid kinetics.",
+      "explanation": "NMDA antagonism dampens wind-up and opioid-induced hyperalgesia, lowering postop opioid needs in tolerant patients. Ketamine doesn't antagonize mu receptors or meaningfully change opioid binding. GABA-A enhancement describes propofol and benzodiazepines.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -872,7 +872,7 @@
       "choices": [
         "2.4",
         "0.42",
-        "0.15",
+        "0.47",
         "0.65",
         "1.4"
       ],
@@ -882,7 +882,7 @@
         "Isoflurane": "1.4",
         "Halothane": "2.4"
       },
-      "explanation": "Lower blood-gas solubility means faster induction and emergence: des < sevo < iso < halothane. 0.15 doesn't match any of these agents.",
+      "explanation": "Lower blood-gas solubility means faster induction and emergence: des 0.42 < sevo 0.65 < iso 1.4 < halothane 2.4. The extra choice, 0.47, is nitrous oxide's coefficient, which sits close to desflurane's.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Clinical Pharm",
@@ -1031,12 +1031,12 @@
       "type": "single",
       "options": [
         "Propofol",
-        "Remifentanil",
+        "Midazolam",
         "Ketamine",
         "Thiopental"
       ],
       "answer": 3,
-      "explanation": "Barbiturates induce ALA synthase through CYP450 effects and can precipitate an acute porphyric crisis. Propofol is considered safe in porphyria. Ketamine and remifentanil are generally regarded as safe.",
+      "explanation": "Barbiturates induce ALA synthase through CYP450 effects and can precipitate an acute porphyric crisis. Propofol is considered safe in porphyria. Ketamine and midazolam are generally regarded as safe, though benzodiazepine data are less complete.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -1428,7 +1428,7 @@
         "Hypotension from vasodilation",
         "Emergence hallucinations",
         "Adrenal suppression",
-        "Malignant hyperthermia"
+        "Histamine release"
       ],
       "answer": {
         "Propofol": "Hypotension from vasodilation",
@@ -1436,7 +1436,7 @@
         "Ketamine": "Emergence hallucinations",
         "Dexmedetomidine": "Bradycardia"
       },
-      "explanation": "Propofol lowers SVR; etomidate inhibits 11β-hydroxylase; ketamine causes dissociative emergence reactions; dex slows HR through alpha-2 effects. None of these IV agents triggers MH.",
+      "explanation": "Propofol lowers SVR; etomidate inhibits 11β-hydroxylase; ketamine causes dissociative emergence reactions; dex slows HR through alpha-2 effects. Histamine release is a thiopental (and morphine or atracurium) effect, not a signature of these four agents.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Clinical Pharm",
@@ -1619,13 +1619,13 @@
       "stem": "ICU patient on lorazepam 10 mg/hr for 4 days develops pH 7.22, anion gap 22, and an osmolar gap of 25. Most likely cause?",
       "type": "single",
       "options": [
-        "Lorazepam-induced hepatic failure",
+        "Lactic acidosis from hypoperfusion",
         "Propylene glycol toxicity",
         "Propofol infusion syndrome",
         "Starvation ketoacidosis"
       ],
       "answer": 1,
-      "explanation": "IV lorazepam is formulated in propylene glycol, which accumulates at high infusion rates and causes an anion-gap acidosis with an osmolar gap. PRIS requires propofol. Ketoacidosis rarely produces an osmolar gap this large. Lorazepam doesn't cause hepatic failure.",
+      "explanation": "IV lorazepam is formulated in propylene glycol, which accumulates at high infusion rates and causes an anion-gap acidosis with an osmolar gap. Lactic acidosis raises the anion gap but doesn't produce an osmolar gap this large. PRIS requires propofol. Ketoacidosis rarely produces a large osmolar gap.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -1754,13 +1754,13 @@
       "stem": "70-year-old with cirrhosis and CKD stage 4 needs sedation for EGD. Why might remimazolam be preferred over midazolam?",
       "type": "single",
       "options": [
-        "It has a longer duration for overnight sedation",
+        "It is a faster-cleared CYP3A4 substrate",
         "It spares respiratory drive",
         "Esterases clear it to an inactive metabolite",
         "It is reversed by naloxone if needed"
       ],
       "answer": 2,
-      "explanation": "Remimazolam is an ester broken down by nonspecific esterases to an inactive metabolite (CNS 7054), so liver and kidney function matter little. It still causes respiratory depression and hypoxia. Flumazenil, not naloxone, reverses it. It is short-acting, which is the point.",
+      "explanation": "Remimazolam is an ester broken down by nonspecific tissue esterases to an inactive metabolite (CNS 7054), so liver and kidney function matter little. It isn't a faster CYP3A4 substrate; that's midazolam's pathway. It still causes respiratory depression. Flumazenil, not naloxone, reverses it.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -2053,7 +2053,7 @@
         "Direct glucuronidation",
         "CYP3A4 hydroxylation",
         "Tissue esterase hydrolysis",
-        "Hofmann elimination",
+        "Renal excretion of unchanged drug",
         "Oxidation to an active long-acting metabolite"
       ],
       "answer": {
@@ -2062,7 +2062,7 @@
         "Remimazolam": "Tissue esterase hydrolysis",
         "Diazepam": "Oxidation to an active long-acting metabolite"
       },
-      "explanation": "Midazolam is cleared by CYP3A4; lorazepam is glucuronidated directly; remimazolam is hydrolyzed by esterases; diazepam forms desmethyldiazepam. Hofmann elimination belongs to cisatracurium and atracurium.",
+      "explanation": "Midazolam is cleared by CYP3A4; lorazepam is glucuronidated directly; remimazolam is hydrolyzed by tissue esterases; diazepam forms desmethyldiazepam. None of these benzodiazepines is excreted unchanged by the kidneys; renal excretion matters for their conjugated metabolites.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -3250,10 +3250,10 @@
         "Double the succinylcholine dose",
         "Avoid relaxants and intubate deep",
         "Standard RSI dose; reduce redosing",
-        "Use pancuronium for its shorter action"
+        "Reduce rocuronium to 0.3 mg/kg for RSI"
       ],
       "answer": 2,
-      "explanation": "Magnesium potentiates nondepolarizing block, so maintenance doses should be reduced and guided by monitoring. Intubating doses usually stay standard. Doubling succinylcholine isn't needed. Relaxants aren't contraindicated. Pancuronium is long-acting.",
+      "explanation": "Magnesium potentiates nondepolarizing block, so maintenance doses are reduced and guided by monitoring, but intubating doses stay standard for reliable RSI conditions. Cutting the RSI dose to 0.3 mg/kg gives poor intubating conditions. Doubling succinylcholine isn't needed. Relaxants aren't contraindicated.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -3598,13 +3598,13 @@
       "stem": "Why is neostigmine paired with glycopyrrolate, while edrophonium is paired with atropine?",
       "type": "single",
       "options": [
-        "Atropine prolongs edrophonium's action",
-        "Edrophonium inactivates glycopyrrolate",
+        "Atropine has fewer CNS effects than glycopyrrolate",
+        "Glycopyrrolate is too short-acting to cover neostigmine",
         "Glycopyrrolate counteracts nicotinic effects",
         "Onset times are matched"
       ],
       "answer": 3,
-      "explanation": "Edrophonium acts in 1–2 min, as does atropine; neostigmine peaks over 7–15 min, which glycopyrrolate's slower onset matches, limiting early tachycardia and late bradycardia. Glycopyrrolate blocks muscarinic, not nicotinic, effects. The other two aren't real interactions.",
+      "explanation": "Edrophonium acts in 1–2 min, as does atropine; neostigmine peaks over 7–15 min, which glycopyrrolate's slower onset matches, limiting early tachycardia and late bradycardia. Atropine crosses into the CNS and has more central effects, not fewer. Glycopyrrolate lasts long enough to cover neostigmine. Glycopyrrolate blocks muscarinic, not nicotinic, effects.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -4042,7 +4042,7 @@
         "Physostigmine"
       ],
       "choices": [
-        "Unfractionated heparin",
+        "Peripheral muscarinic effects",
         "Aminosteroid relaxants",
         "Mu opioid agonists",
         "Benzodiazepine-site agonists",
@@ -4054,7 +4054,7 @@
         "Sugammadex": "Aminosteroid relaxants",
         "Physostigmine": "Central antimuscarinic effects"
       },
-      "explanation": "Naloxone competitively blocks opioid receptors; flumazenil competes at the benzodiazepine site; sugammadex encapsulates rocuronium and vecuronium; physostigmine raises ACh centrally. Protamine reverses heparin.",
+      "explanation": "Naloxone competitively blocks opioid receptors; flumazenil competes at the benzodiazepine site; sugammadex encapsulates rocuronium and vecuronium; physostigmine raises ACh centrally and reverses central antimuscarinic effects. The extra choice, peripheral muscarinic effects, describes what glycopyrrolate counters, not physostigmine's distinctive role.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -4389,13 +4389,13 @@
       "stem": "Fentanyl 250 mcg is pushed rapidly at induction. Mask ventilation becomes impossible, the chest feels rigid, and SpO2 is falling. BEST first drug?",
       "type": "single",
       "options": [
-        "Sevoflurane at 8%",
-        "Glycopyrrolate 0.2 mg IV",
+        "Propofol 1 mg/kg IV to deepen",
+        "Midazolam 2 mg IV to relax muscles",
         "A neuromuscular blocker",
         "Naloxone 0.4 mg IV"
       ],
       "answer": 2,
-      "explanation": "High-dose rapid opioid boluses cause chest wall and glottic rigidity; a relaxant (succinylcholine or rocuronium) restores ventilation while keeping the planned anesthetic. Naloxone also works but reverses the analgesia you need for intubation. Glycopyrrolate treats bradycardia, not rigidity. Increasing the volatile won't help when you can't ventilate.",
+      "explanation": "High-dose rapid opioid boluses cause chest wall and glottic rigidity; a relaxant (succinylcholine or rocuronium) restores ventilation while keeping the planned anesthetic. Naloxone also works but reverses the analgesia you need for intubation. Deepening with propofol or adding midazolam doesn't reliably relieve opioid-induced rigidity and delays ventilation.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -4472,11 +4472,11 @@
       "options": [
         "Esterase saturation leaving a partial agonist metabolite",
         "Acute tolerance and opioid-induced hyperalgesia",
-        "Undetected naloxone in the IV tubing",
+        "Too little remifentanil given during the case",
         "Residual remifentanil antagonizing other opioids"
       ],
       "answer": 1,
-      "explanation": "High-dose intraoperative remifentanil can produce acute tolerance and hyperalgesia, raising postoperative requirements. Ketamine and planned transition analgesia reduce this. Remifentanil is a full agonist and is gone within minutes. Esterases don't saturate, and the acid metabolite is very weak. Nothing suggests naloxone exposure.",
+      "explanation": "High-dose intraoperative remifentanil can produce acute tolerance and hyperalgesia, raising postoperative requirements; ketamine and a planned transition reduce this. The problem is too much remifentanil, not too little. Remifentanil is a full agonist gone within minutes, and esterases don't saturate.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -4497,13 +4497,13 @@
       "stem": "20 min before the end of a remifentanil-based anesthetic for open colectomy, what is the BEST step to prevent a pain crisis at emergence?",
       "type": "single",
       "options": [
-        "Give naloxone 40 mcg to reset receptors",
+        "Give ketorolac at emergence as the sole analgesic",
         "Stop remifentanil now to allow early breathing",
         "Give a longer-acting opioid or regional block",
         "Increase remifentanil to blunt emergence pain"
       ],
       "answer": 2,
-      "explanation": "Remifentanil leaves no analgesic tail, so a longer-acting opioid, ketamine, or a regional technique must be in place before it stops. Increasing the dose worsens tolerance and hyperalgesia. Stopping early leaves the patient in pain without a transition. Naloxone would add to the pain problem.",
+      "explanation": "Remifentanil leaves no analgesic tail, so a longer-acting opioid, ketamine, or a regional technique must be in place before it stops. Ketorolac helps but alone rarely covers open colectomy pain. Increasing the infusion worsens tolerance and hyperalgesia. Stopping early leaves the patient in pain without a transition.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
