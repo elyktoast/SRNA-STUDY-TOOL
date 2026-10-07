@@ -9004,12 +9004,12 @@
       "type": "single",
       "options": [
         "Glycopyrrolate 0.4 mg",
-        "Neostigmine 1 mg",
+        "Ephedrine 10 mg",
         "Atropine 3 mg, the full vagolytic dose",
         "Isoproterenol infusion"
       ],
       "answer": 3,
-      "explanation": "A transplanted heart is denervated, so drugs that act through the vagus (atropine, glycopyrrolate) don't work. Direct beta agonists such as isoproterenol or epinephrine raise HR. Neostigmine would act only indirectly and isn't useful.",
+      "explanation": "A transplanted heart is denervated, so drugs that act through the vagus (atropine, glycopyrrolate) don't work, even at full vagolytic doses. Ephedrine acts largely by releasing NE from nerve terminals, which are absent, so its effect is weak. Direct beta agonists such as isoproterenol or epinephrine raise HR.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -9281,11 +9281,11 @@
       "options": [
         "Its onset is slow and unpredictable",
         "It causes immediate reflex bradycardia",
-        "It is a direct beta-1 antagonist",
+        "It acts mainly on venous capacitance vessels",
         "It is metabolized too quickly to work"
       ],
       "answer": 0,
-      "explanation": "Hydralazine takes 10–20 min to act and its duration is variable, which makes it poorly suited for rapid control. It causes reflex tachycardia, not bradycardia. It is a direct arteriolar vasodilator, not a beta blocker. Its duration is long, not short.",
+      "explanation": "Hydralazine takes 10–20 min to act and its duration is variable, which makes it poorly suited for rapid control. It dilates arterioles, not veins, causes reflex tachycardia rather than bradycardia, and its duration is long, not short.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
@@ -9577,12 +9577,12 @@
       "type": "single",
       "options": [
         "Theophylline speeds adenosine metabolism",
-        "The doses were too high",
+        "Theophylline makes the AV node supersensitive",
         "Theophylline-induced SVT isn't reentrant",
         "Theophylline blocks adenosine receptors"
       ],
       "answer": 3,
-      "explanation": "Theophylline and caffeine antagonize adenosine receptors, so higher doses or a different drug are needed. Dipyridamole has the opposite effect and requires lower doses. The other choices aren't the reason.",
+      "explanation": "Theophylline and caffeine antagonize adenosine receptors, so higher doses or a different drug are needed; they blunt, rather than heighten, the AV node response. Dipyridamole has the opposite effect and requires lower doses.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -9768,10 +9768,10 @@
         "Cardiovert at 200 J",
         "Give calcium chloride 1 g IV for the arrhythmia",
         "Correct K+ and give digoxin immune Fab",
-        "Give more digoxin to control the rate"
+        "Give amiodarone to control the rate"
       ],
       "answer": 2,
-      "explanation": "Hypokalemia enhances digoxin binding to Na-K ATPase; correcting it and giving Fab fragments treats serious toxicity. Calcium was historically avoided, though data on harm are limited. Cardioversion can provoke VF in digoxin toxicity. More digoxin worsens it.",
+      "explanation": "Hypokalemia enhances digoxin binding to Na-K ATPase; correcting it and giving Fab fragments treats serious toxicity. Amiodarone raises digoxin levels and doesn't treat the cause. Calcium was historically avoided, though data on harm are limited. Cardioversion can provoke VF in digoxin toxicity.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -10120,13 +10120,13 @@
       "stem": "Patient with severe pulmonary hypertension is hypotensive. Isoproterenol is proposed to raise HR. What is the main concern?",
       "type": "single",
       "options": [
-        "It slows AV conduction",
+        "It raises PVR through alpha effects",
         "It constricts pulmonary arteries",
         "It is rapidly inactivated by MAO in the lungs",
         "Beta-2 vasodilation can lower SVR and MAP"
       ],
       "answer": 3,
-      "explanation": "Isoproterenol stimulates beta-2 receptors, which dilates systemic vessels and may lower diastolic pressure and MAP, compromising coronary flow. It dilates pulmonary vessels. It speeds conduction. Metabolism isn't the issue.",
+      "explanation": "Isoproterenol stimulates beta-2 receptors, which dilates systemic vessels and may lower diastolic pressure and MAP, compromising coronary flow. It has no alpha effect and dilates rather than constricts pulmonary vessels. Metabolism isn't the issue.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Clinical Pharm",
@@ -10256,12 +10256,12 @@
       "type": "single",
       "options": [
         "Alpha and beta blocking effects",
-        "Direct cholinergic stimulation",
+        "Increased NE reuptake at the synapse",
         "Inhibition of norepinephrine synthesis",
         "Strong vagolytic activity"
       ],
       "answer": 0,
-      "explanation": "Amiodarone has non-competitive alpha and beta blocking effects and causes vasodilation and decreased catecholamine responsiveness. It isn't vagolytic. It doesn't inhibit NE synthesis or act as a cholinergic agonist.",
+      "explanation": "Amiodarone has non-competitive alpha and beta blocking effects and causes vasodilation and reduced catecholamine responsiveness. It doesn't increase NE reuptake, inhibit NE synthesis, or act as a vagolytic.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -10390,13 +10390,13 @@
       "stem": "Patient on a dopamine infusion at 15 mcg/kg/min develops new runs of VT. What is the BEST step?",
       "type": "single",
       "options": [
-        "Give digoxin",
+        "Switch to epinephrine at a higher dose",
         "Reduce or switch to norepinephrine",
         "Increase dopamine for better perfusion",
         "Add isoproterenol"
       ],
       "answer": 1,
-      "explanation": "High-dose dopamine causes tachyarrhythmias; norepinephrine provides similar pressor effect with fewer arrhythmias. Increasing dopamine or adding a beta agonist worsens arrhythmias. Digoxin isn't appropriate.",
+      "explanation": "High-dose dopamine causes tachyarrhythmias; norepinephrine provides similar pressor effect with fewer arrhythmias. High-dose epinephrine or added isoproterenol keeps strong beta-1 stimulation and arrhythmia risk. Increasing dopamine worsens it.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -10855,11 +10855,11 @@
       "options": [
         "Low antithrombin; give AT concentrate or FFP",
         "Faulty ACT machine; proceed with bypass",
-        "Protamine contamination; give more heparin",
+        "Hypothermia; rewarm and recheck",
         "Heparin-induced thrombocytopenia; switch to bivalirudin"
       ],
       "answer": 0,
-      "explanation": "Prolonged heparin exposure depletes antithrombin, which heparin needs to work. Replacing it restores the response. Protamine contamination isn't likely. HIT causes thrombocytopenia and thrombosis rather than an inadequate ACT. Going on bypass with an inadequate ACT risks circuit thrombosis.",
+      "explanation": "Prolonged heparin exposure depletes antithrombin, which heparin needs to work; replacing it restores the response. Hypothermia prolongs the ACT rather than shortening it. HIT causes thrombocytopenia and thrombosis rather than an inadequate ACT. Going on bypass with an inadequate ACT risks circuit thrombosis.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Clinical Pharm",
@@ -11017,7 +11017,7 @@
       "options": [
         "No; hold it 3 days first",
         "Yes, after platelet function testing",
-        "Yes; it doesn't preclude a neuraxial block",
+        "Yes; it doesn't preclude neuraxial",
         "No; hold it 7 days first"
       ],
       "answer": 2,
@@ -11132,10 +11132,10 @@
         "It inhibits plasmin through a different mechanism",
         "It is about 10 times as potent",
         "It doesn't need dose adjustment in renal failure",
-        "It acts on factor XIII instead of plasmin"
+        "It also inhibits platelet aggregation"
       ],
       "answer": 1,
-      "explanation": "TXA and EACA both block plasminogen's lysine-binding sites, but TXA is roughly 10 times as potent. The mechanism is the same. Both require renal dose adjustment. Neither acts on factor XIII; both block plasminogen activation.",
+      "explanation": "TXA and EACA both block plasminogen's lysine-binding sites, but TXA is roughly 10 times as potent. Neither meaningfully inhibits platelet aggregation. The mechanism is the same, and both require renal dose adjustment.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Clinical Pharm",
@@ -11216,7 +11216,7 @@
       "type": "single",
       "options": [
         "Platelets",
-        "4-factor PCC",
+        "4-factor prothrombin complex concentrate",
         "Albumin 5%",
         "Cryoprecipitate"
       ],
@@ -11250,17 +11250,17 @@
       "choices": [
         "Primary hemostasis",
         "Fibrinogen, vWF, VIII, XIII",
-        "Oncotic pressure only",
-        "All plasma coagulation factors",
+        "Oncotic volume expansion",
+        "The full set of plasma clotting factors",
         "Factors II, VII, IX, X"
       ],
       "answer": {
-        "Fresh frozen plasma": "All plasma coagulation factors",
+        "Fresh frozen plasma": "The full set of plasma clotting factors",
         "Cryoprecipitate": "Fibrinogen, vWF, VIII, XIII",
         "Platelets": "Primary hemostasis",
         "4-factor PCC": "Factors II, VII, IX, X"
       },
-      "explanation": "FFP contains all factors at plasma concentrations; cryo concentrates fibrinogen and vWF; platelets provide primary hemostasis; PCC concentrates the vitamin K-dependent factors. Albumin supplies oncotic pressure without clotting factors.",
+      "explanation": "FFP contains all factors at plasma concentrations; cryo concentrates fibrinogen and vWF; platelets provide primary hemostasis; PCC concentrates the vitamin K-dependent factors. Oncotic volume expansion is albumin's role, without clotting factors.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Clinical Pharm",
@@ -11310,11 +11310,11 @@
       "options": [
         "Give methylprednisolone and continue",
         "Stop or slow it and give a diuretic",
-        "Increase the transfusion rate to finish faster",
+        "Treat as TRALI and avoid diuretics",
         "Give epinephrine for anaphylaxis"
       ],
       "answer": 1,
-      "explanation": "Hypertension, volume overload, and elevated BNP point to TACO, treated by stopping or slowing the transfusion and diuresing. Steroids don't treat volume overload. Nothing suggests anaphylaxis. Faster infusion worsens overload.",
+      "explanation": "Hypertension, volume overload, and elevated BNP point to TACO, treated by stopping or slowing the transfusion and diuresing. TRALI brings hypotension and normal filling pressures, so withholding diuretics would be wrong here. Steroids don't treat overload, and nothing suggests anaphylaxis.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Clinical Pharm",
@@ -11390,7 +11390,7 @@
       "type": "single",
       "options": [
         "0.9% normal saline",
-        "Lactated Ringer's",
+        "Lactated Ringer's solution",
         "D5 0.45% NaCl",
         "D5W"
       ],
@@ -11583,13 +11583,13 @@
       "stem": "Platelets are 18,000 in a patient with suspected HIT who isn't bleeding. A colleague orders platelets before a central line. What is the BEST response?",
       "type": "single",
       "options": [
-        "Give platelets with heparin to prevent clotting",
+        "Give platelets once argatroban is started",
         "Give two units to reach 50,000 first",
         "Avoid them; they may worsen thrombosis",
         "Give one unit; HIT doesn't affect transfused platelets"
       ],
       "answer": 2,
-      "explanation": "Platelet transfusion in HIT can fuel thrombosis and is reserved for active bleeding or very high-risk procedures. Heparin is contraindicated. Transfused platelets are activated by the same antibodies.",
+      "explanation": "Platelet transfusion in HIT can fuel thrombosis and is reserved for active bleeding or very high-risk procedures, even after a direct thrombin inhibitor is running. Transfused platelets are activated by the same antibodies.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Clinical Pharm",
@@ -12244,10 +12244,10 @@
         "Glucagon 1 mg IM",
         "Glucose gel 15 g by mouth",
         "D50 25 g PO",
-        "Insulin 2 units SC"
+        "Wait for IV access, then give D50"
       ],
       "answer": 0,
-      "explanation": "Without IV access, glucagon IM or IN raises glucose within about 15–25 min. Oral therapy is unsafe in an unresponsive patient. Insulin worsens hypoglycemia.",
+      "explanation": "Without IV access, glucagon IM or IN raises glucose within about 15–25 min; waiting for access delays treatment of a dangerously low glucose. Oral therapy is unsafe in an unresponsive patient.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -12674,11 +12674,11 @@
       "options": [
         "Rebound seizures after a single dose",
         "Increased bleeding risk",
-        "Severe hypertension from alpha-2-delta binding",
+        "Dizziness causing falls after discharge home",
         "Additive respiratory depression with opioids"
       ],
       "answer": 3,
-      "explanation": "Gabapentinoids add sedation and respiratory depression to opioids, especially in older adults with lung disease. A single preop dose isn't linked to rebound seizures. They don't cause hypertension or bleeding.",
+      "explanation": "Gabapentinoids add sedation and respiratory depression to opioids, especially in older adults with lung disease. Dizziness and falls are real side effects but aren't the main risk for this patient on home O2. A single preop dose isn't linked to rebound seizures, and it doesn't cause bleeding.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -12701,11 +12701,11 @@
       "options": [
         "Gabapentin uses a saturable transporter",
         "Gabapentin is destroyed by stomach acid",
-        "Pregabalin is absorbed in the mouth",
+        "Gabapentin undergoes extensive first-pass metabolism",
         "Pregabalin is more lipid soluble"
       ],
       "answer": 0,
-      "explanation": "Gabapentin's absorption relies on a saturable L-amino acid transporter, so bioavailability falls as the dose rises; pregabalin's absorption is linear. The other options aren't the reason.",
+      "explanation": "Gabapentin's absorption relies on a saturable L-amino acid transporter, so bioavailability falls as the dose rises; pregabalin's absorption is linear. Neither drug is meaningfully metabolized, so first-pass metabolism isn't the explanation.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -12755,7 +12755,7 @@
       "options": [
         "Malignant hyperthermia",
         "Neuroleptic malignant syndrome",
-        "Withdrawal from interrupted drug delivery",
+        "Withdrawal from pump interruption",
         "Serotonin syndrome"
       ],
       "answer": 2,
@@ -12808,12 +12808,12 @@
       "type": "single",
       "options": [
         "Serotonergic toxicity and seizures",
-        "Hyperkalemia",
+        "Additive anticholinergic urinary retention",
         "Bleeding from additive platelet inhibition",
         "Reduced tramadol absorption"
       ],
       "answer": 0,
-      "explanation": "Cyclobenzaprine is structurally related to TCAs and adds serotonergic and seizure risk with tramadol. The other interactions aren't relevant.",
+      "explanation": "Cyclobenzaprine is structurally related to TCAs and adds serotonergic and seizure risk with tramadol. Anticholinergic effects such as retention can occur but aren't the main interaction concern.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -13045,10 +13045,10 @@
         "Serotonin syndrome",
         "Prolonged neuromuscular block after surgery",
         "Rebound hypertension and tachycardia",
-        "Hypoglycemia"
+        "Rebound bradycardia and hypotension"
       ],
       "answer": 2,
-      "explanation": "Tizanidine is a central alpha-2 agonist like clonidine, so abrupt cessation can cause rebound hypertension, tachycardia, and increased tone. The other options aren't withdrawal effects of tizanidine.",
+      "explanation": "Tizanidine is a central alpha-2 agonist like clonidine, so abrupt cessation causes rebound hypertension and tachycardia, the opposite of its usual effect. Serotonin syndrome and prolonged block aren't withdrawal effects.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -13245,11 +13245,11 @@
       "options": [
         "Both reduce renal lithium clearance",
         "Ibuprofen displaces lithium from albumin",
-        "Lithium inhibits COX and accumulates",
+        "Ibuprofen inhibits lithium hepatic metabolism",
         "HCTZ increases lithium absorption"
       ],
       "answer": 0,
-      "explanation": "Thiazides and NSAIDs both reduce renal lithium excretion, pushing levels into the toxic range. Lithium isn't protein bound. Absorption isn't increased. Lithium doesn't inhibit COX.",
+      "explanation": "Thiazides and NSAIDs both reduce renal lithium excretion. Lithium isn't hepatically metabolized or protein bound, and absorption isn't increased.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13270,7 +13270,7 @@
       "stem": "Which perioperative effects are associated with lithium? (Select 3)",
       "type": "multi",
       "options": [
-        "Increased warfarin clearance",
+        "A higher seizure threshold",
         "Prolonged neuromuscular block",
         "Nephrogenic diabetes insipidus",
         "Hyperthermia like MH",
@@ -13282,7 +13282,7 @@
         2,
         4
       ],
-      "explanation": "Lithium prolongs both depolarizing and nondepolarizing block, lowers MAC, and causes nephrogenic DI. It doesn't cause succinylcholine resistance, MH-like reactions, or faster warfarin clearance.",
+      "explanation": "Lithium prolongs both depolarizing and nondepolarizing block, lowers MAC, and causes nephrogenic DI. Toxicity lowers rather than raises the seizure threshold. It doesn't cause succinylcholine resistance or MH-like reactions.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13330,13 +13330,13 @@
       "stem": "Patient on carbamazepine for years has rocuronium wear off faster than expected. Why?",
       "type": "single",
       "options": [
-        "Carbamazepine blocks rocuronium binding to sugammadex",
+        "Carbamazepine speeds rocuronium's Hofmann elimination",
         "Acute carbamazepine potentiates block",
         "Enzyme induction and receptor upregulation",
         "Carbamazepine increases renal clearance"
       ],
       "answer": 2,
-      "explanation": "Chronic anticonvulsants induce hepatic metabolism and upregulate ACh receptors, causing resistance to nondepolarizing relaxants. Acute exposure can potentiate block, which is the opposite pattern. The other choices aren't mechanisms.",
+      "explanation": "Chronic anticonvulsants induce hepatic metabolism and upregulate ACh receptors, causing resistance to nondepolarizing relaxants. Acute exposure can potentiate block. Rocuronium isn't cleared by Hofmann elimination, and renal clearance isn't increased.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -13359,11 +13359,11 @@
       "options": [
         "No faster than 500 mg/min",
         "No faster than 5 mg/min",
-        "As a rapid push over 30 sec",
+        "No faster than 150 mg PE/min",
         "No faster than 50 mg/min"
       ],
       "answer": 3,
-      "explanation": "Rapid phenytoin can cause severe hypotension and arrhythmias, so infusion should not exceed 50 mg/min (slower in older adults). 500 mg/min and rapid push are dangerous. 5 mg/min is unnecessarily slow.",
+      "explanation": "Rapid phenytoin can cause severe hypotension and arrhythmias, so infusion shouldn't exceed 50 mg/min (slower in older adults). 150 mg PE/min is the fosphenytoin limit, not phenytoin's. 500 mg/min is dangerous; 5 mg/min is unnecessarily slow.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
