@@ -4740,13 +4740,13 @@
       "stem": "Patient with ESRD has received meperidine for 3 days and now has tremor and a seizure. What is the BEST response?",
       "type": "single",
       "options": [
-        "Increase meperidine to control agitation",
+        "Switch to morphine and continue",
         "Give naloxone to reverse normeperidine",
-        "Give flumazenil to reverse the seizure",
+        "Give phenytoin as the first drug",
         "Treat the seizure with a benzodiazepine"
       ],
       "answer": 3,
-      "explanation": "Normeperidine is a neurotoxic metabolite with a long half-life in kidney failure, and naloxone doesn't reverse its seizures and may worsen them. A benzodiazepine treats the seizure. Flumazenil reverses benzodiazepines and isn't relevant. More meperidine adds more normeperidine.",
+      "explanation": "Normeperidine is a neurotoxic metabolite with a long half-life in kidney failure, and naloxone doesn't reverse its seizures. A benzodiazepine treats the seizure first. Phenytoin is a second-line drug. Switching to morphine trades one renally accumulating metabolite (normeperidine) for another (M6G).",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -5091,11 +5091,11 @@
       "options": [
         "Heat increased patch absorption",
         "Hypothermia slowed fentanyl metabolism",
-        "Remifentanil interaction with the patch",
+        "Patch fentanyl redistributing from fat after surgery",
         "Opioid withdrawal from patch removal"
       ],
       "answer": 0,
-      "explanation": "Heat raises skin blood flow and drug release from transdermal systems, increasing fentanyl absorption. The patient was warmed, not cooled. No remifentanil was described. Withdrawal doesn't cause somnolence or a low respiratory rate.",
+      "explanation": "Heat raises skin blood flow and drug release from transdermal systems, increasing fentanyl absorption. Redistribution from fat isn't the timing-linked cause here. The patient was warmed, not cooled. Withdrawal doesn't cause somnolence or a low respiratory rate.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -5308,10 +5308,10 @@
         "Ceiling effect from its mixed receptor activity",
         "Rapid ester metabolism shortening exposure",
         "High protein binding limiting free drug",
-        "Lack of any effect on brainstem respiratory centers"
+        "Lower lipid solubility limiting CNS entry"
       ],
       "answer": 0,
-      "explanation": "Nalbuphine's respiratory depression plateaus at about 30 mg because it acts as a kappa agonist and partial mu antagonist. It does have some respiratory effect. It is hepatically metabolized, not by esterases. Protein binding isn't what creates the ceiling.",
+      "explanation": "Nalbuphine's respiratory depression plateaus at about 30 mg because it acts as a kappa agonist and partial mu antagonist. Its CNS entry isn't the limiting factor. It is hepatically metabolized, not by esterases. Protein binding isn't what creates the ceiling.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -5550,7 +5550,7 @@
         "Meperidine"
       ],
       "choices": [
-        "About 10,000 times",
+        "About 10–20 times",
         "About 5–7 times",
         "About 100 times",
         "About one-tenth",
@@ -5562,7 +5562,7 @@
         "Sufentanil": "About 1,000 times",
         "Meperidine": "About one-tenth"
       },
-      "explanation": "Hydromorphone ~5–7×, fentanyl ~100×, sufentanil ~500–1,000×, meperidine ~0.1×. No clinical opioid in this group is 10,000 times as potent.",
+      "explanation": "Hydromorphone ~5–7×, fentanyl ~100×, sufentanil ~500–1,000×, meperidine ~0.1×. The extra choice, about 10–20 times, is closer to alfentanil's relative potency.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -5784,13 +5784,13 @@
       "stem": "Awake patient receives dexamethasone 8 mg IV push before induction and reports intense burning and itching in the perineum. What prevents this next time?",
       "type": "single",
       "options": [
-        "Mix it with glycopyrrolate in one syringe",
+        "Give ondansetron first to block the reaction",
         "Pretreat with diphenhydramine",
         "Give it slowly, or once the patient is asleep",
         "Give it intramuscularly instead"
       ],
       "answer": 2,
-      "explanation": "Perineal burning is a known reaction to rapid IV dexamethasone phosphate in awake patients; slow injection or giving it after induction avoids it. Diphenhydramine doesn't address the mechanism. IM dosing is painful and unnecessary. Glycopyrrolate is incompatible with dexamethasone in the same syringe.",
+      "explanation": "Perineal burning is a known reaction to rapid IV dexamethasone phosphate in awake patients; slow injection or giving it after induction avoids it. Ondansetron and diphenhydramine don't address the mechanism. IM dosing is painful and unnecessary.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -6351,7 +6351,7 @@
       "choices": [
         "Akathisia and dystonia",
         "Hyperglycemia",
-        "Pancreatitis",
+        "Hypokalemia",
         "QT prolongation",
         "Delirium in older adults"
       ],
@@ -6361,7 +6361,7 @@
         "Scopolamine": "Delirium in older adults",
         "Dexamethasone": "Hyperglycemia"
       },
-      "explanation": "Ondansetron prolongs QT; metoclopramide causes extrapyramidal effects; scopolamine causes central anticholinergic effects; dexamethasone raises glucose. Pancreatitis isn't a typical effect of these drugs.",
+      "explanation": "Ondansetron prolongs QT; metoclopramide causes extrapyramidal effects; scopolamine causes central anticholinergic effects; dexamethasone raises glucose. Hypokalemia isn't a characteristic effect of these antiemetics at PONV doses.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -6383,12 +6383,12 @@
       "type": "single",
       "options": [
         "Ondansetron 4 mg IV",
-        "Dantrolene 1 mg/kg IV over 5 min",
+        "Midazolam 2 mg IV alone",
         "Haloperidol 1 mg IV",
         "Diphenhydramine 25–50 mg IV"
       ],
       "answer": 3,
-      "explanation": "This is an acute dystonic reaction from D2 blockade, treated with an anticholinergic antihistamine such as diphenhydramine (or benztropine). Haloperidol is another D2 antagonist. Ondansetron doesn't reverse dystonia. Dantrolene is for MH.",
+      "explanation": "This is an acute dystonic reaction from D2 blockade, treated with an anticholinergic antihistamine such as diphenhydramine (or benztropine). Midazolam may calm the patient but doesn't reverse the dystonia. Haloperidol is another D2 antagonist. Ondansetron doesn't reverse dystonia.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -6572,12 +6572,12 @@
       "type": "single",
       "options": [
         "Give epinephrine 0.3 mg IM",
-        "Push the remaining dose to finish quickly",
+        "Give diphenhydramine and continue at the same rate",
         "Stop, give an antihistamine, resume slower",
         "Switch permanently to daptomycin"
       ],
       "answer": 2,
-      "explanation": "This is a vancomycin infusion reaction from histamine release when infused too fast. Stopping, giving an H1 blocker, and resuming over 2 hr or longer usually works. Without airway, breathing, or severe circulatory signs it isn't anaphylaxis. It isn't an allergy, so the drug doesn't need to be abandoned. Speeding it up makes it worse.",
+      "explanation": "This is a vancomycin infusion reaction from rate-related histamine release. Stopping, giving an H1 blocker, and resuming over 2 hr or longer usually works; continuing at the same rate keeps triggering it. Without airway, breathing, or severe circulatory signs it isn't anaphylaxis. It isn't an allergy, so the drug doesn't need to be abandoned.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Clinical Pharm",
@@ -6627,11 +6627,11 @@
       "options": [
         "Anticholinesterases don't reverse its effect",
         "Clindamycin blocks muscarinic receptors",
-        "Clindamycin binds sugammadex",
+        "Neostigmine was given too early in recovery",
         "Clindamycin inhibits acetylcholinesterase"
       ],
       "answer": 0,
-      "explanation": "Clindamycin potentiates block at both prejunctional and postjunctional sites, and this component doesn't respond well to neostigmine or calcium; sugammadex or time may be needed. It doesn't inhibit the enzyme, bind sugammadex, or act at muscarinic receptors.",
+      "explanation": "Clindamycin potentiates block at prejunctional and postjunctional sites, and this component doesn't respond well to neostigmine or calcium; sugammadex or time may be needed. Neostigmine at TOF count 4 isn't too early. Clindamycin doesn't inhibit the enzyme or act at muscarinic receptors.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Clinical Pharm",
@@ -6870,11 +6870,11 @@
       "options": [
         "Inactivation of clindamycin by calcium binding",
         "Physical incompatibility in the line",
-        "Hypercalcemia from clindamycin",
+        "Calcium potentiates clindamycin's NMB effect",
         "Clindamycin-induced hypocalcemia"
       ],
       "answer": 1,
-      "explanation": "Clindamycin is incompatible with calcium gluconate and barbiturates in the same line. The other options aren't the interaction.",
+      "explanation": "Clindamycin is incompatible with calcium gluconate and barbiturates in the same line. Calcium partially antagonizes, rather than potentiates, drug-induced neuromuscular weakness. Clindamycin doesn't alter calcium levels.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Clinical Pharm",
@@ -6967,7 +6967,7 @@
         "Clindamycin"
       ],
       "choices": [
-        "Pseudomonas coverage",
+        "Gram-negative aerobic coverage",
         "MRSA coverage",
         "First-line for MSSA and streptococci",
         "Gram-positive option in beta-lactam allergy",
@@ -6979,7 +6979,7 @@
         "Metronidazole": "Anaerobic coverage",
         "Clindamycin": "Gram-positive option in beta-lactam allergy"
       },
-      "explanation": "Cefazolin is the default; vancomycin adds MRSA coverage; metronidazole covers anaerobes; clindamycin is an alternative for serious beta-lactam allergy. None of these is chosen for Pseudomonas.",
+      "explanation": "Cefazolin is the default for MSSA and streptococci; vancomycin adds MRSA coverage; metronidazole covers anaerobes; clindamycin is an alternative for serious beta-lactam allergy. Gram-negative aerobic coverage is the role of an aminoglycoside such as gentamicin.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Clinical Pharm",
@@ -7297,13 +7297,13 @@
       "stem": "During a large oxytocin infusion with hypotonic fluids, the patient becomes confused and has a seizure. Sodium is 121. Which oxytocin property explains this?",
       "type": "single",
       "options": [
-        "Inhibition of the sodium-potassium pump",
+        "Cerebral vasospasm from oxytocin",
         "ADH-like water retention",
         "Direct neurotoxicity at high doses",
         "Mineralocorticoid effect on the kidney"
       ],
       "answer": 1,
-      "explanation": "Oxytocin resembles vasopressin and has antidiuretic activity, which can cause water intoxication with large doses and hypotonic fluid. The other mechanisms don't apply.",
+      "explanation": "Oxytocin resembles vasopressin and has antidiuretic activity, which can cause water intoxication with large doses and hypotonic fluid; sodium of 121 fits. Vasospasm, direct neurotoxicity, and mineralocorticoid effects don't explain hyponatremia.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -7326,7 +7326,7 @@
       "options": [
         "Methylergonovine",
         "Carboprost",
-        "Calcium chloride",
+        "Oxytocin 1–3 unit IV bolus",
         "Oxytocin infusion",
         "Misoprostol",
         "Tranexamic acid"
@@ -7335,7 +7335,7 @@
         0,
         1
       ],
-      "explanation": "Methylergonovine worsens hypertension and carboprost can cause bronchospasm. Oxytocin and misoprostol are acceptable uterotonics. TXA reduces bleeding, and calcium may help uterine tone in hypocalcemia.",
+      "explanation": "Methylergonovine worsens hypertension and carboprost can cause bronchospasm. A small oxytocin bolus, an oxytocin infusion, and misoprostol are acceptable uterotonics here. TXA reduces bleeding.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -7366,7 +7366,7 @@
         "Myasthenia gravis",
         "Hypertension or preeclampsia",
         "Reactive airway disease",
-        "Sulfonamide allergy"
+        "Uterine tachysystole"
       ],
       "answer": {
         "Methylergonovine": "Hypertension or preeclampsia",
@@ -7374,7 +7374,7 @@
         "Rapid oxytocin bolus": "Hypotension and tachycardia",
         "Magnesium sulfate": "Myasthenia gravis"
       },
-      "explanation": "Methylergonovine constricts vessels; carboprost causes bronchospasm; rapid oxytocin causes vasodilation; magnesium can cause crisis in myasthenia. Sulfonamide allergy isn't relevant to these drugs.",
+      "explanation": "Methylergonovine constricts vessels; carboprost causes bronchospasm; a rapid oxytocin bolus causes vasodilation; magnesium can cause crisis in myasthenia. Uterine tachysystole is a caution for an oxytocin infusion during labor, not the bolus effect listed.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -8145,12 +8145,12 @@
       "type": "single",
       "options": [
         "Their axons have fewer sodium channels",
-        "They release more acetylcholine at the terminal",
+        "Repeated firing concentrates drug near the nerve",
         "Open channels expose the binding site",
         "They have thinner myelin sheaths"
       ],
       "answer": 2,
-      "explanation": "Local anesthetics bind best to open or inactivated sodium channels from inside the cell, so frequent firing exposes more binding sites (use-dependent block). Myelin and channel density affect sensitivity differently. ACh release isn't involved.",
+      "explanation": "Local anesthetics bind best to open or inactivated sodium channels from inside the cell, so frequent firing exposes more binding sites (use-dependent block). Firing doesn't change local drug concentration. Myelin and channel density affect sensitivity differently.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -8218,7 +8218,7 @@
       "choices": [
         "2.5 mg/kg",
         "11 mg/kg",
-        "15 mg/kg",
+        "3 mg/kg",
         "7 mg/kg",
         "4.5 mg/kg"
       ],
@@ -8228,7 +8228,7 @@
         "Bupivacaine, plain": "2.5 mg/kg",
         "Chloroprocaine, plain": "11 mg/kg"
       },
-      "explanation": "Commonly cited maximums: lidocaine 4.5 plain and 7 with epinephrine, bupivacaine 2.5 plain (3 with epinephrine), chloroprocaine about 11 plain (14 with epinephrine). 15 mg/kg doesn't match any of these.",
+      "explanation": "Commonly cited maximums: lidocaine 4.5 plain and 7 with epinephrine, bupivacaine 2.5 plain, chloroprocaine about 11 plain. The extra choice, 3 mg/kg, is the bupivacaine-with-epinephrine and ropivacaine maximum.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -8411,13 +8411,13 @@
       "stem": "Patient with documented complete heart block needs a regional technique. Which concern about lidocaine-based infiltration is MOST relevant?",
       "type": "single",
       "options": [
-        "Lidocaine causes hyperkalemia",
+        "Lidocaine speeds AV nodal conduction",
         "Systemic lidocaine can depress conduction further",
         "Lidocaine raises the threshold for pacing capture",
         "Lidocaine accelerates junctional escape rhythms"
       ],
       "answer": 1,
-      "explanation": "Lidocaine depresses SA and conduction tissue automaticity at high systemic levels, so caution is warranted with significant conduction disease. It isn't known to dramatically change pacing thresholds at therapeutic levels. It doesn't speed escape rhythms or cause hyperkalemia.",
+      "explanation": "Lidocaine depresses conduction tissue at high systemic levels, so caution is warranted with significant conduction disease; it doesn't speed AV conduction. It isn't known to dramatically change pacing thresholds at therapeutic levels or speed escape rhythms.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -8625,13 +8625,13 @@
       "stem": "Beach-chair shoulder case under interscalene block and LMA. BP 82/50, HR 92. After phenylephrine 100 mcg, HR falls to 35 and BP barely improves. BEST next step?",
       "type": "single",
       "options": [
-        "Give naloxone for opioid-related bradycardia",
+        "Give glycopyrrolate and keep the beach-chair angle",
         "Give ephedrine or atropine; lower the head",
         "Give esmolol to slow the vigorous ventricle",
         "Give more phenylephrine to restore preload"
       ],
       "answer": 1,
-      "explanation": "Upright positioning with a near-empty, vigorously contracting ventricle can trigger the Bezold-Jarisch reflex, causing sudden bradycardia and hypotension; pure alpha agonism makes the reflex slowing worse. Treat with chronotropy (ephedrine, atropine, or epinephrine if severe) and improve venous return. More phenylephrine deepens bradycardia. Beta blockers are sometimes used for prevention, not to treat HR 35. Nothing suggests an opioid cause.",
+      "explanation": "Upright positioning with a near-empty, vigorously contracting ventricle can trigger the Bezold-Jarisch reflex, causing sudden bradycardia and hypotension; pure alpha agonism makes the reflex slowing worse. Treat with chronotropy (ephedrine, atropine, or epinephrine if severe) and improve venous return by lowering the head. An anticholinergic alone without restoring preload leaves the trigger in place. More phenylephrine deepens bradycardia. Beta blockers are sometimes used for prevention, not to treat HR 35.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -8735,11 +8735,11 @@
       "options": [
         "Alpha-1 driven renal K+ wasting",
         "Beta-2 driven shift of K+ into cells",
-        "Dilution from carrier fluids",
+        "Beta-1 driven renal K+ excretion",
         "Epinephrine-induced aldosterone release"
       ],
       "answer": 1,
-      "explanation": "Beta-2 stimulation activates the Na-K ATPase and moves potassium into cells within minutes. Alpha-1 and aldosterone effects don't explain an acute drop. Dilution wouldn't cause this size of change.",
+      "explanation": "Beta-2 stimulation activates the Na-K ATPase and moves potassium into cells within minutes. It's a shift, not renal loss through beta-1 or alpha-1 effects. Aldosterone effects don't explain an acute drop.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
