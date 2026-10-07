@@ -3614,13 +3614,13 @@
       "stem": "First adenosine dose through a central line?",
       "type": "single",
       "options": [
-        "300 mg",
-        "0.03 mg",
-        "3 g",
+        "12 mg",
+        "6 mg",
+        "1 mg",
         "3 mg"
       ],
       "answer": 3,
-      "explanation": "Adenosine, central line: 3 mg. 0.03 mg is hundredfold too low. 3 g uses g instead of mg. 300 mg is hundredfold too high.",
+      "explanation": "Adenosine, central line: 3 mg. 12 mg is the second peripheral dose. 6 mg is the peripheral first dose. 1 mg is a heart transplant starting dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3642,12 +3642,12 @@
       "type": "single",
       "options": [
         "2–20 mcg/kg/min",
-        "20–200 mcg/kg/min",
-        "0.2–2 mcg/kg/min",
-        "2–20 mg/kg/min"
+        "30–50 mcg/kg/min",
+        "0.01–0.5 mcg/kg/min",
+        "0.375–0.75 mcg/kg/min"
       ],
       "answer": 0,
-      "explanation": "Dobutamine, infusion: 2–20 mcg/kg/min. 20–200 mcg/kg/min is tenfold too high. 2–20 mg/kg/min uses mg/kg/min instead of mcg/kg/min. 0.2–2 mcg/kg/min is tenfold too low.",
+      "explanation": "Dobutamine, infusion: 2–20 mcg/kg/min. 30–50 mcg/kg/min is above the usual range. 0.01–0.5 mcg/kg/min is the norepinephrine range. 0.375–0.75 mcg/kg/min is the milrinone range.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3668,13 +3668,13 @@
       "stem": "Typical esmolol loading dose?",
       "type": "single",
       "options": [
-        "0.05 mg/kg",
+        "0.1 mg/kg",
         "0.5 mg/kg",
-        "0.5 mcg/kg",
-        "0.5 g/kg"
+        "5 mg/kg",
+        "50–300 mcg/kg/min"
       ],
       "answer": 1,
-      "explanation": "Esmolol, load: 0.5 mg/kg. 0.05 mg/kg is tenfold too low. 0.5 mcg/kg uses mcg/kg instead of mg/kg. 0.5 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Esmolol, load: 0.5 mg/kg. 0.1 mg/kg is too small. 5 mg/kg is excessive. 50–300 mcg/kg/min is the infusion range.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3695,13 +3695,13 @@
       "stem": "Amiodarone infusion rate for the first 6 hr after loading?",
       "type": "single",
       "options": [
-        "10 mg/min",
-        "0.1 mg/min",
+        "0.5 mg/min",
+        "2 mg/min",
         "1 mg/min",
-        "1 mcg/min"
+        "15 mg/min"
       ],
       "answer": 2,
-      "explanation": "Amiodarone, maintenance: 1 mg/min. 1 mcg/min uses mcg/min instead of mg/min. 0.1 mg/min is tenfold too low. 10 mg/min is tenfold too high.",
+      "explanation": "Amiodarone, maintenance: 1 mg/min. 0.5 mg/min is the rate for the next 18 hr. 2 mg/min is double the initial rate. 15 mg/min is the loading rate over 10 min.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3722,13 +3722,13 @@
       "stem": "Typical ephedrine IV bolus?",
       "type": "single",
       "options": [
-        "50–100 mg",
-        "0.5–1 mg",
-        "5–10 mcg",
+        "50–100 mcg",
+        "1–2 mg",
+        "25–50 mg",
         "5–10 mg"
       ],
       "answer": 3,
-      "explanation": "Ephedrine, bolus: 5–10 mg. 0.5–1 mg is tenfold too low. 50–100 mg is tenfold too high. 5–10 mcg uses mcg instead of mg.",
+      "explanation": "Ephedrine, bolus: 5–10 mg. 50–100 mcg is the phenylephrine bolus. 1–2 mg is too small. 25–50 mg is excessive for a first bolus.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3750,12 +3750,12 @@
       "type": "single",
       "options": [
         "10–200 mcg/min",
-        "100–2,000 mcg/min",
-        "100–2,000 mg/min",
-        "1,000–20,000 mcg/min"
+        "1–5 mcg/min",
+        "500–1,000 mcg/min",
+        "0.3–10 mcg/kg/min"
       ],
       "answer": 0,
-      "explanation": "Nitroglycerin, infusion: 10–200 mcg/min. 100–2,000 mg/min uses mg/min and is tenfold high. 1,000–20,000 mcg/min is hundredfold too high. 100–2,000 mcg/min is tenfold too high.",
+      "explanation": "Nitroglycerin, infusion: 10–200 mcg/min. 1–5 mcg/min is too low. 500–1,000 mcg/min is excessive. 0.3–10 mcg/kg/min is the nitroprusside range.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3776,13 +3776,13 @@
       "stem": "Typical isoproterenol infusion range?",
       "type": "single",
       "options": [
-        "2–10 mg/min",
+        "0.2–0.5 mcg/min",
         "2–10 mcg/min",
-        "2–10 mcg/hr",
-        "20–100 mcg/min"
+        "20–40 mcg/min",
+        "50–200 mcg"
       ],
       "answer": 1,
-      "explanation": "Isoproterenol, infusion: 2–10 mcg/min. 2–10 mg/min uses mg/min instead of mcg/min. 2–10 mcg/hr uses mcg/hr instead of mcg/min. 20–100 mcg/min is tenfold too high.",
+      "explanation": "Isoproterenol, infusion: 2–10 mcg/min. 0.2–0.5 mcg/min is too low. 20–40 mcg/min is excessive. 50–200 mcg is the phenylephrine bolus.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3803,13 +3803,13 @@
       "stem": "IV nitroglycerin bolus for uterine relaxation?",
       "type": "single",
       "options": [
+        "400 mcg",
         "5–10 mcg",
-        "50–100 mg",
         "50–100 mcg",
-        "5–10 mg"
+        "0.5–1 mg"
       ],
       "answer": 2,
-      "explanation": "Nitroglycerin, uterine relaxation: 50–100 mcg. 5–10 mg uses mg and is tenfold low. 50–100 mg uses mg instead of mcg. 5–10 mcg is tenfold too low.",
+      "explanation": "Nitroglycerin, uterine relaxation: 50–100 mcg. 400 mcg is the sublingual tablet dose. 5–10 mcg is too small. 0.5–1 mg is excessive.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3830,13 +3830,13 @@
       "stem": "Typical phenylephrine infusion rate?",
       "type": "single",
       "options": [
-        "100–1,000 mcg/min",
-        "10–100 mg/min",
-        "10–100 mcg/hr",
+        "200–400 mcg/min",
+        "0.5–1 unit",
+        "1–2 mcg/min",
         "10–100 mcg/min"
       ],
       "answer": 3,
-      "explanation": "Phenylephrine, infusion: 10–100 mcg/min. 10–100 mg/min uses mg/min instead of mcg/min. 100–1,000 mcg/min is tenfold too high. 10–100 mcg/hr uses mcg/hr instead of mcg/min.",
+      "explanation": "Phenylephrine, infusion: 10–100 mcg/min. 200–400 mcg/min is excessive. 0.5–1 unit is the vasopressin bolus. 1–2 mcg/min is too low.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3858,12 +3858,12 @@
       "type": "single",
       "options": [
         "5–10 mg",
-        "5–10 g",
-        "5–10 mcg",
-        "0.5–1 mg"
+        "50 mg",
+        "20–40 mg",
+        "1–2 mg"
       ],
       "answer": 0,
-      "explanation": "Hydralazine, IV: 5–10 mg. 5–10 mcg uses mcg instead of mg. 0.5–1 mg is tenfold too low. 5–10 g uses g instead of mg.",
+      "explanation": "Hydralazine, IV: 5–10 mg. 50 mg is an oral dose. 20–40 mg is an excessive first IV dose. 1–2 mg is too small.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3884,13 +3884,13 @@
       "stem": "Typical IV calcium chloride dose?",
       "type": "single",
       "options": [
-        "10 g/kg",
+        "30 mg/kg",
         "10 mg/kg",
-        "1 mg/kg",
-        "100 mg/kg"
+        "3 mg/kg",
+        "50 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Calcium chloride: 10 mg/kg. 1 mg/kg is tenfold too low. 100 mg/kg is tenfold too high. 10 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Calcium chloride: 10 mg/kg. 30 mg/kg is the calcium gluconate dose. 3 mg/kg is too low. 50 mg/kg is excessive.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3911,13 +3911,13 @@
       "stem": "Adult IM epinephrine dose for anaphylaxis?",
       "type": "single",
       "options": [
-        "0.3–0.5 mcg",
-        "3–5 mg",
+        "1 mg",
+        "0.1 mg",
         "0.3–0.5 mg",
-        "0.03–0.05 mg"
+        "10–100 mcg"
       ],
       "answer": 2,
-      "explanation": "Epinephrine, anaphylaxis IM: 0.3–0.5 mg. 0.03–0.05 mg is tenfold too low. 3–5 mg is tenfold too high. 0.3–0.5 mcg uses mcg instead of mg.",
+      "explanation": "Epinephrine, anaphylaxis IM: 0.3–0.5 mg. 1 mg is the IV arrest dose. 0.1 mg is a small pediatric-size IM dose. 10–100 mcg is the titrated IV bolus.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3938,13 +3938,13 @@
       "stem": "Clevidipine maximum labeled infusion rate?",
       "type": "single",
       "options": [
-        "3.2 mg/hr",
-        "32 mg/min",
-        "320 mg/hr",
+        "64 mg/hr",
+        "15 mg/hr",
+        "16 mg/hr",
         "32 mg/hr"
       ],
       "answer": 3,
-      "explanation": "Clevidipine, max: 32 mg/hr. 3.2 mg/hr is tenfold too low. 320 mg/hr is tenfold too high. 32 mg/min uses mg/min instead of mg/hr.",
+      "explanation": "Clevidipine, max: 32 mg/hr. 64 mg/hr is double the labeled maximum. 15 mg/hr is the nicardipine maximum. 16 mg/hr is where most patients are controlled.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3966,12 +3966,12 @@
       "type": "single",
       "options": [
         "0.3–10 mcg/kg/min",
-        "0.3–10 mcg/kg/hr",
-        "30–1,000 mcg/kg/min",
-        "0.03–1 mcg/kg/min"
+        "15–20 mcg/kg/min",
+        "10–200 mcg/min",
+        "0.01–0.1 mcg/kg/min"
       ],
       "answer": 0,
-      "explanation": "Nitroprusside, range: 0.3–10 mcg/kg/min. 30–1,000 mcg/kg/min is hundredfold too high. 0.3–10 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 0.03–1 mcg/kg/min is tenfold too low. Limit the maximum rate to about 10 min.",
+      "explanation": "Nitroprusside, range: 0.3–10 mcg/kg/min. 15–20 mcg/kg/min is above the maximum. 10–200 mcg/min is the nitroglycerin range. 0.01–0.1 mcg/kg/min is the epinephrine infusion range. Limit the maximum rate to about 10 min.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3992,13 +3992,13 @@
       "stem": "First IV labetalol dose for severe hypertension in pregnancy?",
       "type": "single",
       "options": [
-        "20 mcg",
+        "10 mg",
         "20 mg",
-        "2 mg",
-        "20 g"
+        "40 mg",
+        "80 mg"
       ],
       "answer": 1,
-      "explanation": "Labetalol, preeclampsia first dose: 20 mg. 20 g uses g instead of mg. 20 mcg uses mcg instead of mg. 2 mg is tenfold too low.",
+      "explanation": "Labetalol, preeclampsia first dose: 20 mg. 10 mg is a smaller general intraop increment. 40 mg is the second dose. 80 mg is the third dose.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4019,13 +4019,13 @@
       "stem": "First IV diltiazem dose for AF?",
       "type": "single",
       "options": [
-        "0.025 mg/kg",
-        "0.25 mcg/kg",
+        "0.35 mg/kg",
+        "1 mg/kg",
         "0.25 mg/kg",
-        "0.25 g/kg"
+        "0.1 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Diltiazem, first dose: 0.25 mg/kg. 0.25 g/kg uses g/kg instead of mg/kg. 0.25 mcg/kg uses mcg/kg instead of mg/kg. 0.025 mg/kg is tenfold too low.",
+      "explanation": "Diltiazem, first dose: 0.25 mg/kg. 0.35 mg/kg is the second dose. 1 mg/kg is excessive. 0.1 mg/kg is too low.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4046,13 +4046,13 @@
       "stem": "Typical phenylephrine IV bolus?",
       "type": "single",
       "options": [
-        "50–200 mg",
-        "500–2,000 mcg",
-        "5–20 mcg",
+        "10–20 mcg",
+        "500–1,000 mcg",
+        "5–10 mg",
         "50–200 mcg"
       ],
       "answer": 3,
-      "explanation": "Phenylephrine, bolus: 50–200 mcg. 50–200 mg uses mg instead of mcg. 500–2,000 mcg is tenfold too high. 5–20 mcg is tenfold too low.",
+      "explanation": "Phenylephrine, bolus: 50–200 mcg. 10–20 mcg is too small to raise BP. 500–1,000 mcg is enough to cause severe hypertension. 5–10 mg is the ephedrine bolus.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4076,7 +4076,7 @@
         "Amiodarone, stable VT: 150 mg",
         "Epinephrine, anaphylaxis IV: 10–100 mcg",
         "Labetalol, increment: 5–20 mg",
-        "Phenylephrine, infusion: 10–100 mcg/hr",
+        "Phenylephrine, infusion: 200–400 mcg/min",
         "Calcium gluconate: 30 mg/kg",
         "Dobutamine, infusion: 2–20 mcg/kg/min"
       ],
@@ -4087,7 +4087,7 @@
         4,
         5
       ],
-      "explanation": "Correct: Calcium gluconate 30 mg/kg; Epinephrine, anaphylaxis IV 10–100 mcg; Labetalol, increment 5–20 mg; Amiodarone, stable VT 150 mg; Dobutamine, infusion 2–20 mcg/kg/min. Incorrect: Phenylephrine, infusion is 10–100 mcg/min, not 10–100 mcg/hr.",
+      "explanation": "Correct: Amiodarone, stable VT 150 mg; Epinephrine, anaphylaxis IV 10–100 mcg; Labetalol, increment 5–20 mg; Calcium gluconate 30 mg/kg; Dobutamine, infusion 2–20 mcg/kg/min. Incorrect: Phenylephrine, infusion is 10–100 mcg/min; 200–400 mcg/min is excessive.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4108,19 +4108,19 @@
       "stem": "Cardiac and vasoactive dosing: which doses are correct? (Select 3)",
       "type": "multi",
       "options": [
-        "Esmolol, load: 5 mg/kg",
+        "Esmolol, load: 0.1 mg/kg",
         "Isoproterenol, infusion: 2–10 mcg/min",
-        "Epinephrine, pediatric arrest: 0.01 g/kg",
+        "Epinephrine, pediatric arrest: 0.02 mg/kg",
         "Digoxin, initial load: 0.25–0.5 mg",
         "Vasopressin, infusion: 0.03–0.04 units/min",
-        "Clevidipine, max: 32 mcg/hr"
+        "Clevidipine, max: 16 mg/hr"
       ],
       "answer": [
         1,
         3,
         4
       ],
-      "explanation": "Correct: Vasopressin, infusion 0.03–0.04 units/min; Digoxin, initial load 0.25–0.5 mg; Isoproterenol, infusion 2–10 mcg/min. Incorrect: Esmolol, load is 0.5 mg/kg, not 5 mg/kg; Clevidipine, max is 32 mg/hr, not 32 mcg/hr; Epinephrine, pediatric arrest is 0.01 mg/kg, not 0.01 g/kg.",
+      "explanation": "Correct: Isoproterenol, infusion 2–10 mcg/min; Digoxin, initial load 0.25–0.5 mg; Vasopressin, infusion 0.03–0.04 units/min. Incorrect: Esmolol, load is 0.5 mg/kg; 0.1 mg/kg is too small. Epinephrine, pediatric arrest is 0.01 mg/kg; 0.02 mg/kg is the pediatric atropine dose. Clevidipine, max is 32 mg/hr; 16 mg/hr is where most patients are controlled.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4150,7 +4150,7 @@
         "0.3–10 mcg/kg/min",
         "10–100 mcg",
         "0.3–0.5 mg",
-        "100–1,000 mcg",
+        "2 mg/min",
         "1 mg/min"
       ],
       "answer": {
@@ -4159,7 +4159,7 @@
         "Epinephrine, anaphylaxis IM": "0.3–0.5 mg",
         "Amiodarone, maintenance": "1 mg/min"
       },
-      "explanation": "Typical doses: Epinephrine, anaphylaxis IV 10–100 mcg; Nitroprusside, range 0.3–10 mcg/kg/min; Epinephrine, anaphylaxis IM 0.3–0.5 mg; Amiodarone, maintenance 1 mg/min. The extra choice, 100–1,000 mcg, is the Epinephrine, anaphylaxis IV dose with the decimal moved.",
+      "explanation": "Typical doses: Epinephrine, anaphylaxis IV 10–100 mcg; Nitroprusside, range 0.3–10 mcg/kg/min; Epinephrine, anaphylaxis IM 0.3–0.5 mg; Amiodarone, maintenance 1 mg/min. The extra choice, 2 mg/min, is double the initial rate (a near-miss for Amiodarone, maintenance, which is 1 mg/min).",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4181,12 +4181,12 @@
       "type": "single",
       "options": [
         "3 g",
-        "3 mcg",
-        "30 g",
-        "0.3 g"
+        "2 g",
+        "4 g",
+        "1 g"
       ],
       "answer": 0,
-      "explanation": "Cefazolin, adult 120 kg or more: 3 g. 30 g is tenfold too high. 0.3 g is tenfold too low. 3 mcg uses mcg instead of g.",
+      "explanation": "Cefazolin, adult 120 kg or more: 3 g. 2 g is the standard adult dose. 4 g is above the recommended dose. 1 g is an older underdosed amount.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4207,13 +4207,13 @@
       "stem": "Pediatric cefazolin prophylaxis dose?",
       "type": "single",
       "options": [
-        "3 mg/kg",
+        "15 mg/kg",
         "30 mg/kg",
-        "30 g/kg",
-        "30 mcg/kg"
+        "10 mg/kg",
+        "50 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Cefazolin, pediatric: 30 mg/kg. 3 mg/kg is tenfold too low. 30 mcg/kg uses mcg/kg instead of mg/kg. 30 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Cefazolin, pediatric: 30 mg/kg. 15 mg/kg is the vancomycin dose. 10 mg/kg is the pediatric clindamycin dose. 50 mg/kg is above the usual pediatric dose.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4234,13 +4234,13 @@
       "stem": "Gentamicin prophylaxis dose?",
       "type": "single",
       "options": [
-        "5 g/kg",
-        "50 mg/kg",
+        "10 mg/kg",
+        "15 mg/kg",
         "5 mg/kg",
-        "5 mcg/kg"
+        "1.5 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Gentamicin, prophylaxis: 5 mg/kg. 50 mg/kg is tenfold too high. 5 mcg/kg uses mcg/kg instead of mg/kg. 5 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Gentamicin, prophylaxis: 5 mg/kg. 10 mg/kg is double the dose. 15 mg/kg is the vancomycin dose. 1.5 mg/kg is an older traditional dose.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4261,13 +4261,13 @@
       "stem": "Cefazolin prophylaxis dose for an adult under 120 kg?",
       "type": "single",
       "options": [
-        "0.2 g",
-        "2 mg",
-        "2 mcg",
+        "1 g",
+        "3 g",
+        "500 mg",
         "2 g"
       ],
       "answer": 3,
-      "explanation": "Cefazolin, adult under 120 kg: 2 g. 2 mg uses mg instead of g. 0.2 g is tenfold too low. 2 mcg uses mcg instead of g. Use 3 g for patients 120 kg or more.",
+      "explanation": "Cefazolin, adult under 120 kg: 2 g. 1 g is an older, now underdosed amount. 3 g is the dose for 120 kg or more. 500 mg is the metronidazole dose. Use 3 g for patients 120 kg or more.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4292,8 +4292,8 @@
         "Cefazolin, pediatric: 30 mg/kg",
         "Cefazolin, adult 120 kg or more: 3 g",
         "Cefazolin, adult under 120 kg: 2 g",
-        "Clindamycin, adult: 900 g",
-        "Vancomycin, prophylaxis: 150 mg/kg"
+        "Clindamycin, adult: 500 mg",
+        "Vancomycin, prophylaxis: 5 mg/kg"
       ],
       "answer": [
         0,
@@ -4301,7 +4301,7 @@
         2,
         3
       ],
-      "explanation": "Correct: Metronidazole, adult 500 mg; Cefazolin, adult 120 kg or more 3 g; Cefazolin, pediatric 30 mg/kg; Cefazolin, adult under 120 kg 2 g. Incorrect: Vancomycin, prophylaxis is 15 mg/kg, not 150 mg/kg; Clindamycin, adult is 900 mg, not 900 g.",
+      "explanation": "Correct: Metronidazole, adult 500 mg; Cefazolin, pediatric 30 mg/kg; Cefazolin, adult 120 kg or more 3 g; Cefazolin, adult under 120 kg 2 g. Incorrect: Clindamycin, adult is 900 mg; 500 mg is the metronidazole dose. Vancomycin, prophylaxis is 15 mg/kg; 5 mg/kg is the gentamicin dose.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4325,9 +4325,9 @@
         "Cefazolin, pediatric: 30 mg/kg",
         "Vancomycin, prophylaxis: 15 mg/kg",
         "Metronidazole, adult: 500 mg",
-        "Cefazolin, adult under 120 kg: 0.2 g",
+        "Cefazolin, adult under 120 kg: 3 g",
         "Gentamicin, prophylaxis: 5 mg/kg",
-        "Clindamycin, adult: 900 g"
+        "Clindamycin, adult: 600 mg"
       ],
       "answer": [
         0,
@@ -4335,7 +4335,7 @@
         2,
         4
       ],
-      "explanation": "Correct: Cefazolin, pediatric 30 mg/kg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg; Vancomycin, prophylaxis 15 mg/kg. Incorrect: Cefazolin, adult under 120 kg is 2 g, not 0.2 g; Clindamycin, adult is 900 mg, not 900 g.",
+      "explanation": "Correct: Cefazolin, pediatric 30 mg/kg; Vancomycin, prophylaxis 15 mg/kg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg. Incorrect: Cefazolin, adult under 120 kg is 2 g; 3 g is the dose for 120 kg or more. Clindamycin, adult is 900 mg; 600 mg is a lower dose not used for adult prophylaxis.",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4366,7 +4366,7 @@
         "2 g",
         "900 mg",
         "5 mg/kg",
-        "50 mg/kg"
+        "1.5 mg/kg"
       ],
       "answer": {
         "Cefazolin, adult under 120 kg": "2 g",
@@ -4374,7 +4374,7 @@
         "Metronidazole, adult": "500 mg",
         "Gentamicin, prophylaxis": "5 mg/kg"
       },
-      "explanation": "Typical doses: Cefazolin, adult under 120 kg 2 g; Clindamycin, adult 900 mg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg. The extra choice, 50 mg/kg, is the Gentamicin, prophylaxis dose with the decimal moved.",
+      "explanation": "Typical doses: Cefazolin, adult under 120 kg 2 g; Clindamycin, adult 900 mg; Metronidazole, adult 500 mg; Gentamicin, prophylaxis 5 mg/kg. The extra choice, 1.5 mg/kg, is an older traditional dose (a near-miss for Gentamicin, prophylaxis, which is 5 mg/kg).",
       "citation": "",
       "topic": "Antibiotics & Perioperative Anti-Infectives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4396,12 +4396,12 @@
       "type": "single",
       "options": [
         "0.2 mg",
-        "0.2 g",
-        "0.2 mcg",
-        "0.02 mg"
+        "0.25 mg",
+        "0.5 mg",
+        "2 mg"
       ],
       "answer": 0,
-      "explanation": "Methylergonovine, IM: 0.2 mg. 0.02 mg is tenfold too low. 0.2 mcg uses mcg instead of mg. 0.2 g uses g instead of mg.",
+      "explanation": "Methylergonovine, IM: 0.2 mg. 0.25 mg is the terbutaline dose. 0.5 mg is above the usual dose. 2 mg is the carboprost cumulative maximum.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4422,13 +4422,13 @@
       "stem": "Typical small IV oxytocin bolus at cesarean delivery?",
       "type": "single",
       "options": [
-        "1–3 units/kg",
+        "10 units",
         "1–3 units",
-        "0.1–0.3 units",
-        "1–3 mg"
+        "20–40 units",
+        "0.2 units"
       ],
       "answer": 1,
-      "explanation": "Oxytocin, IV bolus: 1–3 units. 0.1–0.3 units is tenfold too low. 1–3 mg uses mg instead of units. 1–3 units/kg uses units/kg instead of units.",
+      "explanation": "Oxytocin, IV bolus: 1–3 units. 10 units is a large IV push that causes hypotension. 20–40 units is the amount added to a liter for infusion. 0.2 units is too small.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4449,13 +4449,13 @@
       "stem": "TXA dose for postpartum hemorrhage, given over 10 min?",
       "type": "single",
       "options": [
-        "10 g",
-        "0.1 g",
+        "10 mg/kg",
+        "100 mg",
         "1 g",
-        "1 mcg"
+        "2 g"
       ],
       "answer": 2,
-      "explanation": "TXA, PPH: 1 g. 1 mcg uses mcg instead of g. 0.1 g is tenfold too low. 10 g is tenfold too high.",
+      "explanation": "TXA, PPH: 1 g. 10 mg/kg is an orthopedic weight-based dose. 100 mg is too low. 2 g is double the dose.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4476,13 +4476,13 @@
       "stem": "Magnesium maintenance rate for preeclampsia?",
       "type": "single",
       "options": [
-        "0.1–0.2 g/hr",
-        "1–2 g/min",
-        "10–20 g/hr",
+        "4–6 g/hr",
+        "3–4 g/hr",
+        "0.25–0.5 g/hr",
         "1–2 g/hr"
       ],
       "answer": 3,
-      "explanation": "Magnesium, preeclampsia maintenance: 1–2 g/hr. 10–20 g/hr is tenfold too high. 1–2 g/min uses g/min instead of g/hr. 0.1–0.2 g/hr is tenfold too low.",
+      "explanation": "Magnesium, preeclampsia maintenance: 1–2 g/hr. 4–6 g/hr is the loading amount used as an hourly rate. 3–4 g/hr is above the usual rate. 0.25–0.5 g/hr is too low.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4504,12 +4504,12 @@
       "type": "single",
       "options": [
         "0.25 mg",
-        "0.25 g",
-        "0.025 mg",
-        "2.5 mg"
+        "0.2 mg",
+        "2.5–5 mg",
+        "1 mg"
       ],
       "answer": 0,
-      "explanation": "Terbutaline, SC: 0.25 mg. 0.025 mg is tenfold too low. 2.5 mg is tenfold too high. 0.25 g uses g instead of mg.",
+      "explanation": "Terbutaline, SC: 0.25 mg. 0.2 mg is the methylergonovine dose. 2.5–5 mg is the albuterol nebulizer range. 1 mg is above the usual dose.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4530,13 +4530,13 @@
       "stem": "Magnesium loading dose for preeclampsia?",
       "type": "single",
       "options": [
-        "0.4–0.6 g",
+        "8–10 g",
         "4–6 g",
-        "40–60 g",
-        "4–6 mcg"
+        "1–2 g",
+        "0.5–1 g"
       ],
       "answer": 1,
-      "explanation": "Magnesium, preeclampsia load: 4–6 g. 40–60 g is tenfold too high. 4–6 mcg uses mcg instead of g. 0.4–0.6 g is tenfold too low.",
+      "explanation": "Magnesium, preeclampsia load: 4–6 g. 8–10 g is excessive. 1–2 g is the maintenance rate or torsades dose. 0.5–1 g is too low.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4557,13 +4557,13 @@
       "stem": "Maximum cumulative carboprost dose?",
       "type": "single",
       "options": [
-        "20 mg",
-        "2 mcg",
+        "1 mg",
+        "250 mcg",
         "2 mg",
-        "0.2 mg"
+        "4 mg"
       ],
       "answer": 2,
-      "explanation": "Carboprost, cumulative max: 2 mg. 20 mg is tenfold too high. 2 mcg uses mcg instead of mg. 0.2 mg is tenfold too low.",
+      "explanation": "Carboprost, cumulative max: 2 mg. 1 mg is half the maximum. 250 mcg is a single dose. 4 mg is double the maximum.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4584,19 +4584,19 @@
       "stem": "Obstetric dosing: which doses are correct? (Select 3)",
       "type": "multi",
       "options": [
-        "Misoprostol, PPH: 60,000–100,000 mcg",
+        "Misoprostol, PPH: 200 mcg",
         "Carboprost, IM: 250 mcg",
         "Magnesium, preeclampsia maintenance: 1–2 g/hr",
         "TXA, PPH: 1 g",
-        "Magnesium, preeclampsia load: 4–6 mcg",
-        "Oxytocin, IV bolus: 1–3 units/kg"
+        "Magnesium, preeclampsia load: 8–10 g",
+        "Oxytocin, IV bolus: 20–40 units"
       ],
       "answer": [
         1,
         2,
         3
       ],
-      "explanation": "Correct: Carboprost, IM 250 mcg; TXA, PPH 1 g; Magnesium, preeclampsia maintenance 1–2 g/hr. Incorrect: Magnesium, preeclampsia load is 4–6 g, not 4–6 mcg; Oxytocin, IV bolus is 1–3 units, not 1–3 units/kg; Misoprostol, PPH is 600–1,000 mcg, not 60,000–100,000 mcg.",
+      "explanation": "Correct: Carboprost, IM 250 mcg; Magnesium, preeclampsia maintenance 1–2 g/hr; TXA, PPH 1 g. Incorrect: Misoprostol, PPH is 600–1,000 mcg; 200 mcg is a single tablet. Magnesium, preeclampsia load is 4–6 g; 8–10 g is excessive. Oxytocin, IV bolus is 1–3 units; 20–40 units is the amount added to a liter for infusion.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4621,7 +4621,7 @@
         "Carboprost, IM: 250 mcg",
         "Methylergonovine, IM: 0.2 mg",
         "TXA, PPH: 1 g",
-        "Misoprostol, PPH: 6,000–10,000 mcg",
+        "Misoprostol, PPH: 2,000–3,000 mcg",
         "Oxytocin, IV bolus: 1–3 units"
       ],
       "answer": [
@@ -4631,7 +4631,7 @@
         3,
         5
       ],
-      "explanation": "Correct: Carboprost, IM 250 mcg; TXA, PPH 1 g; Methylergonovine, IM 0.2 mg; Terbutaline, SC 0.25 mg; Oxytocin, IV bolus 1–3 units. Incorrect: Misoprostol, PPH is 600–1,000 mcg, not 6,000–10,000 mcg.",
+      "explanation": "Correct: Terbutaline, SC 0.25 mg; Carboprost, IM 250 mcg; Methylergonovine, IM 0.2 mg; TXA, PPH 1 g; Oxytocin, IV bolus 1–3 units. Incorrect: Misoprostol, PPH is 600–1,000 mcg; 2,000–3,000 mcg is excessive.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4660,7 +4660,7 @@
       "choices": [
         "1–3 units",
         "1 g",
-        "10–30 units",
+        "200 mcg",
         "600–1,000 mcg",
         "2 mg"
       ],
@@ -4670,7 +4670,7 @@
         "TXA, PPH": "1 g",
         "Carboprost, cumulative max": "2 mg"
       },
-      "explanation": "Typical doses: Oxytocin, IV bolus 1–3 units; Misoprostol, PPH 600–1,000 mcg; TXA, PPH 1 g; Carboprost, cumulative max 2 mg. The extra choice, 10–30 units, is the Oxytocin, IV bolus dose with the decimal moved.",
+      "explanation": "Typical doses: Oxytocin, IV bolus 1–3 units; Misoprostol, PPH 600–1,000 mcg; TXA, PPH 1 g; Carboprost, cumulative max 2 mg. The extra choice, 200 mcg, is a single tablet (a near-miss for Misoprostol, PPH, which is 600–1,000 mcg).",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4691,13 +4691,13 @@
       "stem": "Heparin dose before vascular cross-clamping?",
       "type": "single",
       "options": [
-        "1,000 units/kg",
-        "100 mg/kg",
-        "10 units/kg",
+        "50 units/kg",
+        "300–400 units/kg",
+        "200 units/kg",
         "100 units/kg"
       ],
       "answer": 3,
-      "explanation": "Heparin, vascular clamp: 100 units/kg. 10 units/kg is tenfold too low. 100 mg/kg uses mg/kg instead of units/kg. 1,000 units/kg is tenfold too high.",
+      "explanation": "Heparin, vascular clamp: 100 units/kg. 50 units/kg is half the usual dose. 300–400 units/kg is the bypass dose. 200 units/kg is double the usual dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4719,12 +4719,12 @@
       "type": "single",
       "options": [
         "5,000 units",
-        "5,000 units/kg",
-        "500 units",
-        "50,000 units"
+        "10,000 units",
+        "1,000 units",
+        "40 mg"
       ],
       "answer": 0,
-      "explanation": "Heparin, SC prophylaxis: 5,000 units. 5,000 units/kg uses units/kg instead of units. 500 units is tenfold too low. 50,000 units is tenfold too high.",
+      "explanation": "Heparin, SC prophylaxis: 5,000 units. 10,000 units is double the dose. 1,000 units is too low. 40 mg is the enoxaparin prophylaxis dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4745,13 +4745,13 @@
       "stem": "Protamine dose per 100 units of heparin?",
       "type": "single",
       "options": [
-        "100 mg",
+        "2 mg",
         "1 mg",
-        "0.1 mcg",
-        "0.01 mg"
+        "5 mg",
+        "0.5 mg"
       ],
       "answer": 1,
-      "explanation": "Protamine per 100 units heparin: 1 mg. 0.1 mcg uses mcg and is tenfold low. 0.01 mg is hundredfold too low. 100 mg is hundredfold too high.",
+      "explanation": "Protamine per 100 units heparin: 1 mg. 2 mg is double the ratio. 5 mg is excessive. 0.5 mg is a reduced ratio sometimes used late.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4772,13 +4772,13 @@
       "stem": "Heparin dose before cardiopulmonary bypass?",
       "type": "single",
       "options": [
-        "300–400 mg/kg",
-        "300–400 units",
+        "600–800 units/kg",
+        "100 units/kg",
         "300–400 units/kg",
-        "30–40 units/kg"
+        "5,000 units"
       ],
       "answer": 2,
-      "explanation": "Heparin, bypass: 300–400 units/kg. 30–40 units/kg is tenfold too low. 300–400 units uses units instead of units/kg. 300–400 mg/kg uses mg/kg instead of units/kg.",
+      "explanation": "Heparin, bypass: 300–400 units/kg. 600–800 units/kg is excessive. 100 units/kg is the vascular dose. 5,000 units is the SC prophylaxis dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4799,13 +4799,13 @@
       "stem": "Once-daily enoxaparin prophylaxis dose?",
       "type": "single",
       "options": [
-        "40 g",
-        "40 mcg",
-        "4 mg",
+        "5,000 units",
+        "80 mg",
+        "1 mg/kg",
         "40 mg"
       ],
       "answer": 3,
-      "explanation": "Enoxaparin, prophylaxis: 40 mg. 40 g uses g instead of mg. 40 mcg uses mcg instead of mg. 4 mg is tenfold too low.",
+      "explanation": "Enoxaparin, prophylaxis: 40 mg. 5,000 units is the SC heparin dose. 80 mg is double the prophylactic dose. 1 mg/kg is the treatment dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4827,12 +4827,12 @@
       "type": "single",
       "options": [
         "10–15 mL/kg",
-        "10–15 L/kg",
-        "100–150 mL/kg",
-        "1–1.5 mL/kg"
+        "30–40 mL/kg",
+        "1 unit per 10 kg",
+        "3–5 mL/kg"
       ],
       "answer": 0,
-      "explanation": "FFP, dose: 10–15 mL/kg. 1–1.5 mL/kg is tenfold too low. 10–15 L/kg uses L/kg instead of mL/kg. 100–150 mL/kg is tenfold too high.",
+      "explanation": "FFP, dose: 10–15 mL/kg. 30–40 mL/kg is excessive. 1 unit per 10 kg is cryoprecipitate dosing. 3–5 mL/kg is too low.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4853,13 +4853,13 @@
       "stem": "Enoxaparin treatment dose given every 12 hr?",
       "type": "single",
       "options": [
-        "0.1 mg/kg",
+        "40 mg",
         "1 mg/kg",
-        "1 mcg/kg",
-        "10 mg/kg"
+        "0.5 mg/kg",
+        "1.5 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Enoxaparin, treatment: 1 mg/kg. 10 mg/kg is tenfold too high. 1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 mg/kg is tenfold too low.",
+      "explanation": "Enoxaparin, treatment: 1 mg/kg. 40 mg is the prophylactic dose. 0.5 mg/kg is half the dose. 1.5 mg/kg is the once-daily treatment dose, not every 12 hr.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4880,18 +4880,18 @@
       "stem": "Hematology dosing: which doses are correct? (Select 2)",
       "type": "multi",
       "options": [
-        "Desmopressin, hemostasis: 0.3 mg/kg",
-        "Vitamin K, warfarin reversal: 5–10 g",
+        "Desmopressin, hemostasis: 0.1 mcg/kg",
+        "Vitamin K, warfarin reversal: 0.5 mg",
         "Enoxaparin, prophylaxis: 40 mg",
-        "Enoxaparin, treatment: 10 mg/kg",
+        "Enoxaparin, treatment: 1.5 mg/kg",
         "Heparin, vascular clamp: 100 units/kg",
-        "Heparin, SC prophylaxis: 500 units"
+        "Heparin, SC prophylaxis: 10,000 units"
       ],
       "answer": [
         2,
         4
       ],
-      "explanation": "Correct: Enoxaparin, prophylaxis 40 mg; Heparin, vascular clamp 100 units/kg. Incorrect: Enoxaparin, treatment is 1 mg/kg, not 10 mg/kg; Vitamin K, warfarin reversal is 5–10 mg, not 5–10 g; Heparin, SC prophylaxis is 5,000 units, not 500 units; Desmopressin, hemostasis is 0.3 mcg/kg, not 0.3 mg/kg.",
+      "explanation": "Correct: Enoxaparin, prophylaxis 40 mg; Heparin, vascular clamp 100 units/kg. Incorrect: Desmopressin, hemostasis is 0.3 mcg/kg; 0.1 mcg/kg is too low. Vitamin K, warfarin reversal is 5–10 mg; 0.5 mg is too low. Enoxaparin, treatment is 1 mg/kg; 1.5 mg/kg is the once-daily treatment dose, not every 12 hr. Heparin, SC prophylaxis is 5,000 units; 10,000 units is double the dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4912,19 +4912,19 @@
       "stem": "Hematology dosing: which doses are correct? (Select 3)",
       "type": "multi",
       "options": [
-        "Vitamin K, warfarin reversal: 50–100 mg",
+        "Vitamin K, warfarin reversal: 1–2.5 mg",
         "Enoxaparin, treatment: 1 mg/kg",
-        "4F-PCC, warfarin reversal: 25–50 units",
+        "4F-PCC, warfarin reversal: 5–10 units/kg",
         "Heparin, vascular clamp: 100 units/kg",
         "Heparin, bypass: 300–400 units/kg",
-        "Heparin, SC prophylaxis: 50,000 units"
+        "Heparin, SC prophylaxis: 40 mg"
       ],
       "answer": [
         1,
         3,
         4
       ],
-      "explanation": "Correct: Enoxaparin, treatment 1 mg/kg; Heparin, vascular clamp 100 units/kg; Heparin, bypass 300–400 units/kg. Incorrect: 4F-PCC, warfarin reversal is 25–50 units/kg, not 25–50 units; Vitamin K, warfarin reversal is 5–10 mg, not 50–100 mg; Heparin, SC prophylaxis is 5,000 units, not 50,000 units.",
+      "explanation": "Correct: Enoxaparin, treatment 1 mg/kg; Heparin, vascular clamp 100 units/kg; Heparin, bypass 300–400 units/kg. Incorrect: Vitamin K, warfarin reversal is 5–10 mg; 1–2.5 mg is a low oral dose for mild INR elevation. 4F-PCC, warfarin reversal is 25–50 units/kg; 5–10 units/kg is too low. Heparin, SC prophylaxis is 5,000 units; 40 mg is the enoxaparin prophylaxis dose.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4953,7 +4953,7 @@
       "choices": [
         "25–50 units/kg",
         "1 mg",
-        "10 mg",
+        "5–10 units/kg",
         "300–400 units/kg",
         "100 units/kg"
       ],
@@ -4963,7 +4963,7 @@
         "Heparin, vascular clamp": "100 units/kg",
         "Protamine per 100 units heparin": "1 mg"
       },
-      "explanation": "Typical doses: 4F-PCC, warfarin reversal 25–50 units/kg; Heparin, bypass 300–400 units/kg; Heparin, vascular clamp 100 units/kg; Protamine per 100 units heparin 1 mg. The extra choice, 10 mg, is the Protamine per 100 units heparin dose with the decimal moved.",
+      "explanation": "Typical doses: 4F-PCC, warfarin reversal 25–50 units/kg; Heparin, bypass 300–400 units/kg; Heparin, vascular clamp 100 units/kg; Protamine per 100 units heparin 1 mg. The extra choice, 5–10 units/kg, is too low (a near-miss for 4F-PCC, warfarin reversal, which is 25–50 units/kg).",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -4984,13 +4984,13 @@
       "stem": "Hydrocortisone stress dose at induction for major surgery?",
       "type": "single",
       "options": [
-        "100 g",
-        "1,000 mg",
+        "200 mg",
+        "25 mg",
         "100 mg",
-        "100 mcg"
+        "50 mg"
       ],
       "answer": 2,
-      "explanation": "Hydrocortisone, major surgery: 100 mg. 100 mcg uses mcg instead of mg. 1,000 mg is tenfold too high. 100 g uses g instead of mg.",
+      "explanation": "Hydrocortisone, major surgery: 100 mg. 200 mg is the daily total in adrenal crisis. 25 mg is the minor-surgery dose. 50 mg is the redose every 8 hr.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5011,13 +5011,13 @@
       "stem": "IV glucagon bolus for beta blocker overdose?",
       "type": "single",
       "options": [
-        "30–100 mcg",
-        "300–1,000 mg",
-        "3–10 g",
+        "1 mg",
+        "20–30 mg",
+        "0.5 mg",
         "3–10 mg"
       ],
       "answer": 3,
-      "explanation": "Glucagon, beta blocker overdose: 3–10 mg. 30–100 mcg uses mcg and is tenfold high. 3–10 g uses g instead of mg. 300–1,000 mg is hundredfold too high.",
+      "explanation": "Glucagon, beta blocker overdose: 3–10 mg. 1 mg is the hypoglycemia dose. 20–30 mg is excessive. 0.5 mg is too low.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5039,12 +5039,12 @@
       "type": "single",
       "options": [
         "25 mg",
-        "250 mg",
-        "25 mcg",
-        "250 mcg"
+        "50 mg",
+        "5 mg",
+        "100 mg"
       ],
       "answer": 0,
-      "explanation": "Hydrocortisone, minor surgery: 25 mg. 250 mg is tenfold too high. 25 mcg uses mcg instead of mg. 250 mcg uses mcg and is tenfold high.",
+      "explanation": "Hydrocortisone, minor surgery: 25 mg. 50 mg is a moderate-surgery dose. 5 mg is too low. 100 mg is the major-surgery dose.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5065,13 +5065,13 @@
       "stem": "Glucagon dose for hypoglycemia without IV access?",
       "type": "single",
       "options": [
-        "1 g",
+        "0.1 mg",
         "1 mg",
-        "10 mg",
-        "1 mcg"
+        "3–10 mg",
+        "5 mg"
       ],
       "answer": 1,
-      "explanation": "Glucagon, hypoglycemia: 1 mg. 10 mg is tenfold too high. 1 g uses g instead of mg. 1 mcg uses mcg instead of mg.",
+      "explanation": "Glucagon, hypoglycemia: 1 mg. 0.1 mg is too low. 3–10 mg is the beta blocker overdose dose. 5 mg is excessive for hypoglycemia.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5092,13 +5092,13 @@
       "stem": "Regular insulin dose for hyperkalemia without ESRD?",
       "type": "single",
       "options": [
-        "10 units/kg",
-        "10 mg",
+        "2 units",
+        "5 units",
         "10 units",
-        "1 units"
+        "20 units"
       ],
       "answer": 2,
-      "explanation": "Insulin, hyperkalemia: 10 units. 10 mg uses mg instead of units. 10 units/kg uses units/kg instead of units. 1 units is tenfold too low.",
+      "explanation": "Insulin, hyperkalemia: 10 units. 2 units is too low. 5 units is the ESRD dose. 20 units is double the dose.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5119,13 +5119,13 @@
       "stem": "Regular insulin dose for hyperkalemia in ESRD?",
       "type": "single",
       "options": [
-        "0.5 mg",
-        "5 mg",
-        "5 units/kg",
+        "10 units",
+        "2 units",
+        "15 units",
         "5 units"
       ],
       "answer": 3,
-      "explanation": "Insulin, hyperkalemia in ESRD: 5 units. 5 mg uses mg instead of units. 0.5 mg uses mg and is tenfold low. 5 units/kg uses units/kg instead of units.",
+      "explanation": "Insulin, hyperkalemia in ESRD: 5 units. 10 units is the standard dose. 2 units is too low. 15 units is excessive.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5147,18 +5147,18 @@
       "type": "multi",
       "options": [
         "Insulin, hyperkalemia in ESRD: 5 units",
-        "Glucagon, beta blocker overdose: 3–10 mcg",
+        "Glucagon, beta blocker overdose: 1 mg",
         "Insulin, hyperkalemia: 10 units",
-        "Dextrose with insulin: 25 mcg",
+        "Dextrose with insulin: 50 g",
         "Hydrocortisone, major surgery: 100 mg",
-        "Hydrocortisone, minor surgery: 2.5 mg"
+        "Hydrocortisone, minor surgery: 100 mg"
       ],
       "answer": [
         0,
         2,
         4
       ],
-      "explanation": "Correct: Insulin, hyperkalemia in ESRD 5 units; Insulin, hyperkalemia 10 units; Hydrocortisone, major surgery 100 mg. Incorrect: Dextrose with insulin is 25 g, not 25 mcg; Glucagon, beta blocker overdose is 3–10 mg, not 3–10 mcg; Hydrocortisone, minor surgery is 25 mg, not 2.5 mg.",
+      "explanation": "Correct: Insulin, hyperkalemia in ESRD 5 units; Insulin, hyperkalemia 10 units; Hydrocortisone, major surgery 100 mg. Incorrect: Glucagon, beta blocker overdose is 3–10 mg; 1 mg is the hypoglycemia dose. Dextrose with insulin is 25 g; 50 g is double the usual dextrose. Hydrocortisone, minor surgery is 25 mg; 100 mg is the major-surgery dose.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5179,12 +5179,12 @@
       "stem": "Endocrine dosing: which doses are correct? (Select 4)",
       "type": "multi",
       "options": [
-        "Hydrocortisone, major surgery: 100 g",
+        "Hydrocortisone, major surgery: 25 mg",
         "Hydrocortisone, minor surgery: 25 mg",
         "Insulin, hyperkalemia: 10 units",
         "Glucagon, beta blocker overdose: 3–10 mg",
         "Insulin, hyperkalemia in ESRD: 5 units",
-        "Glucagon, hypoglycemia: 0.1 mg"
+        "Glucagon, hypoglycemia: 5 mg"
       ],
       "answer": [
         1,
@@ -5192,7 +5192,7 @@
         3,
         4
       ],
-      "explanation": "Correct: Insulin, hyperkalemia 10 units; Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia in ESRD 5 units; Glucagon, beta blocker overdose 3–10 mg. Incorrect: Hydrocortisone, major surgery is 100 mg, not 100 g; Glucagon, hypoglycemia is 1 mg, not 0.1 mg.",
+      "explanation": "Correct: Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia 10 units; Glucagon, beta blocker overdose 3–10 mg; Insulin, hyperkalemia in ESRD 5 units. Incorrect: Hydrocortisone, major surgery is 100 mg; 25 mg is the minor-surgery dose. Glucagon, hypoglycemia is 1 mg; 5 mg is excessive for hypoglycemia.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5219,7 +5219,7 @@
         "Glucagon, beta blocker overdose"
       ],
       "choices": [
-        "50 units",
+        "200 mg",
         "100 mg",
         "5 units",
         "3–10 mg",
@@ -5231,7 +5231,7 @@
         "Hydrocortisone, major surgery": "100 mg",
         "Glucagon, beta blocker overdose": "3–10 mg"
       },
-      "explanation": "Typical doses: Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia in ESRD 5 units; Hydrocortisone, major surgery 100 mg; Glucagon, beta blocker overdose 3–10 mg. The extra choice, 50 units, is the Insulin, hyperkalemia in ESRD dose with the decimal moved.",
+      "explanation": "Typical doses: Hydrocortisone, minor surgery 25 mg; Insulin, hyperkalemia in ESRD 5 units; Hydrocortisone, major surgery 100 mg; Glucagon, beta blocker overdose 3–10 mg. The extra choice, 200 mg, is the daily total in adrenal crisis (a near-miss for Hydrocortisone, major surgery, which is 100 mg).",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5253,12 +5253,12 @@
       "type": "single",
       "options": [
         "0.5 mg/kg",
-        "5 mcg/kg",
-        "5 mg/kg",
-        "50 mg/kg"
+        "1 mg/kg",
+        "15 mg/kg",
+        "0.1 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Ketorolac, pediatric: 0.5 mg/kg. 5 mg/kg is tenfold too high. 5 mcg/kg uses mcg/kg and is tenfold high. 50 mg/kg is hundredfold too high.",
+      "explanation": "Ketorolac, pediatric: 0.5 mg/kg. 1 mg/kg is double the dose. 15 mg/kg is the pediatric acetaminophen dose. 0.1 mg/kg is too low.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5279,13 +5279,13 @@
       "stem": "Pediatric IV acetaminophen dose?",
       "type": "single",
       "options": [
-        "1.5 mg/kg",
+        "10 mg/kg",
         "15 mg/kg",
-        "15 g/kg",
-        "15 mcg/kg"
+        "0.5 mg/kg",
+        "40 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Acetaminophen, pediatric IV: 15 mg/kg. 1.5 mg/kg is tenfold too low. 15 mcg/kg uses mcg/kg instead of mg/kg. 15 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Acetaminophen, pediatric IV: 15 mg/kg. 10 mg/kg is a lower oral dose. 0.5 mg/kg is the pediatric ketorolac dose. 40 mg/kg is a rectal loading dose.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5306,13 +5306,13 @@
       "stem": "Adult acetaminophen dose every 6 hr (50 kg or more)?",
       "type": "single",
       "options": [
-        "10 g",
-        "1 mcg",
+        "500 mg",
+        "2 g",
         "1 g",
-        "1 mg"
+        "15 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Acetaminophen, adult: 1 g. 1 mg uses mg instead of g. 1 mcg uses mcg instead of g. 10 g is tenfold too high.",
+      "explanation": "Acetaminophen, adult: 1 g. 500 mg is half the dose. 2 g is double the dose. 15 mg/kg is the dose for patients under 50 kg.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5333,13 +5333,13 @@
       "stem": "Typical adult IV ketorolac dose?",
       "type": "single",
       "options": [
-        "0.15–0.3 mg",
-        "1.5–3 mg",
-        "150–300 mcg",
+        "7.5–10 mg",
+        "120 mg",
+        "60 mg",
         "15–30 mg"
       ],
       "answer": 3,
-      "explanation": "Ketorolac, adult IV: 15–30 mg. 0.15–0.3 mg is hundredfold too low. 1.5–3 mg is tenfold too low. 150–300 mcg uses mcg and is tenfold high.",
+      "explanation": "Ketorolac, adult IV: 15–30 mg. 7.5–10 mg is too low. 120 mg is the daily maximum. 60 mg is an older IM loading dose.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5361,12 +5361,12 @@
       "type": "single",
       "options": [
         "200–400 mg",
-        "2,000–4,000 mg",
-        "200–400 g",
-        "200–400 mcg"
+        "800 mg",
+        "75–150 mg",
+        "15–30 mg"
       ],
       "answer": 0,
-      "explanation": "Celecoxib, preop: 200–400 mg. 200–400 g uses g instead of mg. 2,000–4,000 mg is tenfold too high. 200–400 mcg uses mcg instead of mg.",
+      "explanation": "Celecoxib, preop: 200–400 mg. 800 mg is excessive. 75–150 mg is the pregabalin dose. 15–30 mg is the ketorolac dose.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5387,13 +5387,13 @@
       "stem": "Typical preoperative gabapentin dose?",
       "type": "single",
       "options": [
-        "300–600 g",
+        "75–150 mg",
         "300–600 mg",
-        "3,000–6,000 mg",
-        "300–600 mcg"
+        "1,200–1,800 mg",
+        "50–100 mg"
       ],
       "answer": 1,
-      "explanation": "Gabapentin, preop: 300–600 mg. 300–600 mcg uses mcg instead of mg. 300–600 g uses g instead of mg. 3,000–6,000 mg is tenfold too high.",
+      "explanation": "Gabapentin, preop: 300–600 mg. 75–150 mg is the pregabalin dose. 1,200–1,800 mg is excessive preop. 50–100 mg is too low.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5414,13 +5414,13 @@
       "stem": "Adult daily acetaminophen maximum?",
       "type": "single",
       "options": [
-        "40 g",
-        "4 mg",
+        "6 g",
+        "2 g",
         "4 g",
-        "0.4 g"
+        "3 g"
       ],
       "answer": 2,
-      "explanation": "Acetaminophen, adult daily max: 4 g. 0.4 g is tenfold too low. 40 g is tenfold too high. 4 mg uses mg instead of g.",
+      "explanation": "Acetaminophen, adult daily max: 4 g. 6 g is excessive. 2 g is a reduced limit for heavy alcohol use. 3 g is a conservative limit some protocols use.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5441,13 +5441,13 @@
       "stem": "Maximum daily ketorolac dose for adults under 65?",
       "type": "single",
       "options": [
-        "120 g",
-        "1,200 mg",
-        "12 mg",
+        "240 mg",
+        "30 mg",
+        "60 mg",
         "120 mg"
       ],
       "answer": 3,
-      "explanation": "Ketorolac, adult daily max: 120 mg. 1,200 mg is tenfold too high. 120 g uses g instead of mg. 12 mg is tenfold too low.",
+      "explanation": "Ketorolac, adult daily max: 120 mg. 240 mg is double the maximum. 30 mg is a single dose. 60 mg is the maximum for age 65 or older.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5472,8 +5472,8 @@
         "Ketorolac, adult daily max: 120 mg",
         "Acetaminophen, pediatric IV: 15 mg/kg",
         "Pregabalin, preop: 75–150 mg",
-        "Gabapentin, preop: 300–600 g",
-        "Acetaminophen, adult daily max: 40 g"
+        "Gabapentin, preop: 75–150 mg",
+        "Acetaminophen, adult daily max: 6 g"
       ],
       "answer": [
         0,
@@ -5481,7 +5481,7 @@
         2,
         3
       ],
-      "explanation": "Correct: Ketorolac, pediatric 0.5 mg/kg; Pregabalin, preop 75–150 mg; Ketorolac, adult daily max 120 mg; Acetaminophen, pediatric IV 15 mg/kg. Incorrect: Acetaminophen, adult daily max is 4 g, not 40 g; Gabapentin, preop is 300–600 mg, not 300–600 g.",
+      "explanation": "Correct: Ketorolac, pediatric 0.5 mg/kg; Ketorolac, adult daily max 120 mg; Acetaminophen, pediatric IV 15 mg/kg; Pregabalin, preop 75–150 mg. Incorrect: Gabapentin, preop is 300–600 mg; 75–150 mg is the pregabalin dose. Acetaminophen, adult daily max is 4 g; 6 g is excessive.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5502,18 +5502,18 @@
       "stem": "Analgesic adjunct dosing: which doses are correct? (Select 2)",
       "type": "multi",
       "options": [
-        "Ketorolac, adult daily max: 120 g",
-        "Acetaminophen, pediatric IV: 15 mcg/kg",
+        "Ketorolac, adult daily max: 240 mg",
+        "Acetaminophen, pediatric IV: 10 mg/kg",
         "Pregabalin, preop: 75–150 mg",
-        "Ketorolac, pediatric: 0.5 g/kg",
-        "Acetaminophen, adult: 10 g",
+        "Ketorolac, pediatric: 15 mg/kg",
+        "Acetaminophen, adult: 15 mg/kg",
         "Acetaminophen, adult daily max: 4 g"
       ],
       "answer": [
         2,
         5
       ],
-      "explanation": "Correct: Acetaminophen, adult daily max 4 g; Pregabalin, preop 75–150 mg. Incorrect: Ketorolac, pediatric is 0.5 mg/kg, not 0.5 g/kg; Acetaminophen, adult is 1 g, not 10 g; Ketorolac, adult daily max is 120 mg, not 120 g; Acetaminophen, pediatric IV is 15 mg/kg, not 15 mcg/kg.",
+      "explanation": "Correct: Pregabalin, preop 75–150 mg; Acetaminophen, adult daily max 4 g. Incorrect: Ketorolac, adult daily max is 120 mg; 240 mg is double the maximum. Acetaminophen, pediatric IV is 15 mg/kg; 10 mg/kg is a lower oral dose. Ketorolac, pediatric is 0.5 mg/kg; 15 mg/kg is the pediatric acetaminophen dose. Acetaminophen, adult is 1 g; 15 mg/kg is the dose for patients under 50 kg.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5540,7 +5540,7 @@
         "Gabapentin, preop"
       ],
       "choices": [
-        "2,000–4,000 mg",
+        "75–150 mg",
         "200–400 mg",
         "300–600 mg",
         "15 mg/kg",
@@ -5552,7 +5552,7 @@
         "Acetaminophen, pediatric IV": "15 mg/kg",
         "Gabapentin, preop": "300–600 mg"
       },
-      "explanation": "Typical doses: Celecoxib, preop 200–400 mg; Ketorolac, pediatric 0.5 mg/kg; Acetaminophen, pediatric IV 15 mg/kg; Gabapentin, preop 300–600 mg. The extra choice, 2,000–4,000 mg, is the Celecoxib, preop dose with the decimal moved.",
+      "explanation": "Typical doses: Celecoxib, preop 200–400 mg; Ketorolac, pediatric 0.5 mg/kg; Acetaminophen, pediatric IV 15 mg/kg; Gabapentin, preop 300–600 mg. The extra choice, 75–150 mg, is the pregabalin dose (a near-miss for Gabapentin, preop, which is 300–600 mg).",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5574,12 +5574,12 @@
       "type": "single",
       "options": [
         "90 mcg",
-        "900 mcg",
-        "90 mg",
-        "9 mcg"
+        "2.5 mg",
+        "200 mcg",
+        "18 mcg"
       ],
       "answer": 0,
-      "explanation": "Albuterol MDI, per puff: 90 mcg. 90 mg uses mg instead of mcg. 900 mcg is tenfold too high. 9 mcg is tenfold too low.",
+      "explanation": "Albuterol MDI, per puff: 90 mcg. 2.5 mg is the nebulizer dose. 200 mcg is more than one puff delivers. 18 mcg is the ipratropium puff.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5600,13 +5600,13 @@
       "stem": "Mannitol dose for raised ICP?",
       "type": "single",
       "options": [
-        "5–10 g/kg",
+        "1.5–2 g/kg",
         "0.5–1 g/kg",
-        "0.5–1 mg/kg",
-        "0.05–0.1 g/kg"
+        "2–3 mL/kg",
+        "0.1–0.2 g/kg"
       ],
       "answer": 1,
-      "explanation": "Mannitol, ICP: 0.5–1 g/kg. 0.05–0.1 g/kg is tenfold too low. 0.5–1 mg/kg uses mg/kg instead of g/kg. 5–10 g/kg is tenfold too high.",
+      "explanation": "Mannitol, ICP: 0.5–1 g/kg. 1.5–2 g/kg is excessive. 2–3 mL/kg is a hypertonic saline bolus volume. 0.1–0.2 g/kg is too low.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5627,13 +5627,13 @@
       "stem": "Dantrolene maintenance dose after MH control, every 4–6 hr?",
       "type": "single",
       "options": [
+        "2.5 mg/kg",
         "0.1 mg/kg",
-        "1 g/kg",
         "1 mg/kg",
-        "1 mcg/kg"
+        "5 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Dantrolene, maintenance: 1 mg/kg. 1 mcg/kg uses mcg/kg instead of mg/kg. 0.1 mg/kg is tenfold too low. 1 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Dantrolene, maintenance: 1 mg/kg. 2.5 mg/kg is the initial dose. 0.1 mg/kg is too low. 5 mg/kg is excessive.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5654,13 +5654,13 @@
       "stem": "Initial dantrolene dose for MH?",
       "type": "single",
       "options": [
-        "0.25 mg/kg",
-        "25 mg/kg",
-        "2.5 g/kg",
+        "10 mg/kg",
+        "5 mg/kg",
+        "1 mg/kg",
         "2.5 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Dantrolene, initial: 2.5 mg/kg. 2.5 g/kg uses g/kg instead of mg/kg. 0.25 mg/kg is tenfold too low. 25 mg/kg is tenfold too high.",
+      "explanation": "Dantrolene, initial: 2.5 mg/kg. 10 mg/kg is the cumulative point to reconsider. 5 mg/kg is double the initial dose. 1 mg/kg is the maintenance dose.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5682,12 +5682,12 @@
       "type": "single",
       "options": [
         "2 g",
-        "2 mg",
-        "0.2 g",
-        "20 g"
+        "4–6 g",
+        "1 g",
+        "10 g"
       ],
       "answer": 0,
-      "explanation": "Magnesium, bronchospasm: 2 g. 0.2 g is tenfold too low. 20 g is tenfold too high. 2 mg uses mg instead of g.",
+      "explanation": "Magnesium, bronchospasm: 2 g. 4–6 g is the preeclampsia load. 1 g is half the dose. 10 g is excessive.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5708,13 +5708,13 @@
       "stem": "Cumulative dantrolene dose after which other diagnoses are reconsidered?",
       "type": "single",
       "options": [
-        "10 g/kg",
+        "2.5 mg/kg",
         "10 mg/kg",
-        "10 mcg/kg",
-        "1 mg/kg"
+        "20 mg/kg",
+        "5 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Dantrolene, cumulative: 10 mg/kg. 1 mg/kg is tenfold too low. 10 g/kg uses g/kg instead of mg/kg. 10 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Dantrolene, cumulative: 10 mg/kg. 2.5 mg/kg is the initial dose. 20 mg/kg is double the cumulative point. 5 mg/kg is half the cumulative point.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5737,7 +5737,7 @@
       "options": [
         "Albuterol MDI, per puff: 90 mcg",
         "Mannitol, ICP: 0.5–1 g/kg",
-        "Methylene blue: 10–20 mg/kg",
+        "Methylene blue: 5 mg/kg",
         "Hydroxocobalamin: 5 g",
         "Sodium bicarbonate: 1 mEq/kg",
         "Magnesium, bronchospasm: 2 g"
@@ -5749,7 +5749,7 @@
         4,
         5
       ],
-      "explanation": "Correct: Magnesium, bronchospasm 2 g; Albuterol MDI, per puff 90 mcg; Hydroxocobalamin 5 g; Sodium bicarbonate 1 mEq/kg; Mannitol, ICP 0.5–1 g/kg. Incorrect: Methylene blue is 1–2 mg/kg, not 10–20 mg/kg.",
+      "explanation": "Correct: Albuterol MDI, per puff 90 mcg; Mannitol, ICP 0.5–1 g/kg; Hydroxocobalamin 5 g; Sodium bicarbonate 1 mEq/kg; Magnesium, bronchospasm 2 g. Incorrect: Methylene blue is 1–2 mg/kg; 5 mg/kg is toxic-range dosing.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5774,7 +5774,7 @@
         "Albuterol MDI, per puff: 90 mcg",
         "Methylene blue: 1–2 mg/kg",
         "Sodium bicarbonate: 1 mEq/kg",
-        "Dantrolene, cumulative: 10 mcg/kg",
+        "Dantrolene, cumulative: 5 mg/kg",
         "Dantrolene, initial: 2.5 mg/kg"
       ],
       "answer": [
@@ -5784,7 +5784,7 @@
         3,
         5
       ],
-      "explanation": "Correct: Albuterol MDI, per puff 90 mcg; Sodium bicarbonate 1 mEq/kg; Dantrolene, maintenance 1 mg/kg; Methylene blue 1–2 mg/kg; Dantrolene, initial 2.5 mg/kg. Incorrect: Dantrolene, cumulative is 10 mg/kg, not 10 mcg/kg.",
+      "explanation": "Correct: Dantrolene, maintenance 1 mg/kg; Albuterol MDI, per puff 90 mcg; Methylene blue 1–2 mg/kg; Sodium bicarbonate 1 mEq/kg; Dantrolene, initial 2.5 mg/kg. Incorrect: Dantrolene, cumulative is 10 mg/kg; 5 mg/kg is half the cumulative point.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -5813,7 +5813,7 @@
       "choices": [
         "10 mg/kg",
         "1–2 mg/kg",
-        "25 mg/kg",
+        "0.1–0.2 g/kg",
         "0.5–1 g/kg",
         "2.5 mg/kg"
       ],
@@ -5823,7 +5823,7 @@
         "Dantrolene, initial": "2.5 mg/kg",
         "Mannitol, ICP": "0.5–1 g/kg"
       },
-      "explanation": "Typical doses: Dantrolene, cumulative 10 mg/kg; Methylene blue 1–2 mg/kg; Dantrolene, initial 2.5 mg/kg; Mannitol, ICP 0.5–1 g/kg. The extra choice, 25 mg/kg, is the Dantrolene, initial dose with the decimal moved.",
+      "explanation": "Typical doses: Dantrolene, cumulative 10 mg/kg; Methylene blue 1–2 mg/kg; Dantrolene, initial 2.5 mg/kg; Mannitol, ICP 0.5–1 g/kg. The extra choice, 0.1–0.2 g/kg, is too low (a near-miss for Mannitol, ICP, which is 0.5–1 g/kg).",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Top Drawer Drug Dosing",
