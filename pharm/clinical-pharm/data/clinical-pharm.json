@@ -22018,12 +22018,12 @@
       "type": "single",
       "options": [
         "It causes immediate hypotension",
-        "It raises EtCO2",
+        "It worsens PONV",
         "It lowers ICP excessively",
         "It expands air bubbles"
       ],
       "answer": 3,
-      "explanation": "Nitrous oxide enters gas spaces faster than nitrogen leaves, so any air embolus grows and its hemodynamic effect worsens. It tends to raise rather than lower ICP, doesn't meaningfully raise EtCO2, and doesn't cause immediate hypotension on its own.",
+      "explanation": "Nitrous oxide enters gas spaces faster than nitrogen leaves, so any air embolus grows and its hemodynamic effect worsens. It does raise PONV risk, but that isn't the danger here. It doesn't cause immediate hypotension or lower ICP.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -22071,13 +22071,13 @@
       "stem": "Why is benzocaine spray risky for repeated topicalization?",
       "type": "single",
       "options": [
-        "It is too weak",
+        "It causes seizures at topical doses",
         "Methemoglobinemia",
         "It has a slow onset",
         "It causes bronchospasm through histamine release"
       ],
       "answer": 1,
-      "explanation": "Benzocaine oxidizes hemoglobin to methemoglobin, and repeated sprays raise the dose unpredictably. Its onset is fast, it is an effective topical agent, and it doesn't cause histamine-mediated bronchospasm.",
+      "explanation": "Benzocaine oxidizes hemoglobin to methemoglobin, and repeated sprays raise the dose unpredictably. Its onset is fast, and seizures and histamine-mediated bronchospasm aren't typical with topical use.",
       "citation": "",
       "topic": "Respiratory Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -22099,12 +22099,12 @@
       "type": "single",
       "options": [
         "It causes respiratory depression",
-        "It has no sedative effect",
+        "It worsens hypotension in cocaine patients",
         "It adds sympathetic stimulation",
         "It lowers seizure threshold more than benzodiazepines do"
       ],
       "answer": 2,
-      "explanation": "Ketamine's sympathetic stimulation adds to cocaine's tachycardia and hypertension; benzodiazepines are first-line. Ketamine doesn't cause significant respiratory depression and it is sedating, so those aren't the reason.",
+      "explanation": "Ketamine's sympathetic stimulation adds to cocaine's tachycardia and hypertension; benzodiazepines are first-line. It raises rather than lowers BP and doesn't cause significant respiratory depression.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -22125,13 +22125,13 @@
       "stem": "Patient with Na 118 and seizures receives 3% saline. What is a common initial bolus?",
       "type": "single",
       "options": [
-        "10 mL",
+        "250 mL of normal saline",
         "1,000 mL over 1 hr",
         "500 mL",
         "100–150 mL"
       ],
       "answer": 3,
-      "explanation": "Small 3% saline boluses of 100–150 mL raise sodium by a few mEq/L, enough to stop seizures, and can be repeated. 1,000 mL risks overcorrection and osmotic demyelination. 10 mL does almost nothing. 500 mL is far more than needed initially.",
+      "explanation": "Small 3% saline boluses of 100–150 mL raise sodium a few mEq/L, enough to stop seizures, and can be repeated. Normal saline is too dilute to raise sodium quickly. 500 mL or 1,000 mL of 3% risks overcorrection and osmotic demyelination.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -22462,13 +22462,13 @@
       "stem": "Patient on methadone receives ondansetron and haloperidol and develops polymorphic VT with a pulse. QTc was 540. What is the BEST drug?",
       "type": "single",
       "options": [
-        "Adenosine 6 mg",
+        "Synchronized cardioversion at 50 J",
         "Magnesium 2 g IV",
         "Amiodarone 300 mg IV",
         "Procainamide infusion at 20 mg/min"
       ],
       "answer": 1,
-      "explanation": "Torsades is treated with magnesium and removing QT-prolonging drugs; overdrive pacing or isoproterenol may help. Amiodarone and procainamide prolong QT. Adenosine doesn't treat torsades.",
+      "explanation": "Torsades is treated with magnesium and removing QT-prolonging drugs; overdrive pacing or isoproterenol may help, and unstable or pulseless torsades needs unsynchronized defibrillation, since polymorphic VT can't be reliably synchronized. Amiodarone and procainamide prolong QT.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
