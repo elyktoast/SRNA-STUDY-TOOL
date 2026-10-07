@@ -1,5 +1,6 @@
 (() => {
-  const CHECK_COOLDOWN = 120000;
+  const CHECK_COOLDOWN = 30000;
+  const CHECK_INTERVAL = 30000;
   const REQUEST_TIMEOUT = 8000;
   const BUILD_CACHE_KEY = 'mbu_build_manifest_v1';
   const script = document.currentScript;
@@ -74,5 +75,7 @@
 
   window.addEventListener('pageshow', event => { if (event.persisted) check(true); });
   window.addEventListener('focus', () => check());
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(); });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) check(true); });
+  window.addEventListener('online', () => check(true));
+  setInterval(() => check(), CHECK_INTERVAL);
 })();
