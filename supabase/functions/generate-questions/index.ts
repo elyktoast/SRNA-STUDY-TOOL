@@ -1,9 +1,9 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-const allowed=new Set(["https://elyktoast.github.io","http://127.0.0.1:4173","http://localhost:4173"]);
+const allowed=new Set(["https://elyktoast.github.io","https://srnastudytool.com","https://www.srnastudytool.com","http://127.0.0.1:4173","http://localhost:4173"]);
 const allowedOrigin=(origin:string)=>allowed.has(origin)||/^https:\/\/srna-study-tool-[a-z0-9-]+\.vercel\.app$/i.test(origin);
 const headers=(origin:string)=>({
-  "Access-Control-Allow-Origin":allowedOrigin(origin)?origin:"https://elyktoast.github.io",
+  "Access-Control-Allow-Origin":allowedOrigin(origin)?origin:"https://srnastudytool.com",
   "Access-Control-Allow-Headers":"authorization, apikey, content-type, x-client-info",
   "Access-Control-Allow-Methods":"POST, OPTIONS",
   "Content-Type":"application/json",
