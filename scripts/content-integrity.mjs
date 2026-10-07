@@ -95,6 +95,26 @@ for(const [label,file] of sources){
   else if(missingTopic)warn(label+': '+missingTopic+' questions have no explicit topic (known baseline: '+allowedMissingTopics+')');
 }
 
+// Image contract: every external image reference must resolve through its Studio source.
+const studioByData=new Map((manifest.studioSources||[]).map(s=>[String(s.data),s]));
+for(const [label,file] of sources){
+  const rel=file.replace('equipment/exam-1/',''),meta=studioByData.get(rel),payload=read(file),qs=Array.isArray(payload)?payload:(payload.questions||[]);
+  for(let i=0;i<qs.length;i++){
+    const q=qs[i]||{},identity=Number(q.set??q.setn??1)+'::'+String(q.id??i+1),raw=q.imageId??q.image??q.img??q.imageSvg??null;
+    if(!raw)continue;
+    if(typeof raw==='string'&&(raw.startsWith('data:image/')||raw.trim().startsWith('<svg')))continue;
+    if(typeof raw==='object'&&raw.kind==='direct'&&raw.url)continue;
+    const key=String(q.imageId??q.image??q.img??'').trim();
+    if(!key)continue;
+    if(!meta?.imageBase)err(label+': '+identity+' uses external image '+key+' but its Studio source has no imageBase');
+    else{
+      const safe=key.replace(/[^A-Za-z0-9_-]/g,'');
+      if(safe!==key)err(label+': '+identity+' has unsafe external image key '+key);
+      else if(!fs.existsSync(path.join(root,'equipment/exam-1',meta.imageBase,safe+'.png')))err(label+': '+identity+' references missing image asset '+meta.imageBase+safe+'.png');
+    }
+  }
+}
+
 for(const bank of manifest.banks||[]){
   if(!bank.data||bank.id==='hazards')continue;
   const payload=read('equipment/exam-1/'+bank.data),qs=Array.isArray(payload)?payload:(payload.questions||[]);
@@ -140,7 +160,7 @@ for(const source of bpManifest.studioSources||[]){
     if(String(q.sourceTitle||'').trim()!==source.label)err('Basic Principles '+identity+' sourceTitle does not match lecture source label');
     if(!String(q.explanation??q.exp??q.rationale??'').trim())err('Basic Principles '+identity+' has no explanation/rationale');
     const stemKey=norm(stem);if(stemKey){const prior=bpSeenStem.get(stemKey);if(prior)warn('Basic Principles exact duplicate stem: '+prior+' and '+identity);else bpSeenStem.set(stemKey,identity)}
-    const rawImage=q.img??q.imageSvg??q.image??'',image=String(typeof rawImage==='object'?(rawImage.url||''):rawImage).trim();if(rawImage&&typeof rawImage==='object'&&rawImage.kind!=='direct')err('Basic Principles '+identity+' has unsupported figure object kind '+String(rawImage.kind));if(image){bpImageRefs++;if(image.includes('..')||path.isAbsolute(image))err('Basic Principles '+identity+' has unsafe figure path '+image);else{bpFigurePaths.add(image);const imagePath=path.join(root,bpRoot,image);if(!fs.existsSync(imagePath))err('Basic Principles '+identity+' references missing figure '+image)}}
+    const rawImage=q.img??q.imageSvg??q.image??'',image=String(typeof rawImage==='object'?(rawImage.url||''):rawImage).trim();if(rawImage&&typeof rawImage==='object'&&rawImage.kind!=='direct')err('Basic Principles '+identity+' has unsupported figure object kind '+String(rawImage.kind));if(image){bpImageRefs++;if(image.includes('..')||path.isAbsolute(image))err('Basic Principles '+identity+' has unsafe figure path '+image);else{bpFigurePaths.add(image);const imagePath=path.join(root,bpRoot,image);if(!fs.existsSync(imagePath))err('Basic Principles '+identity+' references missing figure '+image);const original=Number(q.sourceMeta?.originalFigure),m=image.match(/\/fig-(\d+)\.[A-Za-z0-9]+$/);if(Number.isFinite(original)&&m&&Number(m[1])!==original)err('Basic Principles '+identity+' figure '+image+' does not match sourceMeta.originalFigure '+original)}}
   }
 }
 if(bpTotal!==4000)err('Basic Principles: total question count '+bpTotal+' != 4000');
