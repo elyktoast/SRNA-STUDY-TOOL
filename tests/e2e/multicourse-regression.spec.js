@@ -113,7 +113,7 @@ test.describe('multi-course foundation', () => {
     await expect(page.locator('#buildSetsBtn')).toHaveCount(0);
     await expect(page.locator('#buildTopicsBtn')).toHaveCount(0);
     await expect(page.locator('#order')).toHaveCount(0);
-    await expect(page.locator('#topicChecks input')).toHaveCount(9);
+    await expect(page.locator('#topicChecks input')).toHaveCount(5);
     const state = await page.evaluate(() => ({
       count: ALL.length,
       uidCount: ALL_BY_UID.size,
@@ -128,7 +128,7 @@ test.describe('multi-course foundation', () => {
     expect(state.unifiedHeading).toBe('Lecture Topics');
     expect(state.sourceChoices).toEqual([]);
     expect(state.sourceText).toBe('');
-    expect(state.topics).toBe(9);
+    expect(state.topics).toBe(5);
     expect(state.directImages).toBeGreaterThanOrEqual(0);
     await expect(page.locator('#mbu-bank-picker')).toHaveCount(0);
     await page.locator('#topicChecks input').first().check();
@@ -152,7 +152,7 @@ test.describe('multi-course foundation', () => {
     const choice = page.locator('#topicChecks input').first();
     await choice.check();
     const topic = await choice.inputValue();
-    expect(await page.locator('#topicChecks input').count()).toBe(9);
+    expect(await page.locator('#topicChecks input').count()).toBe(5);
     expect(await page.locator('#topicChecks').textContent()).toContain('(500)');
     await page.selectOption('#count', '10');
     await page.getByRole('button', { name: 'Start Quiz' }).click();
