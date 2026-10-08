@@ -2773,7 +2773,7 @@ test.describe('canonical quiz regression', () => {
       document.getElementById('adaptiveToggle').checked=true;
       startMode('custom');
     });
-    await expect(page.locator('#qmeta')).toContainText('Adaptive 2.1');
+    await expect(page.locator('#qmeta')).toContainText(' · Adaptive · ');
     await expect(page.locator('#qmeta')).toContainText('Adaptive Difficulty Level 3 of 5');
     await expect(page.locator('#studioPrev')).toBeDisabled();
     await expect(page.locator('#studioNavToggle')).toBeHidden();
@@ -2929,7 +2929,7 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('#mbu-question-search')).not.toBeVisible();
   });
 
-  test('Studio exposes Smart Review, opt-in Adaptive 2.1, Due Review, and multi-window mastery analytics', async ({ page }) => {
+  test('Studio exposes Smart Review, opt-in Adaptive, Due Review, and multi-window mastery analytics', async ({ page }) => {
     await page.goto(exam + '/studio.html');await waitForStudio(page);
     await expect(page.getByRole('button',{name:'Start Smart Review'})).toBeVisible();
     await expect(page.locator('#adaptiveToggle')).toBeVisible();
@@ -2940,12 +2940,12 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('#analyticsSummary')).toContainText('Last 30 days');
   });
 
-  test('Adaptive 2.1 beta CTA is transparent and remains inside the signed-in course flow', async ({ page }) => {
+  test('Adaptive CTA is transparent and remains inside the signed-in course flow', async ({ page }) => {
     await seedSignedIn(page);
     await page.goto(exam + '/index.html');await page.evaluate(() => MBUPageReady);
     const cta=page.locator('#adaptiveBetaCard');
-    await expect(cta).toContainText('Adaptive 2.1');
-    await expect(cta).toContainText('Account is required');
+    await expect(cta.locator('h2')).toHaveText('Adaptive');
+    await expect(cta).not.toContainText('Account is required');
     await expect(cta).toContainText('testing and population calibration');
     await expect(page.locator('#tryAdaptiveBtn')).toHaveAttribute('href','studio.html?mode=adaptive');
     await page.locator('#tryAdaptiveBtn').click();
