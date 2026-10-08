@@ -2674,12 +2674,12 @@ test.describe('canonical quiz regression', () => {
   test('Adaptive sessions do not inherit cross-outs from earlier Studio sessions', async ({ page }) => {
     await seedSignedIn(page);
     await page.goto(exam + '/studio.html');await waitForStudio(page);
-    await page.evaluate(()=>{
+    await page.evaluate(async ()=>{
       const first=document.querySelector('#sourceChecks input[type=checkbox]');
       if(first)first.checked=true;
       document.getElementById('count').value='10';
       document.getElementById('adaptiveToggle').checked=true;
-      startMode('custom');
+      await startMode('custom');
       const q=session[pos],key=q.uid+':0';
       DB.crosses[key]=true;
       MBUStudio.save(DB);
