@@ -20,7 +20,7 @@ const reviewHistory=new Map();
 for(const q of questions.slice(0,100)){const v=MBUQuestionCoverage.contentVersion(q),row={question_uid:q.uid,content_version:v,coverage_cycle:1,last_issued_at:'2026-09-01T00:00:00Z',times_viewed:1};reviewHistory.set(q.uid+'@'+v,row);reviewHistory.set(q.uid,row)}
 const attempts=uid=>Number(uid.slice(1))<=20?{attempts:2,correct:0,incorrect:2,streak:0,lastAt:Date.UTC(2026,8,1)}:null;
 const mixed=MBUQuestionCoverage.select({questions,count:50,history:reviewHistory,attempts,priority:q=>({score:20,due:Number(q.uid.slice(1))<=10}),seed:'mixed',now:Date.UTC(2026,9,4)});
-assert(mixed.meta.reviewCount>=5&&mixed.meta.reviewCount<=12,'review quota outside normal range');
+assert.equal(mixed.meta.reviewCount,0,'review selected while unseen questions remain');
 assert.equal(mixed.meta.newCount+mixed.meta.reviewCount,50);
 const reviewItems=mixed.meta.items.filter(x=>x.kind==='review');
 assert(reviewItems.every(x=>x.cycle===1),'review item incorrectly consumed the active coverage cycle');
