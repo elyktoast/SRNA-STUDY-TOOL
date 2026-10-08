@@ -2280,6 +2280,8 @@ test.describe('canonical quiz regression', () => {
     await expect(page.getByText('Classmate Bank',{exact:true})).toHaveCount(0);
     await expect(page.getByText('Generated Bank',{exact:true})).toHaveCount(0);
     expect(await page.evaluate(()=>window.MBU_GENERATOR_CLASSROOM_HIDDEN)).toBe(true);
+    expect(await page.evaluate(()=>STUDIO_SOURCE_CATALOG.filter(source=>['classmate','generated'].includes(source.bank)))).toEqual([]);
+    expect(await page.evaluate(()=>STUDIO_SOURCE_ORDER.filter(key=>['classmate','generated'].includes(key)))).toEqual([]);
     const status=await page.evaluate(()=>{
       const api=MBUQuestionGenerator;
       const draft=api.addDraft({
