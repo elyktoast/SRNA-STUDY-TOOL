@@ -120,3 +120,8 @@ test('Account change in another tab cannot leave the prior CAT visible',async({p
  await navigation;await waitForStudio(page);expect(await page.evaluate(()=>DB.active)).toBeNull();
  expect(await page.evaluate(()=>session.length)).toBe(0);await other.close();
 });
+test('A newly missed question cannot bypass CAT first-attempt reservations as review',async({page})=>{
+ await start(page);
+ const result=await page.evaluate(async()=>{const q=ALL.find(q=>q.uid!==session[0].uid),version=MBUQuestionCoverage.contentVersion(q);let calls=0;MBUSupabase.recordQuestionSession=async()=>{calls++;return true};MBUStudyIntelligence.questionStats=()=>({attempts:1,lastCorrect:false});try{await reserveAdaptiveQuestion(q,[{question_uid:q.uid,content_version:version,times_issued:1,times_viewed:1}]);return{reserved:true,calls}}catch{return{reserved:false,calls}}});
+ expect(result).toEqual({reserved:false,calls:0});
+});
