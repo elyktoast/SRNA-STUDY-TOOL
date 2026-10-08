@@ -27,6 +27,11 @@ assert(reviewItems.every(x=>x.cycle===1),'review item incorrectly consumed the a
 // Partial exhaustion: all remaining unseen questions must be selected before recycling.
 const partialHistory=new Map();for(const q of questions.slice(0,463)){const v=MBUQuestionCoverage.contentVersion(q),row={question_uid:q.uid,content_version:v,coverage_cycle:1,last_issued_at:'2026-08-01T00:00:00Z',times_viewed:1};partialHistory.set(q.uid+'@'+v,row)}
 const partial=MBUQuestionCoverage.select({questions,count:100,history:partialHistory,attempts:()=>null,seed:'partial',now:Date.UTC(2026,9,4)});const remaining=new Set(questions.slice(463).map(q=>q.uid));assert.equal(partial.questions.length,37,'correctly answered questions recycled before completing the coverage cycle');assert([...remaining].every(uid=>partial.questions.some(q=>q.uid===uid)),'remaining unseen questions were skipped');assert(partial.meta.items.every(item=>item.kind==='coverage'),'premature review in partial coverage session');
+// Partial exhaustion may include misses, but every remaining unseen item comes first.
+const ordered=MBUQuestionCoverage.select({questions,count:100,history:partialHistory,attempts:uid=>Number(uid.slice(1))<=20?{attempts:2,incorrect:2,lastAt:Date.UTC(2026,8,1)}:null,seed:'ordered',now:Date.UTC(2026,9,4)});
+assert(ordered.meta.reviewCount>0,'review fixture did not exercise mixed coverage');
+assert(ordered.meta.items.slice(0,37).every(item=>item.kind==='coverage'),'review appeared before remaining unseen coverage');
+assert(ordered.meta.items.slice(37).every(item=>item.kind==='review'),'unseen question appeared after a repeat');
 // Small banks cap at available unique questions.
 const small=MBUQuestionCoverage.select({questions:make(17),count:50,history:new Map(),seed:'small'});assert.equal(small.questions.length,17);assert.equal(new Set(small.questions.map(q=>q.uid)).size,17);
 // Topic balancing: an uneven pool should still include minority topics when available.
@@ -61,7 +66,7 @@ for(let run=0;run<3;run++){
  }
 }
 assert.equal(allSeen.size,450);
-const studioSource=fs.readFileSync(new URL('../equipment/assets/studio-runtime.js',import.meta.url),'utf8');
+const studioSource=['studio-runtime.js','studio-lifecycle.js'].map(name=>fs.readFileSync(new URL('../equipment/assets/'+name,import.meta.url),'utf8')).join('\n');
 assert(studioSource.includes("if(m==='custom'&&window.MBUQuestionCoverage"),'All Questions custom sessions bypass coverage');
 assert(studioSource.includes('MBUQuestionCoverage.select({questions:pool,count:limit,history'),'All Questions custom sessions use an invalid selection count');
 assert(studioSource.includes('const coverageLifecyclePending=new Set()'),'Lifecycle requests must be deduplicated while in flight');

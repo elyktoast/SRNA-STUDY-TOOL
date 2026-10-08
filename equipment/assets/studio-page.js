@@ -21,7 +21,7 @@ function resumeActive(){
 const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();const qs=active.uids.map(id=>ALL_BY_UID.get(id)).filter(Boolean);if(qs.length!==active.uids.length){renderHome();return}
 session=qs;pos=Math.min(active.pos||0,session.length-1);showQ()
 }
-function endActiveQuiz(){if(!DB.active)return;clearActive();session=[];pos=0;renderHome()}
+function endActiveQuiz(){studioSessionGeneration++;clearTimeout(autoTimer);autoTimer=null;if(!DB.active)return;clearActive();session=[];pos=0;renderHome()}
 function activeButton(){
 let old=byId('resumeActiveRow');if(old)old.remove();if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;const missing=DB.active.uids.some(id=>!ALL_BY_UID.has(id)),anchor=byId('studioQuickModes'),row=document.createElement('div'),b=document.createElement('button'),end=document.createElement('button');row.id='resumeActiveRow';row.className='resume-active-row';b.id='resumeActive';b.className='btn resume-active-main';end.id='endActiveQuiz';end.className='btn out resume-active-end';end.textContent='End Quiz';end.setAttribute('aria-label','End active quiz');end.onclick=endActiveQuiz;if(missing&&studioHasFailedSource()){b.disabled=true;b.textContent='⏸ Resume Active Quiz · retry failed source first'}else{const active=reconcileActiveState();if(!active)return;b.textContent='▶ Resume Active Quiz · Question '+(active.pos+1)+' / '+active.uids.length;b.onclick=resumeActive}row.append(b,end);anchor?.parentNode?.insertBefore(row,anchor)
 }

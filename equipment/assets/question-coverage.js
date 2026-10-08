@@ -35,8 +35,8 @@ function select({questions,count,history=new Map(),attempts,priority,seed=String
  const pickedReview=review.filter(x=>!used.has(x.q.uid)).slice(0,Math.max(0,limit-coverage.length)).map(x=>x.q);
  // Do not silently recycle correct answers when the pool has not completed a cycle.
  // A short session is preferable to violating account coverage guarantees.
- const reviewIds=new Set(pickedReview.map(q=>q.uid)),remaining=seeded([...coverage,...pickedReview],seed+':final'),selected=[];
- while(remaining.length){const last=selected.length?String(selected[selected.length-1].concept||selected[selected.length-1].topic||''):'';let index=remaining.findIndex(q=>String(q.concept||q.topic||'')!==last);if(index<0)index=0;selected.push(remaining.splice(index,1)[0])}
+ const reviewIds=new Set(pickedReview.map(q=>q.uid)),remaining=[...seeded(coverage,seed+':final'),...seeded(pickedReview,seed+':review')],selected=[];
+ while(remaining.length){const last=selected.length?String(selected[selected.length-1].concept||selected[selected.length-1].topic||''):'';let index=remaining.findIndex(q=>reviewIds.has(q.uid)===reviewIds.has(remaining[0].uid)&&String(q.concept||q.topic||'')!==last);if(index<0)index=0;selected.push(remaining.splice(index,1)[0])}
  return{questions:selected,meta:{newCount:coverage.length,reviewCount:pickedReview.length,cycle:activeCycle,reviewRate:rate,items:selected.map(q=>{const h=rowFor(history,q);return{uid:q.uid,topic:q.topic||'Other',version:contentVersion(q),cycle:reviewIds.has(q.uid)?Math.max(1,Number(h?.coverage_cycle)||1):activeCycle,kind:reviewIds.has(q.uid)?'review':'coverage'}})}}
 }
 window.MBUQuestionCoverage={select,contentVersion,dynamicReviewRate};
