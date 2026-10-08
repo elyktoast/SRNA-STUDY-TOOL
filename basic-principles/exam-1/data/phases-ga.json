@@ -4253,17 +4253,17 @@
       "id": "PHA-170",
       "set": 1,
       "type": "single",
-      "stem": "The low BP is confirmed. End-tidal volatile is 1.3 age-adjusted MAC and a large fentanyl bolus was just given; HR is unchanged and there is no evidence of bleeding. Which mechanism is most likely?",
+      "stem": "During maintenance of anesthesia, a patient develops confirmed hypotension. End-tidal volatile concentration is 1.3 MAC and a large bolus of fentanyl was recently administered; heart rate is unchanged and there is no surgical blood loss. Which mechanism is most likely?",
       "options": [
         "Tension pneumothorax",
-        "Occult hemorrhage as the only plausible cause",
-        "Anesthetic-related vasodilation/depression",
-        "Anaphylaxis"
+        "Occult hemorrhage",
+        "Anesthetic-induced vasodilation and myocardial depression",
+        "Anaphylactic reaction"
       ],
       "answer": [
         2
       ],
-      "explanation": "At 1.3 age-adjusted MAC with a large fentanyl bolus and no bleeding, vasodilation and reduced sympathetic tone from excess anesthetic are the likely cause, so depth is reduced and blood pressure supported with a vasopressor. Tension pneumothorax and anaphylaxis bring other findings, and hemorrhage has been ruled unlikely.",
+      "explanation": "High volatile anesthetic concentrations (1.3 MAC) combined with opioid administration lead to peripheral vasodilation, decreased sympathetic tone, and myocardial depression, resulting in hypotension. Tension pneumothorax, anaphylaxis, and hemorrhage present with distinct clinical signs (such as tachycardia, bronchospasm, or active surgical blood loss) which are absent here.",
       "citation": "",
       "topic": "Hemodynamics, bronchospasm, hemorrhage, and hypothermia",
       "sourceTitle": "Phases of General Anesthesia",
