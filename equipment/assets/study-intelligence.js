@@ -32,7 +32,7 @@ const streak=Math.max(1,Number(attempt?.streak)||1);
 return streak===1?3:streak===2?7:streak===3?14:30
 }
 function questionMeta(bank,q,extra={}){
-return{uid:uidOf(bank,q),courseId:q?.courseId||courseId,examId:q?.examId||examId,bank:bankOf(bank,q),bankLabel:bankLabelOf(extra.bankLabel,bank,q),set:Number(extra.set??q?.set??q?.setn??1)||1,questionId:String(extra.questionId??q?.id??q?.seq??''),topic:topicOf(q),stem:String(q?.stem||q?.q||'').trim(),href:String(extra.href||location.href)}
+return{uid:uidOf(bank,q),courseId:q?.courseId||courseId,examId:q?.examId||examId,bank:bankOf(bank,q),bankLabel:bankLabelOf(extra.bankLabel,bank,q),set:Number(extra.set??q?.set??q?.setn??1)||1,questionId:String(extra.questionId??q?.id??q?.seq??''),topic:topicOf(q),stem:String(q?.stem||q?.q||'').trim(),href:String(extra.href||q?.practiceUrl||location.href)}
 }
 function recordAnswer(bank,q,ok,extra={}){
 const store=storeFor(q),d=db(store),meta=questionMeta(bank,q,extra),t=Number(extra.at)||now(),prev=d.attempts[meta.uid]||{},correct=Number(prev.correct)||0,incorrect=Number(prev.incorrect)||0,attempts=Number(prev.attempts)||0,firstAttempt=attempts===0;

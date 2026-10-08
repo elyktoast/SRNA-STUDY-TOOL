@@ -23,7 +23,7 @@ test('Foreign question reservation, lifecycle, analytics and exact refresh retai
  await expect.poll(()=>events.some(e=>e.p_event==='answered'&&e.p_course_id==='pharm'&&e.p_question_uid===q.uid)).toBe(true);
  await expect.poll(()=>contributions.length).toBe(1);expect(contributions[0]).toMatchObject({p_course_id:'pharm',p_exam_id:'clinical-pharm',p_question_id:q.uid});
  const stores=await page.evaluate(uid=>({owner:JSON.parse(localStorage.getItem('mbu_study_intelligence_pharm_clinical-pharm_v1')),studio:JSON.parse(localStorage.getItem('mbu_studio_pharm_clinical-pharm_v1')),host:MBUStudyIntelligence.analytics().overall.attempts}),q.uid);
- expect(stores.owner.attempts[q.uid]).toMatchObject({attempts:1,courseId:'pharm',examId:'clinical-pharm'});expect(stores.studio.ans[q.uid].ok).toBe(true);expect(stores.host).toBe(0);
+ expect(stores.owner.attempts[q.uid]).toMatchObject({attempts:1,courseId:'pharm',examId:'clinical-pharm'});expect(stores.studio.ans[q.uid].ok).toBe(true);expect(new URL(stores.owner.attempts[q.uid].href).pathname).toBe('/pharm/clinical-pharm/studio.html');expect(new URL(stores.owner.attempts[q.uid].href).searchParams.get('question')).toBe(q.uid);expect(stores.host).toBe(0);
  await page.reload();await waitForStudio(page);await expect(page.locator('#quiz')).toBeVisible();
  expect(await page.evaluate(()=>session[pos].uid)).toBe(q.uid);expect(await page.evaluate(()=>DB.active.answers)).toEqual(before.answers);expect(await page.evaluate(()=>DB.active.adaptive)).toEqual(before.adaptive);
  await page.evaluate(()=>grade());expect(await page.evaluate(uid=>MBUStudyIntelligence.questionStats(uid,catQuestion(uid)).attempts,q.uid)).toBe(1);

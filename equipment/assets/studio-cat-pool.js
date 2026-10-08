@@ -20,7 +20,7 @@ async function loadCatPool(){
  const row=norm(q,src.key,String(src.key).startsWith('h')?1:q.set||1,i,src.label);
  if(src.imageBase&&q.imageId)row.img={kind:'direct',url:new URL(src.imageBase.replace(/\/?$/,'/')+q.imageId+'.png',root).href};
  else if(row.img?.kind==='direct')row.img={...row.img,url:new URL(row.img.url,root).href};
- return {...row,...ctx};
+ return {...row,...ctx,practiceUrl:new URL('studio.html?question='+encodeURIComponent(row.uid),root).href};
  });
  }));return sources.flat();
  }));

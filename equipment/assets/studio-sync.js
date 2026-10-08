@@ -156,7 +156,7 @@
       explanation:String(q.explanation||q.why||q.exp||''),
       source:Array.isArray(sourceRaw)?sourceRaw.join('; '):String(sourceRaw||''),
       page:String(q.page||''),
-      pageUrl:(()=>{const u=new URL(location.origin+location.pathname);u.searchParams.set('question',key(b,q));return u.href})(),
+      pageUrl:q.practiceUrl||(()=>{const u=new URL(location.origin+location.pathname);u.searchParams.set('question',key(b,q));return u.href})(),
       build:(document.body.innerHTML.match(/MBU_BUILD:([^<*]+)/)||[])[1]?.trim()||'',
     };
   }

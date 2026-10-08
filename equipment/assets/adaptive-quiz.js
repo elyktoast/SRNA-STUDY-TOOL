@@ -1,4 +1,3 @@
-/* Adaptive 2.1. */
 (()=>{'use strict';
 const DIAGNOSTIC_LENGTH=6,TOP_CANDIDATES=8,CONCEPT_COOLDOWN=3,structuralCache=new WeakMap(),contentCache=new WeakMap(),conceptCache=new WeakMap();
 const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -111,13 +110,13 @@ function chooseRandomesque(candidates,s){
 function pick(questions,state){
   const s=normalize(state),seen=new Set(s.seenUids),allowed=s.poolUids.length?new Set(s.poolUids):null,seenContent=new Set(s.seenContentKeys);
   for(const q of questions)if(q?.uid&&seen.has(String(q.uid)))seenContent.add(contentKey(q));
-  const recent=recentUids(50),recentContent=recentContentKeys(questions,50),distribution=distributionOf(questions,allowed),targets=Object.keys(s.blueprintTargets).length?s.blueprintTargets:blueprintTargets(distribution,s.maxQuestions),snapshot=masterySnapshot(),deficits=Object.entries(targets).reduce((n,[t,v])=>n+Math.max(0,Number(v)-(Number(s.topicCounts[t])||0)),0),candidates=[];let index=0;
+  const recent=recentUids(50),recentContent=recentContentKeys(questions,50),distribution=distributionOf(questions,allowed),targets=Object.keys(s.blueprintTargets).length?s.blueprintTargets:blueprintTargets(distribution,s.maxQuestions),snapshot=masterySnapshot(),deficits=Object.entries(targets).reduce((n,[t,v])=>n+Math.max(0,Number(v)-(Number(s.topicCounts[t])||0)),0),candidates=[],fallback=[];let index=0;
 for(const q of distribution.rows){
     const key=contentKey(q);
     if(!q?.uid||seen.has(String(q.uid))||seenContent.has(key)||(allowed&&!allowed.has(String(q.uid)))){index++;continue}
     candidates.push(candidateScore(q,s,distribution,recent,recentContent,snapshot,index,targets,deficits));index++
 }
-  let eligible=candidates.filter(x=>x.blueprintFeasible);if(!eligible.length)eligible=candidates;
+  let eligible=candidates;if(!eligible.length)eligible=fallback.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i,targets,deficits));
   const chosen=chooseRandomesque(eligible,s);
   if(!chosen)return{question:null,state:{...s,blueprintTargets:targets}};
   const focus=s.answered<DIAGNOSTIC_LENGTH?'Diagnostic sampling':(chosen.priority.reason||'Balanced practice'),topic=chosen.topic,phase=s.answered<DIAGNOSTIC_LENGTH?'diagnostic':'adaptive';
