@@ -23,17 +23,19 @@ function select({questions,count,history=new Map(),attempts,priority,seed=String
  const pool=unique(questions),limit=Math.min(Math.max(1,Number(count)||50),pool.length);if(!pool.length)return{questions:[],meta:{newCount:0,reviewCount:0,cycle:1}};
  const histories=pool.map(q=>rowFor(history,q)).filter(consumed),cycle=Math.max(1,...histories.map(x=>Number(x.coverage_cycle)||1)),seenThisCycle=pool.filter(q=>{const h=rowFor(history,q);return consumed(h)&&Number(h.coverage_cycle||0)>=cycle}).length,rollover=seenThisCycle>=pool.length,activeCycle=rollover?cycle+1:cycle;
  let unseen=rollover?pool.slice():pool.filter(q=>{const h=rowFor(history,q);return !consumed(h)||Number(h.coverage_cycle||0)<cycle});
- const rate=clamp(Number.isFinite(reviewRate)?reviewRate:dynamicReviewRate(pool,attempts),.10,.25),targetReview=Math.min(Math.floor(limit*rate),Math.max(0,limit-1));
- const recentCutoff=now-2*DAY;
+ const rate=0;
+ // Strict unseen-first: missed questions may be reviewed, but correctly answered
+ // questions never fill a session before the eligible pool is exhausted.
+ const unseenSet=new Set(unseen.map(q=>q.uid));
  const review=pool.map(q=>({q,h:rowFor(history,q),w:reviewWeight(q,attempts,priority,now)}))
-   .filter(x=>consumed(x.h)&&x.w>0&&Date.parse(x.h.last_issued_at||0)<recentCutoff)
-   .sort((a,b)=>b.w-a.w||Date.parse(a.h.last_issued_at||0)-Date.parse(b.h.last_issued_at||0));
- const pickedReview=balancedTake(review.slice(0,Math.max(targetReview*4,targetReview)).map(x=>x.q),targetReview,seed+':review'),used=new Set(pickedReview.map(q=>q.uid));
- const need=limit-pickedReview.length;
- let coverage=shapedTake(unseen.filter(q=>!used.has(q.uid)),need,seed);
- if(coverage.length<need){
-   const fill=pool.filter(q=>!used.has(q.uid)&&!coverage.some(x=>x.uid===q.uid)).sort((a,b)=>Date.parse(rowFor(history,a)?.last_issued_at||0)-Date.parse(rowFor(history,b)?.last_issued_at||0)||hash(seed+a.uid)-hash(seed+b.uid));
-   coverage=coverage.concat(fill.slice(0,need-coverage.length))
+   .filter(x=>!unseenSet.has(x.q.uid)&&consumed(x.h)&&x.w>0)
+   .sort((a,b)=>b.w-a.w);
+ let coverage=shapedTake(unseen,limit,seed);
+ const used=new Set(coverage.map(q=>q.uid));
+ const pickedReview=review.filter(x=>!used.has(x.q.uid)).slice(0,Math.max(0,limit-coverage.length)).map(x=>x.q);
+ if(coverage.length+pickedReview.length<limit && !unseen.length){
+   const recycled=seeded(pool.filter(q=>!used.has(q.uid)&&!pickedReview.some(x=>x.uid===q.uid)),seed+':cycle');
+   coverage=coverage.concat(recycled.slice(0,limit-coverage.length-pickedReview.length));
  }
  const reviewIds=new Set(pickedReview.map(q=>q.uid)),remaining=seeded([...coverage,...pickedReview],seed+':final'),selected=[];
  while(remaining.length){const last=selected.length?String(selected[selected.length-1].concept||selected[selected.length-1].topic||''):'';let index=remaining.findIndex(q=>String(q.concept||q.topic||'')!==last);if(index<0)index=0;selected.push(remaining.splice(index,1)[0])}
