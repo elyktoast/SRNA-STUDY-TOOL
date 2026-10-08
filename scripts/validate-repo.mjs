@@ -408,7 +408,7 @@ for(const p of ['equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards
 {
  const src=studioSource();
  if(!src.includes('function showQ(){clearTimeout(autoTimer);autoTimer=null;'))fail('Studio: render does not clear/null auto-advance timer');
- if(!src.includes('function nextQ(){clearTimeout(autoTimer);autoTimer=null;'))fail('Studio: manual/automatic Next leaves a stale timer handle');
+ if(!src.includes('async function nextQ(){if(adaptiveNextBusy)return;clearTimeout(autoTimer);autoTimer=null;'))fail('Studio: manual/automatic Next leaves a stale timer handle');
  if(!src.includes('if(same&&existing.pos===pos)return;'))fail('Studio: unchanged question renders still rewrite active session state');
 }
 
@@ -617,7 +617,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
   'pos=n;saveActive();showQ()',
   'function resetStudioCurrent(){clearTimeout(autoTimer);autoTimer=null;',
   'delete DB.active.answers[q.uid]',
-  'function nextQ(){clearTimeout(autoTimer);autoTimer=null;',
+  'async function nextQ(){if(adaptiveNextBusy)return;clearTimeout(autoTimer);autoTimer=null;',
   'else clearActive();session=[]'
  ]) if(!studio.includes(token))fail('Studio: final session lifecycle invariant missing: '+token);
  if(!studio.includes('saved=sessionAnswer(q.uid)')||!studio.includes("graded=matching?!!(saved&&saved.matching):!!(saved&&savedSel)"))fail('Studio: revisiting a session question does not restore graded state for standard and matching items');
@@ -930,7 +930,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  for(const token of ['mbu_study_intelligence_v1','recordAnswer','smartReview','questionStats','topicStats','due','analytics','mastery','priorityForQuestion','recentActivity','addIssue','firstAttempt=attempts===0','MBUCalibrationOutbox?.enqueue'])if(!intel.includes(token))fail('Study intelligence contract missing '+token);
  for(const token of ['mbu_calibration_outbox_v2_','ownerId','currentUser','enqueue','flush','flushAll',"window.addEventListener('online'"])if(!outbox.includes(token))fail('Calibration outbox contract missing '+token);
  for(const token of ["m==='smart'","m==='custom'","m==='due'","m==='weak'",'adaptiveToggle','Adaptive 2.1','MBUAdaptiveQuiz','analyticsSummary','seedLegacy',"sessionMode:DB.active?.mode||'custom'","requested==='weak'"])if(!studio.includes(token))fail('Studio intelligence integration missing '+token);
- if(!studio.includes('majorityBalancedSample')||!studio.includes('MBUAdaptiveQuiz?.start?.(adaptivePool,Math.min(limit,adaptivePool.length))')||!studio.includes('MBUAdaptiveQuiz?.pick?.(ALL.filter(q=>DB.active.adaptive.poolUids?.includes(String(q.uid))),DB.active.adaptive)'))fail('Studio/CAT selection architecture is incomplete');
+ if(!studio.includes('majorityBalancedSample')||!studio.includes('MBUAdaptiveQuiz?.start?.(adaptivePool,Math.min(limit,adaptivePool.length))')||!studio.includes('MBUAdaptiveQuiz?.pick?.(eligible,DB.active.adaptive)'))fail('Studio/CAT selection architecture is incomplete');
  const adaptiveBranch=studio.indexOf('if(adaptive){'),balancedBranch=studio.indexOf('majorityBalancedSample(pool,+n');
  if(adaptiveBranch<0||balancedBranch<0||adaptiveBranch>balancedBranch||!studio.slice(adaptiveBranch,balancedBranch).includes('return}'))fail('Adaptive CAT must exit before the custom 80/20 Studio sampler');
  const generator=read('equipment/assets/question-generator.js');
