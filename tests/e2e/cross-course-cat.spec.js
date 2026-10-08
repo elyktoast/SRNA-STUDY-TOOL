@@ -79,3 +79,11 @@ test('Cross-course answer preserves the owning course active quiz and prior stud
  const after=await page.evaluate(()=>JSON.parse(localStorage.getItem('mbu_studio_pharm_clinical-pharm_v1')));
  expect(after.active).toEqual(prior.active);expect(after.flags).toEqual(prior.flags);expect(after.ans['prior-question']).toEqual(prior.ans['prior-question']);expect(after.ans[q.uid].ok).toBe(true);
 });
+test('Full-course engine completes its topic blueprint without repeats',async({page})=>{
+ await setup(page);const result=await page.evaluate(async()=>{
+ const pool=await loadCatPool(),started=performance.now();let picked=MBUAdaptiveQuiz.start(pool,50,{selectionSeed:12345}),state=picked.state;const ids=[],keys=[];
+ while(picked.question){const q=picked.question;ids.push(q.uid);keys.push(MBUAdaptiveQuiz.contentKey(q));state=MBUAdaptiveQuiz.advance(state,q,true);if(state.answered===state.maxQuestions)break;picked=MBUAdaptiveQuiz.pick(pool,state);state=picked.state}
+ return {ids,keys,answered:state.answered,targets:state.blueprintTargets,counts:state.topicCounts,elapsed:performance.now()-started};
+ });
+ expect(result.answered).toBe(50);expect(new Set(result.ids).size).toBe(50);expect(new Set(result.keys).size).toBe(50);expect(result.counts).toEqual(Object.fromEntries(Object.entries(result.targets).filter(([,n])=>n>0)));expect(result.elapsed).toBeLessThan(10000);
+});
