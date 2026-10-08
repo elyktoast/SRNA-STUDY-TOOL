@@ -74,9 +74,9 @@ const calibrationSchema=fs.readFileSync(new URL('../supabase/migrations/20260927
 const calibrationV2=fs.readFileSync(new URL('../supabase/migrations/20260928112827_global_cat_course_exam_metadata.sql',import.meta.url),'utf8');
 const outboxSource=fs.readFileSync(new URL('../equipment/assets/calibration-outbox.js',import.meta.url),'utf8');
 const intelligenceSource=fs.readFileSync(new URL('../equipment/assets/study-intelligence.js',import.meta.url),'utf8');
-assert.match(calibrationSchema,/primary key\\s*\\(user_id,\\s*question_id\\)/i,'First attempts must be unique per student and question across all courses');
-assert.match(calibrationV2,/on conflict\\s*\\(user_id,\\s*question_id\\)\\s*do nothing/i,'Server must ignore repeated first-attempt submissions');
-assert.match(calibrationV2,/get diagnostics inserted_count\\s*=\\s*row_count/i,'Server must distinguish accepted first attempts from repeats');
-assert.match(intelligenceSource,/if\\(firstAttempt\\)window\\.MBUCalibrationOutbox\\?\\.enqueue/,'Practice repeats should not enter the calibration outbox within a course');
-assert.match(outboxSource,/item\\.ownerId!==current/,'Pending first attempts must never submit under another account');
+assert.match(calibrationSchema,/primary key\s*\(user_id,\s*question_id\)/i,'First attempts must be unique per student and question across all courses');
+assert.match(calibrationV2,/on conflict\s*\(user_id,\s*question_id\)\s*do nothing/i,'Server must ignore repeated first-attempt submissions');
+assert.match(calibrationV2,/get diagnostics inserted_count\s*=\s*row_count/i,'Server must distinguish accepted first attempts from repeats');
+assert.match(intelligenceSource,/if\(firstAttempt\)window\.MBUCalibrationOutbox\?\.enqueue/,'Practice repeats should not enter the calibration outbox within a course');
+assert.match(outboxSource,/item\.ownerId!==current/,'Pending first attempts must never submit under another account');
 console.log('Question coverage simulation PASS',JSON.stringify({uniqueBeforeRollover:seen.size,rolloverCycle:rollover.meta.cycle,mixed:mixed.meta.reviewCount+'/'+50}));
