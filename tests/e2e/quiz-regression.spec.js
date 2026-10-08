@@ -628,7 +628,7 @@ test.describe('canonical quiz regression', () => {
     expect(result.output).toBe(1);
   });
 
-  test('Studio source selector exposes every bank and practice set', async ({ page }) => {
+  test('Studio source selector exposes canonical banks and hides classroom generated banks', async ({ page }) => {
     await page.goto(exam + '/studio.html');
     await waitForStudio(page);
     await expect(page.locator('#sourceChecks')).toContainText('Quiz Bank 1');
@@ -636,7 +636,8 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('#sourceChecks')).toContainText('Quiz Bank 3');
     await expect(page.locator('#sourceChecks')).toContainText('Combined');
     await expect(page.locator('#sourceChecks')).toContainText('Workstation Hazards');
-    await expect(page.locator('#sourceChecks')).toContainText('Classmate Bank');
+    await expect(page.locator('#sourceChecks')).not.toContainText('Classmate Bank');
+    await expect(page.locator('#sourceChecks')).not.toContainText('Generated Bank');
     const selector = await page.evaluate(() => {
       const el=document.getElementById('sourceChecks'),last=el.querySelector('input[type="checkbox"]:last-of-type');
       el.scrollTop=el.scrollHeight;
