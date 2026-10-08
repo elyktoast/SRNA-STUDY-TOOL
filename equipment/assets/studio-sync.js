@@ -41,6 +41,7 @@
     const allowedModes=new Set(['custom','smart','due','missed','flagged','weak','adaptive']);const mode=allowedModes.has(String(v.mode||''))?String(v.mode):'',crosses={};
     if(mode==='adaptive'&&plainObject(v.crosses))for(const [rawKey,on] of Object.entries(v.crosses)){if(!on)continue;const cut=rawKey.lastIndexOf(':');if(cut<1)continue;const uid=normalizeKey(rawKey.slice(0,cut)),opt=Number(rawKey.slice(cut+1));if(seen.has(uid)&&Number.isInteger(opt)&&opt>=0)crosses[uid+':'+opt]=true}
     const out={uids,pos,answers,updated:Number.isFinite(Number(v.updated))?Number(v.updated):0};if(mode)out.mode=mode;if(mode==='adaptive')out.crosses=crosses;if(plainObject(v.coverageMeta)){out.coverageMeta={sessionId:String(v.coverageMeta.sessionId||''),newCount:Math.max(0,Number(v.coverageMeta.newCount)||0),reviewCount:Math.max(0,Number(v.coverageMeta.reviewCount)||0),cycle:Math.max(1,Number(v.coverageMeta.cycle)||1),reviewRate:Math.max(0,Math.min(1,Number(v.coverageMeta.reviewRate)||0))}}
+    if(v.crossCourse===true)out.crossCourse=true;
     if(typeof v.sessionId==='string')out.sessionId=v.sessionId;else if(out.coverageMeta?.sessionId)out.sessionId=out.coverageMeta.sessionId;
     if(plainObject(v.lifecycle))out.lifecycle=Object.fromEntries(Object.entries(v.lifecycle).filter(([k,n])=>Number.isFinite(Number(n))&&Number(n)>0));
     if(plainObject(v.questionSessionIds))out.questionSessionIds=Object.fromEntries(Object.entries(v.questionSessionIds).filter(([uid,id])=>seen.has(uid)&&typeof id==='string'));
@@ -129,7 +130,7 @@
   }
   function flagged(bank,q){return !!db().flags[key(bank,q)]}
   function toggleFlag(bank,q){const d=db(),k=key(bank,q),next=!d.flags[k];if(next)d.flags[k]=true;else delete d.flags[k];save(d);return next}
-  function stageAnswer(bank,q,ok){const d=db(),b=normalizeBank(bank),k=key(b,q);d.ans[k]={ok:!!ok,at:Date.now(),topic:topicOf(q),bank:b};return d}
+  function stageAnswer(bank,q,ok){if(q?.courseId&&(q.courseId!==courseId||q.examId!==examId)){const store=q.courseId==='equipment'&&q.examId==='exam-1'?'mbu_exam1_studio_v1':`mbu_studio_${q.courseId}_${q.examId}_v1`;let d;try{d=JSON.parse(localStorage.getItem(store)||'null')}catch{}if(!plainObject(d))d={};if(!plainObject(d.ans))d.ans={};d.ans[key(bank,q)]={ok:!!ok,at:Date.now(),topic:topicOf(q),bank:normalizeBank(bank)};localStorage.setItem(store,JSON.stringify(d));window.MBUAppCore?.touchStore?.(store);return db()}const d=db(),b=normalizeBank(bank),k=key(b,q);d.ans[k]={ok:!!ok,at:Date.now(),topic:topicOf(q),bank:b};return d}
   function answer(bank,q,ok){const d=stageAnswer(bank,q,ok);save(d)}
 
   function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
@@ -155,7 +156,7 @@
       explanation:String(q.explanation||q.why||q.exp||''),
       source:Array.isArray(sourceRaw)?sourceRaw.join('; '):String(sourceRaw||''),
       page:String(q.page||''),
-      pageUrl:(()=>{const u=new URL(location.origin+location.pathname);u.searchParams.set('question',key(b,q));return u.href})(),
+      pageUrl:q.practiceUrl||(()=>{const u=new URL(location.origin+location.pathname);u.searchParams.set('question',key(b,q));return u.href})(),
       build:(document.body.innerHTML.match(/MBU_BUILD:([^<*]+)/)||[])[1]?.trim()||'',
     };
   }

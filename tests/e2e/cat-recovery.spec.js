@@ -3,7 +3,7 @@ const {exam,clearAppState,seedSignedIn,waitForStudio}=require('./helpers');
 const cloud='https://xqyasyambwdyhsjkftqu.supabase.co';
 async function start(page){
  await seedSignedIn(page);await page.goto(exam+'/studio.html');await waitForStudio(page);
- await page.evaluate(async()=>{document.querySelector('#sourceChecks input').checked=true;byId('count').value='10';byId('adaptiveToggle').checked=true;await startMode('custom')});
+ await page.evaluate(async()=>{document.querySelector('#sourceChecks input').checked=true;byId('count').value='10';byId('adaptiveScope').value='course';byId('adaptiveToggle').checked=true;await startMode('custom')});
  await expect(page.locator('#quiz')).toBeVisible();
 }
 test.beforeEach(async({page})=>clearAppState(page));
@@ -75,7 +75,7 @@ test('Final incorrect CAT answer exposes Finish and preserves the completed scor
 test('Duplicate CAT starts share one reservation request',async({page})=>{
  await seedSignedIn(page);await page.goto(exam+'/studio.html');await waitForStudio(page);
  let calls=0;await page.route(cloud+'/rest/v1/rpc/mbu_record_question_session',async route=>{calls++;await new Promise(r=>setTimeout(r,100));await route.fulfill({contentType:'application/json',body:'true'})});
- await page.evaluate(async()=>{document.querySelector('#sourceChecks input').checked=true;byId('adaptiveToggle').checked=true;await Promise.all([startMode('custom'),startMode('custom')])});
+ await page.evaluate(async()=>{document.querySelector('#sourceChecks input').checked=true;byId('adaptiveScope').value='course';byId('adaptiveToggle').checked=true;await Promise.all([startMode('custom'),startMode('custom')])});
  expect(calls).toBe(1);expect(await page.evaluate(()=>session.length)).toBe(1);
 });
 test('Switching account while CAT is loaded clears the old in-memory session',async({page})=>{
@@ -89,7 +89,7 @@ test('Switching account while CAT is loaded clears the old in-memory session',as
 });
 test('CAT only reserves unseen items even when every previously answered item was missed',async({page})=>{
  await seedSignedIn(page);await page.goto(exam+'/studio.html');await waitForStudio(page);
- await page.evaluate(()=>{document.querySelector('#sourceChecks input').checked=true;byId('adaptiveToggle').checked=true;const pool=ALL.filter(q=>q.bank===ALL[0].bank);for(const q of pool.slice(1)){MBUStudyIntelligence.recordAnswer(q.bank,q,false,{bankLabel:q.bankLabel})}window.onlyUnseen=pool[0].uid});
+ await page.evaluate(()=>{document.querySelector('#sourceChecks input').checked=true;byId('adaptiveScope').value='course';byId('adaptiveToggle').checked=true;const pool=ALL.filter(q=>q.bank===ALL[0].bank);for(const q of pool.slice(1)){MBUStudyIntelligence.recordAnswer(q.bank,q,false,{bankLabel:q.bankLabel})}window.onlyUnseen=pool[0].uid});
  await page.evaluate(()=>startMode('custom'));
  expect(await page.evaluate(()=>DB.active.adaptive.poolUids)).toEqual([await page.evaluate(()=>window.onlyUnseen)]);
 });
@@ -103,7 +103,7 @@ test('CAT reservation conflicts preserve the scored session for retry',async({pa
 test('Expired unviewed CAT reservations return to the eligible pool',async({page})=>{
  await seedSignedIn(page);await page.goto(exam+'/studio.html');await waitForStudio(page);
  const q=await page.evaluate(()=>ALL[0]);
- await page.evaluate(()=>{const q=ALL[0],version=MBUQuestionCoverage.contentVersion(q);window.leaseVersion=version;document.querySelector('#sourceChecks input').checked=true;byId('adaptiveToggle').checked=true;MBUStudyIntelligence.questionStats=uid=>uid===q.uid?null:{attempts:1,lastCorrect:true}});
+ await page.evaluate(()=>{const q=ALL[0],version=MBUQuestionCoverage.contentVersion(q);window.leaseVersion=version;document.querySelector('#sourceChecks input').checked=true;byId('adaptiveScope').value='course';byId('adaptiveToggle').checked=true;MBUStudyIntelligence.questionStats=uid=>uid===q.uid?null:{attempts:1,lastCorrect:true}});
  const version=await page.evaluate(()=>window.leaseVersion);
  await page.route(cloud+'/rest/v1/mbu_question_exposure*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify([{question_uid:q.uid,content_version:version,times_issued:1,times_viewed:0,last_issued_at:new Date(Date.now()-31*60000).toISOString()}])}));
  await page.evaluate(()=>startMode('custom'));expect(await page.evaluate(()=>session[0].uid)).toBe(q.uid);

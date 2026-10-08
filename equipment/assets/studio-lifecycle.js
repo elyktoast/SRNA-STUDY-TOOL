@@ -15,7 +15,7 @@ function markCoverageLifecycle(q,event){
  const active=DB.active;if(!active?.coverageMeta||!active.sessionId||!q||!window.MBUSupabase?.markQuestionLifecycle)return;
  const version=window.MBUQuestionCoverage?.contentVersion?.(q)||'1',sessionId=active.questionSessionIds?.[q.uid]||active.sessionId,key=event+':'+q.uid+':'+version,pendingKey=sessionId+':'+key;
  active.lifecycle=active.lifecycle||{};if(active.lifecycle[key])return;
- const ctx=window.MBU_CONTEXT||{};DB.lifecycleOutbox=DB.lifecycleOutbox||{};
+ const ctx=catQuestionContext(q);DB.lifecycleOutbox=DB.lifecycleOutbox||{};
  if(!DB.lifecycleOutbox[pendingKey]){DB.lifecycleOutbox[pendingKey]={ownerId:lifecycleOwner(),courseId:ctx.courseId,examId:ctx.examId,questionUid:q.uid,contentVersion:version,event,sessionId};save()}
  if(coverageLifecyclePending.has(pendingKey))return;
  const db=DB;coverageLifecyclePending.add(pendingKey);
@@ -25,5 +25,5 @@ function markCoverageLifecycle(q,event){
   if(ok&&DB.active===active){active.lifecycle[key]=Date.now();save()}else save()
  }).catch(()=>{}).finally(()=>coverageLifecyclePending.delete(pendingKey))
 }
-function retryCoverageAnswers(){retryCoverageLifecycle();if(!DB.active?.coverageMeta)return;for(const [uid,a] of Object.entries(DB.active.answers||{}))if(a&&ALL_BY_UID.has(uid))markCoverageLifecycle(ALL_BY_UID.get(uid),'answered');if(session.length&&session[pos])markCoverageLifecycle(session[pos],'viewed')}
+function retryCoverageAnswers(){retryCoverageLifecycle();if(!DB.active?.coverageMeta)return;for(const [uid,a] of Object.entries(DB.active.answers||{}))if(a&&catQuestion(uid))markCoverageLifecycle(catQuestion(uid),'answered');if(session.length&&session[pos])markCoverageLifecycle(session[pos],'viewed')}
 window.addEventListener('online',retryCoverageAnswers);
