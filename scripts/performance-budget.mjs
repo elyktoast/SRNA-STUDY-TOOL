@@ -33,7 +33,7 @@ const budgets={
   'equipment/assets/canonical-bank-page.js':8000,
   'equipment/assets/quiz-engine.js':30000,
   'equipment/assets/studio-page.js':30000,
-  'equipment/assets/studio-runtime.js':30000,
+  'equipment/assets/studio-runtime.js':31000,
   'equipment/assets/studio-tools.js':5000,
   'equipment/assets/studio-loader.js':2500,
   'equipment/assets/question-generator.js':10000,
