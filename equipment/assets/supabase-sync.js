@@ -262,8 +262,15 @@ autoSyncTimer=setInterval(()=>{if(session()&&legalAccepted===true&&accountAccess
 }
 async function questionExposure(courseId,examId){
 requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(navigator.onLine===false)throw Error('Coverage offline');
-const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''));
-return await api(query)
+const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''))+'&order=question_uid.asc,content_version.asc';
+const pageSize=500,all=[];
+for(let offset=0;;offset+=pageSize){
+  const page=await api(query+'&limit='+pageSize+'&offset='+offset);
+  if(!Array.isArray(page))throw Error('Question coverage history returned an invalid page.');
+  all.push(...page);
+  if(page.length<pageSize)break;
+}
+return all
 }
 async function markQuestionLifecycle(x){requireAccountAccess();if(!x?.questionUid||!x?.sessionId)return false;return await api('/rest/v1/rpc/mbu_mark_question_lifecycle',{method:'POST',body:{p_course_id:String(x.courseId||''),p_exam_id:String(x.examId||''),p_question_uid:String(x.questionUid),p_content_version:String(x.contentVersion||'1'),p_event:x.event,p_session_id:x.sessionId}})===true}
 async function resetQuestionCoverage(courseId,examId){requireAccountAccess();return Number(await api('/rest/v1/rpc/mbu_reset_question_coverage',{method:'POST',body:{p_course_id:String(courseId||''),p_exam_id:String(examId||'')}}))||0}
