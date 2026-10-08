@@ -97,9 +97,9 @@ function conceptPenalty(q,s){
   if(s.path.at(-1)?.topic===topic)penalty+=.05;
   return{concept,penalty}
 }
-function candidateScore(q,s,distribution,recent,recentContent,snapshot,index,targets,deficits){
+function candidateScore(q,s,distribution,recent,recentContent,snapshot,index){
   const key=contentKey(q),estimate=difficultyEstimate(q),probability=logistic(s.theta-estimate.difficulty),information=probability*(1-probability),topic=topicOf(q),topicCount=Number(s.topicCounts[topic])||0,share=distribution.total?(distribution.counts[topic]||0)/distribution.total:0,expected=(s.answered+1)*share,balancePenalty=Math.max(0,topicCount-expected)*.055,personal=questionStats(q.uid,q),attempts=Math.max(0,Number(personal?.attempts)||0),recentPenalty=(recent.has(String(q.uid))||recentContent.has(key))?.15:0,priority=learningPriority(q,snapshot),diagnostic=s.answered<DIAGNOSTIC_LENGTH,correctRepeatPenalty=personal?.lastCorrect&&!priority.due?.85:0,priorExposurePenalty=correctRepeatPenalty||Math.min(.2,attempts*.05),personalizationWeight=diagnostic?.025:.2,priorityBonus=(priority.score/100)*personalizationWeight,newCoverageBonus=!priority.seen?.12:0,uncertaintyPenalty=estimate.uncertainty*(diagnostic?.025:.055),concept=conceptPenalty(q,s),diagnosticPenalty=diagnostic?Math.abs(estimate.challenge-diagnosticTarget(s.answered))*.09:0,diagnosticTopicPenalty=diagnostic&&topicCount>0?.08*topicCount:0,abilityPenalty=diagnostic?0:Math.abs(probability-.5),jitter=(unitRandom(s.selectionSeed^hash32(q.uid),s.selectionStep)-.5)*(diagnostic?.08:.04),score=abilityPenalty+diagnosticPenalty+diagnosticTopicPenalty+balancePenalty+recentPenalty+priorExposurePenalty+uncertaintyPenalty+concept.penalty-priorityBonus-newCoverageBonus+jitter;
-  return{q,...estimate,probability,information,topic,concept:concept.concept,priority,score,tie:hash32(String(q.uid||index)+':'+s.selectionSeed),blueprintFeasible:blueprintFeasible(topic,s,targets,deficits)}
+  return{q,...estimate,probability,information,topic,concept:concept.concept,priority,score,tie:hash32(String(q.uid||index)+':'+s.selectionSeed)}
 }
 function chooseRandomesque(candidates,s){
   const sorted=[...candidates].sort((a,b)=>a.score-b.score||b.information-a.information||a.tie-b.tie),best=sorted[0];if(!best)return null;
@@ -114,9 +114,9 @@ function pick(questions,state){
 for(const q of distribution.rows){
     const key=contentKey(q);
     if(!q?.uid||seen.has(String(q.uid))||seenContent.has(key)||(allowed&&!allowed.has(String(q.uid)))){index++;continue}
-    candidates.push(candidateScore(q,s,distribution,recent,recentContent,snapshot,index,targets,deficits));index++
+    if(blueprintFeasible(topicOf(q),s,targets,deficits))candidates.push(candidateScore(q,s,distribution,recent,recentContent,snapshot,index));else fallback.push([q,index]);index++
 }
-  let eligible=candidates;if(!eligible.length)eligible=fallback.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i,targets,deficits));
+  let eligible=candidates;if(!eligible.length)eligible=fallback.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i));
   const chosen=chooseRandomesque(eligible,s);
   if(!chosen)return{question:null,state:{...s,blueprintTargets:targets}};
   const focus=s.answered<DIAGNOSTIC_LENGTH?'Diagnostic sampling':(chosen.priority.reason||'Balanced practice'),topic=chosen.topic,phase=s.answered<DIAGNOSTIC_LENGTH?'diagnostic':'adaptive';
