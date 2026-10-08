@@ -125,3 +125,15 @@ test('A newly missed question cannot bypass CAT first-attempt reservations as re
  const result=await page.evaluate(async()=>{const q=ALL.find(q=>q.uid!==session[0].uid),version=MBUQuestionCoverage.contentVersion(q);let calls=0;MBUSupabase.recordQuestionSession=async()=>{calls++;return true};MBUStudyIntelligence.questionStats=()=>({attempts:1,lastCorrect:false});try{await reserveAdaptiveQuestion(q,[{question_uid:q.uid,content_version:version,times_issued:1,times_viewed:1}]);return{reserved:true,calls}}catch{return{reserved:false,calls}}});
  expect(result).toEqual({reserved:false,calls:0});
 });
+test('CAT reload with a failed question bank preserves issued questions and submitted answers',async({page})=>{
+ await start(page);await page.evaluate(()=>{sel=new Set(session[pos].ans);grade();clearTimeout(autoTimer)});
+ const before=await page.evaluate(()=>({uids:DB.active.uids,answers:DB.active.answers,adaptive:DB.active.adaptive,pos:DB.active.pos}));
+ const source=await page.evaluate(()=>new URL(STUDIO_SOURCES.find(x=>x[1]===session[0].bank)[0],location.href).pathname);
+ await page.route('**'+source+'*',route=>route.abort('internetdisconnected'));
+ await page.reload();await waitForStudio(page);
+ await expect(page.locator('#resumeActive')).toBeDisabled();
+ expect(await page.evaluate(()=>({uids:DB.active.uids,answers:DB.active.answers,adaptive:DB.active.adaptive,pos:DB.active.pos}))).toEqual(before);
+ await page.unroute('**'+source+'*');await page.reload();await waitForStudio(page);
+ await expect(page.locator('#quiz')).toBeVisible();expect(await page.evaluate(()=>session[pos].uid)).toBe(before.uids[before.pos]);
+ await expect(page.locator('#submit')).toBeHidden();
+});
