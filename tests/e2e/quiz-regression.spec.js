@@ -1908,7 +1908,7 @@ test.describe('canonical quiz regression', () => {
     // The dashboard waits for its admin RPCs before rendering its statistics.
     await page.route(cloud+'/rest/v1/rpc/snar_admin_mode_analytics',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{session_mode:'adaptive',first_attempts:87,first_attempts_7d:20,first_attempts_30d:87,unique_users:2,accuracy:90,response_samples:0,avg_response_ms:null}])}));
     await page.route(cloud+'/rest/v1/rpc/snar_admin_usage_trend',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{day:'2026-09-27',first_attempts:316,adaptive_first_attempts:87,accuracy:90,response_samples:20,avg_response_ms:12000}])}));
-    await page.route(cloud+'/rest/v1/rpc/snar_admin_question_analytics',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{question_id:'b1-1',unique_learners:25,correct_first_attempts:9,incorrect_first_attempts:16,first_attempt_accuracy:36,adaptive_first_attempts:4,response_samples:20,avg_response_ms:12000,difficulty_logit:0.5,standard_error:0.4,confidence:'preliminary',report_count:0,open_report_count:0,maturity:'preliminary',review_signal:'high_miss',needs_review:true,updated_at:new Date().toISOString()}])}));
+    await page.route(cloud+'/rest/v1/rpc/snar_admin_question_analytics_full',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{question_id:'b1-1',unique_learners:25,correct_first_attempts:9,incorrect_first_attempts:16,first_attempt_accuracy:36,adaptive_first_attempts:4,response_samples:20,avg_response_ms:12000,difficulty_logit:0.5,standard_error:0.4,confidence:'preliminary',report_count:0,open_report_count:0,maturity:'preliminary',review_signal:'high_miss',needs_review:true,updated_at:new Date().toISOString()}])}));
     await page.route(cloud+'/rest/v1/rpc/snar_admin_question_reports',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify([{id:9,reason:'Wrong answer',status:'new',question_uid:'b1-1',bank:'b1',bank_label:'Quiz Bank 1',set_label:'1',question_number:'1',topic:'Medical Gases',stem:'Example reported question',options:['A','B','C','D'],answer_indexes:[1],answer_text:['B'],selected_indexes:[0],selected_text:['A'],explanation:'Example explanation',source:'Example source',page:'',page_url:'/equipment/exam-1/quiz-bank-1.html',build:'test',comment:'Please verify',created_at:new Date().toISOString(),updated_at:new Date().toISOString()}])}));
     let reportStatus=null;
     await page.route(cloud+'/rest/v1/rpc/snar_admin_update_question_report',route=>{reportStatus=JSON.parse(route.request().postData()||'{}');return route.fulfill({status:200,contentType:'application/json',body:'true'})});
@@ -1930,6 +1930,7 @@ test.describe('canonical quiz regression', () => {
 
     await page.locator('[data-admin-view="analytics"]').click();
     await expect(page.locator('[data-analytics-host]')).toContainText('Needs review');
+    await expect(page.locator('[data-analytics-host] .qa-summary-grid')).toContainText('90%');
     await expect(page.locator('[data-analytics-host]')).toContainText('CAT readiness');
     await expect(page.locator('[data-analytics-host]')).toContainText('36% first-attempt');
     await expect(page.locator('.qa-explorer')).not.toHaveAttribute('open','');
