@@ -41,4 +41,22 @@ const poolA=make(20,'Lecture A'),poolB=make(20,'Lecture B').map((q,i)=>({...q,ui
 const dup=[{uid:'d1',topic:'Airway',stem:'Same fact',opts:['a'],ans:[0]},{uid:'d2',topic:'Airway',stem:'Same fact',opts:['a'],ans:[0]}];assert.equal(MBUQuestionCoverage.select({questions:dup,count:2,seed:'dupe'}).questions.length,1);
 // Recovery/cooldown: a recently answered old miss must not immediately re-enter review.
 const coolQ=questions[0],coolV=MBUQuestionCoverage.contentVersion(coolQ),coolHistory=new Map([[coolQ.uid+'@'+coolV,{question_uid:coolQ.uid,content_version:coolV,coverage_cycle:1,last_issued_at:'2026-10-03T18:00:00Z',times_viewed:1}]]);const cool=MBUQuestionCoverage.select({questions:questions.slice(0,50),count:20,history:coolHistory,attempts:uid=>uid===coolQ.uid?{attempts:5,correct:3,incorrect:2,streak:3,lastAt:Date.UTC(2026,9,3,18)}:null,priority:()=>({score:50,due:true}),seed:'cool',now:Date.UTC(2026,9,4)});assert(!cool.meta.items.some(x=>x.uid===coolQ.uid&&x.kind==='review'),'cooldown/recovery failed');
+// The All Questions option requests up to 200, and must retain unseen-first selection.
+const allPool=make(450,'All Questions'),allHistory=new Map(),allSeen=new Set();
+for(let run=0;run<3;run++){
+ const selection=MBUQuestionCoverage.select({questions:allPool,count:200,history:allHistory,seed:'all-'+run});
+ assert.equal(selection.questions.length,run<2?200:50,'All Questions must not recycle correct answers before exhaustion');
+ for(const q of selection.questions){
+  assert(!allSeen.has(q.uid),'All Questions repeated an already viewed item');
+  allSeen.add(q.uid);
+  const version=MBUQuestionCoverage.contentVersion(q);
+  allHistory.set(q.uid+'@'+version,{question_uid:q.uid,content_version:version,coverage_cycle:1,times_viewed:1});
+ }
+}
+assert.equal(allSeen.size,450);
+const studioSource=fs.readFileSync(new URL('../equipment/assets/studio-runtime.js',import.meta.url),'utf8');
+assert(studioSource.includes("if(m==='custom'&&window.MBUQuestionCoverage"),'All Questions custom sessions bypass coverage');
+assert(studioSource.includes('MBUQuestionCoverage.select({questions:pool,count:limit,history'),'All Questions custom sessions use an invalid selection count');
+const cloudSource=fs.readFileSync(new URL('../equipment/assets/supabase-sync.js',import.meta.url),'utf8');
+assert(cloudSource.includes("query+'&limit='+pageSize+'&offset='+offset"),'Coverage history must page beyond the API row cap');
 console.log('Question coverage simulation PASS',JSON.stringify({uniqueBeforeRollover:seen.size,rolloverCycle:rollover.meta.cycle,mixed:mixed.meta.reviewCount+'/'+50}));
