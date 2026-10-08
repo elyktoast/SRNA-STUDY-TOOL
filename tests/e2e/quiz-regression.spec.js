@@ -2803,22 +2803,23 @@ test.describe('canonical quiz regression', () => {
     await expect.poll(()=>page.evaluate(()=>DB.active?.adaptive?.theta)).toBeLessThan(afterCorrectTheta);
   });
 
-  test('Studio grading is idempotent under duplicate submission', async ({ page }) => {
+  for(const scope of ['all','course'])test('Studio grading is idempotent under duplicate submission: '+scope, async ({ page }) => {
     await seedSignedIn(page);
     await page.goto(exam + '/studio.html');await waitForStudio(page);
-    await page.evaluate(()=>{
+    await page.evaluate(async scope=>{
+      byId('adaptiveScope').value=scope;
       const first=document.querySelector('#sourceChecks input[type=checkbox]');
       if(first)first.checked=true;
       document.getElementById('count').value='10';
       document.getElementById('adaptiveToggle').checked=true;
-      startMode('custom');
-    });
-    const before=await page.evaluate(()=>MBUStudyIntelligence.analytics().overall.attempts);
+      await startMode('custom');
+    },scope);
+    const before=await page.evaluate(()=>MBUStudyIntelligence.questionStats(session[pos].uid,session[pos])?.attempts||0);
     await page.evaluate(()=>{const q=session[pos];sel=new Set(q.ans);grade();grade()});
     const state=await page.evaluate(()=>({
       answered:DB.active.adaptive.answered,
       path:DB.active.adaptive.path.length,
-      attempts:MBUStudyIntelligence.analytics().overall.attempts
+      attempts:MBUStudyIntelligence.questionStats(session[pos].uid,session[pos])?.attempts||0
     }));
     expect(state.answered).toBe(1);
     expect(state.path).toBe(1);
