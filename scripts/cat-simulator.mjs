@@ -65,6 +65,20 @@ for(const ability of abilities){
       if(state.answered<engine.DIAGNOSTIC_LENGTH){diagnosticTopics.add(engine.topicOf(q));diagnosticChallenges.push(Number(picked.challenge)||0)}
       const trueDifficulty=engine.difficultyEstimate(q).difficulty,ok=random()<logistic(ability-trueDifficulty);
       state=engine.advance(state,q,ok);
+      // Emulate a browser refresh: persist the adaptive state as JSON and resume.
+      // The next selection must retain the first-attempt count and seen-question set.
+      if(run%2===0&&state.answered%5===0){
+        const before=state,serialized=JSON.parse(JSON.stringify(state));
+        const restored=engine.normalize(serialized,questionCount);
+        if(restored.answered!==before.answered||restored.correct!==before.correct||
+           restored.path.length!==before.path.length||
+           restored.seenUids.length!==before.seenUids.length||
+           restored.seenContentKeys.length!==before.seenContentKeys.length){
+          throw Error('CAT resume changed answer counts or seen-question history');
+        }
+        if(seen.size!==new Set(restored.seenUids).size)throw Error('CAT resume lost a previously issued question');
+        state=restored;
+      }
       if(state.answered>=questionCount)break;
       picked=engine.pick(questions,state);state=picked.state;
     }
