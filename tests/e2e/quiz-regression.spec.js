@@ -2844,12 +2844,12 @@ test.describe('canonical quiz regression', () => {
   test('Adaptive scored answers cannot be reset or mutate CAT state', async ({ page }) => {
     await seedSignedIn(page);
     await page.goto(exam + '/studio.html');await waitForStudio(page);
-    await page.evaluate(()=>{
+    await page.evaluate(async()=>{
       const first=document.querySelector('#sourceChecks input[type=checkbox]');
       if(first)first.checked=true;
       document.getElementById('count').value='10';
       document.getElementById('adaptiveToggle').checked=true;
-      startMode('custom');
+      await startMode('custom');
     });
     await page.evaluate(()=>{const q=session[pos];sel=new Set(q.ans);grade()});
     await expect.poll(()=>page.evaluate(()=>DB.active?.adaptive?.answered)).toBe(1);
