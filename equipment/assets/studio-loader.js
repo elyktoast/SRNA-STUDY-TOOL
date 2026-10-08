@@ -15,6 +15,7 @@ async function start(){
   await window.MBUSupabase?.refreshCalibration?.().catch(()=>{});
   await runtime.loadScript('studio-page.js');
   await runtime.loadScript('studio-runtime.js');
+  await runtime.loadScript('studio-cat-pool.js');
   await runtime.loadScript('studio-lifecycle.js');
   await runtime.loadScript('studio-tools.js');
   await window.MBUStudioCoreReady();

@@ -11,15 +11,18 @@ const shouldWrite=process.argv.includes('--write');
 const abilities=[-1.25,-.6,0,.6,1.25];
 
 function loadQuestions(){
-  const manifest=JSON.parse(fs.readFileSync(path.join(root,'equipment','exam-1','banks.json'),'utf8')),rows=[];
+  const rows=[],exams=arg('scope','all')==='course'?['equipment/exam-1']:['equipment/exam-1','basic-principles/exam-1','pharm/clinical-pharm'];
+  for(const exam of exams){
+  const manifest=JSON.parse(fs.readFileSync(path.join(root,exam,'banks.json'),'utf8'));
   if(!Array.isArray(manifest.studioSources))throw new Error('CAT simulator could not load Studio source manifest');
   for(const source of manifest.studioSources){
-    const full=path.join(root,'equipment','exam-1',source.data),data=JSON.parse(fs.readFileSync(full,'utf8')),all=Array.isArray(data)?data:(Array.isArray(data.questions)?data.questions:[]);
+    const full=path.join(root,exam,source.data),data=JSON.parse(fs.readFileSync(full,'utf8')),all=Array.isArray(data)?data:(Array.isArray(data.questions)?data.questions:[]);
     const selected=source.setFilter?all.filter(q=>Number(q.set)===Number(source.setFilter)):all;
     selected.forEach((q,i)=>{
       const id=String(q.id??q.seq??i+1),studioSet=String(source.key).startsWith('h')?1:(Number(q.set)||1);
-      rows.push({...q,uid:String(source.key)+'-'+id,bank:String(source.key),set:studioSet});
+      rows.push({...q,uid:String(source.key)+'-'+id,bank:String(source.key),set:studioSet,courseId:exam.split('/')[0],examId:exam.split('/')[1]});
     });
+  }
   }
   if(rows.length<questionCount)throw new Error('CAT simulator could not load enough questions');
   const uids=new Set(rows.map(q=>q.uid));if(uids.size!==rows.length)throw new Error('CAT simulator question normalization produced duplicate UIDs');

@@ -31,6 +31,7 @@ const budgets={
   'equipment/assets/account-statistics.js':2500,
   'equipment/assets/account-session-guard.js':1000,
   'equipment/assets/studio-lifecycle.js':3500,
+  'equipment/assets/studio-cat-pool.js':4500,
   'equipment/assets/app-core.css':11000,
   'equipment/assets/app-panels.css':15000,
   'equipment/assets/canonical-bank-page.js':8000,

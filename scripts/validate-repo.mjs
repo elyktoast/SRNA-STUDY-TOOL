@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 const root=process.cwd(), failures=[], notes=[];
 const quizFiles=['equipment/exam-1/quiz-bank-1.html','equipment/exam-1/quiz-bank-2.html','equipment/exam-1/quiz-bank-3.html','equipment/exam-1/combined.html','equipment/exam-1/hazards-100.html','equipment/exam-1/hazards-bank-2.html','equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards-harder.html','equipment/exam-1/studio.html'];
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const studioSource=()=>['studio-page.js','studio-runtime.js','studio-lifecycle.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n');
+const studioSource=()=>['studio-page.js','studio-runtime.js','studio-lifecycle.js','studio-cat-pool.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n');
 const exists=p=>fs.existsSync(path.join(root,p));
 const fail=m=>failures.push(m);
 const protectedFacultyNames=['El'+'more','Sto'+'ne','Aco'+'rd','Mc'+'Pherson'];
@@ -281,7 +281,7 @@ function checkStudioIndexes(){
   for(const token of ['ALL_BY_UID=new Map','BANK_QUESTIONS=new Map','ALL_BY_UID.get(uid)','BANK_QUESTIONS.get(bank)']) if(!src.includes(token))fail('Studio: missing indexed lookup '+token);
   if(src.includes("ALL.find(x=>x.uid===uid)"))fail('Studio: linear UID lookup remains in quiz path');
   if(!src.includes("if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;"))fail('Studio: active session hydration guard is missing');
-  if(!src.includes('if(missing&&studioHasFailedSource())'))fail('Studio: active session is not preserved during a source failure');
+  if(!src.includes('if((missing||catPoolFailed&&DB.active?.crossCourse)&&studioHasFailedSource())'))fail('Studio: active session is not preserved during a source failure');
   if(!page.includes('id="studio-submit-row"')||!page.includes('class="explain"')||!page.includes('id="fbCitation" class="cite"'))fail('Studio: quiz session is not using canonical Bank 1 structure');
   if(page.includes('Studio quiz view: keep the normal question workflow within a desktop viewport.'))fail('Studio: obsolete quiz-specific compact layout remains');
   if(!src.includes('if(meta.imageBase)')||!src.includes("img={kind:'direct',url:meta.imageBase")||!src.includes("q.img.kind==='direct'"))fail('Studio: canonical image questions are not using indexed image paths');
@@ -647,7 +647,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
 
 // JavaScript syntax is a release blocker. A page shell that renders while its inline script fails to parse is not valid.
 {
- const jsAssets=['equipment/assets/adaptive-quiz.js','equipment/assets/supabase-config.js','equipment/assets/supabase-sync.js','equipment/assets/app-core.js','equipment/assets/build-bootstrap.js','equipment/assets/canonical-bank-page.js','equipment/assets/studio-loader.js','equipment/assets/studio-page.js','equipment/assets/studio-runtime.js','equipment/assets/studio-lifecycle.js','equipment/assets/account-statistics.js','equipment/assets/hazards-page.js','equipment/assets/hazards-dashboard.js','equipment/assets/exam-dashboard.js','equipment/assets/quiz-engine.js','equipment/assets/hazards-standard-engine.js','equipment/assets/hazards-quiz-engine.js','equipment/assets/studio-sync.js','equipment/assets/site-nav.js','equipment/assets/navigator.js','equipment/assets/calculator.js','equipment/assets/auto-update.js'];
+ const jsAssets=['equipment/assets/adaptive-quiz.js','equipment/assets/supabase-config.js','equipment/assets/supabase-sync.js','equipment/assets/app-core.js','equipment/assets/build-bootstrap.js','equipment/assets/canonical-bank-page.js','equipment/assets/studio-loader.js','equipment/assets/studio-page.js','equipment/assets/studio-runtime.js','equipment/assets/studio-lifecycle.js','equipment/assets/studio-cat-pool.js','equipment/assets/account-statistics.js','equipment/assets/hazards-page.js','equipment/assets/hazards-dashboard.js','equipment/assets/exam-dashboard.js','equipment/assets/quiz-engine.js','equipment/assets/hazards-standard-engine.js','equipment/assets/hazards-quiz-engine.js','equipment/assets/studio-sync.js','equipment/assets/site-nav.js','equipment/assets/navigator.js','equipment/assets/calculator.js','equipment/assets/auto-update.js'];
  for(const p of jsAssets){try{new vm.Script(read(p),{filename:p})}catch(e){fail(p+': JavaScript syntax error: '+e.message)}}
  for(const p of quizFiles){
   const src=read(p),re=/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;let m,i=0;
@@ -717,7 +717,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  for(const p of ['README.md','docs/ARCHITECTURE.md','docs/SYNC.md','docs/CONTENT_AUDIT.md','docs/CONTENT_PHASE1_AUDIT.md','docs/QUESTION_GENERATION.md','docs/FOUNDATION_FREEZE.md','reports/content-phase1-audit.json','CONTRIBUTING.md'])if(!exists(p))fail('Documentation missing '+p);
  if(!exists('scripts/content-integrity.mjs'))fail('Content integrity validator is missing');
  if(!exists('scripts/cat-simulator.mjs'))fail('CAT simulation harness is missing');
- const catSim=read('scripts/cat-simulator.mjs');if(!catSim.includes('manifest.studioSources')||!catSim.includes("path.join(root,'equipment','exam-1','banks.json')"))fail('CAT simulator is not driven by Studio source manifest');
+ const catSim=read('scripts/cat-simulator.mjs');if(!catSim.includes('manifest.studioSources')||!catSim.includes("'basic-principles/exam-1','pharm/clinical-pharm'"))fail('CAT simulator is not driven by Studio source manifest');
  if(!catSim.includes('picked=engine.pick(questions,state);state=picked.state;'))fail('CAT simulator drops selected CAT state between questions');
 }
 
