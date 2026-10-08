@@ -2271,16 +2271,15 @@ test.describe('canonical quiz regression', () => {
     expect(result.meta.serverRevision).toBe(5);
   });
 
-  test('Gemini question generator is feature-gated, reviewable, and keeps credentials server-side', async ({ page }) => {
+  test('Gemini generator remains functional while student-facing controls and banks stay hidden', async ({ page }) => {
     await page.goto(exam + '/studio.html');await waitForStudio(page);
     await expect(page.locator('#gen-open')).toHaveCount(0);
     await page.goto('/basic-principles/exam-1/studio.html');await waitForStudio(page);
-    await expect(page.locator('#gen-open')).toBeVisible();
-    await expect(page.locator('#generated-question-workbench')).not.toBeVisible();
-    await page.locator('#gen-open').click();
-    await expect(page.locator('#generated-question-workbench')).toBeVisible();
-    await expect(page.locator('link[href*="question-generator-ui.css"]')).toHaveCount(1);
-    await expect(page.locator('#generated-question-workbench')).toHaveCSS('border-radius','16px');
+    await expect(page.locator('#gen-open')).toHaveCount(0);
+    await expect(page.locator('#generated-question-workbench')).toHaveCount(0);
+    await expect(page.getByText('Classmate Bank',{exact:true})).toHaveCount(0);
+    await expect(page.getByText('Generated Bank',{exact:true})).toHaveCount(0);
+    expect(await page.evaluate(()=>window.MBU_GENERATOR_CLASSROOM_HIDDEN)).toBe(true);
     const status=await page.evaluate(()=>{
       const api=MBUQuestionGenerator;
       const draft=api.addDraft({
