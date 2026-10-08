@@ -44,15 +44,15 @@ async function mount(host,msg){
         '<div class="qa-stat"><span>Overall accuracy</span><strong>'+overallAccuracy+'%</strong><small>Weighted first-attempt accuracy</small></div>'+
         '<div class="qa-stat"><span>Questions seen</span><strong>'+measuredCount.toLocaleString()+'</strong><small>Of '+totalQuestions.toLocaleString()+' canonical questions</small></div>'+
         '<div class="qa-stat"><span>Bank coverage</span><strong>'+coveragePct+'%</strong><small>Questions with learner data</small></div>'+
-        '<div class="qa-stat"><span>Max learners / item</span><strong>'+maxLearners+'</strong><small>Highest exposure on one question</small></div>'+
+        '<div class="qa-stat"><span>Questions with 5+ learners</span><strong>'+eligible.length.toLocaleString()+'</strong><small>Early performance sample; '+mature+' reached 25+ learners</small></div>'+
       '</div>'+
       '<section class="qa-readiness"><div><strong>Calibration status</strong><p>'+esc(readiness)+'</p></div><div class="qa-progress" aria-label="'+coveragePct+' percent question coverage"><i style="width:'+Math.min(100,coveragePct)+'%"></i></div><small>'+measuredCount.toLocaleString()+' / '+totalQuestions.toLocaleString()+' questions have learner data · most-used mode reaches '+maxModeLearners+' contributing learners</small></section>'+
       '<div class="qa-two-col">'+
         '<section class="admin-card"><div class="admin-card-head"><div><h4>Question performance</h4><p>Early descriptive results from questions with 5+ learners; not validated population difficulty until 25+ learners.</p></div></div><div class="qa-performance">'+
           '<div><strong>'+eligible.length+'</strong><span>5+ learner sample</span></div>'+
-          '<div><strong>'+healthy+'</strong><span>40–89% correct</span></div>'+
-          '<div><strong>'+tooEasy+'</strong><span>≥90% correct</span></div>'+
-          '<div><strong>'+difficult+'</strong><span>&lt;40% correct</span></div>'+
+          '<div><strong>'+healthy+'</strong><span>40–89% correct (descriptive)</span></div>'+
+          '<div><strong>'+tooEasy+'</strong><span>≥90% correct (review difficulty)</span></div>'+
+          '<div><strong>'+difficult+'</strong><span>&lt;40% correct (review clarity)</span></div>'+
         '</div></section>'+
         '<section class="admin-card"><div class="admin-card-head"><div><h4>Needs attention</h4><p>Signals worth checking, not automatic evidence that a question is wrong.</p></div></div><div class="qa-attention">'+
           '<button data-jump-filter="review"><strong>'+reviewCount+'</strong><span>Needs review</span></button>'+
