@@ -22,7 +22,7 @@ function reviewWeight(q,attempts,priority,now){
 function select({questions,count,history=new Map(),attempts,priority,seed=String(Date.now()),now=Date.now(),reviewRate}){
  const pool=unique(questions),limit=Math.min(Math.max(1,Number(count)||50),pool.length);if(!pool.length)return{questions:[],meta:{newCount:0,reviewCount:0,cycle:1}};
  const histories=pool.map(q=>rowFor(history,q)).filter(consumed),cycle=Math.max(1,...histories.map(x=>Number(x.coverage_cycle)||1)),seenThisCycle=pool.filter(q=>{const h=rowFor(history,q);return consumed(h)&&Number(h.coverage_cycle||0)>=cycle}).length,rollover=seenThisCycle>=pool.length,activeCycle=rollover?cycle+1:cycle;
- let unseen=rollover?pool.slice():pool.filter(q=>{const h=rowFor(history,q);return !consumed(h)||Number(h.coverage_cycle||0)<cycle});
+ let unseen=(rollover?pool.slice():pool.filter(q=>{const h=rowFor(history,q);return !consumed(h)||Number(h.coverage_cycle||0)<cycle})).filter(q=>{const h=rowFor(history,q);return !h||consumed(h)||Number(h.times_issued||0)<1||now-Date.parse(h.last_issued_at||0)>=30*60000});
  const rate=0;
  // Strict unseen-first: missed questions may be reviewed, but correctly answered
  // questions never fill a session before the eligible pool is exhausted.
