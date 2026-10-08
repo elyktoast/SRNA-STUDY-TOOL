@@ -1,4 +1,4 @@
-/* Adaptive 2.1: precalibration CAT hardening with diagnostic sampling, blueprint constraints, exposure control, and uncertainty-aware selection. */
+/* Adaptive 2.1. */
 (()=>{'use strict';
 const DIAGNOSTIC_LENGTH=6,TOP_CANDIDATES=8,CONCEPT_COOLDOWN=3,structuralCache=new WeakMap(),contentCache=new WeakMap(),conceptCache=new WeakMap();
 const plain=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
@@ -60,7 +60,7 @@ function estimateAbility(path=[]){
     let gradient=-theta/priorVar,information=1/priorVar;
     for(const row of rows){const b=clampLogit(row.difficulty),p=logistic(theta-b),certainty=rowCertainty(row);gradient+=(((row.ok?1:0)-p)*certainty);information+=p*(1-p)*certainty}
     const step=gradient/Math.max(.15,information);theta=clampLogit(theta+clamp(step,-1,1));if(Math.abs(step)<.001)break
-  }
+}
   let information=1/priorVar;
   for(const row of rows){const p=logistic(theta-clampLogit(row.difficulty)),certainty=rowCertainty(row);information+=p*(1-p)*certainty}
   return{theta,se:1/Math.sqrt(information),information}
@@ -68,11 +68,11 @@ function estimateAbility(path=[]){
 function normalizeCounts(raw){return Object.fromEntries(Object.entries(plain(raw)?raw:{}).map(([k,v])=>[String(k),Math.max(0,Number(v)||0)]))}
 function normalize(state,count=50){
   const s=plain(state)?state:{},seen=Array.isArray(s.seenUids)?[...new Set(s.seenUids.map(String).filter(Boolean))]:[],seenContentKeys=Array.isArray(s.seenContentKeys)?[...new Set(s.seenContentKeys.map(String).filter(Boolean))]:[],poolUids=Array.isArray(s.poolUids)?[...new Set(s.poolUids.map(String).filter(Boolean))]:[],path=Array.isArray(s.path)?s.path.filter(plain).slice(-200):[],estimate=path.length?estimateAbility(path):{theta:clampLogit(s.theta),se:Number(s.se)||1.5,information:Number(s.information)||0};
-  return{mode:'adaptive',version:3,engine:'2.1',theta:estimate.theta,se:estimate.se,information:estimate.information,level:logitToLevel(estimate.theta),answered:Math.max(0,Number(s.answered)||path.length),correct:Math.max(0,Number(s.correct)||path.filter(x=>x.ok).length),maxQuestions:Math.max(1,Math.min(200,Number(s.maxQuestions)||Number(count)||50)),seenUids:seen,seenContentKeys,poolUids,topicCounts:normalizeCounts(s.topicCounts),focusCounts:normalizeCounts(s.focusCounts),blueprintTargets:normalizeCounts(s.blueprintTargets),path,selectionSeed:(Number(s.selectionSeed)>>>0)||1,selectionStep:Math.max(0,Number(s.selectionStep)||0),currentLevel:logitToLevel(estimate.theta),currentDifficulty:Number.isFinite(Number(s.currentDifficulty))?clampLogit(s.currentDifficulty):null,currentChallenge:Number.isFinite(Number(s.currentChallenge))?Number(s.currentChallenge):null,currentProbability:Number.isFinite(Number(s.currentProbability))?Number(s.currentProbability):null,currentUncertainty:Number.isFinite(Number(s.currentUncertainty))?Number(s.currentUncertainty):null,currentFocus:String(s.currentFocus||''),currentTopic:String(s.currentTopic||''),currentConcept:String(s.currentConcept||''),currentPhase:String(s.currentPhase||'')}
+return{mode:'adaptive',version:3,engine:'2.1',theta:estimate.theta,se:estimate.se,information:estimate.information,level:logitToLevel(estimate.theta),answered:Math.max(0,Number(s.answered)||path.length),correct:Math.max(0,Number(s.correct)||path.filter(x=>x.ok).length),maxQuestions:Math.max(1,Math.min(200,Number(s.maxQuestions)||Number(count)||50)),seenUids:seen,seenContentKeys,poolUids,topicCounts:normalizeCounts(s.topicCounts),focusCounts:normalizeCounts(s.focusCounts),blueprintTargets:normalizeCounts(s.blueprintTargets),path,selectionSeed:(Number(s.selectionSeed)>>>0)||1,selectionStep:Math.max(0,Number(s.selectionStep)||0),currentLevel:logitToLevel(estimate.theta),currentDifficulty:s.currentDifficulty!=null&&Number.isFinite(Number(s.currentDifficulty))?clampLogit(s.currentDifficulty):null,currentChallenge:s.currentChallenge!=null&&Number.isFinite(Number(s.currentChallenge))?Number(s.currentChallenge):null,currentProbability:s.currentProbability!=null&&Number.isFinite(Number(s.currentProbability))?Number(s.currentProbability):null,currentUncertainty:s.currentUncertainty!=null&&Number.isFinite(Number(s.currentUncertainty))?Number(s.currentUncertainty):null,currentFocus:String(s.currentFocus||''),currentTopic:String(s.currentTopic||''),currentConcept:String(s.currentConcept||''),currentPhase:String(s.currentPhase||'')}
 }
 function uniquePool(questions,allowed){
-  const rows=[],seen=new Set();
-  for(const q of questions||[]){if(!q?.uid||allowed&&!allowed.has(String(q.uid)))continue;const key=contentKey(q);if(seen.has(key))continue;seen.add(key);rows.push(q)}
+const rows=[],seen=new Set(),ids=new Set();
+for(const q of questions||[]){if(!q?.uid||ids.has(String(q.uid))||allowed&&!allowed.has(String(q.uid)))continue;ids.add(String(q.uid));const key=contentKey(q);if(seen.has(key))continue;seen.add(key);rows.push(q)}
   return rows
 }
 function distributionOf(questions,allowed){
@@ -114,11 +114,11 @@ function pick(questions,state){
   const s=normalize(state),seen=new Set(s.seenUids),allowed=s.poolUids.length?new Set(s.poolUids):null,seenContent=new Set(s.seenContentKeys);
   for(const q of questions)if(q?.uid&&seen.has(String(q.uid)))seenContent.add(contentKey(q));
   const recent=recentUids(50),recentContent=recentContentKeys(questions,50),distribution=distributionOf(questions,allowed),targets=Object.keys(s.blueprintTargets).length?s.blueprintTargets:blueprintTargets(distribution,s.maxQuestions),snapshot=masterySnapshot(),candidates=[];let index=0;
-  for(const q of questions){
+for(const q of distribution.rows){
     const key=contentKey(q);
     if(!q?.uid||seen.has(String(q.uid))||seenContent.has(key)||(allowed&&!allowed.has(String(q.uid)))){index++;continue}
     candidates.push(candidateScore(q,s,distribution,recent,recentContent,snapshot,index,targets));index++
-  }
+}
   let eligible=candidates.filter(x=>x.blueprintFeasible);if(!eligible.length)eligible=candidates;
   const chosen=chooseRandomesque(eligible,s);
   if(!chosen)return{question:null,state:{...s,blueprintTargets:targets}};
@@ -127,11 +127,11 @@ function pick(questions,state){
   return{question:chosen.q,state:next,challenge:chosen.challenge,difficulty:chosen.difficulty,probability:chosen.probability,information:chosen.information,uncertainty:chosen.uncertainty,difficultySource:chosen.source,focus,topic,concept:chosen.concept,phase,priority:chosen.priority.score,blueprint:{targets:{...targets},counts:{...next.topicCounts}}}
 }
 function start(questions,count=50,options={}){
-  const uniqueCount=new Set(questions.filter(q=>q?.uid).map(contentKey)).size,maxQuestions=Math.max(1,Math.min(Number(count)||50,uniqueCount||1)),seed=(Number(options.selectionSeed)>>>0)||newSeed();
+const uniqueCount=uniquePool(questions).length,maxQuestions=Math.max(1,Math.min(Number(count)||50,uniqueCount||1)),seed=(Number(options.selectionSeed)>>>0)||newSeed();
   return pick(questions,normalize({theta:0,maxQuestions,poolUids:questions.map(q=>String(q.uid)),seenContentKeys:[],focusCounts:{},selectionSeed:seed},maxQuestions))
 }
 function advance(state,q,ok){
-  const s=normalize(state),estimate=Number.isFinite(Number(s.currentDifficulty))?{difficulty:clampLogit(s.currentDifficulty),challenge:Number(s.currentChallenge)||challenge(q),uncertainty:Number(s.currentUncertainty)||difficultyEstimate(q).uncertainty}:difficultyEstimate(q),before=s.theta,path=[...s.path,{uid:String(q?.uid||''),ok:!!ok,difficulty:estimate.difficulty,challenge:estimate.challenge,uncertainty:estimate.uncertainty,focus:s.currentFocus,topic:s.currentTopic||topicOf(q),concept:s.currentConcept||conceptOf(q),phase:s.currentPhase||'',at:Date.now()}].slice(-200),ability=estimateAbility(path),after=ability.theta;
+const s=normalize(state),estimate=s.currentDifficulty!=null&&Number.isFinite(Number(s.currentDifficulty))?{difficulty:clampLogit(s.currentDifficulty),challenge:Number(s.currentChallenge)||challenge(q),uncertainty:Number(s.currentUncertainty)||difficultyEstimate(q).uncertainty}:difficultyEstimate(q),before=s.theta,path=[...s.path,{uid:String(q?.uid||''),ok:!!ok,difficulty:estimate.difficulty,challenge:estimate.challenge,uncertainty:estimate.uncertainty,focus:s.currentFocus,topic:s.currentTopic||topicOf(q),concept:s.currentConcept||conceptOf(q),phase:s.currentPhase||'',at:Date.now()}].slice(-200),ability=estimateAbility(path),after=ability.theta;
   return{...s,theta:after,se:ability.se,information:ability.information,level:logitToLevel(after),currentLevel:logitToLevel(after),currentDifficulty:null,currentChallenge:null,currentProbability:null,currentUncertainty:null,currentFocus:'',currentTopic:'',currentConcept:'',currentPhase:'',answered:s.answered+1,correct:s.correct+(ok?1:0),path:[...path.slice(0,-1),{...path[path.length-1],thetaBefore:before,thetaAfter:after}]}
 }
 function sessionProfile(state,terminationPolicy={}){

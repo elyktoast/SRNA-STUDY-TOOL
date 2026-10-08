@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 const root=process.cwd(), failures=[], notes=[];
 const quizFiles=['equipment/exam-1/quiz-bank-1.html','equipment/exam-1/quiz-bank-2.html','equipment/exam-1/quiz-bank-3.html','equipment/exam-1/combined.html','equipment/exam-1/hazards-100.html','equipment/exam-1/hazards-bank-2.html','equipment/exam-1/hazards-bank-3.html','equipment/exam-1/hazards-harder.html','equipment/exam-1/studio.html'];
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
-const studioSource=()=>['studio-page.js','studio-runtime.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n');
+const studioSource=()=>['studio-page.js','studio-runtime.js','studio-lifecycle.js','studio-tools.js'].map(x=>read('equipment/assets/'+x)).join('\n');
 const exists=p=>fs.existsSync(path.join(root,p));
 const fail=m=>failures.push(m);
 const protectedFacultyNames=['El'+'more','Sto'+'ne','Aco'+'rd','Mc'+'Pherson'];
@@ -647,7 +647,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
 
 // JavaScript syntax is a release blocker. A page shell that renders while its inline script fails to parse is not valid.
 {
- const jsAssets=['equipment/assets/adaptive-quiz.js','equipment/assets/supabase-config.js','equipment/assets/supabase-sync.js','equipment/assets/app-core.js','equipment/assets/build-bootstrap.js','equipment/assets/canonical-bank-page.js','equipment/assets/studio-loader.js','equipment/assets/studio-page.js','equipment/assets/studio-runtime.js','equipment/assets/hazards-page.js','equipment/assets/hazards-dashboard.js','equipment/assets/exam-dashboard.js','equipment/assets/quiz-engine.js','equipment/assets/hazards-standard-engine.js','equipment/assets/hazards-quiz-engine.js','equipment/assets/studio-sync.js','equipment/assets/site-nav.js','equipment/assets/navigator.js','equipment/assets/calculator.js','equipment/assets/auto-update.js'];
+ const jsAssets=['equipment/assets/adaptive-quiz.js','equipment/assets/supabase-config.js','equipment/assets/supabase-sync.js','equipment/assets/app-core.js','equipment/assets/build-bootstrap.js','equipment/assets/canonical-bank-page.js','equipment/assets/studio-loader.js','equipment/assets/studio-page.js','equipment/assets/studio-runtime.js','equipment/assets/studio-lifecycle.js','equipment/assets/account-statistics.js','equipment/assets/hazards-page.js','equipment/assets/hazards-dashboard.js','equipment/assets/exam-dashboard.js','equipment/assets/quiz-engine.js','equipment/assets/hazards-standard-engine.js','equipment/assets/hazards-quiz-engine.js','equipment/assets/studio-sync.js','equipment/assets/site-nav.js','equipment/assets/navigator.js','equipment/assets/calculator.js','equipment/assets/auto-update.js'];
  for(const p of jsAssets){try{new vm.Script(read(p),{filename:p})}catch(e){fail(p+': JavaScript syntax error: '+e.message)}}
  for(const p of quizFiles){
   const src=read(p),re=/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi;let m,i=0;
@@ -862,7 +862,8 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
  if(!boot.includes("sessionStorage.setItem('mbu_post_auth_target',location.href)")||!boot.includes("location.replace(home)"))fail('Bootstrap: protected deep links do not preserve destination and return guests home');
  if(!boot.includes("sessionStorage.removeItem('mbu_post_auth_target')")||!boot.includes("location.replace(target)"))fail('Bootstrap: successful authentication does not safely resume the protected destination');
  if(!boot.includes("candidate.origin===root.origin")||!boot.includes("published.some(course=>candidate.pathname.startsWith(root.pathname+course))"))fail('Bootstrap: remembered auth destination is not restricted to local published courses');
- if(!boot.includes("window.addEventListener('mbu:supabase-status',enforceAccess)")||!boot.includes("window.addEventListener('pageshow',event=>{if(event.persisted)enforceAccess()})"))fail('Bootstrap: protected access is not rechecked after account or browser-history state changes');
+ const guard=read('equipment/assets/account-session-guard.js');
+ if(!boot.includes("loadScript('account-session-guard.js')")||!guard.includes("window.addEventListener('mbu:supabase-status',enforceAccess)")||!guard.includes("window.addEventListener('pageshow',event=>{if(event.persisted)enforceAccess()})"))fail('Bootstrap: protected access is not rechecked after account or browser-history state changes');
  if(!boot.includes("id='mbu-bootstrap-failure'")||!boot.includes("role','alert'")||!boot.includes('Your saved study progress was not changed')||!boot.includes("onclick=()=>location.reload()"))fail('Bootstrap: fatal startup failures do not expose an accessible explicit retry path');
  for(const token of ["LEGAL_VERSION='2026-09-27-v6'","LEGAL_TERMS_VERSION=LEGAL_VERSION","LEGAL_PRIVACY_VERSION=LEGAL_VERSION",'snar_terms_version:LEGAL_TERMS_VERSION','snar_privacy_version:LEGAL_PRIVACY_VERSION','snar_adult_ack:true','snar_has_current_legal_acceptance','snar_accept_current_legal','acceptCurrentLegal','legalAccepted','refreshCalibration(true)'])if(!cloud.includes(token))fail('Account legal acknowledgement contract missing '+token);
  if(!core.includes('data-cloud-reaccept')||!core.includes('Updated agreement required')||!core.includes("info.legalAccepted!==true?'Action required'")||!core.includes('data-cloud-legal-required'))fail('Authenticated legal re-acceptance UI/state handling is missing');

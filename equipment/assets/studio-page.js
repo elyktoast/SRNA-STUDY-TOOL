@@ -11,7 +11,7 @@ function setSessionAnswer(uid,result){if(!DB.active||!DB.active.answers)saveActi
 function clearActive(){DB.active=null;save()}
 function studioHasFailedSource(){for(const state of STUDIO_SOURCE_STATE.values())if(state.status==='failed')return true;return false}
 function reconcileActiveState(){
-const a=DB.active;if(!a||!Array.isArray(a.uids)||!a.uids.length)return null;const old=a.uids,base=Math.min(Math.max(Number(a.pos)||0,0),old.length-1),currentUid=old[base],uids=[],seen=new Set();for(const uid of old)if(ALL_BY_UID.has(uid)&&!seen.has(uid)){seen.add(uid);uids.push(uid)}
+const a=DB.active;if(!a||!Array.isArray(a.uids)||!a.uids.length)return null;if(studioHasFailedSource()&&a.uids.some(uid=>!ALL_BY_UID.has(uid)))return null;const old=a.uids,base=Math.min(Math.max(Number(a.pos)||0,0),old.length-1),currentUid=old[base],uids=[],seen=new Set();for(const uid of old)if(ALL_BY_UID.has(uid)&&!seen.has(uid)){seen.add(uid);uids.push(uid)}
 if(!uids.length){clearActive();return null}
 const answers={};for(const uid of uids)if(a.answers&&a.answers[uid])answers[uid]=a.answers[uid];const crosses={};if(a.mode==='adaptive'&&a.crosses&&typeof a.crosses==='object'&&!Array.isArray(a.crosses)){for(const [k,on] of Object.entries(a.crosses)){if(!on)continue;const cut=k.lastIndexOf(':');if(cut<1)continue;const uid=k.slice(0,cut);if(seen.has(uid))crosses[k]=true}}
 let nextPos=currentUid?uids.indexOf(currentUid):-1;if(nextPos<0)nextPos=Math.min(base,uids.length-1);const changed=uids.length!==old.length||uids.some((uid,i)=>uid!==old[i])||nextPos!==a.pos||Object.keys(answers).length!==Object.keys(a.answers||{}).length||(a.mode==='adaptive'&&Object.keys(crosses).length!==Object.keys(a.crosses||{}).length);if(changed){DB.active={...a,uids,pos:nextPos,answers,...(a.mode==='adaptive'?{crosses}: {})};save()}
@@ -21,7 +21,7 @@ function resumeActive(){
 const active=reconcileActiveState();if(!active||!Array.isArray(active.uids)||!active.uids.length)return renderHome();const qs=active.uids.map(id=>ALL_BY_UID.get(id)).filter(Boolean);if(qs.length!==active.uids.length){renderHome();return}
 session=qs;pos=Math.min(active.pos||0,session.length-1);showQ()
 }
-function endActiveQuiz(){if(!DB.active)return;clearActive();session=[];pos=0;renderHome()}
+function endActiveQuiz(){studioSessionGeneration++;clearTimeout(autoTimer);autoTimer=null;if(!DB.active)return;clearActive();session=[];pos=0;renderHome()}
 function activeButton(){
 let old=byId('resumeActiveRow');if(old)old.remove();if(!DB.active||!Array.isArray(DB.active.uids)||!DB.active.uids.length||!ALL_BY_UID.size)return;const missing=DB.active.uids.some(id=>!ALL_BY_UID.has(id)),anchor=byId('studioQuickModes'),row=document.createElement('div'),b=document.createElement('button'),end=document.createElement('button');row.id='resumeActiveRow';row.className='resume-active-row';b.id='resumeActive';b.className='btn resume-active-main';end.id='endActiveQuiz';end.className='btn out resume-active-end';end.textContent='End Quiz';end.setAttribute('aria-label','End active quiz');end.onclick=endActiveQuiz;if(missing&&studioHasFailedSource()){b.disabled=true;b.textContent='⏸ Resume Active Quiz · retry failed source first'}else{const active=reconcileActiveState();if(!active)return;b.textContent='▶ Resume Active Quiz · Question '+(active.pos+1)+' / '+active.uids.length;b.onclick=resumeActive}row.append(b,end);anchor?.parentNode?.insertBefore(row,anchor)
 }

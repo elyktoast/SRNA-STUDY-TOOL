@@ -221,10 +221,10 @@ if(result?.applied===false&&row){
 const merged=await sync.importSnapshot(cloudSnapshot([row],s.user));
 conflictImports+=Number(merged?.imported)||0;
 if(!merged?.imported){
-  const retry=await writeState(key,payload,writeMeta,row.server_revision);
-  const retryRow=retry?.row||null;if(retryRow)remoteByKey.set(key,retryRow);
-  if(retry?.applied===false)throw Error('Cloud progress changed again while syncing. Retry sync.');
-  if(retryRow)sync.acknowledgeServerWrite?.(key,retryRow,meta)
+const retry=await writeState(key,payload,writeMeta,row.server_revision);
+const retryRow=retry?.row||null;if(retryRow)remoteByKey.set(key,retryRow);
+if(retry?.applied===false)throw Error('Cloud progress changed again while syncing. Retry sync.');
+if(retryRow)sync.acknowledgeServerWrite?.(key,retryRow,meta)
 }
 }else if(result?.applied===false){
 remoteByKey.delete(key);throw Error('Cloud sync conflict could not be resolved. Retry sync.');
@@ -234,6 +234,7 @@ await api('/rest/v1/mbu_sync_devices?on_conflict=user_id,device_id',{method:'POS
 return{conflictImports}
 }
 sync.registerAdapter('supabase',{pull,push});
+const syncIdle=[];async function syncNow(){while(syncing)await new Promise(r=>syncIdle.push(r));return fullSync()}
 async function fullSync({reloadOnImport=false}={}){
 requireAccountAccess();
 if(syncing){syncQueued=true;return null}const s=await validSession();if(!s?.user?.id){emit('signed-out');return null}
@@ -243,7 +244,7 @@ const result=await sync.syncWith('supabase');lastSyncAt=Date.now();emit('synced'
 if(reloadOnImport&&(result?.imported>0||result?.pushResult?.conflictImports>0))emit('synced-import',{email:s.user?.email||'',result})
 return result
 }catch(e){emit('error',{email:s.user?.email||'',error:e.message});throw e}
-finally{syncing=false;if(syncQueued){syncQueued=false;scheduleSync(0)}}
+finally{syncing=false;for(const r of syncIdle.splice(0))r();if(syncQueued){syncQueued=false;scheduleSync(0)}}
 }
 async function pushLocal(){
 if(legalAccepted!==true||accountAccess!=='active')return null;
@@ -252,7 +253,7 @@ if(!remoteByKey.size)return fullSync();
 syncing=true;emit('syncing',{email:s.user?.email||''});
 try{const snapshot=await sync.exportSnapshot();await push(snapshot);lastSyncAt=Date.now();emit('synced',{email:s.user?.email||''});return true}
 catch(e){emit('error',{email:s.user?.email||'',error:e.message});throw e}
-finally{syncing=false;if(syncQueued){syncQueued=false;scheduleSync(0)}}
+finally{syncing=false;for(const r of syncIdle.splice(0))r();if(syncQueued){syncQueued=false;scheduleSync(0)}}
 }
 function scheduleSync(delay=1500){if(!session()||legalAccepted!==true||accountAccess!=='active')return;clearTimeout(timer);timer=setTimeout(()=>{timer=null;pushLocal().catch(()=>{})},delay)}
 function stopAutoSync(){if(autoSyncTimer){clearInterval(autoSyncTimer);autoSyncTimer=null}}
@@ -265,10 +266,10 @@ requireAccountAccess();const s=await validSession();if(!s?.user?.id)return[];if(
 const query='/rest/v1/mbu_question_exposure?select=question_uid,topic,content_version,first_issued_at,last_issued_at,times_issued,coverage_cycle,last_session_id,first_viewed_at,last_viewed_at,times_viewed,first_answered_at,last_answered_at,times_answered&user_id=eq.'+encodeURIComponent(s.user.id)+'&course_id=eq.'+encodeURIComponent(String(courseId||''))+'&exam_id=eq.'+encodeURIComponent(String(examId||''))+'&order=question_uid.asc,content_version.asc';
 const pageSize=500,all=[];
 for(let offset=0;;offset+=pageSize){
-  const page=await api(query+'&limit='+pageSize+'&offset='+offset);
-  if(!Array.isArray(page))throw Error('Question coverage history returned an invalid page.');
-  all.push(...page);
-  if(page.length<pageSize)break;
+const page=await api(query+'&limit='+pageSize+'&offset='+offset);
+if(!Array.isArray(page))throw Error('Question coverage history returned an invalid page.');
+all.push(...page);
+if(page.length<pageSize)break;
 }
 return all
 }
@@ -290,7 +291,7 @@ await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow:()=>fullSync({reloadOnImport:false}),scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow,scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){

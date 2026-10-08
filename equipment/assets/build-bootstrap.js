@@ -10,9 +10,9 @@ if(!build)throw Error('Invalid build manifest');
 const urlFor=src=>{const u=new URL(src,assetsBase);u.searchParams.set('b',build);return u};
 const jsonCache=new Map();
 const fetchJSON=async(input,{cache='force-cache',timeout=12000}={})=>{
-  const url=new URL(input,location.href),key=url.href;if(jsonCache.has(key))return jsonCache.get(key);
-  const request=(async()=>{const response=await fetchTimed(url,{cache,credentials:'same-origin'},timeout);if(!response.ok)throw Error('HTTP '+response.status+' for '+url.pathname);const text=await response.text();if(!text.trim())throw Error('Empty JSON response for '+url.pathname);try{return JSON.parse(text)}catch(e){throw Error('Invalid JSON at '+url.pathname+': '+e.message)}})();
-  jsonCache.set(key,request);try{return await request}catch(e){jsonCache.delete(key);throw e}
+const url=new URL(input,location.href),key=url.href;if(jsonCache.has(key))return jsonCache.get(key);
+const request=(async()=>{const response=await fetchTimed(url,{cache,credentials:'same-origin'},timeout);if(!response.ok)throw Error('HTTP '+response.status+' for '+url.pathname);const text=await response.text();if(!text.trim())throw Error('Empty JSON response for '+url.pathname);try{return JSON.parse(text)}catch(e){throw Error('Invalid JSON at '+url.pathname+': '+e.message)}})();
+jsonCache.set(key,request);try{return await request}catch(e){jsonCache.delete(key);throw e}
 };
 const loads=new Map(),once=(key,make)=>loads.get(key)||loads.set(key,make()).get(key);
 const loadStyle=src=>{const href=urlFor(src).href;return once('c'+href,()=>new Promise((resolve,reject)=>{const l=document.createElement('link'),timer=setTimeout(()=>{l.remove();reject(Error('Stylesheet timed out: '+src))},ASSET_TIMEOUT);l.rel='stylesheet';l.href=href;l.onload=()=>{clearTimeout(timer);resolve()};l.onerror=()=>{clearTimeout(timer);l.remove();reject(Error('Stylesheet failed: '+src))};document.head.append(l)}))};
@@ -32,34 +32,24 @@ if(window.MBUAuthReady&&typeof window.MBUAuthReady.then==='function')await windo
 await window.MBUCalibrationOutbox?.flushAll?.();
 const root=MBUBuild.appRoot,path=location.pathname,published=['equipment/','basic-principles/','pharm/'],protectedCourse=published.some(x=>path.startsWith(root.pathname+x));
 if(protectedCourse){
-  const info=window.MBUSupabase?.status?.()||{};
-  if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
-    const home=root.href;
-    sessionStorage.setItem('mbu_post_auth_target',location.href);
-    location.replace(home);
-    return build;
-  }
+const info=window.MBUSupabase?.status?.()||{};
+if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
+const home=root.href;
+sessionStorage.setItem('mbu_post_auth_target',location.href);
+location.replace(home);
+return build;
+}
 }
 const postAuthTarget=sessionStorage.getItem('mbu_post_auth_target');
 if(!protectedCourse&&postAuthTarget){
-  const info=window.MBUSupabase?.status?.()||{};
-  if(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active'&&!info.recoveryMode){
-    let target=null;try{const candidate=new URL(postAuthTarget,location.href);if(candidate.origin===root.origin&&published.some(course=>candidate.pathname.startsWith(root.pathname+course)))target=candidate.href}catch{}
-    sessionStorage.removeItem('mbu_post_auth_target');
-    if(target){location.replace(target);return build}
-  }
+const info=window.MBUSupabase?.status?.()||{};
+if(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active'&&!info.recoveryMode){
+let target=null;try{const candidate=new URL(postAuthTarget,location.href);if(candidate.origin===root.origin&&published.some(course=>candidate.pathname.startsWith(root.pathname+course)))target=candidate.href}catch{}
+sessionStorage.removeItem('mbu_post_auth_target');
+if(target){location.replace(target);return build}
 }
-if(protectedCourse){
-  const enforceAccess=()=>{
-    const info=window.MBUSupabase?.status?.()||{};
-    if(!(info.signedIn&&info.legalAccepted===true&&info.accessStatus==='active')&&!info.recoveryMode){
-      sessionStorage.setItem('mbu_post_auth_target',location.href);
-      location.replace(new URL('../../',assetsBase).href);
-    }
-  };
-  window.addEventListener('mbu:supabase-status',enforceAccess);
-  window.addEventListener('pageshow',event=>{if(event.persisted)enforceAccess()});
 }
+if(protectedCourse)await loadScript('account-session-guard.js');
 await Promise.all((cfg.styles||[]).map(loadStyle));
 for(const entry of cfg.scripts||[])await loadScript(entry);
 if(typeof cfg.ready==='function')await cfg.ready();
