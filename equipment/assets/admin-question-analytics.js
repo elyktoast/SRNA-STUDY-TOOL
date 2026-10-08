@@ -18,7 +18,7 @@ function draw(host){
   const filter=host.querySelector('[data-qa-filter]')?.value||'all',q=(host.querySelector('[data-qa-search]')?.value||'').trim().toLowerCase(),shown=rows.filter(r=>matches(r,filter,q));
   const out=host.querySelector('[data-qa-rows]');
   out.innerHTML=shown.map(r=>{const m=meta.get(r.question_id)||{},acc=r.first_attempt_accuracy==null?'—':Number(r.first_attempt_accuracy)+'%',sig=signal(r),learners=Number(r.unique_learners||0),reports=Number(r.report_count||0);
-    return '<div class="mbu-cloud-row"><div><strong>'+esc(m.label||r.question_id)+' · '+esc(r.question_id)+'</strong><span>'+learners+' learner'+(learners===1?'':'s')+' · '+acc+' first-attempt · '+Number(r.adaptive_first_attempts||0)+' Adaptive · '+esc(r.maturity)+'</span>'+(sig?'<small><b>Why review:</b> '+esc(sig)+'</small>':'')+'<small>'+esc(m.topic||'Unknown topic')+(m.source?' · '+esc(m.source):'')+(m.stem?' · '+esc(m.stem):'')+'</small><small>'+reports+' report'+(reports===1?'':'s')+(r.avg_response_ms?' · avg '+Math.round(Number(r.avg_response_ms)/1000)+'s response':'')+'</small></div><a class="secondary" target="_blank" rel="noopener" href="'+esc(href(r.question_id,m))+'">Open exact question</a></div>'
+    return '<div class="mbu-cloud-row"><div><strong>'+esc(m.label||r.question_id)+' · '+esc(r.question_id)+'</strong><span>'+learners+' learner'+(learners===1?'':'s')+' · '+acc+' first-attempt accuracy · '+Number(r.adaptive_first_attempts||0)+' Adaptive · '+(learners>=25?'Population sample (25+)':learners>=5?'Early sample (5–24)':'Insufficient sample (under 5)')+'</span>'+(sig?'<small><b>Why review:</b> '+esc(sig)+'</small>':'')+'<small>'+esc(m.topic||'Unknown topic')+(m.source?' · '+esc(m.source):'')+(m.stem?' · '+esc(m.stem):'')+'</small><small>'+reports+' report'+(reports===1?'':'s')+(r.avg_response_ms?' · avg '+Math.round(Number(r.avg_response_ms)/1000)+'s response':'')+'</small></div><a class="secondary" target="_blank" rel="noopener" href="'+esc(href(r.question_id,m))+'">Open exact question</a></div>'
   }).join('')||'<div class="mbu-muted">No questions match this view.</div>';
   host.querySelector('[data-qa-count]').textContent=shown.length+' shown · '+measuredCount+' measured · '+contentReview.size+' content-review items';
 }
@@ -48,7 +48,7 @@ async function mount(host,msg){
       '</div>'+
       '<section class="qa-readiness"><div><strong>Calibration status</strong><p>'+esc(readiness)+'</p></div><div class="qa-progress" aria-label="'+coveragePct+' percent question coverage"><i style="width:'+Math.min(100,coveragePct)+'%"></i></div><small>'+measuredCount.toLocaleString()+' / '+totalQuestions.toLocaleString()+' questions have learner data · most-used mode reaches '+maxModeLearners+' contributing learners</small></section>'+
       '<div class="qa-two-col">'+
-        '<section class="admin-card"><div class="admin-card-head"><div><h4>Question performance</h4><p>Uses questions with at least 5 learners so tiny samples do not dominate.</p></div></div><div class="qa-performance">'+
+        '<section class="admin-card"><div class="admin-card-head"><div><h4>Question performance</h4><p>Early descriptive results from questions with 5+ learners; not validated population difficulty until 25+ learners.</p></div></div><div class="qa-performance">'+
           '<div><strong>'+eligible.length+'</strong><span>5+ learner sample</span></div>'+
           '<div><strong>'+healthy+'</strong><span>40–89% correct</span></div>'+
           '<div><strong>'+tooEasy+'</strong><span>≥90% correct</span></div>'+
