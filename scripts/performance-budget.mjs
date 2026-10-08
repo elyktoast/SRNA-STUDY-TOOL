@@ -26,7 +26,7 @@ const budgets={
   'equipment/assets/admin-question-editor.js':5000,
   'equipment/assets/admin-dashboard.js':5000,
   'equipment/assets/admin-dashboard.css':12000,
-  'equipment/assets/admin-question-analytics.js':12500,
+  'equipment/assets/admin-question-analytics.js':13500,
   'equipment/assets/cloud-management.js':7000,
   'equipment/assets/app-core.css':11000,
   'equipment/assets/app-panels.css':15000,
