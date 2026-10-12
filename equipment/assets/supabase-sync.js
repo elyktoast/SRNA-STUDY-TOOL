@@ -41,11 +41,11 @@ if(!response.ok){const msg=(data&&typeof data==='object'&&(data.msg||data.messag
 return data
 }catch(e){throw ctl.signal.aborted?Error('Timed out'):e}finally{clearTimeout(timer)}
 }
-const refreshGate=window.MBURefreshGate();
+const refreshGate=MBURefreshGate();
 function refresh(){return refreshGate.run(async()=>{
 const s=session();if(!s?.refresh_token)return null;
 try{const next=normalizeAuth(await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}));saveSession(next);return next}
-catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:'Refresh failed: '+e.message})}return null}
+catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:e.message})}return null}
 })}
 async function validSession(){
 let s=session();if(!s)return null;
