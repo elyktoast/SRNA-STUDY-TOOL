@@ -50,7 +50,7 @@ catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=n
 async function validSession(){
 let s=session();if(!s)return null;
 if(Number(s.expires_at||0)*1000-Date.now()<60000)s=await refresh();
-return s
+return s?.expires_at*1000>Date.now()?s:null
 }
 async function api(path,opts={}){
 const s=await validSession();if(!s?.access_token)throw Error('Sign in.');
@@ -113,7 +113,7 @@ emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{me
 const s=normalizeAuth(data);if(!s)throw Error('No session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
 }
 async function signUp(email,password,accepted=false){
-if(accepted!==true)throw Error('Confirm age and accept the Terms and Privacy Notice before signing up.');
+if(accepted!==true)throw Error('Confirm age and accept Terms and Privacy before signup.');
 const acceptedAt=new Date().toISOString();emit('signing-up');const data=await raw('/auth/v1/signup?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:normalizeEmail(email),password:String(password||''),data:{snar_terms_version:LEGAL_TERMS_VERSION,snar_privacy_version:LEGAL_PRIVACY_VERSION,snar_adult_ack:true,snar_accepted_at:acceptedAt}}}),s=normalizeAuth(data);
 if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return{session:s,confirmationRequired:false}}if(!await refreshLegalAcceptance())await acceptCurrentLegal(true);else{await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync()}else emit('access-suspended',{email:s.user?.email||email})}return{session:s,confirmationRequired:false}}
 emit('confirmation-required',{email:normalizeEmail(email)});return{session:null,confirmationRequired:true}
