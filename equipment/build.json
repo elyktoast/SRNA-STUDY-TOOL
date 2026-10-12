@@ -1,3 +1,3 @@
 {
-  "build": "2026-10-12-auth-refresh-manual-retry"
+  "build": "2026-10-12-auth-expired-session-guard"
 }
