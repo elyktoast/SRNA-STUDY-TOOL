@@ -41,7 +41,7 @@ if(!response.ok){const msg=(data&&typeof data==='object'&&(data.msg||data.messag
 return data
 }catch(e){throw ctl.signal.aborted?Error('Timed out'):e}finally{clearTimeout(timer)}
 }
-const refreshGate=MBURefreshGate();
+const refreshGate=MBURefreshGate()
 function refresh(){return refreshGate.run(async()=>{
 const s=session();if(!s?.refresh_token)return null;
 try{const next=normalizeAuth(await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}));saveSession(next);return next}
