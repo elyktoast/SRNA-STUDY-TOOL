@@ -49,6 +49,14 @@ jobs:
         run: npm run analyze:questions
       - name: Verify content review queue
         run: npm run test:review-queue
+      - name: Generate and validate all-course quality report
+        run: npm run test:quality-report
+      - name: Upload all-course question quality report
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-course-question-quality
+          path: reports/all-course-question-quality.json
+          retention-days: 30
       - name: Simulate precalibration CAT behavior
         run: npm run test:cat
       - name: Verify account-aware question coverage
