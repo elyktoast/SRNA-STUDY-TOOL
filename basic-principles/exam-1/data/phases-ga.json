@@ -4104,7 +4104,7 @@
       "id": "PHA-164",
       "set": 1,
       "type": "multi",
-      "stem": "A core temperature of 34.8 ÃÂ°C persists near the end of a long case. Which FOUR complications should be anticipated? (Select 4)",
+      "stem": "A core temperature of 34.8 °C persists near the end of a long case. Which FOUR complications should be anticipated? (Select 4)",
       "options": [
         "Increased hepatic drug clearance",
         "Wound infection",
@@ -4119,7 +4119,7 @@
         4,
         5
       ],
-      "explanation": "Hypothermia impairs platelets and clotting enzymes, increases wound infection, slows drug metabolism, and causes shivering that raises oxygen consumption. It prolongs rather than accelerates neuromuscular blockade and reduces hepatic clearance.",
+      "explanation": "Hypothermia impairs platelets and clotting enzymes, increases wound infection, slows drug metabolism, and causes shivering that raises oxygen demand. It prolongs rather than accelerates neuromuscular blockade and reduces hepatic clearance.",
       "citation": "",
       "topic": "Hemodynamics, bronchospasm, hemorrhage, and hypothermia",
       "sourceTitle": "Phases of General Anesthesia",
