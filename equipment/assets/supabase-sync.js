@@ -27,7 +27,7 @@ expires_in:Number(p.get('expires_in')||3600),
 expires_at:Number(p.get('expires_at')||0)
 });
 if(!s)return null;
-s=await hydrateUser(s);if(!s?.user?.id)throw Error('Could not verify the signed-in account.');recoveryMode=p.get('type')==='recovery';
+s=await hydrateUser(s);if(!s?.user?.id)throw Error('Account verification failed.');recoveryMode=p.get('type')==='recovery';
 history.replaceState(null,'',location.pathname+location.search);
 emit(recoveryMode?'password-recovery':'signed-in',{email:s.user?.email||''});
 return s
@@ -39,7 +39,7 @@ const response=await fetch(base+path,{method,headers:{apikey:cfg.publishableKey,
 const text=await response.text();const data=text?safeJSON(text,text):null;
 if(!response.ok){const msg=(data&&typeof data==='object'&&(data.msg||data.message||data.error_description||data.error))||('HTTP '+response.status);const e=Error(String(msg));e.status=response.status;throw e}
 return data
-}catch(e){throw ctl.signal.aborted?Error('Request timed out. Try again.'):e}finally{clearTimeout(timer)}
+}catch(e){throw ctl.signal.aborted?Error('Timed out'):e}finally{clearTimeout(timer)}
 }
 async function refresh(){
 const s=session();if(!s?.refresh_token)return null;
@@ -52,7 +52,7 @@ if(Number(s.expires_at||0)*1000-Date.now()<60000)s=await refresh();
 return s
 }
 async function api(path,opts={}){
-const s=await validSession();if(!s?.access_token)throw Error('Sign in to use cloud sync.');
+const s=await validSession();if(!s?.access_token)throw Error('Sign in to sync.');
 return raw(path,{...opts,token:s.access_token})
 }
 const writeState=(key,payload,meta,expected)=>api('/rest/v1/rpc/mbu_sync_write_state',{method:'POST',body:{p_store_key:key,p_payload:payload,p_device_id:String(meta.deviceId||sync.deviceId()),p_client_revision:Number(meta.revision)||0,p_client_updated_at:new Date(Number(meta.updatedAt)||Date.now()).toISOString(),p_expected_server_revision:Number(expected)||0}});
@@ -74,7 +74,7 @@ return accountAccess
 }
 function requireAccountAccess(){
 requireLegal();
-if(accountAccess!=='active')throw Error('This account\'s cloud and Adaptive Mode access is suspended.')
+if(accountAccess!=='active')throw Error('Account access suspended.')
 }
 function guestSessionId(){
 let id=sessionStorage.getItem('snar_guest_session_v1');
@@ -98,7 +98,7 @@ async function acceptCurrentLegal(adultAck=false){
 if(adultAck!==true)throw Error('Confirm that you are 18+ and agree to the current Terms and Privacy Notice.');
 const s=await validSession();if(!s?.access_token)throw Error('Sign in first.');
 const ok=await raw('/rest/v1/rpc/snar_accept_current_legal',{method:'POST',token:s.access_token,body:{p_terms_version:LEGAL_TERMS_VERSION,p_privacy_version:LEGAL_PRIVACY_VERSION,p_adult_ack:true}});
-legalAccepted=ok===true;if(!legalAccepted)throw Error('Could not record legal acceptance.');
+legalAccepted=ok===true;if(!legalAccepted)throw Error('Agreement not saved.');
 await refreshAccountAccess();
 if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||''});return true}
 emit('signed-in',{email:s.user?.email||''});
@@ -109,7 +109,7 @@ return true
 }
 async function signIn(email,password){
 emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{method:'POST',body:{email:normalizeEmail(email),password:String(password||'')}});
-const s=normalizeAuth(data);if(!s)throw Error('Supabase did not return a session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
+const s=normalizeAuth(data);if(!s)throw Error('No session returned.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
 }
 async function signUp(email,password,accepted=false){
 if(accepted!==true)throw Error('You must confirm that you are 18+ and agree to the Terms and Privacy Notice before creating an account.');
