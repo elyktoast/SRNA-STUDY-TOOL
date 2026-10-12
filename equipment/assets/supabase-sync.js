@@ -41,11 +41,12 @@ if(!response.ok){const msg=(data&&typeof data==='object'&&(data.msg||data.messag
 return data
 }catch(e){throw ctl.signal.aborted?Error('Timed out'):e}finally{clearTimeout(timer)}
 }
-async function refresh(){
+const refreshGate=window.MBURefreshGate();
+function refresh(){return refreshGate.run(async()=>{
 const s=session();if(!s?.refresh_token)return null;
-try{const data=await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}),next=normalizeAuth(data);saveSession(next);return next}
-catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else emit('error',{error:'Session refresh failed: '+e.message});return null}
-}
+try{const next=normalizeAuth(await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}));saveSession(next);return next}
+catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:'Session refresh failed: '+e.message})}return null}
+})}
 async function validSession(){
 let s=session();if(!s)return null;
 if(Number(s.expires_at||0)*1000-Date.now()<60000)s=await refresh();
