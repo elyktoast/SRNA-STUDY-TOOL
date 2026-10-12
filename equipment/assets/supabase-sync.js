@@ -39,7 +39,7 @@ const response=await fetch(base+path,{method,headers:{apikey:cfg.publishableKey,
 const text=await response.text();const data=text?safeJSON(text,text):null;
 if(!response.ok){const msg=(data&&typeof data==='object'&&(data.msg||data.message||data.error_description||data.error))||('HTTP '+response.status);const e=Error(String(msg));e.status=response.status;throw e}
 return data
-}catch(e){if(ctl.signal.aborted)throw Error('The server did not respond in time. Check your connection and try again.');throw e}finally{clearTimeout(timer)}
+}catch(e){throw ctl.signal.aborted?Error('Request timed out. Try again.'):e}finally{clearTimeout(timer)}
 }
 async function refresh(){
 const s=session();if(!s?.refresh_token)return null;
@@ -109,7 +109,7 @@ return true
 }
 async function signIn(email,password){
 emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{method:'POST',body:{email:normalizeEmail(email),password:String(password||'')}});
-const s=normalizeAuth(data);if(!s)throw Error('Supabase did not return a session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(e=>emit('error',{error:'Cloud sync could not complete: '+e.message}));return s
+const s=normalizeAuth(data);if(!s)throw Error('Supabase did not return a session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
 }
 async function signUp(email,password,accepted=false){
 if(accepted!==true)throw Error('You must confirm that you are 18+ and agree to the Terms and Privacy Notice before creating an account.');
