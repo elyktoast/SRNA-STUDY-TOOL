@@ -8515,7 +8515,7 @@
       "id": "PRE-349",
       "set": 1,
       "type": "single",
-      "stem": "A patient with obesity has total body weight 120 kg and ideal body weight 60 kg. A drug protocol specifies adjusted body weight = IBW + 0.4(TBW ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ IBW). What adjusted body weight should be used?",
+      "stem": "A patient with obesity has total body weight 120 kg and ideal body weight 60 kg. A drug protocol specifies adjusted body weight = IBW + 0.4(TBW - IBW). What adjusted body weight should be used?",
       "options": [
         "60 kg",
         "72 kg",
@@ -8525,7 +8525,7 @@
       "answer": [
         2
       ],
-      "explanation": "Adjusted body weight = 60 + 0.4(120 ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ 60) = 60 + 24 = 84 kg. This calculation illustrates why some drug protocols use a scalar between ideal and total body weight rather than either value alone.",
+      "explanation": "Adjusted body weight = 60 + 0.4(120 - 60) = 60 + 0.4(60) = 60 + 24 = 84 kg. This calculation illustrates why some drug protocols use a scalar between ideal and total body weight rather than either value alone.",
       "citation": "",
       "topic": "Obesity, BMI, IBW, and Apfel",
       "sourceTitle": "Perioperative Assessment & Evaluation",
