@@ -1,6 +1,6 @@
 (()=>{'use strict';
 const cfg=window.MBU_SUPABASE_CONFIG||{},sync=window.MBUSync,SESSION_KEY='mbu_supabase_session_v1',OWNER_KEY='mbu_cloud_local_owner_v1',META_KEY='mbu_sync_meta_v1',STATUS_EVENT='mbu:supabase-status',script=document.currentScript,APP_ROOT=new URL('../../',script?.src||location.href).href;
-if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Supabase sync is not configured');return}
+if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Sync not configured');return}
 const base=cfg.url.replace(/\/$/,''),REQUEST_TIMEOUT=10000,AUTO_SYNC_INTERVAL=5*60*1000,LEGAL_VERSION='2026-09-27-v6',LEGAL_TERMS_VERSION=LEGAL_VERSION,LEGAL_PRIVACY_VERSION=LEGAL_VERSION;
 let syncing=false,syncQueued=false,lastSyncAt=0,lastState='signed-out',remoteByKey=new Map(),calibrationByKey=new Map(),calibrationFetchedAt=0,timer=null,autoSyncTimer=null,guestTimer=null,recoveryMode=false,legalAccepted=null,accountAccess='signed_out';
 const safeJSON=(raw,fallback=null)=>{try{return JSON.parse(raw)}catch{return fallback}},normalizeEmail=value=>String(value||'').trim().toLowerCase();
@@ -45,7 +45,7 @@ const refreshGate=window.MBURefreshGate();
 function refresh(){return refreshGate.run(async()=>{
 const s=session();if(!s?.refresh_token)return null;
 try{const next=normalizeAuth(await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}));saveSession(next);return next}
-catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:'Session refresh failed: '+e.message})}return null}
+catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:'Refresh failed: '+e.message})}return null}
 })}
 async function validSession(){
 let s=session();if(!s)return null;
@@ -53,7 +53,7 @@ if(Number(s.expires_at||0)*1000-Date.now()<60000)s=await refresh();
 return s
 }
 async function api(path,opts={}){
-const s=await validSession();if(!s?.access_token)throw Error('Sign in to sync.');
+const s=await validSession();if(!s?.access_token)throw Error('Sign in.');
 return raw(path,{...opts,token:s.access_token})
 }
 const writeState=(key,payload,meta,expected)=>api('/rest/v1/rpc/mbu_sync_write_state',{method:'POST',body:{p_store_key:key,p_payload:payload,p_device_id:String(meta.deviceId||sync.deviceId()),p_client_revision:Number(meta.revision)||0,p_client_updated_at:new Date(Number(meta.updatedAt)||Date.now()).toISOString(),p_expected_server_revision:Number(expected)||0}});
@@ -64,7 +64,7 @@ try{
 const ok=await raw('/rest/v1/rpc/snar_has_current_legal_acceptance',{method:'POST',token:s.access_token,body:{p_terms_version:LEGAL_TERMS_VERSION,p_privacy_version:LEGAL_PRIVACY_VERSION}});
 legalAccepted=ok===true;return legalAccepted
 }catch(e){
-legalAccepted=null;emit('error',{email:s.user?.email||'',error:'Could not verify account agreement: '+e.message});return false
+legalAccepted=null;emit('error',{email:s.user?.email||'',error:'Agreement check failed: '+e.message});return false
 }
 }
 async function refreshAccountAccess(){
@@ -75,7 +75,7 @@ return accountAccess
 }
 function requireAccountAccess(){
 requireLegal();
-if(accountAccess!=='active')throw Error('Account access suspended.')
+if(accountAccess!=='active')throw Error('Access suspended.')
 }
 function guestSessionId(){
 let id=sessionStorage.getItem('snar_guest_session_v1');
@@ -110,7 +110,7 @@ return true
 }
 async function signIn(email,password){
 emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{method:'POST',body:{email:normalizeEmail(email),password:String(password||'')}});
-const s=normalizeAuth(data);if(!s)throw Error('No session returned.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
+const s=normalizeAuth(data);if(!s)throw Error('No session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
 }
 async function signUp(email,password,accepted=false){
 if(accepted!==true)throw Error('You must confirm that you are 18+ and agree to the Terms and Privacy Notice before creating an account.');
