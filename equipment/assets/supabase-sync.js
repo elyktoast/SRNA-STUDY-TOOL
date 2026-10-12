@@ -1,6 +1,6 @@
 (()=>{'use strict';
 const cfg=window.MBU_SUPABASE_CONFIG||{},sync=window.MBUSync,SESSION_KEY='mbu_supabase_session_v1',OWNER_KEY='mbu_cloud_local_owner_v1',META_KEY='mbu_sync_meta_v1',STATUS_EVENT='mbu:supabase-status',script=document.currentScript,APP_ROOT=new URL('../../',script?.src||location.href).href;
-if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Sync not configured');return}
+if(!cfg.url||!cfg.publishableKey||!sync){console.warn('Sync unavailable');return}
 const base=cfg.url.replace(/\/$/,''),REQUEST_TIMEOUT=10000,AUTO_SYNC_INTERVAL=5*60*1000,LEGAL_VERSION='2026-09-27-v6',LEGAL_TERMS_VERSION=LEGAL_VERSION,LEGAL_PRIVACY_VERSION=LEGAL_VERSION;
 let syncing=false,syncQueued=false,lastSyncAt=0,lastState='signed-out',remoteByKey=new Map(),calibrationByKey=new Map(),calibrationFetchedAt=0,timer=null,autoSyncTimer=null,guestTimer=null,recoveryMode=false,legalAccepted=null,accountAccess='signed_out';
 const safeJSON=(raw,fallback=null)=>{try{return JSON.parse(raw)}catch{return fallback}},normalizeEmail=value=>String(value||'').trim().toLowerCase();
@@ -42,11 +42,11 @@ return data
 }catch(e){throw ctl.signal.aborted?Error('Timed out'):e}finally{clearTimeout(timer)}
 }
 const refreshGate=MBURefreshGate()
-function refresh(){return refreshGate.run(async()=>{
+function refresh(manual=false){return refreshGate.run(async()=>{
 const s=session();if(!s?.refresh_token)return null;
 try{const next=normalizeAuth(await raw('/auth/v1/token?grant_type=refresh_token',{method:'POST',body:{refresh_token:s.refresh_token}}));saveSession(next);return next}
 catch(e){if([400,401,403].includes(e?.status)){saveSession(null);legalAccepted=null;accountAccess='signed_out';emit('signed-out',{error:e.message})}else{refreshGate.backoff(e?.status===429?60000:10000);emit('error',{error:e.message})}return null}
-})}
+},manual)}
 async function validSession(){
 let s=session();if(!s)return null;
 if(Number(s.expires_at||0)*1000-Date.now()<60000)s=await refresh();
@@ -113,7 +113,7 @@ emit('signing-in');const data=await raw('/auth/v1/token?grant_type=password',{me
 const s=normalizeAuth(data);if(!s)throw Error('No session.');const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return s}if(!await refreshLegalAcceptance()){emit('legal-required',{email:s.user?.email||email});return s}await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended',{email:s.user?.email||email});return s}emit('signed-in',{email:s.user?.email||email});startAutoSync();fullSync({reloadOnImport:false}).catch(()=>{});return s
 }
 async function signUp(email,password,accepted=false){
-if(accepted!==true)throw Error('You must confirm that you are 18+ and agree to the Terms and Privacy Notice before creating an account.');
+if(accepted!==true)throw Error('Confirm age and accept the Terms and Privacy Notice before signing up.');
 const acceptedAt=new Date().toISOString();emit('signing-up');const data=await raw('/auth/v1/signup?redirect_to='+encodeURIComponent(APP_ROOT),{method:'POST',body:{email:normalizeEmail(email),password:String(password||''),data:{snar_terms_version:LEGAL_TERMS_VERSION,snar_privacy_version:LEGAL_PRIVACY_VERSION,snar_adult_ack:true,snar_accepted_at:acceptedAt}}}),s=normalizeAuth(data);
 if(s){const switched=await prepareLocalOwner(s.user?.id);saveSession(s);stopGuestHeartbeat();if(switched){emit('local-owner-changed',{email:s.user?.email||email});return{session:s,confirmationRequired:false}}if(!await refreshLegalAcceptance())await acceptCurrentLegal(true);else{await refreshAccountAccess();if(accountAccess==='active'){emit('signed-in',{email:s.user?.email||email});await fullSync({reloadOnImport:false});startAutoSync()}else emit('access-suspended',{email:s.user?.email||email})}return{session:s,confirmationRequired:false}}
 emit('confirmation-required',{email:normalizeEmail(email)});return{session:null,confirmationRequired:true}
@@ -292,7 +292,7 @@ await refreshAccountAccess();if(accountAccess!=='active'){emit('access-suspended
 stopGuestHeartbeat();startAutoSync();setTimeout(()=>fullSync({reloadOnImport:false}).catch(()=>{}),100);return true
 }
 window.addEventListener('hashchange',()=>handleAuthRedirect().catch(e=>{emit('error',{error:e.message});console.error('Supabase auth redirect failed',e)}));
-window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow,scheduleSync,refresh,appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
+window.MBUSupabase={signIn,signUp,signOut,deleteAccount,resendConfirmation,requestPasswordReset,updatePassword,status,currentUser,accessToken:async()=>{const s=await validSession();return s?.access_token||null},refreshLegalAcceptance,refreshAccountAccess,acceptCurrentLegal,submitPrivacyRequest,submitSuggestion,submitQuestionReport,submitItemContribution,refreshCalibration,calibration,listDevices,removeDevice,listHistory,restoreVersion,questionExposure,markQuestionLifecycle,resetQuestionCoverage,recordQuestionSession,adminStatus,adminRpc,syncNow,scheduleSync,refresh:()=>refresh(true),appRoot:APP_ROOT,autoSyncIntervalMs:AUTO_SYNC_INTERVAL};
 const authReady=(async()=>{
 if(await handleAuthRedirect())return true;
 if(session()){
