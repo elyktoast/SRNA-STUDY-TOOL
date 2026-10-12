@@ -1934,8 +1934,13 @@ test.describe('canonical quiz regression', () => {
     await expect(page.locator('[data-analytics-host] .qa-summary-grid')).toContainText('90%');
     await expect(page.locator('[data-analytics-host]')).toContainText('CAT readiness');
     await expect(page.locator('[data-analytics-host]')).toContainText('36% first-attempt');
-    await expect(page.locator('.qa-explorer')).not.toHaveAttribute('open','');
-    await page.locator('.qa-explorer > summary').click();
+    await expect(page.locator('[data-analytics-host]')).toContainText('First attempts by course');
+    await expect(page.locator('[data-analytics-host]')).toContainText('Measured questions');
+    await page.locator('[data-qa-course="Equipment & Hazards"]').click();
+    await expect(page.locator('[data-qa-count]')).toContainText('Equipment & Hazards');
+    await page.locator('[data-qa-course="all"]').click();
+    await expect(page.locator('[data-qa-count]')).toContainText('All courses');
+    await expect(page.locator('.qa-explorer')).toHaveAttribute('open','');
     await page.locator('[data-qa-filter]').selectOption('content');
     await expect.poll(async()=>page.locator('[data-qa-rows] .mbu-cloud-row').count()).toBeGreaterThan(0);
     await page.locator('[data-qa-filter]').selectOption('all');
