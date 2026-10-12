@@ -3504,8 +3504,8 @@
         "Airway patency and security",
         "Drugs and depth",
         "Equipment and environment",
-        "Surgical progress alone",
-        "Blood pressure alone",
+        "Surgical progress",
+        "Blood pressure",
         "Neuromuscular blockade alone"
       ],
       "answer": [
