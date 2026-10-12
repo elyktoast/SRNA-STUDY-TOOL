@@ -6359,7 +6359,7 @@
       "id": "PHA-255",
       "set": 1,
       "type": "single",
-      "stem": "Near emergence, end-tidal sevoflurane falls to roughly 0.3Ã¢ÂÂ0.4 age-adjusted MAC and the patient begins responding to commands. Which MAC concept does this transition approximate?",
+      "stem": "Near emergence, end-tidal sevoflurane falls to roughly 0.3 to 0.4 age-adjusted MAC and the patient begins responding to commands. Which MAC concept does this transition approximate?",
       "options": [
         "1.0 MAC",
         "MAC-BAR",
@@ -6369,7 +6369,7 @@
       "answer": [
         2
       ],
-      "explanation": "MAC-awake, about 0.3 to 0.4 MAC, is the end-tidal concentration at which patients begin to respond to commands during emergence. It is well below the 1.0 MAC that prevents movement and the roughly 1.5 MAC that blunts adrenergic responses (MAC-BAR).",
+      "explanation": "MAC-awake, which is approximately 0.3 to 0.4 MAC, defines the alveolar concentration at which a patient opens their eyes or responds to verbal commands during emergence. It is significantly lower than the 1.0 MAC required to prevent movement to surgical incision or the roughly 1.5 MAC required to block autonomic responses (MAC-BAR).",
       "citation": "",
       "topic": "Emergence",
       "sourceTitle": "Phases of General Anesthesia",
