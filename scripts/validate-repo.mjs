@@ -218,7 +218,7 @@ try{
   // the merged tree already contains the matching build manifest. Compare
   // the current tree against the first parent instead of commit timestamps.
   const parent=execFileSync('git',['rev-parse','HEAD^'],{encoding:'utf8'}).trim();
-  const changed=execFileSync('git',['diff','--name-only',parent,'HEAD','--','equipment'],{encoding:'utf8'}).trim().split('\\n').filter(Boolean);
+  const changed=execFileSync('git',['diff','--name-only',parent,'HEAD','--','equipment'],{encoding:'utf8'}).trim().split('\n').filter(Boolean);
   if(changed.some(path=>path!=='equipment/build.json')&&!changed.includes('equipment/build.json'))fail('Build manifest is stale: equipment changed without publishing a new build id');
 }catch(e){fail('Build manifest is invalid JSON: '+e.message)}
 function checkHazardNavigators(){
