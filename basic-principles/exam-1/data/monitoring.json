@@ -2129,7 +2129,7 @@
       "id": "MON-086",
       "set": 1,
       "type": "multi",
-      "stem": "Beyond disconnect detection, which FOUR ventilator alarms help identify dangerous circuit or patient conditions? (Select 4)",
+      "stem": "During general anesthesia with mechanical ventilation, which FOUR alarms on the anesthesia workstation can alert the anesthesia provider to dangerous airway-pressure, breathing-system, or gas-supply conditions? (Select 4)",
       "options": [
         "High peak inspiratory pressure",
         "Sustained high airway pressure",
@@ -2144,8 +2144,8 @@
         2,
         3
       ],
-      "explanation": "Besides disconnect detection, ventilator alarms include high peak pressure for obstruction or stiff lungs, sustained high airway pressure for a stuck valve or closed APL valve, negative pressure for a patient inspiring against a blocked circuit or active suction, and low oxygen supply pressure for pipeline failure. Volatile concentration and BIS alarms belong to other monitors.",
-      "citation": "",
+      "explanation": "Workstation monitoring systems incorporate both breathing-circuit pressure monitors and pipeline/cylinder supply alarms to alert the clinician to barotrauma risks, circuit obstructions, or pipeline failures. High peak inspiratory pressure, sustained high airway pressure, negative pressure limits, and low oxygen supply pressure are critical safety alarms integrated into the anesthesia machine.",
+      "citation": "Miller's Anesthesia / Morgan & Mikhail's Clinical Anesthesiology: Anesthesia Machine Alarms and Safety Systems.",
       "topic": "Ventilator pressures, loops, and alarms",
       "sourceTitle": "Intraoperative Monitoring & Data Interpretation",
       "image": null,

@@ -2587,7 +2587,7 @@
       "id": "PRE-107",
       "set": 1,
       "type": "multi",
-      "stem": "A patient presents with BP 168/98 mmHg before surgery. Which three findings most directly determine whether this represents uncomplicated chronic hypertension or a higher-risk perioperative problem? (Select 3)",
+      "stem": "A patient with known hypertension presents for elective surgery with BP 168/98 mmHg. Which THREE findings are most important for assessing cardiovascular risk and determining whether additional evaluation is needed, rather than identifying causes of an isolated elevated reading? (Select 3)",
       "options": [
         "Evidence of end-organ dysfunction",
         "Symptoms such as syncope or dizziness",
@@ -2601,8 +2601,8 @@
         1,
         5
       ],
-      "explanation": "Assessing preoperative hypertension focuses on end-organ dysfunction, symptoms such as syncope or chest pain, and the medication list with last-dose timing. Anxiety, cuff size, and caffeine can raise a single reading, which is why the reading is repeated, but they do not determine whether the patient faces higher perioperative risk.",
-      "citation": "",
+      "explanation": "Evaluating chronic hypertension before elective surgery focuses on identifying target-organ damage, acute ischemic symptoms, and medication compliance, rather than transient confounders like anxiety or cuff size. Assessing these key parameters guides perioperative risk stratification and hemodynamic management.",
+      "citation": "Miller's Anesthesia: Preoperative Assessment and Management of Systemic Hypertension.",
       "topic": "Ischemic heart disease, testing, and hypertension",
       "sourceTitle": "Perioperative Assessment & Evaluation",
       "image": null,
