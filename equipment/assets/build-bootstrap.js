@@ -27,6 +27,7 @@ await loadScript('calibration-outbox.js');
 await loadScript('study-intelligence.js');
 await loadScript('answer-order.js');
 await loadScript('supabase-config.js');
+await loadScript('auth-refresh-gate.js');
 await loadScript('supabase-sync.js');
 if(window.MBUAuthReady&&typeof window.MBUAuthReady.then==='function')await window.MBUAuthReady;
 await window.MBUCalibrationOutbox?.flushAll?.();
