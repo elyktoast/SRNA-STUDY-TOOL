@@ -96,7 +96,7 @@ guestHeartbeat().catch(()=>{});
 guestTimer=setInterval(()=>{if(!session())guestHeartbeat().catch(()=>{})},5*60*1000)
 }
 async function acceptCurrentLegal(adultAck=false){
-if(adultAck!==true)throw Error('Confirm that you are 18+ and agree to the current Terms and Privacy Notice.');
+if(adultAck!==true)throw Error('Confirm age and accept current Terms and Privacy.');
 const s=await validSession();if(!s?.access_token)throw Error('Sign in first.');
 const ok=await raw('/rest/v1/rpc/snar_accept_current_legal',{method:'POST',token:s.access_token,body:{p_terms_version:LEGAL_TERMS_VERSION,p_privacy_version:LEGAL_PRIVACY_VERSION,p_adult_ack:true}});
 legalAccepted=ok===true;if(!legalAccepted)throw Error('Agreement not saved.');
