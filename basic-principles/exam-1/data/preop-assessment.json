@@ -8543,13 +8543,13 @@
       "options": [
         "Actual total body weight",
         "Predicted body weight",
-        "Total body surface area",
-        "Body mass index alone"
+        "Lean body weight",
+        "Body surface area"
       ],
       "answer": [
         1
       ],
-      "explanation": "Initial tidal volume is based on predicted or ideal body weight because lung size correlates with height and sex rather than with excess adipose mass. Using actual body weight in severe obesity can produce excessive tidal volumes and lung injury.",
+      "explanation": "Initial tidal volume is based on predicted or ideal body weight because lung size correlates with height and sex rather than with excess adipose mass. Using actual total body weight in severe obesity can produce excessive tidal volumes and lung injury.",
       "citation": "",
       "topic": "Obesity, BMI, IBW, and Apfel",
       "sourceTitle": "Perioperative Assessment & Evaluation",
