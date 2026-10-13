@@ -11213,15 +11213,15 @@
       "type": "single",
       "stem": "A patient with a respiratory infection is placed on high-flow nasal oxygen at 60 L/min. How is it commonly managed for infection control?",
       "options": [
-        "As a non-aerosol procedure",
-        "As an aerosol procedure",
+        "Non-aerosol procedure",
+        "Aerosol-generating procedure",
         "With contact precautions",
         "With droplet precautions"
       ],
       "answer": [
         1
       ],
-      "explanation": "High-flow nasal oxygen is commonly managed with aerosol precautions because it may disperse respiratory particles, though evidence and classifications have varied. Current pathogen-specific guidance and institutional policy determine the precautions.",
+      "explanation": "High-flow nasal oxygen at high flow rates is commonly managed using aerosol precautions due to the potential dispersion of respiratory particles, though specific requirements depend on institutional policy and pathogen guidelines.",
       "citation": "",
       "topic": "Mixed application",
       "sourceTitle": "Miscellaneous Topics in Nurse Anesthesia Practice",
