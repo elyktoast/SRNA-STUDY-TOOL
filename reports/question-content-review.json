@@ -8,7 +8,7 @@
     "missingSourceTitle": 0,
     "missingSourceLocator": 0,
     "explanationsUnder8Words": 0,
-    "manualReviewPairs": 23,
+    "manualReviewPairs": 17,
     "manualReviewCandidates": 0,
     "informationalCrossSetClusters": 15
   },
@@ -19,8 +19,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-121",
-        "b1-331",
-        "b1-431",
         "b1-75"
       ],
       "stems": [
@@ -53,9 +51,7 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-151",
-        "b1-295",
-        "b1-328",
-        "b1-428"
+        "b1-328"
       ],
       "stems": [
         "Which of the following clinical factors can lead to an elevated baseline on the capnography waveform during general anesthesia? (Select 3)"
@@ -70,8 +66,7 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-159",
-        "b1-322",
-        "b1-422"
+        "b1-322"
       ],
       "stems": [
         "Which of the following clinical events will produce an acute INCREASE in measured end-tidal carbon dioxide (EtCO2)? (Select 3)"
@@ -101,8 +96,7 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-237",
-        "b1-368",
-        "b1-468"
+        "b1-368"
       ],
       "stems": [
         "What is the primary role of calcium hydroxide [Ca(OH)2] in wet soda lime absorbent?",
@@ -118,8 +112,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-258",
-        "b1-350",
-        "b1-450",
         "b1-77"
       ],
       "stems": [
@@ -137,8 +129,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-277",
-        "b1-346",
-        "b1-446",
         "b1-55"
       ],
       "stems": [
@@ -155,8 +145,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-283",
-        "b1-340",
-        "b1-440",
         "b1-70"
       ],
       "stems": [
@@ -172,8 +160,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-286",
-        "b1-343",
-        "b1-443",
         "b1-85"
       ],
       "stems": [
@@ -221,8 +207,7 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-327",
-        "b1-40",
-        "b1-427"
+        "b1-40"
       ],
       "stems": [
         "During general anesthesia, what capnographic finding confirms carbon dioxide rebreathing?",
@@ -238,7 +223,6 @@
       "scope": "cross_set_reinforcement",
       "questions": [
         "b1-334",
-        "b1-434",
         "b1-80"
       ],
       "stems": [
