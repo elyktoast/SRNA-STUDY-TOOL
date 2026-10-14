@@ -11496,18 +11496,18 @@
       "id": "350",
       "set": 4,
       "type": "single",
-      "stem": "Why should an absorber's intergranular air space be at least as large as the patient's tidal volume?",
+      "stem": "An anesthesia machine's CO2 absorber shows rising inspired CO2 despite absorbent that has not reached its expected service life. Gas is preferentially passing along channels near the canister wall. What best explains the loss of effective absorption?",
       "options": [
-        "So exhaled gas stays in contact long enough",
-        "So gas cannot channel along the canister walls",
-        "So circuit resistance stays below the APL setting",
-        "So enough moisture stays to prevent compound A"
+        "Gas bypasses much of the absorbent surface area",
+        "The patient's tidal volume exceeds the intergranular air space",
+        "The APL valve is set below the peak inspiratory pressure",
+        "The granules have retained too much anesthetic vapor"
       ],
       "answer": [
         0
       ],
-      "explanation": "About half of a packed canister is air space between granules. If that space holds an entire tidal volume, each exhaled breath sits within the absorbent between breaths, giving time for full CO2 neutralization. When the space is smaller than the tidal volume, part of each breath passes through before it can react. Channeling depends on packing, not total volume.",
-      "citation": "CO₂ & Scavenging · Slides 4, 5",
+      "explanation": "Channeling creates preferential low-resistance pathways through the absorbent bed. Less gas contacts the available absorbent surface, reducing effective CO2 removal even when some absorbent capacity remains. Evaluate inspired CO2 and the absorber assembly rather than relying solely on expected canister life. Miller's Anesthesia, chapter 20, describes channeling and reduced functional absorptive capacity.",
+      "citation": "Miller's Anesthesia, 10th ed., Ch. 20 · CO2 absorbers",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
