@@ -20,6 +20,23 @@ test('CAT refresh retains reservation and retries interrupted lifecycle without 
  await expect.poll(()=>events.filter(x=>x.p_event==='answered'&&x.p_session_id===before.id).length).toBe(1);
  await page.evaluate(()=>grade());expect(await page.evaluate(()=>DB.active.adaptive)).toEqual(before.state);
 });
+test('Answer submission repairs a missing view event and retries both exactly once',async({page})=>{
+ await start(page);
+ await page.route(cloud+'/rest/v1/rpc/mbu_mark_question_lifecycle',route=>route.abort('internetdisconnected'));
+ const first=await page.evaluate(()=>{
+  const q=session[pos],version=MBUQuestionCoverage.contentVersion(q);
+  delete DB.active.lifecycle['viewed:'+q.uid+':'+version];
+  for(const [key,item] of Object.entries(DB.lifecycleOutbox||{}))if(item.questionUid===q.uid&&item.event==='viewed')delete DB.lifecycleOutbox[key];
+  save();sel=new Set(q.ans);grade();clearTimeout(autoTimer);
+  return {uid:q.uid,sessionId:DB.active.questionSessionIds?.[q.uid]||DB.active.sessionId,events:Object.values(DB.lifecycleOutbox||{}).filter(x=>x.questionUid===q.uid).map(x=>x.event)};
+ });
+ expect(first.events).toEqual(expect.arrayContaining(['viewed','answered']));
+ const events=[];
+ await page.route(cloud+'/rest/v1/rpc/mbu_mark_question_lifecycle',route=>{events.push(route.request().postDataJSON());return route.fulfill({contentType:'application/json',body:'true'})});
+ await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+ await expect.poll(()=>new Set(events.filter(x=>x.p_question_uid===first.uid&&x.p_session_id===first.sessionId).map(x=>x.p_event)).size).toBe(2);
+ await expect.poll(()=>page.evaluate(()=>Object.values(DB.lifecycleOutbox||{}).filter(x=>x.questionUid===session[pos].uid).length)).toBe(0);
+});
 test('CAT lifecycle retries retain each issued question reservation after advancing',async({page})=>{
  await start(page);
  const first=await page.evaluate(()=>({uid:session[0].uid,id:DB.active.sessionId}));
