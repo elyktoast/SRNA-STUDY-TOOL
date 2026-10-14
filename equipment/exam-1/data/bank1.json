@@ -11516,13 +11516,13 @@
       "supp": null,
       "sourceMeta": {
         "families": [
-          "Miller's Anesthesia, 10th edition"
+          "CO₂ Absorbents and Scavenging"
         ],
-        "chapter": "20",
-        "citationFormat": "textbook"
+        "slides": "4, 5",
+        "citationFormat": "slides"
       },
-      "sourceTitle": "Miller's Anesthesia, 10th edition",
-      "sourceLocator": "Chapter 20, Carbon Dioxide Absorbers"
+      "sourceTitle": "CO₂ Absorbents and Scavenging",
+      "sourceLocator": "Slides 4, 5"
     },
     {
       "id": "351",
