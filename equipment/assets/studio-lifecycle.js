@@ -12,6 +12,9 @@ function retryCoverageLifecycle(){
  }
 }
 function markCoverageLifecycle(q,event){
+ // A submitted answer must also have a durable view event. Queue the view first;
+ // both events use the same reserved question/session and retry independently.
+ if(event==='answered')markCoverageLifecycle(q,'viewed');
  const active=DB.active;if(!active?.coverageMeta||!active.sessionId||!q||!window.MBUSupabase?.markQuestionLifecycle)return;
  const version=window.MBUQuestionCoverage?.contentVersion?.(q)||'1',sessionId=active.questionSessionIds?.[q.uid]||active.sessionId,key=event+':'+q.uid+':'+version,pendingKey=sessionId+':'+key;
  active.lifecycle=active.lifecycle||{};if(active.lifecycle[key])return;
