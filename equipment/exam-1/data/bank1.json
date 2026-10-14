@@ -9698,7 +9698,7 @@
       "id": "295",
       "set": 3,
       "type": "single",
-      "stem": "From the first breath of the case, the capnogram baseline sits at 4 mmHg. The absorbent is fresh and both unidirectional valves move normally. What should be done next?",
+      "stem": "From the first breath, the capnogram baseline remains at 4 mmHg. The absorbent is fresh and the unidirectional valves appear to move normally. A separate inspired CO2 measurement at the patient connection is zero. What is the most appropriate next step?",
       "options": [
         "Replace the CO2 absorbent canister",
         "Replace the expiratory valve disk",
@@ -9708,7 +9708,7 @@
       "answer": [
         2
       ],
-      "explanation": "A raised baseline that is present from the very first breath, with fresh absorbent and normal valve movement, points to the analyzer rather than true rebreathing. Water in the sample cell or a drifted zero offsets every reading, and re-zeroing against room air corrects it. Changing the canister or valve disk treats rebreathing that the other findings have already ruled out.",
+      "explanation": "A persistently elevated displayed baseline can reflect either inspired CO2 from rebreathing or an analyzer/sample-system offset. The independently confirmed zero inspired CO2 at the patient connection makes an analyzer zero error more likely, so verify the sampling system and re-zero the capnograph according to the manufacturer's instructions. Fresh absorbent and visibly moving valves alone do not exclude rebreathing.",
       "citation": "Monitoring · Slides 43, 50",
       "topic": "Monitoring",
       "imageSvg": null,
@@ -11058,7 +11058,7 @@
       "answer": [
         1
       ],
-      "explanation": "Below the lower inflection point, collapsed alveoli need extra pressure before they open, so the curve is flat until recruitment begins. Setting PEEP just above that point keeps alveoli open between breaths and moves ventilation onto the steeper, more compliant part of the curve. Reducing tidal volume addresses an upper inflection point (overdistension), not a lower one.",
+      "explanation": "The lower inflection point on an inspiratory pressure-volume curve is associated with recruitment of previously collapsed lung units. PEEP above this region can help limit cyclic derecruitment, but the lower inflection point is not a universal prescription for an optimal PEEP. Titrate to oxygenation, respiratory mechanics, driving pressure, and hemodynamic tolerance.",
       "citation": "Monitoring · Slides 28, 29",
       "topic": "Monitoring",
       "imageSvg": null,
