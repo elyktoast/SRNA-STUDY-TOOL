@@ -3203,18 +3203,18 @@
       "id": "S2-001",
       "set": 2,
       "type": "single",
-      "stem": "A nitrous oxide E-cylinder has been used for several minutes but still reads about 745 psig. Which interpretation is most appropriate?",
+      "stem": "A hospital's backup cylinder manifold switches automatically from its primary bank to its reserve bank. What should this changeover trigger?",
       "options": [
-        "The pressure gauge cannot measure nitrous oxide",
-        "The first-stage regulator is malfunctioning",
-        "Liquid nitrous oxide remains in the cylinder",
-        "The cylinder remains completely full"
+        "A drop in wall outlet pressure to about 30 psig",
+        "An alarm so facility staff replace the empty bank",
+        "Automatic shutoff of nitrous oxide at every outlet",
+        "Nothing, because changeover is silent by design"
       ],
       "answer": [
-        2
+        1
       ],
-      "explanation": "Nitrous oxide exists as liquid and gas in equilibrium; pressure remains about 745 psig while liquid remains, so pressure does not show remaining content until the liquid is gone.",
-      "citation": "Medical Gas Systems in Anesthesia · 14",
+      "explanation": "Manifolds switch banks automatically to keep pipeline pressure steady, so clinicians see no change at the outlet. A master alarm tells facility staff the system is now running on reserve, so the empty bank is replaced before the reserve runs out too.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 30, 32",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -3225,27 +3225,28 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "30, 32",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 14"
+      "sourceLocator": "Slides 30, 32"
     },
     {
       "id": "S2-002",
       "set": 2,
       "type": "single",
-      "stem": "A lightly sedated patient needs an airway adjunct but continues to have intact oropharyngeal reflexes. Which choice best matches the lecture?",
+      "stem": "After oral intubation of an average adult, what tube depth at the teeth is typical?",
       "options": [
-        "Nasopharyngeal airway",
-        "Oral RAE tube",
-        "Oropharyngeal airway",
-        "Armored tracheal tube"
+        "About 15 cm in women and 17 cm in men",
+        "About 21 cm in women and 23 cm in men",
+        "About 27 cm in women and 29 cm in men",
+        "About 30 cm regardless of sex"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "NPAs are better tolerated than OPAs in awake patients; an OPA may stimulate oropharyngeal and laryngeal reflexes.",
-      "citation": "Airway Equipment · 6",
+      "explanation": "A depth of about 21 cm at the incisors in women and 23 cm in men places the tip in the mid-trachea, a few centimeters above the carina. Deeper placement risks right mainstem intubation, and shallower placement risks cuff herniation through the cords. Depth is confirmed by auscultation and recorded.",
+      "citation": "Nurse Anesthesia, 7th ed. · Chapter 24",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -3254,29 +3255,29 @@
       "supp": null,
       "sourceMeta": {
         "families": [
-          "Airway Equipment"
+          "Nurse Anesthesia, 7th ed. (Elisha et al.)"
         ],
-        "citationFormat": "slides"
+        "citationFormat": "document"
       },
-      "sourceTitle": "Airway Equipment",
-      "sourceLocator": "Slide 6"
+      "sourceTitle": "Nurse Anesthesia, 7th ed. (Elisha et al.)",
+      "sourceLocator": "Chapter 24"
     },
     {
       "id": "S2-003",
       "set": 2,
       "type": "single",
-      "stem": "An oxygen analyzer displays 50% inspired oxygen while the pulse oximeter falls to 84%. Which conclusion is best supported?",
+      "stem": "Large cannon a waves appear on a central venous pressure tracing. What do they suggest?",
       "options": [
-        "The inspired oxygen concentration excludes a respiratory problem",
-        "The oxygen analyzer must be reading falsely high",
-        "The pulse oximeter must be reading falsely low",
-        "Adequate circuit oxygen does not guarantee adequate arterial oxygenation"
+        "Atrial contraction against a closed tricuspid",
+        "Severe tricuspid regurgitation during systole",
+        "Atrial fibrillation with absent atrial contraction",
+        "Hypovolemia with a collapsing central vein"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "The lecture explicitly states that adequate inspired oxygen concentration does not guarantee adequate arterial oxygenation.",
-      "citation": "Monitoring · 38",
+      "explanation": "Cannon a waves occur when the atrium contracts while the tricuspid valve is closed, as in AV dissociation, junctional rhythm, or complete heart block. Tricuspid regurgitation produces large v waves, and atrial fibrillation abolishes a waves entirely.",
+      "citation": "Monitoring · Slides 64, 70",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -3287,27 +3288,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "64, 70",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 38"
+      "sourceLocator": "Slides 64, 70"
     },
     {
       "id": "S2-004",
       "set": 2,
       "type": "single",
-      "stem": "A low-flow anesthetic is planned. Why is the carbon dioxide absorber essential in this setting?",
+      "stem": "Some absorbers have a bypass so the canister can be changed during a case. What happens while the bypass is active?",
       "options": [
-        "Volatile-agent vapor pressure falls as fresh-gas flow decreases",
-        "Pipeline pressure falls as fresh-gas flow decreases",
-        "Rebreathing increases as fresh-gas flow decreases",
-        "Waste-gas suction decreases as fresh-gas flow decreases"
+        "CO2 is rebreathed unless fresh gas is raised",
+        "CO2 is vented through the APL valve automatically",
+        "The circuit is sealed so no gas can be delivered",
+        "Volatile agent is diverted to the scavenger"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "The absorber is necessary during low fresh-gas flow because exhaled gas is rebreathed and carbon dioxide must be removed.",
-      "citation": "CO₂ & Scavenging · 8",
+      "explanation": "With the canister bypassed, nothing removes CO2 from recirculated gas, so rebreathing begins. Raising fresh gas flow above minute ventilation limits rebreathing until the new canister is in place, and capnography confirms when inspired CO2 returns to zero.",
+      "citation": "CO₂ & Scavenging · Slide 8",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -3318,6 +3320,7 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
@@ -3358,18 +3361,18 @@
       "id": "S2-006",
       "set": 2,
       "type": "single",
-      "stem": "During anesthesia, the pulse oximeter reads 100% while the patient has been apneic on supplemental oxygen. Which limitation explains why this can occur?",
+      "stem": "In the standard US five-lead ECG color code, where is the white electrode placed?",
       "options": [
-        "Pulse oximetry may detect apnea late during supplemental oxygen",
-        "Pulse oximetry immediately falls when ventilation stops",
-        "Pulse oximetry continuously measures arterial carbon dioxide",
-        "Pulse oximetry directly measures alveolar ventilation"
+        "Left arm",
+        "Left leg",
+        "Right arm",
+        "Right leg"
       ],
       "answer": [
-        0
+        2
       ],
-      "explanation": "The lecture notes that patients receiving supplemental oxygen may be apneic for several minutes before pulse oximetry detects desaturation.",
-      "citation": "Monitoring · 79",
+      "explanation": "In the AHA color code, white goes on the right arm, black on the left arm, red on the left leg, green on the right leg, and brown on the chest (V lead), often remembered as white on right, smoke over fire. Reversed limb leads change lead II morphology and can mimic pathology.",
+      "citation": "Monitoring · Slide 57",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -3380,27 +3383,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "57",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 79"
+      "sourceLocator": "Slide 57"
     },
     {
       "id": "S2-007",
       "set": 2,
       "type": "single",
-      "stem": "The low-pressure system begins immediately downstream of which component?",
+      "stem": "During checkout, an oxygen cylinder is opened, then closed. Over the next minute its gauge falls steadily. What does this indicate?",
       "options": [
-        "First-stage pressure regulator",
-        "Pipeline inlet",
-        "Cylinder yoke",
-        "Gas flow-control valves"
+        "A leak between the cylinder valve and the machine",
+        "Normal cooling of gas inside the cylinder",
+        "Oxygen being used by the flowmeters as expected",
+        "A faulty gauge, since closed cylinders always read zero"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "The lecture defines the low-pressure system as downstream of the gas flow-control valves to the common gas outlet.",
-      "citation": "Medical Gas Systems in Anesthesia · 76",
+      "explanation": "With the valve closed, the gauge reads gas trapped in the yoke and high-pressure line. A steady fall means that gas is escaping, typically at a missing or damaged washer, a loose yoke, or a leaking connection. The leak should be fixed before relying on the cylinder as backup.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 10, 18",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -3411,30 +3415,31 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "10, 18",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 76"
+      "sourceLocator": "Slides 10, 18"
     },
     {
       "id": "S2-008",
       "set": 2,
       "type": "multi",
-      "stem": "Which TWO benefits of carbon dioxide absorption become more pronounced as fresh-gas flow decreases? (Select 2)",
+      "stem": "Which TWO effects become more important as fresh gas flow is reduced in a circle system? (Select 2)",
       "options": [
-        "Conservation of exhaled heat",
-        "Conservation of exhaled humidity",
-        "Prevention of vaporizer tipping",
-        "Elimination of all waste-gas exposure",
-        "Reduction of cylinder pressure",
-        "Increase in pipeline pressure"
+        "The absorbent dries out more quickly",
+        "More waste gas is vented to the room",
+        "Inspired gas departs more from the dialed settings",
+        "More heat and humidity are lost from the airway",
+        "Volatile agent use per hour increases",
+        "The absorbent is consumed more quickly"
       ],
       "answer": [
-        0,
-        1
+        2,
+        5
       ],
-      "explanation": "The lecture notes that absorbent use partially conserves exhaled humidity and heat, with both benefits optimized as flow decreases.",
-      "citation": "CO₂ & Scavenging · 8",
+      "explanation": "At low flows, most inspired gas is rebreathed, so inspired oxygen and agent drift away from the flowmeter and dial settings and must be monitored with gas analysis. More exhaled CO2 passes through the canister, so absorbent is used faster. Drying, waste gas, heat loss, and agent use all decrease.",
+      "citation": "CO₂ & Scavenging · Slide 8",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -3445,6 +3450,7 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
@@ -3454,22 +3460,21 @@
       "id": "S2-009",
       "set": 2,
       "type": "multi",
-      "stem": "Which THREE actions are recommended when replacing an E-cylinder? (Select 3)",
+      "stem": "Which TWO statements about medical gas wall outlets are correct? (Select 2)",
       "options": [
-        "Ignore hissing if pressure is adequate",
-        "Use only one washer",
-        "Overtighten the retaining screw",
-        "Check for leaks after attachment",
-        "Stack full and empty cylinders together",
-        "Use proper transport methods"
+        "Each outlet accepts only its own gas-specific connector",
+        "All gases share one connector, distinguished by color",
+        "Outlets deliver gas at the full cylinder pressure",
+        "A valve in the outlet closes when the hose is removed",
+        "Outlets use the pin index system to prevent mix-ups",
+        "Outlet colors are identical in every country"
       ],
       "answer": [
-        1,
-        3,
-        5
+        0,
+        3
       ],
-      "explanation": "The lecture recommends proper transport, one washer, listening/checking for leaks, avoiding overtightening, and checking system pressure.",
-      "citation": "Medical Gas Systems in Anesthesia · 10",
+      "explanation": "Wall outlets use gas-specific DISS or quick-connect fittings, and each contains a check valve that seals the outlet when the hose is disconnected. Pipeline gas arrives at about 50 psig, not cylinder pressure. The pin index system applies to small cylinders, and color codes vary internationally.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 30, 32",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -3480,31 +3485,31 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "30, 32",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 10"
+      "sourceLocator": "Slides 30, 32"
     },
     {
       "id": "S2-010",
       "set": 2,
       "type": "multi",
-      "stem": "Which THREE conditions can increase waste-anesthetic-gas leakage into the OR from the patient circuit or airway? (Select 3)",
+      "stem": "Which TWO statements describe breathing-circuit compliance during volume-controlled ventilation on a ventilator without compliance compensation? (Select 2)",
       "options": [
-        "Well-fitted supraglottic airway",
-        "Properly sealed cuffed tracheal tube",
-        "Fresh-gas flow paused during disconnection",
-        "Undersized uncuffed tracheal tube",
-        "Poorly fitting face mask",
-        "Poorly seated cuffed tracheal tube"
+        "Delivered tidal volume is less than the set volume",
+        "Delivered tidal volume is more than the set volume",
+        "The volume lost grows as airway pressure rises",
+        "The volume lost disappears at high airway pressure",
+        "Compliant tubing reduces apparatus dead space",
+        "It matters only during spontaneous breathing"
       ],
       "answer": [
-        3,
-        4,
-        5
+        0,
+        2
       ],
-      "explanation": "The lecture identifies poor mask/airway-device seals and tubes that do not seal the trachea as sources of anesthetic gas leakage.",
-      "citation": "CO₂ & Scavenging · 14",
+      "explanation": "Corrugated tubing expands and gas compresses with each breath, so part of the set volume stays in the circuit instead of reaching the lungs. The lost volume equals circuit compliance times airway pressure, so it grows when pressures are high and matters most in small patients. Modern ventilators measure and correct for it.",
+      "citation": "CO₂ & Scavenging · Slide 8",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -3515,10 +3520,11 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 14"
+      "sourceLocator": "Slide 8"
     },
     {
       "id": "S2-011",
@@ -3563,7 +3569,7 @@
         "The diastolic pressure falls to zero while systolic pressure remains accurate"
       ],
       "answer": [
-        3
+        2
       ],
       "explanation": "Overdamping blunts the arterial waveform and tends to underestimate systolic blood pressure. Underdamping produces the opposite pattern, with ringing and systolic overestimation.",
       "citation": "Monitoring · Slide 70",
@@ -6389,18 +6395,18 @@
       "id": "S3-001",
       "set": 3,
       "type": "single",
-      "stem": "A nitrous oxide E-cylinder has been used for several minutes but still reads about 745 psig. Which interpretation is most appropriate?",
+      "stem": "At high altitude, a flowmeter calibrated at sea level is set to a high flow. How does actual flow compare with the reading?",
       "options": [
-        "The pressure gauge cannot measure nitrous oxide",
-        "The first-stage regulator is malfunctioning",
-        "Liquid nitrous oxide remains in the cylinder",
-        "The cylinder remains completely full"
+        "Lower, because thinner air slows the float",
+        "Identical, because the tube is gas-specific",
+        "Zero, because the float cannot rise in thin air",
+        "Higher, as the thinner gas flows more easily"
       ],
       "answer": [
-        2
+        3
       ],
-      "explanation": "Nitrous oxide exists as liquid and gas in equilibrium; pressure remains about 745 psig while liquid remains, so pressure does not show remaining content until the liquid is gone.",
-      "citation": "Medical Gas Systems in Anesthesia · 14",
+      "explanation": "At high flows, flow through the annular gap around the float is turbulent and depends on gas density. At altitude the gas is less dense, so more passes for a given float position and the flowmeter under-reads the true flow. At low, laminar flows viscosity dominates and the error is small.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 41, 43",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -6411,27 +6417,28 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "41, 43",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 14"
+      "sourceLocator": "Slides 41, 43"
     },
     {
       "id": "S3-002",
       "set": 3,
       "type": "single",
-      "stem": "A mechanically ventilated patient suddenly develops a higher peak inspiratory pressure, but plateau pressure is unchanged. Passing a suction catheter through the ETT is difficult. Which cause best fits the combined findings?",
+      "stem": "Under pressure-control ventilation, bronchospasm develops. Which change is expected?",
       "options": [
-        "Loss of pulmonary compliance",
-        "Development of a circuit leak",
-        "Increase in delivered tidal volume",
-        "Kink or obstruction of the tracheal tube"
+        "Peak airway pressure rises sharply",
+        "Plateau pressure rises to match the peak",
+        "Delivered tidal volume falls",
+        "Inspiratory time shortens automatically"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "An isolated rise in peak pressure indicates increased resistance. The lecture specifically notes secretions or ETT kinking and recommends a suction catheter to help distinguish these causes.",
-      "citation": "Monitoring · 32",
+      "explanation": "In pressure control the ventilator holds a set pressure, so airway pressure does not climb. Higher resistance means less flow reaches the lungs during the set inspiratory time, so tidal volume and minute ventilation fall. Exhaled volume and capnography are the key monitors in this mode.",
+      "citation": "Monitoring · Slides 26, 32",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -6442,10 +6449,11 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "26, 32",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 32"
+      "sourceLocator": "Slides 26, 32"
     },
     {
       "id": "S3-003",
@@ -6482,18 +6490,18 @@
       "id": "S3-004",
       "set": 3,
       "type": "single",
-      "stem": "Which factor can interfere with pulse oximetry through the optical signal rather than through reduced peripheral perfusion?",
+      "stem": "What is the main monitoring value of a precordial or esophageal stethoscope?",
       "options": [
-        "Low cardiac output",
-        "Nail polish",
-        "Peripheral arterial occlusion",
-        "Severe vasoconstriction"
+        "Continuous breath and heart sounds",
+        "It quantifies exhaled tidal volume",
+        "It measures arterial oxygen saturation",
+        "It replaces capnography for tube placement"
       ],
       "answer": [
-        1
+        0
       ],
-      "explanation": "Nail polish is an optical interference; the other choices primarily reduce peripheral perfusion.",
-      "citation": "Monitoring · 79",
+      "explanation": "A precordial or esophageal stethoscope gives continuous, real-time breath and heart sounds, which can reveal disconnection, bronchospasm, or changes in heart sounds. It is a qualitative supplement and cannot replace capnography, pulse oximetry, or measured volumes.",
+      "citation": "Monitoring · Slides 13, 33",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -6504,59 +6512,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "13, 33",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 79"
+      "sourceLocator": "Slides 13, 33"
     },
     {
       "id": "S3-005",
       "set": 3,
       "type": "single",
-      "stem": "Which monitor detects a crossed oxygen pipeline when pipeline pressure remains normal but the gas is not oxygen?",
+      "stem": "Can a Tec 6 desflurane vaporizer be refilled while it is delivering agent?",
       "options": [
-        "Inspired oxygen analyzer",
-        "Oxygen fail-safe valve",
-        "Proportioning system",
-        "Pipeline pressure gauge"
+        "No, it must be turned off and allowed to cool first",
+        "No, it must be unplugged before the filler opens",
+        "Yes, its sealed, keyed filling system allows it",
+        "Yes, only after the sump is completely empty"
       ],
       "answer": [
-        0
+        2
       ],
-      "explanation": "ASA oxygenation monitoring requires measurement of oxygen concentration in the patient breathing system with an oxygen analyzer and a low-oxygen concentration alarm. Because pressure-based safeguards cannot verify gas identity, the analyzer is the direct check of inspired oxygen concentration.",
-      "citation": "Monitoring · Slide 11",
-      "topic": "Monitoring",
-      "imageSvg": null,
-      "image": null,
-      "imageId": null,
-      "disc": null,
-      "supp": null,
-      "sourceMeta": {
-        "families": [
-          "Intraoperative Assessment, Monitoring & Data Interpretation"
-        ],
-        "slides": "11",
-        "citationFormat": "slides"
-      },
-      "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 11"
-    },
-    {
-      "id": "S3-006",
-      "set": 3,
-      "type": "single",
-      "stem": "A loose vaporizer filler cap produces a low-pressure-system leak. Why can this be clinically important even if pipeline pressure is normal?",
-      "options": [
-        "The leak is isolated from the common gas outlet",
-        "The leak is upstream of the cylinder regulator",
-        "The leak occurs before pipeline gas enters the machine",
-        "The leak is downstream of the flow-control valves"
-      ],
-      "answer": [
-        3
-      ],
-      "explanation": "The low-pressure system is downstream of the flow-control valves and is the portion most vulnerable to leaks that alter the final gas mixture delivered to the common gas outlet.",
-      "citation": "Medical Gas Systems in Anesthesia · 76",
+      "explanation": "Desflurane boils near room temperature, so its bottle and the Tec 6 filler form a sealed, keyed system that prevents vapor escape. That design lets the vaporizer be refilled during use without interrupting delivery, unlike most variable bypass vaporizers, which are filled with the dial off.",
+      "citation": "Medical Gas Systems in Anesthesia · Slide 60",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -6567,6 +6544,39 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "60",
+        "citationFormat": "slides"
+      },
+      "sourceTitle": "Medical Gas Systems in Anesthesia",
+      "sourceLocator": "Slide 60"
+    },
+    {
+      "id": "S3-006",
+      "set": 3,
+      "type": "single",
+      "stem": "On a machine with an accessible common gas outlet, the fresh gas hose detaches during a case. What happens?",
+      "options": [
+        "The interlock shuts the vaporizer off automatically",
+        "Circuit pressure rises because gas cannot leave",
+        "Fresh gas spills out and the circuit slowly empties",
+        "Nothing, because the circle keeps recirculating gas"
+      ],
+      "answer": [
+        2
+      ],
+      "explanation": "Everything from the flowmeters and vaporizer leaves through the common gas outlet. If the hose detaches, fresh gas and agent spill into the room, and the circuit loses volume as the patient consumes oxygen and gas escapes, so the bag or bellows empties and inspired oxygen and agent fall.",
+      "citation": "Medical Gas Systems in Anesthesia · Slide 76",
+      "topic": "Medical Gases",
+      "imageSvg": null,
+      "image": null,
+      "imageId": null,
+      "disc": null,
+      "supp": null,
+      "sourceMeta": {
+        "families": [
+          "Medical Gas Systems in Anesthesia"
+        ],
+        "slides": "76",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
@@ -6576,18 +6586,18 @@
       "id": "S3-007",
       "set": 3,
       "type": "single",
-      "stem": "A canister has very fine granules. Which combination is expected?",
+      "stem": "How does the texture of soda lime granules change as they become exhausted?",
       "options": [
-        "Less CO₂-reactive surface area and greater resistance to flow",
-        "Greater CO₂-reactive surface area and greater resistance to flow",
-        "Greater CO₂-reactive surface area and lower resistance to flow",
-        "Less CO₂-reactive surface area and lower resistance to flow"
+        "They become soft and crumble easily",
+        "They become sticky and clump with moisture",
+        "They become hard and difficult to crush",
+        "They do not change, so only color helps"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "Smaller granules increase surface area but also increase resistance; 4–8 mesh balances absorption and flow resistance.",
-      "citation": "CO₂ & Scavenging · 5",
+      "explanation": "Fresh granules are relatively soft and crumble when pressed, while exhausted granules harden as calcium hydroxide becomes calcium carbonate. Hardness is a rough supporting sign; rising inspired CO2 on the capnograph remains the definitive indicator.",
+      "citation": "CO₂ & Scavenging · Slides 4, 5",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -6598,27 +6608,28 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "4, 5",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 5"
+      "sourceLocator": "Slides 4, 5"
     },
     {
       "id": "S3-008",
       "set": 3,
       "type": "single",
-      "stem": "A recirculating OR ventilation system filters room air and returns it to other rooms. What limitation remains?",
+      "stem": "How can an individual provider's exposure to waste anesthetic gas be measured?",
       "options": [
-        "Recirculation eliminates the need for scavenging",
-        "Filters remove all anesthetic gases but not oxygen",
-        "Recirculation prevents any outdoor-air exchange",
-        "Filters do not remove anesthetic gases"
+        "With the capnograph's inspired agent reading",
+        "With a personal sampling badge on the collar",
+        "With an oxygen analyzer placed in the OR",
+        "With the scavenger's reservoir bag size"
       ],
       "answer": [
-        3
+        1
       ],
-      "explanation": "The lecture states that standard filtration does not remove anesthetic gases, so contaminated air can be redistributed.",
-      "citation": "CO₂ & Scavenging · 17",
+      "explanation": "Passive dosimeter badges worn on the collar collect anesthetic gas from the wearer's breathing zone over a shift and are analyzed to estimate time-weighted exposure. Room air sampling describes general contamination, but badges show what an individual actually breathed.",
+      "citation": "CO₂ & Scavenging · Slides 14, 17",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -6629,27 +6640,28 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "14, 17",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 17"
+      "sourceLocator": "Slides 14, 17"
     },
     {
       "id": "S3-009",
       "set": 3,
       "type": "single",
-      "stem": "During two-handed mask ventilation, where should the fingers used for mandibular support be placed?",
+      "stem": "Which formula estimates an uncuffed tracheal tube internal diameter for a child older than 2 years?",
       "options": [
-        "Across the cricothyroid membrane",
-        "Along the bony mandible",
-        "Into the submandibular soft tissue",
-        "Over the thyroid cartilage"
+        "(Age / 2) + 4",
+        "(Age / 4) + 2",
+        "(Age / 4) + 4",
+        "(Age x 4) + 4"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "The airway lecture instructs the provider to place the lower fingers along the bony mandible to complete the mask seal and mandibular lift.",
-      "citation": "Airway Equipment · 4",
+      "explanation": "Uncuffed tube size is estimated as age divided by 4, plus 4, so a 6-year-old needs about 5.5 mm. For cuffed tubes, subtract about half a size (age divided by 4, plus 3.5). Tubes a half size above and below should be ready because of individual variation.",
+      "citation": "Nurse Anesthesia, 7th ed. · Chapter 24",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -6658,29 +6670,29 @@
       "supp": null,
       "sourceMeta": {
         "families": [
-          "Airway Equipment"
+          "Nurse Anesthesia, 7th ed. (Elisha et al.)"
         ],
-        "citationFormat": "slides"
+        "citationFormat": "document"
       },
-      "sourceTitle": "Airway Equipment",
-      "sourceLocator": "Slide 4"
+      "sourceTitle": "Nurse Anesthesia, 7th ed. (Elisha et al.)",
+      "sourceLocator": "Chapter 24"
     },
     {
       "id": "S3-010",
       "set": 3,
       "type": "single",
-      "stem": "During airway laser surgery, which component of a laser-resistant ETT remains vulnerable to laser injury?",
+      "stem": "An airway fire starts during laser surgery of the larynx. What is the FIRST action?",
       "options": [
-        "Shaft",
-        "Connector",
-        "Cuff",
-        "Pilot balloon valve only"
+        "Stop gas flow and remove the tracheal tube",
+        "Pour saline into the mouth and wait",
+        "Increase oxygen to support the patient",
+        "Deflate the cuff and leave the tube in place"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "The lecture states that the cuff is not laser resistant even when a laser-resistant tube is used.",
-      "citation": "Airway Equipment · 9",
+      "explanation": "Stopping gas flow removes the oxidizer, and removing the burning tube removes the fuel; both happen at once. Saline is then poured into the airway, ventilation resumes by mask with air or low oxygen, and the airway is examined by bronchoscopy for injury and debris.",
+      "citation": "Airway Equipment · Slide 9",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -6691,6 +6703,7 @@
         "families": [
           "Airway Equipment"
         ],
+        "slides": "9",
         "citationFormat": "slides"
       },
       "sourceTitle": "Airway Equipment",
@@ -9577,18 +9590,18 @@
       "id": "S4-001",
       "set": 4,
       "type": "single",
-      "stem": "Which factor can interfere with pulse oximetry through the optical signal rather than through reduced peripheral perfusion?",
+      "stem": "After a phenylephrine bolus, the pulse oximeter's perfusion index falls from 4 to 0.3. What does this indicate?",
       "options": [
-        "Low cardiac output",
-        "Nail polish",
-        "Peripheral arterial occlusion",
-        "Severe vasoconstriction"
+        "Arterial desaturation has occurred",
+        "Carboxyhemoglobin is now elevated",
+        "The probe has been placed on the wrong finger",
+        "Pulsatile flow at the probe site has dropped"
       ],
       "answer": [
-        1
+        3
       ],
-      "explanation": "Nail polish is an optical interference; the other choices primarily reduce peripheral perfusion.",
-      "citation": "Monitoring · 79",
+      "explanation": "Perfusion index is the ratio of pulsatile to nonpulsatile light absorption at the probe. Vasoconstriction reduces the pulsatile signal, so the index falls and SpO2 readings become less reliable. Moving the probe to a central site or warming the hand can restore the signal.",
+      "citation": "Monitoring · Slides 74, 79",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -9599,31 +9612,31 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "74, 79",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 79"
+      "sourceLocator": "Slides 74, 79"
     },
     {
       "id": "S4-002",
       "set": 4,
       "type": "multi",
-      "stem": "Which THREE variables are displayed or derived from spirometry in the lecture? (Select 3)",
+      "stem": "Which TWO statements describe mainstream (in-line) capnography? (Select 2)",
       "options": [
-        "Neuromuscular twitch height",
-        "Hemoglobin concentration",
-        "Volume",
-        "Pressure",
-        "Flow",
-        "Core temperature"
+        "Gas is aspirated to a remote analyzer through tubing",
+        "The sensor at the airway adds weight and some dead space",
+        "Its sampling rate dilutes readings in small infants",
+        "There is no delay from gas transport through a line",
+        "It can monitor nonintubated patients via nasal cannula",
+        "Water traps are needed to protect the analyzer"
       ],
       "answer": [
-        2,
-        3,
-        4
+        1,
+        3
       ],
-      "explanation": "Respiratory spirometry evaluates pressure, volume, and flow and uses these variables to construct respiratory loops.",
-      "citation": "Monitoring · 24",
+      "explanation": "A mainstream sensor sits directly on the airway, so readings are immediate, but it adds weight and some dead space at the connector. Aspiration through tubing, sample dilution, nasal cannula sampling, and water traps are features of sidestream capnography.",
+      "citation": "Monitoring · Slides 41, 43",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -9634,27 +9647,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "41, 43",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 24"
+      "sourceLocator": "Slides 41, 43"
     },
     {
       "id": "S4-003",
       "set": 4,
       "type": "single",
-      "stem": "A patient receiving supplemental oxygen becomes apneic. Why may SpO₂ remain normal initially?",
+      "stem": "Why can bladder temperature lag behind core temperature during rapid cooling or warming?",
       "options": [
-        "The oxygen reservoir delays desaturation despite absent ventilation",
-        "Pulse oximetry directly measures ventilation",
-        "Supplemental oxygen causes the oximeter to ignore apnea",
-        "SpO₂ cannot fall while inspired oxygen exceeds room air"
+        "It is measured outside the body",
+        "It depends on urine flow, which may be low",
+        "It reads skin temperature over the pubis",
+        "It is affected by inspired gas temperature"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "Supplemental oxygen can delay desaturation, so pulse oximetry may identify apnea later than ventilation monitoring.",
-      "citation": "Monitoring · 79",
+      "explanation": "A bladder probe reflects core temperature well when urine flow is good, but with low urine output it lags during rapid changes such as bypass or active warming. Esophageal, nasopharyngeal, or pulmonary artery sites respond faster.",
+      "citation": "Monitoring · Slides 81, 82",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -9665,27 +9679,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "81, 82",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 79"
+      "sourceLocator": "Slides 81, 82"
     },
     {
       "id": "S4-004",
       "set": 4,
       "type": "single",
-      "stem": "A full oxygen E-cylinder is opened and the pressure gauge reads about 2,000 psig. After substantial use it reads 1,000 psig. Which conclusion is most appropriate?",
+      "stem": "Why must oil or grease never be used on oxygen cylinder valves, yokes, or regulators?",
       "options": [
-        "No estimate can be made from oxygen pressure",
-        "The cylinder remains full until pressure reaches 745 psig",
-        "Only cylinder weight can estimate oxygen content",
-        "Approximately half the compressed oxygen remains"
+        "It can ignite in high-pressure oxygen",
+        "It blocks the pin index holes on the valve",
+        "It absorbs oxygen and lowers the gauge reading",
+        "It makes the Bourdon gauge read falsely high"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "Oxygen is stored as compressed gas, so cylinder pressure tracks remaining content approximately linearly.",
-      "citation": "Medical Gas Systems in Anesthesia · 13",
+      "explanation": "Hydrocarbons can ignite spontaneously or burn violently in high-pressure, oxygen-rich conditions, especially when compression heats the gas as a valve opens. Oxygen fittings must be kept clean and free of oil, grease, and hand creams.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 10, 18",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -9696,27 +9711,28 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "10, 18",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 13"
+      "sourceLocator": "Slides 10, 18"
     },
     {
       "id": "S4-005",
       "set": 4,
       "type": "single",
-      "stem": "Which device provides the final machine-level check that oxygen is actually present in the inspired gas?",
+      "stem": "Where should the ventilator low-pressure (disconnect) alarm threshold be set?",
       "options": [
-        "Proportioning linkage",
-        "Fail-safe valve",
-        "Oxygen analyzer",
-        "Pipeline pressure gauge"
+        "Just below the usual peak pressure",
+        "At the lowest setting the ventilator allows",
+        "At the same value as the set PEEP",
+        "Slightly above the usual peak pressure"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "ASA oxygenation monitoring requires measurement of oxygen concentration in the patient breathing system with an oxygen analyzer and a low-oxygen concentration alarm. Because pressure-based safeguards cannot verify gas identity, the analyzer is the direct check of inspired oxygen concentration.",
-      "citation": "Monitoring · Slide 11",
+      "explanation": "Setting the threshold just below normal peak pressure means a disconnection or large leak quickly fails to reach it and triggers the alarm. Set too low, a partial disconnection can still generate enough pressure from circuit resistance to silence it.",
+      "citation": "Monitoring · Slide 33",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -9727,31 +9743,31 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "11",
+        "slides": "33",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 11"
+      "sourceLocator": "Slide 33"
     },
     {
       "id": "S4-006",
       "set": 4,
       "type": "multi",
-      "stem": "Which TWO components are clearly within the low-pressure system? (Select 2)",
+      "stem": "Which TWO conditions make a variable bypass vaporizer deliver less agent than the dial setting? (Select 2)",
       "options": [
-        "First-stage regulator",
-        "Pipeline inlet",
-        "Cylinder yoke",
-        "Vaporizer",
-        "Common gas outlet",
-        "Cylinder pressure gauge"
+        "Tipping the vaporizer during transport",
+        "Very high fresh gas flow, around 15 L/min",
+        "Filling a sevoflurane vaporizer with isoflurane",
+        "Intermittent back pressure without an outlet check valve",
+        "Very low fresh gas flow, under 250 mL/min",
+        "Using it at high altitude"
       ],
       "answer": [
-        3,
+        1,
         4
       ],
-      "explanation": "The low-pressure system includes flowmeters, vaporizers, check valves if present, and the common gas outlet.",
-      "citation": "Medical Gas Systems in Anesthesia · 76",
+      "explanation": "At very high flows the chamber gas does not fully saturate, and at very low flows there is too little turbulence to carry vapor out, so output falls below the dial at both extremes. Tipping, misfilling with a higher vapor pressure agent, and the pumping effect all raise output, and at altitude the delivered percentage rises.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 54, 55",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -9762,30 +9778,31 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "54, 55",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 76"
+      "sourceLocator": "Slides 54, 55"
     },
     {
       "id": "S4-007",
       "set": 4,
       "type": "multi",
-      "stem": "Which TWO changes would be expected to increase Compound A formation? (Select 2)",
+      "stem": "Which TWO are functions of the reservoir (breathing) bag in a circle system? (Select 2)",
       "options": [
-        "Increase absorbent water content",
-        "Increase absorbent temperature",
-        "Decrease fresh-gas flow",
-        "Increase fresh-gas flow",
-        "Cool the absorbent",
-        "Decrease sevoflurane concentration"
+        "Removes CO2 from exhaled gas",
+        "Allows manual ventilation of the patient",
+        "Humidifies the inspired gas",
+        "Sends waste gas to the scavenging system",
+        "Raises the inspired oxygen concentration",
+        "Lets the provider observe spontaneous breathing"
       ],
       "answer": [
         1,
-        2
+        5
       ],
-      "explanation": "Lower fresh-gas flow and higher absorbent temperature promote Compound A formation.",
-      "citation": "CO₂ & Scavenging · 6",
+      "explanation": "The reservoir bag holds gas for manual ventilation and moves visibly with spontaneous breaths, which helps confirm breathing and estimate tidal volume. Its compliance also buffers circuit pressure. CO2 removal belongs to the absorbent, and excess gas leaves through the APL valve.",
+      "citation": "CO₂ & Scavenging · Slide 8",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -9796,30 +9813,31 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 6"
+      "sourceLocator": "Slide 8"
     },
     {
       "id": "S4-008",
       "set": 4,
       "type": "multi",
-      "stem": "Which TWO findings indicate excessive suction at a closed scavenging interface? (Select 2)",
+      "stem": "During mechanical ventilation, the circuit disconnects at the Y-piece. Which TWO findings are expected? (Select 2)",
       "options": [
-        "Reservoir bag collapses",
-        "Positive-pressure relief valve vents",
-        "Room pressure becomes the pipeline pressure",
-        "Reservoir bag distends",
-        "Negative-pressure relief valve opens",
-        "Waste gas accumulates from absent suction"
+        "The high-pressure alarm sounds",
+        "EtCO2 rises over several breaths",
+        "SpO2 falls to zero immediately",
+        "The low-pressure (disconnect) alarm sounds",
+        "The capnogram waveform disappears",
+        "Ascending bellows rise higher than usual"
       ],
       "answer": [
-        0,
+        3,
         4
       ],
-      "explanation": "Excessive suction creates negative pressure, collapsing the bag and opening the negative-pressure relief valve.",
-      "citation": "CO₂ & Scavenging · 20",
+      "explanation": "With the circuit open, the ventilator cannot build pressure, so the low-pressure alarm triggers, and no exhaled CO2 reaches the sampling port, so the capnogram goes flat. SpO2 falls only after oxygen stores are used, and ascending bellows collapse rather than rise.",
+      "citation": "CO₂ & Scavenging · Slides 8, 19",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -9830,27 +9848,28 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8, 19",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 20"
+      "sourceLocator": "Slides 8, 19"
     },
     {
       "id": "S4-009",
       "set": 4,
       "type": "single",
-      "stem": "Why is a transparent face mask useful during ventilation?",
+      "stem": "How is a correctly sized adult face mask positioned?",
       "options": [
-        "It directly displays exhaled tidal volume",
-        "It directly measures peak airway pressure",
-        "It replaces the need for capnography",
-        "It permits direct visualization of secretions, vomitus, blood, and lip color"
+        "From the forehead to below the chin",
+        "Nose bridge to the groove above the chin",
+        "From the tip of the nose to the lower lip",
+        "From the eyebrows to the upper lip"
       ],
       "answer": [
-        3
+        1
       ],
-      "explanation": "The clear mask permits visualization of lip color, condensation, secretions, vomitus, and blood.",
-      "citation": "Airway Equipment · 4",
+      "explanation": "A correctly sized mask rests on the bridge of the nose and in the cleft above the chin, sealing over both nose and mouth without pressing on the eyes. A mask that is too large presses on the eyes and leaks at the chin, and one that is too small occludes the nostrils.",
+      "citation": "Airway Equipment · Slide 4",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -9861,6 +9880,7 @@
         "families": [
           "Airway Equipment"
         ],
+        "slides": "4",
         "citationFormat": "slides"
       },
       "sourceTitle": "Airway Equipment",
@@ -9870,22 +9890,21 @@
       "id": "S4-010",
       "set": 4,
       "type": "multi",
-      "stem": "Which THREE variables influence the likelihood of an airway tube igniting during laser surgery? (Select 3)",
+      "stem": "Which TWO reasons explain why a left-sided double-lumen tube is usually chosen even for right lung surgery? (Select 2)",
       "options": [
-        "Flowmeter float type",
-        "NIBP cuff size",
-        "Direct laser contact",
-        "Arterial-line damping",
-        "Tube material",
-        "Oxidizer concentration"
+        "The right upper lobe bronchus arises close to the carina",
+        "The left mainstem is more vertical than the right",
+        "Left-sided tubes have no bronchial cuff",
+        "Right-sided tubes cannot isolate either lung",
+        "The left mainstem bronchus is longer",
+        "The left lung is larger than the right"
       ],
       "answer": [
-        2,
-        4,
-        5
+        0,
+        4
       ],
-      "explanation": "Tube material, oxygen/nitrous concentration, and direct contact with the heat source affect ETT ignition risk.",
-      "citation": "Airway Equipment · 9",
+      "explanation": "The right upper lobe bronchus leaves the right mainstem about 1.5 to 2.5 cm from the carina, so a right-sided tube can easily block it. The left mainstem is longer, giving more room to seat the bronchial cuff safely. The right mainstem is the more vertical one.",
+      "citation": "Airway Equipment · Slide 8",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -9896,10 +9915,11 @@
         "families": [
           "Airway Equipment"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "Airway Equipment",
-      "sourceLocator": "Slide 9"
+      "sourceLocator": "Slide 8"
     },
     {
       "id": "S4-011",
@@ -12770,18 +12790,18 @@
       "id": "S5-001",
       "set": 5,
       "type": "single",
-      "stem": "A patient receiving supplemental oxygen becomes apneic. Why may SpO₂ remain normal initially?",
+      "stem": "How can intrinsic PEEP (auto-PEEP) be measured on a ventilated patient?",
       "options": [
-        "The oxygen reservoir delays desaturation despite absent ventilation",
-        "Pulse oximetry directly measures ventilation",
-        "Supplemental oxygen causes the oximeter to ignore apnea",
-        "SpO₂ cannot fall while inspired oxygen exceeds room air"
+        "By an end-inspiratory pause",
+        "By the peak minus plateau pressure",
+        "By an end-expiratory hold",
+        "By the EtCO2 waveform plateau"
       ],
       "answer": [
-        0
+        2
       ],
-      "explanation": "Supplemental oxygen can delay desaturation, so pulse oximetry may identify apnea later than ventilation monitoring.",
-      "citation": "Monitoring · 79",
+      "explanation": "An end-expiratory hold closes the circuit at the end of exhalation so alveolar and airway pressure equalize; the pressure above set PEEP is intrinsic PEEP. On flow tracings, expiratory flow that does not return to zero before the next breath also suggests air trapping.",
+      "citation": "Monitoring · Slides 26, 28",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -12792,27 +12812,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "26, 28",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 79"
+      "sourceLocator": "Slides 26, 28"
     },
     {
       "id": "S5-002",
       "set": 5,
       "type": "single",
-      "stem": "Which pressure finding most specifically favors bronchospasm over a pure compliance problem?",
+      "stem": "During volume control, the peak pressure reaches the set pressure limit (Pmax). What does the ventilator do?",
       "options": [
-        "A higher plateau pressure with unchanged peak pressure",
-        "A parallel rise in peak and plateau pressure",
-        "A lower peak pressure with unchanged plateau pressure",
-        "A larger peak-to-plateau pressure difference"
+        "It continues the breath until the full volume is delivered",
+        "It caps pressure, so less volume is delivered",
+        "It switches to pressure support ventilation",
+        "It opens the APL valve to vent gas"
       ],
       "answer": [
-        3
+        1
       ],
-      "explanation": "An isolated rise in peak inspiratory pressure relative to plateau pressure reflects increased airway resistance. Bronchospasm is a classic cause of that pattern.",
-      "citation": "Monitoring · Slide 26",
+      "explanation": "When Pmax is reached, the ventilator either ends inspiration or holds pressure at the limit, depending on the model, so the full set volume is not delivered and an alarm sounds. The cause, such as bronchospasm, kinking, or secretions, must be found rather than just raising the limit.",
+      "citation": "Monitoring · Slides 26, 32",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -12823,11 +12844,11 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "citationFormat": "slides",
-        "slides": "26"
+        "slides": "26, 32",
+        "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 26"
+      "sourceLocator": "Slides 26, 32"
     },
     {
       "id": "S5-003",
@@ -12864,21 +12885,21 @@
       "id": "S5-004",
       "set": 5,
       "type": "multi",
-      "stem": "Which TWO monitoring requirements belong to ASA circulation assessment? (Select 2)",
+      "stem": "Which TWO complications are associated with very frequent automated NIBP cycling? (Select 2)",
       "options": [
-        "Continuous pulmonary artery catheterization",
-        "Core temperature every five minutes in every case",
-        "Arterial blood gas every five minutes",
-        "Blood pressure and heart rate at least every five minutes",
-        "Continuous ECG display",
-        "Continuous central venous pressure"
+        "Nerve compression injury",
+        "Air embolism from the cuff tubing",
+        "Methemoglobinemia in the cuffed limb",
+        "Atrial dysrhythmias during inflation",
+        "Hyperkalemia from muscle compression",
+        "Petechiae under the cuff"
       ],
       "answer": [
-        3,
-        4
+        0,
+        5
       ],
-      "explanation": "The lecture states that ECG is continuously displayed and blood pressure/heart rate are evaluated at least every five minutes.",
-      "citation": "Monitoring · 13",
+      "explanation": "Repeated inflation compresses nerves (ulnar and radial) and causes petechiae, bruising, and limb edema, and very rarely compartment syndrome. Cycling should be no more often than needed, and the cuff site should be checked during long cases.",
+      "citation": "Monitoring · Slides 61, 62",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -12889,27 +12910,28 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
+        "slides": "61, 62",
         "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 13"
+      "sourceLocator": "Slides 61, 62"
     },
     {
       "id": "S5-005",
       "set": 5,
       "type": "single",
-      "stem": "The oxygen pipeline is crossed with another gas but remains at 50 psi. Which device is most likely to reveal the problem before patient desaturation?",
+      "stem": "A conventional machine with mechanical flowmeters loses all electrical power and its battery is exhausted. What still works?",
       "options": [
-        "Inspired oxygen analyzer",
-        "Pipeline pressure gauge",
-        "Vaporizer interlock",
-        "Cylinder pressure regulator"
+        "The mechanical ventilator and the monitors",
+        "Nothing, because flow control needs power",
+        "Only the oxygen flush, with nothing else",
+        "Fresh gas, vaporizer, and bag ventilation"
       ],
       "answer": [
-        0
+        3
       ],
-      "explanation": "An oxygen analyzer measures actual oxygen concentration; normal pipeline pressure cannot prove gas identity.",
-      "citation": "Medical Gas Systems in Anesthesia · 34",
+      "explanation": "Mechanical flowmeters and variable bypass vaporizers are pneumatic and need no electricity, so fresh gas, agent, and manual ventilation with the reservoir bag continue. The electronic ventilator and monitors stop, so the patient is hand-ventilated and monitored with portable or battery-powered devices.",
+      "citation": "Medical Gas Systems in Anesthesia · Slide 76",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -12920,27 +12942,28 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "76",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 34"
+      "sourceLocator": "Slide 76"
     },
     {
       "id": "S5-006",
       "set": 5,
       "type": "single",
-      "stem": "A vaporizer is empty but the dial is turned on. Which delivery problem should be expected?",
+      "stem": "Why are vaporizers made of metals with high thermal conductivity and large thermal mass?",
       "options": [
-        "High cylinder pressure",
-        "Excessive agent from liquid entering the bypass",
-        "Little or no volatile agent despite the dial setting",
-        "Automatic substitution of another agent"
+        "To keep the liquid from freezing during storage",
+        "To buffer the cooling caused by vaporization",
+        "To raise the agent's vapor pressure above normal",
+        "To make the vaporizer harder to tip over"
       ],
       "answer": [
-        2
+        1
       ],
-      "explanation": "An empty vaporizer cannot provide the intended volatile concentration even if the dial is set.",
-      "citation": "Medical Gas Systems in Anesthesia · 69",
+      "explanation": "Vaporization absorbs heat, which cools the remaining liquid and lowers its vapor pressure. A heavy, conductive metal body supplies heat from the room and slows that temperature drop, working alongside the temperature-compensating valve to keep output stable.",
+      "citation": "Medical Gas Systems in Anesthesia · Slide 56",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -12951,27 +12974,28 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
+        "slides": "56",
         "citationFormat": "slides"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 69"
+      "sourceLocator": "Slide 56"
     },
     {
       "id": "S5-007",
       "set": 5,
       "type": "single",
-      "stem": "Why would extremely small absorbent granules increase work of breathing?",
+      "stem": "Why does lengthening the corrugated tubing of a circle system not add dead space?",
       "options": [
-        "They prevent water formation",
-        "They decrease reactive surface area",
-        "They eliminate carbonic acid formation",
-        "They increase resistance to gas flow"
+        "Longer tubing has lower compliance",
+        "Corrugations trap CO2 before it is rebreathed",
+        "The absorbent removes CO2 from the tubing",
+        "One-way flow keeps the limbs separate"
       ],
       "answer": [
         3
       ],
-      "explanation": "Smaller absorbent granules increase reactive surface area, but if granules are too small they narrow gas pathways and increase resistance to flow. The 4–8 mesh size balances carbon dioxide absorption efficiency with acceptable breathing resistance.",
-      "citation": "CO₂ & Scavenging · 5",
+      "explanation": "Unidirectional valves keep inspiratory and expiratory gas in separate limbs, so the only shared path is from the Y-piece to the patient. That segment, plus elbows and filters, is the apparatus dead space. Longer tubing does add compliance and compressed volume.",
+      "citation": "CO₂ & Scavenging · Slide 8",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -12982,27 +13006,28 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "8",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 5"
+      "sourceLocator": "Slide 8"
     },
     {
       "id": "S5-008",
       "set": 5,
       "type": "single",
-      "stem": "A closed scavenging reservoir bag becomes progressively distended. Which failure is most likely?",
+      "stem": "Charcoal canisters are sometimes used to scavenge in locations without suction. What is their main limitation?",
       "options": [
-        "The oxygen flush is disconnected",
-        "The negative-pressure relief is stuck open",
-        "Disposal suction is excessive",
-        "Disposal suction is inadequate"
+        "They release volatile agent back when warm",
+        "They work only with desflurane",
+        "They raise circuit pressure dangerously",
+        "They do not adsorb nitrous oxide"
       ],
       "answer": [
         3
       ],
-      "explanation": "Bag distention indicates waste gas is entering faster than it is removed, suggesting inadequate suction.",
-      "citation": "CO₂ & Scavenging · 20",
+      "explanation": "Activated charcoal adsorbs halogenated volatile agents but not nitrous oxide, which passes through. Canisters also saturate and must be weighed or replaced on schedule. They are a fallback when active scavenging is unavailable.",
+      "citation": "CO₂ & Scavenging · Slides 14, 20",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -13013,27 +13038,28 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
+        "slides": "14, 20",
         "citationFormat": "slides"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 20"
+      "sourceLocator": "Slides 14, 20"
     },
     {
       "id": "S5-009",
       "set": 5,
       "type": "single",
-      "stem": "Which observation through a clear face mask can warn of regurgitation before monitor values change?",
+      "stem": "During face-mask ventilation, why should peak airway pressure be kept below about 20 cmH2O when possible?",
       "options": [
-        "Peak inspiratory pressure",
-        "Visible vomitus or secretions",
-        "Exhaled tidal volume",
-        "End-tidal carbon dioxide number"
+        "To keep the mask seal from leaking",
+        "To avoid triggering the APL valve",
+        "To prevent closure of the vocal cords",
+        "To limit air forced into the stomach"
       ],
       "answer": [
-        1
+        3
       ],
-      "explanation": "A transparent mask permits direct visualization of vomitus, secretions, blood, lip color, and condensation.",
-      "citation": "Airway Equipment · 4",
+      "explanation": "Above roughly 20 cmH2O, gas can open the lower esophageal sphincter and enter the stomach, raising regurgitation and aspiration risk and impairing ventilation. Optimal head position, airway adjuncts, and two-handed technique help ventilate effectively at lower pressures.",
+      "citation": "Airway Equipment · Slide 4",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -13044,6 +13070,7 @@
         "families": [
           "Airway Equipment"
         ],
+        "slides": "4",
         "citationFormat": "slides"
       },
       "sourceTitle": "Airway Equipment",
@@ -13053,21 +13080,21 @@
       "id": "S5-010",
       "set": 5,
       "type": "multi",
-      "stem": "Which TWO features distinguish an armored tube from a RAE tube? (Select 2)",
+      "stem": "Which TWO statements about cuffed tracheal tubes in young children are supported by current practice? (Select 2)",
       "options": [
-        "Armored tube has no cuff",
-        "RAE tube uses a preformed bend",
-        "Armored tube is inherently laser proof",
-        "RAE tube uses spiral reinforcement",
-        "RAE tube has no connector",
-        "Armored tube uses spiral reinforcement"
+        "They are contraindicated under 8 years of age",
+        "Cuff pressures up to 40 cmH2O are acceptable",
+        "They reduce tube changes for leaks",
+        "Cuff pressure must be measured and limited",
+        "The same size as an uncuffed tube is used",
+        "The cuff eliminates aspiration risk entirely"
       ],
       "answer": [
-        1,
-        5
+        2,
+        3
       ],
-      "explanation": "Armored tubes resist kinking via reinforcement; RAE tubes are preformed to redirect the connector.",
-      "citation": "Airway Equipment · 8",
+      "explanation": "Modern high-volume, low-pressure cuffed tubes are widely used in children because they reduce reintubation for leaks and allow lower fresh gas flows. Cuff pressure must still be measured and kept low, typically under about 20 to 25 cmH2O, and a half size smaller tube is chosen. No cuff fully eliminates aspiration.",
+      "citation": "Nurse Anesthesia, 7th ed. · Chapter 24",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -13076,12 +13103,12 @@
       "supp": null,
       "sourceMeta": {
         "families": [
-          "Airway Equipment"
+          "Nurse Anesthesia, 7th ed. (Elisha et al.)"
         ],
-        "citationFormat": "slides"
+        "citationFormat": "document"
       },
-      "sourceTitle": "Airway Equipment",
-      "sourceLocator": "Slide 8"
+      "sourceTitle": "Nurse Anesthesia, 7th ed. (Elisha et al.)",
+      "sourceLocator": "Chapter 24"
     },
     {
       "id": "S5-011",

@@ -8,6 +8,10 @@ const uidOf=(bank,q)=>String(q?.uid||((bank||q?.bank||'unknown')+'-'+(q?.id??q?.
 const topicOf=q=>String(q?.topic||q?.lec||q?.concept||'Other').trim()||'Other';
 const bankOf=(bank,q)=>String(bank||q?.bank||'unknown');
 const bankLabelOf=(label,bank,q)=>String(label||q?.bankLabel||bankOf(bank,q));
+const revOf=uid=>Number(window.MBUContentRevisions?.revision?.(uid))||1,calId=uid=>window.MBUContentRevisions?.calibrationId?.(uid)||String(uid);
+// History recorded before a question's current content revision is kept, but never applied to the rewritten question.
+const current=(a,uid)=>a&&(Number(a.revision)||1)>=revOf(uid)?a:null;
+function retire(d,uid){const a=d.attempts[uid];if(!a||current(a,uid))return;const key=uid+'@r'+(Number(a.revision)||1);d.attempts[key]={...a,uid:key,retiredFrom:uid,retiredAt:now()};delete d.attempts[uid];delete d.reviews[uid]}
 const blank=()=>({schema:SCHEMA,updatedAt:0,attempts:{},reviews:{},activity:[],issues:[],seededLegacy:false});
 function normalize(raw){
 const d=plain(raw)&&Number(raw.schema)===SCHEMA?raw:blank();
@@ -35,13 +39,13 @@ function questionMeta(bank,q,extra={}){
 return{uid:uidOf(bank,q),courseId:q?.courseId||courseId,examId:q?.examId||examId,bank:bankOf(bank,q),bankLabel:bankLabelOf(extra.bankLabel,bank,q),set:Number(extra.set??q?.set??q?.setn??1)||1,questionId:String(extra.questionId??q?.id??q?.seq??''),topic:topicOf(q),stem:String(q?.stem||q?.q||'').trim(),href:String(extra.href||q?.practiceUrl||location.href)}
 }
 function recordAnswer(bank,q,ok,extra={}){
-const store=storeFor(q),d=db(store),meta=questionMeta(bank,q,extra),t=Number(extra.at)||now(),prev=d.attempts[meta.uid]||{},correct=Number(prev.correct)||0,incorrect=Number(prev.incorrect)||0,attempts=Number(prev.attempts)||0,firstAttempt=attempts===0;
-const next={...prev,...meta,attempts:attempts+1,correct:correct+(ok?1:0),incorrect:incorrect+(ok?0:1),lastAt:t,lastCorrect:!!ok,streak:ok?(Number(prev.streak)||0)+1:0};
+const store=storeFor(q),d=db(store),meta=questionMeta(bank,q,extra),t=Number(extra.at)||now(),rev=revOf(meta.uid);retire(d,meta.uid);const prev=d.attempts[meta.uid]||{},correct=Number(prev.correct)||0,incorrect=Number(prev.incorrect)||0,attempts=Number(prev.attempts)||0,firstAttempt=attempts===0;
+const next={...prev,...meta,revision:rev,attempts:attempts+1,correct:correct+(ok?1:0),incorrect:incorrect+(ok?0:1),lastAt:t,lastCorrect:!!ok,streak:ok?(Number(prev.streak)||0)+1:0};
 d.attempts[meta.uid]=next;
 const days=reviewInterval(next,!!ok);d.reviews[meta.uid]={uid:meta.uid,dueAt:t+days*DAY,intervalDays:days,lastAt:t,lastCorrect:!!ok};
 d.activity.push({id:meta.uid+':'+t,at:t,type:'answer',uid:meta.uid,bank:meta.bank,bankLabel:meta.bankLabel,topic:meta.topic,ok:!!ok,href:meta.href});
 if(d.activity.length>MAX_ACTIVITY)d.activity.splice(0,d.activity.length-MAX_ACTIVITY);
-save(d,store);if(firstAttempt)window.MBUCalibrationOutbox?.enqueue?.(store,meta.uid,{questionId:meta.uid,correct:!!ok,responseMs:extra.responseMs??null,sessionMode:extra.sessionMode||'unknown',courseId:meta.courseId,examId:meta.examId,bankId:meta.bank,topic:meta.topic});
+save(d,store);if(firstAttempt)window.MBUCalibrationOutbox?.enqueue?.(store,calId(meta.uid),{questionId:calId(meta.uid),correct:!!ok,responseMs:extra.responseMs??null,sessionMode:extra.sessionMode||'unknown',courseId:meta.courseId,examId:meta.examId,bankId:meta.bank,topic:meta.topic});
 return next
 }
 function seedLegacy(records=[]){
@@ -55,7 +59,7 @@ changed=true
 }
 d.seededLegacy=true;save(d);return changed
 }
-function due(at=now()){return Object.values(db().reviews).filter(r=>(Number(r.dueAt)||0)<=at).sort((a,b)=>a.dueAt-b.dueAt)}
+function due(at=now()){const d=db();return Object.values(d.reviews).filter(r=>(Number(r.dueAt)||0)<=at&&(revOf(r.uid)<=1||current(d.attempts[r.uid],r.uid))).sort((a,b)=>a.dueAt-b.dueAt)}
 function stats(rows){
 const questions=rows.length,correct=rows.reduce((n,a)=>n+(Number(a.correct)||0),0),attempts=rows.reduce((n,a)=>n+(Number(a.attempts)||0),0);
 return{questions,attempts,correct,accuracy:attempts?Math.round(correct/attempts*100):0}
@@ -88,10 +92,10 @@ const topics=Object.entries(byTopic).sort((a,b)=>a[1].mastery-b[1].mastery||b[1]
 const overall=masteryRow(rows,activity,at);
 return{overall,byTopic,weakest:topics.slice(0,3).map(([topic,x])=>({topic,...x})),strongest:[...topics].reverse().slice(0,3).map(([topic,x])=>({topic,...x})),topicsPracticed:topics.length,due:due(at).length}
 }
-function questionStats(uid,q){const a=db(storeFor(q)).attempts[String(uid||'')];return a?{...a}:null}
+function questionStats(uid,q){const a=current(db(storeFor(q)).attempts[String(uid||'')],uid);return a?{...a}:null}
 function topicStats(topic){const rows=Object.values(db().attempts).filter(x=>x.topic===String(topic||''));return stats(rows)}
 function priorityForQuestion(q,at=now(),snapshot=null){
-const d=db(storeFor(q)),uid=String(q?.uid||''),personal=d.attempts[uid],review=d.reviews[uid],topic=topicOf(q),topicMastery=storeFor(q)===STORE?(snapshot||mastery(at)).byTopic?.[topic]:null;
+const d=db(storeFor(q)),uid=String(q?.uid||''),personal=current(d.attempts[uid],uid),review=personal||revOf(uid)<=1?d.reviews[uid]:null,topic=topicOf(q),topicMastery=storeFor(q)===STORE?(snapshot||mastery(at)).byTopic?.[topic]:null;
 let score=0,reason='Balanced practice';
 if(!personal){score+=30;reason='New coverage'}
 if(review&&Number(review.dueAt)<=at){score+=45;reason='Due review'}

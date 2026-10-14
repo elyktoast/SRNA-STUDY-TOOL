@@ -95,6 +95,7 @@
       if(JSON.stringify(next)!==JSON.stringify(d[field]))changed=true;
       d[field]=next
     }
+    if(window.MBUContentRevisions?.retireStudioState?.(d))changed=true;
     cache=d;
     if(changed)save(d);
     else try{lastSerialized=JSON.stringify(d)}catch(e){}

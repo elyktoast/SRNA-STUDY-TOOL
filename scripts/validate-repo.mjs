@@ -1112,7 +1112,7 @@ if(/images\s*:\s*[A-Za-z_$][\w$]*\s*\|\|/.test(sharedHazardsEngine))fail('Shared
   for(const token of ['ctx.examUrl','m.sync?.studioStorageKey',"b.page||'bank.html?bank='",'encodeURIComponent(b.id)'])if(!examDashboard.includes(token))fail('Multi-course exam dashboard missing '+token);
   for(const token of ['ctx.examUrl','URLSearchParams(location.search)',env])if(!renderer.includes(token))fail('Cross-course canonical renderer missing '+token);
 
-  for(const token of ['courseId,examId','questionId:meta.uid','courseId:meta.courseId','examId:meta.examId','bankId:meta.bank','topic:meta.topic'])if(!intelligence.includes(token))fail('Global CAT evidence metadata missing '+token);
+  for(const token of ['courseId,examId','questionId:calId(meta.uid)','courseId:meta.courseId','examId:meta.examId','bankId:meta.bank','topic:meta.topic'])if(!intelligence.includes(token))fail('Global CAT evidence metadata missing '+token);
   const bootstrap=read('equipment/assets/build-bootstrap.js'),home=read('index.html'),migration=read('supabase/migrations/20260927041827_add_anonymous_item_calibration.sql');
   for(const course of ['equipment','basic-principles','pharm'])if(!home.includes('href="'+course+'/" data-course-link'))fail('Home is missing published course '+course);
   if(!bootstrap.includes("loadScript('course-context.js')")||!read('equipment/assets/course-context.js').includes("'pharm':{label:'Pharm',exam:'clinical-pharm'}")||!bootstrap.includes("published=['equipment/','basic-principles/','pharm/']")||!bootstrap.includes("protectedCourse=published.some"))fail('Published courses are not uniformly account protected');
