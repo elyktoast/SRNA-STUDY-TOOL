@@ -41,6 +41,8 @@ jobs:
           exit "$status"
       - name: Validate question content integrity
         run: npm run test:content
+      - name: Verify content revisions and learner-history isolation
+        run: npm run test:revisions
       - name: Run semantic content audit
         run: npm run test:semantic
       - name: Enforce performance and architecture budgets

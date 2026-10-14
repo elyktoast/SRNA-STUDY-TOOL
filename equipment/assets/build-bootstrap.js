@@ -24,6 +24,7 @@ await loadScript('legal-gate.js');
 if(SRNALegalReady)await SRNALegalReady;
 await loadScript('course-context.js');
 await loadScript('calibration-outbox.js');
+await loadScript('content-revisions.js');
 await loadScript('study-intelligence.js');
 await loadScript('answer-order.js');
 await loadScript('supabase-config.js');

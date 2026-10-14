@@ -3502,18 +3502,18 @@
       "id": "S2-M25",
       "set": 2,
       "type": "single",
-      "stem": "In Landesberg's vascular surgery study, which lead detected perioperative ischemia earliest and most often?",
+      "stem": "After a patient is moved, lead I shows inverted P waves and QRS complexes, and aVR becomes upright. The patient is stable. What is the most likely cause?",
       "options": [
-        "V4",
-        "V5",
-        "Lead II",
-        "V3"
+        "Dextrocardia discovered intraoperatively",
+        "Acute lateral wall ischemia",
+        "Electrocautery interference on lead I",
+        "Reversed right and left arm electrodes"
       ],
       "answer": [
         3
       ],
-      "explanation": "V3 was most sensitive (86.8%), V4 second (78.9%), and V5 third (65.8%). 97% of ischemic events showed ST depression, not elevation. monitor lead II for rhythm and V3 for ischemia. V5 is the classic trap answer.",
-      "citation": "Monitoring · Slide 58 (PDF p. 59)",
+      "explanation": "Swapping the right and left arm electrodes inverts lead I and swaps aVR with aVL, so aVR looks upright. Dextrocardia produces a similar lead I picture but would have been present before the move, and ischemia does not invert the P wave. Checking electrode placement comes before treating a new finding.",
+      "citation": "Monitoring · Slide 57 (PDF p. 58)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -3525,12 +3525,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "58",
-        "pdfPages": "59",
+        "slides": "57",
+        "pdfPages": "58",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 58 · PDF p. 59"
+      "sourceLocator": "Slide 57 · PDF p. 58"
     },
     {
       "id": "S2-G35",
@@ -3785,35 +3785,35 @@
       "id": "S2-K01",
       "set": 2,
       "type": "single",
-      "stem": "In soda lime, sodium carbonate reacts with which compound to regenerate sodium hydroxide?",
+      "stem": "During a long low-flow anesthetic, water collects in the circuit and the expiratory valve leaflet starts to stick. What is the source of the water?",
       "options": [
-        "Calcium hydroxide, forming calcium carbonate",
-        "Potassium hydroxide, forming potassium carbonate",
-        "Water, forming carbonic acid",
-        "Carbonic acid, forming sodium bicarbonate"
+        "CO2 absorption plus exhaled moisture",
+        "Humidity added by the vaporizer",
+        "Condensation from the oxygen pipeline",
+        "Leakage from the scavenging system"
       ],
       "answer": [
         0
       ],
-      "explanation": "The sequence: CO2 + H2O makes H2CO3; H2CO3 + 2NaOH makes Na2CO3 + 2H2O (the most common reaction); then Na2CO3 + Ca(OH)2 makes CaCO3 + 2NaOH. This may be tested in the form 'what does X react with to form Y.'",
-      "citation": "CO₂ & Scavenging · Slide 3 (PDF p. 2)",
+      "explanation": "CO2 absorption produces water, and exhaled gas is humid; at low flows little of this is washed out, so it condenses in cooler parts of the circuit. Pooled water can make unidirectional valve leaflets stick and raise resistance, so water traps are drained and circuits checked during long cases.",
+      "citation": "CO₂ & Scavenging · Slides 2, 8 (PDF p. 1, 4)",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
       "imageId": null,
-      "disc": "Slide 3 prints calcium hydroxide as Ca(OH). The correct formula is Ca(OH)2, which is what this question uses.",
+      "disc": null,
       "supp": null,
       "orig": "K01",
       "sourceMeta": {
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
-        "slides": "3",
-        "pdfPages": "2",
+        "slides": "2, 8",
+        "pdfPages": "1, 4",
         "citationFormat": "document"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 3 · PDF p. 2"
+      "sourceLocator": "Slides 2, 8 · PDF p. 1, 4"
     },
     {
       "id": "S2-N13",
@@ -3887,18 +3887,18 @@
       "id": "S2-G02",
       "set": 2,
       "type": "single",
-      "stem": "Midway through a case, the N2O E-cylinder gauge reads 745 psig. What can you conclude about the remaining contents?",
+      "stem": "At sea level, sevoflurane is delivered at 2%. What is its approximate partial pressure in the inspired gas?",
       "options": [
-        "Liquid N2O remains, but the gauge can't show how much; weigh the cylinder",
-        "The cylinder is essentially full, holding about 1590 L of N2O",
-        "The cylinder is about half full, since pressure falls linearly with use",
-        "The liquid phase is gone and only gaseous N2O remains"
+        "About 2 mmHg",
+        "About 15 mmHg",
+        "About 21 mmHg",
+        "About 160 mmHg"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "N2O's critical temperature is about 36 C, so at room temperature it stays liquid under pressure. Liquid and gas sit in equilibrium and the gauge holds at 745 psig until the last liquid vaporizes. Anything from full to nearly empty can read 745, which is why you have to weigh the cylinder. The linear pressure-volume rule applies to O2 and air, not N2O.",
-      "citation": "Medical Gas Systems in Anesthesia · Slide 14 (PDF p. 7)",
+      "explanation": "By Dalton's law, partial pressure equals the fraction times total pressure: 0.02 × 760 is about 15 mmHg. Anesthetic effect depends on partial pressure, which is why the same percentage has less effect at altitude. 160 mmHg is sevoflurane's vapor pressure, and 21% is its saturated concentration.",
+      "citation": "Medical Gas Systems in Anesthesia · Slide 50 (PDF p. 25)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -3910,12 +3910,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "14",
-        "pdfPages": "7",
+        "slides": "50",
+        "pdfPages": "25",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 14 · PDF p. 7"
+      "sourceLocator": "Slide 50 · PDF p. 25"
     },
     {
       "id": "S2-G57",
@@ -4307,22 +4307,22 @@
       "id": "S2-M15",
       "set": 2,
       "type": "single",
-      "stem": "On this normal capnogram, which segment represents alveolar gas being sampled?",
+      "stem": "During laparoscopic insufflation, EtCO2 abruptly falls from 38 to 15 mmHg with hypotension and a mill-wheel murmur. What is the FIRST action?",
       "options": [
-        "A to B",
-        "B to C",
-        "C to D",
-        "D to E"
+        "Increase minute ventilation to clear the CO2 load",
+        "Check the sampling line for a disconnection",
+        "Stop insufflation and release the gas",
+        "Deepen anesthesia for suspected light anesthesia"
       ],
       "answer": [
         2
       ],
-      "explanation": "A to B is anatomic dead space with essentially no CO2. B to C is the expiratory upstroke as CO2-containing gas arrives. C to D is the alveolar (expiratory) plateau, when alveolar gas is sampled. D is ETCO2, the best reflection of alveolar CO2. D to E is the inspiratory downstroke as fresh gas is entrained.",
-      "citation": "Monitoring · Slide 44 (PDF p. 44)",
+      "explanation": "A sudden fall in EtCO2 with cardiovascular collapse during insufflation points to CO2 gas embolism, which blocks pulmonary blood flow and increases dead space. Stopping insufflation and releasing the pneumoperitoneum stops further entry, followed by 100% oxygen and left-side-down, head-down positioning. Increasing ventilation treats the opposite problem.",
+      "citation": "Monitoring · Slides 41, 43 (PDF p. 41, 43)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
-      "imageId": "capno",
+      "imageId": null,
       "disc": null,
       "supp": null,
       "orig": "M15",
@@ -4330,12 +4330,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "44",
-        "pdfPages": "44",
+        "slides": "41, 43",
+        "pdfPages": "41, 43",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 44 · PDF p. 44"
+      "sourceLocator": "Slides 41, 43 · PDF p. 41, 43"
     },
     {
       "id": "S2-G52",
@@ -4899,18 +4899,18 @@
       "id": "S2-G07",
       "set": 2,
       "type": "single",
-      "stem": "Where is the O2 fail-safe valve located, and what does it sense?",
+      "stem": "Both oxygen cylinders on a double yoke are left open while the machine runs on cylinder supply. What happens?",
       "options": [
-        "In the O2 supply line; it senses N2O supply pressure",
-        "In the N2O supply line; it senses inspired O2 concentration",
-        "In the O2 supply line; it senses O2 flow at the flowmeter",
-        "In the N2O supply line; it senses O2 supply pressure"
+        "Each cylinder supplies half the flow until both are empty",
+        "Only the cylinder on the left supplies gas",
+        "The higher-pressure one supplies first; both drain",
+        "The check valves lock both cylinders closed"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "The fail-safe valve is in the nitrous oxide supply pathway but responds to oxygen supply pressure. As oxygen pressure falls to roughly 25–30 psig it reduces other-gas flow, and at still lower pressure it stops that flow. Because it senses pressure rather than oxygen concentration, it cannot detect the wrong gas in the oxygen pipeline.",
-      "citation": "Medical Gas Systems in Anesthesia · Slide 34 (PDF p. 17)",
+      "explanation": "Gas flows from whichever cylinder has the higher pressure, so both end up draining with no full reserve left. Standard practice is to open only one cylinder and keep the second closed and full as backup. Yoke check valves prevent transfilling but do not choose a cylinder.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 18, 33 (PDF p. 9, 17)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -4922,12 +4922,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "34",
-        "pdfPages": "17",
+        "slides": "18, 33",
+        "pdfPages": "9, 17",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 34 · PDF p. 17"
+      "sourceLocator": "Slides 18, 33 · PDF p. 9, 17"
     },
     {
       "id": "S2-N12",
@@ -5661,18 +5661,18 @@
       "id": "S2-G19",
       "set": 2,
       "type": "single",
-      "stem": "A variable bypass vaporizer delivers 1% sevoflurane at 2 L/min at 20 C, where sevo vapor is 21% of the sump gas. What is the approximate splitting ratio of bypass flow to sump inflow?",
+      "stem": "A variable bypass vaporizer is used in a very cold transport environment, near 10°C. How is output affected?",
       "options": [
-        "About 4:1",
-        "About 21:1",
-        "About 25:1",
-        "About 100:1"
+        "Output rises because cold liquid evaporates faster",
+        "Output stays exact because compensation is unlimited",
+        "Output stops entirely below 15°C",
+        "Output falls because cold lowers vapor pressure"
       ],
       "answer": [
-        2
+        3
       ],
-      "explanation": "At 20 C, saturated sump gas is 21% sevoflurane. For a 1% delivered concentration, the bypass-to-sump carrier-gas splitting ratio is approximately (0.21/0.01 - 1) / (1 - 0.21), or about 25:1. In other words, roughly 25 parts of fresh gas bypass the sump for every 1 part entering it.",
-      "citation": "Medical Gas Systems in Anesthesia · Slide 55 (PDF p. 28)",
+      "explanation": "Vapor pressure falls with temperature. The temperature-compensating valve routes more gas through the chamber to make up for it, but only within the vaporizer's rated range (usually about 15 to 35°C). Below that range compensation is incomplete, so output falls below the dial.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 55, 56 (PDF p. 28, 28)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -5684,12 +5684,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "55",
-        "pdfPages": "28",
+        "slides": "55, 56",
+        "pdfPages": "28, 28",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 55 · PDF p. 28"
+      "sourceLocator": "Slides 55, 56 · PDF p. 28, 28"
     },
     {
       "id": "S2-N56",
@@ -5831,17 +5831,17 @@
       "id": "S2-M04",
       "set": 2,
       "type": "single",
-      "stem": "Under volume control, PIP rises from 22 to 38 cmH2O while plateau pressure stays at 18. What is the most likely cause?",
+      "stem": "Under volume control at 450 mL, PEEP is raised from 5 to 10 cmH2O. Plateau pressure goes from 25 to 27 cmH2O. What does this indicate?",
       "options": [
-        "Bronchospasm",
-        "Endobronchial intubation",
-        "Peritoneal insufflation",
-        "Steep Trendelenburg positioning"
+        "Compliance improved as PEEP recruited lung",
+        "Compliance worsened because plateau pressure rose",
+        "Airway resistance increased with the higher PEEP",
+        "Nothing changed, since plateau always rises with PEEP"
       ],
       "answer": [
         0
       ],
-      "explanation": "PIP reflects dynamic compliance (resistance plus compliance); plateau reflects static compliance. A rise in PIP with no change in plateau means higher airway resistance or inspiratory flow: bronchospasm, a kinked tube, secretions. Insufflation, Trendelenburg, and endobronchial intubation lower compliance and raise BOTH pressures.",
+      "explanation": "Driving pressure (plateau minus PEEP) fell from 20 to 17 cmH2O at the same tidal volume, so static compliance rose from about 22 to 26 mL/cmH2O. That pattern means the added PEEP opened collapsed alveoli. If plateau had risen by the full 5 cmH2O, compliance would be unchanged.",
       "citation": "Monitoring · Slides 26, 32 (PDF p. 26, 32)",
       "topic": "Monitoring",
       "imageSvg": null,
@@ -6183,18 +6183,18 @@
       "id": "S2-K06",
       "set": 2,
       "type": "single",
-      "stem": "Monday's first case is a desflurane anesthetic. The O2 flowmeter was found running at 10 L/min all weekend. What is the most appropriate action?",
+      "stem": "An unrecognized exhausted absorbent allows CO2 to accumulate under general anesthesia. Which clinical signs would be expected?",
       "options": [
-        "Increase fresh gas flow to wash out any CO",
-        "Proceed, because barium hydroxide lime prevents CO formation",
-        "Replace the absorbent before starting",
-        "Switch from desflurane to isoflurane"
+        "Tachycardia, hypertension, and sweating",
+        "Bradycardia, hypotension, and pale dry skin",
+        "Hypothermia and a falling EtCO2",
+        "Pinpoint pupils and muscle rigidity"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "High O2 flow over a weekend desiccates the absorbent, and dry absorbent with des produces the most CO (des > enflurane > iso). The recommendation is not to use absorbent known or suspected to be desiccated. Iso still produces CO, and Baralyme produces MORE CO than soda lime.",
-      "citation": "CO₂ & Scavenging · Slides 6, 7 (PDF p. 3, 4)",
+      "explanation": "Hypercarbia stimulates the sympathetic system, causing tachycardia, hypertension, flushing, and sweating, and later arrhythmias. On the capnograph, inspired CO2 and EtCO2 rise. Extreme hypercarbia can eventually depress the heart, but early signs are sympathetic.",
+      "citation": "CO₂ & Scavenging · Slides 4, 5 (PDF p. 2, 3)",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -6206,12 +6206,12 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
-        "slides": "6, 7",
-        "pdfPages": "3, 4",
+        "slides": "4, 5",
+        "pdfPages": "2, 3",
         "citationFormat": "document"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slides 6, 7 · PDF p. 3, 4"
+      "sourceLocator": "Slides 4, 5 · PDF p. 2, 3"
     },
     {
       "id": "S2-G51",
@@ -7258,18 +7258,18 @@
       "id": "S3-N57",
       "set": 3,
       "type": "single",
-      "stem": "Shortly after intubation, the pressure-volume loop remains closed but becomes wider, with the expiratory limb bowed outward. Which problem best explains this pattern?",
+      "stem": "On SIMV with no pressure support, a weak patient takes rapid, shallow breaths between mandatory breaths. What is the main concern?",
       "options": [
-        "Increased airway resistance during expiration, as in bronchospasm",
-        "Abnormally increased compliance, as in emphysema",
-        "A leak in the breathing circuit",
-        "Increased airway resistance during inspiration, as in a bitten ETT"
+        "Spontaneous breaths are unassisted through the tube",
+        "Mandatory breaths are skipped during spontaneous effort",
+        "The ventilator will stack breaths and cause barotrauma",
+        "SIMV prevents the patient from triggering any breaths"
       ],
       "answer": [
         0
       ],
-      "explanation": "A closed but widened pressure-volume loop with outward bowing of the expiratory limb indicates increased airway resistance during expiration, as with bronchospasm. Increased inspiratory resistance from a kinked or bitten endotracheal tube distorts the inspiratory limb; a leak leaves the loop open; increased compliance makes the loop taller and steeper toward the volume axis.",
-      "citation": "Monitoring · Slide 29 (PDF p. 29)",
+      "explanation": "In SIMV, breaths taken between mandatory breaths get no support unless pressure support is added, so a weak patient breathes through the tube's resistance with high work of breathing and rapid, shallow breaths. Adding pressure support or switching modes reduces that work.",
+      "citation": "Monitoring · Slides 26, 33 (PDF p. 26, 33)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -7281,12 +7281,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "29",
-        "pdfPages": "29",
+        "slides": "26, 33",
+        "pdfPages": "26, 33",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 29 · PDF p. 29"
+      "sourceLocator": "Slides 26, 33 · PDF p. 26, 33"
     },
     {
       "id": "S3-H57",
@@ -7510,22 +7510,21 @@
       "id": "S3-G67",
       "set": 3,
       "type": "multi",
-      "stem": "Which events can deliver a hypoxic mixture despite a working fail-safe valve and proportioning system? Select 3.",
+      "stem": "Which TWO statements about heliox (helium-oxygen mixtures) are correct? (Select 2)",
       "options": [
-        "Nitrogen contamination of the O2 pipeline",
-        "O2 supply pressure falling to 20 psig with N2O on",
-        "Hanging an N2O cylinder on the O2 yoke",
-        "N2O set at 4 L/min with O2 turned to 0.5 L/min",
-        "Crossed O2 and N2O pipelines",
-        "A cracked O2 flowmeter tube"
+        "Helium is more soluble in blood than nitrogen",
+        "Lower density reduces turbulent resistance in narrowed airways",
+        "Heliox improves laminar flow by lowering viscosity",
+        "Heliox flows read accurately on oxygen flowmeters",
+        "Common mixtures limit the deliverable FiO2",
+        "Helium supports combustion more than nitrogen"
       ],
       "answer": [
-        0,
-        4,
-        5
+        1,
+        4
       ],
-      "explanation": "Both safety systems sense only pressure, not O2 itself, so crossed pipelines and nitrogen contamination slip past them (the lecture cites real events from 2024 and 2019). A cracked flowmeter tube leaks O2 downstream of both. Low O2 supply pressure triggers the fail-safe, a low O2 to N2O ratio triggers the proportioner, and PISS prevents an N2O cylinder from fitting the O2 yoke.",
-      "citation": "Medical Gas Systems in Anesthesia · Slides 46, 48 (PDF p. 23, 24)",
+      "explanation": "Helium is much less dense than nitrogen, so heliox lowers resistance where flow is turbulent, such as a narrowed airway. Typical 70:30 or 80:20 mixtures cap FiO2 at 30% or less. Helium's viscosity is similar to oxygen's, it is poorly soluble, it is inert, and an oxygen-calibrated flowmeter under-reads heliox flow.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 11, 43 (PDF p. 6, 22)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -7537,12 +7536,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "46, 48",
-        "pdfPages": "23, 24",
+        "slides": "11, 43",
+        "pdfPages": "6, 22",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slides 46, 48 · PDF p. 23, 24"
+      "sourceLocator": "Slides 11, 43 · PDF p. 6, 22"
     },
     {
       "id": "S3-H56",
@@ -7582,22 +7581,22 @@
       "id": "S3-N36",
       "set": 3,
       "type": "single",
-      "stem": "On this arterial waveform, which numbered point is read as the diastolic blood pressure?",
+      "stem": "A ventilated COPD patient develops hypotension, and expiratory flow does not return to zero before each breath. Which ventilator change best addresses the cause?",
       "options": [
-        "Point 2",
-        "Point 4",
-        "Point 5",
-        "Point 6"
+        "Increase the rate with a smaller tidal volume",
+        "Lengthen the inspiratory time",
+        "Increase the tidal volume",
+        "Decrease the respiratory rate"
       ],
       "answer": [
         3
       ],
-      "explanation": "Point 6 is the end-diastolic pressure, the lowest point before the next upstroke, which is the DBP. Point 2 is systolic peak pressure, 4 is the dicrotic notch (aortic valve closure), and 5 is the diastolic runoff slope leading down to DBP.",
-      "citation": "Monitoring · Slide 72 (PDF p. 73)",
+      "explanation": "Flow that does not reach zero means air trapping and intrinsic PEEP, which raises intrathoracic pressure and lowers venous return. Lowering the rate lengthens expiratory time so the lungs can empty. A faster rate or longer inspiration shortens exhalation, and a larger tidal volume adds to trapping.",
+      "citation": "Monitoring · Slides 26, 28 (PDF p. 26, 28)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
-      "imageId": "artwave",
+      "imageId": null,
       "disc": null,
       "supp": null,
       "orig": "N36",
@@ -7605,12 +7604,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "72",
-        "pdfPages": "73",
+        "slides": "26, 28",
+        "pdfPages": "26, 28",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 72 · PDF p. 73"
+      "sourceLocator": "Slides 26, 28 · PDF p. 26, 28"
     },
     {
       "id": "S3-H51",
@@ -8306,18 +8305,18 @@
       "id": "S3-N42",
       "set": 3,
       "type": "single",
-      "stem": "A sedated patient breathing supplemental O2 becomes apneic. Which monitor will reveal the problem first?",
+      "stem": "After a large dose of rocuronium, there is no response to train-of-four stimulation. How can the depth of blockade be assessed?",
       "options": [
-        "Capnography",
-        "Pulse oximetry",
-        "Expired anesthetic agent analysis",
-        "Inspired O2 analyzer"
+        "Double-burst stimulation",
+        "Single twitch at 1 Hz",
+        "A post-tetanic count",
+        "Train-of-four at higher current"
       ],
       "answer": [
-        0
+        2
       ],
-      "explanation": "Pulse oximetry is a poor indicator of ventilation: a patient on supplemental O2 may be apneic for several minutes before desaturation shows up. Capnography shows loss of expired CO2 with the next missed breath. The inspired O2 analyzer measures delivered gas, and agent analysis is irrelevant without a volatile.",
-      "citation": "Monitoring · Slides 41, 78 (PDF p. 41, 79)",
+      "explanation": "With profound block, TOF shows nothing. A 5-second 50 Hz tetanus followed by single twitches produces a post-tetanic count; fewer responses mean deeper block. It guides when TOF responses will return and how much reversal agent is needed. Double-burst stimulation helps detect fade only after twitches return.",
+      "citation": "Monitoring · Slides 86, 87 (PDF p. 87, 88)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -8329,12 +8328,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "41, 78",
-        "pdfPages": "41, 79",
+        "slides": "86, 87",
+        "pdfPages": "87, 88",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 41, 78 · PDF p. 41, 79"
+      "sourceLocator": "Slides 86, 87 · PDF p. 87, 88"
     },
     {
       "id": "S3-P48",
@@ -8480,18 +8479,18 @@
       "id": "S3-N17",
       "set": 3,
       "type": "single",
-      "stem": "The capnogram suddenly goes flat at zero. SpO2 is 99%, BP is unchanged, and PIP and exhaled tidal volume are unchanged. What is the most likely cause?",
+      "stem": "A paralyzed, ventilated patient's breath rate climbs from 12 to 26 with no change in settings. There is a small cuff leak. What is the most likely cause?",
       "options": [
-        "Cardiac arrest",
-        "Massive pulmonary embolism",
-        "Sampling line disconnection or kink",
-        "Esophageal migration of the tube"
+        "Emergence with spontaneous breathing efforts",
+        "Auto-triggering from the leak",
+        "Hypercarbia driving the ventilator rate",
+        "A malfunctioning exhalation valve"
       ],
       "answer": [
-        2
+        1
       ],
-      "explanation": "Sudden waveform loss requires checking the airway, circuit, pulmonary blood flow, and sampling integrity. Stable BP rules against PE and arrest, and unchanged PIP and exhaled volume show the patient is still being ventilated through the tube. A sampling line problem is left.",
-      "citation": "Monitoring · Slides 41, 50 (PDF p. 41, 51)",
+      "explanation": "A leak or cardiac oscillations can drop circuit pressure or flow enough to cross a very sensitive trigger threshold, so the ventilator delivers extra breaths the patient did not initiate. A paralyzed patient cannot trigger breaths. Fixing the leak or making the trigger less sensitive stops it.",
+      "citation": "Monitoring · Slides 26, 33 (PDF p. 26, 33)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -8503,12 +8502,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "41, 50",
-        "pdfPages": "41, 51",
+        "slides": "26, 33",
+        "pdfPages": "26, 33",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 41, 50 · PDF p. 41, 51"
+      "sourceLocator": "Slides 26, 33 · PDF p. 26, 33"
     },
     {
       "id": "S3-H24",
@@ -8760,18 +8759,18 @@
       "id": "S3-G34",
       "set": 3,
       "type": "single",
-      "stem": "Why does N2O exist as a liquid in an E-cylinder at room temperature while O2 remains a gas?",
+      "stem": "Before attaching a freestanding regulator to an oxygen cylinder, the valve is briefly opened and closed ('cracked'). Why?",
       "options": [
-        "N2O's critical temp (about 36 C) is above room temp; O2's (-118.6 C) is far below",
-        "N2O's boiling point is above room temperature, while O2's boiling point is below",
-        "O2's critical temp is above room temp, but it's filled below its liquefying pressure",
-        "N2O is filled to a much higher pressure than O2 is in an E-cylinder"
+        "To blow debris out of the outlet",
+        "To check that the cylinder is full",
+        "To cool the valve so the washer seals",
+        "To bleed residual pressure from the regulator"
       ],
       "answer": [
         0
       ],
-      "explanation": "A gas can only be liquefied by pressure below its critical temperature. N2O's critical temperature (about 36 C) is above room temperature, so compressing it liquefies it. O2's is -118.6 C, the highest temperature at which O2 can exist as a liquid, so no pressure will liquefy it at room temperature. N2O's boiling point is -88 C, and its fill pressure (745 psig) is lower than O2's.",
-      "citation": "Medical Gas Systems in Anesthesia · Slides 11, 14 (PDF p. 6, 7)",
+      "explanation": "Cracking the valve, pointed away from people, blows dust or debris out of the outlet so it is not driven into the regulator, where particles can ignite in high-pressure oxygen or damage the seat. The valve is then opened slowly after the regulator is attached.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 10, 18 (PDF p. 5, 9)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -8783,12 +8782,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "11, 14",
-        "pdfPages": "6, 7",
+        "slides": "10, 18",
+        "pdfPages": "5, 9",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slides 11, 14 · PDF p. 6, 7"
+      "sourceLocator": "Slides 10, 18 · PDF p. 5, 9"
     },
     {
       "id": "S3-P29",
@@ -10044,18 +10043,18 @@
       "id": "S3-N20",
       "set": 3,
       "type": "single",
-      "stem": "A spontaneously breathing patient under sedation has significant metabolic acidosis. How would you expect ETCO2 to change?",
+      "stem": "A patient on pressure support receives a fentanyl bolus and stops breathing. What determines whether any breaths are delivered?",
       "options": [
-        "No change, since metabolic disorders don't affect ETCO2",
-        "Increase, from compensatory hypoventilation",
-        "Increase, from higher CO2 production",
-        "Decrease, from compensatory hyperventilation"
+        "The pressure support level that has been set",
+        "Whether apnea backup ventilation is enabled",
+        "The PEEP setting on the ventilator",
+        "The inspiratory rise time setting"
       ],
       "answer": [
-        3
+        1
       ],
-      "explanation": "Box 18.1 lists metabolic acidosis (if spontaneously breathing) under hyperventilation, which lowers ETCO2. Metabolic alkalosis in a spontaneously breathing patient causes hypoventilation and raises ETCO2.",
-      "citation": "Monitoring · Slide 43 (PDF p. 43)",
+      "explanation": "Pressure support only assists breaths the patient starts, so with apnea no supported breaths occur. Delivery then depends on apnea backup ventilation, which switches to a mandatory mode after a set apnea time, and on the apnea alarm. Without backup, the patient is unventilated until someone intervenes.",
+      "citation": "Monitoring · Slides 26, 33 (PDF p. 26, 33)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -10067,12 +10066,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "43",
-        "pdfPages": "43",
+        "slides": "26, 33",
+        "pdfPages": "26, 33",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 43 · PDF p. 43"
+      "sourceLocator": "Slides 26, 33 · PDF p. 26, 33"
     },
     {
       "id": "S3-H62",
@@ -10218,18 +10217,18 @@
       "id": "S3-C22",
       "set": 3,
       "type": "single",
-      "stem": "Gas flows preferentially along the smooth wall of a CO2 absorber canister. What is the MOST likely consequence?",
+      "stem": "On the first case after a long idle period, sevoflurane induction is unusually slow despite a high dial setting, and the canister is warm. What should be suspected?",
       "options": [
-        "The indicator changes color evenly throughout the canister",
-        "Absorbent along the flow path exhausts early while color elsewhere looks fresh",
-        "CO2 absorption improves because wall contact increases surface area",
-        "Resistance to gas flow rises across the whole canister"
+        "A leak in the vaporizer filler cap",
+        "An empty vaporizer sump after storage",
+        "Desiccated absorbent taking up agent",
+        "Excessive suction at the scavenger"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "Channeling is flow moving preferentially along the canister sides (between the smooth wall and irregular granules) and within the absorbent. Gas bypasses much of the absorbent, so the used path exhausts while the rest can look fresh. That's one reason color change isn't reliable. Channeling follows the path of LEAST resistance, so it doesn't raise resistance.",
-      "citation": "CO₂ & Scavenging · Slides 4, 5 (PDF p. 2, 3)",
+      "explanation": "Dry absorbent adsorbs and breaks down volatile agent, so inspired concentration lags well behind the dial, and the reaction generates heat. The absorbent should be replaced. Unexplained slow inhalation induction or a large inspired-to-dial gap on the first case is a clue to desiccation.",
+      "citation": "CO₂ & Scavenging · Slides 6, 7 (PDF p. 3, 4)",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -10241,12 +10240,12 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
-        "slides": "4, 5",
-        "pdfPages": "2, 3",
+        "slides": "6, 7",
+        "pdfPages": "3, 4",
         "citationFormat": "document"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slides 4, 5 · PDF p. 2, 3"
+      "sourceLocator": "Slides 6, 7 · PDF p. 3, 4"
     },
     {
       "id": "S3-H17",
@@ -11889,18 +11888,18 @@
       "id": "S4-H03",
       "set": 4,
       "type": "single",
-      "stem": "Mid-case, the O2 pipeline hose is pulled from the wall and the O2 supply low-pressure alarm sounds. The backup O2 cylinder is closed. What is the FIRST action?",
+      "stem": "After a pipeline oxygen outage, the machine ran on its E-cylinder. Pipeline pressure is restored to 50 psig. What should be done next?",
       "options": [
-        "Open the backup O2 cylinder on the machine",
-        "Switch the patient to the auxiliary O2 flowmeter",
-        "Increase N2O flow to maintain total fresh gas flow",
-        "Press the O2 flush to keep the bag full"
+        "Leave the cylinder open as continued backup",
+        "Close the cylinder; confirm pipeline gas",
+        "Disconnect the pipeline until the case ends",
+        "Run the oxygen flush to purge the pipeline"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "The machine uses the cylinder (regulated to about 45 psi) whenever pipeline pressure is lower, but only if the cylinder is open. The flush and the auxiliary flowmeter draw from the same O2 supply that just failed, and the fail-safe will reduce and then stop N2O as O2 pressure falls.",
-      "citation": "Medical Gas Systems in Anesthesia · Slides 26, 33, 44 (PDF p. 13, 17, 22)",
+      "explanation": "Once pipeline pressure returns, the cylinder should be closed so it is not drained by small pressure dips, and the pipeline supply confirmed with the gauge and oxygen analyzer. The cylinder should then be replaced if it is low, so a full backup is available.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 26, 33, 34 (PDF p. 13, 17, 17)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -11912,12 +11911,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "26, 33, 44",
-        "pdfPages": "13, 17, 22",
+        "slides": "26, 33, 34",
+        "pdfPages": "13, 17, 17",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slides 26, 33, 44 · PDF p. 13, 17, 22"
+      "sourceLocator": "Slides 26, 33, 34 · PDF p. 13, 17, 17"
     },
     {
       "id": "S4-Y03",
@@ -11960,18 +11959,18 @@
       "id": "S4-P35",
       "set": 4,
       "type": "single",
-      "stem": "A fast-flush test shows a slow return to baseline with no oscillations, and the waveform looks rounded. What should you expect, and what should you check?",
+      "stem": "After cardiopulmonary bypass on high-dose vasopressors, the radial arterial pressure reads 30 mmHg lower than a femoral reading. Which is more accurate for central pressure?",
       "options": [
-        "Overdamping underestimating SBP; check for bubbles, clot, or kinks",
-        "Underdamping underestimating SBP; add extension tubing",
-        "Overdamping overestimating SBP; lower the transducer",
-        "Underdamping overestimating SBP; check for bubbles, clot, or kinks"
+        "The femoral line, as radial underestimates now",
+        "Neither, as both readings are affected equally",
+        "The radial line, because femoral lines overestimate",
+        "The radial line, as it reflects true peripheral flow"
       ],
       "answer": [
         0
       ],
-      "explanation": "The fast-flush test gauges damping from the resonant waves after the flush. No oscillations and a slow return mean an overdamped system, which underestimates SBP. Air bubbles, clot, kinks, excess tubing, and stopcocks degrade fidelity; extension tubing makes it worse.",
-      "citation": "Monitoring · Slides 65, 69 (PDF p. 66, 70)",
+      "explanation": "After bypass and with intense vasoconstriction, the usual peripheral amplification can reverse, so radial pressure underestimates central aortic pressure. A femoral or aortic measurement better reflects perfusion pressure and avoids giving unnecessary vasopressors.",
+      "citation": "Monitoring · Slides 64, 70 (PDF p. 65, 71)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -11983,12 +11982,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "65, 69",
-        "pdfPages": "66, 70",
+        "slides": "64, 70",
+        "pdfPages": "65, 71",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 65, 69 · PDF p. 66, 70"
+      "sourceLocator": "Slides 64, 70 · PDF p. 65, 71"
     },
     {
       "id": "S4-J73",
@@ -12065,17 +12064,17 @@
       "id": "S4-X09",
       "set": 4,
       "type": "single",
-      "stem": "After failed intubation and failed supraglottic airway rescue, the patient can't be oxygenated and SpO2 is falling rapidly. What is the next step?",
+      "stem": "A known difficult airway is ready for extubation, with a real chance of reintubation. Which approach keeps airway access?",
       "options": [
-        "Cricothyrotomy through the cricothyroid membrane",
-        "Fiberoptic intubation through the failed SGA",
-        "Another direct laryngoscopy attempt with a Miller blade",
-        "Continued two-person mask ventilation with an OPA"
+        "Extubate deep and place an oral airway",
+        "Leave an airway exchange catheter in the trachea",
+        "Extubate onto a nasal cannula and observe",
+        "Replace the tube with a supraglottic airway first"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "Cricothyrotomy is a lifesaving emergency procedure and the final option for 'cannot intubate, cannot ventilate' in every airway algorithm. Once oxygenation has failed by all routes, further attempts at the same techniques delay oxygenation. Approaches: needle, percutaneous, or surgical.",
+      "explanation": "For selected patients at risk of difficult reintubation, an airway exchange catheter can be left in the trachea after extubation to preserve a guide for reintubation. Placement and removal require an individualized extubation plan and appropriate monitoring. Although some catheters permit oxygen insufflation or jet ventilation, these techniques can cause severe barotrauma and should not be presented as routine oxygen-delivery methods. Supplemental oxygen should ordinarily be provided by a separate appropriate route.",
       "citation": "Airway Equipment · Slide 15 (PDF p. 15)",
       "topic": "Airway",
       "imageSvg": null,
@@ -12276,17 +12275,17 @@
       "id": "S4-H26",
       "set": 4,
       "type": "single",
-      "stem": "Fresh gas flow through a Tec 6 is raised from 2 to 6 L/min with the dial unchanged. How is the dialed concentration maintained?",
+      "stem": "Fresh gas flow is 0.5 L/min and circle-plus-lung volume is about 6 L. The vaporizer dial is increased. About how long until the circuit concentration reaches roughly 95% of the new value?",
       "options": [
-        "The dial restrictor automatically closes to reduce des vapor",
-        "The bimetallic strip sends more gas through the sump",
-        "The sump heater raises temperature to increase vapor pressure",
-        "Back pressure rises; the transducer opens the vapor valve to match, adding des"
+        "About 1 minute",
+        "About 4 minutes",
+        "About 12 minutes",
+        "About 36 minutes"
       ],
       "answer": [
         3
       ],
-      "explanation": "The gas circuit restrictor creates back pressure proportional to fresh gas flow. The differential pressure transducer senses the gas and vapor circuits and moves a valve to equalize them, so vapor delivery rises with flow. The dial controls restrictor #2. There's no bimetallic strip in the Tec 6.",
+      "explanation": "The time constant is volume divided by flow: 6 L / 0.5 L/min = 12 minutes, and about three time constants (36 minutes) are needed to reach 95% of the new concentration. That is why low-flow anesthetics need higher fresh gas flow when depth must change quickly.",
       "citation": "Medical Gas Systems in Anesthesia · Slides 62, 63 (PDF p. 31, 32)",
       "topic": "Medical Gases",
       "imageSvg": null,
@@ -12620,18 +12619,18 @@
       "id": "S4-P63",
       "set": 4,
       "type": "single",
-      "stem": "A patient in cardiac arrest is intubated. Breath sounds are bilateral and the chest rises, but ETCO2 is very low with small waveforms. What is the best interpretation?",
+      "stem": "After a circuit change, the capnogram shows almost no CO2 while the patient is ventilating well. The sampling line is attached to a port on the inspiratory limb near the machine. What explains this?",
       "options": [
-        "Hyperventilation is lowering ETCO2; reduce the rate",
-        "The tube is likely tracheal; low ETCO2 reflects low pulmonary blood flow",
-        "Low ETCO2 proves esophageal placement; reintubate immediately",
-        "The sampling line is kinked; replace it before continuing"
+        "The patient has a large pulmonary embolism",
+        "The analyzer is sampling fresh inspired gas",
+        "The absorbent is exhausted and rebreathing",
+        "The patient is hyperventilating to near zero"
       ],
       "answer": [
         1
       ],
-      "explanation": "Low cardiac output and cardiac arrest reduce carbon dioxide delivery to the lungs and can produce very low ETCO2. Bilateral breath sounds, chest rise, and persistent expired-CO2 waveforms support tracheal placement, so the low value is best explained by poor pulmonary blood flow rather than esophageal intubation.",
-      "citation": "Monitoring · Slides 43, 93 (PDF p. 43, 94)",
+      "explanation": "The sampling point must be at the Y-piece or airway connector, where exhaled gas passes. A port on the inspiratory limb sees mostly fresh gas, so EtCO2 reads near zero even with normal ventilation. Rebreathing would raise inspired CO2, and embolism would also cause hemodynamic change.",
+      "citation": "Monitoring · Slides 41, 43 (PDF p. 41, 43)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -12643,12 +12642,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "43, 93",
-        "pdfPages": "43, 94",
+        "slides": "41, 43",
+        "pdfPages": "41, 43",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 43, 93 · PDF p. 43, 94"
+      "sourceLocator": "Slides 41, 43 · PDF p. 41, 43"
     },
     {
       "id": "S4-J18",
@@ -12933,21 +12932,21 @@
       "id": "S4-D01",
       "set": 4,
       "type": "multi",
-      "stem": "Hospital vacuum to a closed-reservoir scavenging interface fails during a case. Which findings are expected? Select 2.",
+      "stem": "Which TWO statements about the Bain (coaxial Mapleson D) circuit are correct? (Select 2)",
       "options": [
-        "The interface reservoir bag distends",
-        "The negative-pressure (pop-in) relief valve opens to room air",
-        "Excess suction pulls gas out through the APL valve",
-        "The interface reservoir bag collapses",
-        "The positive-pressure (pop-off) relief valve vents waste gas into the room",
-        "Negative pressure is transmitted to the breathing circuit"
+        "Fresh gas flows through the inner tube",
+        "It contains a CO2 absorber at the machine end",
+        "Exhaled gas travels through the inner tube",
+        "It needs less fresh gas than a circle at low flows",
+        "It prevents rebreathing at any fresh gas flow",
+        "An inner-tube disconnection causes large dead space"
       ],
       "answer": [
         0,
-        4
+        5
       ],
-      "explanation": "With vacuum failure or insufficient suction, waste gas accumulates, so the reservoir bag distends and pressure builds until the pop-off valve opens and vents gas into the room. Bag collapse, pop-in opening, and negative pressure on the circuit are the findings with EXCESSIVE suction.",
-      "citation": "CO₂ & Scavenging · Slide 20 (PDF p. 10)",
+      "explanation": "Fresh gas travels down the inner tube to the patient, and exhaled gas returns through the outer tube. If the inner tube disconnects or kinks, the whole outer tube becomes dead space and rebreathing occurs; the Pethick test checks for this. With no absorber, high fresh gas flows are needed to prevent rebreathing.",
+      "citation": "CO₂ & Scavenging · Slide 8 (PDF p. 4)",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -12959,12 +12958,12 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
-        "slides": "20",
-        "pdfPages": "10",
+        "slides": "8",
+        "pdfPages": "4",
         "citationFormat": "document"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 20 · PDF p. 10"
+      "sourceLocator": "Slide 8 · PDF p. 4"
     },
     {
       "id": "S4-R102",
@@ -13008,22 +13007,22 @@
       "id": "S4-P06",
       "set": 4,
       "type": "single",
-      "stem": "During CPR, the intubated patient's capnogram changes as shown. What is the MOST likely explanation?",
+      "stem": "SpO2 repeatedly drops and the waveform disappears every few minutes, then recovers. The NIBP cuff is on the same arm as the probe. What is the best response?",
       "options": [
-        "Hyperventilation from overly rapid bagging",
-        "Sampling line disconnection",
-        "Esophageal migration of the tube",
-        "Return of spontaneous circulation"
+        "Treat each drop as a true desaturation episode",
+        "Switch to a forehead probe and stop NIBP",
+        "Increase FiO2 to keep the reading above 95%",
+        "Move the probe to the arm without the cuff"
       ],
       "answer": [
         3
       ],
-      "explanation": "Low, flat CO2 waves during CPR reflect low pulmonary blood flow. A sudden rise in ETCO2 is the lecture's sign of ROSC, as CO2-rich blood reaches the lungs again. Hyperventilation lowers ETCO2, and esophageal placement or a disconnection would make CO2 fade or vanish, not jump.",
-      "citation": "Monitoring · Slide 46 (PDF p. 47)",
+      "explanation": "Each cuff inflation stops arterial pulsation distal to the cuff, so the oximeter loses its signal and may show a falsely low value. The pattern tied to the cycling interval gives it away. Moving the probe to the other limb keeps continuous oxygenation monitoring without giving up blood pressure measurement.",
+      "citation": "Monitoring · Slides 74, 79",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
-      "imageId": "rosc",
+      "imageId": null,
       "disc": null,
       "supp": null,
       "orig": "P06",
@@ -13031,12 +13030,11 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "46",
-        "pdfPages": "47",
-        "citationFormat": "document"
+        "slides": "74, 79",
+        "citationFormat": "slides"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 46 · PDF p. 47"
+      "sourceLocator": "Slides 74, 79"
     },
     {
       "id": "S4-J37",
@@ -14246,18 +14244,18 @@
       "id": "S5-J15",
       "set": 5,
       "type": "single",
-      "stem": "A Tec 6 desflurane vaporizer is switched on and dialed to 6% right away, but the agent monitor shows no des. What is the MOST likely reason?",
+      "stem": "Under laminar flow, the internal radius of a tube is halved. How does resistance change?",
       "options": [
-        "The vapor shut-off valve doesn't open until the vaporizer warms up",
-        "The dial must be set above 6% before des flows",
-        "Des must first saturate wicks in the sump",
-        "The differential pressure transducer requires high FGF to start"
+        "2 times higher",
+        "4 times higher",
+        "8 times higher",
+        "16 times higher"
       ],
       "answer": [
-        0
+        3
       ],
-      "explanation": "Vapor circuit restrictor #1 is a shut-off that opens only when the vaporizer has warmed up and the dial is opened. Until the sump reaches operating temperature and pressure, no vapor is released. The Tec 6 has no wicks.",
-      "citation": "Medical Gas Systems in Anesthesia · Slide 62 (PDF p. 31)",
+      "explanation": "Poiseuille's law makes laminar resistance inversely proportional to the fourth power of the radius, so halving the radius raises resistance 16-fold. Small changes in tracheal tube size or a partially kinked tube therefore have large effects on work of breathing and airway pressure.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 41, 43 (PDF p. 21, 22)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -14269,12 +14267,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "62",
-        "pdfPages": "31",
+        "slides": "41, 43",
+        "pdfPages": "21, 22",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 62 · PDF p. 31"
+      "sourceLocator": "Slides 41, 43 · PDF p. 21, 22"
     },
     {
       "id": "S5-T117",
@@ -15253,18 +15251,18 @@
       "id": "S5-R130",
       "set": 5,
       "type": "single",
-      "stem": "Tidal volume is increased from 450 to 650 mL. PIP and plateau both rise by similar amounts. What is the best interpretation?",
+      "stem": "During active rewarming after hypothermia, EtCO2 rises from 32 to 42 mmHg with unchanged ventilator settings and no inspired CO2. What explains this?",
       "options": [
-        "New bronchospasm",
-        "An expected effect of the larger tidal volume",
-        "A new decrease in lung compliance",
-        "A kinked endotracheal tube"
+        "A new leak in the breathing circuit",
+        "Rebreathing through the warming circuit",
+        "More CO2 production as metabolism rises",
+        "Worsening dead space from vasodilation"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "The lecture: an increase in both PIP and plateau (gap roughly constant) can come from an increase in tidal volume OR decreased compliance. With a deliberate volume increase, the rise is expected. Bronchospasm and a kink raise PIP alone.",
-      "citation": "Monitoring · Slide 26 (PDF p. 26)",
+      "explanation": "CO2 production falls roughly 8 to 10% per degree Celsius of hypothermia and rises again with rewarming. With ventilation unchanged, EtCO2 climbs, so minute ventilation usually needs to increase as temperature returns to normal. No inspired CO2 rules out rebreathing.",
+      "citation": "Monitoring · Slides 43, 80 (PDF p. 43, 81)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -15276,29 +15274,29 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "26",
-        "pdfPages": "26",
+        "slides": "43, 80",
+        "pdfPages": "43, 81",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 26 · PDF p. 26"
+      "sourceLocator": "Slides 43, 80 · PDF p. 43, 81"
     },
     {
       "id": "S5-J04",
       "set": 5,
       "type": "single",
-      "stem": "During the morning check, the O2 cylinder is found open and pipeline pressure reads 42 psig. Over the first case, the cylinder gauge steadily falls. What is the best action?",
+      "stem": "A transport oxygen regulator uses a fixed-orifice flowmeter that reads flow from a pressure gauge. The tubing becomes kinked. What will the gauge show?",
       "options": [
-        "Increase O2 flowmeter settings to draw more from the pipeline",
-        "Close the cylinder to keep it as backup and report the low pipeline pressure",
-        "Leave the cylinder open, since it is supplementing a weak pipeline",
-        "Switch to the auxiliary O2 flowmeter to spare the cylinder"
+        "Lower flow, because pressure falls downstream",
+        "Correct flow, because the orifice is fixed",
+        "Higher flow than is actually delivered",
+        "Zero flow, because the regulator shuts off"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "The machine draws from whichever source is at higher pressure. Pipeline normally runs 50-55 psi, above the cylinder's regulated ~45 psi. At 42 psig the open cylinder takes over and silently empties, leaving no backup. The auxiliary flowmeter draws from the same O2 supply.",
-      "citation": "Medical Gas Systems in Anesthesia · Slide 33 (PDF p. 17)",
+      "explanation": "A fixed-orifice (pressure-gauge) flowmeter infers flow from the pressure upstream of the orifice. A downstream kink raises that pressure while actual flow falls, so the gauge reads high. A Thorpe tube would show the real drop, which is why tubing and flow are checked during transport.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 40, 41 (PDF p. 20, 21)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -15310,12 +15308,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "33",
-        "pdfPages": "17",
+        "slides": "40, 41",
+        "pdfPages": "20, 21",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slide 33 · PDF p. 17"
+      "sourceLocator": "Slides 40, 41 · PDF p. 20, 21"
     },
     {
       "id": "S5-T03",
@@ -15525,18 +15523,18 @@
       "id": "S5-R64",
       "set": 5,
       "type": "single",
-      "stem": "ETCO2 keeps rising despite doubling minute ventilation. The absorbent is fresh, inspired CO2 is zero, and the patient is tachycardic. What is the MOST likely cause?",
+      "stem": "The train-of-four is monitored at the orbicularis oculi instead of the adductor pollicis. How does this affect reversal decisions?",
       "options": [
-        "Absorption of insufflated CO2 during laparoscopy",
-        "Rebreathing from an incompetent expiratory valve",
-        "Increased CO2 production, as in malignant hyperthermia",
-        "Hypoventilation from a ventilator leak"
+        "It overstates recovery and hides residual block",
+        "It matches the adductor pollicis exactly",
+        "It underestimates recovery and delays extubation",
+        "It cannot detect fade at any level of block"
       ],
       "answer": [
-        2
+        0
       ],
-      "explanation": "Zero inspired CO2 rules out rebreathing, and doubled ventilation rules out simple hypoventilation. CO2 rising faster than you can blow it off points to increased production, and MH leads Box 18.1's list. With no insufflation described, laparoscopy doesn't fit.",
-      "citation": "Monitoring · Slides 42, 43 (PDF p. 42, 43)",
+      "explanation": "Facial muscles such as the orbicularis oculi recover earlier than the adductor pollicis, so their twitches return while the hand and airway muscles are still weak. Relying on them can lead to extubation with residual block. The adductor pollicis with quantitative monitoring is the reference site.",
+      "citation": "Monitoring · Slides 86, 87 (PDF p. 87, 88)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -15548,12 +15546,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "42, 43",
-        "pdfPages": "42, 43",
+        "slides": "86, 87",
+        "pdfPages": "87, 88",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 42, 43 · PDF p. 42, 43"
+      "sourceLocator": "Slides 86, 87 · PDF p. 87, 88"
     },
     {
       "id": "S5-V116",
@@ -15768,18 +15766,18 @@
       "id": "S5-R118",
       "set": 5,
       "type": "single",
-      "stem": "A leak in the ventilator's bellows reduces the tidal volume actually delivered. How is ETCO2 likely to change?",
+      "stem": "After repositioning, EtCO2 climbs steadily and no ventilator breaths are seen. The bag/vent switch is in bag mode and the APL valve is open. What is the FIRST action?",
       "options": [
-        "No change, since the circuit is still sealed",
-        "Decrease, from increased dead space",
-        "Increase, from hypoventilation",
-        "Decrease, from dilution with room air"
+        "Raise fresh gas flow to clear CO2",
+        "Close the APL and wait for spontaneous breathing",
+        "Switch to ventilator mode or hand-ventilate now",
+        "Change the absorbent canister"
       ],
       "answer": [
         2
       ],
-      "explanation": "Box 18.1 lists ventilator leak among equipment causes of INCREASED ETCO2: less delivered volume means less CO2 eliminated. Circuit or ETT leaks that entrain room air around the sample are the ones listed under decreased ETCO2.",
-      "citation": "Monitoring · Slide 43 (PDF p. 43)",
+      "explanation": "In bag mode with an open APL, the ventilator is out of circuit and the paralyzed patient is not being ventilated, so CO2 accumulates and oxygen falls. Ventilation must restart immediately, either by switching back to the ventilator or by squeezing the bag. Higher fresh gas flow cannot ventilate an apneic patient.",
+      "citation": "Monitoring · Slides 33, 43 (PDF p. 33, 43)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -15791,12 +15789,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "43",
-        "pdfPages": "43",
+        "slides": "33, 43",
+        "pdfPages": "33, 43",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slide 43 · PDF p. 43"
+      "sourceLocator": "Slides 33, 43 · PDF p. 33, 43"
     },
     {
       "id": "S5-Z02",
@@ -16078,22 +16076,22 @@
       "id": "S5-R41",
       "set": 5,
       "type": "single",
-      "stem": "During ventilation of a patient with long-standing lung disease, this pressure-volume loop appears. What does it MOST likely show?",
+      "stem": "A flow-volume loop shows flattening of both the inspiratory and expiratory limbs. What does this pattern suggest?",
       "options": [
-        "A leak in the breathing circuit",
-        "Increased inspiratory resistance from a kinked ETT",
-        "Abnormally increased compliance, as in emphysema",
-        "Decreased compliance from pneumothorax"
+        "Variable extrathoracic obstruction",
+        "Fixed upper airway obstruction",
+        "Restrictive lung disease from obesity",
+        "Emphysema with dynamic airway collapse"
       ],
       "answer": [
-        2
+        1
       ],
-      "explanation": "The loop is tall and steep, hugging the volume axis: large volume for little pressure, the lecture's pattern for abnormally increased compliance (emphysema). Decreased compliance shifts toward the pressure axis, a leak leaves the loop open, and a kink bows the inspiratory limb.",
+      "explanation": "A fixed lesion limits flow equally in both directions, flattening both limbs. A variable extrathoracic lesion flattens only inspiration, a variable intrathoracic lesion flattens expiration, restriction shrinks the loop but keeps its shape, and emphysema scoops the expiratory limb.",
       "citation": "Monitoring · Slides 28, 29 (PDF p. 28, 29)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
-      "imageId": "pvemph",
+      "imageId": null,
       "disc": null,
       "supp": null,
       "orig": "R41",
@@ -16855,18 +16853,18 @@
       "id": "S5-J48",
       "set": 5,
       "type": "single",
-      "stem": "A sevoflurane vaporizer is mistakenly filled with isoflurane and dialed to 2%. How will output compare with the dial?",
+      "stem": "During high flow from an oxygen regulator in a humid room, frost forms on the regulator body. What causes this?",
       "options": [
-        "Equal to the dial, because the splitting ratio is fixed",
-        "Higher than dialed, because iso's vapor pressure (240) exceeds sevo's (160)",
-        "Lower than dialed, because iso's vapor pressure is lower than sevo's",
-        "Equal to the dial, because temperature compensation corrects it"
+        "Liquid oxygen boiling inside the regulator",
+        "Moisture trapped in the cylinder freezing",
+        "A leak of liquid nitrous oxide into the line",
+        "Cooling as compressed gas expands through it"
       ],
       "answer": [
-        1
+        3
       ],
-      "explanation": "The splitting ratio is calibrated to sevo's vapor pressure (160 mmHg), and ratios differ among agents based on vapor pressure. Iso's higher vapor pressure (240 mmHg) saturates chamber gas at a higher concentration, so output exceeds the dial. The lecture's intervention: always double-check bottle, key, and vaporizer.",
-      "citation": "Medical Gas Systems in Anesthesia · Slides 50, 54 (PDF p. 25, 27)",
+      "explanation": "When compressed gas expands across the regulator from high to low pressure, it cools (the Joule-Thomson effect), and moisture in the room air condenses and freezes on the cold metal. Oxygen in an E-cylinder is a gas, not a liquid, so this differs from the frost on a nitrous oxide cylinder, which comes from liquid vaporizing.",
+      "citation": "Medical Gas Systems in Anesthesia · Slides 10, 14 (PDF p. 5, 7)",
       "topic": "Medical Gases",
       "imageSvg": null,
       "image": null,
@@ -16878,12 +16876,12 @@
         "families": [
           "Medical Gas Systems in Anesthesia"
         ],
-        "slides": "50, 54",
-        "pdfPages": "25, 27",
+        "slides": "10, 14",
+        "pdfPages": "5, 7",
         "citationFormat": "document"
       },
       "sourceTitle": "Medical Gas Systems in Anesthesia",
-      "sourceLocator": "Slides 50, 54 · PDF p. 25, 27"
+      "sourceLocator": "Slides 10, 14 · PDF p. 5, 7"
     },
     {
       "id": "S5-T85",
@@ -16957,18 +16955,18 @@
       "id": "S5-Y04",
       "set": 5,
       "type": "single",
-      "stem": "For laser microlaryngoscopy with a laser-resistant tube, which gas choice best reduces ignition risk?",
+      "stem": "During lighted-stylet intubation, a bright, well-defined glow appears in the anterior neck below the thyroid cartilage. What does this indicate?",
       "options": [
-        "N2O with a small O2 fraction",
-        "Air/O2 at the lowest acceptable FiO2",
-        "O2/N2O to lower the O2 fraction",
-        "100% O2 to maximize safety margin"
+        "The tube tip is entering the trachea",
+        "The tube tip is in the vallecula",
+        "The tube tip is in the esophagus",
+        "The tube tip is in the right mainstem"
       ],
       "answer": [
-        1
+        0
       ],
-      "explanation": "Ignition depends on tube material, the concentration of O2 or N2O, and direct heat contact. N2O supports combustion like O2, so swapping O2 for N2O doesn't lower risk. Air with the lowest acceptable FiO2 reduces the oxidizer concentration.",
-      "citation": "Airway Equipment · Slide 9 (PDF p. 9)",
+      "explanation": "The trachea lies just under the skin of the anterior neck, so light from a stylet in the trachea gives a bright, sharply outlined glow below the thyroid prominence. In the esophagus the light is dull and diffuse because more tissue lies in between, and a lateral glow suggests a piriform sinus.",
+      "citation": "Airway Equipment · Slides 9, 15 (PDF p. 9, 15)",
       "topic": "Airway",
       "imageSvg": null,
       "image": null,
@@ -16980,12 +16978,12 @@
         "families": [
           "Airway Equipment"
         ],
-        "slides": "9",
-        "pdfPages": "9",
+        "slides": "9, 15",
+        "pdfPages": "9, 15",
         "citationFormat": "document"
       },
       "sourceTitle": "Airway Equipment",
-      "sourceLocator": "Slide 9 · PDF p. 9"
+      "sourceLocator": "Slides 9, 15 · PDF p. 9, 15"
     },
     {
       "id": "S5-V108",
@@ -17096,18 +17094,18 @@
       "id": "S5-R65",
       "set": 5,
       "type": "single",
-      "stem": "ETCO2 has risen from 36 to 44 mmHg with unchanged ventilator settings, and the inspired CO2 baseline is still zero. Which cause is ruled out?",
+      "stem": "Pulse pressure variation is 16% in a patient who is breathing spontaneously in atrial fibrillation. How should it be interpreted?",
       "options": [
-        "Absorption of insufflated CO2",
-        "Rebreathing",
-        "Increased CO2 production",
-        "Decreased elimination from hypoventilation"
+        "As strong evidence of fluid responsiveness",
+        "As evidence of overdamping in the arterial line",
+        "As evidence of left ventricular failure",
+        "As unreliable in these conditions"
       ],
       "answer": [
-        1
+        3
       ],
-      "explanation": "Rebreathing (exhausted absorbent, bad valves, low FGF) shows up as a baseline that doesn't return to zero. A zero baseline rules it out and leaves increased production, increased delivery (laparoscopy), or decreased elimination.",
-      "citation": "Monitoring · Slides 43, 50 (PDF p. 43, 51)",
+      "explanation": "Pulse pressure variation predicts fluid responsiveness only during controlled ventilation with adequate tidal volume and a regular rhythm. Spontaneous breaths and atrial fibrillation produce beat-to-beat variation unrelated to preload, so the number cannot be trusted here.",
+      "citation": "Monitoring · Slides 64, 70 (PDF p. 65, 71)",
       "topic": "Monitoring",
       "imageSvg": null,
       "image": null,
@@ -17119,12 +17117,12 @@
         "families": [
           "Intraoperative Assessment, Monitoring & Data Interpretation"
         ],
-        "slides": "43, 50",
-        "pdfPages": "43, 51",
+        "slides": "64, 70",
+        "pdfPages": "65, 71",
         "citationFormat": "document"
       },
       "sourceTitle": "Intraoperative Assessment, Monitoring & Data Interpretation",
-      "sourceLocator": "Slides 43, 50 · PDF p. 43, 51"
+      "sourceLocator": "Slides 64, 70 · PDF p. 65, 71"
     },
     {
       "id": "S5-V13",
@@ -17306,18 +17304,18 @@
       "id": "S5-E13",
       "set": 5,
       "type": "single",
-      "stem": "A long sevoflurane anesthetic runs at 0.5 L/min fresh gas flow, and the absorbent canister is warm. Which change most directly reduces compound A production?",
+      "stem": "During a long low-flow anesthetic with 50% nitrous oxide, inspired oxygen gradually falls although the flowmeters are unchanged. Why?",
       "options": [
-        "Let the absorbent dry out",
-        "Switch to barium hydroxide lime",
-        "Increase the sevoflurane concentration",
-        "Increase fresh gas flow"
+        "The vaporizer dilutes oxygen at low flows",
+        "The absorbent removes oxygen from the circuit",
+        "O2 is used up while N2O accumulates",
+        "The proportioning system fails at low flows"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "Compound A is promoted by warmer, drier absorbent, higher agent concentration, and LOWER fresh gas flow. Raising FGF works against it. Drying the absorbent and raising agent concentration both increase compound A.",
-      "citation": "CO₂ & Scavenging · Slide 6 (PDF p. 3)",
+      "explanation": "At low flows, the patient takes up oxygen at a steady rate but takes up little nitrous oxide once tissues are saturated, so nitrous oxide accumulates in the rebreathed gas and inspired oxygen falls. The oxygen analyzer is essential, and oxygen flow must be adjusted to maintain a safe FiO2.",
+      "citation": "CO₂ & Scavenging · Slide 8 (PDF p. 4)",
       "topic": "CO₂ & Scavenging",
       "imageSvg": null,
       "image": null,
@@ -17329,12 +17327,12 @@
         "families": [
           "CO₂ Absorbents and Scavenging"
         ],
-        "slides": "6",
-        "pdfPages": "3",
+        "slides": "8",
+        "pdfPages": "4",
         "citationFormat": "document"
       },
       "sourceTitle": "CO₂ Absorbents and Scavenging",
-      "sourceLocator": "Slide 6 · PDF p. 3"
+      "sourceLocator": "Slide 8 · PDF p. 4"
     },
     {
       "id": "S5-T39",

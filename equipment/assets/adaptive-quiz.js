@@ -25,7 +25,7 @@ function contentKey(q){
   if(q&&typeof q==='object')contentCache.set(q,value);return value
 }
 function questionStats(uid,q){return window.MBUStudyIntelligence?.questionStats?.(uid,q)||null}
-function populationStats(uid){return window.MBUSupabase?.calibration?.(uid)||null}
+function populationStats(uid){return window.MBUSupabase?.calibration?.(window.MBUContentRevisions?.calibrationId?.(uid)||uid)||null}
 function masterySnapshot(){return window.MBUStudyIntelligence?.mastery?.()||{byTopic:{}}}
 function learningPriority(q,snapshot){return window.MBUStudyIntelligence?.priorityForQuestion?.(q,Date.now(),snapshot)||{score:0,reason:'Balanced practice',topic:topicOf(q),mastery:null,confidence:0,due:false,seen:!!questionStats(q?.uid,q)}}
 function recentUids(limit=50){return new Set((window.MBUStudyIntelligence?.recentActivity?.(limit)||[]).map(x=>String(x.uid||'')))}
@@ -110,13 +110,14 @@ function chooseRandomesque(candidates,s){
 function pick(questions,state){
   const s=normalize(state),seen=new Set(s.seenUids),allowed=s.poolUids.length?new Set(s.poolUids):null,seenContent=new Set(s.seenContentKeys);
   for(const q of questions)if(q?.uid&&seen.has(String(q.uid)))seenContent.add(contentKey(q));
-  const recent=recentUids(50),recentContent=recentContentKeys(questions,50),distribution=distributionOf(questions,allowed),targets=Object.keys(s.blueprintTargets).length?s.blueprintTargets:blueprintTargets(distribution,s.maxQuestions),snapshot=masterySnapshot(),deficits=Object.entries(targets).reduce((n,[t,v])=>n+Math.max(0,Number(v)-(Number(s.topicCounts[t])||0)),0),candidates=[],fallback=[];let index=0;
+  const recent=recentUids(50),recentContent=recentContentKeys(questions,50),distribution=distributionOf(questions,allowed),targets=Object.keys(s.blueprintTargets).length?s.blueprintTargets:blueprintTargets(distribution,s.maxQuestions),snapshot=masterySnapshot(),deficits=Object.entries(targets).reduce((n,[t,v])=>n+Math.max(0,Number(v)-(Number(s.topicCounts[t])||0)),0),candidates=[],fallback=[],variants=[];let index=0;
 for(const q of distribution.rows){
     const key=contentKey(q);
     if(!q?.uid||seen.has(String(q.uid))||seenContent.has(key)||(allowed&&!allowed.has(String(q.uid)))){index++;continue}
+    if(recentContent.has(key)&&!recent.has(String(q.uid))){variants.push([q,index]);index++;continue}
     if(blueprintFeasible(topicOf(q),s,targets,deficits))candidates.push(candidateScore(q,s,distribution,recent,recentContent,snapshot,index));else fallback.push([q,index]);index++
 }
-  let eligible=candidates;if(!eligible.length)eligible=fallback.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i));
+  let eligible=candidates;if(!eligible.length)eligible=fallback.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i));if(!eligible.length)eligible=variants.map(([q,i])=>candidateScore(q,s,distribution,recent,recentContent,snapshot,i));
   const chosen=chooseRandomesque(eligible,s);
   if(!chosen)return{question:null,state:{...s,blueprintTargets:targets}};
   const focus=s.answered<DIAGNOSTIC_LENGTH?'Diagnostic sampling':(chosen.priority.reason||'Balanced practice'),topic=chosen.topic,phase=s.answered<DIAGNOSTIC_LENGTH?'diagnostic':'adaptive';
