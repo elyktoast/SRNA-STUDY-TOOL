@@ -2498,7 +2498,7 @@
     {
       "id": "NMB-015",
       "set": 1,
-      "stem": "Same 130 kg, 180 cm man (IBW 75 kg). Rocuronium for intubation at 1.2 mg/kg is planned using ideal body weight. What dose?",
+      "stem": "130 kg, 180 cm man (IBW 75 kg). Rocuronium for intubation at 1.2 mg/kg is planned using ideal body weight. What dose?",
       "type": "single",
       "options": [
         "156 mg",
@@ -7267,7 +7267,7 @@
     {
       "id": "OB-009",
       "set": 1,
-      "stem": "Same cesarean spinal, but BP is 84/48 with HR 52. Which vasopressor is MOST appropriate?",
+      "stem": "Cesarean under spinal anesthesia: BP is 84/48 with HR 52. Which vasopressor is MOST appropriate?",
       "type": "single",
       "options": [
         "Ephedrine 10 mg IV",
@@ -7898,7 +7898,7 @@
     {
       "id": "LA-016",
       "set": 1,
-      "stem": "Same benzocaine-induced methemoglobinemia, but the patient has known G6PD deficiency. Which treatment is MOST appropriate?",
+      "stem": "Patient with benzocaine-induced methemoglobinemia has known G6PD deficiency. Which treatment is MOST appropriate?",
       "type": "single",
       "options": [
         "Methylene blue at half the usual dose",
@@ -14344,7 +14344,7 @@
     {
       "id": "BD-HEM-01-2",
       "set": 1,
-      "stem": "Same 72-year-old on lisinopril, amlodipine, and metoprolol: after ephedrine 20 mg and phenylephrine 200 mcg, MAP is 50 and HR 64. What is the BEST next drug?",
+      "stem": "72-year-old on lisinopril, amlodipine, and metoprolol is hypotensive after propofol induction. After ephedrine 20 mg and phenylephrine 200 mcg, MAP is 50 and HR 64. What is the BEST next drug?",
       "type": "single",
       "options": [
         "Epinephrine 1 mg IV",
@@ -14371,7 +14371,7 @@
     {
       "id": "BD-HEM-01-3",
       "set": 1,
-      "stem": "Same 72-year-old with refractory hypotension after propofol induction. Which home medications likely contributed? (Select 3)",
+      "stem": "72-year-old on lisinopril, amlodipine, and metoprolol has refractory hypotension after propofol induction. Which home medications likely contributed? (Select 3)",
       "type": "multi",
       "options": [
         "Lisinopril",
@@ -14404,7 +14404,7 @@
     {
       "id": "BD-HEM-01-4",
       "set": 1,
-      "stem": "Same patient: vasopressin infusion is started at 0.03 units/min. The bag is 20 units in 100 mL. What pump rate?",
+      "stem": "72-year-old with refractory post-induction hypotension on an ACE inhibitor: vasopressin infusion is started at 0.03 units/min. The bag is 20 units in 100 mL. What pump rate?",
       "type": "single",
       "options": [
         "0.15 mL/hr",
@@ -14458,7 +14458,7 @@
     {
       "id": "BD-HEM-02-2",
       "set": 1,
-      "stem": "Same 67-year-old with intraoperative AF: rate is now 162 and BP 74/40 despite fluids. Which energy and mode are MOST appropriate?",
+      "stem": "67-year-old under GA for colectomy has intraoperative AF: rate is now 162 and BP 74/40 despite fluids. Which energy and mode are MOST appropriate?",
       "type": "single",
       "options": [
         "Synchronized 120–200 J",
@@ -14485,7 +14485,7 @@
     {
       "id": "BD-HEM-02-3",
       "set": 1,
-      "stem": "Same 67-year-old: AF recurs after cardioversion with BP 100/60. TEE shows EF 25%. Which drug is MOST appropriate?",
+      "stem": "67-year-old under GA for colectomy: AF recurs after cardioversion with BP 100/60. TEE shows EF 25%. Which drug is MOST appropriate?",
       "type": "single",
       "options": [
         "Labetalol 20 mg IV, repeated every 10 min",
@@ -14512,7 +14512,7 @@
     {
       "id": "BD-HEM-02-4",
       "set": 1,
-      "stem": "Same patient: amiodarone 150 mg is supplied premixed as 150 mg in 100 mL, to run over 10 min. What pump rate?",
+      "stem": "Patient with intraoperative AF and EF 25% needs amiodarone 150 mg, supplied premixed as 150 mg in 100 mL, to run over 10 min. What pump rate?",
       "type": "single",
       "options": [
         "60 mL/hr",
@@ -14566,7 +14566,7 @@
     {
       "id": "BD-HEM-03-2",
       "set": 1,
-      "stem": "Same coughing laparoscopy patient: BIS 68, HR 104, BP 168/92, TOF count 3. What is the BEST immediate intervention?",
+      "stem": "Patient coughing during laparoscopy under sevoflurane 0.8 MAC: BIS 68, HR 104, BP 168/92, TOF count 3. What is the BEST immediate intervention?",
       "type": "single",
       "options": [
         "Propofol 30–50 mg IV",
@@ -14593,7 +14593,7 @@
     {
       "id": "BD-HEM-03-3",
       "set": 1,
-      "stem": "Same patient after deepening: coughing stops, but peak pressure stays 38, wheezes are heard, and the capnogram has a shark-fin upstroke. Interpretation?",
+      "stem": "Patient coughing during laparoscopy is deepened: coughing stops, but peak pressure stays 38, wheezes are heard, and the capnogram has a shark-fin upstroke. Interpretation?",
       "type": "single",
       "options": [
         "Light anesthesia",
@@ -14647,7 +14647,7 @@
     {
       "id": "BD-HEM-04-2",
       "set": 1,
-      "stem": "Same patient with suspected anaphylaxis: after two IV epinephrine boluses of 50 mcg, BP is 66/34. What is the BEST next step?",
+      "stem": "Suspected anaphylaxis under GA after rocuronium and cefazolin: after two IV epinephrine boluses of 50 mcg, BP is 66/34. What is the BEST next step?",
       "type": "single",
       "options": [
         "Give epinephrine 1 mg IV",
@@ -14674,7 +14674,7 @@
     {
       "id": "BD-HEM-04-3",
       "set": 1,
-      "stem": "Same patient remains hypotensive on epinephrine infusion and fluids. His home medications include metoprolol. Which drug is MOST likely to help?",
+      "stem": "Patient with anaphylaxis under GA remains hypotensive on an epinephrine infusion and fluids. Home medications include metoprolol. Which drug is MOST likely to help?",
       "type": "single",
       "options": [
         "Glucagon 1–2 mg IV",
@@ -14701,7 +14701,7 @@
     {
       "id": "BD-HEM-04-4",
       "set": 1,
-      "stem": "Same anaphylaxis patient after stabilization. Which laboratory tests help confirm the diagnosis? (Select 2)",
+      "stem": "Patient with suspected intraoperative anaphylaxis is now stable. Which laboratory tests help confirm the diagnosis? (Select 2)",
       "type": "multi",
       "options": [
         "Drug skin testing within 24 hr",
@@ -14733,7 +14733,7 @@
     {
       "id": "BD-HEM-04-5",
       "set": 1,
-      "stem": "Same patient with suspected rocuronium anaphylaxis. A colleague suggests sugammadex to \"remove the allergen.\" What is the BEST response?",
+      "stem": "Patient with suspected rocuronium anaphylaxis: a colleague suggests sugammadex to \"remove the allergen.\" What is the BEST response?",
       "type": "single",
       "options": [
         "Give sugammadex 16 mg/kg right away",
@@ -14760,7 +14760,7 @@
     {
       "id": "BD-HEM-04-6",
       "set": 1,
-      "stem": "Same patient recovers. When is skin testing to identify the culprit drug MOST informative?",
+      "stem": "Patient recovers from intraoperative anaphylaxis. When is skin testing to identify the culprit drug MOST informative?",
       "type": "single",
       "options": [
         "After 1 year",
@@ -14814,7 +14814,7 @@
     {
       "id": "BD-HEM-05-2",
       "set": 1,
-      "stem": "Same craniotomy patient: why are direct vasodilators such as nitroprusside a weaker choice for emergence hypertension?",
+      "stem": "Patient with emergence hypertension after tumor craniotomy: why are direct vasodilators such as nitroprusside a weaker choice?",
       "type": "single",
       "options": [
         "Cerebral vasodilation can raise ICP",
@@ -14868,7 +14868,7 @@
     {
       "id": "BD-HEM-06-2",
       "set": 1,
-      "stem": "Same 70-year-old later develops ST elevation in II, III, and aVF. BP 82/50, HR 50, clear lungs. Which approach is BEST?",
+      "stem": "70-year-old with CAD under GA develops ST elevation in II, III, and aVF. BP 82/50, HR 50, clear lungs. Which approach is BEST?",
       "type": "single",
       "options": [
         "Nitroglycerin infusion for coronary vasodilation",
@@ -14922,7 +14922,7 @@
     {
       "id": "BD-HEM-07-2",
       "set": 1,
-      "stem": "Same 80 kg patient: after infrarenal cross-clamp, BP rises from 128/70 to 196/104 and wedge pressure climbs. HR 76. Which drug is BEST?",
+      "stem": "80 kg patient having open infrarenal aortic repair: after cross-clamp, BP rises from 128/70 to 196/104 and wedge pressure climbs. HR 76. Which drug is BEST?",
       "type": "single",
       "options": [
         "Nitroglycerin infusion",
@@ -14949,7 +14949,7 @@
     {
       "id": "BD-HEM-07-3",
       "set": 1,
-      "stem": "Same aortic repair: the surgeon says unclamping is in 5 min. BP is 142/80 on nitroglycerin. What is the BEST preparation?",
+      "stem": "Open aortic repair: the surgeon says unclamping is in 5 min. BP is 142/80 on nitroglycerin. What is the BEST preparation?",
       "type": "single",
       "options": [
         "Increase nitroglycerin to prevent rebound hypertension on release",
@@ -14976,7 +14976,7 @@
     {
       "id": "BD-HEM-07-4",
       "set": 1,
-      "stem": "Same aortic repair: after unclamping, BP falls to 72/40 and EtCO2 rises from 34 to 44. Which mechanisms explain these changes? (Select 3)",
+      "stem": "Open aortic repair: after unclamping, BP falls to 72/40 and EtCO2 rises from 34 to 44. Which mechanisms explain these changes? (Select 3)",
       "type": "multi",
       "options": [
         "Washout of CO2 and acid from ischemic tissue",
@@ -15009,7 +15009,7 @@
     {
       "id": "BD-HEM-07-5",
       "set": 1,
-      "stem": "Same aortic patient: protamine is started at the end. How should it be given to reduce hypotension?",
+      "stem": "Open aortic repair: protamine is started at the end of the case. How should it be given to reduce hypotension?",
       "type": "single",
       "options": [
         "Rapidly, followed by phenylephrine",
@@ -15063,7 +15063,7 @@
     {
       "id": "BD-HEM-08-2",
       "set": 1,
-      "stem": "Same carotid patient: baseline BP is 160/90. During cross-clamp, BP is 118/70. Which management is BEST?",
+      "stem": "Carotid endarterectomy under GA: baseline BP is 160/90. During cross-clamp, BP is 118/70. Which management is BEST?",
       "type": "single",
       "options": [
         "Phenylephrine toward baseline BP",
@@ -15090,7 +15090,7 @@
     {
       "id": "BD-HEM-08-3",
       "set": 1,
-      "stem": "Same carotid patient in PACU: BP 192/104 and a new ipsilateral headache. What is the main concern and step?",
+      "stem": "PACU patient after carotid endarterectomy: BP 192/104 and a new ipsilateral headache. What is the main concern and step?",
       "type": "single",
       "options": [
         "Contralateral stroke; raise BP",
@@ -15144,7 +15144,7 @@
     {
       "id": "BD-HEM-09-2",
       "set": 1,
-      "stem": "Same septic patient: after induction, norepinephrine is at 25 mcg/min with MAP 58. Which drug is the BEST next addition?",
+      "stem": "Septic patient with perforated viscus: after induction, norepinephrine is at 25 mcg/min with MAP 58. Which drug is the BEST next addition?",
       "type": "single",
       "options": [
         "Isoproterenol 2 mcg/min",
@@ -15171,7 +15171,7 @@
     {
       "id": "BD-HEM-09-3",
       "set": 1,
-      "stem": "Same septic patient: on norepinephrine and vasopressin, MAP remains 60 for several hours. Which addition is MOST appropriate?",
+      "stem": "Septic patient on norepinephrine and vasopressin: MAP remains 60 for several hours. Which addition is MOST appropriate?",
       "type": "single",
       "options": [
         "Hydrocortisone 50 mg IV every 6 hr",
@@ -15198,7 +15198,7 @@
     {
       "id": "BD-HEM-09-4",
       "set": 1,
-      "stem": "Same septic patient weighs 75 kg. Norepinephrine is ordered at 0.2 mcg/kg/min from 8 mg in 250 mL. What pump rate?",
+      "stem": "75 kg septic patient: norepinephrine is ordered at 0.2 mcg/kg/min from 8 mg in 250 mL. What pump rate?",
       "type": "single",
       "options": [
         "About 0.5 mL/hr",
@@ -15225,7 +15225,7 @@
     {
       "id": "BD-HEM-09-5",
       "set": 1,
-      "stem": "Same septic patient is ventilated with tidal volume 8 mL/kg and sinus rhythm. Which measures predict fluid responsiveness? (Select 3)",
+      "stem": "Septic patient is ventilated with tidal volume 8 mL/kg and is in sinus rhythm. Which measures predict fluid responsiveness? (Select 3)",
       "type": "multi",
       "options": [
         "Pulse pressure variation",
@@ -15285,7 +15285,7 @@
     {
       "id": "BD-HEM-10-2",
       "set": 1,
-      "stem": "Same patient with severe aortic stenosis: new AF at 132 with BP 78/44 during surgery. What is the BEST treatment?",
+      "stem": "84-year-old with severe aortic stenosis having hip fracture repair: new AF at 132 with BP 78/44 during surgery. What is the BEST treatment?",
       "type": "single",
       "options": [
         "Diltiazem 10 mg IV",
@@ -15312,7 +15312,7 @@
     {
       "id": "BD-HEM-10-3",
       "set": 1,
-      "stem": "Same aortic stenosis patient: why is a single-shot spinal riskier than a carefully titrated technique?",
+      "stem": "84-year-old with severe aortic stenosis needs hip fracture repair. Why is a single-shot spinal riskier than a carefully titrated technique?",
       "type": "single",
       "options": [
         "Abrupt sympathectomy drops SVR and preload",
@@ -15366,7 +15366,7 @@
     {
       "id": "BD-AWY-01-2",
       "set": 1,
-      "stem": "Same patient after rocuronium 1.2 mg/kg: the supraglottic airway fails, mask ventilation fails, and SpO2 is 76% and falling. What is the BEST next step?",
+      "stem": "Failed intubation after rocuronium 1.2 mg/kg: the supraglottic airway fails, mask ventilation fails, and SpO2 is 76% and falling. What is the BEST next step?",
       "type": "single",
       "options": [
         "Place a larger supraglottic airway and retry ventilation",
@@ -15393,7 +15393,7 @@
     {
       "id": "BD-AWY-01-3",
       "set": 1,
-      "stem": "Same CICO scenario: the patient weighs 95 kg. Sugammadex is 100 mg/mL. What volume gives 16 mg/kg?",
+      "stem": "Can't-intubate, can't-oxygenate scenario after rocuronium: the patient weighs 95 kg. Sugammadex is 100 mg/mL. What volume gives 16 mg/kg?",
       "type": "single",
       "options": [
         "3.8 mL",
@@ -15420,7 +15420,7 @@
     {
       "id": "BD-AWY-01-4",
       "set": 1,
-      "stem": "Same CICO scenario after sugammadex 16 mg/kg. Why might reversal alone fail to rescue the patient? (Select 2)",
+      "stem": "Can't-intubate, can't-oxygenate scenario after rocuronium, treated with sugammadex 16 mg/kg. Why might reversal alone fail to rescue the patient? (Select 2)",
       "type": "multi",
       "options": [
         "Anesthetic and opioid effects may still suppress breathing",
@@ -15479,7 +15479,7 @@
     {
       "id": "BD-AWY-02-2",
       "set": 1,
-      "stem": "Same adult with laryngospasm: CPAP and propofol 0.5 mg/kg haven't broken it, and SpO2 is 72%. Which drug is BEST next?",
+      "stem": "Adult with laryngospasm after tonsillectomy: CPAP and propofol 0.5 mg/kg haven't broken it, and SpO2 is 72%. Which drug is BEST next?",
       "type": "single",
       "options": [
         "Rocuronium 0.6 mg/kg IV with sugammadex ready",
@@ -15506,7 +15506,7 @@
     {
       "id": "BD-AWY-02-3",
       "set": 1,
-      "stem": "Same adult after laryngospasm resolves: 20 min later, pink frothy secretions and SpO2 88% on 6 L. BP 138/80. Most likely cause and treatment?",
+      "stem": "Adult whose laryngospasm resolved 20 min ago now has pink frothy secretions and SpO2 88% on 6 L. BP 138/80. Most likely cause and treatment?",
       "type": "single",
       "options": [
         "Aspiration pneumonitis; start broad-spectrum antibiotics",
@@ -15560,7 +15560,7 @@
     {
       "id": "BD-AWY-03-2",
       "set": 1,
-      "stem": "Same asthmatic after disconnection, BP recovers. Which ventilator change BEST prevents recurrence?",
+      "stem": "Intubated severe asthmatic became hypotensive from gas trapping; BP recovered after brief disconnection. Which ventilator change BEST prevents recurrence?",
       "type": "single",
       "options": [
         "Lower RR and longer expiratory time",
@@ -15587,7 +15587,7 @@
     {
       "id": "BD-AWY-03-3",
       "set": 1,
-      "stem": "Same intubated asthmatic remains bronchospastic despite albuterol. Which drugs are reasonable additions? (Select 4)",
+      "stem": "Intubated severe asthmatic remains bronchospastic despite albuterol. Which drugs are reasonable additions? (Select 4)",
       "type": "multi",
       "options": [
         "Neostigmine",
@@ -15621,7 +15621,7 @@
     {
       "id": "BD-AWY-03-4",
       "set": 1,
-      "stem": "Same asthmatic: magnesium sulfate 2 g IV is ordered. The vial is 50% (500 mg/mL). What volume do you draw up before dilution?",
+      "stem": "Intubated asthmatic: magnesium sulfate 2 g IV is ordered. The vial is 50% (500 mg/mL). What volume do you draw up before dilution?",
       "type": "single",
       "options": [
         "2 mL",
@@ -15675,7 +15675,7 @@
     {
       "id": "BD-NMB-01-2",
       "set": 1,
-      "stem": "Same PACU patient with TOF ratio 0.5: why does residual block cause hypoxemia and aspiration risk even when tidal volumes look adequate?",
+      "stem": "PACU patient with TOF ratio 0.5: why does residual block cause hypoxemia and aspiration risk even when tidal volumes look adequate?",
       "type": "single",
       "options": [
         "Upper airway reflexes become hyperactive",
@@ -15702,7 +15702,7 @@
     {
       "id": "BD-NMB-01-3",
       "set": 1,
-      "stem": "Same PACU patient with residual block. Which intraoperative drugs could have contributed? (Select 2)",
+      "stem": "PACU patient has residual neuromuscular block after rocuronium. Which intraoperative drugs could have contributed? (Select 2)",
       "type": "multi",
       "options": [
         "Sugammadex given at closure",
@@ -15761,7 +15761,7 @@
     {
       "id": "BD-NMB-02-2",
       "set": 1,
-      "stem": "Same myasthenia patient needs a nondepolarizing relaxant. Which plan is BEST?",
+      "stem": "Patient with myasthenia gravis having thymectomy needs a nondepolarizing relaxant. Which plan is BEST?",
       "type": "single",
       "options": [
         "Cisatracurium at double the usual dose",
@@ -15788,7 +15788,7 @@
     {
       "id": "BD-NMB-02-3",
       "set": 1,
-      "stem": "Same myasthenia patient after surgery received extra neostigmine: now weak with fasciculations, salivation, miosis, and HR 48. Interpretation?",
+      "stem": "Patient with myasthenia gravis received extra neostigmine after surgery: now weak with fasciculations, salivation, miosis, and HR 48. Interpretation?",
       "type": "single",
       "options": [
         "Lambert-Eaton syndrome",
@@ -15815,7 +15815,7 @@
     {
       "id": "BD-NMB-02-4",
       "set": 1,
-      "stem": "Same myasthenia patient. Which factors predict the need for postoperative ventilation? (Select 3)",
+      "stem": "Patient with myasthenia gravis having thymectomy. Which factors predict the need for postoperative ventilation? (Select 3)",
       "type": "multi",
       "options": [
         "Pyridostigmine dose over 750 mg/day",
@@ -15875,7 +15875,7 @@
     {
       "id": "BD-NMB-03-2",
       "set": 1,
-      "stem": "Same MH patient: ABG pH 7.12, PaCO2 70, K+ 6.8 with peaked T waves. Which treatments for the hyperkalemia are appropriate? (Select 3)",
+      "stem": "Patient with malignant hyperthermia: ABG pH 7.12, PaCO2 70, K+ 6.8 with peaked T waves. Which treatments for the hyperkalemia are appropriate? (Select 3)",
       "type": "multi",
       "options": [
         "Succinylcholine redosing",
@@ -15908,7 +15908,7 @@
     {
       "id": "BD-NMB-03-3",
       "set": 1,
-      "stem": "Same MH patient is being actively cooled. At what core temperature should active cooling stop?",
+      "stem": "Patient with malignant hyperthermia is being actively cooled. At what core temperature should active cooling stop?",
       "type": "single",
       "options": [
         "About 38–38.5 °C",
@@ -15935,7 +15935,7 @@
     {
       "id": "BD-NMB-03-4",
       "set": 1,
-      "stem": "Same 60 kg MH patient needs three doses of dantrolene at 2.5 mg/kg. How many 20 mg vials?",
+      "stem": "60 kg patient with malignant hyperthermia needs three doses of dantrolene at 2.5 mg/kg. How many 20 mg vials?",
       "type": "single",
       "options": [
         "8 vials",
@@ -15962,7 +15962,7 @@
     {
       "id": "BD-NMB-03-5",
       "set": 1,
-      "stem": "Same MH patient after control: CK is rising and urine is dark. What is the main goal for renal protection?",
+      "stem": "Patient with malignant hyperthermia is now controlled, but CK is rising and urine is dark. What is the main goal for renal protection?",
       "type": "single",
       "options": [
         "Restrict fluids to avoid pulmonary edema from dantrolene",
@@ -16016,7 +16016,7 @@
     {
       "id": "BD-PED-01-2",
       "set": 1,
-      "stem": "Same 20 kg child for tonsillectomy. Dexamethasone 0.15 mg/kg is ordered. What dose?",
+      "stem": "20 kg child having tonsillectomy. Dexamethasone 0.15 mg/kg is ordered. What dose?",
       "type": "single",
       "options": [
         "3 mg",
@@ -16043,7 +16043,7 @@
     {
       "id": "BD-PED-01-3",
       "set": 1,
-      "stem": "Same child after tonsillectomy: thrashing and inconsolable at emergence; SpO2 98%, no obstruction. Which drug is BEST if one is needed?",
+      "stem": "Child after tonsillectomy is thrashing and inconsolable at emergence; SpO2 98%, no obstruction. Which drug is BEST if one is needed?",
       "type": "single",
       "options": [
         "Midazolam 0.1 mg/kg IV",
@@ -16070,7 +16070,7 @@
     {
       "id": "BD-PED-01-4",
       "set": 1,
-      "stem": "Same child returns 8 hr later bleeding from the tonsil bed, HR 150, pale. Which induction plan is MOST appropriate?",
+      "stem": "Child returns 8 hr after tonsillectomy bleeding from the tonsil bed, HR 150, pale. Which induction plan is MOST appropriate?",
       "type": "single",
       "options": [
         "Propofol 3 mg/kg and LMA",
@@ -16129,7 +16129,7 @@
     {
       "id": "BD-OB-01-2",
       "set": 1,
-      "stem": "Same hemorrhage: EBL reaches 2,500 mL, HR 130, BP 78/40. Massive transfusion is activated. Which ratio is the usual starting target?",
+      "stem": "Postpartum hemorrhage from atony: EBL reaches 2,500 mL, HR 130, BP 78/40. Massive transfusion is activated. Which ratio is the usual starting target?",
       "type": "single",
       "options": [
         "PRBC alone until coagulation labs return",
@@ -16156,7 +16156,7 @@
     {
       "id": "BD-OB-01-3",
       "set": 1,
-      "stem": "Same hemorrhage patient goes to laparotomy for persistent atony under GA. How should the anesthetic be adjusted?",
+      "stem": "Patient with postpartum hemorrhage goes to laparotomy for persistent atony under GA. How should the anesthetic be adjusted?",
       "type": "single",
       "options": [
         "Keep volatile under about 0.5 MAC or use TIVA",
@@ -16183,7 +16183,7 @@
     {
       "id": "BD-OB-01-4",
       "set": 1,
-      "stem": "Same patient: TXA 1 g is diluted in 100 mL to run over 10 min. What pump rate?",
+      "stem": "Patient with postpartum hemorrhage: TXA 1 g is diluted in 100 mL to run over 10 min. What pump rate?",
       "type": "single",
       "options": [
         "10 mL/hr",
@@ -16237,7 +16237,7 @@
     {
       "id": "BD-OB-02-2",
       "set": 1,
-      "stem": "Same preeclampsia patient is on magnesium. Which RSI relaxant plan is BEST?",
+      "stem": "Patient with severe preeclampsia on magnesium needs GA cesarean. Which RSI relaxant plan is BEST?",
       "type": "single",
       "options": [
         "No relaxant, using remifentanil 1 mcg/kg alone",
@@ -16264,7 +16264,7 @@
     {
       "id": "BD-OB-02-3",
       "set": 1,
-      "stem": "Same preeclampsia patient needs a magnesium load of 4 g over 20 min. The bag is 20 g in 500 mL. What pump rate?",
+      "stem": "Patient with severe preeclampsia needs a magnesium load of 4 g over 20 min. The bag is 20 g in 500 mL. What pump rate?",
       "type": "single",
       "options": [
         "300 mL/hr",
@@ -16291,7 +16291,7 @@
     {
       "id": "BD-OB-02-4",
       "set": 1,
-      "stem": "Same preeclampsia patient after delivery: the uterus is atonic despite oxytocin. She has no asthma. Which uterotonic should be AVOIDED?",
+      "stem": "Patient with preeclampsia after delivery: the uterus is atonic despite oxytocin. She has no asthma. Which uterotonic should be AVOIDED?",
       "type": "single",
       "options": [
         "Carboprost",
@@ -16345,7 +16345,7 @@
     {
       "id": "BD-OB-03-2",
       "set": 1,
-      "stem": "Same cesarean spinal: within 5 min the patient says her hands tingle and her grip is weak; speech is faint and SpO2 92%. What is the BEST step?",
+      "stem": "Cesarean under spinal: within 5 min the patient says her hands tingle and her grip is weak; speech is faint and SpO2 92%. What is the BEST step?",
       "type": "single",
       "options": [
         "Reassure her; this is expected",
@@ -16372,7 +16372,7 @@
     {
       "id": "BD-OB-03-3",
       "set": 1,
-      "stem": "Same healthy cesarean patient (no OSA, no added sedatives) received intrathecal morphine 100 mcg. What respiratory monitoring does SOAP consensus suggest?",
+      "stem": "Healthy cesarean patient (no OSA, no added sedatives) received intrathecal morphine 100 mcg. What respiratory monitoring does SOAP consensus suggest?",
       "type": "single",
       "options": [
         "RR and sedation every 3 hr for 12 hr",
@@ -16453,7 +16453,7 @@
     {
       "id": "BD-OB-04-3",
       "set": 1,
-      "stem": "Same pregnant patient weighs 90 kg. Using current local anesthetic toxicity guidance, what is the initial 20% lipid bolus?",
+      "stem": "Pregnant patient weighing 90 kg has local anesthetic systemic toxicity. Using current LAST guidance, what is the initial 20% lipid bolus?",
       "type": "single",
       "options": [
         "225 mL",
@@ -16534,7 +16534,7 @@
     {
       "id": "BD-OB-05-2",
       "set": 1,
-      "stem": "Same patient at 24 weeks needs positioning for surgery. Why is left uterine displacement used?",
+      "stem": "Patient at 24 weeks' gestation needs positioning for surgery. Why is left uterine displacement used?",
       "type": "single",
       "options": [
         "It improves maternal FRC",
@@ -16595,7 +16595,7 @@
     {
       "id": "BD-NEU-01-2",
       "set": 1,
-      "stem": "Same TBI patient: MAP 60 after hemorrhage elsewhere; ICP is high. Which osmotic agent is preferred, and why?",
+      "stem": "TBI patient under GA for craniotomy: MAP 60 after hemorrhage elsewhere; ICP is high. Which osmotic agent is preferred, and why?",
       "type": "single",
       "options": [
         "Mannitol; it doesn't cross an intact blood-brain barrier",
@@ -16622,7 +16622,7 @@
     {
       "id": "BD-NEU-01-3",
       "set": 1,
-      "stem": "Same 70 kg TBI patient needs phenytoin 20 mg/kg IV, given no faster than 50 mg/min. What is the shortest safe infusion time?",
+      "stem": "70 kg TBI patient needs phenytoin 20 mg/kg IV, given no faster than 50 mg/min. What is the shortest safe infusion time?",
       "type": "single",
       "options": [
         "28 min",
@@ -16649,7 +16649,7 @@
     {
       "id": "BD-NEU-01-4",
       "set": 1,
-      "stem": "Same TBI patient on levetiracetam needs ongoing seizure prophylaxis. Why is levetiracetam often chosen over phenytoin?",
+      "stem": "TBI patient on levetiracetam needs ongoing seizure prophylaxis. Why is levetiracetam often chosen over phenytoin?",
       "type": "single",
       "options": [
         "It has stronger evidence for preventing early seizures",
@@ -16703,7 +16703,7 @@
     {
       "id": "BD-NEU-02-2",
       "set": 1,
-      "stem": "Same spine patient: MEP amplitudes fall 60% bilaterally during correction. Which anesthetic and physiologic responses are appropriate? (Select 3)",
+      "stem": "Posterior spine fusion with MEP monitoring: MEP amplitudes fall 60% bilaterally during correction. Which anesthetic and physiologic responses are appropriate? (Select 3)",
       "type": "multi",
       "options": [
         "Give rocuronium to reduce movement",
@@ -16736,7 +16736,7 @@
     {
       "id": "BD-NEU-02-3",
       "set": 1,
-      "stem": "Same spine patient needs an analgesic adjunct that is LEAST likely to depress MEPs. Which is BEST?",
+      "stem": "Posterior spine fusion with MEP monitoring needs an analgesic adjunct. Which is LEAST likely to depress MEPs?",
       "type": "single",
       "options": [
         "Sevoflurane at 1 MAC",
@@ -16763,7 +16763,7 @@
     {
       "id": "BD-NEU-02-4",
       "set": 1,
-      "stem": "Same spine fusion patient takes oxycodone 60 mg/day. Which intraoperative opioid choice may reduce postoperative opioid needs for days?",
+      "stem": "Spine fusion patient takes oxycodone 60 mg/day. Which intraoperative opioid choice may reduce postoperative opioid needs for days?",
       "type": "single",
       "options": [
         "Methadone 0.1–0.2 mg/kg at induction",
@@ -16817,7 +16817,7 @@
     {
       "id": "BD-CAR-01-2",
       "set": 1,
-      "stem": "Same bypass candidate developed HIT confirmed by antibody and functional assay 3 weeks ago, and surgery can't wait. Which anticoagulant is BEST for bypass?",
+      "stem": "Bypass candidate developed HIT, confirmed by antibody and functional assay 3 weeks ago, and surgery can't wait. Which anticoagulant is BEST for bypass?",
       "type": "single",
       "options": [
         "Warfarin",
@@ -16844,7 +16844,7 @@
     {
       "id": "BD-CAR-01-3",
       "set": 1,
-      "stem": "Same CABG patient after bypass: MAP 50, cardiac index 3.2, SVR 600, on norepinephrine 0.2 mcg/kg/min. Which drug is BEST next?",
+      "stem": "CABG patient after bypass: MAP 50, cardiac index 3.2, SVR 600, on norepinephrine 0.2 mcg/kg/min. Which drug is BEST next?",
       "type": "single",
       "options": [
         "Epinephrine at high dose",
@@ -16871,7 +16871,7 @@
     {
       "id": "BD-CAR-01-4",
       "set": 1,
-      "stem": "Same CABG patient with vasoplegia remains hypotensive on norepinephrine and vasopressin. He takes sertraline. Which rescue is MOST appropriate?",
+      "stem": "CABG patient with vasoplegia remains hypotensive on norepinephrine and vasopressin. He takes sertraline. Which rescue is MOST appropriate?",
       "type": "single",
       "options": [
         "Hydroxocobalamin",
@@ -16898,7 +16898,7 @@
     {
       "id": "BD-CAR-01-5",
       "set": 1,
-      "stem": "Same CABG patient is bleeding after protamine. Match each TEG finding to the MOST appropriate product.",
+      "stem": "CABG patient is bleeding after protamine. Match each TEG finding to the MOST appropriate product.",
       "type": "matching",
       "prompts": [
         "Prolonged R time",
@@ -16970,7 +16970,7 @@
     {
       "id": "BD-CAR-02-2",
       "set": 1,
-      "stem": "Same pheochromocytoma patient: during tumor manipulation, BP jumps to 240/130 with HR 104. Which drug is BEST?",
+      "stem": "Pheochromocytoma resection: during tumor manipulation, BP jumps to 240/130 with HR 104. Which drug is BEST?",
       "type": "single",
       "options": [
         "Esmolol alone",
@@ -16997,7 +16997,7 @@
     {
       "id": "BD-CAR-02-3",
       "set": 1,
-      "stem": "Same pheochromocytoma patient: after the adrenal vein is ligated, BP falls to 70/40. Which steps are appropriate? (Select 4)",
+      "stem": "Pheochromocytoma resection: after the adrenal vein is ligated, BP falls to 70/40. Which steps are appropriate? (Select 4)",
       "type": "multi",
       "options": [
         "Give volume",
@@ -17031,7 +17031,7 @@
     {
       "id": "BD-CAR-02-4",
       "set": 1,
-      "stem": "Same pheochromocytoma patient: why can hypoglycemia occur after tumor removal?",
+      "stem": "Patient after pheochromocytoma resection: why can hypoglycemia occur after tumor removal?",
       "type": "single",
       "options": [
         "Clevidipine increases insulin sensitivity",
@@ -17085,7 +17085,7 @@
     {
       "id": "BD-TRA-01-2",
       "set": 1,
-      "stem": "Same trauma patient after 10 units of blood: K+ 6.4 with peaked T waves, iCa 0.9. Which factors contribute? (Select 3)",
+      "stem": "Trauma patient after 10 units of blood: K+ 6.4 with peaked T waves, iCa 0.9. Which factors contribute? (Select 3)",
       "type": "multi",
       "options": [
         "Citrate-related hypocalcemia",
@@ -17118,7 +17118,7 @@
     {
       "id": "BD-TRA-01-3",
       "set": 1,
-      "stem": "Same trauma patient's core temperature is 34 °C. Coagulation tests run at 37 °C are near normal, but oozing continues. Why?",
+      "stem": "Trauma patient on massive transfusion has a core temperature of 34 °C. Coagulation tests run at 37 °C are near normal, but oozing continues. Why?",
       "type": "single",
       "options": [
         "Labs warm the sample and miss hypothermic clotting dysfunction",
@@ -17145,7 +17145,7 @@
     {
       "id": "BD-TRA-01-4",
       "set": 1,
-      "stem": "Same trauma patient: fibrinogen is 90 mg/dL. Which product raises fibrinogen MOST efficiently?",
+      "stem": "Trauma patient on massive transfusion: fibrinogen is 90 mg/dL. Which product raises fibrinogen MOST efficiently?",
       "type": "single",
       "options": [
         "4-factor prothrombin complex concentrate",
@@ -17199,7 +17199,7 @@
     {
       "id": "BD-END-01-2",
       "set": 1,
-      "stem": "Same patient in thyroid storm under GA. Which treatments are appropriate? (Select 4)",
+      "stem": "Patient with untreated Graves disease develops thyroid storm under GA. Which treatments are appropriate? (Select 4)",
       "type": "multi",
       "options": [
         "Propylthiouracil",
@@ -17233,7 +17233,7 @@
     {
       "id": "BD-END-01-3",
       "set": 1,
-      "stem": "Same thyroid storm patient. Why is acetaminophen preferred to aspirin for fever?",
+      "stem": "Patient in thyroid storm under GA. Why is acetaminophen preferred to aspirin for fever?",
       "type": "single",
       "options": [
         "Aspirin blocks thionamide absorption",
@@ -17287,7 +17287,7 @@
     {
       "id": "BD-END-02-2",
       "set": 1,
-      "stem": "Same ESRD patient with K+ 6.6. Insulin with dextrose is planned. What insulin dose is often recommended in kidney failure to reduce hypoglycemia?",
+      "stem": "ESRD patient with K+ 6.6. Insulin with dextrose is planned. What insulin dose is often recommended in kidney failure to reduce hypoglycemia?",
       "type": "single",
       "options": [
         "Glargine 10 units SC",
@@ -17314,7 +17314,7 @@
     {
       "id": "BD-END-02-3",
       "set": 1,
-      "stem": "Same ESRD patient weighs 80 kg. Calcium gluconate 10% (100 mg/mL) is given for ECG changes. What volume provides 3 g?",
+      "stem": "80 kg ESRD patient with K+ 6.6 and ECG changes. Calcium gluconate 10% (100 mg/mL) is given. What volume provides 3 g?",
       "type": "single",
       "options": [
         "10 mL",
@@ -17377,7 +17377,7 @@
     {
       "id": "BD-END-03-2",
       "set": 1,
-      "stem": "Same bariatric patient weighs 160 kg and is 170 cm tall. What is the BMI?",
+      "stem": "Bariatric surgery patient weighs 160 kg and is 170 cm tall. What is the BMI?",
       "type": "single",
       "options": [
         "About 33",
@@ -17431,7 +17431,7 @@
     {
       "id": "BD-END-03-4",
       "set": 1,
-      "stem": "Same bariatric patient with STOP-BANG 7. Which postoperative analgesic plan BEST lowers respiratory risk?",
+      "stem": "Bariatric surgery patient with STOP-BANG 7. Which postoperative analgesic plan BEST lowers respiratory risk?",
       "type": "single",
       "options": [
         "Long-acting oral oxycodone started in PACU at low dose",
@@ -17485,7 +17485,7 @@
     {
       "id": "BD-END-04-2",
       "set": 1,
-      "stem": "Same patient on naltrexone. Why is overcoming the blockade with large opioid doses dangerous?",
+      "stem": "Patient on monthly extended-release naltrexone needs urgent surgery. Why is overcoming the blockade with large opioid doses dangerous?",
       "type": "single",
       "options": [
         "Naltrexone prolongs QT with opioids",
@@ -17566,7 +17566,7 @@
     {
       "id": "BD-END-06-2",
       "set": 1,
-      "stem": "Same 88-year-old with dementia and a hip fracture. Which drugs raise postoperative delirium risk and are best avoided? (Select 4)",
+      "stem": "88-year-old with dementia and a hip fracture. Which drugs raise postoperative delirium risk and are best avoided? (Select 4)",
       "type": "multi",
       "options": [
         "Meperidine",
@@ -17600,7 +17600,7 @@
     {
       "id": "BD-END-06-3",
       "set": 1,
-      "stem": "Same 88-year-old. Sevoflurane MAC at age 40 is about 2.0% and falls about 6% per decade. What is her approximate MAC?",
+      "stem": "88-year-old having hip surgery. Sevoflurane MAC at age 40 is about 2.0% and falls about 6% per decade. What is her approximate MAC?",
       "type": "single",
       "options": [
         "About 1.8%",
@@ -17627,7 +17627,7 @@
     {
       "id": "BD-END-06-4",
       "set": 1,
-      "stem": "Same 88-year-old in PACU after hip pinning: pain 7/10, mildly confused. Which analgesic approach is BEST?",
+      "stem": "88-year-old in PACU after hip pinning: pain 7/10, mildly confused. Which analgesic approach is BEST?",
       "type": "single",
       "options": [
         "Meperidine 50 mg IV for pain and shivering",
@@ -17681,7 +17681,7 @@
     {
       "id": "BD-SPC-01-2",
       "set": 1,
-      "stem": "Same cirrhosis and CKD patient needs an opioid for maintenance. Which is BEST?",
+      "stem": "Patient with cirrhosis (Child-Pugh C) and CKD stage 4 needs an opioid for maintenance. Which is BEST?",
       "type": "single",
       "options": [
         "Hydromorphone at high doses",
@@ -17708,7 +17708,7 @@
     {
       "id": "BD-SPC-01-3",
       "set": 1,
-      "stem": "Same patient needs sedation for EGD before surgery. Which benzodiazepine is BEST suited?",
+      "stem": "Patient with cirrhosis (Child-Pugh C) and CKD stage 4 needs sedation for EGD before surgery. Which benzodiazepine is BEST suited?",
       "type": "single",
       "options": [
         "Lorazepam infusion",
@@ -17762,7 +17762,7 @@
     {
       "id": "BD-SPC-02-2",
       "set": 1,
-      "stem": "Same heart transplant recipient. Which drugs act directly on the heart and keep their effect? (Select 3)",
+      "stem": "Heart transplant recipient having hernia repair. Which drugs act directly on the heart and keep their effect? (Select 3)",
       "type": "multi",
       "options": [
         "Atropine",
@@ -17984,7 +17984,7 @@
     {
       "id": "BD-PAC-01-2",
       "set": 1,
-      "stem": "Same 68-year-old after naloxone 120 mcg total: RR 14 now, but she is still hard to rouse with SpO2 92%. She also got midazolam 2 mg. Which drug is MOST reasonable?",
+      "stem": "68-year-old in PACU got hydromorphone 2 mg and midazolam 2 mg. After naloxone 120 mcg total, RR is 14, but she is still hard to rouse with SpO2 92%. Which drug is MOST reasonable next?",
       "type": "single",
       "options": [
         "Naloxone 0.4 mg IV",
@@ -18011,7 +18011,7 @@
     {
       "id": "BD-PAC-01-3",
       "set": 1,
-      "stem": "Same patient: 45 min later RR falls to 7 again. She needed 0.12 mg naloxone total to respond. Using two-thirds of the effective dose per hour, what infusion rate is appropriate?",
+      "stem": "68-year-old in PACU needed 0.12 mg naloxone total to reverse hydromorphone; 45 min later RR falls to 7 again. Using two-thirds of the effective dose per hour, what infusion rate?",
       "type": "single",
       "options": [
         "0.08 mg/hr",
@@ -18065,7 +18065,7 @@
     {
       "id": "BD-PAC-02-2",
       "set": 1,
-      "stem": "Same 25-year-old: treatable causes are excluded and agitation persists. Which drug is BEST?",
+      "stem": "25-year-old with emergence agitation after nasal surgery: treatable causes are excluded and agitation persists. Which drug is BEST?",
       "type": "single",
       "options": [
         "Ketamine 0.5 mg/kg IV, then reassess in 5 min",
@@ -18181,7 +18181,7 @@
     {
       "id": "BD-REG-01-2",
       "set": 1,
-      "stem": "Same patient with COPD needs shoulder analgesia. Which block choice reduces phrenic involvement?",
+      "stem": "Patient with COPD needs shoulder surgery analgesia. Which block choice reduces phrenic involvement?",
       "type": "single",
       "options": [
         "Supraclavicular block with 40 mL of ropivacaine 0.5%",
@@ -18289,7 +18289,7 @@
     {
       "id": "BD-REG-03-2",
       "set": 1,
-      "stem": "Same outpatient: why is mepivacaine avoided for obstetric epidurals?",
+      "stem": "Why is mepivacaine avoided for obstetric epidurals?",
       "type": "single",
       "options": [
         "It causes intense uterine contractions",
@@ -18443,7 +18443,7 @@
     {
       "id": "BD-REG-05-2",
       "set": 1,
-      "stem": "Same 30-year-old weighs 60 kg. After the lipid bolus, the infusion runs at 0.25 mL/kg/min. What is the infusion rate in mL/hr?",
+      "stem": "60 kg 30-year-old with LAST after a rectus sheath block: after the lipid bolus, the infusion runs at 0.25 mL/kg/min. What is the infusion rate in mL/hr?",
       "type": "single",
       "options": [
         "900 mL/hr",
@@ -20387,7 +20387,7 @@
     {
       "id": "BD-AWY-04-2",
       "set": 1,
-      "stem": "Same aspiration patient after intubation. Which measures are appropriate? (Select 3)",
+      "stem": "Patient aspirated gastric contents at induction and is now intubated. Which measures are appropriate? (Select 3)",
       "type": "multi",
       "options": [
         "Suction the trachea before ventilating",
@@ -20447,7 +20447,7 @@
     {
       "id": "BD-AWY-05-2",
       "set": 1,
-      "stem": "Same COPD patient: why is ipratropium added rather than more albuterol during bronchospasm with HR 130?",
+      "stem": "Patient with COPD develops bronchospasm under GA with HR 130. Why is ipratropium added rather than more albuterol?",
       "type": "single",
       "options": [
         "It works faster than albuterol in severe bronchospasm",
@@ -21264,7 +21264,7 @@
     {
       "id": "BD-PED-02-2",
       "set": 1,
-      "stem": "Same 5-week-old with pyloric stenosis after correction. Which induction approach is MOST appropriate?",
+      "stem": "5-week-old with pyloric stenosis after electrolyte correction. Which induction approach is MOST appropriate?",
       "type": "single",
       "options": [
         "LMA with spontaneous breathing",
@@ -21291,7 +21291,7 @@
     {
       "id": "BD-PED-02-3",
       "set": 1,
-      "stem": "Same infant with pyloric stenosis. Which factors raise the risk of postoperative apnea? (Select 3)",
+      "stem": "5-week-old with pyloric stenosis. Which factors raise the risk of postoperative apnea? (Select 3)",
       "type": "multi",
       "options": [
         "Use of regional wound infiltration",
@@ -21464,7 +21464,7 @@
     {
       "id": "BD-TRA-03-2",
       "set": 1,
-      "stem": "Same burn patient 10 days after injury needs debridement. Which drug responses should you expect? (Select 4)",
+      "stem": "Burn patient 10 days after injury needs debridement. Which drug responses should you expect? (Select 4)",
       "type": "multi",
       "options": [
         "Increased sensitivity to rocuronium",
@@ -21498,7 +21498,7 @@
     {
       "id": "BD-TRA-03-3",
       "set": 1,
-      "stem": "Same burn patient: which induction agent BEST supports hemodynamics and analgesia during debridement?",
+      "stem": "Burn patient 10 days after injury needs debridement. Which induction agent BEST supports hemodynamics and analgesia?",
       "type": "single",
       "options": [
         "Propofol at 3 mg/kg",
@@ -21552,7 +21552,7 @@
     {
       "id": "BD-TRA-04-2",
       "set": 1,
-      "stem": "Same fire victim. Why is SpO2 misleading? (Select 2)",
+      "stem": "House fire victim with COHb 18% shows SpO2 99%. Why is SpO2 misleading? (Select 2)",
       "type": "multi",
       "options": [
         "Pulse oximetry is accurate if PaO2 is normal",
@@ -21611,7 +21611,7 @@
     {
       "id": "BD-NEU-04-2",
       "set": 1,
-      "stem": "Same aneurysm patient after coiling develops vasospasm. Which BP strategy is used?",
+      "stem": "Patient with a cerebral aneurysm develops vasospasm after coiling. Which BP strategy is used?",
       "type": "single",
       "options": [
         "Lower BP to reduce rebleeding",
@@ -21692,7 +21692,7 @@
     {
       "id": "BD-AWY-06-2",
       "set": 1,
-      "stem": "Same awake intubation patient. Which sedative BEST preserves spontaneous breathing?",
+      "stem": "Patient with a known difficult airway needs awake fiberoptic intubation. Which sedative BEST preserves spontaneous breathing?",
       "type": "single",
       "options": [
         "Dexmedetomidine",
@@ -21719,7 +21719,7 @@
     {
       "id": "BD-AWY-06-3",
       "set": 1,
-      "stem": "Same 70 kg awake intubation patient. Using 9 mg/kg as the topical lidocaine limit, how much 4% lidocaine can be used?",
+      "stem": "70 kg patient for awake fiberoptic intubation. Using 9 mg/kg as the topical lidocaine limit, how much 4% lidocaine can be used?",
       "type": "single",
       "options": [
         "157.5 mL",
@@ -21872,7 +21872,7 @@
     {
       "id": "BD-HEM-13-2",
       "set": 1,
-      "stem": "Same cocaine patient. Which statements are accurate? (Select 4)",
+      "stem": "Patient with recent cocaine use, HR 132, BP 196/110, and agitation. Which statements are accurate? (Select 4)",
       "type": "multi",
       "options": [
         "Ephedrine can produce exaggerated responses",
@@ -22149,7 +22149,7 @@
     {
       "id": "BD-END-10-2",
       "set": 1,
-      "stem": "Same patient after the seizure stops. Why limit correction to about 8–10 mEq/L per 24 hr?",
+      "stem": "Patient with Na 118 and seizures received 3% saline, and the seizure has stopped. Why limit correction to about 8–10 mEq/L per 24 hr?",
       "type": "single",
       "options": [
         "To prevent osmotic demyelination",
@@ -22236,7 +22236,7 @@
     {
       "id": "BD-NMB-05-2",
       "set": 1,
-      "stem": "Same patient with prolonged mivacurium block, TOF count 0. What is the BEST plan?",
+      "stem": "Patient has prolonged block after mivacurium, TOF count 0 at 60 min, and a relative who had \"trouble waking up.\" What is the BEST plan?",
       "type": "single",
       "options": [
         "Sugammadex 16 mg/kg as a single dose",
@@ -22363,7 +22363,7 @@
     {
       "id": "BD-CAR-04-2",
       "set": 1,
-      "stem": "Same post-CABG tamponade patient needs induction for reexploration. Which choices are appropriate? (Select 4)",
+      "stem": "Post-CABG patient with suspected tamponade needs induction for reexploration. Which choices are appropriate? (Select 4)",
       "type": "multi",
       "options": [
         "Propofol 2 mg/kg",
@@ -22432,7 +22432,7 @@
     {
       "id": "BD-PAC-08-2",
       "set": 1,
-      "stem": "Same unresponsive patient: glucose, temperature, and ABG are normal; TOF ratio 1.0. Naloxone and flumazenil have no effect. Pupils are asymmetric. What is NEXT?",
+      "stem": "Patient unresponsive 45 min after a 2-hr case: glucose, temperature, and ABG are normal; TOF ratio 1.0. Naloxone and flumazenil have no effect. Pupils are asymmetric. What is NEXT?",
       "type": "single",
       "options": [
         "Urgent head CT",
@@ -22486,7 +22486,7 @@
     {
       "id": "BD-HEM-14-2",
       "set": 1,
-      "stem": "Same patient with torsades. Which steps are appropriate? (Select 4)",
+      "stem": "Patient on methadone develops torsades after ondansetron and haloperidol; QTc was 540. Which steps are appropriate? (Select 4)",
       "type": "multi",
       "options": [
         "Give amiodarone to prevent recurrence",
@@ -22648,7 +22648,7 @@
     {
       "id": "BD-SPC-07-2",
       "set": 1,
-      "stem": "Same sickle cell patient develops chest pain, fever, and new infiltrates after surgery. Most likely diagnosis?",
+      "stem": "Patient with sickle cell disease develops chest pain, fever, and new infiltrates after cholecystectomy. Most likely diagnosis?",
       "type": "single",
       "options": [
         "Acute chest syndrome",
