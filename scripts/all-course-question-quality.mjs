@@ -28,7 +28,8 @@ for(const group of groups){
  }
  summary[group.course]={questions:count};
 }
-if(rows.length!==7000)failures.push('Expected 7000 questions; found '+rows.length);
+const expectedTotal=8000;
+if(rows.length!==expectedTotal)failures.push('Expected '+expectedTotal+' questions; found '+rows.length);
 if(Object.values(summary).some(s=>s.questions===0)||Object.keys(summary).length!==3)failures.push('All three courses must be present');
 const findings=[],byStem=new Map(),byRecord=new Map();
 const ref=r=>r.course+'/'+r.source+'/'+r.id;
