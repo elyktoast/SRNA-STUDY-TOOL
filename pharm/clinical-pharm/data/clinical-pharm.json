@@ -17238,11 +17238,11 @@
       "options": [
         "Aspirin blocks thionamide absorption",
         "Acetaminophen also blocks peripheral T4-to-T3 conversion",
-        "Aspirin causes direct thyroid stimulation",
+        "Aspirin impairs platelet function before surgery",
         "It frees T4 and T3 from binding proteins"
       ],
       "answer": 3,
-      "explanation": "Salicylates free bound thyroid hormone and can worsen storm. Acetaminophen doesn't block conversion; it's simply safer. The other options aren't real effects.",
+      "explanation": "Salicylates free bound thyroid hormone and can worsen storm. Aspirin's platelet effect is real but isn't the reason to avoid it here. Acetaminophen doesn't block T4-to-T3 conversion; it's simply safer.",
       "citation": "",
       "topic": "Endocrine & Metabolic Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -17490,11 +17490,11 @@
       "options": [
         "Naltrexone prolongs QT with opioids",
         "Naltrexone converts opioids to neurotoxic metabolites",
-        "Large opioid doses cause hyperkalemia",
+        "Opioid-induced hyperalgesia worsens pain",
         "Respiratory depression as naltrexone wanes"
       ],
       "answer": 3,
-      "explanation": "As naltrexone wanes, the high opioid doses needed to break through can cause sudden, severe respiratory depression. The other mechanisms aren't real.",
+      "explanation": "As naltrexone wanes, the high opioid doses needed to break through can cause sudden, severe respiratory depression. Hyperalgesia is possible but isn't the life-threatening risk. Naltrexone doesn't create neurotoxic metabolites or prolong QT with opioids.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19500,12 +19500,12 @@
       "type": "single",
       "options": [
         "It causes dopamine-mediated dystonia",
-        "It is less effective than placebo in diabetes",
+        "It causes hypokalemia that worsens gastroparesis",
         "It prolongs the QT interval in diabetics",
         "It raises glucose for 6–12 hr"
       ],
       "answer": 3,
-      "explanation": "Dexamethasone causes hyperglycemia that can be significant in poorly controlled diabetes. It doesn't prolong QT or cause dystonia.",
+      "explanation": "Dexamethasone causes hyperglycemia that can be significant in poorly controlled diabetes. It doesn't meaningfully lower potassium at PONV doses, prolong QT, or cause dystonia.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -19580,13 +19580,13 @@
       "stem": "Older adult after hip surgery needs treatment for shivering. Why is meperidine 50 mg IV a poor choice?",
       "type": "single",
       "options": [
-        "Meperidine is contraindicated after orthopedic surgery",
+        "It causes miosis that masks neuro checks",
         "Meperidine is ineffective for shivering",
         "High doses raise delirium and seizure risk",
         "Meperidine causes severe bradycardia in older adults"
       ],
       "answer": 2,
-      "explanation": "Meperidine works for shivering at 12.5–25 mg, but larger doses in older adults raise delirium and normeperidine risk. It tends to raise HR. It isn't contraindicated after orthopedic surgery.",
+      "explanation": "Meperidine works for shivering at 12.5–50 mg (usually 25), but larger doses in older adults raise delirium and normeperidine risk. Its atropine-like structure tends to cause mydriasis, not miosis, and it raises rather than lowers HR.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19607,13 +19607,13 @@
       "stem": "Why is IV verapamil a dangerous choice for a wide-complex tachycardia of uncertain origin?",
       "type": "single",
       "options": [
-        "It has no AV nodal effect",
+        "It is ineffective for SVT",
         "It speeds the ventricular rate in SVT with aberrancy",
         "It is too slow to act",
         "If it is VT, it can cause collapse"
       ],
       "answer": 3,
-      "explanation": "Verapamil causes vasodilation and negative inotropy; in VT, it can cause hemodynamic collapse. Wide-complex tachycardia is treated as VT until proven otherwise.",
+      "explanation": "Verapamil causes vasodilation and negative inotropy; in VT it can cause collapse, so wide-complex tachycardia is treated as VT until proven otherwise. Verapamil does slow the AV node and works for many SVTs.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19635,12 +19635,12 @@
       "type": "single",
       "options": [
         "It slows conduction and HR",
-        "It requires an arterial line",
+        "It speeds AV conduction",
         "It has a long context-sensitive half-time at sedation doses",
         "It causes respiratory depression in most patients"
       ],
       "answer": 0,
-      "explanation": "Dex increases vagal tone and lowers sympathetic tone, which can worsen AV block. It causes little respiratory depression. Its short-term kinetics are acceptable for procedures.",
+      "explanation": "Dex increases vagal tone and lowers sympathetic tone, which slows conduction and can worsen AV block. It doesn't speed conduction, and it causes little respiratory depression.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -19689,12 +19689,12 @@
       "type": "single",
       "options": [
         "It requires a central line",
-        "It is less effective than placebo for PONV",
+        "It prolongs QT more than droperidol",
         "Extravasation can cause severe tissue injury",
         "It prolongs QT more than ondansetron does"
       ],
       "answer": 2,
-      "explanation": "Promethazine is a vesicant; small veins raise extravasation and arterial injury risk. It is effective for PONV. A central line isn't required, but a large vein and dilution are.",
+      "explanation": "Promethazine is a vesicant; small veins raise extravasation and arterial injury risk. Its QT effect isn't greater than droperidol's. A central line isn't required, but a large vein and dilution are.",
       "citation": "",
       "topic": "Antiemetics & Gastrointestinal Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -19716,12 +19716,12 @@
       "type": "single",
       "options": [
         "It requires central access for boluses",
-        "It has no vasoconstrictor effect in healthy patients",
+        "It acts too briefly to sustain BP",
         "It causes immediate tachycardia",
         "Its potent, longer vasoconstriction exceeds the need"
       ],
       "answer": 3,
-      "explanation": "Vasopressin's effect lasts longer and is harder to titrate than phenylephrine or ephedrine, so it's reserved for refractory or RAAS-blocked hypotension. It does constrict vessels. It doesn't raise HR.",
+      "explanation": "Vasopressin's effect lasts longer and is harder to titrate than phenylephrine or ephedrine, so it's reserved for refractory or RAAS-blocked hypotension. It isn't too brief, and it doesn't raise HR.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -19745,10 +19745,10 @@
         "It reduces renal blood flow and can worsen kidney function",
         "It causes hyperkalemia mainly in dialysis patients",
         "It is cleared by the liver and causes hepatotoxicity in renal failure",
-        "It lacks analgesic effect in renal failure"
+        "It raises renal blood flow, causing diuresis"
       ],
       "answer": 0,
-      "explanation": "NSAIDs inhibit renal prostaglandins that maintain blood flow in compromised kidneys. Ketorolac is renally cleared. Hyperkalemia risk isn't limited to dialysis.",
+      "explanation": "NSAIDs inhibit the renal prostaglandins that maintain blood flow in compromised kidneys, lowering flow rather than raising it. Ketorolac is renally cleared, and hyperkalemia risk isn't limited to dialysis.",
       "citation": "",
       "topic": "Analgesic Adjuncts & Multimodal Analgesia",
       "sourceTitle": "Clinical Pharm",
@@ -19772,10 +19772,10 @@
         "It causes bradycardia through muscarinic blockade",
         "It adds sodium channel blockade",
         "It is metabolized into bupivacaine",
-        "It reverses lipid emulsion"
+        "It shortens bupivacaine's half-life"
       ],
       "answer": 1,
-      "explanation": "Another local anesthetic adds to sodium channel block. Amiodarone is preferred if an antiarrhythmic is needed. The other mechanisms aren't real.",
+      "explanation": "Another local anesthetic adds to sodium channel block; amiodarone is preferred if an antiarrhythmic is needed. Lidocaine doesn't change bupivacaine's clearance or cause muscarinic bradycardia.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19796,13 +19796,13 @@
       "stem": "Why is succinylcholine a poor choice for a patient bedbound in the ICU for 3 weeks?",
       "type": "single",
       "options": [
-        "It is metabolized by the kidneys in ICU patients",
+        "Low cholinesterase in ICU patients prolongs it",
         "It is ineffective after immobilization",
         "Extrajunctional receptors raise hyperkalemia risk",
         "It causes phase II block with a single dose in ICU patients"
       ],
       "answer": 2,
-      "explanation": "Prolonged immobilization upregulates extrajunctional receptors, and succinylcholine can cause dangerous hyperkalemia. It is still effective as a relaxant.",
+      "explanation": "Prolonged immobilization upregulates extrajunctional receptors, and succinylcholine can cause dangerous hyperkalemia. Critical illness can lower cholinesterase and modestly prolong it, but that isn't the danger. It's still effective as a relaxant.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -19852,11 +19852,11 @@
       "options": [
         "It can trigger vasospasm in diseased arteries",
         "It causes bronchospasm through histamine release",
-        "It relaxes the uterus in patients with CAD",
+        "It causes coronary vasodilation and steal",
         "It lowers BP abruptly"
       ],
       "answer": 0,
-      "explanation": "Methylergonovine is a potent vasoconstrictor and can cause coronary spasm and hypertension. It contracts the uterus. Bronchospasm is a carboprost concern.",
+      "explanation": "Methylergonovine is a potent vasoconstrictor and can cause coronary spasm and hypertension, the opposite of vasodilation. It contracts the uterus. Bronchospasm is a carboprost concern.",
       "citation": "",
       "topic": "Obstetric Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19877,13 +19877,13 @@
       "stem": "Why is aspirin alone NOT a reason to cancel a planned spinal?",
       "type": "single",
       "options": [
-        "It increases platelet counts",
+        "Guidelines require a 7-day aspirin hold",
         "It doesn't significantly increase neuraxial hematoma risk",
         "It is reversed by protamine before the spinal",
         "It irreversibly blocks platelets, so the risk is already fixed"
       ],
       "answer": 1,
-      "explanation": "ASRA guidance considers aspirin alone acceptable for neuraxial techniques. Irreversible blockade is true but doesn't translate into a clinically meaningful hematoma risk by itself.",
+      "explanation": "ASRA guidance considers aspirin alone acceptable for neuraxial techniques; no 7-day hold is required. Irreversible blockade is true but doesn't translate into meaningful hematoma risk by itself. Protamine doesn't reverse aspirin.",
       "citation": "",
       "topic": "Anticoagulants, Antiplatelets & Hemostasis",
       "sourceTitle": "Clinical Pharm",
@@ -19932,12 +19932,12 @@
       "type": "single",
       "options": [
         "It is too short-acting for home use",
-        "It causes serotonin syndrome when combined with acetaminophen",
+        "Its NMDA effect causes hallucinations at home",
         "It has weaker analgesic effect after minor surgery",
         "Delayed respiratory depression"
       ],
       "answer": 3,
-      "explanation": "Methadone accumulates over several days, so an opioid-naive outpatient can develop respiratory depression after discharge. It is an effective analgesic, it is long- rather than short-acting, and acetaminophen doesn't cause serotonin syndrome with it.",
+      "explanation": "Methadone accumulates over days, and opioid-naive patients can develop respiratory depression after discharge. Its NMDA antagonism doesn't typically cause hallucinations. It is effective and long-acting.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -19988,10 +19988,10 @@
         "It works better as a bolus than an infusion",
         "It can cause fatal arrhythmias",
         "It is ineffective unless given orally",
-        "It causes hypercalcemia"
+        "A bolus shifts into cells too fast to work"
       ],
       "answer": 1,
-      "explanation": "A rapid push raises serum potassium abruptly and can cause cardiac arrest, so KCl is given as a controlled infusion. IV potassium works, doesn't cause hypercalcemia, and an infusion is safer than a bolus.",
+      "explanation": "Rapid IV potassium raises serum levels abruptly and can cause cardiac arrest; it is given as a controlled infusion. The danger is the spike in serum potassium, not loss of effect.",
       "citation": "",
       "topic": "Fluids, Blood Products & Electrolytes",
       "sourceTitle": "Clinical Pharm",
@@ -20040,12 +20040,12 @@
       "type": "single",
       "options": [
         "It causes more tachycardia",
-        "It reverses neuromuscular block itself at higher doses",
+        "Its fast onset matches edrophonium",
         "It works faster than atropine",
         "No CNS entry"
       ],
       "answer": 3,
-      "explanation": "Glycopyrrolate is quaternary and stays out of the CNS, avoiding delirium in older adults, and its onset matches neostigmine's. Atropine actually acts faster, causes at least as much tachycardia, and neither drug reverses block.",
+      "explanation": "Glycopyrrolate is quaternary and avoids central effects in older adults; its slower onset matches neostigmine. Atropine's fast onset is what matches edrophonium. Neither drug reverses block.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -20148,12 +20148,12 @@
       "type": "single",
       "options": [
         "It decreases preload and LV size",
-        "It dilates the mitral annulus directly",
+        "It raises HR, lengthening regurgitant time",
         "It causes reflex tachycardia that worsens MR",
         "Higher afterload increases regurgitant flow"
       ],
       "answer": 3,
-      "explanation": "Raising afterload increases regurgitant flow into the left atrium and lowers forward output. Phenylephrine causes reflex bradycardia, not tachycardia, and it doesn't reduce preload or act on the annulus.",
+      "explanation": "In MR, increased afterload promotes backward flow into the atrium. Phenylephrine causes reflex bradycardia, which also lengthens regurgitant time; it doesn't raise HR or reduce preload.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Clinical Pharm",
@@ -20176,11 +20176,11 @@
       "options": [
         "Unopposed alpha stimulation can raise BP",
         "It causes tachycardia in this setting",
-        "It is too short-acting",
+        "It causes reflex tachycardia",
         "It reverses cocaine's sodium channel effects"
       ],
       "answer": 0,
-      "explanation": "Blocking beta-2 vasodilation leaves cocaine's alpha vasoconstriction unopposed, which can raise BP and worsen coronary spasm; benzodiazepines and vasodilators come first. Beta blockers lower HR, don't reverse sodium channel blockade, and duration isn't the concern.",
+      "explanation": "Blocking beta-2 vasodilation leaves cocaine's alpha vasoconstriction unopposed, which can raise BP and worsen coronary spasm; benzodiazepines and vasodilators come first. Beta blockers lower HR rather than cause reflex tachycardia.",
       "citation": "",
       "topic": "CNS & Chronic Medication Interactions",
       "sourceTitle": "Clinical Pharm",
@@ -21385,14 +21385,14 @@
         "Rocuronium 0.3 mg/kg IM",
         "Propofol 2 mg/kg IM",
         "Atropine about 0.02 mg/kg IM",
-        "Neostigmine 0.05 mg/kg IM",
-        "Flumazenil 0.01 mg/kg IM"
+        "Lidocaine 1.5 mg/kg IM",
+        "Glycopyrrolate IM without a relaxant"
       ],
       "answer": [
         0,
         3
       ],
-      "explanation": "IM succinylcholine relaxes the cords and IM atropine prevents bradycardia. IM rocuronium is slow at low doses, propofol isn't given IM, and the others don't treat laryngospasm.",
+      "explanation": "IM succinylcholine relaxes the cords, and IM atropine prevents the bradycardia that can follow. An anticholinergic alone doesn't break laryngospasm. IM lidocaine and low-dose IM rocuronium act too slowly, and propofol isn't given IM.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Clinical Pharm",
@@ -21939,10 +21939,10 @@
         "Nitrite-induced methemoglobin",
         "Cyanide toxicity is rare when COHb is under 20%",
         "Sodium nitrite is too slow",
-        "The dose should be doubled"
+        "Hydroxocobalamin also causes methemoglobinemia"
       ],
       "answer": 0,
-      "explanation": "Nitrites treat cyanide by creating methemoglobin, which further reduces oxygen-carrying capacity in a patient already poisoned by CO. Hydroxocobalamin binds cyanide without that cost. Cyanide toxicity is common after enclosed-space fires, and speed or dose isn't the core problem.",
+      "explanation": "Nitrite-induced methemoglobinemia adds to CO's oxygen-carrying defect, so hydroxocobalamin is preferred; it binds cyanide without creating methemoglobin. Cyanide toxicity is common after enclosed-space fires.",
       "citation": "",
       "topic": "Toxicology, Emergencies & Special Pharmacology",
       "sourceTitle": "Clinical Pharm",
@@ -21963,13 +21963,13 @@
       "stem": "Resident's plan for a patient with an unsecured aneurysm: \"Lighten anesthesia before laryngoscopy to keep BP up.\" What is the error?",
       "type": "single",
       "options": [
-        "BP should be kept below 70",
+        "Light anesthesia preserves cerebral autoregulation",
         "BP spikes risk rerupture",
         "Light anesthesia lowers ICP",
         "Hyperventilation should be avoided"
       ],
       "answer": 1,
-      "explanation": "Lightening anesthesia invites a pressor response to laryngoscopy, and the rise in transmural pressure can rerupture the aneurysm. Depth, opioid, beta blocker, or lidocaine blunting is used instead. A BP target near 70 would threaten perfusion, and brief moderate hyperventilation isn't the error here.",
+      "explanation": "The laryngoscopy pressor response increases transmural pressure and can rupture the aneurysm. Light anesthesia doesn't protect autoregulation and invites the BP spike. Moderate, brief hyperventilation isn't the error.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Clinical Pharm",

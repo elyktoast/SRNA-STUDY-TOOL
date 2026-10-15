@@ -40,6 +40,36 @@
       },
       "count": 200,
       "sourceTitleContract": "Top Drawer Drug Dosing"
+    },
+    {
+      "key": "pharm-top-drawer-recall",
+      "label": "Top Drawer Straight Recall",
+      "groupLabel": "Top Drawer Straight Recall",
+      "data": "data/top-drawer-recall.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Top Drawer Straight Recall"
+      },
+      "count": 500,
+      "sourceTitleContract": "Top Drawer Straight Recall"
+    },
+    {
+      "key": "pharm-top-drawer-recall-2",
+      "label": "Top Drawer Straight Recall",
+      "groupLabel": "Top Drawer Straight Recall",
+      "data": "data/top-drawer-recall-2.json",
+      "format": "canonical",
+      "sets": [
+        1
+      ],
+      "setLabels": {
+        "1": "Top Drawer Straight Recall"
+      },
+      "count": 500,
+      "sourceTitleContract": "Top Drawer Straight Recall"
     }
   ],
   "sync": {
@@ -80,7 +110,8 @@
     ],
     "sourceTitles": [
       "Clinical Pharm",
-      "Top Drawer Drug Dosing"
+      "Top Drawer Drug Dosing",
+      "Top Drawer Straight Recall"
     ]
   },
   "sessionEnvironment": "equipment-bank1-practice-set1-v1",

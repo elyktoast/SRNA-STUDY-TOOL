@@ -171,13 +171,13 @@
       "stem": "Typical subanesthetic ketamine infusion rate?",
       "type": "single",
       "options": [
-        "0.6–1 mg/kg/hr",
-        "1–2 mg/kg/hr",
+        "0.01–0.05 mg/kg/hr",
+        "2–3 mg/kg/hr",
         "0.1–0.5 mg/kg/hr",
         "0.2–0.7 mcg/kg/hr"
       ],
       "answer": 2,
-      "explanation": "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr. 0.6–1 mg/kg/hr is above the analgesic range. 1–2 mg/kg/hr is an anesthetic-level infusion. 0.2–0.7 mcg/kg/hr is the dexmedetomidine infusion. Some PACU protocols use 0.15–0.5 mg/kg/hr.",
+      "explanation": "Ketamine, analgesic infusion: 0.1–0.5 mg/kg/hr is the usual range, and the 2018 ASRA/AAPM/ASA consensus guidelines (Schwenk et al., Reg Anesth Pain Med) cap infusions for acute pain at 1 mg/kg/hr outside intensive monitoring. 2–3 mg/kg/hr is above that ceiling. 0.01–0.05 mg/kg/hr is too low to help. 0.2–0.7 mcg/kg/hr is the dexmedetomidine infusion.",
       "citation": "",
       "topic": "Anesthetic Agents & Sedatives",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1099,16 +1099,16 @@
     {
       "id": "DOSE-RV-002",
       "set": 1,
-      "stem": "Typical neostigmine reversal dose?",
+      "stem": "Neostigmine reversal dose range (FDA label)?",
       "type": "single",
       "options": [
         "0.01–0.02 mg/kg",
         "0.5–1 mg/kg",
-        "0.04–0.07 mg/kg",
+        "0.03–0.07 mg/kg",
         "0.1–0.15 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Neostigmine, reversal: 0.04–0.07 mg/kg. 0.01–0.02 mg/kg is closer to the glycopyrrolate pairing dose. 0.5–1 mg/kg is the edrophonium dose. 0.1–0.15 mg/kg is above the ceiling dose.",
+      "explanation": "Neostigmine, reversal: 0.03–0.07 mg/kg per the Bloxiverz FDA label, using 0.03 mg/kg for shallow block or shorter-acting relaxants and 0.07 mg/kg for deeper block or longer-acting relaxants, with a maximum of 0.07 mg/kg or 5 mg, whichever is less. 0.01–0.02 mg/kg is closer to the glycopyrrolate pairing dose. 0.5–1 mg/kg is the edrophonium dose. 0.1–0.15 mg/kg is above the labeled maximum.",
       "citation": "",
       "topic": "Neuromuscular Blockade & Reversal",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1601,13 +1601,13 @@
       "stem": "Typical remifentanil maintenance infusion with a volatile or propofol?",
       "type": "single",
       "options": [
-        "0.5–1 mcg/kg/min",
+        "5–10 mcg/kg/min",
         "0.01–0.02 mcg/kg/min",
         "0.5–2 mcg/kg/hr",
         "0.05–0.25 mcg/kg/min"
       ],
       "answer": 3,
-      "explanation": "Remifentanil, infusion: 0.05–0.25 mcg/kg/min. 0.5–1 mcg/kg/min is above typical maintenance. 0.01–0.02 mcg/kg/min is too low to matter. 0.5–2 mcg/kg/hr is the fentanyl infusion.",
+      "explanation": "Remifentanil, infusion: 0.05–0.25 mcg/kg/min is the typical maintenance range with a volatile or propofol; the Ultiva FDA label starts at 0.25 mcg/kg/min and allows 0.05–2 mcg/kg/min. 5–10 mcg/kg/min is far above the labeled range. 0.5–2 mcg/kg/hr is the fentanyl infusion range. 0.01–0.02 mcg/kg/min is too low to matter.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -1655,13 +1655,13 @@
       "stem": "Typical fentanyl infusion rate?",
       "type": "single",
       "options": [
-        "5–10 mcg/kg/hr",
+        "20–30 mcg/kg/hr",
         "0.5–2 mcg/kg/hr",
         "0.1–0.2 mcg/kg/hr",
         "0.05–0.25 mcg/kg/min"
       ],
       "answer": 1,
-      "explanation": "Fentanyl, infusion: 0.5–2 mcg/kg/hr. 5–10 mcg/kg/hr is excessive. 0.1–0.2 mcg/kg/hr is too low. 0.05–0.25 mcg/kg/min is the remifentanil infusion.",
+      "explanation": "Fentanyl, infusion: 0.5–2 mcg/kg/hr is a typical intraoperative range. 20–30 mcg/kg/hr is cardiac high-dose territory. 0.1–0.2 mcg/kg/hr is too low. 0.05–0.25 mcg/kg/min is the remifentanil infusion.",
       "citation": "",
       "topic": "Opioids & Opioid Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2783,12 +2783,12 @@
       "type": "single",
       "options": [
         "10–15 mg",
-        "10–15 g",
-        "100–150 mg",
-        "1–1.5 mg"
+        "20–25 mg",
+        "2.5–3 mg",
+        "5–7.5 mg"
       ],
       "answer": 0,
-      "explanation": "Bupivacaine, spinal cesarean: 10–15 mg. 1–1.5 mg is tenfold too low. 10–15 g uses g instead of mg. 100–150 mg is tenfold too high.",
+      "explanation": "Bupivacaine, spinal cesarean: 10–15 mg. 20–25 mg is above the usual cesarean dose. 2.5–3 mg is too little alone. 5–7.5 mg is a short urologic or ambulatory spinal amount.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2809,13 +2809,13 @@
       "stem": "Commonly cited maximum topical lidocaine for awake airway topicalization (lean body weight)?",
       "type": "single",
       "options": [
-        "900 mg/kg",
+        "7 mg/kg",
         "9 mg/kg",
-        "0.9 mg/kg",
-        "0.09 mg/kg"
+        "4.5 mg/kg",
+        "15 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Lidocaine, topical airway max: 9 mg/kg. 900 mg/kg is hundredfold too high. 0.9 mg/kg is tenfold too low. 0.09 mg/kg is hundredfold too low.",
+      "explanation": "Lidocaine, topical airway max: 9 mg/kg. 7 mg/kg is the maximum with epinephrine. 4.5 mg/kg is the plain infiltration maximum. 15 mg/kg is above the topical limit.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2836,13 +2836,13 @@
       "stem": "20% lipid emulsion bolus for LAST in a patient under 70 kg?",
       "type": "single",
       "options": [
-        "1.5 mL",
-        "0.15 mL/kg",
+        "3 mL/kg",
+        "0.25 mL/kg",
         "1.5 mL/kg",
-        "1.5 L/kg"
+        "1 mL/kg"
       ],
       "answer": 2,
-      "explanation": "Lipid 20%, bolus under 70 kg: 1.5 mL/kg. 1.5 L/kg uses L/kg instead of mL/kg. 0.15 mL/kg is tenfold too low. 1.5 mL uses mL instead of mL/kg.",
+      "explanation": "Lipid 20%, bolus under 70 kg: 1.5 mL/kg. 3 mL/kg is double the bolus. 0.25 mL/kg is the per-minute infusion amount. 1 mL/kg is below the bolus dose.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2863,13 +2863,13 @@
       "stem": "Maximum dose of chloroprocaine with epinephrine?",
       "type": "single",
       "options": [
-        "1.4 mg/kg",
-        "140 mg/kg",
-        "14 g/kg",
+        "7 mg/kg",
+        "11 mg/kg",
+        "20 mg/kg",
         "14 mg/kg"
       ],
       "answer": 3,
-      "explanation": "Chloroprocaine with epi, max: 14 mg/kg. 1.4 mg/kg is tenfold too low. 140 mg/kg is tenfold too high. 14 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Chloroprocaine with epi, max: 14 mg/kg. 7 mg/kg is the lidocaine with epinephrine maximum. 11 mg/kg is the plain maximum. 20 mg/kg is above any cited maximum.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2891,12 +2891,12 @@
       "type": "single",
       "options": [
         "0.25 mL/kg/min",
-        "2.5 mL/kg/min",
-        "0.25 mL/min",
-        "0.25 mL/kg/hr"
+        "1 mL/kg/min",
+        "1.5 mL/kg/min",
+        "0.1 mL/kg/min"
       ],
       "answer": 0,
-      "explanation": "Lipid 20%, infusion under 70 kg: 0.25 mL/kg/min. 2.5 mL/kg/min is tenfold too high. 0.25 mL/min uses mL/min instead of mL/kg/min. 0.25 mL/kg/hr uses mL/kg/hr instead of mL/kg/min.",
+      "explanation": "Lipid 20%, infusion under 70 kg: 0.25 mL/kg/min. 1 mL/kg/min is too fast. 1.5 mL/kg/min is the bolus amount used as a rate. 0.1 mL/kg/min is too slow.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2917,13 +2917,13 @@
       "stem": "Epinephrine content of a standard epidural test dose?",
       "type": "single",
       "options": [
-        "1.5 mg",
+        "5 mcg",
         "15 mcg",
-        "0.15 mcg",
-        "150 mg"
+        "50 mcg",
+        "10 mcg"
       ],
       "answer": 1,
-      "explanation": "Epinephrine, test dose: 15 mcg. 0.15 mcg is hundredfold too low. 1.5 mg uses mg and is tenfold low. 150 mg uses mg and is tenfold high.",
+      "explanation": "Epinephrine, test dose: 15 mcg. 5 mcg is the amount per mL at 1:200,000. 50 mcg is above a test dose. 10 mcg is less than a standard adult test dose.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2944,13 +2944,13 @@
       "stem": "Maximum dose of lidocaine with epinephrine?",
       "type": "single",
       "options": [
-        "7 mcg/kg",
-        "70 mg/kg",
+        "9 mg/kg",
+        "11 mg/kg",
         "7 mg/kg",
-        "7 g/kg"
+        "4.5 mg/kg"
       ],
       "answer": 2,
-      "explanation": "Lidocaine with epi, max: 7 mg/kg. 7 mcg/kg uses mcg/kg instead of mg/kg. 70 mg/kg is tenfold too high. 7 g/kg uses g/kg instead of mg/kg.",
+      "explanation": "Lidocaine with epi, max: 7 mg/kg. 9 mg/kg is the topical airway limit. 11 mg/kg is the chloroprocaine maximum. 4.5 mg/kg is the plain maximum.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -2972,17 +2972,17 @@
       "type": "multi",
       "options": [
         "Lidocaine, topical airway max: 9 mg/kg",
-        "Lidocaine, IV infusion: 0.1–0.2 mg/kg/hr",
+        "Lidocaine, IV infusion: 3–4 mg/kg/hr",
         "Lidocaine IV, laryngoscopy: 1–1.5 mg/kg",
-        "Ropivacaine, max: 3 mcg/kg",
-        "Epinephrine 1:200,000: 500 mcg/mL",
-        "Bupivacaine, spinal cesarean: 10–15 g"
+        "Ropivacaine, max: 5 mg/kg",
+        "Epinephrine 1:200,000: 2.5 mcg/mL",
+        "Bupivacaine, spinal cesarean: 5–7.5 mg"
       ],
       "answer": [
         0,
         2
       ],
-      "explanation": "Correct: Lidocaine IV, laryngoscopy 1–1.5 mg/kg; Lidocaine, topical airway max 9 mg/kg. Incorrect: Epinephrine 1:200,000 is 5 mcg/mL, not 500 mcg/mL; Lidocaine, IV infusion is 1–2 mg/kg/hr, not 0.1–0.2 mg/kg/hr; Ropivacaine, max is 3 mg/kg, not 3 mcg/kg; Bupivacaine, spinal cesarean is 10–15 mg, not 10–15 g.",
+      "explanation": "Correct: Lidocaine, topical airway max 9 mg/kg; Lidocaine IV, laryngoscopy 1–1.5 mg/kg. Incorrect: Lidocaine, IV infusion is 1–2 mg/kg/hr; 3–4 mg/kg/hr is above the usual range. Ropivacaine, max is 3 mg/kg; 5 mg/kg is above the ropivacaine maximum. Epinephrine 1:200,000 is 5 mcg/mL; 2.5 mcg/mL is the 1:400,000 concentration. Bupivacaine, spinal cesarean is 10–15 mg; 5–7.5 mg is a short urologic or ambulatory spinal amount.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3004,17 +3004,17 @@
       "type": "multi",
       "options": [
         "Lidocaine with epi, max: 7 mg/kg",
-        "Bupivacaine with epi, max: 30 mg/kg",
-        "Lipid 20%, infusion under 70 kg: 2.5 mL/kg/min",
-        "Lidocaine plain, max: 0.45 mg/kg",
-        "Lidocaine, topical airway max: 9 g/kg",
+        "Bupivacaine with epi, max: 7 mg/kg",
+        "Lipid 20%, infusion under 70 kg: 0.1 mL/kg/min",
+        "Lidocaine plain, max: 2.5 mg/kg",
+        "Lidocaine, topical airway max: 15 mg/kg",
         "Lidocaine, IV infusion: 1–2 mg/kg/hr"
       ],
       "answer": [
         0,
         5
       ],
-      "explanation": "Correct: Lidocaine with epi, max 7 mg/kg; Lidocaine, IV infusion 1–2 mg/kg/hr. Incorrect: Bupivacaine with epi, max is 3 mg/kg, not 30 mg/kg; Lidocaine plain, max is 4.5 mg/kg, not 0.45 mg/kg; Lipid 20%, infusion under 70 kg is 0.25 mL/kg/min, not 2.5 mL/kg/min; Lidocaine, topical airway max is 9 mg/kg, not 9 g/kg.",
+      "explanation": "Correct: Lidocaine with epi, max 7 mg/kg; Lidocaine, IV infusion 1–2 mg/kg/hr. Incorrect: Bupivacaine with epi, max is 3 mg/kg; 7 mg/kg is the lidocaine with epinephrine maximum. Lipid 20%, infusion under 70 kg is 0.25 mL/kg/min; 0.1 mL/kg/min is too slow. Lidocaine plain, max is 4.5 mg/kg; 2.5 mg/kg is the plain bupivacaine maximum. Lidocaine, topical airway max is 9 mg/kg; 15 mg/kg is above the topical limit.",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3043,7 +3043,7 @@
       "choices": [
         "10–15 mg",
         "14 mg/kg",
-        "140 mg/kg",
+        "1 mL/kg/min",
         "5 mcg/mL",
         "0.25 mL/kg/min"
       ],
@@ -3053,7 +3053,7 @@
         "Bupivacaine, spinal cesarean": "10–15 mg",
         "Lipid 20%, infusion under 70 kg": "0.25 mL/kg/min"
       },
-      "explanation": "Typical doses: Epinephrine 1:200,000 5 mcg/mL; Chloroprocaine with epi, max 14 mg/kg; Bupivacaine, spinal cesarean 10–15 mg; Lipid 20%, infusion under 70 kg 0.25 mL/kg/min. The extra choice, 140 mg/kg, is the Chloroprocaine with epi, max dose with the decimal moved.",
+      "explanation": "Typical doses: Epinephrine 1:200,000 5 mcg/mL; Chloroprocaine with epi, max 14 mg/kg; Bupivacaine, spinal cesarean 10–15 mg; Lipid 20%, infusion under 70 kg 0.25 mL/kg/min. The extra choice, 1 mL/kg/min, is too fast (a near-miss for Lipid 20%, infusion under 70 kg, which is 0.25 mL/kg/min).",
       "citation": "",
       "topic": "Local Anesthetics & Regional Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3074,13 +3074,13 @@
       "stem": "IV magnesium dose for torsades?",
       "type": "single",
       "options": [
-        "1–2 mg",
-        "1–2 mcg",
-        "10–20 g",
+        "10 g",
+        "200–500 mg",
+        "4–6 g",
         "1–2 g"
       ],
       "answer": 3,
-      "explanation": "Magnesium, torsades: 1–2 g. 1–2 mcg uses mcg instead of g. 10–20 g is tenfold too high. 1–2 mg uses mg instead of g.",
+      "explanation": "Magnesium, torsades: 1–2 g. 10 g is excessive. 200–500 mg is too low. 4–6 g is the preeclampsia load.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3102,12 +3102,12 @@
       "type": "single",
       "options": [
         "0.25–0.5 mg",
-        "0.025–0.05 mg",
-        "0.0025–0.005 mg",
-        "0.25–0.5 mcg"
+        "2 mg",
+        "1–1.5 mg",
+        "0.0625–0.125 mg"
       ],
       "answer": 0,
-      "explanation": "Digoxin, initial load: 0.25–0.5 mg. 0.25–0.5 mcg uses mcg instead of mg. 0.0025–0.005 mg is hundredfold too low. 0.025–0.05 mg is tenfold too low.",
+      "explanation": "Digoxin, initial load: 0.25–0.5 mg. 2 mg is excessive. 1–1.5 mg is the full cumulative load given at once. 0.0625–0.125 mg is the daily maintenance dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3128,13 +3128,13 @@
       "stem": "Typical norepinephrine infusion rate?",
       "type": "single",
       "options": [
-        "0.01–0.5 mcg/kg/hr",
+        "2–20 mcg/kg/min",
         "0.01–0.5 mcg/kg/min",
-        "1–50 mcg/kg/min",
-        "0.1–5 mcg/kg/hr"
+        "0.03–0.04 units/min",
+        "1–3 mcg/kg/min"
       ],
       "answer": 1,
-      "explanation": "Norepinephrine, infusion: 0.01–0.5 mcg/kg/min. 0.01–0.5 mcg/kg/hr uses mcg/kg/hr instead of mcg/kg/min. 1–50 mcg/kg/min is hundredfold too high. 0.1–5 mcg/kg/hr uses mcg/kg/hr and is tenfold high.",
+      "explanation": "Norepinephrine, infusion: 0.01–0.5 mcg/kg/min. 2–20 mcg/kg/min is the dobutamine range. 0.03–0.04 units/min is the vasopressin infusion. 1–3 mcg/kg/min is excessive.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3155,13 +3155,13 @@
       "stem": "Typical vasopressin infusion rate in septic shock?",
       "type": "single",
       "options": [
-        "0.003–0.004 units/min",
-        "0.03–0.04 units/kg/min",
+        "0.1–0.2 units/min",
+        "0.5–1 units/min",
         "0.03–0.04 units/min",
-        "3–4 units/min"
+        "0.003 units/min"
       ],
       "answer": 2,
-      "explanation": "Vasopressin, infusion: 0.03–0.04 units/min. 3–4 units/min is hundredfold too high. 0.03–0.04 units/kg/min uses units/kg/min instead of units/min. 0.003–0.004 units/min is tenfold too low.",
+      "explanation": "Vasopressin, infusion: 0.03–0.04 units/min. 0.1–0.2 units/min is above the septic shock range. 0.5–1 units/min is the bolus amount used as a rate. 0.003 units/min is too low.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3182,13 +3182,13 @@
       "stem": "Amiodarone dose for stable VT, given over 10 min?",
       "type": "single",
       "options": [
-        "150 g",
-        "150 mcg",
-        "15 mg",
+        "75 mg",
+        "300 mg",
+        "450 mg",
         "150 mg"
       ],
       "answer": 3,
-      "explanation": "Amiodarone, stable VT: 150 mg. 150 g uses g instead of mg. 15 mg is tenfold too low. 150 mcg uses mcg instead of mg.",
+      "explanation": "Amiodarone, stable VT: 150 mg. 75 mg is half the stable dose. 300 mg is the pulseless arrest dose. 450 mg is above the stable dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3210,12 +3210,12 @@
       "type": "single",
       "options": [
         "300 mg",
-        "30 mg",
-        "3,000 mg",
-        "300 mcg"
+        "450 mg",
+        "75 mg",
+        "150 mg"
       ],
       "answer": 0,
-      "explanation": "Amiodarone, pulseless: 300 mg. 3,000 mg is tenfold too high. 300 mcg uses mcg instead of mg. 30 mg is tenfold too low.",
+      "explanation": "Amiodarone, pulseless: 300 mg. 450 mg is above the arrest dose. 75 mg is too low. 150 mg is the stable VT and second arrest dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3236,13 +3236,13 @@
       "stem": "Nicardipine starting infusion rate?",
       "type": "single",
       "options": [
-        "0.5 mg/hr",
+        "2.5 mg/hr",
         "5 mg/hr",
-        "5 mg/min",
-        "50 mg/hr"
+        "15 mg/hr",
+        "1–2 mg/hr"
       ],
       "answer": 1,
-      "explanation": "Nicardipine, start: 5 mg/hr. 5 mg/min uses mg/min instead of mg/hr. 50 mg/hr is tenfold too high. 0.5 mg/hr is tenfold too low.",
+      "explanation": "Nicardipine, start: 5 mg/hr. 2.5 mg/hr is the titration step. 15 mg/hr is the maximum rate. 1–2 mg/hr is the clevidipine start.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3263,13 +3263,13 @@
       "stem": "Typical vasopressin bolus for refractory post-induction hypotension?",
       "type": "single",
       "options": [
-        "0.5–1 units/kg",
-        "5–10 unit",
+        "0.1 unit",
+        "5–10 units",
         "0.5–1 unit",
-        "0.5–1 mg"
+        "40 units"
       ],
       "answer": 2,
-      "explanation": "Vasopressin, bolus: 0.5–1 unit. 5–10 unit is tenfold too high. 0.5–1 units/kg uses units/kg instead of unit. 0.5–1 mg uses mg instead of unit.",
+      "explanation": "Vasopressin, bolus: 0.5–1 unit. 0.1 unit is too small. 5–10 units is excessive for hypotension. 40 units is the old cardiac arrest dose.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3290,13 +3290,13 @@
       "stem": "Adult IV epinephrine dose in cardiac arrest?",
       "type": "single",
       "options": [
-        "0.1 mcg",
-        "0.1 mg",
-        "100 mg",
+        "0.3–0.5 mg",
+        "3 mg",
+        "100 mcg",
         "1 mg"
       ],
       "answer": 3,
-      "explanation": "Epinephrine, cardiac arrest: 1 mg. 100 mg is hundredfold too high. 0.1 mcg uses mcg and is tenfold low. 0.1 mg is tenfold too low.",
+      "explanation": "Epinephrine, cardiac arrest: 1 mg. 0.3–0.5 mg is the IM anaphylaxis dose. 3 mg is the old high-dose regimen. 100 mcg is an anaphylaxis IV bolus.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3318,12 +3318,12 @@
       "type": "single",
       "options": [
         "0.375–0.75 mcg/kg/min",
-        "37.5–75 mcg/kg/min",
-        "0.0037–0.0075 mcg/kg/min",
-        "0.0375–0.075 mcg/kg/min"
+        "1.5–3 mcg/kg/min",
+        "2–20 mcg/kg/min",
+        "0.1–0.2 mcg/kg/min"
       ],
       "answer": 0,
-      "explanation": "Milrinone, infusion: 0.375–0.75 mcg/kg/min. 37.5–75 mcg/kg/min is hundredfold too high. 0.0375–0.075 mcg/kg/min is tenfold too low. 0.0037–0.0075 mcg/kg/min is hundredfold too low.",
+      "explanation": "Milrinone, infusion: 0.375–0.75 mcg/kg/min. 1.5–3 mcg/kg/min is above the usual range. 2–20 mcg/kg/min is the dobutamine range. 0.1–0.2 mcg/kg/min is too low.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3344,13 +3344,13 @@
       "stem": "First pediatric adenosine dose?",
       "type": "single",
       "options": [
-        "0.01 mg/kg",
+        "0.02 mg/kg",
         "0.1 mg/kg",
-        "0.1 mcg/kg",
-        "1 mg/kg"
+        "0.2 mg/kg",
+        "0.05 mg/kg"
       ],
       "answer": 1,
-      "explanation": "Adenosine, pediatric: 0.1 mg/kg. 1 mg/kg is tenfold too high. 0.01 mg/kg is tenfold too low. 0.1 mcg/kg uses mcg/kg instead of mg/kg.",
+      "explanation": "Adenosine, pediatric: 0.1 mg/kg. 0.02 mg/kg is the pediatric atropine dose. 0.2 mg/kg is the second pediatric dose. 0.05 mg/kg is half the first dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3371,13 +3371,13 @@
       "stem": "Phentolamine dose for vasopressor extravasation?",
       "type": "single",
       "options": [
-        "50–100 mg",
-        "0.5–1 mg",
+        "20–40 mg",
+        "1–2 mg",
         "5–10 mg",
-        "5–10 g"
+        "0.5–1 mg"
       ],
       "answer": 2,
-      "explanation": "Phentolamine, extravasation: 5–10 mg. 50–100 mg is tenfold too high. 0.5–1 mg is tenfold too low. 5–10 g uses g instead of mg.",
+      "explanation": "Phentolamine, extravasation: 5–10 mg. 20–40 mg is excessive. 1–2 mg is small IV doses used for hypertension. 0.5–1 mg is too little for infiltration.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3398,13 +3398,13 @@
       "stem": "First peripheral IV adenosine dose?",
       "type": "single",
       "options": [
-        "0.6 mg",
-        "60 mg",
-        "6 g",
+        "12 mg",
+        "3 mg",
+        "18 mg",
         "6 mg"
       ],
       "answer": 3,
-      "explanation": "Adenosine, first peripheral: 6 mg. 6 g uses g instead of mg. 0.6 mg is tenfold too low. 60 mg is tenfold too high.",
+      "explanation": "Adenosine, first peripheral: 6 mg. 12 mg is the second dose. 3 mg is the central-line dose. 18 mg is above the usual second dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3426,12 +3426,12 @@
       "type": "single",
       "options": [
         "0.01 mg/kg",
-        "0.1 mcg/kg",
-        "1 mg/kg",
-        "0.001 mg/kg"
+        "0.02 mg/kg",
+        "0.1 mg/kg",
+        "0.05 mg/kg"
       ],
       "answer": 0,
-      "explanation": "Epinephrine, pediatric arrest: 0.01 mg/kg. 1 mg/kg is hundredfold too high. 0.1 mcg/kg uses mcg/kg and is tenfold high. 0.001 mg/kg is tenfold too low.",
+      "explanation": "Epinephrine, pediatric arrest: 0.01 mg/kg. 0.02 mg/kg is the pediatric atropine dose. 0.1 mg/kg is the endotracheal dose, not IV. 0.05 mg/kg is above the IV dose.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3452,13 +3452,13 @@
       "stem": "Typical IV epinephrine bolus for perioperative anaphylaxis, titrated?",
       "type": "single",
       "options": [
-        "1–10 mcg",
+        "1–2 mcg",
         "10–100 mcg",
-        "100–1,000 mcg",
-        "10–100 mg"
+        "0.3–0.5 mg",
+        "1 mg"
       ],
       "answer": 1,
-      "explanation": "Epinephrine, anaphylaxis IV: 10–100 mcg. 10–100 mg uses mg instead of mcg. 1–10 mcg is tenfold too low. 100–1,000 mcg is tenfold too high.",
+      "explanation": "Epinephrine, anaphylaxis IV: 10–100 mcg. 1–2 mcg is too small. 0.3–0.5 mg is the IM dose. 1 mg is the cardiac arrest dose.",
       "citation": "",
       "topic": "Vasopressors, Inotropes & Hemodynamic Drugs",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3479,13 +3479,13 @@
       "stem": "Typical IV metoprolol increment?",
       "type": "single",
       "options": [
-        "25–50 mg",
-        "0.25–0.5 mg",
+        "0.5–1 mg",
+        "25 mg",
         "2.5–5 mg",
-        "2.5–5 mcg"
+        "15 mg"
       ],
       "answer": 2,
-      "explanation": "Metoprolol, increment: 2.5–5 mg. 0.25–0.5 mg is tenfold too low. 25–50 mg is tenfold too high. 2.5–5 mcg uses mcg instead of mg.",
+      "explanation": "Metoprolol, increment: 2.5–5 mg. 0.5–1 mg is too small. 25 mg is an oral dose. 15 mg is the cumulative limit.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3506,13 +3506,13 @@
       "stem": "Second peripheral IV adenosine dose?",
       "type": "single",
       "options": [
-        "12 g",
-        "12 mcg",
-        "120 mg",
+        "6 mg",
+        "24 mg",
+        "18 mg",
         "12 mg"
       ],
       "answer": 3,
-      "explanation": "Adenosine, second: 12 mg. 12 g uses g instead of mg. 12 mcg uses mcg instead of mg. 120 mg is tenfold too high.",
+      "explanation": "Adenosine, second: 12 mg. 6 mg is the first dose. 24 mg is double the second dose. 18 mg is above the recommended second dose.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3534,12 +3534,12 @@
       "type": "single",
       "options": [
         "20–50 mg/min",
-        "20–50 mcg/min",
-        "20–50 mg/hr",
-        "2–5 mg/min"
+        "100–200 mg/min",
+        "5 mg/min",
+        "1 mg/min"
       ],
       "answer": 0,
-      "explanation": "Procainamide, rate: 20–50 mg/min. 20–50 mcg/min uses mcg/min instead of mg/min. 2–5 mg/min is tenfold too low. 20–50 mg/hr uses mg/hr instead of mg/min.",
+      "explanation": "Procainamide, rate: 20–50 mg/min. 100–200 mg/min is too fast, risking hypotension. 5 mg/min is too slow. 1 mg/min is the amiodarone maintenance rate.",
       "citation": "",
       "topic": "Antiarrhythmics & Cardiovascular Pharmacology",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3560,13 +3560,13 @@
       "stem": "Nicardipine maximum infusion rate?",
       "type": "single",
       "options": [
-        "1.5 mg/hr",
+        "5 mg/hr",
         "15 mg/hr",
-        "15 mg/min",
-        "150 mg/hr"
+        "10 mg/hr",
+        "32 mg/hr"
       ],
       "answer": 1,
-      "explanation": "Nicardipine, max: 15 mg/hr. 150 mg/hr is tenfold too high. 1.5 mg/hr is tenfold too low. 15 mg/min uses mg/min instead of mg/hr.",
+      "explanation": "Nicardipine, max: 15 mg/hr. 5 mg/hr is the starting rate. 10 mg/hr is a mid-titration rate. 32 mg/hr is the clevidipine maximum.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
@@ -3587,13 +3587,13 @@
       "stem": "Clevidipine starting infusion rate?",
       "type": "single",
       "options": [
-        "1–2 mg/min",
-        "10–20 mg/hr",
+        "5 mg/hr",
+        "16 mg/hr",
         "1–2 mg/hr",
         "0.1–0.2 mg/hr"
       ],
       "answer": 2,
-      "explanation": "Clevidipine, start: 1–2 mg/hr. 10–20 mg/hr is tenfold too high. 0.1–0.2 mg/hr is tenfold too low. 1–2 mg/min uses mg/min instead of mg/hr.",
+      "explanation": "Clevidipine, start: 1–2 mg/hr. 5 mg/hr is the nicardipine start. 16 mg/hr is a common upper titration point. 0.1–0.2 mg/hr is too low.",
       "citation": "",
       "topic": "Antihypertensives & Vasodilators",
       "sourceTitle": "Top Drawer Drug Dosing",
