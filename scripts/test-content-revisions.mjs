@@ -16,8 +16,9 @@ const probe={};vm.runInNewContext(registrySrc,{window:probe});
 const runtimeIds=Array.from(probe.MBUContentRevisions.list()).sort(),manifestIds=Object.keys(manifest.revisions).sort();
 assert.deepEqual(runtimeIds,manifestIds,'content-revisions.js and scripts/content-revisions.json list different questions');
 const banks={};for(const b of ['bank1','bank2','bank3'])banks[b]=new Map(JSON.parse(read('equipment/exam-1/data/'+b+'.json')).questions.map(q=>[String(q.id),q]));
+const pharm=new Map(JSON.parse(read('pharm/clinical-pharm/data/clinical-pharm.json')).questions.map(q=>[String(q.id),q]));
 for(const [uid,e] of Object.entries(manifest.revisions)){
-  const bank={b1:'bank1',b2:'bank2',b3:'bank3'}[uid.split('-')[0]],q=banks[bank]?.get(String(e.id));
+  const bank={b1:'bank1',b2:'bank2',b3:'bank3'}[uid.split('-')[0]],q=uid.startsWith('pharm-clinical-')?pharm.get(String(e.id)):banks[bank]?.get(String(e.id));
   assert.ok(q,uid+' is missing from '+bank+' (question IDs must never be removed)');
   assert.equal(Number(q.set),Number(e.set),uid+' moved from set '+e.set+' to set '+q.set);
   assert.equal(probe.MBUContentRevisions.revision(uid),Number(e.revision),uid+' runtime revision differs from manifest');

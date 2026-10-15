@@ -1105,6 +1105,678 @@
       "set": 5,
       "revision": 2,
       "fingerprint": "47115a18"
+    },
+    "pharm-clinical-NMB-015": {
+      "id": "NMB-015",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "96f35390"
+    },
+    "pharm-clinical-OB-009": {
+      "id": "OB-009",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f1d3cb49"
+    },
+    "pharm-clinical-LA-016": {
+      "id": "LA-016",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "d67b0203"
+    },
+    "pharm-clinical-BD-HEM-01-2": {
+      "id": "BD-HEM-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "684f8164"
+    },
+    "pharm-clinical-BD-HEM-01-3": {
+      "id": "BD-HEM-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8f27a89e"
+    },
+    "pharm-clinical-BD-HEM-01-4": {
+      "id": "BD-HEM-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7ed2dc24"
+    },
+    "pharm-clinical-BD-HEM-02-2": {
+      "id": "BD-HEM-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "023c151a"
+    },
+    "pharm-clinical-BD-HEM-02-3": {
+      "id": "BD-HEM-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "88026a91"
+    },
+    "pharm-clinical-BD-HEM-02-4": {
+      "id": "BD-HEM-02-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7ccf09f9"
+    },
+    "pharm-clinical-BD-HEM-03-2": {
+      "id": "BD-HEM-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "0a69e1c1"
+    },
+    "pharm-clinical-BD-HEM-03-3": {
+      "id": "BD-HEM-03-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c72be923"
+    },
+    "pharm-clinical-BD-HEM-04-2": {
+      "id": "BD-HEM-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "799a29ca"
+    },
+    "pharm-clinical-BD-HEM-04-3": {
+      "id": "BD-HEM-04-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f880db2d"
+    },
+    "pharm-clinical-BD-HEM-04-4": {
+      "id": "BD-HEM-04-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "33a171ca"
+    },
+    "pharm-clinical-BD-HEM-04-5": {
+      "id": "BD-HEM-04-5",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "d06deb95"
+    },
+    "pharm-clinical-BD-HEM-04-6": {
+      "id": "BD-HEM-04-6",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "2f15a434"
+    },
+    "pharm-clinical-BD-HEM-05-2": {
+      "id": "BD-HEM-05-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "d1160c1c"
+    },
+    "pharm-clinical-BD-HEM-06-2": {
+      "id": "BD-HEM-06-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "5c24aec0"
+    },
+    "pharm-clinical-BD-HEM-07-2": {
+      "id": "BD-HEM-07-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8bed00f5"
+    },
+    "pharm-clinical-BD-HEM-07-3": {
+      "id": "BD-HEM-07-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "fc71b676"
+    },
+    "pharm-clinical-BD-HEM-07-4": {
+      "id": "BD-HEM-07-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b4cba20e"
+    },
+    "pharm-clinical-BD-HEM-07-5": {
+      "id": "BD-HEM-07-5",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "00e3fdce"
+    },
+    "pharm-clinical-BD-HEM-08-2": {
+      "id": "BD-HEM-08-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "9ff61005"
+    },
+    "pharm-clinical-BD-HEM-08-3": {
+      "id": "BD-HEM-08-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "be76062d"
+    },
+    "pharm-clinical-BD-HEM-09-2": {
+      "id": "BD-HEM-09-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "de385600"
+    },
+    "pharm-clinical-BD-HEM-09-3": {
+      "id": "BD-HEM-09-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "ce84c949"
+    },
+    "pharm-clinical-BD-HEM-09-4": {
+      "id": "BD-HEM-09-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "0bae69a4"
+    },
+    "pharm-clinical-BD-HEM-09-5": {
+      "id": "BD-HEM-09-5",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "bc62c7cb"
+    },
+    "pharm-clinical-BD-HEM-10-2": {
+      "id": "BD-HEM-10-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "a0d007a4"
+    },
+    "pharm-clinical-BD-HEM-10-3": {
+      "id": "BD-HEM-10-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6336dc66"
+    },
+    "pharm-clinical-BD-AWY-01-2": {
+      "id": "BD-AWY-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "a0e106c5"
+    },
+    "pharm-clinical-BD-AWY-01-3": {
+      "id": "BD-AWY-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c8554345"
+    },
+    "pharm-clinical-BD-AWY-01-4": {
+      "id": "BD-AWY-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "bdcc7926"
+    },
+    "pharm-clinical-BD-AWY-02-2": {
+      "id": "BD-AWY-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6615afcb"
+    },
+    "pharm-clinical-BD-AWY-02-3": {
+      "id": "BD-AWY-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8f34f24a"
+    },
+    "pharm-clinical-BD-AWY-03-2": {
+      "id": "BD-AWY-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "bc9399bb"
+    },
+    "pharm-clinical-BD-AWY-03-3": {
+      "id": "BD-AWY-03-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f71ee8d4"
+    },
+    "pharm-clinical-BD-AWY-03-4": {
+      "id": "BD-AWY-03-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7531d847"
+    },
+    "pharm-clinical-BD-NMB-01-2": {
+      "id": "BD-NMB-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "884af90f"
+    },
+    "pharm-clinical-BD-NMB-01-3": {
+      "id": "BD-NMB-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7937cd50"
+    },
+    "pharm-clinical-BD-NMB-02-2": {
+      "id": "BD-NMB-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b09726af"
+    },
+    "pharm-clinical-BD-NMB-02-3": {
+      "id": "BD-NMB-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b1019f64"
+    },
+    "pharm-clinical-BD-NMB-02-4": {
+      "id": "BD-NMB-02-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "5d2b5daa"
+    },
+    "pharm-clinical-BD-NMB-03-2": {
+      "id": "BD-NMB-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "de331834"
+    },
+    "pharm-clinical-BD-NMB-03-3": {
+      "id": "BD-NMB-03-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "0aa0a871"
+    },
+    "pharm-clinical-BD-NMB-03-4": {
+      "id": "BD-NMB-03-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "73769ea7"
+    },
+    "pharm-clinical-BD-NMB-03-5": {
+      "id": "BD-NMB-03-5",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "05960cfa"
+    },
+    "pharm-clinical-BD-PED-01-2": {
+      "id": "BD-PED-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6b3b9a25"
+    },
+    "pharm-clinical-BD-PED-01-3": {
+      "id": "BD-PED-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "eed09a88"
+    },
+    "pharm-clinical-BD-PED-01-4": {
+      "id": "BD-PED-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "91099ce4"
+    },
+    "pharm-clinical-BD-OB-01-2": {
+      "id": "BD-OB-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "ea66e69f"
+    },
+    "pharm-clinical-BD-OB-01-3": {
+      "id": "BD-OB-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b6805887"
+    },
+    "pharm-clinical-BD-OB-01-4": {
+      "id": "BD-OB-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "09e29051"
+    },
+    "pharm-clinical-BD-OB-02-2": {
+      "id": "BD-OB-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f3a1abc8"
+    },
+    "pharm-clinical-BD-OB-02-3": {
+      "id": "BD-OB-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b54d486e"
+    },
+    "pharm-clinical-BD-OB-02-4": {
+      "id": "BD-OB-02-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "b8d59d85"
+    },
+    "pharm-clinical-BD-OB-03-2": {
+      "id": "BD-OB-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "4644b92f"
+    },
+    "pharm-clinical-BD-OB-03-3": {
+      "id": "BD-OB-03-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8395fd86"
+    },
+    "pharm-clinical-BD-OB-04-3": {
+      "id": "BD-OB-04-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "71ed4a33"
+    },
+    "pharm-clinical-BD-OB-05-2": {
+      "id": "BD-OB-05-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c2c89bc0"
+    },
+    "pharm-clinical-BD-NEU-01-2": {
+      "id": "BD-NEU-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "a5417e53"
+    },
+    "pharm-clinical-BD-NEU-01-3": {
+      "id": "BD-NEU-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "827ff3c3"
+    },
+    "pharm-clinical-BD-NEU-01-4": {
+      "id": "BD-NEU-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "982563cd"
+    },
+    "pharm-clinical-BD-NEU-02-2": {
+      "id": "BD-NEU-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "47a14f7c"
+    },
+    "pharm-clinical-BD-NEU-02-3": {
+      "id": "BD-NEU-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "4dcaefe5"
+    },
+    "pharm-clinical-BD-NEU-02-4": {
+      "id": "BD-NEU-02-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6e768ae7"
+    },
+    "pharm-clinical-BD-CAR-01-2": {
+      "id": "BD-CAR-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "3c4f6478"
+    },
+    "pharm-clinical-BD-CAR-01-3": {
+      "id": "BD-CAR-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "cfaf12d0"
+    },
+    "pharm-clinical-BD-CAR-01-4": {
+      "id": "BD-CAR-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "bdde5807"
+    },
+    "pharm-clinical-BD-CAR-01-5": {
+      "id": "BD-CAR-01-5",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f1913f31"
+    },
+    "pharm-clinical-BD-CAR-02-2": {
+      "id": "BD-CAR-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "07d8e13c"
+    },
+    "pharm-clinical-BD-CAR-02-3": {
+      "id": "BD-CAR-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "97905d89"
+    },
+    "pharm-clinical-BD-CAR-02-4": {
+      "id": "BD-CAR-02-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "0e6b2934"
+    },
+    "pharm-clinical-BD-TRA-01-2": {
+      "id": "BD-TRA-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "2b24b9e6"
+    },
+    "pharm-clinical-BD-TRA-01-3": {
+      "id": "BD-TRA-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "24ac8840"
+    },
+    "pharm-clinical-BD-TRA-01-4": {
+      "id": "BD-TRA-01-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "cd4e49d4"
+    },
+    "pharm-clinical-BD-END-01-2": {
+      "id": "BD-END-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "22f752f1"
+    },
+    "pharm-clinical-BD-END-01-3": {
+      "id": "BD-END-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "95459af7"
+    },
+    "pharm-clinical-BD-END-02-2": {
+      "id": "BD-END-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7e967508"
+    },
+    "pharm-clinical-BD-END-02-3": {
+      "id": "BD-END-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "3f77addd"
+    },
+    "pharm-clinical-BD-END-03-2": {
+      "id": "BD-END-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "5c865848"
+    },
+    "pharm-clinical-BD-END-03-4": {
+      "id": "BD-END-03-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7f8d3b6e"
+    },
+    "pharm-clinical-BD-END-04-2": {
+      "id": "BD-END-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "90130251"
+    },
+    "pharm-clinical-BD-END-06-2": {
+      "id": "BD-END-06-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6cba4e1b"
+    },
+    "pharm-clinical-BD-END-06-3": {
+      "id": "BD-END-06-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "cba0b337"
+    },
+    "pharm-clinical-BD-END-06-4": {
+      "id": "BD-END-06-4",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6d34e09a"
+    },
+    "pharm-clinical-BD-SPC-01-2": {
+      "id": "BD-SPC-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7b006b46"
+    },
+    "pharm-clinical-BD-SPC-01-3": {
+      "id": "BD-SPC-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c2e4e098"
+    },
+    "pharm-clinical-BD-SPC-02-2": {
+      "id": "BD-SPC-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "a53fc48a"
+    },
+    "pharm-clinical-BD-PAC-01-2": {
+      "id": "BD-PAC-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "e3c97a96"
+    },
+    "pharm-clinical-BD-PAC-01-3": {
+      "id": "BD-PAC-01-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7a33762d"
+    },
+    "pharm-clinical-BD-PAC-02-2": {
+      "id": "BD-PAC-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "dd26c45c"
+    },
+    "pharm-clinical-BD-REG-01-2": {
+      "id": "BD-REG-01-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7fc3a272"
+    },
+    "pharm-clinical-BD-REG-03-2": {
+      "id": "BD-REG-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "946de4fe"
+    },
+    "pharm-clinical-BD-REG-05-2": {
+      "id": "BD-REG-05-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "594d570e"
+    },
+    "pharm-clinical-BD-AWY-04-2": {
+      "id": "BD-AWY-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f0c31b84"
+    },
+    "pharm-clinical-BD-AWY-05-2": {
+      "id": "BD-AWY-05-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c4efa482"
+    },
+    "pharm-clinical-BD-PED-02-2": {
+      "id": "BD-PED-02-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "5724c573"
+    },
+    "pharm-clinical-BD-PED-02-3": {
+      "id": "BD-PED-02-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "e5ebc869"
+    },
+    "pharm-clinical-BD-TRA-03-2": {
+      "id": "BD-TRA-03-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "54365fb9"
+    },
+    "pharm-clinical-BD-TRA-03-3": {
+      "id": "BD-TRA-03-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "ec26099c"
+    },
+    "pharm-clinical-BD-TRA-04-2": {
+      "id": "BD-TRA-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "c9a66013"
+    },
+    "pharm-clinical-BD-NEU-04-2": {
+      "id": "BD-NEU-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "1a21bbbf"
+    },
+    "pharm-clinical-BD-AWY-06-2": {
+      "id": "BD-AWY-06-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "cee3c310"
+    },
+    "pharm-clinical-BD-AWY-06-3": {
+      "id": "BD-AWY-06-3",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "6af693af"
+    },
+    "pharm-clinical-BD-HEM-13-2": {
+      "id": "BD-HEM-13-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "d2e3acb3"
+    },
+    "pharm-clinical-BD-END-10-2": {
+      "id": "BD-END-10-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "f738d7a7"
+    },
+    "pharm-clinical-BD-NMB-05-2": {
+      "id": "BD-NMB-05-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8289936a"
+    },
+    "pharm-clinical-BD-CAR-04-2": {
+      "id": "BD-CAR-04-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "7b843943"
+    },
+    "pharm-clinical-BD-PAC-08-2": {
+      "id": "BD-PAC-08-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "8c20c9e7"
+    },
+    "pharm-clinical-BD-HEM-14-2": {
+      "id": "BD-HEM-14-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "12a40b22"
+    },
+    "pharm-clinical-BD-SPC-07-2": {
+      "id": "BD-SPC-07-2",
+      "set": 1,
+      "revision": 2,
+      "fingerprint": "445291b8"
     }
   }
 }
