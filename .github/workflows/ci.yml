@@ -3,6 +3,9 @@ name: Quality gates
 on:
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
   push:
     branches: [main]
   workflow_dispatch:
@@ -54,6 +57,7 @@ jobs:
       - name: Generate and validate all-course quality report
         run: npm run test:quality-report
       - name: Upload all-course question quality report
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: all-course-question-quality
@@ -64,16 +68,21 @@ jobs:
       - name: Verify account-aware question coverage
         run: npm run test:coverage
       - name: Build clean question JSON export
+        if: github.event_name != 'pull_request'
         run: node scripts/export-question-data.mjs
       - name: Upload clean question JSON export
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: srna-question-data-no-difficulty
           path: exports/srna-question-data-no-difficulty.json
           retention-days: 30
 
+  # Browser runners are the most expensive part of CI. Run them once on
+  # main (before publishing) or when requested manually, not on every PR push.
   browser:
     name: Browser regression (${{ matrix.shard }})
+    if: github.event_name != 'pull_request'
     needs: quality
     strategy:
       fail-fast: false
