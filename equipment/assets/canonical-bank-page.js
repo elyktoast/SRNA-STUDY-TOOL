@@ -13,6 +13,16 @@ async function start(){
   if(!runtime)throw Error('SRNA Study Tool build runtime is missing');
   if(!bankId)throw Error('Canonical bank id is missing');
   const manifest=await runtime.fetchJSON(new URL('banks.json',exam),{cache:'no-store'}),bank=(manifest.banks||[]).find(x=>x.id===bankId);
+  // Previously deployed Exam 2 HTML may be cached while its manifest has moved to unified Study Studio.
+  // Recover legacy bookmarks instead of trying to load a removed bank; never mutate student progress.
+  if(!bank && manifest.course?.id==='equipment' && manifest.exam?.id==='exam-2' && manifest.studio?.sourceMode==='unified'){
+    const target=new URL('studio.html',exam),legacy=new URLSearchParams(location.search);
+    const question=legacy.get('question');
+    if(question)target.searchParams.set('question',question);
+    else if(legacy.has('review'))target.searchParams.set('mode','missed');
+    location.replace(target.href);
+    return true;
+  }
   if(!bank||bank.engine!=='canonical')throw Error('Canonical bank config not found: '+bankId);
   const sessionEnvironment=String(bank.sessionEnvironment||manifest.sessionEnvironment||'');if(sessionEnvironment!=='equipment-bank1-practice-set1-v1')throw Error('Unsupported quiz session environment: '+sessionEnvironment);
   document.title=bank.label+' | Practice Sets';document.body.className='mbu-bank1-ui';document.body.innerHTML=shell(bank);window.MBUAppCore?.ensureA11y?.();
