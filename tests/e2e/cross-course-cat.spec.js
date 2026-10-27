@@ -87,3 +87,21 @@ test('Full-course engine completes its topic blueprint without repeats',async({p
  });
  expect(result.answered).toBe(50);expect(new Set(result.ids).size).toBe(50);expect(new Set(result.keys).size).toBe(50);expect(result.counts).toEqual(Object.fromEntries(Object.entries(result.targets).filter(([,n])=>n>0)));expect(result.elapsed).toBeLessThan(10000);
 });
+
+test('Exam 2 desktop Study Studio tabs fit viewport and preserve quiz settings',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await setup(page,'/equipment/exam-2');
+ await expect(page.locator('#home')).toHaveAttribute('data-e2-active','builder');
+ await expect(page.locator('#exam2QuizBuilder')).toBeVisible();
+ await expect(page.locator('#studioQuickModes')).toBeHidden();
+ await page.locator('[data-e2-view="quick"]').click();
+ await expect(page.locator('#studioQuickModes')).toBeVisible();
+ await expect(page.locator('#exam2QuizBuilder')).toBeHidden();
+ await page.locator('[data-e2-view="progress"]').click();
+ await expect(page.locator('#exam2Progress')).toBeVisible();
+ await page.locator('[data-e2-view="builder"]').click();
+ await page.locator('[data-exam2-count="50"]').click();
+ await expect(page.locator('#count')).toHaveValue('50');
+ const geometry=await page.evaluate(()=>({bottom:document.getElementById('home').getBoundingClientRect().bottom,inner:window.innerHeight,fit:document.getElementById('home').classList.contains('exam2-viewport-fit')}));
+ expect(geometry.fit).toBe(true);expect(geometry.bottom).toBeLessThanOrEqual(geometry.inner+2);
+});
