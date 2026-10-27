@@ -231,7 +231,7 @@ function updateExam2Ui(){
  const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')];
  let visible=0,selected=0,all=0;
  for(const label of labels){
-  const text=label.textContent||'',n=Number((text.match(/\\((\\d+)\\)\\s*$/)||[])[1]||0),checked=!!label.querySelector('input[type="checkbox"]')?.checked;
+  const text=label.textContent||'',n=Number((text.match(/\((\d+)\)\s*$/)||[])[1]||0),checked=!!label.querySelector('input[type="checkbox"]')?.checked;
   const showing=text.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';
   visible+=Number(showing);all+=n;if(checked)selected+=n;
  }
