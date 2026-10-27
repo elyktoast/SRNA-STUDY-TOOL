@@ -1,0 +1,8 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const root='equipment/exam-2/';const manifest=JSON.parse(fs.readFileSync(root+'banks.json','utf8'));const data=JSON.parse(fs.readFileSync(root+'questions.json','utf8'));const questions=data.questions;
+assert.equal(manifest.course.id,'equipment');assert.equal(manifest.exam.id,'exam-2');assert.equal(questions.length,500);assert.equal(new Set(questions.map(q=>q.id)).size,500);
+assert.equal(manifest.banks.length,1);const bank=manifest.banks[0];assert.equal(bank.engine,'canonical');assert.equal(bank.data,'questions.json');assert.equal(bank.storageKey,'mbu_course_equipment_exam2_bank1_v1');assert.equal(manifest.studioSources[0].count,500);
+for(let set=1;set<=5;set++)assert.equal(questions.filter(q=>q.set===set).length,100);
+for(const q of questions){assert.ok(q.stem?.trim(),q.id+' missing stem');assert.ok(Array.isArray(q.options)&&q.options.length>=2,q.id+' invalid options');assert.ok(Array.isArray(q.answer)&&q.answer.length>0,q.id+' invalid answers');assert.equal(new Set(q.answer).size,q.answer.length,q.id+' duplicate answers');for(const i of q.answer)assert.ok(Number.isInteger(i)&&i>=0&&i<q.options.length,q.id+' answer out of range');if(q.image)assert.match(q.image,/^data:image\/(png|jpeg|webp|svg\+xml);base64,[A-Za-z0-9+/=]+$/,q.id+' invalid image');assert.doesNotMatch(JSON.stringify(q),/McPherson|Elmore|Haley\\s+Frank/i,q.id+' instructor name');}
+const page=fs.readFileSync(root+'bank.html','utf8');assert.match(page,/canonical-bank-page\.js/);assert.match(page,/build-bootstrap\.js/);assert.doesNotMatch(page,/function\s+grade|function\s+submitAnswer/);
+console.log('Equipment Exam 2 verified: 500 unique questions, 5 sets, answer keys, images, names, manifest, canonical runtime.');
