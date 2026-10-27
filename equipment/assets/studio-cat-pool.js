@@ -1,5 +1,5 @@
 /* CAT uses canonical course manifests; ordinary Studio pools stay course-scoped. */
-const CAT_COURSES=[{courseId:'equipment',examId:'exam-1'},{courseId:'basic-principles',examId:'exam-1'},{courseId:'pharm',examId:'clinical-pharm'}];
+const CAT_COURSES=[{courseId:'equipment',examId:'exam-1'},{courseId:'equipment',examId:'exam-2'},{courseId:'basic-principles',examId:'exam-1'},{courseId:'pharm',examId:'clinical-pharm'}];
 let CAT_ALL=[],CAT_BY_UID=new Map(),catPoolPromise=null,catPoolFailed=false;
 function catQuestionContext(q){return q?.courseId?{courseId:q.courseId,examId:q.examId}:(window.MBU_CONTEXT||{})}
 function catSessionPool(){return DB.active?.crossCourse?CAT_ALL:ALL}
