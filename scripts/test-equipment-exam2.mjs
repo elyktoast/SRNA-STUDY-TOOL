@@ -10,4 +10,5 @@ console.log('Equipment Exam 2 verified: 500 unique questions, answer keys, image
 const hybrid=fs.readFileSync(root+'studio.html','utf8');
 for(const id of ['exam2QuizBuilder','exam2Progress','exam2TopicSearch','exam2TopicStatus','topicChecks','adaptiveToggle','adaptiveScope','analyticsSummary','reportN']) assert.ok(hybrid.includes('id="'+id+'"'),'Hybrid UI missing '+id);
 for(const action of ["startMode('missed')","startMode('flagged')","startMode('smart')","startMode('due')","startMode('custom')"])assert.ok(hybrid.includes(action),'Hybrid UI missing '+action);
-assert.match(hybrid,/MutationObserver\(filterTopics\)/,'Topic search must refresh after async question loading');
+assert.match(hybrid,/MutationObserver\(updateExam2Ui\)/,'Topic search must refresh after async question loading');
+assert.ok(hybrid.includes('id="exam2MatchCount"'),'Live matching count required');assert.ok(hybrid.includes('id="exam2AdaptiveNote"'),'Adaptive guidance required');assert.ok(hybrid.includes('resumeActiveRow'),'Resume session styling required');
