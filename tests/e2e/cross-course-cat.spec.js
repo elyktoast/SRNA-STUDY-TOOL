@@ -105,3 +105,17 @@ test('Exam 2 desktop Study Studio tabs fit viewport and preserve quiz settings',
  const geometry=await page.evaluate(()=>({bottom:document.getElementById('home').getBoundingClientRect().bottom,inner:window.innerHeight,fit:document.getElementById('home').classList.contains('exam2-viewport-fit')}));
  expect(geometry.fit).toBe(true);expect(geometry.bottom).toBeLessThanOrEqual(geometry.inner+2);
 });
+
+test('Exam 2 desktop Study Studio never scrolls the document',async({page})=>{
+ await page.setViewportSize({width:1440,height:850});
+ await setup(page,'/equipment/exam-2');
+ await page.locator('[data-e2-view="builder"]').click();
+ const a=await page.evaluate(()=>({doc:document.documentElement.scrollHeight,body:document.body.scrollHeight,viewport:document.documentElement.clientHeight,fit:document.querySelector('#home')?.classList.contains('exam2-viewport-fit'),panel:document.querySelector('#home')?.getBoundingClientRect().bottom}));
+ expect(a.fit).toBe(true);
+ expect(a.doc).toBeLessThanOrEqual(a.viewport+2);
+ expect(a.panel).toBeLessThanOrEqual(a.viewport+2);
+ await page.locator('[data-e2-view="quick"]').click();
+ await expect(page.locator('#studioQuickModes')).toBeVisible();
+ await page.locator('[data-e2-view="progress"]').click();
+ await expect(page.locator('#exam2Progress')).toBeVisible();
+});
