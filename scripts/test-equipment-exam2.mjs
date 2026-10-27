@@ -25,4 +25,4 @@ const adminPanel=fs.readFileSync('equipment/assets/admin-panel.js','utf8');asser
 const crossCat=fs.readFileSync('tests/e2e/cross-course-cat.spec.js','utf8');assert.match(crossCat,/9000/,'Cross-course CAT tests must reflect 9000 questions');
 assert.match(fs.readFileSync(root+'index.html','utf8'),/1,000-question/,'Dashboard must advertise 1000 questions');
 
-for(const key of ['data-e2-view="builder"','data-e2-view="quick"','data-e2-view="progress"','function fitExam2Viewport','window.innerHeight-home.getBoundingClientRect().top','overscroll-behavior:contain','data-e2-active="builder"'])assert.ok(hybrid.includes(key),'Missing viewport-fit tabbed workspace: '+key);
+for(const key of ['data-e2-view="builder"','data-e2-view="quick"','data-e2-view="progress"','function fitExam2Viewport','document.documentElement.clientHeight-bounds.top','overscroll-behavior:contain','data-e2-active="builder"'])assert.ok(hybrid.includes(key),'Missing viewport-fit tabbed workspace: '+key);
