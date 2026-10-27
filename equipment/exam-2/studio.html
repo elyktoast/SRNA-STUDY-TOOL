@@ -241,7 +241,7 @@ function updateExam2Ui(){
   const input=label.querySelector('input[type="checkbox"]'),topic=input?.value||'',items=questions.filter(q=>q.topic===topic),attempted=items.filter(q=>answers[q.uid]),correct=items.filter(q=>answers[q.uid]?.ok).length;
   let badge=label.querySelector('.exam2-topic-mastery');
   if(!badge){badge=document.createElement('small');badge.className='exam2-topic-mastery';label.append(badge)}
-  badge.textContent=attempted.length?Math.round(100*correct/attempted.length)+'% latest-answer accuracy · '+attempted.length+'/'+items.length+' attempted':'Not studied · '+items.length+' questions';
+  const mastery=attempted.length?Math.round(100*correct/attempted.length)+'% latest-answer accuracy · '+attempted.length+'/'+items.length+' attempted':'Not studied · '+items.length+' questions';if(badge.textContent!==mastery)badge.textContent=mastery;
   const showing=topic.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';if(showing)visible++;
  }
  const matching=questions.filter(q=>!selectedTopics.size||selectedTopics.has(q.topic)),remaining=matching.filter(q=>!answers[q.uid]).length;
