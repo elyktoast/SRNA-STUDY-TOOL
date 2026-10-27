@@ -234,27 +234,27 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 function updateExam2Ui(){
  const search=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus'),match=document.getElementById('exam2MatchCount'),unseen=document.getElementById('exam2UnseenCount');
  if(!host)return;
- const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')],questions=typeof ALL!=='undefined'&&Array.isArray(ALL)?ALL:[],answers=typeof DB!=='undefined'&&DB?.ans?DB.ans:{};
+ const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')],questions=typeof ALL!=='undefined'&&Array.isArray(ALL)?ALL:[];const statsFor=q=>window.MBUStudyIntelligence?.questionStats?.(q.uid,q)||null;
  const selectedTopics=new Set(labels.filter(label=>label.querySelector('input[type="checkbox"]')?.checked).map(label=>label.querySelector('input').value));
  let visible=0;
  for(const label of labels){
-  const input=label.querySelector('input[type="checkbox"]'),topic=input?.value||'',items=questions.filter(q=>q.topic===topic),attempted=items.filter(q=>answers[q.uid]),correct=items.filter(q=>answers[q.uid]?.ok).length;
+  const input=label.querySelector('input[type="checkbox"]'),topic=input?.value||'',items=questions.filter(q=>q.topic===topic),attempted=items.filter(q=>Number(statsFor(q)?.attempts)>0),correct=items.filter(q=>Number(statsFor(q)?.attempts)>0&&statsFor(q)?.lastCorrect).length;
   let badge=label.querySelector('.exam2-topic-mastery');
   if(!badge){badge=document.createElement('small');badge.className='exam2-topic-mastery';label.append(badge)}
-  const mastery=attempted.length?Math.round(100*correct/attempted.length)+'% latest-answer accuracy · '+attempted.length+'/'+items.length+' attempted':'Not studied · '+items.length+' questions';if(badge.textContent!==mastery)badge.textContent=mastery;
+  const mastery=items.length?(attempted.length?Math.round(100*correct/attempted.length)+'% latest-answer accuracy · '+attempted.length+'/'+items.length+' attempted':'Not studied · '+items.length+' questions'):'Loading questions…';if(badge.textContent!==mastery)badge.textContent=mastery;
   const showing=topic.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';if(showing)visible++;
  }
- const matching=questions.filter(q=>!selectedTopics.size||selectedTopics.has(q.topic)),remaining=matching.filter(q=>!answers[q.uid]).length;
+ const matching=questions.filter(q=>!selectedTopics.size||selectedTopics.has(q.topic)),remaining=matching.filter(q=>!Number(statsFor(q)?.attempts)).length;
  if(status)status.textContent=query?visible+' of '+labels.length+' topics shown':labels.length+' topics available';
- if(match)match.textContent=matching.length+' questions match '+(selectedTopics.size?'selected topics':'the complete Exam 2 pool');
- if(unseen)unseen.textContent=remaining+' unseen of '+matching.length+' matching questions';
+ if(match)match.textContent=questions.length?matching.length+' questions match '+(selectedTopics.size?'selected topics':'the complete Exam 2 pool'):'Loading question pool…';
+ if(unseen)unseen.textContent=questions.length?remaining+' not yet answered of '+matching.length+' matching questions':'Unseen counts load with your questions';
  const adaptive=!!document.getElementById('adaptiveToggle')?.checked,scope=document.getElementById('adaptiveScope')?.value||'all',cross=adaptive&&scope==='all';
  const order=document.getElementById('order'),note=document.getElementById('exam2AdaptiveNote'),count=document.getElementById('count');
  if(order){order.disabled=adaptive;order.title=adaptive?'Adaptive selects question order automatically':''}
  if(note)note.textContent=cross?'All-course adaptive chooses from every course; Exam 2 topic filters and order do not apply.':adaptive?'Exam 2 adaptive chooses unseen questions and controls the order automatically.':'Standard quiz: choose topics and question order.';
  const topic=document.getElementById('topicPickbox');
- if(topic)topic.classList.toggle('exam2-adaptive-inactive',cross);
- if(search)search.disabled=cross;
+ if(topic){topic.classList.toggle('exam2-adaptive-inactive',cross);topic.setAttribute('aria-disabled',String(cross));}
+ if(search)search.disabled=cross;host.querySelectorAll('input[type="checkbox"]').forEach(input=>{input.disabled=cross});
  document.querySelectorAll('[data-exam2-count]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.exam2Count===count?.value)));
 }
 document.addEventListener('input',e=>{if(e.target.id==='exam2TopicSearch')updateExam2Ui()});
@@ -264,6 +264,8 @@ document.addEventListener('click',e=>{if(e.target.closest('#topicPickbox .pickac
 const topicHost=document.getElementById('topicChecks');
 if(topicHost&&typeof MutationObserver!=='undefined'){new MutationObserver(updateExam2Ui).observe(topicHost,{childList:true});}
 updateExam2Ui();
+const home=document.getElementById('home');if(home&&typeof MutationObserver!=='undefined')new MutationObserver(updateExam2Ui).observe(home,{attributes:true,attributeFilter:['aria-busy','class']});
+window.addEventListener('storage',updateExam2Ui);
 document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#exam2"]');if(link){const target=document.querySelector(link.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}}});
 })();
 </script><script>window.MBU_CONTEXT={courseId:'equipment',courseLabel:'Equipment',courseUrl:'../',examId:'exam-2',examUrl:'./',manifestUrl:'banks.json'};</script><script>window.MBU_BOOT={scripts:[{src:'studio-loader.js',waitFor:'MBUStudioPageReady'}]};</script><script src="../assets/build-bootstrap.js"></script></body></html>
