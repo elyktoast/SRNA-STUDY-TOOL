@@ -12,3 +12,6 @@ for(const id of ['exam2QuizBuilder','exam2Progress','exam2TopicSearch','exam2Top
 for(const action of ["startMode('missed')","startMode('flagged')","startMode('smart')","startMode('due')","startMode('custom')"])assert.ok(hybrid.includes(action),'Hybrid UI missing '+action);
 assert.match(hybrid,/MutationObserver\(updateExam2Ui\)/,'Topic search must refresh after async question loading');
 assert.ok(hybrid.includes('id="exam2MatchCount"'),'Live matching count required');assert.ok(hybrid.includes('id="exam2AdaptiveNote"'),'Adaptive guidance required');assert.ok(hybrid.includes('resumeActiveRow'),'Resume session styling required');
+
+for(const id of ['exam2UnseenCount']) assert.ok(hybrid.includes('id="'+id+'"'),'Missing '+id);
+for(const token of ['data-exam2-count="10"','data-exam2-count="25"','data-exam2-count="50"','data-exam2-count="100"','exam2-topic-mastery'])assert.ok(hybrid.includes(token),'Missing quiz preset/mastery feature: '+token);
