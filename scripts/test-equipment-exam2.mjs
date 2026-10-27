@@ -24,3 +24,5 @@ const adminStats=fs.readFileSync('equipment/assets/account-statistics.js','utf8'
 const adminPanel=fs.readFileSync('equipment/assets/admin-panel.js','utf8');assert.ok(adminPanel.includes("['equipment','exam-2']"),'Admin report resolver must include Exam 2');assert.ok(adminPanel.includes('data-e2-inventory')&&adminPanel.includes('data-all-inventory'),'Admin overview must visibly show live question counts');
 const crossCat=fs.readFileSync('tests/e2e/cross-course-cat.spec.js','utf8');assert.match(crossCat,/9000/,'Cross-course CAT tests must reflect 9000 questions');
 assert.match(fs.readFileSync(root+'index.html','utf8'),/1,000-question/,'Dashboard must advertise 1000 questions');
+
+for(const key of ['data-e2-view="builder"','data-e2-view="quick"','data-e2-view="progress"','function fitExam2Viewport','window.innerHeight-home.getBoundingClientRect().top','overscroll-behavior:contain','data-e2-active="builder"'])assert.ok(hybrid.includes(key),'Missing viewport-fit tabbed workspace: '+key);
