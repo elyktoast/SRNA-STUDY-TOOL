@@ -8,7 +8,7 @@ test.beforeEach(async({page})=>clearAppState(page));
 for(const path of [exam,'/basic-principles/exam-1','/pharm/clinical-pharm'])test('Full CAT pool is available from '+path,async({page})=>{
  await setup(page,path);await begin(page);
  const result=await page.evaluate(()=>({raw:CAT_ALL.length,unique:new Set(CAT_ALL.map(MBUAdaptiveQuiz.contentKey)).size,counts:Object.fromEntries([...new Set(CAT_COURSES.map(c=>c.courseId))].map(course=>[course,CAT_ALL.filter(q=>q.courseId===course).length])),pool:DB.active.adaptive.poolUids,keys:CAT_ALL.filter(q=>DB.active.adaptive.poolUids.includes(q.uid)).map(MBUAdaptiveQuiz.contentKey),ordinary:ALL.length,cross:DB.active.crossCourse}));
- expect(result.raw).toBe(8500);expect(result.counts).toEqual({equipment:2500,'basic-principles':4000,pharm:2000});expect(result.cross).toBe(true);
+ expect(result.raw).toBe(9000);expect(result.counts).toEqual({equipment:3000,'basic-principles':4000,pharm:2000});expect(result.cross).toBe(true);
  expect(result.pool.length).toBe(result.unique);expect(new Set(result.pool).size).toBe(result.pool.length);expect(new Set(result.keys).size).toBe(result.keys.length);
  expect(result.ordinary).toBe(path===exam?2000:path.includes('pharm')?2000:4000);
 });
@@ -61,7 +61,7 @@ test('CAT does not reserve a partial pool when a course manifest is unavailable'
  await setup(page);let calls=0;await page.route('**/basic-principles/exam-1/banks.json',r=>r.abort('internetdisconnected'));
  await page.route(cloud+'/rest/v1/rpc/mbu_record_question_session',r=>{calls++;return r.fulfill({contentType:'application/json',body:'true'})});
  page.on('dialog',d=>d.dismiss());await page.evaluate(async()=>{byId('adaptiveToggle').checked=true;await startMode('custom')});expect(calls).toBe(0);expect(await page.evaluate(()=>DB.active)).toBeNull();
- await page.unroute('**/basic-principles/exam-1/banks.json');await begin(page);expect(await page.evaluate(()=>CAT_ALL.length)).toBe(8500);
+ await page.unroute('**/basic-principles/exam-1/banks.json');await begin(page);expect(await page.evaluate(()=>CAT_ALL.length)).toBe(9000);
 });
 test('Canceled cross-course loading cannot reserve or revive a session',async({page})=>{
  await setup(page);let pending,calls=0;
@@ -86,4 +86,22 @@ test('Full-course engine completes its topic blueprint without repeats',async({p
  return {ids,keys,answered:state.answered,targets:state.blueprintTargets,counts:state.topicCounts,elapsed:performance.now()-started};
  });
  expect(result.answered).toBe(50);expect(new Set(result.ids).size).toBe(50);expect(new Set(result.keys).size).toBe(50);expect(result.counts).toEqual(Object.fromEntries(Object.entries(result.targets).filter(([,n])=>n>0)));expect(result.elapsed).toBeLessThan(10000);
+});
+
+test('Exam 2 desktop Study Studio tabs fit viewport and preserve quiz settings',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await setup(page,'/equipment/exam-2');
+ await expect(page.locator('#home')).toHaveAttribute('data-e2-active','builder');
+ await expect(page.locator('#exam2QuizBuilder')).toBeVisible();
+ await expect(page.locator('#studioQuickModes')).toBeHidden();
+ await page.locator('[data-e2-view="quick"]').click();
+ await expect(page.locator('#studioQuickModes')).toBeVisible();
+ await expect(page.locator('#exam2QuizBuilder')).toBeHidden();
+ await page.locator('[data-e2-view="progress"]').click();
+ await expect(page.locator('#exam2Progress')).toBeVisible();
+ await page.locator('[data-e2-view="builder"]').click();
+ await page.locator('[data-exam2-count="50"]').click();
+ await expect(page.locator('#count')).toHaveValue('50');
+ const geometry=await page.evaluate(()=>({bottom:document.getElementById('home').getBoundingClientRect().bottom,inner:window.innerHeight,fit:document.getElementById('home').classList.contains('exam2-viewport-fit')}));
+ expect(geometry.fit).toBe(true);expect(geometry.bottom).toBeLessThanOrEqual(geometry.inner+2);
 });

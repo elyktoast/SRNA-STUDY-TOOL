@@ -25,6 +25,34 @@
       "setLabels": {
         "1": "All Equipment Exam 2 questions"
       }
+    },
+    {
+      "key": "e2b2",
+      "bankId": "bank2",
+      "label": "Equipment Exam 2 — Additional Questions 1–250",
+      "groupLabel": "Equipment Exam 2",
+      "data": "questions-set2-1.json",
+      "format": "canonical",
+      "count": 250,
+      "sets": [
+        6,
+        7,
+        8
+      ]
+    },
+    {
+      "key": "e2b3",
+      "bankId": "bank3",
+      "label": "Equipment Exam 2 — Additional Questions 251–500",
+      "groupLabel": "Equipment Exam 2",
+      "data": "questions-set2-2.json",
+      "format": "canonical",
+      "count": 250,
+      "sets": [
+        8,
+        9,
+        10
+      ]
     }
   ],
   "sync": {
@@ -48,7 +76,8 @@
   "contentTaxonomy": {
     "topics": [],
     "sourceTitles": [
-      "Equipment Exam 2"
+      "Equipment Exam 2",
+      "Equipment Exam 2 — Additional Questions"
     ]
   }
 }
