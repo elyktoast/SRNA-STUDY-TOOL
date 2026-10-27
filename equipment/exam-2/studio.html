@@ -189,10 +189,10 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
  body:not(.mbu-quiz-active) #home .studio-home-head{flex:none;padding:15px 24px 13px}
  body:not(.mbu-quiz-active) #home .exam2-jump{flex:none;padding:10px 24px}
  body:not(.mbu-quiz-active) #home .studio-home-body{display:flex;flex:1;min-height:0;overflow:hidden;padding:12px 24px 16px}
- body:not(.mbu-quiz-active) #home .studio-section{display:none;flex:1;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 5px 0 0;border:0;scrollbar-gutter:stable}
- body:not(.mbu-quiz-active) #home[data-e2-active="builder"] #exam2QuizBuilder,
- body:not(.mbu-quiz-active) #home[data-e2-active="quick"] #studioQuickModes,
- body:not(.mbu-quiz-active) #home[data-e2-active="progress"] #exam2Progress{display:block}
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit .studio-section{display:none;flex:1;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 5px 0 0;border:0;scrollbar-gutter:stable}
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit[data-e2-active="builder"] #exam2QuizBuilder,
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit[data-e2-active="quick"] #studioQuickModes,
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit[data-e2-active="progress"] #exam2Progress{display:block}
  body:not(.mbu-quiz-active) #home .studio-builder-options{position:static}
  body:not(.mbu-quiz-active) #home .studio-builder-shell{align-items:start}
  body:not(.mbu-quiz-active) #home #topicChecks{max-height:min(34vh,330px)}
@@ -254,20 +254,20 @@ function setExam2View(view){
  const home=document.getElementById('home');if(!home)return;
  if(!['builder','quick','progress'].includes(view))view='builder';
  home.dataset.e2Active=view;
- document.querySelectorAll('[data-e2-view]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.e2View===view)));
+ document.querySelectorAll('[data-e2-view]').forEach(button=>{const selected=button.dataset.e2View===view;button.setAttribute('aria-selected',String(selected));button.setAttribute('aria-pressed',String(selected));});
 }
 function fitExam2Viewport(){
  const home=document.getElementById('home');if(!home)return;
  const fit=window.matchMedia('(min-width:800px) and (min-height:570px)').matches&&!document.body.classList.contains('mbu-quiz-active');
- home.style.height=fit?Math.max(340,window.innerHeight-home.getBoundingClientRect().top-12)+'px':'';
+ const available=window.innerHeight-home.getBoundingClientRect().top-12;home.style.height=fit&&available>=360?Math.floor(available)+'px':'';home.classList.toggle('exam2-viewport-fit',fit&&available>=360);
 }
 document.addEventListener('click',e=>{
  const tab=e.target.closest('[data-e2-view]');if(tab){setExam2View(tab.dataset.e2View);return}
  const link=e.target.closest('a[href="#exam2QuizBuilder"]');if(link){e.preventDefault();setExam2View('builder')}
 });
-window.addEventListener('resize',fitExam2Viewport);
-if(typeof ResizeObserver!=='undefined'){const nav=document.querySelector('.mbu-site-nav');if(nav)new ResizeObserver(fitExam2Viewport).observe(nav)}
-setExam2View('builder');requestAnimationFrame(fitExam2Viewport);
+window.addEventListener('resize',fitExam2Viewport);window.visualViewport?.addEventListener('resize',fitExam2Viewport);
+if(typeof ResizeObserver!=='undefined'){new ResizeObserver(fitExam2Viewport).observe(document.body)}
+setExam2View('builder');requestAnimationFrame(fitExam2Viewport);window.addEventListener('load',fitExam2Viewport);
 
 (function(){
 function updateExam2Ui(){
