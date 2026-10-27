@@ -8,30 +8,8 @@
     "id": "exam-2",
     "label": "Exam 2"
   },
-  "canonicalBank": "bank1",
-  "banks": [
-    {
-      "id": "bank1",
-      "studioKey": "e2b1",
-      "label": "Exam 2 Question Bank",
-      "short": "Exam 2",
-      "creator": "SRNA Study Tool",
-      "page": "bank.html?bank=bank1",
-      "data": "questions.json",
-      "description": "500 board-style questions across five 100-question practice sets.",
-      "sets": [
-        1,
-        2,
-        3,
-        4,
-        5
-      ],
-      "questionsPerSet": 100,
-      "storageKey": "mbu_course_equipment_exam2_bank1_v1",
-      "engine": "canonical",
-      "sessionEnvironment": "equipment-bank1-practice-set1-v1"
-    }
-  ],
+  "canonicalBank": null,
+  "banks": [],
   "studioSources": [
     {
       "key": "e2b1",
@@ -40,14 +18,13 @@
       "groupLabel": "Equipment Exam 2",
       "data": "questions.json",
       "format": "canonical",
+      "count": 500,
       "sets": [
-        1,
-        2,
-        3,
-        4,
-        5
+        1
       ],
-      "count": 500
+      "setLabels": {
+        "1": "All Equipment Exam 2 questions"
+      }
     }
   ],
   "sync": {
@@ -58,8 +35,20 @@
     "deviceKey": "mbu_device_id_v1",
     "adapterApi": "MBUSync.registerAdapter(name, adapter)"
   },
-  "sessionEnvironment": "equipment-bank1-practice-set1-v1",
+  "sessionEnvironment": "equipment-exam2-v1",
   "defaultBankEngine": "canonical",
   "bankPage": "bank.html",
-  "uidNamespace": "equipment-exam2"
+  "uidNamespace": "equipment-exam2",
+  "studio": {
+    "sourceMode": "unified",
+    "label": "Equipment Exam 2",
+    "topicField": "topic",
+    "emptyTopicsMeansAll": true
+  },
+  "contentTaxonomy": {
+    "topics": [],
+    "sourceTitles": [
+      "Equipment Exam 2"
+    ]
+  }
 }

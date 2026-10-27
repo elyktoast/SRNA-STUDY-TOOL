@@ -1,0 +1,26 @@
+/* Equipment Exam 2 / Principles-style Studio integration regression. Run: node scripts/validate-equipment-exam2-studio.mjs */
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const read=p=>fs.readFileSync(new URL('../'+p,import.meta.url),'utf8');
+const manifest=JSON.parse(read('equipment/exam-2/banks.json'));
+const source=manifest.studioSources?.[0];
+assert.equal(manifest.studio?.sourceMode,'unified');
+assert.equal(manifest.studio?.topicField,'topic');
+assert.equal(manifest.studio?.emptyTopicsMeansAll,true);
+assert.equal(manifest.sync?.studioStorageKey,'mbu_studio_equipment_exam-2_v1');
+assert.equal(manifest.exam?.id,'exam-2');
+assert.equal(source?.key,'e2b1');
+assert.equal(source?.count,500);
+const payload=JSON.parse(read('equipment/exam-2/questions.json'));
+const rows=Array.isArray(payload)?payload:payload.questions;
+assert.ok(Array.isArray(rows),'Questions must be an array');
+assert.equal(rows.length,500,'500 canonical Equipment Exam 2 questions required');
+const ids=rows.map((q,i)=>'e2b1-'+(q.id??((q.set||1)+'-'+i)));
+assert.equal(new Set(ids).size,500,'Question IDs must be unique');
+const studio=read('equipment/exam-2/studio.html'),home=read('equipment/exam-2/index.html');
+assert.ok(studio.includes("examId:'exam-2'") && studio.includes("src:'studio-loader.js'"),'Studio context/loader missing');
+assert.ok(home.includes("studio.html?mode=weak")&&home.includes("studio.html?reports=1"),'Dashboard actions missing');
+assert.ok(read('equipment/assets/studio-cat-pool.js').includes("{courseId:'equipment',examId:'exam-2'}"),'CAT registration missing');
+assert.ok(read('equipment/assets/question-search.js').includes("path:'equipment/exam-2/'"),'Global admin/search index missing Exam 2');
+assert.ok(read('equipment/exam-2/bank.html').includes("location.replace('studio.html'"),'Legacy route must redirect');
+console.log('Equipment Exam 2 Study Studio integration checks passed: 500 questions, unique IDs, adaptive pool, dashboard, search/admin index.');

@@ -7,8 +7,8 @@ async function onlyUnseen(page,course){return page.evaluate(async course=>{await
 test.beforeEach(async({page})=>clearAppState(page));
 for(const path of [exam,'/basic-principles/exam-1','/pharm/clinical-pharm'])test('Full CAT pool is available from '+path,async({page})=>{
  await setup(page,path);await begin(page);
- const result=await page.evaluate(()=>({raw:CAT_ALL.length,unique:new Set(CAT_ALL.map(MBUAdaptiveQuiz.contentKey)).size,counts:Object.fromEntries(CAT_COURSES.map(c=>[c.courseId,CAT_ALL.filter(q=>q.courseId===c.courseId).length])),pool:DB.active.adaptive.poolUids,keys:CAT_ALL.filter(q=>DB.active.adaptive.poolUids.includes(q.uid)).map(MBUAdaptiveQuiz.contentKey),ordinary:ALL.length,cross:DB.active.crossCourse}));
- expect(result.raw).toBe(8000);expect(result.counts).toEqual({equipment:2000,'basic-principles':4000,pharm:2000});expect(result.cross).toBe(true);
+ const result=await page.evaluate(()=>({raw:CAT_ALL.length,unique:new Set(CAT_ALL.map(MBUAdaptiveQuiz.contentKey)).size,counts:Object.fromEntries([...new Set(CAT_COURSES.map(c=>c.courseId))].map(course=>[course,CAT_ALL.filter(q=>q.courseId===course).length])),pool:DB.active.adaptive.poolUids,keys:CAT_ALL.filter(q=>DB.active.adaptive.poolUids.includes(q.uid)).map(MBUAdaptiveQuiz.contentKey),ordinary:ALL.length,cross:DB.active.crossCourse}));
+ expect(result.raw).toBe(8500);expect(result.counts).toEqual({equipment:2500,'basic-principles':4000,pharm:2000});expect(result.cross).toBe(true);
  expect(result.pool.length).toBe(result.unique);expect(new Set(result.pool).size).toBe(result.pool.length);expect(new Set(result.keys).size).toBe(result.keys.length);
  expect(result.ordinary).toBe(path===exam?2000:path.includes('pharm')?2000:4000);
 });
@@ -61,7 +61,7 @@ test('CAT does not reserve a partial pool when a course manifest is unavailable'
  await setup(page);let calls=0;await page.route('**/basic-principles/exam-1/banks.json',r=>r.abort('internetdisconnected'));
  await page.route(cloud+'/rest/v1/rpc/mbu_record_question_session',r=>{calls++;return r.fulfill({contentType:'application/json',body:'true'})});
  page.on('dialog',d=>d.dismiss());await page.evaluate(async()=>{byId('adaptiveToggle').checked=true;await startMode('custom')});expect(calls).toBe(0);expect(await page.evaluate(()=>DB.active)).toBeNull();
- await page.unroute('**/basic-principles/exam-1/banks.json');await begin(page);expect(await page.evaluate(()=>CAT_ALL.length)).toBe(8000);
+ await page.unroute('**/basic-principles/exam-1/banks.json');await begin(page);expect(await page.evaluate(()=>CAT_ALL.length)).toBe(8500);
 });
 test('Canceled cross-course loading cannot reserve or revive a session',async({page})=>{
  await setup(page);let pending,calls=0;
