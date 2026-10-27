@@ -15,3 +15,5 @@ assert.ok(hybrid.includes('id="exam2MatchCount"'),'Live matching count required'
 
 for(const id of ['exam2UnseenCount']) assert.ok(hybrid.includes('id="'+id+'"'),'Missing '+id);
 for(const token of ['data-exam2-count="10"','data-exam2-count="25"','data-exam2-count="50"','data-exam2-count="100"','exam2-topic-mastery'])assert.ok(hybrid.includes(token),'Missing quiz preset/mastery feature: '+token);
+
+assert.match(hybrid,/MBUStudyIntelligence\?\.questionStats/,'Topic stats must use revision-aware history');assert.match(hybrid,/attributeFilter:\['aria-busy','class'\]/,'Metrics refresh on home lifecycle');assert.match(hybrid,/input\.disabled=cross/,'Cross-course adaptive must disable course topic controls');
