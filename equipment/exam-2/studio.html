@@ -201,6 +201,19 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 .exam2-workspace-tabs button[aria-selected="true"]{background:#1a365d;color:white;border-color:#1a365d}
 .exam2-workspace-tabs button:focus-visible{outline:3px solid #83afe4;outline-offset:2px}
 @media(max-width:799px), (max-height:569px){#home .studio-section{display:block!important}#home .studio-home-body{display:grid}#home .exam2-jump{flex-wrap:wrap}}
+
+/* Study Studio desktop app-shell: the document never scrolls; active tab owns overflow. */
+@media(min-width:800px) and (min-height:570px){
+ html:has(body:not(.mbu-quiz-active) #home:not(.hidden)){height:100%;overflow:hidden}
+ body:not(.mbu-quiz-active):has(#home:not(.hidden)){height:100dvh;max-height:100dvh;overflow:hidden}
+ body:not(.mbu-quiz-active):has(#home:not(.hidden))>.wrap{height:auto;max-height:100dvh;padding-bottom:0}
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit{overflow:hidden;min-height:0}
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit .studio-home-body{overflow:hidden}
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit #exam2QuizBuilder,
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit #studioQuickModes,
+ body:not(.mbu-quiz-active) #home.exam2-viewport-fit #exam2Progress{overscroll-behavior:contain}
+ body:not(.mbu-quiz-active):has(#home.exam2-viewport-fit) footer{display:none}
+}
 </style>
 </head><body><div class="wrap"><h1 id="studioTitle">Exam 2 Study Studio</h1><button class="btn out hidden" type="button" id="studioHomeNav">← Study Studio Home</button><section id="home" class="panel" aria-busy="true">
   <div id="studioLoadPanel" class="studio-load-panel hidden" role="status" aria-live="polite"><div id="studioLoadSummary" class="studio-load-summary"></div><div id="studioLoadSources" class="studio-load-sources"></div></div>
@@ -259,7 +272,7 @@ function setExam2View(view){
 function fitExam2Viewport(){
  const home=document.getElementById('home');if(!home)return;
  const fit=window.matchMedia('(min-width:800px) and (min-height:570px)').matches&&!document.body.classList.contains('mbu-quiz-active');
- const available=window.innerHeight-home.getBoundingClientRect().top-12;home.style.height=fit&&available>=360?Math.floor(available)+'px':'';home.classList.toggle('exam2-viewport-fit',fit&&available>=360);
+ const bounds=home.getBoundingClientRect();const available=document.documentElement.clientHeight-bounds.top-6;const enabled=fit&&available>=360;home.style.height=enabled?Math.floor(available)+'px':'';home.style.maxHeight=enabled?Math.floor(available)+'px':'';home.classList.toggle('exam2-viewport-fit',enabled);
 }
 document.addEventListener('click',e=>{
  const tab=e.target.closest('[data-e2-view]');if(tab){setExam2View(tab.dataset.e2View);const home=document.getElementById('home');if(home&&!home.classList.contains('exam2-viewport-fit')){const id={builder:'exam2QuizBuilder',quick:'studioQuickModes',progress:'exam2Progress'}[tab.dataset.e2View];document.getElementById(id)?.scrollIntoView({block:'start',behavior:'smooth'});}return}
