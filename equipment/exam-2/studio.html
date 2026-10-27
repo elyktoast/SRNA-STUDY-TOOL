@@ -279,7 +279,7 @@ document.addEventListener('click',e=>{
  const link=e.target.closest('a[href="#exam2QuizBuilder"]');if(link){e.preventDefault();setExam2View('builder')}
 });
 window.addEventListener('resize',fitExam2Viewport);window.visualViewport?.addEventListener('resize',fitExam2Viewport);
-if(typeof ResizeObserver!=='undefined'){new ResizeObserver(fitExam2Viewport).observe(document.body)}
+if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(fitExam2Viewport);observer.observe(document.body);const nav=document.querySelector('.mbu-global-nav');if(nav)observer.observe(nav)}if(typeof MutationObserver!=='undefined'){new MutationObserver(()=>requestAnimationFrame(fitExam2Viewport)).observe(document.body,{childList:true})}
 setExam2View('builder');requestAnimationFrame(fitExam2Viewport);window.addEventListener('load',fitExam2Viewport);
 
 (function(){
