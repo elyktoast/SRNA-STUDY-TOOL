@@ -1,0 +1,65 @@
+{
+  "schema": 3,
+  "course": {
+    "id": "equipment",
+    "label": "Equipment"
+  },
+  "exam": {
+    "id": "exam-2",
+    "label": "Exam 2"
+  },
+  "canonicalBank": "bank1",
+  "banks": [
+    {
+      "id": "bank1",
+      "studioKey": "e2b1",
+      "label": "Exam 2 Question Bank",
+      "short": "Exam 2",
+      "creator": "SRNA Study Tool",
+      "page": "bank.html?bank=bank1",
+      "data": "questions.json",
+      "description": "500 board-style questions across five 100-question practice sets.",
+      "sets": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "questionsPerSet": 100,
+      "storageKey": "mbu_course_equipment_exam2_bank1_v1",
+      "engine": "canonical",
+      "sessionEnvironment": "equipment-bank1-practice-set1-v1"
+    }
+  ],
+  "studioSources": [
+    {
+      "key": "e2b1",
+      "bankId": "bank1",
+      "label": "Equipment Exam 2",
+      "groupLabel": "Equipment Exam 2",
+      "data": "questions.json",
+      "format": "canonical",
+      "sets": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "count": 500
+    }
+  ],
+  "sync": {
+    "schema": 1,
+    "mode": "local-first",
+    "studioStorageKey": "mbu_studio_equipment_exam-2_v1",
+    "metadataKey": "mbu_sync_meta_v1",
+    "deviceKey": "mbu_device_id_v1",
+    "adapterApi": "MBUSync.registerAdapter(name, adapter)"
+  },
+  "sessionEnvironment": "equipment-bank1-practice-set1-v1",
+  "defaultBankEngine": "canonical",
+  "bankPage": "bank.html",
+  "uidNamespace": "equipment-exam2"
+}
