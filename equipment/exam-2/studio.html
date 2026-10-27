@@ -162,6 +162,19 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 @media(max-width:900px){#home .studio-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#home .studio-builder-shell{grid-template-columns:1fr}#home .studio-builder-options{position:static}}
 @media(max-width:550px){.exam2-jump{padding:10px 16px}#home .studio-home-body{padding:14px}#home .studio-quick-grid{grid-template-columns:1fr 1fr}#home .studio-quick-card{min-height:138px;padding:10px}.exam2-head .btn{width:100%}}
 @media(max-width:390px){#home .studio-quick-grid{grid-template-columns:1fr}#home .studio-quick-card{min-height:0}}
+
+/* Hybrid refinement: compact sections, sticky action and resumed-session emphasis. */
+#home .studio-home-body{gap:12px;padding-top:14px}#home .studio-section+.studio-section{padding-top:14px}
+#home .studio-quick-card{min-height:106px}#home .studio-quick-card .mut{min-height:0}
+#home .studio-builder-options{position:sticky;top:12px;align-self:start}
+#home #topicChecks{max-height:202px}
+#home .exam2-match-count{font-size:.85rem;font-weight:800;color:#183b68;padding:9px 11px;background:#eaf2fc;border:1px solid #c9dcf5;border-radius:9px;margin:8px 0}
+#home .exam2-adaptive-note{display:block;font-size:.75rem;color:#475569;margin:5px 0 10px}
+#home .exam2-adaptive-inactive{opacity:.55}
+#home #resumeActiveRow{border:1px solid #98b8df;border-radius:12px;padding:8px;background:#ecf5ff;box-shadow:0 3px 12px #1c467313}
+#home #resumeActiveRow .resume-active-main{background:#183b68}
+#home #exam2QuizBuilder,#home #exam2Progress{scroll-margin-top:15px}
+@media(max-width:900px){#home .studio-builder-options{position:static}}
 </style>
 </head><body><div class="wrap"><h1 id="studioTitle">Exam 2 Study Studio</h1><button class="btn out hidden" type="button" id="studioHomeNav">← Study Studio Home</button><section id="home" class="panel" aria-busy="true">
   <div id="studioLoadPanel" class="studio-load-panel hidden" role="status" aria-live="polite"><div id="studioLoadSummary" class="studio-load-summary"></div><div id="studioLoadSources" class="studio-load-sources"></div></div>
@@ -185,7 +198,7 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
       <div class="studio-builder-shell">
         <div class="studio-builder-main">
           <div class="pickbox hidden" id="sourcePickbox"><h4>All Exam 2 Questions</h4><div class="pickactions"><button class="btn out tiny" onclick="setChecks('sourceChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('sourceChecks',false)">Clear</button></div><div id="sourceChecks" class="checklist"></div></div>
-          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><input id="exam2TopicSearch" class="field exam2-topic-search" type="search" autocomplete="off" placeholder="Search topics…" aria-label="Search Exam 2 topics"><div id="exam2TopicStatus" class="exam2-topic-status" role="status" aria-live="polite">All five topics available</div><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div></div>
+          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><input id="exam2TopicSearch" class="field exam2-topic-search" type="search" autocomplete="off" placeholder="Search topics…" aria-label="Search Exam 2 topics"><div id="exam2TopicStatus" class="exam2-topic-status" role="status" aria-live="polite">All five topics available</div><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div><div class="exam2-match-count" id="exam2MatchCount" role="status" aria-live="polite">500 questions available</div></div>
         </div>
         <aside class="studio-builder-options">
           <label class="studio-option-label" for="count">Question count</label>
@@ -193,7 +206,7 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
           <label class="studio-option-label" for="order">Order</label>
           <select id="order" class="field"><option value="random">Random</option><option value="sequential">Sequential</option></select>
           <div class="studio-adaptive-card"><label class="checkitem"><input type="checkbox" id="adaptiveToggle" onchange="adaptiveToggleChanged(this)"> <span><b>Adaptive</b> <span class="mut">Samples unseen questions with adaptive difficulty and a balanced content blueprint.</span></span></label><label for="adaptiveScope">Adaptive question pool</label><select id="adaptiveScope" class="field"><option value="all">All courses: Equipment Exams 1 &amp; 2, Basic Principles &amp; Clinical Pharm</option><option value="course">This course: selected sets or topics</option></select><span class="mut">All-course Adaptive includes Equipment Exams 1 and 2, Basic Principles, and Clinical Pharmacology.</span></div>
-          <button class="btn studio-start-btn" onclick="startMode('custom')">Start Quiz</button>
+          <span class="exam2-adaptive-note" id="exam2AdaptiveNote">Standard quiz: choose topics and question order.</span><button class="btn studio-start-btn" onclick="startMode('custom')">Start Quiz</button>
           <div class="studio-builder-note">Select topics at left, or leave them empty to use the complete 500-question Exam 2 pool.</div>
         </aside>
       </div>
@@ -212,16 +225,32 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 <section id="search" class="panel hidden"><h2>Question Repository Search</h2><input id="searchbox" class="field" style="width:100%" aria-label="Search question repository" placeholder="Search PIP, vaporizer, scavenging…" oninput="doSearch()"><div id="searchresults"></div></section><section id="reports" class="panel hidden"><h2>Saved Question Reports</h2><div class="controls" style="margin-bottom:10px"><button class="btn" id="sendSavedReportsBtn" type="button" onclick="sendSavedReports()">Send Saved Reports</button><button class="btn out" type="button" onclick="renderHome()">← Study Studio Home</button></div><div class="mut" id="savedReportStatus" role="status" aria-live="polite"></div><div id="reportlist"></div></section></div><script>
 /* Only Exam 2 presentation helpers. Quiz state and analytics stay in the shared runtime. */
 (function(){
-function filterTopics(){
- const input=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus');
- if(!input||!host||!status)return;
- const query=input.value.trim().toLowerCase();let visible=0,total=0;
- host.querySelectorAll('label').forEach(label=>{total++;const match=label.textContent.toLowerCase().includes(query);label.hidden=!match;label.style.display=match?'':'none';if(match)visible++});
- status.textContent=query?visible+' of '+total+' topics shown':total+' topics · 500 questions total';
+function updateExam2Ui(){
+ const search=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus'),match=document.getElementById('exam2MatchCount');
+ if(!host)return;
+ const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')];
+ let visible=0,selected=0,all=0;
+ for(const label of labels){
+  const text=label.textContent||'',n=Number((text.match(/\\((\\d+)\\)\\s*$/)||[])[1]||0),checked=!!label.querySelector('input[type="checkbox"]')?.checked;
+  const showing=text.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';
+  visible+=Number(showing);all+=n;if(checked)selected+=n;
+ }
+ if(status)status.textContent=query?visible+' of '+labels.length+' topics shown':labels.length+' topics available';
+ if(match)match.textContent=(selected||all||500)+' questions match '+(selected?'selected topics':'the complete Exam 2 pool');
+ const adaptive=!!document.getElementById('adaptiveToggle')?.checked,scope=document.getElementById('adaptiveScope')?.value||'all',cross=adaptive&&scope==='all';
+ const order=document.getElementById('order'),note=document.getElementById('exam2AdaptiveNote');
+ if(order){order.disabled=adaptive;order.title=adaptive?'Adaptive selects question order automatically':''}
+ if(note)note.textContent=cross?'All-course adaptive chooses from every course; Exam 2 topic filters and order do not apply.':adaptive?'Exam 2 adaptive chooses unseen questions and controls the order automatically.':'Standard quiz: choose topics and question order.';
+ const topic=document.getElementById('topicPickbox');
+ if(topic)topic.classList.toggle('exam2-adaptive-inactive',cross);
+ if(search)search.disabled=cross;
 }
-document.addEventListener('input',e=>{if(e.target.id==='exam2TopicSearch')filterTopics()});
+document.addEventListener('input',e=>{if(e.target.id==='exam2TopicSearch')updateExam2Ui()});
+document.addEventListener('change',e=>{if(['adaptiveToggle','adaptiveScope','count'].includes(e.target.id)||e.target.closest('#topicChecks'))updateExam2Ui()});
+document.addEventListener('click',e=>{if(e.target.closest('#topicPickbox .pickactions'))queueMicrotask(updateExam2Ui)});
 const topicHost=document.getElementById('topicChecks');
-if(topicHost&&typeof MutationObserver!=='undefined'){const obs=new MutationObserver(filterTopics);obs.observe(topicHost,{childList:true});}
+if(topicHost&&typeof MutationObserver!=='undefined'){new MutationObserver(updateExam2Ui).observe(topicHost,{childList:true});}
+updateExam2Ui();
 document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#exam2"]');if(link){const target=document.querySelector(link.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}}});
 })();
 </script><script>window.MBU_CONTEXT={courseId:'equipment',courseLabel:'Equipment',courseUrl:'../',examId:'exam-2',examUrl:'./',manifestUrl:'banks.json'};</script><script>window.MBU_BOOT={scripts:[{src:'studio-loader.js',waitFor:'MBUStudioPageReady'}]};</script><script src="../assets/build-bootstrap.js"></script></body></html>
