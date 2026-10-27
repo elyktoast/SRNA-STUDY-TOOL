@@ -262,7 +262,7 @@ function fitExam2Viewport(){
  const available=window.innerHeight-home.getBoundingClientRect().top-12;home.style.height=fit&&available>=360?Math.floor(available)+'px':'';home.classList.toggle('exam2-viewport-fit',fit&&available>=360);
 }
 document.addEventListener('click',e=>{
- const tab=e.target.closest('[data-e2-view]');if(tab){setExam2View(tab.dataset.e2View);return}
+ const tab=e.target.closest('[data-e2-view]');if(tab){setExam2View(tab.dataset.e2View);const home=document.getElementById('home');if(home&&!home.classList.contains('exam2-viewport-fit')){const id={builder:'exam2QuizBuilder',quick:'studioQuickModes',progress:'exam2Progress'}[tab.dataset.e2View];document.getElementById(id)?.scrollIntoView({block:'start',behavior:'smooth'});}return}
  const link=e.target.closest('a[href="#exam2QuizBuilder"]');if(link){e.preventDefault();setExam2View('builder')}
 });
 window.addEventListener('resize',fitExam2Viewport);window.visualViewport?.addEventListener('resize',fitExam2Viewport);
