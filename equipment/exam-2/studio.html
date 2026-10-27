@@ -127,44 +127,79 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
   .studio-quick-card{min-height:0}
 }
 @media(prefers-reduced-motion:reduce){.btn{transition:none}}
+
+/* Exam 2 hybrid Studio: compact quick-start and modern focused builder. */
+.exam2-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.exam2-kicker{font-size:.73rem;font-weight:850;letter-spacing:.09em;color:#386aa4;text-transform:uppercase;margin-bottom:7px}
+.exam2-head h2{font-size:1.45rem;margin:0;color:#142e51}
+.exam2-head p{max-width:620px}
+.exam2-head .btn{min-width:158px;text-decoration:none;text-align:center}
+.exam2-jump{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:12px 24px;border-bottom:1px solid #dfe7f1;background:#fff}
+.exam2-jump a{padding:8px 13px;border:1px solid #dce5ef;border-radius:9px;color:#254971;font-size:.83rem;font-weight:800;text-decoration:none;background:#f8fafc}
+.exam2-jump a:hover,.exam2-jump a:focus-visible{background:#e8f0fb;outline:2px solid transparent}
+#home .studio-home-body{gap:18px;padding:18px 24px 24px}
+#home .studio-section+.studio-section{padding-top:18px}
+#home .studio-quick-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#home .studio-quick-card{min-height:122px;padding:13px;background:#fff}
+#home .studio-quick-card h3{font-size:.92rem}
+#home .studio-quick-card .mut{min-height:30px;font-size:.76rem;margin-bottom:8px}
+#home .studio-quick-card .btn{font-size:.79rem}
+#home .studio-quick-card:first-child{border-color:#acc5e6;background:#f4f8fd}
+#home .studio-builder-shell{grid-template-columns:minmax(0,1.65fr) minmax(265px,.75fr)}
+#home .studio-builder-main,#home .studio-builder-options{background:#fff}
+#home .studio-builder-main{padding:14px 16px}
+#home .studio-builder-options{padding:15px}
+.exam2-topic-search{width:100%;margin:0 0 10px}
+.exam2-topic-status{color:#64748b;font-size:.76rem;margin-bottom:8px}
+#home #topicChecks{max-height:245px;overflow-y:auto;gap:4px}
+#home #topicChecks label{border-radius:8px;padding:8px 9px;background:#f7f9fc;border:1px solid #e6ebf3}
+#home #topicChecks label:hover{background:#eaf2fc}
+#home .studio-adaptive-card{padding:10px}
+#home .studio-builder-options .field{margin-bottom:9px}
+#home .studio-start-btn{background:#1f5cad}
+#home .studio-builder-note{font-size:.74rem}
+.exam2-progress-jump{font-size:.82rem;color:#2563a6;text-decoration:none;font-weight:800}
+@media(max-width:900px){#home .studio-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#home .studio-builder-shell{grid-template-columns:1fr}#home .studio-builder-options{position:static}}
+@media(max-width:550px){.exam2-jump{padding:10px 16px}#home .studio-home-body{padding:14px}#home .studio-quick-grid{grid-template-columns:1fr 1fr}#home .studio-quick-card{min-height:138px;padding:10px}.exam2-head .btn{width:100%}}
+@media(max-width:390px){#home .studio-quick-grid{grid-template-columns:1fr}#home .studio-quick-card{min-height:0}}
 </style>
 </head><body><div class="wrap"><h1 id="studioTitle">Exam 2 Study Studio</h1><button class="btn out hidden" type="button" id="studioHomeNav">← Study Studio Home</button><section id="home" class="panel" aria-busy="true">
   <div id="studioLoadPanel" class="studio-load-panel hidden" role="status" aria-live="polite"><div id="studioLoadSummary" class="studio-load-summary"></div><div id="studioLoadSources" class="studio-load-sources"></div></div>
-  <div class="studio-home-head"><h2>Study Studio</h2><p>Review weak areas, build a focused quiz, or let Adaptive Mode choose the next question.</p></div>
+  <div class="studio-home-head exam2-head"><div><div class="exam2-kicker">Equipment · Exam 2 · 500 questions</div><h2>Study Studio</h2><p>Choose your topics, start a quiz, or pick up where you left off.</p></div><a class="btn" href="#exam2QuizBuilder">Build a Quiz ↓</a></div><nav class="exam2-jump" aria-label="Study Studio sections"><a href="#studioQuickModes">Quick Study</a><a href="#exam2QuizBuilder">Build a Quiz</a><a href="#exam2Progress">Progress &amp; Reports</a></nav>
   <div class="studio-home-body">
     <section class="studio-section" id="studioQuickModes">
       <div class="studio-section__head"><div><h2>Quick Study</h2><p>Jump directly into a targeted review mode.</p></div></div>
-      <div class="studio-quick-grid">
+      <div class="studio-quick-grid"><div class="studio-quick-card"><h3>Start Practice</h3><div class="mut">Create a custom quiz from all 500 questions.</div><a class="btn" href="#exam2QuizBuilder" style="text-align:center;text-decoration:none">Build Quiz</a></div>
         <div class="studio-quick-card"><h3>Cumulative Missed</h3><div id="missedN" class="mut"></div><button class="btn" onclick="startMode('missed')">Review Missed</button></div>
         <div class="studio-quick-card"><h3>Flagged</h3><div id="flagN" class="mut"></div><button class="btn" onclick="startMode('flagged')">Review Flagged</button></div>
         <div class="studio-quick-card"><h3>Smart Review</h3><div class="mut" id="smartN">Prioritizes due, missed, weak, and stale questions.</div><button class="btn" onclick="startMode('smart')">Start Smart Review</button></div>
         <div class="studio-quick-card"><h3>Due Review</h3><div class="mut" id="dueN">Questions scheduled for spaced review.</div><button class="btn" id="dueBtn" onclick="startMode('due')">Review Due</button></div>
-        <div class="studio-quick-card"><h3>Question Search</h3><div class="mut">Find questions across all loaded banks by topic, stem, explanation, or source.</div><button class="btn" onclick="show('search')">Search Questions</button></div>
+        
       </div>
     </section>
 
-    <section class="studio-section">
+    <section class="studio-section" id="exam2QuizBuilder">
       <div class="studio-section__head"><div><h2>Build a Quiz</h2><p>Choose exactly what you want to practice, then set the session style.</p></div></div>
       <div class="studio-builder-tabs hidden"><button class="btn" id="buildSetsBtn" onclick="setBuildMode('sets')">Practice Sets</button><button class="btn out" id="buildTopicsBtn" onclick="setBuildMode('topics')">Topics</button></div>
       <div class="mut" id="buildModeHelp">Choose topics from the complete 500-question Exam 2 pool.</div>
       <div class="studio-builder-shell">
         <div class="studio-builder-main">
           <div class="pickbox hidden" id="sourcePickbox"><h4>All Exam 2 Questions</h4><div class="pickactions"><button class="btn out tiny" onclick="setChecks('sourceChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('sourceChecks',false)">Clear</button></div><div id="sourceChecks" class="checklist"></div></div>
-          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div></div>
+          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><input id="exam2TopicSearch" class="field exam2-topic-search" type="search" autocomplete="off" placeholder="Search topics…" aria-label="Search Exam 2 topics"><div id="exam2TopicStatus" class="exam2-topic-status" role="status" aria-live="polite">All five topics available</div><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div></div>
         </div>
         <aside class="studio-builder-options">
           <label class="studio-option-label" for="count">Question count</label>
           <select id="count" class="field"><option>10</option><option>25</option><option>50</option><option selected>100</option><option>150</option><option>200</option><option value="all">All matching</option></select>
           <label class="studio-option-label" for="order">Order</label>
           <select id="order" class="field"><option value="random">Random</option><option value="sequential">Sequential</option></select>
-          <div class="studio-adaptive-card"><label class="checkitem"><input type="checkbox" id="adaptiveToggle" onchange="adaptiveToggleChanged(this)"> <span><b>Adaptive</b> <span class="mut">Samples unseen questions with adaptive difficulty and a balanced content blueprint.</span></span></label><label for="adaptiveScope">Adaptive question pool</label><select id="adaptiveScope" class="field"><option value="all">All courses: Equipment Exams 1 &amp; 2, Basic Principles &amp; Clinical Pharm</option><option value="course">This course: selected sets or topics</option></select><span class="mut">All-course Adaptive uses all three courses, independent of the set and topic selections above.</span></div>
+          <div class="studio-adaptive-card"><label class="checkitem"><input type="checkbox" id="adaptiveToggle" onchange="adaptiveToggleChanged(this)"> <span><b>Adaptive</b> <span class="mut">Samples unseen questions with adaptive difficulty and a balanced content blueprint.</span></span></label><label for="adaptiveScope">Adaptive question pool</label><select id="adaptiveScope" class="field"><option value="all">All courses: Equipment Exams 1 &amp; 2, Basic Principles &amp; Clinical Pharm</option><option value="course">This course: selected sets or topics</option></select><span class="mut">All-course Adaptive includes Equipment Exams 1 and 2, Basic Principles, and Clinical Pharmacology.</span></div>
           <button class="btn studio-start-btn" onclick="startMode('custom')">Start Quiz</button>
-          <div class="studio-builder-note">Practice Set mode stays inside the sets you choose. Topic mode pulls matching questions across every loaded bank and Hazards set.</div>
+          <div class="studio-builder-note">Select topics at left, or leave them empty to use the complete 500-question Exam 2 pool.</div>
         </aside>
       </div>
     </section>
 
-    <section class="studio-section">
+    <section class="studio-section" id="exam2Progress">
       <div class="studio-section__head"><div><h2>Progress</h2><p>Your recent performance and review workload.</p></div></div>
       <div class="studio-secondary-grid">
         <div class="studio-analytics-card"><div id="analyticsSummary" class="studio-analytics-summary"></div><div id="analytics"></div></div>
@@ -174,4 +209,19 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
   </div>
 </section>
 <section id="quiz" class="panel hidden mbu-bank1-ui"><div class="mbu-session-head"><div class="mbu-session-title"><span class="badge" id="sessionBadge">STUDY STUDIO</span><div class="progress" id="qprog"></div></div><div class="mbu-session-actions"><button class="btn out" id="flagBtn" onclick="toggleFlag()">☆ Flag</button><button class="btn out" id="studioNotesBtn" onclick="toggleStudioNotes()">Notes</button><button class="btn out" onclick="reportCurrent()">Report</button><button class="btn out" id="studioNavToggle" onclick="toggleNav()">Navigator</button><button class="btn out mbu-return" onclick="renderHome()">← Study Studio Home</button></div></div><div class="stats mbu-quiz-stats"><div><span>Answered</span><strong id="sessionCompleted">0</strong></div><div><span>Correct</span><strong id="sessionCorrect">0</strong></div><div><span>Missed</span><strong id="sessionMissed">0</strong></div><div><span>Accuracy</span><strong><span id="sessionScore">0</span>%</strong></div><span id="sessionTotal" class="hidden">0</span></div><div id="navigator" class="row hidden" style="flex-wrap:wrap;gap:6px;margin:8px 0 14px;max-height:180px;overflow:auto;padding:3px"></div><div id="studioNotesPanel" class="mbu-notes-panel hidden"><div class="mbu-notes-head"><div><strong>Session Notes</strong><span>Scratchpad for thoughts, formulas, and equations. Stored only in this browser tab.</span></div><button type="button" class="btn out" onclick="toggleStudioNotes(false)">Done</button></div><textarea id="studioNotesText" rows="6" placeholder="Type notes, equations, reminders, or reasoning here…" aria-label="Session notes"></textarea><div class="mbu-notes-foot"><span>Saved in this tab</span><button type="button" class="mbu-text-button" onclick="clearStudioNotes()">Clear notes</button></div></div><div class="type" id="qmeta"></div><div class="stem" id="stem"></div><div class="mbu-crossout-hint">Tip: Right-click an answer to cross it out.</div><div id="qimage" class="image hidden"></div><div class="options" id="opts"></div><div class="row" id="studio-submit-row" style="display:none;margin:4px 0 18px;justify-content:flex-end"><button class="btn" id="submit" onclick="grade()">Submit Answer</button></div><div id="fb" class="explain"><div id="fbText"></div><div id="fbCitation" class="cite"></div></div><div class="controls"><button class="btn out" id="studioPrev" onclick="studioNav(-1)">Previous</button><div class="row"><button class="btn out" id="studioReset" onclick="resetStudioCurrent()">Reset</button><button class="btn" id="next" onclick="nextQ()">Next</button></div></div></section>
-<section id="search" class="panel hidden"><h2>Question Repository Search</h2><input id="searchbox" class="field" style="width:100%" aria-label="Search question repository" placeholder="Search PIP, vaporizer, scavenging…" oninput="doSearch()"><div id="searchresults"></div></section><section id="reports" class="panel hidden"><h2>Saved Question Reports</h2><div class="controls" style="margin-bottom:10px"><button class="btn" id="sendSavedReportsBtn" type="button" onclick="sendSavedReports()">Send Saved Reports</button><button class="btn out" type="button" onclick="renderHome()">← Study Studio Home</button></div><div class="mut" id="savedReportStatus" role="status" aria-live="polite"></div><div id="reportlist"></div></section></div><script>window.MBU_CONTEXT={courseId:'equipment',courseLabel:'Equipment',courseUrl:'../',examId:'exam-2',examUrl:'./',manifestUrl:'banks.json'};</script><script>window.MBU_BOOT={scripts:[{src:'studio-loader.js',waitFor:'MBUStudioPageReady'}]};</script><script src="../assets/build-bootstrap.js"></script></body></html>
+<section id="search" class="panel hidden"><h2>Question Repository Search</h2><input id="searchbox" class="field" style="width:100%" aria-label="Search question repository" placeholder="Search PIP, vaporizer, scavenging…" oninput="doSearch()"><div id="searchresults"></div></section><section id="reports" class="panel hidden"><h2>Saved Question Reports</h2><div class="controls" style="margin-bottom:10px"><button class="btn" id="sendSavedReportsBtn" type="button" onclick="sendSavedReports()">Send Saved Reports</button><button class="btn out" type="button" onclick="renderHome()">← Study Studio Home</button></div><div class="mut" id="savedReportStatus" role="status" aria-live="polite"></div><div id="reportlist"></div></section></div><script>
+/* Only Exam 2 presentation helpers. Quiz state and analytics stay in the shared runtime. */
+(function(){
+function filterTopics(){
+ const input=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus');
+ if(!input||!host||!status)return;
+ const query=input.value.trim().toLowerCase();let visible=0,total=0;
+ host.querySelectorAll('label').forEach(label=>{total++;const match=label.textContent.toLowerCase().includes(query);label.hidden=!match;label.style.display=match?'':'none';if(match)visible++});
+ status.textContent=query?visible+' of '+total+' topics shown':total+' topics · 500 questions total';
+}
+document.addEventListener('input',e=>{if(e.target.id==='exam2TopicSearch')filterTopics()});
+const topicHost=document.getElementById('topicChecks');
+if(topicHost&&typeof MutationObserver!=='undefined'){const obs=new MutationObserver(filterTopics);obs.observe(topicHost,{childList:true});}
+document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#exam2"]');if(link){const target=document.querySelector(link.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}}});
+})();
+</script><script>window.MBU_CONTEXT={courseId:'equipment',courseLabel:'Equipment',courseUrl:'../',examId:'exam-2',examUrl:'./',manifestUrl:'banks.json'};</script><script>window.MBU_BOOT={scripts:[{src:'studio-loader.js',waitFor:'MBUStudioPageReady'}]};</script><script src="../assets/build-bootstrap.js"></script></body></html>
