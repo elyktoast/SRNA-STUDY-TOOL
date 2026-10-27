@@ -21,6 +21,6 @@ for(const token of ['data-exam2-count="10"','data-exam2-count="25"','data-exam2-
 assert.match(hybrid,/MBUStudyIntelligence\?\.questionStats/,'Topic stats must use revision-aware history');assert.match(hybrid,/attributeFilter:\['aria-busy','class'\]/,'Metrics refresh on home lifecycle');assert.match(hybrid,/input\.disabled=cross/,'Cross-course adaptive must disable course topic controls');
 
 const adminStats=fs.readFileSync('equipment/assets/account-statistics.js','utf8');assert.ok(adminStats.includes("'equipment','exam-2','Equipment Exam 2'"),'Admin account statistics inventory must include Exam 2');
-const adminPanel=fs.readFileSync('equipment/assets/admin-panel.js','utf8');assert.ok(adminPanel.includes("['equipment','exam-2']"),'Admin report resolver must include Exam 2');
+const adminPanel=fs.readFileSync('equipment/assets/admin-panel.js','utf8');assert.ok(adminPanel.includes("['equipment','exam-2']"),'Admin report resolver must include Exam 2');assert.ok(adminPanel.includes('data-e2-inventory')&&adminPanel.includes('data-all-inventory'),'Admin overview must visibly show live question counts');
 const crossCat=fs.readFileSync('tests/e2e/cross-course-cat.spec.js','utf8');assert.match(crossCat,/9000/,'Cross-course CAT tests must reflect 9000 questions');
 assert.match(fs.readFileSync(root+'index.html','utf8'),/1,000-question/,'Dashboard must advertise 1000 questions');
