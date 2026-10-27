@@ -119,3 +119,16 @@ test('Exam 2 desktop Study Studio never scrolls the document',async({page})=>{
  await page.locator('[data-e2-view="progress"]').click();
  await expect(page.locator('#exam2Progress')).toBeVisible();
 });
+
+test('Exam 2 quiz settings fit without scrolling builder at 1440x900',async({page})=>{
+ await page.setViewportSize({width:1440,height:900});
+ await setup(page,'/equipment/exam-2');
+ await expect(page.locator('#exam2QuizBuilder')).toBeVisible();
+ await expect(page.locator('#exam2QuizBuilder .studio-start-btn')).toBeVisible();
+ await expect.poll(()=>page.evaluate(()=>{
+   const builder=document.querySelector('#exam2QuizBuilder'),btn=document.querySelector('#exam2QuizBuilder .studio-start-btn'),rect=btn.getBoundingClientRect();
+   return {overflow:builder.scrollHeight-builder.clientHeight,buttonBottom:Math.ceil(rect.bottom),viewport:document.documentElement.clientHeight};
+ })).toMatchObject({overflow:0,buttonBottom:expect.any(Number),viewport:900});
+ const check=await page.evaluate(()=>({end:Math.ceil(document.querySelector('#exam2QuizBuilder .studio-start-btn').getBoundingClientRect().bottom),height:document.documentElement.clientHeight}));
+ expect(check.end).toBeLessThanOrEqual(check.height);
+});
