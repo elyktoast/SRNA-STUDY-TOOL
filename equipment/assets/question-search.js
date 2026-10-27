@@ -16,6 +16,7 @@ async function buildIndex(){
   const runtime=window.MBUBuild;if(!runtime)throw Error('SRNA Study Tool runtime is unavailable.');
   const roots=[
     {path:'equipment/exam-1/',course:'Equipment & Hazards'},
+    {path:'equipment/exam-2/',course:'Equipment Exam 2'},
     {path:'basic-principles/exam-1/',course:'Basic Principles'},
     {path:'pharm/clinical-pharm/',course:'Clinical Pharmacology'}
   ];
