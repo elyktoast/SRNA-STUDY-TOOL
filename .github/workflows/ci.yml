@@ -42,6 +42,8 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
+      - name: Validate Equipment Exam 2 integration
+        run: node scripts/test-equipment-exam2.mjs
       - name: Validate question content integrity
         run: npm run test:content
       - name: Verify content revisions and learner-history isolation
@@ -78,11 +80,9 @@ jobs:
           path: exports/srna-question-data-no-difficulty.json
           retention-days: 30
 
-  # Browser runners are the most expensive part of CI. Run them once on
-  # main (before publishing) or when requested manually, not on every PR push.
+  # Run browser regressions on PRs so Exam 2 is tested before merging.
   browser:
     name: Browser regression (${{ matrix.shard }})
-    if: github.event_name != 'pull_request'
     needs: quality
     strategy:
       fail-fast: false
