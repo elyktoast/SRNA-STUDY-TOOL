@@ -181,10 +181,30 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 #home #resumeActiveRow .resume-active-main{background:#183b68}
 #home #exam2QuizBuilder,#home #exam2Progress{scroll-margin-top:15px}
 @media(max-width:900px){#home .studio-builder-options{position:static}}
+
+/* Desktop: viewport-fit tabbed workspace, scroll only inside its active content. */
+@media(min-width:800px) and (min-height:570px){
+ body:not(.mbu-quiz-active)>.wrap{max-width:1240px;padding:10px 18px 0;overflow:visible}
+ body:not(.mbu-quiz-active) #home:not(.hidden){display:flex;flex-direction:column;min-height:0;margin:0}
+ body:not(.mbu-quiz-active) #home .studio-home-head{flex:none;padding:15px 24px 13px}
+ body:not(.mbu-quiz-active) #home .exam2-jump{flex:none;padding:10px 24px}
+ body:not(.mbu-quiz-active) #home .studio-home-body{display:flex;flex:1;min-height:0;overflow:hidden;padding:12px 24px 16px}
+ body:not(.mbu-quiz-active) #home .studio-section{display:none;flex:1;min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 5px 0 0;border:0;scrollbar-gutter:stable}
+ body:not(.mbu-quiz-active) #home[data-e2-active="builder"] #exam2QuizBuilder,
+ body:not(.mbu-quiz-active) #home[data-e2-active="quick"] #studioQuickModes,
+ body:not(.mbu-quiz-active) #home[data-e2-active="progress"] #exam2Progress{display:block}
+ body:not(.mbu-quiz-active) #home .studio-builder-options{position:static}
+ body:not(.mbu-quiz-active) #home .studio-builder-shell{align-items:start}
+ body:not(.mbu-quiz-active) #home #topicChecks{max-height:min(34vh,330px)}
+}
+.exam2-workspace-tabs button{border:1px solid #dce5ef;border-radius:9px;background:#f8fafc;color:#254971;font:inherit;font-size:.84rem;font-weight:800;padding:9px 13px;cursor:pointer}
+.exam2-workspace-tabs button[aria-selected="true"]{background:#1a365d;color:white;border-color:#1a365d}
+.exam2-workspace-tabs button:focus-visible{outline:3px solid #83afe4;outline-offset:2px}
+@media(max-width:799px), (max-height:569px){#home .studio-section{display:block!important}#home .studio-home-body{display:grid}#home .exam2-jump{flex-wrap:wrap}}
 </style>
 </head><body><div class="wrap"><h1 id="studioTitle">Exam 2 Study Studio</h1><button class="btn out hidden" type="button" id="studioHomeNav">← Study Studio Home</button><section id="home" class="panel" aria-busy="true">
   <div id="studioLoadPanel" class="studio-load-panel hidden" role="status" aria-live="polite"><div id="studioLoadSummary" class="studio-load-summary"></div><div id="studioLoadSources" class="studio-load-sources"></div></div>
-  <div class="studio-home-head exam2-head"><div><div class="exam2-kicker">Equipment · Exam 2 · 1,000 questions</div><h2>Study Studio</h2><p>Choose your topics, start a quiz, or pick up where you left off.</p></div><a class="btn" href="#exam2QuizBuilder">Build a Quiz ↓</a></div><nav class="exam2-jump" aria-label="Study Studio sections"><a href="#studioQuickModes">Quick Study</a><a href="#exam2QuizBuilder">Build a Quiz</a><a href="#exam2Progress">Progress &amp; Reports</a></nav>
+  <div class="studio-home-head exam2-head"><div><div class="exam2-kicker">Equipment · Exam 2 · 1,000 questions</div><h2>Study Studio</h2><p>Choose your topics, start a quiz, or pick up where you left off.</p></div><a class="btn" href="#exam2QuizBuilder">Build a Quiz ↓</a></div><nav class="exam2-jump exam2-workspace-tabs" aria-label="Study Studio sections"><button type="button" data-e2-view="builder" aria-selected="true">Build Quiz</button><button type="button" data-e2-view="quick" aria-selected="false">Quick Study</button><button type="button" data-e2-view="progress" aria-selected="false">Progress &amp; Reports</button><button type="button" onclick="showReports()">Question Reports</button></nav>
   <div class="studio-home-body">
     <section class="studio-section" id="studioQuickModes">
       <div class="studio-section__head"><div><h2>Quick Study</h2><p>Jump directly into a targeted review mode.</p></div></div>
@@ -230,6 +250,25 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 <section id="quiz" class="panel hidden mbu-bank1-ui"><div class="mbu-session-head"><div class="mbu-session-title"><span class="badge" id="sessionBadge">STUDY STUDIO</span><div class="progress" id="qprog"></div></div><div class="mbu-session-actions"><button class="btn out" id="flagBtn" onclick="toggleFlag()">☆ Flag</button><button class="btn out" id="studioNotesBtn" onclick="toggleStudioNotes()">Notes</button><button class="btn out" onclick="reportCurrent()">Report</button><button class="btn out" id="studioNavToggle" onclick="toggleNav()">Navigator</button><button class="btn out mbu-return" onclick="renderHome()">← Study Studio Home</button></div></div><div class="stats mbu-quiz-stats"><div><span>Answered</span><strong id="sessionCompleted">0</strong></div><div><span>Correct</span><strong id="sessionCorrect">0</strong></div><div><span>Missed</span><strong id="sessionMissed">0</strong></div><div><span>Accuracy</span><strong><span id="sessionScore">0</span>%</strong></div><span id="sessionTotal" class="hidden">0</span></div><div id="navigator" class="row hidden" style="flex-wrap:wrap;gap:6px;margin:8px 0 14px;max-height:180px;overflow:auto;padding:3px"></div><div id="studioNotesPanel" class="mbu-notes-panel hidden"><div class="mbu-notes-head"><div><strong>Session Notes</strong><span>Scratchpad for thoughts, formulas, and equations. Stored only in this browser tab.</span></div><button type="button" class="btn out" onclick="toggleStudioNotes(false)">Done</button></div><textarea id="studioNotesText" rows="6" placeholder="Type notes, equations, reminders, or reasoning here…" aria-label="Session notes"></textarea><div class="mbu-notes-foot"><span>Saved in this tab</span><button type="button" class="mbu-text-button" onclick="clearStudioNotes()">Clear notes</button></div></div><div class="type" id="qmeta"></div><div class="stem" id="stem"></div><div class="mbu-crossout-hint">Tip: Right-click an answer to cross it out.</div><div id="qimage" class="image hidden"></div><div class="options" id="opts"></div><div class="row" id="studio-submit-row" style="display:none;margin:4px 0 18px;justify-content:flex-end"><button class="btn" id="submit" onclick="grade()">Submit Answer</button></div><div id="fb" class="explain"><div id="fbText"></div><div id="fbCitation" class="cite"></div></div><div class="controls"><button class="btn out" id="studioPrev" onclick="studioNav(-1)">Previous</button><div class="row"><button class="btn out" id="studioReset" onclick="resetStudioCurrent()">Reset</button><button class="btn" id="next" onclick="nextQ()">Next</button></div></div></section>
 <section id="search" class="panel hidden"><h2>Question Repository Search</h2><input id="searchbox" class="field" style="width:100%" aria-label="Search question repository" placeholder="Search PIP, vaporizer, scavenging…" oninput="doSearch()"><div id="searchresults"></div></section><section id="reports" class="panel hidden"><h2>Saved Question Reports</h2><div class="controls" style="margin-bottom:10px"><button class="btn" id="sendSavedReportsBtn" type="button" onclick="sendSavedReports()">Send Saved Reports</button><button class="btn out" type="button" onclick="renderHome()">← Study Studio Home</button></div><div class="mut" id="savedReportStatus" role="status" aria-live="polite"></div><div id="reportlist"></div></section></div><script>
 /* Only Exam 2 presentation helpers. Quiz state and analytics stay in the shared runtime. */
+function setExam2View(view){
+ const home=document.getElementById('home');if(!home)return;
+ if(!['builder','quick','progress'].includes(view))view='builder';
+ home.dataset.e2Active=view;
+ document.querySelectorAll('[data-e2-view]').forEach(button=>button.setAttribute('aria-selected',String(button.dataset.e2View===view)));
+}
+function fitExam2Viewport(){
+ const home=document.getElementById('home');if(!home)return;
+ const fit=window.matchMedia('(min-width:800px) and (min-height:570px)').matches&&!document.body.classList.contains('mbu-quiz-active');
+ home.style.height=fit?Math.max(340,window.innerHeight-home.getBoundingClientRect().top-12)+'px':'';
+}
+document.addEventListener('click',e=>{
+ const tab=e.target.closest('[data-e2-view]');if(tab){setExam2View(tab.dataset.e2View);return}
+ const link=e.target.closest('a[href="#exam2QuizBuilder"]');if(link){e.preventDefault();setExam2View('builder')}
+});
+window.addEventListener('resize',fitExam2Viewport);
+if(typeof ResizeObserver!=='undefined'){const nav=document.querySelector('.mbu-site-nav');if(nav)new ResizeObserver(fitExam2Viewport).observe(nav)}
+setExam2View('builder');requestAnimationFrame(fitExam2Viewport);
+
 (function(){
 function updateExam2Ui(){
  const search=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus'),match=document.getElementById('exam2MatchCount'),unseen=document.getElementById('exam2UnseenCount');
@@ -266,6 +305,6 @@ if(topicHost&&typeof MutationObserver!=='undefined'){new MutationObserver(update
 updateExam2Ui();
 const home=document.getElementById('home');if(home&&typeof MutationObserver!=='undefined')new MutationObserver(updateExam2Ui).observe(home,{attributes:true,attributeFilter:['aria-busy','class']});
 window.addEventListener('storage',updateExam2Ui);
-document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#exam2"]');if(link){const target=document.querySelector(link.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}}});
+document.addEventListener('click',e=>{const link=e.target.closest('a[href^="#exam2"]');if(link){e.preventDefault();setExam2View(link.getAttribute('href')==='#studioQuickModes'?'quick':link.getAttribute('href')==='#exam2Progress'?'progress':'builder');}});
 })();
 </script><script>window.MBU_CONTEXT={courseId:'equipment',courseLabel:'Equipment',courseUrl:'../',examId:'exam-2',examUrl:'./',manifestUrl:'banks.json'};</script><script>window.MBU_BOOT={scripts:[{src:'studio-loader.js',waitFor:'MBUStudioPageReady'}]};</script><script src="../assets/build-bootstrap.js"></script></body></html>
