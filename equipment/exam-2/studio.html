@@ -164,6 +164,12 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 @media(max-width:390px){#home .studio-quick-grid{grid-template-columns:1fr}#home .studio-quick-card{min-height:0}}
 
 /* Hybrid refinement: compact sections, sticky action and resumed-session emphasis. */
+.exam2-presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:2px 0 9px}
+.exam2-presets button{padding:8px 0;background:#f4f8fd;border:1px solid #c9d9ea;border-radius:8px;color:#1a365d;font:inherit;font-weight:800;cursor:pointer}
+.exam2-presets button[aria-pressed="true"]{color:#fff;background:#1a365d;border-color:#1a365d}
+.exam2-unseen{color:#255880;font-size:.82rem;font-weight:750;margin:4px 0 0}
+.exam2-topic-mastery{display:block;font-size:.74rem;font-weight:700;color:#5a718e;margin-left:24px;margin-top:3px}
+
 #home .studio-home-body{gap:12px;padding-top:14px}#home .studio-section+.studio-section{padding-top:14px}
 #home .studio-quick-card{min-height:106px}#home .studio-quick-card .mut{min-height:0}
 #home .studio-builder-options{position:sticky;top:12px;align-self:start}
@@ -198,10 +204,10 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
       <div class="studio-builder-shell">
         <div class="studio-builder-main">
           <div class="pickbox hidden" id="sourcePickbox"><h4>All Exam 2 Questions</h4><div class="pickactions"><button class="btn out tiny" onclick="setChecks('sourceChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('sourceChecks',false)">Clear</button></div><div id="sourceChecks" class="checklist"></div></div>
-          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><input id="exam2TopicSearch" class="field exam2-topic-search" type="search" autocomplete="off" placeholder="Search topics…" aria-label="Search Exam 2 topics"><div id="exam2TopicStatus" class="exam2-topic-status" role="status" aria-live="polite">All five topics available</div><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div><div class="exam2-match-count" id="exam2MatchCount" role="status" aria-live="polite">500 questions available</div></div>
+          <div class="pickbox" id="topicPickbox"><h4>Topics</h4><input id="exam2TopicSearch" class="field exam2-topic-search" type="search" autocomplete="off" placeholder="Search topics…" aria-label="Search Exam 2 topics"><div id="exam2TopicStatus" class="exam2-topic-status" role="status" aria-live="polite">All five topics available</div><div class="pickactions"><button class="btn out tiny" onclick="setChecks('topicChecks',true)">Select All</button><button class="btn out tiny" onclick="setChecks('topicChecks',false)">Clear</button></div><div id="topicChecks" class="checklist"></div><div class="exam2-match-count" id="exam2MatchCount" role="status" aria-live="polite">500 questions available</div><div class="exam2-unseen" id="exam2UnseenCount" role="status" aria-live="polite">Unseen count loads with your questions</div></div>
         </div>
         <aside class="studio-builder-options">
-          <label class="studio-option-label" for="count">Question count</label>
+          <label class="studio-option-label" for="count">Question count</label><div class="exam2-presets" aria-label="Quick question counts"><button type="button" data-exam2-count="10">10</button><button type="button" data-exam2-count="25">25</button><button type="button" data-exam2-count="50">50</button><button type="button" data-exam2-count="100">100</button></div>
           <select id="count" class="field"><option>10</option><option>25</option><option>50</option><option selected>100</option><option>150</option><option>200</option><option value="all">All matching</option></select>
           <label class="studio-option-label" for="order">Order</label>
           <select id="order" class="field"><option value="random">Random</option><option value="sequential">Sequential</option></select>
@@ -226,26 +232,33 @@ body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 /* Only Exam 2 presentation helpers. Quiz state and analytics stay in the shared runtime. */
 (function(){
 function updateExam2Ui(){
- const search=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus'),match=document.getElementById('exam2MatchCount');
+ const search=document.getElementById('exam2TopicSearch'),host=document.getElementById('topicChecks'),status=document.getElementById('exam2TopicStatus'),match=document.getElementById('exam2MatchCount'),unseen=document.getElementById('exam2UnseenCount');
  if(!host)return;
- const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')];
- let visible=0,selected=0,all=0;
+ const query=(search?.value||'').trim().toLowerCase(),labels=[...host.querySelectorAll('label')],questions=typeof ALL!=='undefined'&&Array.isArray(ALL)?ALL:[],answers=typeof DB!=='undefined'&&DB?.ans?DB.ans:{};
+ const selectedTopics=new Set(labels.filter(label=>label.querySelector('input[type="checkbox"]')?.checked).map(label=>label.querySelector('input').value));
+ let visible=0;
  for(const label of labels){
-  const text=label.textContent||'',n=Number((text.match(/\((\d+)\)\s*$/)||[])[1]||0),checked=!!label.querySelector('input[type="checkbox"]')?.checked;
-  const showing=text.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';
-  visible+=Number(showing);all+=n;if(checked)selected+=n;
+  const input=label.querySelector('input[type="checkbox"]'),topic=input?.value||'',items=questions.filter(q=>q.topic===topic),attempted=items.filter(q=>answers[q.uid]),correct=items.filter(q=>answers[q.uid]?.ok).length;
+  let badge=label.querySelector('.exam2-topic-mastery');
+  if(!badge){badge=document.createElement('small');badge.className='exam2-topic-mastery';label.append(badge)}
+  badge.textContent=attempted.length?Math.round(100*correct/attempted.length)+'% latest-answer accuracy · '+attempted.length+'/'+items.length+' attempted':'Not studied · '+items.length+' questions';
+  const showing=topic.toLowerCase().includes(query);label.hidden=!showing;label.style.display=showing?'':'none';if(showing)visible++;
  }
+ const matching=questions.filter(q=>!selectedTopics.size||selectedTopics.has(q.topic)),remaining=matching.filter(q=>!answers[q.uid]).length;
  if(status)status.textContent=query?visible+' of '+labels.length+' topics shown':labels.length+' topics available';
- if(match)match.textContent=(selected||all||500)+' questions match '+(selected?'selected topics':'the complete Exam 2 pool');
+ if(match)match.textContent=matching.length+' questions match '+(selectedTopics.size?'selected topics':'the complete Exam 2 pool');
+ if(unseen)unseen.textContent=remaining+' unseen of '+matching.length+' matching questions';
  const adaptive=!!document.getElementById('adaptiveToggle')?.checked,scope=document.getElementById('adaptiveScope')?.value||'all',cross=adaptive&&scope==='all';
- const order=document.getElementById('order'),note=document.getElementById('exam2AdaptiveNote');
+ const order=document.getElementById('order'),note=document.getElementById('exam2AdaptiveNote'),count=document.getElementById('count');
  if(order){order.disabled=adaptive;order.title=adaptive?'Adaptive selects question order automatically':''}
  if(note)note.textContent=cross?'All-course adaptive chooses from every course; Exam 2 topic filters and order do not apply.':adaptive?'Exam 2 adaptive chooses unseen questions and controls the order automatically.':'Standard quiz: choose topics and question order.';
  const topic=document.getElementById('topicPickbox');
  if(topic)topic.classList.toggle('exam2-adaptive-inactive',cross);
  if(search)search.disabled=cross;
+ document.querySelectorAll('[data-exam2-count]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.exam2Count===count?.value)));
 }
 document.addEventListener('input',e=>{if(e.target.id==='exam2TopicSearch')updateExam2Ui()});
+document.addEventListener('click',e=>{const button=e.target.closest('[data-exam2-count]');if(!button)return;const count=document.getElementById('count');if(count){count.value=button.dataset.exam2Count;count.dispatchEvent(new Event('change',{bubbles:true}))}});
 document.addEventListener('change',e=>{if(['adaptiveToggle','adaptiveScope','count'].includes(e.target.id)||e.target.closest('#topicChecks'))updateExam2Ui()});
 document.addEventListener('click',e=>{if(e.target.closest('#topicPickbox .pickactions'))queueMicrotask(updateExam2Ui)});
 const topicHost=document.getElementById('topicChecks');
