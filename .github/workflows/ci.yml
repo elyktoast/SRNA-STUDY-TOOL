@@ -42,6 +42,8 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
           exit "$status"
+      - name: Validate Equipment Exam 2 integration
+        run: node scripts/test-equipment-exam2.mjs
       - name: Validate question content integrity
         run: npm run test:content
       - name: Verify content revisions and learner-history isolation
