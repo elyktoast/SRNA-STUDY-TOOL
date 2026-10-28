@@ -70,3 +70,7 @@ Rewrote 50 ventilator explanations in original array order, retaining all stems,
 ## Eleventh 50-question batch — supplemental circuits B201–B255
 
 Reviewed the first 50 records in `questions-set2-1.json`, preserving ID gaps. Rewrote explanations about circuit classifications, CO₂ elimination, one-way valves, Mapleson arrangements and humidification. Aligned reading references to *Anesthesia Equipment*, 3rd ed., Chapters 4 and 7, but **did not verify individual page passages**. Thirteen records remain flagged for precise numerical, anatomical or numbered-figure review (especially B206, B211, B236, B241–B245 and B249). Original answers, options, stems, image data and learner progress were preserved; clinical discrepancies were noted rather than silently correcting source-dependent answers.
+
+## Twelfth 50-question batch — S2-B256–S2-B306
+
+Rewrote 50 explanations concerning airway humidification, filtration, closed and low-flow circuits, and circle-system anatomy. References aligned with the relevant chapters of Ehrenwerth et al., 3e (Chs. 4, 7, 19), but exact pages and individual answer keys are NOT passage-verified. Figure-number questions B286–B293 and disputed generalizations B260/B262/B278/B283/B285/B302/B303 require checks. IDs, options, answers and images preserved.
