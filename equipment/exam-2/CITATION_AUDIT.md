@@ -216,3 +216,14 @@ Directly inspected *Anesthesia Equipment*, 3rd ed., Ch. 17, printed p. 374 (Box 
 ## Final attribution and integration cleanup
 
 Removed residual classroom/instructor wording from 11 explanations (T001, T059, T063, T078, T088, T111, V030, B083, N149, S2-B206, S2-V220), retaining their source limitations and unresolved numerical or answer-key concerns. No new passage verification is claimed. Corrected the top-level progress summary and historical Batch 15/17/18 cumulative totals. All IDs, stems, choices, keys, images, difficulty and ordering remain unchanged. Inventory verification decisions and citations are unchanged. Published a new build identifier with the cleanup; final local quality, integration and preservation checks and GitHub Actions are reported separately.
+
+
+## Stem and answer audit pass 1 — 2026-10-27
+
+Corrected 20 question records in the 250-question supplemental file `questions-set2-2.json`, including malformed source attributions, lecture-specific wording, clinical overgeneralizations, calculations and distractor clarity. **No answer indices, IDs, question order, images, topics, difficulty or question types changed.**
+
+Five previously unresolved answers now have directly inspected textbook support: S2-N227 (Equipment Ch. 6 printed p. 160, gas-driven bellows with electrical circuits), S2-N295 (Equipment Ch. 6 p. 168 and Nurse Ch. 16 p. 278, optional PSV apnea backup), S2-V204 (Equipment Ch. 17 p. 389, measurement delay and early alarm limits; removed unsupported sidestream/15-second claim), S2-V220 and S2-V221 (Equipment Ch. 17 p. 373, Table 17.2 equipment-design and miscommunication examples). V204's supplied SpO₂ figure was visually reviewed in the prior batch and remains unchanged. S2-N267 was made clinically conditional rather than declaring a PIP of 32 cm H₂O universally acceptable; it remains unverified.
+
+**Aggregate reported verification: 446/1,000; 554 remaining. Important accounting limitation:** only 319 question records now carry an explicit `sourceReview.correctAnswerIndependentlyVerified=true` value, while the aggregate includes 127 legacy verifications recorded before that structured field existed. These legacy items have not been re-audited in this pass and must be reconciled individually before final certification. Remaining critical discrepancies including S2-R260, S2-T214 and T083 are not resolved by this batch.
+
+Pre-publication data checks: 250/250 question records and 1,000/1,000 inventory records parsed; unique IDs; unchanged ID, set, answer indices, image bytes, topic, difficulty, type, question ordering and option counts. Full GitHub Actions checks must complete after publication. PR #29 remains unmerged.
