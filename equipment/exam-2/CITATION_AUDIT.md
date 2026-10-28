@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **789 independently verified answers and 211 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **813 independently verified answers and 187 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -443,3 +444,15 @@ Sources inspected: Anesthesia Equipment3e Ch9 pp224–227,230–232 and Ch10 pp2
 Corrections and issues: R056 and R057 restricted to the appropriate passive/spontaneous and PEEP conditions. R059 remains an unverifiable subjective instructor ranking. No answer indices or image payloads changed.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-R050, NUR868-R051, NUR868-R052, NUR868-R053, NUR868-R054, NUR868-R055, NUR868-R060, NUR868-R061, NUR868-R062, NUR868-R063, NUR868-R064, NUR868-R065, NUR868-R066. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 5 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-R067, NUR868-R068, NUR868-R069, NUR868-R070, NUR868-R071, NUR868-R072, NUR868-R073, NUR868-R074, NUR868-R075, NUR868-R076, NUR868-R077, NUR868-R078, NUR868-R079, NUR868-R080, NUR868-R081, NUR868-R082, NUR868-R083, NUR868-R084, NUR868-R085, NUR868-R086, NUR868-R087, NUR868-R088, NUR868-R089, NUR868-R090, NUR868-R091. **24 newly verified; 1 unresolved in this batch. Total813/1000 verified; 187 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch10 pp242–249, Ch11 p253; Nurse Anesthesia7e Ch18 p318 including curare cleft and high/lowETCO2 causes. Two supplied image families inspected.
+
+Corrections and issues: R068 corrected nonunique paralysis inference; clarified CO2 elimination, alveolar versus apparatus dead space, sampling leak, CPR threshold and model-gradient premises. R085 relative detection timing remains unsupported. Original answer indices retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-R067, NUR868-R068, NUR868-R069, NUR868-R070, NUR868-R071, NUR868-R072, NUR868-R073, NUR868-R074. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+Panel-reference repair accompanying batch5: the supplied trend grid has no visible A–D labels and the flow-time figure has incomplete panel lettering. R070–R074 now name quadrants; R053–R055 name left/middle/right positions. Original images and answer indices unchanged. These three earlier verified items received presentation repairs only and no new verification credit.
