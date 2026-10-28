@@ -46,3 +46,7 @@ Key issues: T045 radiative-transfer formula wording; T052 A3/A2 source discrepan
 ## Fifth 50-question batch — T091–T115 (24 records), V001–V026
 
 Reviewed in actual array order, preserving T091B and gaps. Inspected Equipment Ch. 13 pp. 287, 292–299 and Ch. 17 pp. 372–374; cross-checked Nurse Anesthesia Ch. 18 pp. 314, 321–322 and Ch. 60 pp. 1364–1365, 1367. Rewritten explanations distinguish verified mechanisms from unsupported rates and rankings. T098 conflicts with the Equipment forced-air rate example; T106 has a bladder-site classification discrepancy between editions. Exact fluid temperatures, extracorporeal rewarming rates, circadian timing, and postoperative-fever percentages remain flagged. No keys or protected question fields changed.
+
+## Sixth 50-question batch — remaining vigilance and B001–B037
+
+Rewrote 17 vigilance and 33 breathing-circuit records in array order. Inspected Equipment Ch. 4 pp. 101–106, Ch. 17 pp. 371–374, 388–390; cross-checked Nurse Anesthesia Ch. 16 pp. 266–267 and Ch. 18 p. 314. Flow requirements vary by circuit and ventilation mode; B006/B035 retain numerical caveats. B008 wrongly generalizes closed-circuit replacement requirements to semiclosed operation. B016 needs extension-location context; some Mapleson and named auditory-attention claims remain unresolved. Images, keys, choices and learner records preserved.
