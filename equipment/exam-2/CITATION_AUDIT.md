@@ -208,3 +208,7 @@ High-priority IDs and flags: NUR868-T052 (source-discrepancy); NUR868-T062 (answ
 **Citation synchronization:** corrected 300 preexisting mismatches between inventory citation strings and the actual student question files. This is metadata reconciliation only, **not new textbook passage verification**; existing sourceReview decisions and flags remain unchanged. No stems, keys, choices, image bytes or student history were altered.
 
 Next verification pass should inspect exact passages and supplied figures for priority records first, then systematically clear the remaining 563 unverified complete answers. Do not merge until critical key conflicts are resolved and quality gates pass.
+
+### Follow-up source verification — four vigilance items
+
+Directly inspected *Anesthesia Equipment*, 3rd ed., Ch. 17, printed p. 374 (Box 17.1), p. 386 (three functions of alarms), and p. 387 (inattentional deafness). **V028, V029, V031 and V042 now have their complete keyed answers supported by the actual passages**. Replaced stale explanations/citations where necessary, removed their source-check flags, and preserved all protected fields. Verified complete answers now 441/1,000; 559 still unresolved.
