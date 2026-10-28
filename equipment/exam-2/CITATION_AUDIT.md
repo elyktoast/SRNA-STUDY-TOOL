@@ -7,9 +7,9 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-Five questions (NUR868-R001 through R005) have subsequently been verified against *Anesthesia Equipment*, 3rd ed., Ch. 8, printed pp. 195–198; their explanations and citations were updated. All remaining 995 question-specific citations require passage-level verification. See `source-verification-inventory.json` for a per-question status and issue flags.
+The inventory records 152 independently verified answers out of 1,000: 25 from this Batch 9 passage review and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Thirteen rewrite batches cover 650 explanations; 350 remain unreviewed by those batches. **650 rewritten does not mean 650 textbook-verified.**
 
-Every citation was recreated as a **chapter-level reading reference** based on the question's topic and terminology, using chapter titles verified against the uploaded textbooks' tables of contents. These citations are NOT proof that every question, numerical answer, explanation, slide image, or clinical claim has been individually confirmed in the cited chapter. No page numbers or verbatim textbook quotations are asserted. Items should be individually checked against chapter text before being labeled source-verified. Questions requiring primary-source validation remain a separate editorial task.
+Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
 Question identifiers, answer keys, stems, options, and attached images were preserved. Original classroom slide citations were replaced; teacher surname was removed from respiratory-monitoring attribution fields.
 
@@ -78,3 +78,24 @@ Rewrote 50 explanations concerning airway humidification, filtration, closed and
 ## Thirteenth 50-question batch — S2-B307–S2-R212 (actual array order)
 
 Rewrote the next 50 records in `questions-set2-1.json`: 20 B-series, 19 M-series, and 11 R-series records, preserving ID gaps. Inspected original *Anesthesia Equipment*, 3rd ed., Ch. 4 printed pp. 101, 114–117; Ch. 7 pp. 184–185; Ch. 10 p. 245; and Ch. 19 pp. 441, 445, 449. Also inspected *Nurse Anesthesia*, 7th ed., Ch. 16 p. 266–267 on rebreathing, reservoir and concentration gradients. Eleven records reference an inspected printed passage supporting a relevant principle; **none of those references alone certifies the entire answer set**. Checked supplied analyzer-response and mainstream/sidestream images used by R201–R203 and R206–R209; the labels are consistent with the keyed intervals and configurations. B313 (3.0-micrometer filtration challenge), M208 (mandatory vaporizer increase), R211 (disposable mainstream sensor), B325 (fixed gas inlet location), and M207 (upper-airway terminology) need key/stem review; proposed corrections are recorded in batch13 of the inventory, not applied. All IDs, stems, options, answer keys, image data and learner records were preserved.
+
+## Batch 9 passage-verification follow-up — N051–N102 (50 records)
+
+Checked PR #29's commit history before editing: initial head `5ec823c8` recorded rewrite batches 9–12; fetched head `49662f86` added Batch 13 while this review was in progress. Rather than repeating those rewrites or calling them verified, individually checked the requested questions 401–450 using both uploaded PDFs. All 50 explanations and citations were reviewed; **25 answers independently verified, 25 unresolved/conditional**. Rewrite progress remains 650/1,000, with 350 not yet rewritten. Answer-verification count rises from 127 to 152/1,000.
+
+Inspected actual passages in *Anesthesia Equipment: Principles and Applications*, 3rd ed., Ch. 4 p. 103; Ch. 6 pp. 151–154, 159–160, 162–168; Ch. 8 p. 211; and *Nurse Anesthesia*, 7th ed., Ch. 16 pp. 276–279, Ch. 18 p. 316, Ch. 29 pp. 620–621, 644, 669, and Ch. 34 pp. 809–810. Printed page numbers were read from the pages, not inferred from PDF indices. Visually inspected Equipment Fig. 6.22 on p. 168 and Nurse p. 620's static-compliance equation. All 50 question image fields are null.
+
+Notable issues:
+- N052: dyssynchrony is supported, but compliance-dependent volume is also plausible in time-cycled PCV; stem is ambiguous.
+- N054: Equipment Fig. 6.22 labels 25%, not the keyed 20%; retained key and flagged numerical discrepancy.
+- N056: constant-flow VCV does not establish the keyed combination “pressure and flow” for unspecified older designs.
+- N063/N074: cited initial-rate and ARDS-ratio examples differ from keyed ranges; examples are not universal standards.
+- N080: volume-loss proportionality requires the pressure rise, not unqualified PIP when PEEP is nonzero.
+- N081/N089: supporting individual mechanisms does not verify the complete three-answer set.
+- N082/N086–N088/N092: exact trigger, default, titration, or pressure values remain unverified.
+- N091: peak, plateau, and driving pressure are separate quantities; do not relabel an alveolar-pressure threshold as a PIP goal.
+- N098: duplicate distractors and unsupported exact intervention threshold; no silent option/key changes.
+
+Every record has separate fields for explanation rewrite, chapter identification, passage inspection, independent answer verification, support scope, and evidence notes. Unsupported legacy page ranges were replaced by inspected principle-level support, with unresolved status retained where appropriate. IDs, stems, options, answers, images, order, revision mappings, and learner-storage code were preserved.
+
+Validation: pre-edit GitHub Actions run #2874 (`40621595633`) passed the quality job and all four browser shards. Local `npm run quality` passed (existing semantic duplicate warnings remain). The citation integration assertion was updated to accept either of the two approved textbooks as the primary citation, allowing specific Nurse Anesthesia evidence to replace unrelated Equipment chapter references. Post-edit validation is recorded in the batch commit's session report.
