@@ -18,3 +18,10 @@ Question identifiers, answer keys, stems, options, and attached images were pres
 - Eight items (R012–R014, R020, R026, R050–R052) remain explicitly flagged for exact source, device condition, or figure cross-check; see `source-verification-inventory.json`.
 - The numeric sequence omits several IDs; the count is 45 updated records, not every integer 006–054.
 - Do not interpret the batch as 50 individually textbook-verified correct answers. Passage checks, figure validation, and clinical accuracy review are still needed for flagged items.
+
+## Respiratory monitoring — second 50-question batch
+
+- Question records R055–R104: 50 explanations rewritten to remove lecture attribution and explain mechanisms in concise, original wording.
+- References are associated with the appropriate textbook chapter: *Anesthesia Equipment* (2021), Ch. 9 (monitoring ventilation), Ch. 10 (capnography), or Ch. 11 (pulse oximetry).
+- **No page-specific passage verification is claimed for this batch.** Figure-dependent questions (panel/segment labels), instrument-dependent claims, CPR thresholds, and subjective lecturer rankings are listed for follow-up in the source verification inventory.
+- Original IDs, stems, options, answers, and images were not changed. If a source does not support the current answer key, it must be flagged for correction rather than quietly asserted as verified.
