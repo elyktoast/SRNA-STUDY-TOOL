@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **765 independently verified answers and 235 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **789 independently verified answers and 211 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -432,3 +433,13 @@ Sources inspected: Anesthesia Equipment3e Ch13 pp292–295,299; Ch19 pp435–436
 Corrections and issues: Removed unsupported warming superlatives, restricted underbody-mattress claim to its device context, removed high-IJ equivalence, and clarified brain-lag and colorimetric premises. Seven exact timing/temperature/rewarming/fever claims remain flagged; correct answer indices retained. No images in this batch.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 4 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-R040, NUR868-R042, NUR868-R043, NUR868-R044, NUR868-R045, NUR868-R046, NUR868-R048, NUR868-R049, NUR868-R050, NUR868-R051, NUR868-R052, NUR868-R053, NUR868-R054, NUR868-R055, NUR868-R056, NUR868-R057, NUR868-R058, NUR868-R059, NUR868-R060, NUR868-R061, NUR868-R062, NUR868-R063, NUR868-R064, NUR868-R065, NUR868-R066. **24 newly verified; 1 unresolved in this batch. Total789/1000 verified; 211 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch9 pp224–227,230–232 and Ch10 pp239–242. All four image families inspected: volume-time, flow-time, numbered capnogram, abnormal capnogram panels.
+
+Corrections and issues: R056 and R057 restricted to the appropriate passive/spontaneous and PEEP conditions. R059 remains an unverifiable subjective instructor ranking. No answer indices or image payloads changed.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-R050, NUR868-R051, NUR868-R052, NUR868-R053, NUR868-R054, NUR868-R055, NUR868-R060, NUR868-R061, NUR868-R062, NUR868-R063, NUR868-R064, NUR868-R065, NUR868-R066. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
