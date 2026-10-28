@@ -130,6 +130,8 @@ body.mbu-quiz-active #quiz .xo{border-radius:9px}
 body.mbu-quiz-active #quiz .controls{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:12px}
 body.mbu-quiz-active #quiz .controls .row{display:flex;gap:8px;margin-left:auto}
 body.mbu-quiz-active #quiz .controls .btn{min-height:38px;padding:8px 14px;border-radius:8px}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn:disabled{background:#e2e8f0;color:#64748b;border-color:#cbd5e1;cursor:not-allowed}
+body.mbu-quiz-active #quiz .opt:focus-visible,body.mbu-quiz-active #quiz .xo:focus-visible{outline:3px solid #7bb0ef;outline-offset:2px}
 body.mbu-quiz-active #quiz button:focus-visible{outline:3px solid #7bb0ef;outline-offset:2px}
 @media(max-width:650px){
  body.mbu-quiz-active #quiz{padding:14px 12px}
@@ -138,6 +140,7 @@ body.mbu-quiz-active #quiz button:focus-visible{outline:3px solid #7bb0ef;outlin
  body.mbu-quiz-active #quiz .mbu-session-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
  body.mbu-quiz-active #quiz .mbu-session-actions .btn{width:100%;padding:7px 3px;font-size:.75rem}
  body.mbu-quiz-active #quiz .mbu-session-actions .mbu-return{grid-column:1/-1;margin:0}
+ body.mbu-quiz-active #quiz .mbu-session-title::after{grid-column:1/-1}
  body.mbu-quiz-active #quiz .mbu-quiz-stats>div{padding:6px 5px;font-size:.79rem}
  body.mbu-quiz-active #quiz .stem{font-size:1.03rem}
 }
@@ -364,13 +367,13 @@ if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(fitExa
   if(!quiz.classList.contains('hidden')){
    if(badge.textContent!=='EQUIPMENT EXAM 2')badge.textContent='EQUIPMENT EXAM 2';
    const raw=counter.textContent||'';
-   const match=raw.match(/Question\\s*(\\d+)\\s*(?:of|\\/)\\s*(\\d+)/i);
+   const match=raw.match(/(?:Question\s*)?(\d+)\s*(?:of|\/)\s*(\d+)/i);
    if(match){
     const label='Question '+match[1]+' of '+match[2];
     if(counter.textContent!==label)counter.textContent=label;
     const total=Number(match[2]),current=Number(match[1]);
     quiz.style.setProperty('--exam2-progress',total>0?Math.min(100,Math.max(0,current/total*100))+'%':'0%');
-   }
+   }else{quiz.style.setProperty('--exam2-progress','0%')}
   }
  }
  function schedule(){if(!pending){pending=true;queueMicrotask(refresh)}}
