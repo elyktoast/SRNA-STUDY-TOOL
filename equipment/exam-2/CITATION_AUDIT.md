@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **837 independently verified answers and 163 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **861 independently verified answers and 139 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -465,5 +466,15 @@ Reviewed25 previously unresolved records: NUR868-R092, NUR868-R093, NUR868-R094,
 Sources inspected: Anesthesia Equipment3e Ch11 pp253–260,265–266; Ch8 p200; Ch10 pp241–242; Ch6 pp151–152; Ch19 p434. Nurse Anesthesia7e Ch29 p628 (four hemoglobin subunits).
 
 Corrections and issues: Qualified fetal-Hb effect, historical motion-artifact approaches, device-specific SET filtering, dependent-arm study value and CaO2 assumptions. R103 finger-perfusion ranking remains unverified. No images; answer indices retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 7 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-N003, NUR868-N004, NUR868-N005, NUR868-N006, NUR868-N007, NUR868-N008, NUR868-N009, NUR868-N010, NUR868-N011, NUR868-N012, NUR868-N013, NUR868-N014, NUR868-N016, NUR868-N017, NUR868-N018, NUR868-N019, NUR868-N020, NUR868-N021, NUR868-N022, NUR868-N023, NUR868-N024, NUR868-N025, NUR868-N026, NUR868-N027, NUR868-N028. **24 newly verified; 1 unresolved in this batch. Total861/1000 verified; 139 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch6 pp151–154,160–163 and Ch9 p232; Nurse Anesthesia7e Ch16 pp275–277 and Ch29 p620. Equations independently rearranged under explicit passive/linear/constant-flow assumptions.
+
+Corrections and issues: Fixed N016 four-components/select3 contradiction, corrected N023 source value2–3cmH2O, replaced unsupported full-hang sensor claim with documented monitoring, and qualified bellows behavior and pressure equations. N003 unqualified vascular-tone claim remains unresolved. Keys kept at original correct indices; no images.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
