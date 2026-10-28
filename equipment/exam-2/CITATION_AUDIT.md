@@ -188,3 +188,11 @@ Read *Anesthesia Equipment*, 3rd ed., Ch. 6 pp. 152–153, 159–171; Ch. 8 p. 2
 Unresolved: N286 exact PCV CO₂ range; N288 leak-reduction mechanism; N295 universal PSV backup-rate assumption; N300 bilevel indication; N306 functional-recruitment definition; N308 recruitment contraindication; N309 recruitment tolerability comparison; and N310–N312's referenced pediatric table. The inspected general Table 16.7 separates PIP from plateau pressure and cannot establish a pediatric PIP threshold of 28 cmH₂O. No pediatric table was invented or substituted. Pressure-supported versus mandatory backup behavior is described as device-dependent rather than universally guaranteed.
 
 All question IDs, stems, options, answer keys, image bytes, ordering, difficulty, learner-storage code and revision mappings preserved. No silent rekeying. Integration/quality and preservation checks precede commit; full GitHub Actions status is reported separately.
+
+## Twentieth 50-question batch — S2-V202–S2-V255 (actual array order)
+
+Rewrote the final 50 vigilance/alarm explanations. **46 complete answers passage-verified; four unresolved (V204, V220, V221, V255).** Visually inspected the supplied saturation curve in V202–V204. Directly read *Anesthesia Equipment*, 3rd ed., Ch. 17 printed pp. 372–375, 379, 386–390, including Tables 17.1–17.3, Box 17.1, the auditory-alarm discussion, and alarm-limit/alarm-fatigue recommendations. These sources support the error definitions, vigilance-factor categories, alarm functions and limits.
+
+V204 mixes a sidestream gas analyzer and an unsupported 15-second delay with an SpO₂ graph. V220's lecture-specific light-check recommendation is not directly prescribed by Table 17.2. V221's named closed-loop read-back is not explicit in the textbook's noise example. V255's structured-scanning strategy is reasonable but not identified as uniquely best in the inspected boredom passage. Proposed corrections are flagged; original stems and keys are preserved.
+
+**Rewrite coverage: 1,000/1,000. Complete answer verification: 437/1,000.** The remaining 563 records are not certified answer-verified. Earlier flags remain in the inventory for targeted verification. All question IDs, stems, options, answer keys, image bytes, order, difficulty, and learner-storage code were preserved. GitHub Actions status is checked separately.
