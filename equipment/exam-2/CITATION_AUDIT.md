@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records 391 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, 44 from Batch 15, 33 from Batch 16, 35 from Batch 17, 42 from Batch 18, 40 from Batch 19, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Nineteen rewrite batches cover 950 explanations; 50 remain unreviewed by those batches. **950 rewritten does not mean 950 textbook-verified.**
+The inventory records **441 independently verified complete answers out of 1,000; 559 remain unresolved**. Twenty batches cover all 1,000 rewritten explanations. This includes 46 verified answers in Batch 20 and four subsequent vigilance passage checks. Earlier verified records have not all been re-audited in this session. **1,000 rewritten does not mean 1,000 textbook-verified.**
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -159,7 +159,7 @@ No IDs, stems, choices, keys, images, order, difficulty, learner-storage code or
 
 ## Seventeenth 50-question batch — S2-T254–S2-N207 (actual array order)
 
-Reviewed 33 temperature, ten multiple-answer ventilator, and seven diagram-based ventilator records. **35 complete answers verified; 15 unresolved.** All 50 explanations revised. Coverage is 850/1,000 rewritten, 150 untouched, with 391 independently verified answers. All seven image-bearing records were visually inspected across the bellows and piston-system schematic families.
+Reviewed 33 temperature, ten multiple-answer ventilator, and seven diagram-based ventilator records. **35 complete answers verified; 15 unresolved.** All 50 explanations revised. Coverage is 850/1,000 rewritten, 150 untouched, with 309 independently verified answers. All seven image-bearing records were visually inspected across the bellows and piston-system schematic families.
 
 Sources read: *Anesthesia Equipment*, 3rd ed., Ch. 6 pp. 152, 159–160, 163–166, 169, 174–175; Ch. 13 pp. 287–296, 298–299. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 14 pp. 213–215, Ch. 16 pp. 275–278, 280–281, and Ch. 29 p. 644. Source passages support thermistor accuracy, thermoregulation, heat transfer, bellows behavior, pressure/volume control, and fresh-gas decoupling. Piston relief values +75 ±5/−8 cmH₂O are explicitly identified as properties of the described design, not universal defaults. The supplied piston and bellows components were compared with the actual operating descriptions and Fig. 16.42.
 
@@ -171,7 +171,7 @@ Protected question fields, image bytes, keys, difficulty, ordering, revision map
 
 ## Eighteenth 50-question batch — S2-N208–S2-N267 (ID gaps preserved)
 
-Checked all 50 records individually: **42 complete answers verified; eight unresolved**. All explanations revised. Twelve image-bearing questions were visually reviewed across three families: volume/pressure control traces (N208–N211), mandatory/assisted/IMV/CPAP traces (N212–N215), and I:E flow-time panels (N216–N219). Coverage is 900/1,000 rewritten, 100 untouched, and 391 independently verified answers.
+Checked all 50 records individually: **42 complete answers verified; eight unresolved**. All explanations revised. Twelve image-bearing questions were visually reviewed across three families: volume/pressure control traces (N208–N211), mandatory/assisted/IMV/CPAP traces (N212–N215), and I:E flow-time panels (N216–N219). Coverage is 900/1,000 rewritten, 100 untouched, and 351 independently verified answers.
 
 Read *Anesthesia Equipment*, 3rd ed., Ch. 4 p. 103; Ch. 6 pp. 152–154, 159–170, 174–177; Ch. 8 p. 211; Ch. 10 p. 248; Ch. 11 p. 265. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 16 pp. 275–278, 280–281; Ch. 18 p. 316; Ch. 29 pp. 620–621, 644; Ch. 34 pp. 809–810. Recomputed PIP as 10 + 8.33 + 5 = 23.33 cmH₂O, no-flow pressure as 600/40 + 5 = 20 cmH₂O, the inverse compliance relation, conditional PaCO₂ estimate 30–33 mmHg, and 70-kg tidal-volume range 420–560 mL.
 
@@ -212,3 +212,7 @@ Next verification pass should inspect exact passages and supplied figures for pr
 ### Follow-up source verification — four vigilance items
 
 Directly inspected *Anesthesia Equipment*, 3rd ed., Ch. 17, printed p. 374 (Box 17.1), p. 386 (three functions of alarms), and p. 387 (inattentional deafness). **V028, V029, V031 and V042 now have their complete keyed answers supported by the actual passages**. Replaced stale explanations/citations where necessary, removed their source-check flags, and preserved all protected fields. Verified complete answers now 441/1,000; 559 still unresolved.
+
+## Final attribution and integration cleanup
+
+Removed residual classroom/instructor wording from 11 explanations (T001, T059, T063, T078, T088, T111, V030, B083, N149, S2-B206, S2-V220), retaining their source limitations and unresolved numerical or answer-key concerns. No new passage verification is claimed. Corrected the top-level progress summary and historical Batch 17/18 cumulative totals. All IDs, stems, choices, keys, images, difficulty and ordering remain unchanged. Inventory verification decisions and citations are unchanged. Published a new build identifier with the cleanup; final local quality, integration and preservation checks and GitHub Actions are reported separately.
