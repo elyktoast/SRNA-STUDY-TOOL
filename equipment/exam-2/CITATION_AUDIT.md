@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **940 independently verified answers and 60 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **941 independently verified answers and 59 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -522,3 +523,23 @@ Sources inspected: Anesthesia Equipment3e Ch6 pp159–170 and Ch10 pp242–243; 
 Corrections and issues: Corrected recruitment duration to the actual morbid-obesity table, removed unsafe half-APL/O2-flush recipe, clarified source-defined HFV and context-specific APRV, and corrected six-hour serotonin timing without claiming the unresolved differential verified. Thirteen claims remain unresolved, including the ECG/J-wave mismatch and missing pediatric table. Images and answer indices retained.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-S2-R253, NUR868-S2-T214. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session verification batch — 12 (October28,2026)
+
+Reviewed6 previously unresolved records: NUR868-S2-T268, NUR868-S2-T269, NUR868-S2-T274, NUR868-S2-T276, NUR868-S2-T284, NUR868-S2-N219. **1 newly verified; 5 unresolved in this batch. Total941/1000 verified; 59 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch6 pp153–155 (time/I:E relationships), Ch13 pp292,295 (hyperthermia and active warming). Both uploaded books searched for HTIV/HT IV, staged rewarming, thoracic lavage, hemodialysis, exact rates and postoperative-fever thresholds. N219 supplied three-panel flow image visually inspected.
+
+Corrections and issues: Final partial batch of6 completes this pass over all281 initially unresolved questions. N219 corrected to test the observable timing change, not an unsupported mean-pressure inference. Five stage-specific rewarming or fever claims remain unresolved. No images or answer indices changed.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-S2-N219. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Complete unresolved-record pass — October 28, 2026
+
+Started from `4aa2ed1b`:719 independently verified and281 unresolved per-question records. The nested670 progress summary was stale and was reconciled without adding verification credit. Completed11batches of25 and a final6-record remainder: **281 unique unresolved records reviewed,222 newly verified,941 total verified,59 still unresolved**. All941 verified records have explicit answer-verification and passage-inspection flags. All1,000 question records have structured verification decisions.
+
+The59 unresolved records remain flagged; no missing passage was replaced with a guessed page. Topic counts: Temperature: 42, Respiratory monitoring: 3, Ventilators: 14. Remaining IDs: NUR868-T006, NUR868-T019, NUR868-T020, NUR868-T021, NUR868-T026, NUR868-T034, NUR868-T045, NUR868-T053, NUR868-T054, NUR868-T056, NUR868-T057, NUR868-T058, NUR868-T063, NUR868-T068, NUR868-T069, NUR868-T070, NUR868-T077, NUR868-T078, NUR868-T079, NUR868-T080, NUR868-T082, NUR868-T084, NUR868-T088, NUR868-T091, NUR868-T099, NUR868-T100, NUR868-T109, NUR868-T110, NUR868-T111, NUR868-R059, NUR868-R085, NUR868-R103, NUR868-N003, NUR868-N060, NUR868-N082, NUR868-N083, NUR868-N086, NUR868-N088, NUR868-N092, NUR868-N128, NUR868-N138, NUR868-N147, NUR868-N150, NUR868-N151, NUR868-N152, NUR868-N153, NUR868-S2-M224, NUR868-S2-T214, NUR868-S2-T245, NUR868-S2-T246, NUR868-S2-T247, NUR868-S2-T251, NUR868-S2-T252, NUR868-S2-T255, NUR868-S2-T268, NUR868-S2-T269, NUR868-S2-T274, NUR868-S2-T276, NUR868-S2-T284.
+
+This is completion of the review pass, not certification of all1,000 answers. Residual issues include the ECG/J-wave figure, exact anatomical or physiological claims, missing pediatric and staged-rewarming tables, fever percentages and treatment thresholds, and complete NMS/serotonin comparisons. PR must remain unmerged. Local full-repository quality, integration, inventory consistency and protected-field checks pass before publication; final committed-tree Actions status is reported in PR metadata.
+
+Final integrity check found24 preexisting differences between inventory and student-facing citation strings. Synchronized inventory strings to the existing question citations without changing any verification decision or assigning new source credit. All1,000 citation pairs now match.
