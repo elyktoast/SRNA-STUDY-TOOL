@@ -829,18 +829,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "Which renal effect of hypothermia is listed?",
+      "stem": "Approximately how much does cellular metabolic rate decrease for each 1°C reduction in body temperature during mild hypothermia?",
       "options": [
-        "Cold diuresis",
-        "Hyperkalemia only",
-        "Oliguria from ADH (antidiuretic hormone) release",
-        "Increased GFR (glomerular filtration rate)"
+        "About 1%",
+        "About 8%",
+        "About 25%",
+        "About 50%"
       ],
       "answer": [
-        0
+        1
       ],
-      "explanation": "Cold diuresis is on Wolpaw's list.",
-      "citation": "Wolpaw, Temperature Regulation: slide 13",
+      "explanation": "Ehrenwerth describes an approximately linear 8% decrease in cellular metabolic rate per 1°C reduction in temperature, which contributes to the protective effect of mild hypothermia during cerebral ischemia.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 292",
       "image": null
     },
     {
@@ -869,18 +869,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "The J wave appears where on the ECG (electrocardiogram)?",
+      "stem": "What core temperature defines unintended perioperative hypothermia?",
       "options": [
-        "Just after the QRS",
-        "After the T wave",
-        "In the middle of the PR interval",
-        "Before the P wave"
+        "Below 36°C",
+        "Below 38°C",
+        "Above 38°C",
+        "Exactly 37°C"
       ],
       "answer": [
         0
       ],
-      "explanation": "An extra small wave after the QRS.",
-      "citation": "Wolpaw, Temperature Regulation: slide 14",
+      "explanation": "Unintended perioperative hypothermia is defined as an unintended core body temperature below 36°C during the perioperative period.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
