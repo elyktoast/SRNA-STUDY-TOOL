@@ -391,3 +391,7 @@ Reviewed 23 unresolved questions from the supplemental banks (B283, B289, M213, 
 ## Manual 25-question review — remaining monitoring, thermal and ventilator items (October 28, 2026)
 
 Reviewed 25 pending supplemental items: M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N207, N219, N235, N286, V255 plus B283, B289, B286 and B287 (the latter four were already verified and checked for consistency). Two newly verified after revisions: N207 and N235, using Ehrenwerth Ch. 6 printed p. 161, removing unsupported numbered component and bellows phase assertions. Original IDs, answer indices and image data preserved. The other 19 pending questions remain unresolved, and no source-verification credit was assigned to them. Total verified: 717/1000; unresolved: 283.
+
+## Manual 25-record pass — waveform and temperature questions (October 28, 2026)
+
+Examined 18 outstanding supplemental questions: M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N219 and N286, alongside seven previously verified records checked for continuity. One newly verified: M217, corrected to distinguish expiratory leak and intrinsic PEEP on volume-time curves (Ehrenwerth Ch. 9 pp. 230–232, Fig. 9.13). Seventeen remaining unresolved; no credit assigned without direct evidence. Earlier unreported commits on branch increased verified count from 715 to 717 before this pass; current total 718, unresolved 282. No original questions.json edits in this pass.
