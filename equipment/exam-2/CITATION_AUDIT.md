@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **861 independently verified answers and 139 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **885 independently verified answers and 115 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -476,5 +477,15 @@ Reviewed25 previously unresolved records: NUR868-N003, NUR868-N004, NUR868-N005,
 Sources inspected: Anesthesia Equipment3e Ch6 pp151–154,160–163 and Ch9 p232; Nurse Anesthesia7e Ch16 pp275–277 and Ch29 p620. Equations independently rearranged under explicit passive/linear/constant-flow assumptions.
 
 Corrections and issues: Fixed N016 four-components/select3 contradiction, corrected N023 source value2–3cmH2O, replaced unsupported full-hang sensor claim with documented monitoring, and qualified bellows behavior and pressure equations. N003 unqualified vascular-tone claim remains unresolved. Keys kept at original correct indices; no images.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 8 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-N029, NUR868-N030, NUR868-N031, NUR868-N032, NUR868-N033, NUR868-N034, NUR868-N035, NUR868-N036, NUR868-N037, NUR868-N038, NUR868-N039, NUR868-N040, NUR868-N041, NUR868-N042, NUR868-N043, NUR868-N044, NUR868-N045, NUR868-N046, NUR868-N047, NUR868-N048, NUR868-N050, NUR868-N052, NUR868-N055, NUR868-N060, NUR868-N062. **24 newly verified; 1 unresolved in this batch. Total885/1000 verified; 115 unresolved.**
+
+Sources inspected: Nurse Anesthesia7e Ch16 pp276–281 and Ch7 p83; Anesthesia Equipment3e Ch6 pp160–162,166,174–175 and Ch8 p211. Decoupling phases and device-specific relief values directly inspected.
+
+Corrections and issues: Corrected bellows leak mechanism, scoped piston relief values to Apollo, clarified no inherent versus selected PEEP, excluded electronically compensated ventilators from unqualified fresh-flow augmentation, and replaced unsupported poor-compliance cycling wording with the documented pressure-targeted relationship. N060 remains unresolved. No keys or images changed.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
