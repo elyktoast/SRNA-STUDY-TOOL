@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **941 independently verified answers and 59 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **966 independently verified answers and 34 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -543,3 +544,13 @@ The59 unresolved records remain flagged; no missing passage was replaced with a 
 This is completion of the review pass, not certification of all1,000 answers. Residual issues include the ECG/J-wave figure, exact anatomical or physiological claims, missing pediatric and staged-rewarming tables, fever percentages and treatment thresholds, and complete NMS/serotonin comparisons. PR must remain unmerged. Local full-repository quality, integration, inventory consistency and protected-field checks pass before publication; final committed-tree Actions status is reported in PR metadata.
 
 Final integrity check found24 preexisting differences between inventory and student-facing citation strings. Synchronized inventory strings to the existing question citations without changing any verification decision or assigning new source credit. All1,000 citation pairs now match.
+
+## Work-session verification batch — 13 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-T006, NUR868-T019, NUR868-T020, NUR868-T021, NUR868-T026, NUR868-T034, NUR868-T045, NUR868-T053, NUR868-T054, NUR868-T056, NUR868-T057, NUR868-T058, NUR868-T063, NUR868-T068, NUR868-T069, NUR868-T070, NUR868-T077, NUR868-T078, NUR868-T079, NUR868-T080, NUR868-T082, NUR868-T084, NUR868-T088, NUR868-T091, NUR868-T099. **25 newly verified; 0 unresolved in this batch. Total966/1000 verified; 34 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch13 printed pp287–295; Nurse Anesthesia7e Ch7 p81, Ch14 pp213–215, Ch25 p485, Ch36 p843. ECG image and printed p485 visually inspected.
+
+Corrections and issues: All25 original unsupported premises narrowed or replaced with source-supported questions. Original stems/options/issues archived per record; original claims are NOT certified. J-wave figure item now tests its actual T-wave region. Unsupported formula, exact temperatures/rates/doses, lecturer rankings and comparative assertions retired. All answer indices, IDs and image bytes retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-T068. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
