@@ -50,3 +50,7 @@ Reviewed in actual array order, preserving T091B and gaps. Inspected Equipment C
 ## Sixth 50-question batch — remaining vigilance and B001–B037
 
 Rewrote 17 vigilance and 33 breathing-circuit records in array order. Inspected Equipment Ch. 4 pp. 101–106, Ch. 17 pp. 371–374, 388–390; cross-checked Nurse Anesthesia Ch. 16 pp. 266–267 and Ch. 18 p. 314. Flow requirements vary by circuit and ventilation mode; B006/B035 retain numerical caveats. B008 wrongly generalizes closed-circuit replacement requirements to semiclosed operation. B016 needs extension-location context; some Mapleson and named auditory-attention claims remain unresolved. Images, keys, choices and learner records preserved.
+
+## Seventh 50-question batch — B038–B088, preserving ID gaps
+
+Inspected Equipment Ch. 4 pp. 101, 104, 113–116 and Ch. 7 pp. 183–188; cross-checked Nurse Anesthesia Ch. 16 pp. 266–267. Rewrote all 50 explanations. B044–B049 require image-number verification; B059–B060 contain broad anatomical assertions; B077–B078 and B083 depend on particular lecture examples; B084/B087 require kinetics and effect-site clarification. Page citations establish only the explicitly supported principles. Protected fields and learner state unchanged.
