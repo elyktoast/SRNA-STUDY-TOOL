@@ -1269,18 +1269,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "For stage IV hypothermia (HT IV) when ECMO (extracorporeal membrane oxygenation) or CPB (cardiopulmonary bypass) isn't available, which technique does the table list?",
+      "stem": "Which statement about cardiopulmonary bypass for perioperative temperature management is correct?",
       "options": [
-        "Hemodialysis",
-        "Thoracic lavage",
-        "Warm sweet drinks",
-        "Peritoneal dialysis"
+        "It cannot warm blood during cardiac surgery",
+        "It can actively warm blood through a heat exchanger and may reverse profound hypothermia",
+        "It is the routine first-line warming method for all noncardiac procedures",
+        "It provides only passive insulation"
       ],
       "answer": [
         1
       ],
-      "explanation": "Thoracic lavage (about 3°C/hr) is listed for stage IV hypothermia (HT IV) without ECMO or CPB.",
-      "citation": "Wolpaw, Temperature Regulation: slide 24",
+      "explanation": "A cardiopulmonary bypass circuit can actively warm blood passing through its heat exchanger and may reverse profound hypothermia during cardiac surgery. Ehrenwerth notes that bypass is not routinely used solely for warming in noncardiac perioperative settings.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 295",
       "image": null
     },
     {
@@ -1289,18 +1289,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "Which rewarming technique in the table has an \"uncertain\" indication at about 2–4°C/hr?",
+      "stem": "Which statement about forced-air warming is supported in perioperative temperature management?",
       "options": [
-        "CPB (cardiopulmonary bypass)",
-        "Hemodialysis",
-        "VA ECMO (venoarterial extracorporeal membrane oxygenation)",
-        "Warm environment"
+        "It is less effective than passive cotton blankets in all cases",
+        "It raises core temperature by approximately 9°C per hour",
+        "It transfers heat by convection and can raise core temperature by approximately 0.75°C per hour",
+        "It warms the patient solely by delivering heated intravenous fluids"
       ],
       "answer": [
-        1
+        2
       ],
-      "explanation": "Hemodialysis, peritoneal dialysis, and VV ECMO (venovenous extracorporeal membrane oxygenation) are listed as uncertain.",
-      "citation": "Wolpaw, Temperature Regulation: slide 24",
+      "explanation": "Forced-air warming blankets transfer heat to the patient by convection while limiting radiant heat loss. Ehrenwerth describes an approximate core temperature increase of 0.75°C per hour with forced-air warming.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 295",
       "image": null
     },
     {
