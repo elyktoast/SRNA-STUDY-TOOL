@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records 152 independently verified answers out of 1,000: 25 from this Batch 9 passage review and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Thirteen rewrite batches cover 650 explanations; 350 remain unreviewed by those batches. **650 rewritten does not mean 650 textbook-verified.**
+The inventory records 197 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Fourteen rewrite batches cover 700 explanations; 300 remain unreviewed by those batches. **700 rewritten does not mean 700 textbook-verified.**
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -99,3 +99,22 @@ Notable issues:
 Every record has separate fields for explanation rewrite, chapter identification, passage inspection, independent answer verification, support scope, and evidence notes. Unsupported legacy page ranges were replaced by inspected principle-level support, with unresolved status retained where appropriate. IDs, stems, options, answers, images, order, revision mappings, and learner-storage code were preserved.
 
 Validation: pre-edit GitHub Actions run #2874 (`40621595633`) passed the quality job and all four browser shards. Local `npm run quality` passed (existing semantic duplicate warnings remain). The citation integration assertion was updated to accept either of the two approved textbooks as the primary citation, allowing specific Nurse Anesthesia evidence to replace unrelated Equipment chapter references. Post-edit validation is recorded in the batch commit's session report.
+
+## Fourteenth 50-question batch — S2-R213–S2-R265 (actual array order)
+
+Individually checked and rewrote 50 respiratory-monitoring explanations. **45 complete keyed answers verified under the stated qualifications; five unresolved** (R215, R223, R245, R253, R260). Total rewrite coverage is 700/1,000; 300 are not yet rewritten. Inventory answer-verification total is 197/1,000, distinct from rewrite coverage.
+
+Inspected actual uploaded *Anesthesia Equipment: Principles and Applications*, 3rd ed., Ch. 6 p. 166; Ch. 8 pp. 199–200, 204–209, 213; Ch. 9 pp. 224–226, 230–232; Ch. 10 pp. 240–242, 244–245, 248–250. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 15 p. 230; Ch. 16 pp. 266, 270, 277; Ch. 18 p. 316; Ch. 29 pp. 637, 644. Only supporting inspected passages are cited. Calculations for R213, R214, R216 and R233 were independently recomputed.
+
+Visually reviewed all 16 image-bearing questions across six distinct supplied image families: laminar/turbulent flow (R239–R241), volume-time tracing (R252), flow-time tracing (R253), pressure-volume loops (R254–R257), numbered capnogram (R259–R260), and abnormal capnograms (R261–R265). Visually compared textbook Figs. 9.13, 9.15–9.19 and 10.1 with relevant supplied patterns; source page numbers read from printed page headers.
+
+Unresolved issues:
+- **R260 answer-key conflict:** supplied segment 1 is phase I, clearing CO₂-free anatomic/apparatus dead-space gas. The existing key selects segment 2, the phase II mixture/upstroke. Proposed answer index [1] instead of [2] is recorded for editorial review; original key and options remain intact.
+- R253: the third flow-time tracing suggests incomplete exhalation, but the supplied figure has no panel letters or axis labels; “panel C” requires clarification.
+- R245: a cracked rotameter can cause a hypoxic mixture; exact indicated-versus-delivered flow depends on leak location.
+- R223: textbook supports colorimetric use when conventional capnography is unavailable, but does not establish OR use frequency.
+- R215: Dalton additivity is verified; the explicit nonreacting-gas qualification was not located in the passages inspected.
+
+IDs, stems, choices, keys, image bytes, order, difficulty fields, revision mappings and learner-storage code were preserved. All changed explanations omit instructor/lecture attribution. Individual evidence notes distinguish complete answer support from partial support.
+
+Validation: Batch 9 local quality, content-integrity, revision/history, integration, performance, review-queue, quality-report, coverage and CAT checks passed before the execution workspace disconnected. Batch 14 was prepared through GitHub after that disconnect; no local Batch 14 test run is claimed. JSON structure, 50-record coverage, and exact preservation of all protected bank fields were checked before committing; GitHub Actions must validate the committed tree.
