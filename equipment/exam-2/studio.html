@@ -150,6 +150,28 @@ body.mbu-quiz-active #quiz button:focus-visible{outline:3px solid #7bb0ef;outlin
 }
 @media(prefers-reduced-motion:reduce){body.mbu-quiz-active #quiz .btn{transition:none}}
 
+
+/* Final polish: restrained tools, balanced viewport, intentional navigation. */
+body.mbu-quiz-active #quiz .mbu-session-actions .btn{background:#f8fafc;color:#254971;border-color:#cbd7e5;font-weight:700}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn:hover{background:#eaf2fc;border-color:#8fb2dc}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn:focus-visible{outline:3px solid #7bb0ef;outline-offset:2px}
+body.mbu-quiz-active #quiz .mbu-session-actions .mbu-return{background:#fff}
+body.mbu-quiz-active #quiz .controls{gap:12px}
+body.mbu-quiz-active #quiz .controls #studioPrev{margin-right:auto}
+body.mbu-quiz-active #quiz .controls #studioReset{background:#fff;color:#254971;border-color:#cbd7e5}
+body.mbu-quiz-active #quiz .controls #next{min-width:94px}
+@media(min-width:800px) and (min-height:720px){
+ body.mbu-quiz-active>.wrap{min-height:calc(100dvh - 200px);display:flex;flex-direction:column}
+ body.mbu-quiz-active #quiz:not(.hidden){flex:1;display:flex;flex-direction:column;min-height:0}
+ body.mbu-quiz-active #quiz .controls{margin-top:auto}
+}
+@media(max-width:650px){
+ body.mbu-quiz-active #quiz .mbu-session-actions{grid-template-columns:repeat(4,minmax(0,1fr))}
+ body.mbu-quiz-active #quiz .controls{flex-wrap:wrap}
+ body.mbu-quiz-active #quiz .controls #studioPrev{margin-right:auto}
+ body.mbu-quiz-active #quiz .controls #next{min-width:70px}
+}
+
 /* Active Studio and Adaptive sessions use bank1-quiz-ui.css for quiz-session chrome. */
 body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 @media(max-width:1050px){
