@@ -62,3 +62,7 @@ Read *Anesthesia Equipment*, third edition, Chapter 6, printed pp. 149–177 (ve
 ## Batch 9 — N051–N102
 
 Reviewed and rewrote 50 ventilator explanations covering cycling, timing, triggering, PEEP, compliance, pressure and tidal volume. Read *Anesthesia Equipment* (3rd ed.), Chapter 6, printed pages 151–169. Chapter-section references are not proof that every answer or numerical cutoff has been independently verified. Flagged questions with context-dependent thresholds or device assumptions in the verification inventory. All protected question fields remain unchanged.
+
+## Tenth 50-question batch — N103–N153
+
+Rewrote 50 ventilator explanations in original array order, retaining all stems, answer options, keys, and images. Added Chapter 6 textbook references clearly labeled as chapter-aligned and not individually page-verified. Twenty-seven questions are flagged for figure/mode/device/clinical-parameter source review in the verification inventory. No claims of complete answer verification are made for this batch.
