@@ -34,6 +34,6 @@ const citedQuestions=JSON.parse(fs.readFileSync(root+'questions-set2-2.json','ut
 assert.equal(citedQuestions.length,250,'Verified supplemental citation audit must cover 250 questions');
 for(const q of citedQuestions){
  assert.ok(/^(?:Ehrenwerth, Eisenkraft, & Berry \(2021\)|Elisha, Heiner, & Nagelhout \(2023\))/.test(q.citation||'')&&(q.citation||'').includes('Ch'),'Textbook chapter citation required for '+q.id);
- assert.doesNotMatch(q.citation||'',/slide\s*\d+/i,'Slide citation remains for '+q.id);
+ assert.doesNotMatch(q.citation||'',/slides?\s*\d+/i,'Slide citation remains for '+q.id);
  if(q.topic==='Respiratory monitoring')assert.ok(!String(q.explanation||'').toLowerCase().includes(['fr','anck'].join('')),'Instructor surname remains in explanation '+q.id);
 }
