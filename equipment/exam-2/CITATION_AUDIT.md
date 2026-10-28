@@ -1,13 +1,13 @@
 # Equipment Exam 2 textbook citation audit
 
-Coverage: 1,000 question citation fields (500 original + 500 supplemental). Updated October 27, 2026.
+Coverage: 1,000 question citation fields (500 original + 500 supplemental). Updated October 28, 2026.
 
 ## Textbooks used
 - Ehrenwerth, J., Eisenkraft, J. B., & Berry, J. M. (Eds.). (2021). *Anesthesia Equipment: Principles and Applications* (3rd ed.). Elsevier. Chapters 4–11, 13, 17–19 as appropriate to the topic.
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **469 complete answers with explicit structured passage and answer verification; 531 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The inventory records **505 complete answers with explicit structured passage and answer verification; 495 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -262,3 +262,8 @@ Read uploaded *Anesthesia Equipment*, 3rd ed., Ch. 4 pp. 100–106, 113–117; C
 B008 omits intentional excess-gas venting from semiclosed gas balance. B060's blanket epithelial classification across the nasopharynx, pharynx and larynx remains anatomically questionable despite locating the keyed wording. B079's worldwide usage ranking is not established by the inspected source. Their complete answers remain unresolved. Removed obsolete source-check and image-label flags only where the exact source or figure check was completed; retained clinical and context qualifications.
 
 **Current aggregate: 469 explicit verified complete answers; 531 unresolved; zero legacy verification labels awaiting reconciliation.** Across these three 50-record follow-ups, 126 prior verifications were confirmed, one downgraded, and 20 new answers verified. No keys, choices, IDs, stems, image bytes, difficulty, order, revision mappings or learner-progress code changed. Local quality, integration and preservation checks precede publication; Actions status is reported separately.
+
+
+## Chapter 4 and filtration verification pass — 36 complete answers (October 28, 2026)
+
+Individually checked the stem, keyed answer, alternatives, explanation, and source for 36 previously unresolved supplemental breathing-circuit and filtration questions: NUR868-S2-B201, NUR868-S2-B202, NUR868-S2-B203, NUR868-S2-B204, NUR868-S2-B205, NUR868-S2-B206, NUR868-S2-B207, NUR868-S2-B208, NUR868-S2-B209, NUR868-S2-B210, NUR868-S2-B211, NUR868-S2-B212, NUR868-S2-B213, NUR868-S2-B214, NUR868-S2-B216, NUR868-S2-B217, NUR868-S2-B218, NUR868-S2-B219, NUR868-S2-B220, NUR868-S2-B221, NUR868-S2-B224, NUR868-S2-B225, NUR868-S2-B226, NUR868-S2-B228, NUR868-S2-B229, NUR868-S2-B230, NUR868-S2-B231, NUR868-S2-B232, NUR868-S2-B234, NUR868-S2-B235, NUR868-S2-B236, NUR868-S2-B237, NUR868-S2-B238, NUR868-S2-B239, NUR868-S2-B240, NUR868-S2-B313. Directly inspected *Anesthesia Equipment*, 3rd ed., Ch. 4 printed pp. 101–106, 113–117, and Ch. 7 p. 186. Clarified conditional stems (B202, B206, B224, B231–B232, B236), removed lecture wording, and distinguished the BFE/VFE 3.0-µm aerosol test from the 0.3-µm salt test in B313. B224's keyed option was clarified, with no change to the correct answer index. All IDs, answers, images, order, difficulty, and learner-progress code preserved. **New total: 505/1,000 independently verified complete answers; 495 unresolved.** Remaining items are not certified by this pass.
