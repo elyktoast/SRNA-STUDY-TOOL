@@ -469,18 +469,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "Shivering can raise core temperature by about how much per hour?",
+      "stem": "Which complication can occur with postanesthetic shivering?",
       "options": [
-        "0.1°C",
-        "1.5°C",
-        "5°C",
-        "9°C"
+        "Increased oxygen consumption and discomfort",
+        "Reduced metabolic demand",
+        "Complete prevention of hypothermia",
+        "Reduced cardiovascular workload"
       ],
       "answer": [
-        1
+        0
       ],
-      "explanation": "Wolpaw: about 1.5°C/hr.",
-      "citation": "Wolpaw, Temperature Regulation: slide 25",
+      "explanation": "Postanesthetic shivering is uncomfortable and increases metabolic demand and oxygen consumption. Temperature management and appropriate treatment reduce this burden.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
@@ -1249,18 +1249,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "Per the rewarming table, which technique is best for stage I (mild) hypothermia (HT I)?",
+      "stem": "Which initial warming approach is appropriate for a conscious patient with mild hypothermia?",
       "options": [
-        "Cardiopulmonary bypass at 9°C/hr",
-        "Venoarterial ECMO (extracorporeal membrane oxygenation) with cardiac support",
-        "Thoracic lavage with warmed saline",
-        "Warm room, clothing, and active movement"
+        "Immediate cardiopulmonary bypass in every case",
+        "Venoarterial ECMO for every patient",
+        "Avoid insulation and warming",
+        "Provide insulation and a warm environment, with active external warming when indicated"
       ],
       "answer": [
         3
       ],
-      "explanation": "Stage I hypothermia (HT I) uses a warm environment and clothing (about 2°C/hr).",
-      "citation": "Wolpaw, Temperature Regulation: slide 23",
+      "explanation": "Mild hypothermia can often be addressed with reducing further heat loss and external warming; invasive extracorporeal rewarming is reserved for selected severe cases.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13 (Temperature Monitoring)",
       "image": null
     },
     {
@@ -1469,18 +1469,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "Which outcome measure does Wolpaw attach to a temperature of 35°C?",
+      "stem": "Which postoperative complication is associated with mild perioperative hypothermia?",
       "options": [
-        "ICU (intensive care unit) stay about 1 week longer",
-        "Mortality roughly doubled",
-        "Readmission rate about tripled",
-        "Hospital stay about 2.5 days longer"
+        "Elimination of wound infection risk",
+        "Reduced bleeding and transfusion",
+        "Increased surgical wound infection risk",
+        "Shorter duration of anesthetic drug action"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "Hospital LOS (length of stay) increases about 2.5 days.",
-      "citation": "Wolpaw, Temperature Regulation: slide 10",
+      "explanation": "Mild intraoperative hypothermia impairs immune function and is associated with increased surgical wound infection risk, along with greater bleeding and prolonged drug effects.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
@@ -1549,18 +1549,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "A severely hypothermic patient with cardiac instability is warming 2°C/hr with forced air. Which escalation offers the fastest rate per the table?",
+      "stem": "Which extracorporeal technique can actively rewarm a patient with profound hypothermia during cardiac surgery?",
       "options": [
         "Peritoneal dialysis",
         "Thoracic lavage",
-        "Warm IV (intravenous) fluids alone",
+        "Warmed intravenous fluids alone",
         "Cardiopulmonary bypass"
       ],
       "answer": [
         3
       ],
-      "explanation": "CPB (cardiopulmonary bypass) about 9°C/hr; VA ECMO (venoarterial extracorporeal membrane oxygenation) about 6°C/hr.",
-      "citation": "Wolpaw, Temperature Regulation: slide 23",
+      "explanation": "Cardiopulmonary bypass provides active cooling and rewarming and can help reverse profound hypothermia. The textbook does not establish a fixed 9°C-per-hour rate for every patient.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 295",
       "image": null
     },
     {
