@@ -769,18 +769,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "A patient cools from 37 to 35.5°C during a liver resection. Which change in blood loss would you anticipate?",
+      "stem": "Which effect is associated with mild perioperative hypothermia?",
       "options": [
-        "No change",
-        "About 500 mL more",
-        "About 500 mL less",
-        "About 2 L more"
+        "Approximately 16% greater blood loss",
+        "Approximately 16% less blood loss",
+        "No change in blood loss or transfusion",
+        "A lower relative risk of transfusion"
       ],
       "answer": [
-        1
+        0
       ],
-      "explanation": "Wolpaw: approximately 500 mL increase.",
-      "citation": "Wolpaw, Temperature Regulation: slide 9",
+      "explanation": "Mild perioperative hypothermia impairs coagulation and is associated with approximately 16% greater blood loss and a 22% higher relative risk of transfusion in the meta-analysis described in Ehrenwerth.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
@@ -1569,18 +1569,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "Prewarming is started 15 minutes before induction. Based on both lectures, what should you expect?",
+      "stem": "What is the main benefit of actively warming the patient before induction of general anesthesia?",
       "options": [
-        "No benefit, because prewarming needs at least 30 minutes",
-        "More redistribution once anesthesia starts",
-        "Full prevention of redistribution hypothermia",
-        "Partial benefit; Wolpaw cites 2 hours for full effect"
+        "Reducing redistribution hypothermia after induction",
+        "Preventing all intraoperative heat loss",
+        "Eliminating the need for core temperature monitoring",
+        "Immediately increasing core temperature by 2°C"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "Course lecture: 30 minutes helps; Wolpaw: 2 hours for full effect.",
-      "citation": "Wolpaw, Temperature Regulation: slide 21",
+      "explanation": "Preinduction skin warming raises peripheral tissue temperature and reduces redistribution of heat from the core after induction. Ehrenwerth describes studies using approximately 60 minutes of prewarming; the benefit is not dependent on an asserted two-hour minimum.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, pp. 291–292",
       "image": null
     },
     {
