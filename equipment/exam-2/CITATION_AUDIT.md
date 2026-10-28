@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **737 independently verified answers and 263 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **747 independently verified answers and 253 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
@@ -410,3 +411,13 @@ Sources inspected: Anesthesia Equipment3e Ch13 printed pp287–291; actual respo
 Corrections and issues: T029 narrowed to a possible plateau mechanism, preserving its key; seven exact anatomical, cutoff, ICP, piloerection, fixed-temperature and radiation-formula claims remain unresolved. Nested progress summary reconciled to per-question flags; no extra credit for that metadata correction.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-T008, NUR868-T009, NUR868-T010, NUR868-T027, NUR868-T028, NUR868-T029. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 2 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-T047, NUR868-T048, NUR868-T049, NUR868-T050, NUR868-T051, NUR868-T053, NUR868-T054, NUR868-T055, NUR868-T056, NUR868-T057, NUR868-T058, NUR868-T059, NUR868-T060, NUR868-T063, NUR868-T068, NUR868-T069, NUR868-T070, NUR868-T076, NUR868-T077, NUR868-T078, NUR868-T079, NUR868-T080, NUR868-T081, NUR868-T082, NUR868-T084. **10 newly verified; 15 unresolved in this batch. Total747/1000 verified; 253 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch13 pp290–292; Nurse Anesthesia7e Ch7 p81, Ch14 pp213–215, Ch18 pp321–322, Ch36 p843. Both image families visually inspected. Targeted full-text searches for NMS drugs, dosing, timing and ECG terminology.
+
+Corrections and issues: T059 removes instructor ranking and tests supported catecholamine effects; T060 asks about the explicit source list rather than declaring no thrombosis risk; T076 removes unverified2% incidence; T081 corrects6h to minutes–24h with original answer index retained. ECGT068 remains a T-wave/J-wave mismatch. Fifteen unsupported numerical, laboratory, ECG or comparative-treatment claims remain flagged.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-T048, NUR868-T049, NUR868-T050, NUR868-T051, NUR868-T068. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
