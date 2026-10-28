@@ -849,18 +849,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "Which metabolic abnormality is on Wolpaw's hypothermia list?",
+      "stem": "How does mild intraoperative hypothermia affect the duration of action of vecuronium?",
       "options": [
-        "Hyperglycemia",
-        "Hypercalcemia",
-        "Ketoacidosis",
-        "Hypoglycemia"
+        "Shortens its duration by half",
+        "Has no effect on its duration",
+        "Doubles its duration with an approximately 2°C core temperature reduction",
+        "Completely prevents neuromuscular blockade"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "Wolpaw lists hypoglycemia.",
-      "citation": "Wolpaw, Temperature Regulation: slide 13",
+      "explanation": "Hypothermia reduces hepatic and other enzyme activity, slowing drug metabolism. Ehrenwerth reports that a 2°C decrease in core temperature doubles the duration of action of vecuronium.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
@@ -1389,18 +1389,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "A patient has a postoperative temperature of 38.4°C on day 1. Per Wolpaw's facts, what is TRUE?",
+      "stem": "Which condition should be considered when marked hyperthermia develops in the postanesthesia care unit?",
       "options": [
-        "Most postop fevers are from wound infection",
-        "Fever above 38°C should always be treated",
-        "High fever reliably predicts infection",
-        "Most postop fevers are not from infection"
+        "Infection, including pneumonia or aspiration-related infection",
+        "Hypothermia as the only cause",
+        "Anesthetic-induced hypoglycemia in every case",
+        "Normal thermoregulation with no need for assessment"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "67% of postop fevers are noninfectious.",
-      "citation": "Wolpaw, Temperature Regulation: slide 35",
+      "explanation": "Marked postoperative hyperthermia warrants evaluation for infection and other causes. Ehrenwerth discusses infection, preexisting pneumonia, and intraoperative aspiration among potential causes of postoperative fever.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 292",
       "image": null
     },
     {
@@ -1409,18 +1409,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "Treating fever below what temperature may cause harm per Wolpaw?",
+      "stem": "What effect can mild perioperative hypothermia have on recovery from anesthesia?",
       "options": [
-        "37.5°C",
-        "38°C",
-        "40°C",
-        "42°C"
+        "Accelerates metabolism of all anesthetic drugs",
+        "Shortens the duration of neuromuscular blockers",
+        "Has no effect on drug metabolism",
+        "Prolongs anesthetic drug effects and delays recovery"
       ],
       "answer": [
-        2
+        3
       ],
-      "explanation": "True: treating fever below 40°C may cause harm.",
-      "citation": "Wolpaw, Temperature Regulation: slide 35",
+      "explanation": "Hypothermia decreases the rate of drug metabolism and may prolong the effects of anesthetic medications, delaying postanesthetic recovery.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 13, p. 291",
       "image": null
     },
     {
