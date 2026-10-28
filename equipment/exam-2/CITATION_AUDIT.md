@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **991 independently verified answers and 9 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **1000 independently verified answers and 0 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -536,7 +537,7 @@ Corrections and issues: Final partial batch of6 completes this pass over all281 
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-S2-N219. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
 
-## Complete unresolved-record pass — October 28, 2026
+## Historical first unresolved-record pass — October 28, 2026
 
 Started from `4aa2ed1b`:719 independently verified and281 unresolved per-question records. The nested670 progress summary was stale and was reconciled without adding verification credit. Completed11batches of25 and a final6-record remainder: **281 unique unresolved records reviewed,222 newly verified,941 total verified,59 still unresolved**. All941 verified records have explicit answer-verification and passage-inspection flags. All1,000 question records have structured verification decisions.
 
@@ -565,3 +566,23 @@ Sources inspected: Anesthesia Equipment3e Ch6 pp152–153,159,164,168,174; Ch10 
 Corrections and issues: All25 corrected questions verified against their revised scope. Retired absent pediatric/rewarming tables, universal trigger/PIP/FiO2 settings, subjective monitor rankings and erroneous J-wave mapping. Explicitly distinguished plateau from peak pressure and normal neonatal tidal volume from a prescribed setting. Archived every original claim; preserved indices/images/progress code.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-S2-T214. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session verification batch — 15 (October28,2026)
+
+Reviewed9 previously unresolved records: NUR868-S2-T247, NUR868-S2-T251, NUR868-S2-T252, NUR868-S2-T255, NUR868-S2-T268, NUR868-S2-T269, NUR868-S2-T274, NUR868-S2-T276, NUR868-S2-T284. **9 newly verified; 0 unresolved in this batch. Total1000/1000 verified; 0 unresolved.**
+
+Sources inspected: Nurse Anesthesia7e Ch14 p213, Ch17 p300, Ch25 p485, Ch36 p843; Anesthesia Equipment3e Ch13 pp292,295. Actual passages examined for each keyed answer and distractor set.
+
+Corrections and issues: Final9 corrected questions verified. Replaced unsupported J-wave/withdrawal-syndrome/rewarming-rate/fever-threshold premises with explicitly documented related ECG, hyperthermic-syndrome and warming concepts. Original claims archived and not certified; all59 previously unresolved items are now verified only in their corrected forms. No answer indices or image payloads changed.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Remaining 59 resolved through documented question corrections — October 28, 2026
+
+Starting from `95b42216` (941 verified, 59 unresolved), completed batches of 25, 25 and 9. **All 1,000 current questions now have complete-answer verification decisions marked true and inspected-passage citations; zero current questions remain unresolved.** This does not retrospectively certify the 59 original unsupported claims. Their stems, options, answer indices, explanations, citations and prior evidence gaps are preserved in each inventory record's `resolvedOriginalQuestion` field. Verification applies to the corrected stem, every option, retained keyed index and rewritten explanation.
+
+Unsupported original numerical thresholds, fixed protocols, subjective rankings, comparative treatment assertions, absent tables and J-wave mappings were retired or narrowed. In particular, the unchanged ECG drawing is now used for the T-wave region it actually depicts; no J-wave identification is certified. Missing pediatric-setting entries were replaced with explicit source-scoped physiology, pressure-table or calculation questions. No missing passage received a guessed citation.
+
+This pass preserved all 1,000 IDs, answer-index arrays, images, ordering, sets, types, difficulties and topics. No learner-progress code or content-revision mappings changed. Where the semantic content changed substantially, that replacement is explicit in the per-record evidence history rather than represented as confirmation of the original answer.
+
+Final metadata reconciliation: replaced the stale700/300 notes string; retired obsolete page-check/individual-check/lecture-dependent flags on 20 already verified records using their existing explicit evidence notes (no new verification credit). Context/model/placement/linear-mechanics qualifications remain visible as informational flags. Ten already verified records received limited stem/option scope repairs: NUR868-B006, NUR868-B016, NUR868-B035, NUR868-N064, NUR868-N077, NUR868-N079, NUR868-S2-T258, NUR868-S2-T289, NUR868-S2-M228, NUR868-S2-N211. These specify circuit placement, historical/model context, healthy-patient gradient, calculation assumptions or measurement error; they do not add to the59 newly verified revised questions. IDs, answer-index arrays, images and learner-progress code remain unchanged.
