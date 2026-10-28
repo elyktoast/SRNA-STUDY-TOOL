@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **700 complete answers with explicit structured passage and answer verification; 300 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The inventory records **705 complete answers with explicit structured passage and answer verification; 295 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -375,3 +375,7 @@ Reviewed 11 records: NUR868-S2-T205, NUR868-S2-T206, NUR868-S2-T208, NUR868-S2-T
 ## Nine-question manual verification milestone (October 28, 2026)
 
 - Revised and verified NUR868-S2-R201, R202, R203, R206, R207, R208, R209, R245 and R300 against *Anesthesia Equipment*, 3rd ed., Chapter 8 pp. 197–199, Chapter 2 pp. 37–40, and Chapter 11 pp. 253–254. Replaced ambiguous numbered figure references with directly supported concepts. Preserved IDs, answer indices and image data. Total: 700 complete revised answers verified; 300 unresolved.
+
+## 25-question manual review — Mapleson and unresolved monitoring questions (October 28, 2026)
+
+Reviewed B241–B245, B283, B286–B293, M213, M217, R253, M224, T214, T245–T247, T251, T252 and T255. Five revised Mapleson questions (B241–B245) independently verified against Ehrenwerth Ch. 4, Fig. 4.15, pp. 114–120. Original IDs, answer indices and image payloads retained. Remaining 20 still need independent source/figure verification; no verification credit assigned. Count 705/1000; 295 unresolved.
