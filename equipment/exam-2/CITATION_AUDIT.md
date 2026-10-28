@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **813 independently verified answers and 187 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **837 independently verified answers and 163 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -456,3 +457,13 @@ Corrections and issues: R068 corrected nonunique paralysis inference; clarified 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-R067, NUR868-R068, NUR868-R069, NUR868-R070, NUR868-R071, NUR868-R072, NUR868-R073, NUR868-R074. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
 
 Panel-reference repair accompanying batch5: the supplied trend grid has no visible A–D labels and the flow-time figure has incomplete panel lettering. R070–R074 now name quadrants; R053–R055 name left/middle/right positions. Original images and answer indices unchanged. These three earlier verified items received presentation repairs only and no new verification credit.
+
+## Work-session batch of25 — 6 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-R092, NUR868-R093, NUR868-R094, NUR868-R095, NUR868-R096, NUR868-R097, NUR868-R098, NUR868-R099, NUR868-R100, NUR868-R101, NUR868-R102, NUR868-R103, NUR868-R104, NUR868-R105, NUR868-R106, NUR868-R107, NUR868-R108, NUR868-R109, NUR868-R110, NUR868-R111, NUR868-R112, NUR868-R113, NUR868-R114, NUR868-N001, NUR868-N002. **24 newly verified; 1 unresolved in this batch. Total837/1000 verified; 163 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch11 pp253–260,265–266; Ch8 p200; Ch10 pp241–242; Ch6 pp151–152; Ch19 p434. Nurse Anesthesia7e Ch29 p628 (four hemoglobin subunits).
+
+Corrections and issues: Qualified fetal-Hb effect, historical motion-artifact approaches, device-specific SET filtering, dependent-arm study value and CaO2 assumptions. R103 finger-perfusion ranking remains unverified. No images; answer indices retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
