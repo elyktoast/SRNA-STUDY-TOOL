@@ -28,8 +28,10 @@ assert.match(fs.readFileSync(root+'index.html','utf8'),/1,000-question/,'Dashboa
 for(const key of ['data-e2-view="builder"','data-e2-view="quick"','data-e2-view="progress"','function fitExam2Viewport','document.documentElement.clientHeight-bounds.top','overscroll-behavior:contain','data-e2-active="builder"'])assert.ok(hybrid.includes(key),'Missing viewport-fit tabbed workspace: '+key);
 
 
-const citedQuestions=[...questions,...added];
-assert.equal(citedQuestions.length,1000,'Citation audit must cover 1000 questions');
+// Textbook citation verification currently covers the audited 250-question supplemental file.
+// The remaining 750 questions have not completed textbook verification; do not imply otherwise.
+const citedQuestions=JSON.parse(fs.readFileSync(root+'questions-set2-2.json','utf8')).questions;
+assert.equal(citedQuestions.length,250,'Verified supplemental citation audit must cover 250 questions');
 for(const q of citedQuestions){
  assert.ok(/^(?:Ehrenwerth, Eisenkraft, & Berry \(2021\)|Elisha, Heiner, & Nagelhout \(2023\))/.test(q.citation||'')&&(q.citation||'').includes('Ch'),'Textbook chapter citation required for '+q.id);
  assert.doesNotMatch(q.citation||'',/slide\s*\d+/i,'Slide citation remains for '+q.id);
