@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **686 complete answers with explicit structured passage and answer verification; 314 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The inventory records **691 complete answers with explicit structured passage and answer verification; 309 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -367,3 +367,7 @@ Inspected *Anesthesia Equipment*, 3rd ed., Chapter 7, printed pp. 185–187 and 
 ## Manual verification — general-anesthesia temperature plateau (October 28, 2026)
 
 - **NUR868-S2-T202:** Corrected the stem to ask which response *can contribute* to the plateau rather than asserting vasoconstriction is the sole cause. Ehrenwerth Chapter 13, printed p. 289, Fig. 13.3 caption explicitly identifies either passive thermal steady state or vasoconstriction; surrounding text on pp. 289–290 supports the revised choices. Preserved the existing image, question ID, position, and answer index 1. Complete revised answer independently verified.
+
+## Manual 11-question review — temperature monitoring (October 28, 2026)
+
+Reviewed 11 records: NUR868-S2-T205, NUR868-S2-T206, NUR868-S2-T208, NUR868-S2-T209, NUR868-S2-T213, NUR868-S2-T214, NUR868-S2-T245, NUR868-S2-T246, NUR868-S2-T247, NUR868-S2-T202, NUR868-S2-M226. Five additional answers independently verified: T205, T206, T208, T209 and T213. Four site-numbering questions had unsupported mappings to an unlabelled figure; rewrote stems and choices to directly test core-temperature site properties established in Ehrenwerth Ch. 13 pp. 299–300. T213's signed-slope ambiguity was replaced with the textbook's unambiguous gain definition (pp. 287–288). All five retain their original answer indices, IDs, positions and image fields. T214 (ECG figure), T245 (cold diuresis), T246 (glucose effect) and T247 (J wave location) remain unverified and unchanged pending direct textbook evidence. T202 and M226 were already verified in earlier manual passes and were checked for consistency; no new verification credit assigned.
