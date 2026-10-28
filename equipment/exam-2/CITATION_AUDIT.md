@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **449 reported verified complete answers out of1,000; 551 remain unresolved**. Of those verified, **372 have explicit structured passage/answer evidence and 77 legacy records still require individual reconciliation**. Twenty rewrite batches cover all1,000 explanations. Rewrite coverage is distinct from complete textbook verification. See the latest reconciliation section for count changes.
+The inventory records **449 reported verified complete answers out of1,000; 551 remain unresolved**. Of those verified, **422 have explicit structured passage/answer evidence and 27 legacy records still require individual reconciliation**. Twenty rewrite batches cover all1,000 explanations. Rewrite coverage is distinct from complete textbook verification. See the latest reconciliation section for count changes.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -244,3 +244,11 @@ Rechecked35 vigilance records (V001–V041, selected legacy records with gaps) a
 Read actual uploaded *Anesthesia Equipment*,3rd ed., Ch.13 printed pp.289–292 and Ch.17 pp.372–375,387–390. Cross-checked *Nurse Anesthesia*,7th ed., Ch.7 p.81, Ch.14 pp.213–215 and Ch.36 p.842. The latter explicitly supports an unexpected ETCO2 rise out of proportion to minute ventilation in MH (T074). T084’s serotonin signs/onset are supported, but an exact comparative NMS passage was not established; its complete-answer status was therefore reduced rather than inferred. No guessed pages, rekeying or classroom-source verification.
 
 Aggregate after reconciliation: **449 reported verified, 551 unresolved; 372 explicit structured verifications and 77 legacy verifications still awaiting reconciliation.**** All IDs, stems, choices, keys, image bytes, order, difficulty and learner-progress code preserved. Only citations and T084’s explanation changed in student question data. Local quality/integration/preservation checks precede publication; Actions status reported separately.
+
+## Legacy verification reconciliation 2 — 50 records
+
+Individually rechecked30 breathing-circuit legacy verifications (B001–B040, selected records with gaps),15 temperature legacy verifications (T085–T115, selected records), andR001–R005. Exact50IDs enumerated in `legacyReconciliation2`. **All50 prior complete-answer verifications confirmed; no newly verified answers and no changes to keys.** No question in this selection has an attached image.
+
+Directly read *Anesthesia Equipment*,3rd ed., Ch.4 printed pp.101–106,113,115,117; Ch.8 pp.195–198; Ch.13 pp.289–292,294–296,298–299. Cross-checked *Nurse Anesthesia*,7th ed., Ch.14 p.213 for severe serotonin-toxicity escalation. Source-specific values/rankings and functional versus hardware circuit classification are qualified in individual evidence notes. Gas-analyzer timing definitions now cite exact passages, and circuit/temperature citations no longer imply a generic secondary chapter proves every detail. No classroom-source claims are certified.
+
+**Current aggregate:449 reported verified,551 unresolved;422 explicit structured verifications,27 legacy verifications awaiting reconciliation.** This is reconciliation of previously counted answers, not50new verified answers. All IDs, stems, options, keys, image bytes, difficulty, order and learner-progress code preserved. Only citation fields changed in student question data. Local quality/integration/preservation checks precede publication; Actions status reported separately.
