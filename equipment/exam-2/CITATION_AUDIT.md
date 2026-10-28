@@ -387,3 +387,7 @@ Reviewed B283, B286–B293, M213, M217, R253, M224, T214, T245–T247, T251, T25
 ## Manual review — volatile wash-in, APL, vigilance and outstanding cases (October 28, 2026)
 
 Reviewed 23 unresolved questions from the supplemental banks (B283, B289, M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N207, N219, N235, N286, V255), and rechecked previously verified B286 and B287 for consistency (25 records examined). Three newly independently verified and corrected: B283 (Ehrenwerth Ch. 19 pp. 433–437), B289 (Ch. 4 pp. 121–122; clarified APL does not guarantee precise PEEP), V255 (Ch. 17 pp. 373–379). Other 20 unresolved records remain flagged for specific evidence or image review. Total 715/1000 verified, 285 unresolved.
+
+## Manual 25-question review — remaining monitoring, thermal and ventilator items (October 28, 2026)
+
+Reviewed 25 pending supplemental items: M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N207, N219, N235, N286, V255 plus B283, B289, B286 and B287 (the latter four were already verified and checked for consistency). Two newly verified after revisions: N207 and N235, using Ehrenwerth Ch. 6 printed p. 161, removing unsupported numbered component and bellows phase assertions. Original IDs, answer indices and image data preserved. The other 19 pending questions remain unresolved, and no source-verification credit was assigned to them. Total verified: 717/1000; unresolved: 283.
