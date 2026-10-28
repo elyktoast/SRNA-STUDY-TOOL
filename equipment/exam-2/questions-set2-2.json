@@ -1029,18 +1029,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "Which treatment helps NMS (neuroleptic malignant syndrome) but not serotonin syndrome?",
+      "stem": "Which medication used for malignant hyperthermia may also be effective in neuroleptic malignant syndrome?",
       "options": [
         "Dantrolene",
-        "Stopping the offending drug",
-        "Supportive care",
-        "Cooling"
+        "Naloxone",
+        "Neostigmine",
+        "Flumazenil"
       ],
       "answer": [
         0
       ],
-      "explanation": "Dantrolene is used for NMS; it doesn't help serotonin syndrome.",
-      "citation": "Wolpaw, Temperature Regulation: slides 33, 34",
+      "explanation": "Dantrolene inhibits skeletal muscle calcium release through the ryanodine receptor and is the specific treatment for malignant hyperthermia. Nagelhout also describes possible efficacy in neuroleptic malignant syndrome.",
+      "citation": "Elisha, Heiner, & Nagelhout (2023), Nurse Anesthesia, 7th ed., Ch. 36, p. 843",
       "image": null
     },
     {
@@ -1693,22 +1693,22 @@
       "type": "multi",
       "difficulty": "medium",
       "topic": "Ventilators",
-      "stem": "Which are features of piston ventilators? Select 3.",
+      "stem": "Which statements describe piston-driven anesthesia ventilators? Select 3.",
       "options": [
-        "Electric motor drive",
-        "Fresh gas decoupling",
-        "Loud, easily heard cycling",
-        "Relief valves at +75 and −8 cmH2O",
-        "Driving gas required",
-        "Spill valve adds PEEP (positive end-expiratory pressure)"
+        "An electric motor can drive the piston",
+        "Piston movement can deliver inspiratory volume",
+        "An electric piston requires driving oxygen for every breath",
+        "The design may avoid consumption of compressed driving gas",
+        "All piston ventilators use the same relief-valve pressure settings",
+        "Piston ventilators cannot be used with fresh-gas decoupling"
       ],
       "answer": [
         0,
         1,
         3
       ],
-      "explanation": "Pistons are electric, quiet, decoupled, and protected by relief valves.",
-      "citation": "Course lecture, Anesthesia Ventilators: slides 19, 20, 22",
+      "explanation": "Electrically driven piston ventilators generate inspiratory flow through motor-driven piston displacement rather than consuming compressed driving gas. Design-specific safety valves and fresh-gas handling differ between models.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6 (Anesthesia Ventilators)",
       "image": null
     },
     {
@@ -1741,22 +1741,22 @@
       "type": "multi",
       "difficulty": "medium",
       "topic": "Ventilators",
-      "stem": "Which result from lengthening expiratory time? Select 3.",
+      "stem": "Which effects can result from allowing more time for expiration in an obstructed patient? Select 3.",
       "options": [
-        "Better oxygenation through recruitment",
-        "Higher mean airway pressure",
-        "More air trapping",
-        "Better CO2 clearance",
-        "Less hemodynamic effect",
-        "Less auto-PEEP"
+        "More complete exhalation",
+        "Guaranteed improvement in oxygenation regardless of other settings",
+        "Greater intrinsic PEEP in every patient",
+        "Reduced dynamic hyperinflation",
+        "Reduced air trapping",
+        "Guaranteed increase in mean airway pressure"
       ],
       "answer": [
+        0,
         3,
-        4,
-        5
+        4
       ],
-      "explanation": "Longer expiration helps ventilation and air trapping but reduces oxygenation.",
-      "citation": "Course lecture, Anesthesia Ventilators: slides 33, 34",
+      "explanation": "With expiratory flow limitation, insufficient expiratory time promotes breath stacking, intrinsic PEEP, and dynamic hyperinflation. Allowing more time for exhalation can reduce these problems.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6 (Anesthesia Ventilators)",
       "image": null
     },
     {
@@ -1859,22 +1859,22 @@
       "type": "multi",
       "difficulty": "medium",
       "topic": "Ventilators",
-      "stem": "Which are risks of recruitment maneuvers? Select 3.",
+      "stem": "Which potential complications should be considered during an alveolar recruitment maneuver? Select 3.",
       "options": [
-        "Increased atelectasis",
-        "Barotrauma",
-        "Loss of recruited lung when switching to the vent",
-        "Hypotension from reduced preload",
-        "Lower compliance",
-        "Increased shunt"
+        "Barotrauma from elevated airway pressures",
+        "Guaranteed permanent improvement in compliance",
+        "Reduced venous return and hypotension",
+        "Loss of recruitment after pressures are reduced",
+        "Elimination of all shunt regardless of disease",
+        "Prevention of every form of atelectasis"
       ],
       "answer": [
-        1,
+        0,
         2,
         3
       ],
-      "explanation": "The goals are less atelectasis and shunt; risks are hemodynamic and barotrauma.",
-      "citation": "Course lecture, Anesthesia Ventilators: slides 63, 64",
+      "explanation": "Recruitment maneuvers apply elevated airway pressures and may cause barotrauma or hypotension through impaired venous return. Recruitment may be lost without adequate subsequent PEEP.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6 (Anesthesia Ventilators)",
       "image": null
     },
     {
