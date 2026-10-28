@@ -2666,18 +2666,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Ventilators",
-      "stem": "Default flow-cycling is set similar to calm, awake ventilation at about:",
+      "stem": "For volume-controlled ventilation, which relationship determines tidal volume when minute ventilation and respiratory rate are known?",
       "options": [
-        "0.5 L/min",
-        "5 L/min",
-        "20 L/min",
-        "50 L/min"
+        "Tidal volume equals respiratory rate divided by minute ventilation",
+        "Tidal volume equals minute ventilation divided by respiratory rate",
+        "Tidal volume equals minute ventilation multiplied by respiratory rate",
+        "Tidal volume is unrelated to respiratory rate"
       ],
       "answer": [
         1
       ],
-      "explanation": "Default flow similar to calm ventilation (~5 L/min).",
-      "citation": "Course lecture, Anesthesia Ventilators: slide 26",
+      "explanation": "Minute ventilation is the product of tidal volume and respiratory rate (minute ventilation = tidal volume × frequency). Therefore, tidal volume equals minute ventilation divided by respiratory rate.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6, pp. 152–153",
       "image": null
     },
     {
@@ -3926,18 +3926,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Ventilators",
-      "stem": "Per the pediatric table, respiratory rate should be set to:",
+      "stem": "When setting volume-controlled ventilation, what happens to calculated tidal volume if minute ventilation stays constant and respiratory rate increases?",
       "options": [
-        "Fixed at 30 breaths/min",
-        "Half the normal rate",
-        "Adult rates of 10–12 breaths/min",
-        "Normal rate for age or pathology"
+        "Tidal volume increases",
+        "Tidal volume stays constant",
+        "Tidal volume decreases",
+        "Tidal volume becomes independent of minute ventilation"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "RR parallels normal for age or pathophysiology.",
-      "citation": "Course lecture, Anesthesia Ventilators: slide 65",
+      "explanation": "Tidal volume equals minute ventilation divided by respiratory rate. At a fixed minute ventilation, increasing respiratory rate decreases the tidal volume required per breath.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6, pp. 152–153",
       "image": null
     },
     {
