@@ -58,3 +58,7 @@ Inspected Equipment Ch. 4 pp. 101, 104, 113–116 and Ch. 7 pp. 183–188; cross
 ## Eighth 50-question batch — B089–B090 and N001–N050
 
 Read *Anesthesia Equipment*, third edition, Chapter 6, printed pp. 149–177 (ventilator fundamentals, bellows, piston and turbine designs, fresh-gas decoupling), and Chapter 4 breathing-circuit content. Rewrote 50 explanations and aligned their references to relevant chapter sections. Exact model-dependent claims and numerical thresholds remain flagged, notably N023–N024, N032–N033, N036, N043–N044 and N047. No answer choices, answer keys, images, question IDs, or learner history were changed. References are not individually passage-verified for every answer.
+
+## Batch 9 — N051–N102
+
+Reviewed and rewrote 50 ventilator explanations covering cycling, timing, triggering, PEEP, compliance, pressure and tidal volume. Read *Anesthesia Equipment* (3rd ed.), Chapter 6, printed pages 151–169. Chapter-section references are not proof that every answer or numerical cutoff has been independently verified. Flagged questions with context-dependent thresholds or device assumptions in the verification inventory. All protected question fields remain unchanged.
