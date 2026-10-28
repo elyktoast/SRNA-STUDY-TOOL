@@ -99,6 +99,57 @@ body.mbu-quiz-active>.wrap{max-width:1040px;padding:20px}
 #search,#reports{max-width:900px;margin-left:auto;margin-right:auto}
 #search h2,#reports h2{margin-top:0;color:#183153}
 
+/* Exam 2 quiz header: compact progress-first presentation. */
+body.mbu-quiz-active #quiz .mbu-session-head{gap:10px}
+body.mbu-quiz-active #quiz .mbu-session-title{flex:1;min-width:220px}
+body.mbu-quiz-active #quiz #sessionBadge{font-weight:850;letter-spacing:.025em}
+body.mbu-quiz-active #quiz #qprog{font-weight:750}
+body.mbu-quiz-active #quiz .mbu-session-title::after{content:"";display:block;width:100%;height:6px;margin-top:9px;border-radius:99px;background:linear-gradient(to right,#3478d4 var(--exam2-progress,0%),#e2e8f0 var(--exam2-progress,0%))}
+@media(max-width:650px){body.mbu-quiz-active #quiz .mbu-session-title{min-width:0;width:100%}}
+
+/* Exam 2 Design 2: focused card, compact toolbar, consistent controls. */
+body.mbu-quiz-active #studioHomeNav{display:none!important}
+body.mbu-quiz-active #quiz{max-width:1040px;padding:20px 24px 18px;border:1px solid #dbe4ee!important;border-radius:14px!important;box-shadow:0 8px 26px #1a365d12}
+body.mbu-quiz-active #quiz .mbu-session-head{gap:12px;padding-bottom:12px;margin-bottom:12px}
+body.mbu-quiz-active #quiz .mbu-session-title{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 14px;width:100%;min-width:0}
+body.mbu-quiz-active #quiz #sessionBadge{justify-self:start;max-width:100%;padding:5px 12px;font-size:.82rem}
+body.mbu-quiz-active #quiz #qprog{justify-self:end;margin:0;white-space:nowrap;color:#183b68;font-size:.9rem}
+body.mbu-quiz-active #quiz .mbu-session-title::after{grid-column:1/-1;width:100%;margin:0;height:7px}
+body.mbu-quiz-active #quiz .mbu-session-actions{display:flex;align-items:center;gap:7px}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn{min-height:34px;padding:7px 11px;border:1px solid #c6d4e4;border-radius:8px;background:#fff;color:#1a365d;font-size:.84rem;font-weight:750}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn:hover{background:#edf5ff;border-color:#83a9d8}
+body.mbu-quiz-active #quiz .mbu-session-actions .mbu-return{margin-left:auto}
+body.mbu-quiz-active #quiz .mbu-quiz-stats{margin-bottom:13px;background:#f6f9fd;border-color:#dce7f3}
+body.mbu-quiz-active #quiz .mbu-quiz-stats>div{padding:8px 10px}
+body.mbu-quiz-active #quiz .stem{font-size:1.13rem;line-height:1.43;margin-bottom:7px}
+body.mbu-quiz-active #quiz .type{margin-bottom:6px}
+body.mbu-quiz-active #quiz .mbu-crossout-hint{margin-bottom:9px}
+body.mbu-quiz-active #quiz .options{gap:6px}
+body.mbu-quiz-active #quiz .opt{min-height:43px;border-radius:9px;padding:10px 12px}
+body.mbu-quiz-active #quiz .xo{border-radius:9px}
+body.mbu-quiz-active #quiz .controls{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:1px solid #e2e8f0;padding-top:12px;margin-top:12px}
+body.mbu-quiz-active #quiz .controls .row{display:flex;gap:8px;margin-left:auto}
+body.mbu-quiz-active #quiz .controls .btn{min-height:38px;padding:8px 14px;border-radius:8px}
+body.mbu-quiz-active #quiz .mbu-session-actions .btn:disabled{background:#e2e8f0;color:#64748b;border-color:#cbd5e1;cursor:not-allowed}
+body.mbu-quiz-active #quiz .opt:focus-visible,body.mbu-quiz-active #quiz .xo:focus-visible{outline:3px solid #7bb0ef;outline-offset:2px}
+body.mbu-quiz-active #quiz button:focus-visible{outline:3px solid #7bb0ef;outline-offset:2px}
+@media(max-width:650px){
+ body.mbu-quiz-active #quiz{padding:14px 12px}
+ body.mbu-quiz-active #quiz .mbu-session-title{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+ body.mbu-quiz-active #quiz .mbu-session-title .progress{margin:0;text-align:right}
+ body.mbu-quiz-active #quiz .mbu-session-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ body.mbu-quiz-active #quiz .mbu-session-actions .btn{width:100%;padding:7px 3px;font-size:.75rem}
+ body.mbu-quiz-active #quiz .mbu-session-actions .mbu-return{grid-column:1/-1;margin:0}
+ body.mbu-quiz-active #quiz .mbu-session-title::after{grid-column:1/-1}
+ body.mbu-quiz-active #quiz .mbu-quiz-stats>div{padding:6px 5px;font-size:.79rem}
+ body.mbu-quiz-active #quiz .stem{font-size:1.03rem}
+}
+@media(max-width:380px){
+ body.mbu-quiz-active #quiz .mbu-session-title{grid-template-columns:1fr}
+ body.mbu-quiz-active #quiz #qprog{justify-self:start}
+}
+@media(prefers-reduced-motion:reduce){body.mbu-quiz-active #quiz .btn{transition:none}}
+
 /* Active Studio and Adaptive sessions use bank1-quiz-ui.css for quiz-session chrome. */
 body.mbu-quiz-active #quiz{border:0;border-radius:10px}
 @media(max-width:1050px){
@@ -306,6 +357,31 @@ document.addEventListener('click',e=>{
 });
 window.addEventListener('resize',fitExam2Viewport);window.visualViewport?.addEventListener('resize',fitExam2Viewport);
 if(typeof ResizeObserver!=='undefined'){const observer=new ResizeObserver(fitExam2Viewport);observer.observe(document.body);const nav=document.querySelector('.mbu-global-nav');if(nav)observer.observe(nav)}if(typeof MutationObserver!=='undefined'){new MutationObserver(()=>requestAnimationFrame(fitExam2Viewport)).observe(document.body,{childList:true})}
+/* Normalize session-only labels; never alter the source question bank or session IDs. */
+(function(){
+ const badge=document.getElementById('sessionBadge'),counter=document.getElementById('qprog'),quiz=document.getElementById('quiz');
+ if(!badge||!counter||!quiz)return;
+ let pending=false;
+ function refresh(){
+  pending=false;
+  if(!quiz.classList.contains('hidden')){
+   if(badge.textContent!=='EQUIPMENT EXAM 2')badge.textContent='EQUIPMENT EXAM 2';
+   const raw=counter.textContent||'';
+   const match=raw.match(/(?:Question\s*)?(\d+)\s*(?:of|\/)\s*(\d+)/i);
+   if(match){
+    const label='Question '+match[1]+' of '+match[2];
+    if(counter.textContent!==label)counter.textContent=label;
+    const total=Number(match[2]),current=Number(match[1]);
+    quiz.style.setProperty('--exam2-progress',total>0?Math.min(100,Math.max(0,current/total*100))+'%':'0%');
+   }else{quiz.style.setProperty('--exam2-progress','0%')}
+  }
+ }
+ function schedule(){if(!pending){pending=true;queueMicrotask(refresh)}}
+ new MutationObserver(schedule).observe(badge,{childList:true,characterData:true,subtree:true});
+ new MutationObserver(schedule).observe(counter,{childList:true,characterData:true,subtree:true});
+ new MutationObserver(schedule).observe(quiz,{attributes:true,attributeFilter:['class']});
+ schedule();
+})();
 setExam2View('builder');requestAnimationFrame(fitExam2Viewport);window.addEventListener('load',fitExam2Viewport);
 
 (function(){
