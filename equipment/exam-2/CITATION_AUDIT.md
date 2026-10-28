@@ -54,3 +54,7 @@ Rewrote 17 vigilance and 33 breathing-circuit records in array order. Inspected 
 ## Seventh 50-question batch — B038–B088, preserving ID gaps
 
 Inspected Equipment Ch. 4 pp. 101, 104, 113–116 and Ch. 7 pp. 183–188; cross-checked Nurse Anesthesia Ch. 16 pp. 266–267. Rewrote all 50 explanations. B044–B049 require image-number verification; B059–B060 contain broad anatomical assertions; B077–B078 and B083 depend on particular lecture examples; B084/B087 require kinetics and effect-site clarification. Page citations establish only the explicitly supported principles. Protected fields and learner state unchanged.
+
+## Eighth 50-question batch — B089–B090 and N001–N050
+
+Read *Anesthesia Equipment*, third edition, Chapter 6, printed pp. 149–177 (ventilator fundamentals, bellows, piston and turbine designs, fresh-gas decoupling), and Chapter 4 breathing-circuit content. Rewrote 50 explanations and aligned their references to relevant chapter sections. Exact model-dependent claims and numerical thresholds remain flagged, notably N023–N024, N032–N033, N036, N043–N044 and N047. No answer choices, answer keys, images, question IDs, or learner history were changed. References are not individually passage-verified for every answer.
