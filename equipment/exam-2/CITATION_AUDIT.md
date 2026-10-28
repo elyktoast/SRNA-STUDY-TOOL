@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records 197 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Fourteen rewrite batches cover 700 explanations; 300 remain unreviewed by those batches. **700 rewritten does not mean 700 textbook-verified.**
+The inventory records 241 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, 44 from Batch 15, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Fifteen rewrite batches cover 750 explanations; 250 remain unreviewed by those batches. **750 rewritten does not mean 750 textbook-verified.**
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -118,3 +118,23 @@ Unresolved issues:
 IDs, stems, choices, keys, image bytes, order, difficulty fields, revision mappings and learner-storage code were preserved. All changed explanations omit instructor/lecture attribution. Individual evidence notes distinguish complete answer support from partial support.
 
 Validation: Batch 9 local quality, content-integrity, revision/history, integration, performance, review-queue, quality-report, coverage and CAT checks passed before the execution workspace disconnected. Batch 14 was prepared through GitHub after that disconnect; no local Batch 14 test run is claimed. JSON structure, 50-record coverage, and exact preservation of all protected bank fields were checked before committing; GitHub Actions must validate the committed tree.
+
+## Fifteenth 50-question batch — S2-R266–S2-M225 (actual array order)
+
+Reviewed the next 44 respiratory-monitoring and six temperature records in `questions-set2-1.json`, preserving ID gaps and original order. **44 complete answers verified; six unresolved/conditional.** All 50 explanations rewritten and linked to actual inspected printed passages. Coverage is 750/1,000 rewritten, 250 untouched, and 241 independently verified answers across the inventory. Earlier verification records were not re-audited in this batch.
+
+Sources inspected: *Anesthesia Equipment: Principles and Applications*, 3rd ed., Ch. 6 p. 166; Ch. 8 pp. 211, 213; Ch. 9 pp. 230–231; Ch. 10 pp. 239, 242, 245, 247–249; Ch. 11 pp. 253, 255–260, 265–266; Ch. 13 pp. 289–295, 299. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 14 pp. 213–214, Ch. 16 p. 277 and Ch. 29 p. 629. Printed-page headers were checked. Visually inspected Equipment p. 253's saturation/content equations and p. 299's temperature-site classification. Independently recomputed fractional saturation (87%), functional saturation (96.7%), CaO₂ (19.98 mL/dL), and the dissolved-oxygen increment (0.3 mL/dL).
+
+All eight image-bearing questions reviewed across four supplied families: R266 abnormal capnograms, R267 obstructive capnogram, R288–R290 optical-path schematic, and R298–R300 dissociation curve. Image labels were checked against mechanisms, not assumed from topic. The unscaled curve does not prove a specific numeric PaO₂ reduction stays on its plateau.
+
+Unresolved records:
+- R274: pulmonary arterial hypotension is supported by the passage, but the broadly worded V/Q comparison does not exclude pulmonary hypertension.
+- R284: the hemoglobin-versus-PaO₂ comparison requires comparable saturation and other conditions that the stem omits.
+- R300: no numeric axes establish whether halving PaO₂ at point 3 leaves saturation unchanged.
+- R301: the 1986 adoption date is verified; an assertion that patient outcomes were the primary adoption reason is not established, and the text explicitly discusses limitations of early outcome studies.
+- R314: ventilation, perfusion and metabolism are verified; “most valuable” is an unsupported subjective ranking.
+- M224: clonus/hyperreflexia are supported by Hunter criteria, but the source gives onset from minutes up to 24 hours, not a verified six-hour discriminator or complete NMS comparison.
+
+Additional qualifications: R295 reflects the text's conflicting HbS accuracy literature, not a universal error direction. R296 describes historical ECG synchronization, which the text says was abandoned in later models. R297's up-to-eight-point decrease is a particular volunteer-study result, not a universal dependent-limb effect. Temperature-site classification in M222 is explicitly that of Equipment Fig. 13.20.
+
+IDs, stems, answer choices, answer keys, image bytes, difficulty, ordering, revision mappings and learner-storage code were preserved. No keys silently corrected. Per-question sourceReview distinguishes rewrite, chapter identification, passage inspection and independent full-answer verification. Batch validation is reported after commit; no blanket assertion that all 750 answers are verified.
