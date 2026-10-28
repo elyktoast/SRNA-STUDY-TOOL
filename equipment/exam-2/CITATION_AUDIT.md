@@ -42,3 +42,7 @@ Question identifiers, answer keys, stems, options, and attached images were pres
 All 50 explanations rewritten and reviewed against the supplied PDFs: Equipment Ch. 13 pp. 289–294 and Nurse Anesthesia Ch. 18 pp. 321–322, with targeted Ch. 8 p. 90 and Ch. 14 pp. 213–215 cross-checks. Only supporting inspected pages are cited. Individual inventory records distinguish verified answers from partial support and unresolved claims.
 
 Key issues: T045 radiative-transfer formula wording; T052 A3/A2 source discrepancy; T062 drug/value mismatch; T083 includes an unkeyed drug explicitly listed in Nagelhout. T048–T051 and T068 are image-dependent and their labels remain unverified. Several exact numerical effects, NMS details and dantrolene dosing remain unsupported by the passages inspected. No IDs, choices, keys, images, order, learner storage, or content-revision mappings changed.
+
+## Fifth 50-question batch — T091–T115 (24 records), V001–V026
+
+Reviewed in actual array order, preserving T091B and gaps. Inspected Equipment Ch. 13 pp. 287, 292–299 and Ch. 17 pp. 372–374; cross-checked Nurse Anesthesia Ch. 18 pp. 314, 321–322 and Ch. 60 pp. 1364–1365, 1367. Rewritten explanations distinguish verified mechanisms from unsupported rates and rankings. T098 conflicts with the Equipment forced-air rate example; T106 has a bladder-site classification discrepancy between editions. Exact fluid temperatures, extracorporeal rewarming rates, circadian timing, and postoperative-fever percentages remain flagged. No keys or protected question fields changed.
