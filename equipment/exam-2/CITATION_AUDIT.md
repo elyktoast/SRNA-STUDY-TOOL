@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **928 independently verified answers and 72 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **940 independently verified answers and 60 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -511,3 +512,13 @@ Sources inspected: Anesthesia Equipment3e Ch6 pp152,162,166–169 and Ch9 p232; 
 Corrections and issues: Replaced exclusive VCV/PCV injury labels, unconditional PCV-VG behavior, minimum-volume guarantees and empty-airway SIMV claims with supported mode descriptions. Scoped SIMV timing to the source model. N128 LMA ceiling and N138 pressure-support range remain unresolved. Answer indices retained.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-N113. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 11 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-N139, NUR868-N140, NUR868-N141, NUR868-N142, NUR868-N143, NUR868-N144, NUR868-N145, NUR868-N146, NUR868-N147, NUR868-N148, NUR868-N149, NUR868-N150, NUR868-N151, NUR868-N152, NUR868-N153, NUR868-S2-M213, NUR868-S2-R253, NUR868-S2-M224, NUR868-S2-T214, NUR868-S2-T245, NUR868-S2-T246, NUR868-S2-T247, NUR868-S2-T251, NUR868-S2-T252, NUR868-S2-T255. **12 newly verified; 13 unresolved in this batch. Total940/1000 verified; 60 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch6 pp159–170 and Ch10 pp242–243; Nurse Anesthesia7e Ch16 pp278–281, Ch29 p644, Ch39 p925, Ch48 p1105, Ch14 pp213–215 and Ch36 p843. Original and supplemental flow/ECG images inspected; targeted pediatric/NMS/cold-diuresis searches performed.
+
+Corrections and issues: Corrected recruitment duration to the actual morbid-obesity table, removed unsafe half-APL/O2-flush recipe, clarified source-defined HFV and context-specific APRV, and corrected six-hour serotonin timing without claiming the unresolved differential verified. Thirteen claims remain unresolved, including the ECG/J-wave mismatch and missing pediatric table. Images and answer indices retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-S2-R253, NUR868-S2-T214. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
