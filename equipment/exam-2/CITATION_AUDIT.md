@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **905 independently verified answers and 95 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **928 independently verified answers and 72 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -500,3 +501,13 @@ Sources inspected: Anesthesia Equipment3e Ch6 pp151–152,159–165,168,174 and 
 Corrections and issues: Corrected fixed versus conditional timing, volume-loss assumptions, protective-strategy choices and PEEP risks; scoped PEEP5 to its cited analysis. Five unverified trigger/default/titration/PIP claims remain flagged. Correct answer indices and image bytes retained.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-N107, NUR868-N108, NUR868-N109, NUR868-N110, NUR868-N111, NUR868-N112. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 10 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-N113, NUR868-N114, NUR868-N115, NUR868-N116, NUR868-N117, NUR868-N118, NUR868-N119, NUR868-N120, NUR868-N121, NUR868-N122, NUR868-N123, NUR868-N124, NUR868-N125, NUR868-N126, NUR868-N127, NUR868-N128, NUR868-N129, NUR868-N130, NUR868-N132, NUR868-N133, NUR868-N134, NUR868-N135, NUR868-N136, NUR868-N137, NUR868-N138. **23 newly verified; 2 unresolved in this batch. Total928/1000 verified; 72 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch6 pp152,162,166–169 and Ch9 p232; Nurse Anesthesia7e Ch16 pp277–278,281. N113 uses the pressure-panel figure visually inspected in batch9.
+
+Corrections and issues: Replaced exclusive VCV/PCV injury labels, unconditional PCV-VG behavior, minimum-volume guarantees and empty-airway SIMV claims with supported mode descriptions. Scoped SIMV timing to the source model. N128 LMA ceiling and N138 pressure-support range remain unresolved. Answer indices retained.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-N113. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
