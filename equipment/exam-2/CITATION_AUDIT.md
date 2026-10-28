@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **705 complete answers with explicit structured passage and answer verification; 295 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The authoritative per-question flags record **737 independently verified answers and 263 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -399,3 +400,13 @@ Examined 18 outstanding supplemental questions: M213, M217, R253, M224, T214, T2
 ## Manual follow-up review — supplemental unresolved items (October 28, 2026)
 
 Checked 17 remaining unverified supplemental questions: M213, R253, M224, T214, T245, T246, T247, T251, T252, T255, T268, T269, T274, T276, T284, N219, and N286. One revised complete answer independently verified: N286, adult end-tidal CO2 reference, Ehrenwerth Chapter 10 pp. 243–244. Sixteen remain unresolved because exact source support, image mapping, or comparative treatment/numerical claims were not established. Count 719/1000; 281 unresolved. Original questions.json bank could not be fully retrieved during this pass; do not claim a 25-question batch was completed.
+
+## Work-session batch of25 — 1 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-T002, NUR868-T006, NUR868-T008, NUR868-T009, NUR868-T010, NUR868-T014, NUR868-T019, NUR868-T020, NUR868-T021, NUR868-T026, NUR868-T027, NUR868-T028, NUR868-T029, NUR868-T030, NUR868-T031, NUR868-T032, NUR868-T033, NUR868-T034, NUR868-T035, NUR868-T036, NUR868-T037, NUR868-T038, NUR868-T039, NUR868-T040, NUR868-T045. **18 newly verified; 7 unresolved in this batch. Total737/1000 verified; 263 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch13 printed pp287–291; actual response and post-induction images compared with Figs13.1 and13.3. Targeted searches of both uploaded texts for preoptic, piloerection, shivering cutoffs and ICP.
+
+Corrections and issues: T029 narrowed to a possible plateau mechanism, preserving its key; seven exact anatomical, cutoff, ICP, piloerection, fixed-temperature and radiation-formula claims remain unresolved. Nested progress summary reconciled to per-question flags; no extra credit for that metadata correction.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-T008, NUR868-T009, NUR868-T010, NUR868-T027, NUR868-T028, NUR868-T029. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
