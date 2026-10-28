@@ -379,3 +379,7 @@ Reviewed 11 records: NUR868-S2-T205, NUR868-S2-T206, NUR868-S2-T208, NUR868-S2-T
 ## 25-question manual review — Mapleson and unresolved monitoring questions (October 28, 2026)
 
 Reviewed B241–B245, B283, B286–B293, M213, M217, R253, M224, T214, T245–T247, T251, T252 and T255. Five revised Mapleson questions (B241–B245) independently verified against Ehrenwerth Ch. 4, Fig. 4.15, pp. 114–120. Original IDs, answer indices and image payloads retained. Remaining 20 still need independent source/figure verification; no verification credit assigned. Count 705/1000; 295 unresolved.
+
+## Manual 25-question review — circle systems and temperature (October 28, 2026)
+
+Reviewed B283, B286–B293, M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276 and T284. Seven newly verified: B286, B287, B288, B290, B291, B292, B293 against Ehrenwerth Chapter 4 printed pp. 103–114. Converted unsupported numbered-diagram mappings into standalone questions, preserving original answer indices and image data. The other 18 remain unresolved; especially B289's PEEP premise needs care because tightening an APL valve is not a generally reliable PEEP method. Total verified: 712/1000; unresolved: 288.
