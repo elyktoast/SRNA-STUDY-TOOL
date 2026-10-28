@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **684 complete answers with explicit structured passage and answer verification; 316 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The inventory records **685 complete answers with explicit structured passage and answer verification; 315 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -358,3 +358,8 @@ All 3 records preserve ID, order, type, difficulty, answer indices, and image fi
 ## October 28 follow-up — airway humidification precision (3 verified)
 
 Inspected *Anesthesia Equipment*, 3rd ed., Chapter 7, printed pp. 185–187 and verified three complete answer sets. **S2-B254** now asks about squamous airway lining without asserting uniform laryngeal histology (p. 185). **S2-M204** distinguishes underhumidification effects (thick secretions, distal ISB movement, reduced compliance) from overhumidification effects (pp. 185–186). **S2-B312** verifies reduced membrane-based hydrophobic HME efficiency with large tidal volumes (p. 187). The three correct-answer indices and all protected question fields remain unchanged. Verification increased from 681 to 684; 316 remain unresolved. Full GitHub Actions regression for this commit must be checked separately.
+
+
+## Manual verification — shivering answer set (October 28, 2026)
+
+- **NUR868-S2-M226:** Replaced the unsupported increased-intracranial-pressure answer choice with increased metabolic heat production. The revised stem, two correct options (indices 0 and 2), distractors and explanation were checked against *Anesthesia Equipment*, 3rd ed., Chapter 13, printed pp. 288 and 291. Page 288 explicitly describes shivering increasing metabolic heat production by 50–100%; the oxygen-demand effect is addressed on p. 291. The answer indices, ID, question order and image fields were preserved. One additional complete answer set is verified.
