@@ -3886,18 +3886,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Ventilators",
-      "stem": "For a 3-year-old on pressure control, which PIP (peak inspiratory pressure) limit fits the pediatric table?",
+      "stem": "Why may pressure-controlled ventilation be useful when managing a neonate at risk of barotrauma?",
       "options": [
-        "Above 30 cmH2O",
-        "40–45 cmH2O",
-        "35–40 cmH2O",
-        "Under 28 cmH2O"
+        "It allows airway pressure to be limited",
+        "It guarantees a fixed tidal volume despite changing compliance",
+        "It eliminates the need for monitoring ventilation",
+        "It always requires higher peak airway pressures than volume control"
       ],
       "answer": [
-        3
+        0
       ],
-      "explanation": "Pediatric PIP <28.",
-      "citation": "Course lecture, Anesthesia Ventilators: slide 65",
+      "explanation": "Pressure-controlled ventilation permits an inspiratory pressure limit, although delivered tidal volume can change with respiratory mechanics. Ehrenwerth discusses low-pressure approaches and prevention of barotrauma in neonates.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6, p. 170",
       "image": null
     },
     {
@@ -3906,18 +3906,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Ventilators",
-      "stem": "The pediatric table's initial FiO2 recommendation is:",
+      "stem": "What safety feature is important when pressure-support ventilation is used during general anesthesia in children?",
       "options": [
-        "21% from the start to avoid toxicity",
-        "30%, then increase",
-        "50% and never higher",
-        "100%, then quickly trend down"
+        "Disable the apnea alarm",
+        "Provide an apnea alarm and backup ventilation mode",
+        "Rely on pressure support to deliver breaths during complete apnea without backup",
+        "Avoid monitoring spontaneous respiratory effort"
       ],
       "answer": [
-        3
+        1
       ],
-      "explanation": "FiO2 (fraction of inspired oxygen) 100% (quickly trend down).",
-      "citation": "Course lecture, Anesthesia Ventilators: slide 65",
+      "explanation": "Pressure-support ventilation can assist spontaneous breathing in adults and children during general anesthesia. Because respiratory effort may diminish unexpectedly, an apnea alarm and backup ventilation mode are important safeguards.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6, p. 168",
       "image": null
     },
     {
