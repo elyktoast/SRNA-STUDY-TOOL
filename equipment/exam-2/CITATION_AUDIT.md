@@ -66,3 +66,7 @@ Reviewed and rewrote 50 ventilator explanations covering cycling, timing, trigge
 ## Tenth 50-question batch — N103–N153
 
 Rewrote 50 ventilator explanations in original array order, retaining all stems, answer options, keys, and images. Added Chapter 6 textbook references clearly labeled as chapter-aligned and not individually page-verified. Twenty-seven questions are flagged for figure/mode/device/clinical-parameter source review in the verification inventory. No claims of complete answer verification are made for this batch.
+
+## Eleventh 50-question batch — supplemental circuits B201–B255
+
+Reviewed the first 50 records in `questions-set2-1.json`, preserving ID gaps. Rewrote explanations about circuit classifications, CO₂ elimination, one-way valves, Mapleson arrangements and humidification. Aligned reading references to *Anesthesia Equipment*, 3rd ed., Chapters 4 and 7, but **did not verify individual page passages**. Thirteen records remain flagged for precise numerical, anatomical or numbered-figure review (especially B206, B211, B236, B241–B245 and B249). Original answers, options, stems, image data and learner progress were preserved; clinical discrepancies were noted rather than silently correcting source-dependent answers.
