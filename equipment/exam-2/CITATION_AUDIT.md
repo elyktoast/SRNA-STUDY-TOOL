@@ -395,3 +395,7 @@ Reviewed 25 pending supplemental items: M213, M217, R253, M224, T214, T245–T24
 ## Manual 25-record pass — waveform and temperature questions (October 28, 2026)
 
 Examined 18 outstanding supplemental questions: M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N219 and N286, alongside seven previously verified records checked for continuity. One newly verified: M217, corrected to distinguish expiratory leak and intrinsic PEEP on volume-time curves (Ehrenwerth Ch. 9 pp. 230–232, Fig. 9.13). Seventeen remaining unresolved; no credit assigned without direct evidence. Earlier unreported commits on branch increased verified count from 715 to 717 before this pass; current total 718, unresolved 282. No original questions.json edits in this pass.
+
+## Manual follow-up review — supplemental unresolved items (October 28, 2026)
+
+Checked 17 remaining unverified supplemental questions: M213, R253, M224, T214, T245, T246, T247, T251, T252, T255, T268, T269, T274, T276, T284, N219, and N286. One revised complete answer independently verified: N286, adult end-tidal CO2 reference, Ehrenwerth Chapter 10 pp. 243–244. Sixteen remain unresolved because exact source support, image mapping, or comparative treatment/numerical claims were not established. Count 719/1000; 281 unresolved. Original questions.json bank could not be fully retrieved during this pass; do not claim a 25-question batch was completed.
