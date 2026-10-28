@@ -949,18 +949,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "A patient on haloperidol for 3 days develops lead-pipe rigidity, fever, and labile BP (blood pressure). Which treatment is listed?",
+      "stem": "A patient receiving haloperidol develops fever, marked muscle rigidity, and autonomic instability. Which adverse reaction should be suspected?",
       "options": [
-        "Restart haloperidol at a lower dose",
-        "Methylene blue and cooling blankets",
-        "Stop the drug, supportive care, and dantrolene",
-        "Benzodiazepines and cyproheptadine, no dantrolene"
+        "Uncomplicated extrapyramidal tremor",
+        "Serotonin withdrawal syndrome",
+        "Neuroleptic malignant syndrome",
+        "Acute opioid withdrawal"
       ],
       "answer": [
         2
       ],
-      "explanation": "This is NMS (neuroleptic malignant syndrome); dantrolene 2–3 mg/kg/day (up to 10) plus supportive care.",
-      "citation": "Wolpaw, Temperature Regulation: slide 33",
+      "explanation": "Haloperidol is a first-generation antipsychotic and dopamine receptor antagonist. Nagelhout identifies neuroleptic malignant syndrome as a potentially serious adverse effect of first-generation antipsychotic medications.",
+      "citation": "Elisha, Heiner, & Nagelhout (2023), Nurse Anesthesia, 7th ed., Ch. 14, p. 215",
       "image": null
     },
     {
@@ -969,18 +969,18 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "A Parkinson's patient's levodopa is held for 2 days before surgery. Fever, rigidity, and confusion develop. What is the likely diagnosis and first step?",
+      "stem": "Which statement about dantrolene is supported when differentiating malignant hyperthermia from neuroleptic malignant syndrome?",
       "options": [
-        "Serotonin syndrome; give benzos",
-        "MH; give dantrolene 2.5 mg/kg",
-        "Sepsis; start antibiotics only",
-        "NMS (neuroleptic malignant syndrome); restart the dopaminergic drug"
+        "Dantrolene is ineffective in malignant hyperthermia",
+        "Dantrolene works by blocking nicotinic receptors at the neuromuscular junction",
+        "Dantrolene should always be combined with calcium channel blockers",
+        "Dantrolene treats malignant hyperthermia and may also be effective in neuroleptic malignant syndrome"
       ],
       "answer": [
         3
       ],
-      "explanation": "Stopping a dopamine agonist can cause NMS; restarting it is part of treatment.",
-      "citation": "Wolpaw, Temperature Regulation: slide 33",
+      "explanation": "Dantrolene reduces calcium release through the skeletal muscle ryanodine receptor and is the specific drug treatment for malignant hyperthermia. Nagelhout also notes that dantrolene may be efficacious in neuroleptic malignant syndrome.",
+      "citation": "Elisha, Heiner, & Nagelhout (2023), Nurse Anesthesia, 7th ed., Ch. 36, p. 843",
       "image": null
     },
     {
