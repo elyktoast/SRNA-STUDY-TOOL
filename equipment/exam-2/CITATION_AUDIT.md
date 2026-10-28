@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records 241 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, 44 from Batch 15, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Fifteen rewrite batches cover 750 explanations; 250 remain unreviewed by those batches. **750 rewritten does not mean 750 textbook-verified.**
+The inventory records 274 independently verified answers out of 1,000: 25 from the Batch 9 passage review, 45 from Batch 14, 44 from Batch 15, 33 from Batch 16, and 127 recorded by earlier reviews. Earlier verified records have not been re-audited in this session. Sixteen rewrite batches cover 800 explanations; 200 remain unreviewed by those batches. **800 rewritten does not mean 800 textbook-verified.**
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -121,7 +121,7 @@ Validation: Batch 9 local quality, content-integrity, revision/history, integrat
 
 ## Fifteenth 50-question batch — S2-R266–S2-M225 (actual array order)
 
-Reviewed the next 44 respiratory-monitoring and six temperature records in `questions-set2-1.json`, preserving ID gaps and original order. **44 complete answers verified; six unresolved/conditional.** All 50 explanations rewritten and linked to actual inspected printed passages. Coverage is 750/1,000 rewritten, 250 untouched, and 241 independently verified answers across the inventory. Earlier verification records were not re-audited in this batch.
+Reviewed the next 44 respiratory-monitoring and six temperature records in `questions-set2-1.json`, preserving ID gaps and original order. **44 complete answers verified; six unresolved/conditional.** All 50 explanations rewritten and linked to actual inspected printed passages. Coverage is 750/1,000 rewritten, 250 untouched, and 274 independently verified answers across the inventory. Earlier verification records were not re-audited in this batch.
 
 Sources inspected: *Anesthesia Equipment: Principles and Applications*, 3rd ed., Ch. 6 p. 166; Ch. 8 pp. 211, 213; Ch. 9 pp. 230–231; Ch. 10 pp. 239, 242, 245, 247–249; Ch. 11 pp. 253, 255–260, 265–266; Ch. 13 pp. 289–295, 299. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 14 pp. 213–214, Ch. 16 p. 277 and Ch. 29 p. 629. Printed-page headers were checked. Visually inspected Equipment p. 253's saturation/content equations and p. 299's temperature-site classification. Independently recomputed fractional saturation (87%), functional saturation (96.7%), CaO₂ (19.98 mL/dL), and the dissolved-oxygen increment (0.3 mL/dL).
 
@@ -138,3 +138,21 @@ Unresolved records:
 Additional qualifications: R295 reflects the text's conflicting HbS accuracy literature, not a universal error direction. R296 describes historical ECG synchronization, which the text says was abandoned in later models. R297's up-to-eight-point decrease is a particular volunteer-study result, not a universal dependent-limb effect. Temperature-site classification in M222 is explicitly that of Equipment Fig. 13.20.
 
 IDs, stems, answer choices, answer keys, image bytes, difficulty, ordering, revision mappings and learner-storage code were preserved. No keys silently corrected. Per-question sourceReview distinguishes rewrite, chapter identification, passage inspection and independent full-answer verification. Batch validation is reported after commit; no blanket assertion that all 750 answers are verified.
+
+## Sixteenth 50-question batch — S2-M226 and S2-T201–T253 (ID gaps preserved)
+
+Individually reviewed all 50 records in actual `questions-set2-2.json` order. **33 complete answers verified, 17 unresolved.** All explanations rewritten; 14 image-bearing questions inspected across six supplied figure families. Rewrite coverage is 800/1,000, with 200 untouched. Answer-verification count is 274/1,000.
+
+Read actual *Anesthesia Equipment*, 3rd ed., Ch. 13 printed pp. 287–295 and 299. Cross-checked *Nurse Anesthesia*, 7th ed., Ch. 7 p. 81 (MAC), Ch. 12 p. 171 (hypothermia/NMBA duration), and Ch. 14 pp. 213–215 (serotonergic agents and antipsychotic-associated syndromes). Visually checked Equipment Fig. 13.1's gain/threshold definition against T213. Printed page headers and figure locations were checked; chapter-only references without pages were retained wherever exact supporting passages were not located.
+
+Key source/image issues:
+- **T214 key/figure conflict:** supplied feature 3 is the T wave. No clearly numbered J wave appears. Record requires a corrected/annotated image and a specific ECG source before any rekeying; current key retained.
+- T205–T206, T208–T209: the core/intermediate site classification and bleeding risk are supported, but the schematic lacks an anatomical legend. A generic head/heart/pelvic dot cannot independently verify all requested anatomical number mappings. T204's visibly drawn distal esophageal probe and T207's skin-surface marker were separately checked.
+- T202: the textbook permits either active vasoconstriction or a passive thermal steady state for the plateau, so the graph does not prove one exclusive mechanism.
+- T213: gain depends on slope magnitude; “raises the slope” is ambiguous for the downward-sloping line.
+- M226, T224, T227, T238, T242: second-answer ICP claim, specific suppression of infant NST, a 1.5°C/hour rate, normal-coagulation-test temperature conditions, and an absolute 500-mL liver-resection effect remain unsupported by inspected passages.
+- T245–T247: no exact passage for cold diuresis, generalized hypoglycemia, or J-wave timing was located. They retain explicitly unverified chapter reading references without guessed pages.
+- T251–T252: exact treatment bundles and dopaminergic-withdrawal diagnosis/restart claims require specific passages; generic syndrome mentions are not treatment verification.
+- T215 has a malformed attribution in the preserved stem. Explanation confines the approximately threefold infection association to the study population.
+
+No IDs, stems, choices, keys, images, order, difficulty, learner-storage code or revision mappings changed. Local integration, quality, and preservation checks are run before publishing; full Actions results are reported after each batch.
