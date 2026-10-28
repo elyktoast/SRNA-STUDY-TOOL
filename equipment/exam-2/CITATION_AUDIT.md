@@ -7,7 +7,8 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The authoritative per-question flags record **747 independently verified answers and 253 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+The authoritative per-question flags record **765 independently verified answers and 235 unresolved**. All1,000 explanations have been rewritten. Chapter alignment, passage inspection, complete-answer verification and unresolved status remain distinct. Earlier milestone totals below are historical.
+
 
 
 
@@ -421,3 +422,13 @@ Sources inspected: Anesthesia Equipment3e Ch13 pp290–292; Nurse Anesthesia7e C
 Corrections and issues: T059 removes instructor ranking and tests supported catecholamine effects; T060 asks about the explicit source list rather than declaring no thrombosis risk; T076 removes unverified2% incidence; T081 corrects6h to minutes–24h with original answer index retained. ECGT068 remains a T-wave/J-wave mismatch. Fifteen unsupported numerical, laboratory, ECG or comparative-treatment claims remain flagged.
 
 All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: NUR868-T048, NUR868-T049, NUR868-T050, NUR868-T051, NUR868-T068. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
+
+## Work-session batch of25 — 3 (October28,2026)
+
+Reviewed25 previously unresolved records: NUR868-T087, NUR868-T088, NUR868-T091, NUR868-T094, NUR868-T095, NUR868-T096, NUR868-T099, NUR868-T100, NUR868-T104, NUR868-T105, NUR868-T109, NUR868-T110, NUR868-T111, NUR868-B084, NUR868-B085, NUR868-B086, NUR868-B087, NUR868-R022, NUR868-R023, NUR868-R033, NUR868-R034, NUR868-R035, NUR868-R037, NUR868-R038, NUR868-R039. **18 newly verified; 7 unresolved in this batch. Total765/1000 verified; 235 unresolved.**
+
+Sources inspected: Anesthesia Equipment3e Ch13 pp292–295,299; Ch19 pp435–436; Ch8 pp205,211,213; Ch10 pp244,248; Ch9 pp224–225,230–232. Every listed option checked against these passages.
+
+Corrections and issues: Removed unsupported warming superlatives, restricted underbody-mattress claim to its device context, removed high-IJ equivalence, and clarified brain-lag and colorimetric premises. Seven exact timing/temperature/rewarming/fever claims remain flagged; correct answer indices retained. No images in this batch.
+
+All stems, every option, keys and explanations were reviewed. No verification credit for rewrites alone. Images inspected: none in this selection. IDs, ordering, existing image payloads and learner-progress code preserved. Any stem/choice/key edits are documented above. Local quality, integration and preservation checks precede publication; Actions status reported separately.
