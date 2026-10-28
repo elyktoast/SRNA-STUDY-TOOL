@@ -7,7 +7,7 @@ Coverage: 1,000 question citation fields (500 original + 500 supplemental). Upda
 - Elisha, S., Heiner, J. S., & Nagelhout, J. J. (Eds.). (2023). *Nurse Anesthesia* (7th ed.). Elsevier. Chapter 16 (Anesthesia Equipment) and Chapter 18 (Clinical Monitoring II: Respiratory and Metabolic Systems), where applicable.
 
 ## Citation precision and limitations
-The inventory records **670 complete answers with explicit structured passage and answer verification; 330 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
+The inventory records **681 complete answers with explicit structured passage and answer verification; 319 remain unresolved**. All 127 legacy verification labels were individually reconciled: 126 confirmed and T084 downgraded for incomplete comparative support. Twenty rewrite batches cover all 1,000 explanations. Rewrite coverage remains distinct from complete textbook verification.
 
 Original chapter-only citations were reading references. Subsequent reviews added inspected pages where support was found. A page can support a principle while the exact number, full answer set, or stem premise remains unresolved. Per-question verification and evidence notes in `source-verification-inventory.json` are authoritative.
 
@@ -342,3 +342,14 @@ Individually checked and revised 32 previously unverified complete answer sets: 
 ## Oxygen balance, oximetry, capnography and historical adoption — eight verified corrections (October 28, 2026)
 
 Inspected the uploaded *Anesthesia Equipment*, 3rd ed., Ch. 19 printed pp. 448–449 (oxygen loss in nonclosed low-flow circuits); Ch. 11 printed pp. 253, 254–255, 258–260 (functional versus fractional saturation, pulse oximetry adoption, dyes, hypothermia and low perfusion); and Ch. 10 printed pp. 247–249 (capnography during CPR and transport, and perfusion-related low end-tidal CO₂). Verified complete revised question and answer sets for NUR868-S2-B276, NUR868-S2-B315, NUR868-S2-M214, NUR868-S2-M215, NUR868-S2-M216, NUR868-S2-M218, NUR868-S2-R274, NUR868-S2-R301. Replaced ambiguous pulmonary-hypotension distractors with explicit hypovolemia/tamponade physiology, corrected unsupported 1986 adoption causation, and clarified oxygen losses and saturation denominators. **No answer-key indices changed; no images, IDs, ordering, type, difficulty or learner-history code changed.** All eight inventory records now contain printed-page evidence and explicit complete-answer verification. **678/1,000 verified; 322 unresolved.** GitHub Actions validation remains necessary.
+
+
+## October 28 follow-up — anesthetic-depth and turbulent-flow precision (3 verified)
+
+Three complete answer sets were inspected against actual printed pages of *Anesthesia Equipment*, 3rd ed., and their stems, options, explanations, citations, and structured verification records were updated. Verified count advanced from 678 to 681 of 1,000; 319 remain unresolved.
+
+- **S2-M210:** Chapter 19, printed p. 435 directly identifies pupillary responses, heart rate, blood pressure, and processed EEG as integrated depth-assessment findings. Correct three-option key retained; corrected prior incorrect Chapter 4 attribution.
+- **S2-M219:** Chapter 9, printed pp. 224–225 describes velocity-dependent transition to turbulent flow and the contribution of obstructions and kinks. Correct three-option key retained; corrected prior incorrect Chapter 8 attribution.
+- **S2-B278:** Chapter 19, printed pp. 435–437 supports reducing fresh-gas flow to limit anesthetic waste, with vaporizer adjustments guided by inspired/end-tidal monitoring. Replaced protocol-dependent wash-in wording with a clinically conditional stem; key index retained.
+
+All 3 records preserve ID, order, type, difficulty, answer indices, and image fields. No learner-progress files were edited. The preexisting 678 verified records were not reclassified. Full GitHub Actions regression for this commit must be checked separately.
