@@ -383,3 +383,7 @@ Reviewed B241–B245, B283, B286–B293, M213, M217, R253, M224, T214, T245–T2
 ## Manual 25-question review — circle systems and temperature (October 28, 2026)
 
 Reviewed B283, B286–B293, M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276 and T284. Seven newly verified: B286, B287, B288, B290, B291, B292, B293 against Ehrenwerth Chapter 4 printed pp. 103–114. Converted unsupported numbered-diagram mappings into standalone questions, preserving original answer indices and image data. The other 18 remain unresolved; especially B289's PEEP premise needs care because tightening an APL valve is not a generally reliable PEEP method. Total verified: 712/1000; unresolved: 288.
+
+## Manual review — volatile wash-in, APL, vigilance and outstanding cases (October 28, 2026)
+
+Reviewed 23 unresolved questions from the supplemental banks (B283, B289, M213, M217, R253, M224, T214, T245–T247, T251, T252, T255, T268, T269, T274, T276, T284, N207, N219, N235, N286, V255), and rechecked previously verified B286 and B287 for consistency (25 records examined). Three newly independently verified and corrected: B283 (Ehrenwerth Ch. 19 pp. 433–437), B289 (Ch. 4 pp. 121–122; clarified APL does not guarantee precise PEEP), V255 (Ch. 17 pp. 373–379). Other 20 unresolved records remain flagged for specific evidence or image review. Total 715/1000 verified, 285 unresolved.
