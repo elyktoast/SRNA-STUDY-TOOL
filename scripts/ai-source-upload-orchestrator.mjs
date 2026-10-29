@@ -24,6 +24,7 @@ export async function submitSourceTextbook({
      created.upload.fileBytes!==file.size||created.upload.status!=='pending')
    throw new Error('invalid initiated upload');
   uploadId=created.upload.uploadId;
+  if(signal?.aborted)throw new Error('upload canceled');
   const started=await request('/source/uploads/start',{uploadId});
   if(started?.status!=='uploading')throw new Error('upload session could not start');
  }
