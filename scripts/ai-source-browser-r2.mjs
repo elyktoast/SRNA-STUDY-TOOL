@@ -3,7 +3,7 @@
 import {R2_PART_BYTES,R2_UPLOAD_CONCURRENCY} from './ai-source-r2-upload-config.mjs';
 function validR2Etag(value){
  return typeof value==='string'&&value.length<=258&&
-  !value.includes('\\r')&&!value.includes('\\n')&&
+  !value.includes('\r')&&!value.includes('\n')&&
   (value.startsWith('"')===value.endsWith('"'))&&
   value.replace(/^"|"$/g,'').length>=1;
 }
