@@ -30,3 +30,9 @@ Status: **draft; not deployed**. Test in isolated Supabase project before produc
 
 ## Release gate
 Do not enable production upload UI until all security and large-file tests pass, the bucket exists, and runtime preflight confirms project limits. Do not merge without explicit user approval.
+
+## Known integration blockers (must resolve before applying 007)
+- The current runtime preflight deliberately denies `USAGE` on schema `private` to `authenticated`. The draft Storage policy calls a helper function in that schema. Confirm whether the Storage policy evaluator can resolve that function without schema usage; if not, move the narrowly granted helper to an appropriate non-exposed callable schema after a security review. **Do not weaken the existing private-schema preflight simply to make uploads work.**
+- `scripts/ai-source-start-server.mjs` currently starts the legacy 40 MiB path only. New upload routes and their database/storage adapters are not yet wired into that runtime.
+- No `ai-textbook-sources` bucket was found in the connected project on 2026-10-29. The project's global object size ceiling has not been established.
+- A successful mock TUS test does not prove Storage TUS PATCH behavior, RLS correctness, or 330 MiB compatibility.
