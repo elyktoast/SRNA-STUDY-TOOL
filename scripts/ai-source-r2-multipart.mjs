@@ -7,7 +7,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ETAG=/^"?[^"\r\n]{1,256}"?$/;
 export function createR2MultipartController({client,commands,presign}){
  if(typeof client?.send!=='function'||typeof presign!=='function'||
-    !['CreateMultipartUploadCommand','UploadPartCommand','CompleteMultipartUploadCommand','AbortMultipartUploadCommand']
+    !['CreateMultipartUploadCommand','UploadPartCommand','CompleteMultipartUploadCommand','AbortMultipartUploadCommand','ListPartsCommand']
       .every(name=>typeof commands?.[name]==='function'))
   throw new TypeError('trusted R2 multipart dependencies required');
  const check=(intent)=>{
@@ -37,6 +37,36 @@ export function createR2MultipartController({client,commands,presign}){
    }),{expiresIn:300});
    if(typeof url!=='string'||!url.startsWith('https://'))throw new Error('R2 part signature unavailable');
    return {url,partNumber,partBytes:R2_PART_BYTES};
+  },
+  async listParts(intent,{multipartId}){
+   check(intent);
+   if(typeof multipartId!=='string'||!multipartId||multipartId.length>512)
+    throw new Error('invalid R2 multipart session');
+   const count=Math.ceil(Number(intent.file_bytes)/R2_PART_BYTES);
+   const parts=[];
+   let marker;
+   do{
+    const result=await client.send(new commands.ListPartsCommand({
+     Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path,UploadId:multipartId,
+     ...(marker?{PartNumberMarker:marker}:{})
+    }));
+    for(const part of result.Parts??[]){
+     const number=part.PartNumber;
+     const expected=number===count?Number(intent.file_bytes)-(count-1)*R2_PART_BYTES:R2_PART_BYTES;
+     if(!Number.isInteger(number)||number<1||number>count||
+        typeof part.ETag!=='string'||!ETAG.test(part.ETag)||
+        Number(part.Size)!==expected)
+      throw new Error('invalid R2 uploaded part metadata');
+     parts.push({PartNumber:number,ETag:part.ETag});
+    }
+    if(!result.IsTruncated)break;
+    marker=result.NextPartNumberMarker;
+    if(!Number.isInteger(marker)||marker<1||parts.length>count)
+     throw new Error('invalid R2 part pagination');
+   }while(true);
+   if(new Set(parts.map(part=>part.PartNumber)).size!==parts.length)
+    throw new Error('duplicate R2 uploaded part');
+   return {parts:parts.sort((a,b)=>a.PartNumber-b.PartNumber)};
   },
   async complete(intent,{multipartId,parts}){
    check(intent);
