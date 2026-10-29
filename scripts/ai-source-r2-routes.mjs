@@ -45,7 +45,16 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
    }
    if(path==='/source/uploads/r2/complete'){
     if(current.r2_completed_at)return {status:200,body:{completed:true}};
-    const completed=await controller.complete(intent,{multipartId:body.multipartId,parts:body.parts});
+    let completed;
+    try{
+     completed=await controller.complete(intent,{multipartId:body.multipartId,parts:body.parts});
+    }catch(error){
+     // A completed multipart upload no longer has a ListParts inventory.
+     // Reconcile only when the exact private object exists with expected metadata.
+     if(typeof controller.inspectCompleted!=='function')throw error;
+     try{completed=await controller.inspectCompleted(intent)}
+     catch{throw error}
+    }
     const marked=await markComplete({uploadId:body.uploadId,actorId,multipartId:body.multipartId});
     if(!marked){
      const latest=await getSession({uploadId:body.uploadId,actorId});
