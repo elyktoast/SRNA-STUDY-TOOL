@@ -26,7 +26,7 @@ export async function createResumableSourceIntent({
   throw new Error('invalid upload timestamp');
  const intent={
   id,actorId,title:title.trim(),fileBytes,mimeType,
-  bucket:'ai-textbook-sources',
+  bucket:'srna-private-textbooks',
   storagePath:'documents/'+id+'.pdf',
   status:'pending',createdAt:created.toISOString()
  };
