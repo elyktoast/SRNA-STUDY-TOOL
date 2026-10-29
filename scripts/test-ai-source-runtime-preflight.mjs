@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {verifySourceRuntimeResources} from './ai-source-runtime-preflight.mjs';
-const db={query:async()=>({rows:[{table_name:'ai_source_documents'},{table_name:'ai_source_chunks'}]})};
+const db={query:async()=>({rows:[{table_name:'ai_source_documents'},{table_name:'ai_source_sections'},{table_name:'ai_source_chunks'},{table_name:'ai_source_processing_jobs'}]})};
 test('accepts existing private schema and private bucket',async()=>{
  assert.equal(await verifySourceRuntimeResources({db,supabase:{storage:{getBucket:async()=>({data:{public:false},error:null})}}}),true);
 });
