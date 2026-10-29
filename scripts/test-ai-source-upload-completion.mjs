@@ -47,3 +47,14 @@ test('rejects malformed Storage object size before reading',async()=>{
  await assert.rejects(verifyCompletedTextbook(f.options),/size mismatch/);
  assert.deepEqual(f.calls,['failed']);
 });
+
+test('rejects oversized stream chunks before hashing',async()=>{
+ const f=setup({readObject:async function*(){yield new Uint8Array(6291457)}});
+ await assert.rejects(verifyCompletedTextbook(f.options),/invalid upload stream chunk size/);
+ assert.deepEqual(f.calls,['failed']);
+});
+test('rejects empty stream chunks',async()=>{
+ const f=setup({readObject:async function*(){yield new Uint8Array(0)}});
+ await assert.rejects(verifyCompletedTextbook(f.options),/invalid upload stream chunk size/);
+ assert.deepEqual(f.calls,['failed']);
+});
