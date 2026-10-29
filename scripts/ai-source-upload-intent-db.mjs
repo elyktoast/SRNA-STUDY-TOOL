@@ -47,3 +47,51 @@ export function createSourceUploadIntentDb(db){
   }
  };
 }
+
+// Transactional finalization: creates one document and links it to the claimed intent.
+// Caller must have verified the private object's size, PDF signature and SHA-256.
+export function createSourceUploadFinalizer(db){
+ if(typeof db?.connect!=='function') throw new TypeError('transaction-capable database required');
+ return async function completeVerifiedIntent({uploadId,actorId,intent,sha256,fileBytes,mimeType}){
+  if(typeof uploadId!=='string'||!/^[0-9a-f-]{36}$/i.test(uploadId)||
+     typeof actorId!=='string'||!actorId.trim()) throw new Error('invalid upload identity');
+  if(typeof sha256!=='string'||!/^[a-f0-9]{64}$/.test(sha256)||
+     mimeType!=='application/pdf'||!Number.isSafeInteger(fileBytes)||fileBytes<8||
+     fileBytes>524288000) throw new Error('invalid verified source metadata');
+  const client=await db.connect();
+  try{
+   await client.query('BEGIN');
+   const row=await client.query(
+    `select id,title,file_bytes,mime_type,storage_bucket,storage_path,status,document_id
+       from private.ai_source_upload_intents
+      where id=$1 and actor_id=$2 for update`,[uploadId,actorId]);
+   const current=row.rows?.[0];
+   if(!current||current.status!=='verifying'||current.document_id||
+      current.storage_bucket!=='ai-textbook-sources'||
+      current.storage_path!==`documents/${uploadId}.pdf`||
+      Number(current.file_bytes)!==fileBytes||current.mime_type!==mimeType||
+      intent?.storage_path!==current.storage_path)
+    throw new Error('upload not eligible for finalization');
+   const inserted=await client.query(
+    `insert into private.ai_source_documents
+      (title,source_kind,storage_bucket,storage_path,sha256,mime_type,file_bytes)
+     values ($1,'textbook',$2,$3,$4,$5,$6) returning id,processing_status`,
+    [current.title,current.storage_bucket,current.storage_path,sha256,mimeType,fileBytes]);
+   if(inserted.rows?.length!==1) throw new Error('document insert failed');
+   const document=inserted.rows[0];
+   const updated=await client.query(
+    `update private.ai_source_upload_intents
+        set status='completed',document_id=$3,updated_at=now()
+      where id=$1 and actor_id=$2 and status='verifying' and document_id is null
+      returning id`,[uploadId,actorId,document.id]);
+   if(updated.rowCount!==1) throw new Error('upload finalization conflict');
+   await client.query('COMMIT');
+   return document;
+  }catch(error){
+   try{await client.query('ROLLBACK')}catch(rollbackError){
+    throw new AggregateError([error,rollbackError],'upload finalization rollback failed');
+   }
+   throw error;
+  }finally{client.release?.()}
+ };
+}
