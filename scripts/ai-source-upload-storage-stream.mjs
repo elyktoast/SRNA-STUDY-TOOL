@@ -19,7 +19,8 @@ export function createSourceUploadStorageStream({supabase,storageOrigin,fetchImp
   const {data,error}=await supabase.storage.from(bucket).createSignedUrl(path,60);
   if(error||typeof data?.signedUrl!=='string')throw new Error('private source URL unavailable');
   const signed=new URL(data.signedUrl,origin);
-  if(signed.protocol!=='https:'||signed.origin!==origin.origin||
+  if(signed.protocol!=='https:'||signed.origin!==origin.origin||signed.username||signed.password||signed.hash||
+     !signed.searchParams.get('token')||
      signed.pathname!==('/storage/v1/object/sign/'+bucket+'/'+path))
    throw new Error('untrusted private source URL');
   const response=await fetchImpl(signed.href,{redirect:'error',headers:{'accept-encoding':'identity'}});
