@@ -29,7 +29,7 @@ test('claims verification only from uploadable state, for owner, before expiry',
  let sql,params;
  const adapter=createSourceUploadIntentDb({query:async(s,p)=>{sql=s;params=p;return {rows:[{id}]}}});
  assert.deepEqual(await adapter.claimVerification({uploadId:id,actorId:'actor'}),{id});
- assert.match(sql,/status in \('pending','uploading'\)/);
+ assert.ok(sql.includes("status='uploading'"));
  assert.match(sql,/actor_id=\$2/);
  assert.match(sql,/expires_at>now\(\)/);
  assert.deepEqual(params,[id,'actor']);
