@@ -19,9 +19,15 @@
     "review:all": "node scripts/all-course-question-quality.mjs",
     "review:all:write": "node scripts/all-course-question-quality.mjs --write",
     "test:quality-report": "node scripts/test-all-course-question-quality.mjs",
-    "test:ai-source": "node --test scripts/test-ai-source-*.mjs"
+    "test:ai-source": "node --test scripts/test-ai-source-*.mjs",
+    "start:ai-source": "node scripts/ai-source-start-server.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "pdfjs-dist": "^5.4.0",
+    "pg": "^8.16.0"
   }
 }
