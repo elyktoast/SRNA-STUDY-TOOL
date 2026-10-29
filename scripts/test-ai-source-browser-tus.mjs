@@ -87,3 +87,12 @@ test('resumable fingerprint is isolated per user and intent',async()=>{
  assert.match(fingerprint,/11111111-1111-4111-8111-111111111111/);
  assert.match(fingerprint,/01234567-89ab-4def-8abc-0123456789ab/);
 });
+
+test('rejects invalid progress callback before constructing transport',async()=>{
+ const m=mock();
+ await assert.rejects(uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  userId:'11111111-1111-4111-8111-111111111111',tus:m.tus,progress:'invalid'
+ }),/progress callback required/);
+ assert.equal(m.options,undefined);
+});
