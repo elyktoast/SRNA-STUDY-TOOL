@@ -8,6 +8,8 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
   ['private',required]);
  const found=new Set((result.rows??[]).map(row=>row.table_name));
  for(const name of required) if(!found.has(name)) throw new Error('missing private source schema');
+ const rls=await db.query("select relname,relrowsecurity from pg_class where relnamespace='private'::regnamespace and relname=any($1::text[])",[required]);
+ if((rls.rows??[]).filter(row=>row.relrowsecurity===true).length!==required.length) throw new Error('source table RLS disabled');
  const admin=await db.query("select to_regclass('private.snar_admins') as relation");
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
