@@ -26,6 +26,15 @@ export function createSourceUploadIntentDb(db){
     [uploadId,actorId]);
    return result.rows?.[0]??null;
   },
+  async markUploading({uploadId,actorId}){
+   const result=await db.query(
+    `update private.ai_source_upload_intents
+        set status='uploading',updated_at=now()
+      where id=$1 and actor_id=$2 and status='pending' and expires_at>now()
+      returning id`,
+    [uploadId,actorId]);
+   return result.rowCount===1;
+  },
   async claimVerification({uploadId,actorId}){
    const result=await db.query(
     `update private.ai_source_upload_intents
