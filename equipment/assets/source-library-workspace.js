@@ -78,7 +78,7 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
  host.querySelector('.sl-add').addEventListener('click',()=>{
   if(uploadPanel){uploadPanel.destroy();uploadPanel=null;uploadHost.hidden=true;return}
   uploadHost.hidden=false;
-  uploadPanel=mountSourceLibrary(uploadHost,{getAccessToken,apiBase});
+  uploadPanel=mountSourceLibrary(uploadHost,{getAccessToken,apiBase,onChanged:()=>{void refresh()}});
  });
  void refresh();
  return {refresh,destroy(){revision++;detailRevision++;uploadPanel?.destroy();host.remove()}};
