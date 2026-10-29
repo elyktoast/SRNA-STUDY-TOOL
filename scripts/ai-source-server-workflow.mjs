@@ -1,3 +1,4 @@
+import {createSourceStorageKey} from './ai-source-storage-key.mjs';
 import {uploadAdminSource} from './ai-source-upload-service.mjs';
 import {createPrivateUploadAdapter} from './ai-source-private-upload-adapter.mjs';
 import {createSourceDocumentRecord} from './ai-source-document-record.mjs';
@@ -14,7 +15,7 @@ export function createSourceServerWorkflow({db,supabase,authorizeAdmin,getDocume
  const reader=createPrivateSourceReader({supabase});
  const indexing=createSourceDbAdapter(db);
  return {
-  upload:args=>uploadAdminSource({...args,authorizeAdmin,...storage,createRecord}),
+  upload:args=>uploadAdminSource({...args,storagePath:createSourceStorageKey(),authorizeAdmin,...storage,createRecord}),
   process:args=>processAdminPdf({...args,authorizeAdmin,getDocument,ocrPage,
    readPrivatePdf:id=>reader(id,lookup),...indexing})
  };
