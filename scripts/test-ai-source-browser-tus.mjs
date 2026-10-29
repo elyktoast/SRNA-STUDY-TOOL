@@ -118,3 +118,24 @@ test('reports valid incremental progress and ignores corrupt transport counters'
  });
  assert.deepEqual(values,[6291456,file.size]);
 });
+
+test('does not regress upload progress when a retry reports fewer bytes',async()=>{
+ let options;
+ class Upload{
+  constructor(_file,opts){options=opts}
+  async findPreviousUploads(){return []}
+  start(){
+   options.onProgress(6291456,file.size);
+   options.onProgress(1024,file.size);
+   options.onProgress(12582912,file.size);
+   options.onSuccess();
+  }
+ }
+ const reported=[];
+ await uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  userId:'11111111-1111-4111-8111-111111111111',tus:{Upload},
+  progress:value=>reported.push(value.bytesUploaded)
+ });
+ assert.deepEqual(reported,[6291456,12582912]);
+});
