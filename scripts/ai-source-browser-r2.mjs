@@ -9,11 +9,24 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
  const started=await request('/source/uploads/r2/create',{uploadId});
  if(typeof started?.multipartId!=='string'||!started.multipartId||started.partBytes!==R2_PART_BYTES)throw new Error('invalid R2 upload session');
  const total=Math.ceil(file.size/R2_PART_BYTES),parts=new Array(total);
- let next=0,done=0,failure;
+ const recovered=await request('/source/uploads/r2/parts',{uploadId,multipartId:started.multipartId});
+ if(!Array.isArray(recovered?.parts))throw new Error('R2 part recovery unavailable');
+ let done=0;
+ for(const part of recovered.parts){
+  const index=part.PartNumber-1;
+  if(!Number.isInteger(index)||index<0||index>=total||parts[index]||
+     typeof part.ETag!=='string'||part.ETag.length>258)
+   throw new Error('invalid recovered R2 part');
+  parts[index]={PartNumber:part.PartNumber,ETag:part.ETag};
+  done+=Math.min(R2_PART_BYTES,file.size-index*R2_PART_BYTES);
+ }
+ progress({bytesUploaded:done,bytesTotal:file.size});
+ let next=0,failure;
  const worker=async()=>{
   while(next<total&&!failure){
    if(signal?.aborted)throw new Error('upload canceled');
    const index=next++,partNumber=index+1;
+   if(parts[index])continue;
    const signed=await request('/source/uploads/r2/sign',{uploadId,multipartId:started.multipartId,partNumber});
    if(typeof signed?.url!=='string'||!signed.url.startsWith('https://'))throw new Error('invalid R2 signed part');
    const start=index*R2_PART_BYTES,end=Math.min(start+R2_PART_BYTES,file.size);
