@@ -92,3 +92,14 @@ test('Node adapter rejects declared oversized PDF without calling upload',async(
   assert.equal(invoked,false);
  }finally{await new Promise(resolve=>server.close(resolve))}
 });
+
+test('Node adapter rejects malformed JSON before processing',async()=>{
+ let called=false;
+ const server=createSourceNodeServer({workflow:{upload:async()=>{},process:async()=>{called=true}},getAuthenticatedActor:async()=> 'verified-admin'});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/process',{method:'POST',headers:{'content-type':'application/json'},body:'{' });
+  assert.equal(response.status,400);
+  assert.equal(called,false);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
