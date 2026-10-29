@@ -1,9 +1,12 @@
 // Trusted Node-only adapter. Never expose service-role credentials to browsers.
 import {TUS_CHUNK_BYTES} from './ai-source-upload-constants.mjs';
 
-export function createSourceUploadStorageStream({supabase,fetchImpl=fetch}){
+export function createSourceUploadStorageStream({supabase,storageOrigin,fetchImpl=fetch}){
  if(typeof supabase?.storage?.from!=='function'||typeof fetchImpl!=='function')
   throw new TypeError('trusted Storage client and fetch required');
+ const origin=new URL(storageOrigin);
+ if(origin.protocol!=='https:'||origin.username||origin.password||origin.pathname!=='/'||origin.search||origin.hash)
+  throw new TypeError('HTTPS Storage origin required');
  const validate=({bucket,path})=>{
   if(bucket!=='ai-textbook-sources'||typeof path!=='string'||
      !/^documents\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.pdf$/i.test(path))
@@ -15,7 +18,11 @@ export function createSourceUploadStorageStream({supabase,fetchImpl=fetch}){
   validate({bucket,path});
   const {data,error}=await supabase.storage.from(bucket).createSignedUrl(path,60);
   if(error||typeof data?.signedUrl!=='string')throw new Error('private source URL unavailable');
-  const response=await fetchImpl(data.signedUrl,{redirect:'error',headers:{'accept-encoding':'identity'}});
+  const signed=new URL(data.signedUrl);
+  if(signed.protocol!=='https:'||signed.origin!==origin.origin||
+     !signed.pathname.startsWith('/storage/v1/object/sign/ai-textbook-sources/'))
+   throw new Error('untrusted private source URL');
+  const response=await fetchImpl(signed.href,{redirect:'error',headers:{'accept-encoding':'identity'}});
   if(!response.ok||!response.body)throw new Error('private source stream unavailable');
   return response;
  };
