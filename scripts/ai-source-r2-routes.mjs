@@ -19,7 +19,7 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     return {status:409,body:{error:'upload unavailable'}};
    const current=await getSession({uploadId:body.uploadId,actorId});
    if(path==='/source/uploads/r2/create'){
-    if(current?.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
+    if(current?.r2_completed_at)return {status:200,body:{completed:true,fileBytes:Number(intent.file_bytes),title:intent.title}};
     if(current?.multipart_id)return {status:200,body:{multipartId:current.multipart_id,partBytes:R2_PART_BYTES,fileBytes:Number(intent.file_bytes),title:intent.title}};
     const created=await controller.initiate(intent);
     const saved=await saveSession({uploadId:body.uploadId,actorId,multipartId:created.multipartId});
