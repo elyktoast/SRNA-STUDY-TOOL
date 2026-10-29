@@ -26,6 +26,35 @@ export function createSourceUploadIntentDb(db){
     [uploadId,actorId]);
    return result.rows?.[0]??null;
   },
+  async getSession({uploadId,actorId}){
+   const result=await db.query(
+    `select r2_multipart_id as multipart_id,r2_completed_at
+       from private.ai_source_upload_intents
+      where id=$1 and actor_id=$2 and status='uploading' and expires_at>now()`,
+    [uploadId,actorId]);
+   return result.rows?.[0]??null;
+  },
+  async saveSession({uploadId,actorId,multipartId}){
+   if(typeof multipartId!=='string'||!multipartId||multipartId.length>512)
+    throw new Error('invalid R2 multipart session');
+   const result=await db.query(
+    `update private.ai_source_upload_intents
+        set r2_multipart_id=$3,updated_at=now()
+      where id=$1 and actor_id=$2 and status='uploading'
+        and storage_bucket='srna-private-textbooks' and expires_at>now()
+        and r2_multipart_id is null
+      returning id`,[uploadId,actorId,multipartId]);
+   return result.rowCount===1;
+  },
+  async markComplete({uploadId,actorId,multipartId}){
+   const result=await db.query(
+    `update private.ai_source_upload_intents
+        set r2_completed_at=now(),updated_at=now()
+      where id=$1 and actor_id=$2 and status='uploading'
+        and r2_multipart_id=$3 and r2_completed_at is null
+      returning id`,[uploadId,actorId,multipartId]);
+   return result.rowCount===1;
+  },
   async markUploading({uploadId,actorId}){
    const result=await db.query(
     `update private.ai_source_upload_intents
