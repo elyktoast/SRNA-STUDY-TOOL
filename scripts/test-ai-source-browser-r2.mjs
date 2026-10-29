@@ -91,3 +91,15 @@ test('newline in recovered ETag is rejected before part transfer',async()=>{
  await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{transfers++}}),/invalid recovered R2 part/);
  assert.equal(transfers,0);
 });
+
+test('completed R2 multipart resumes directly to verification without transfer',async()=>{
+ const paths=[];
+ const request=async(path)=>{
+  paths.push(path);
+  if(path.endsWith('/create'))return {completed:true,fileBytes:R2_PART_BYTES+8};
+  throw new Error('unexpected multipart request');
+ };
+ const result=await uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{throw new Error('transfer should not run')}});
+ assert.equal(result.uploadId,uploadId);
+ assert.deepEqual(paths,['/source/uploads/r2/create']);
+});
