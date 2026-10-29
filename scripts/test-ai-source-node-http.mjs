@@ -76,3 +76,19 @@ test('Node adapter rejects non-PDF content types before upload',async()=>{
   assert.equal(uploaded,false);
  }finally{await new Promise(resolve=>server.close(resolve))}
 });
+
+test('Node adapter rejects declared oversized PDF without calling upload',async()=>{
+ let invoked=false;
+ const server=createSourceNodeServer({maxBytes:8,
+  workflow:{upload:async()=>{invoked=true},process:async()=>{}},
+  getAuthenticatedActor:async()=> 'verified-admin'
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/upload',{
+   method:'POST',headers:{'x-source-title':'Book','content-type':'application/pdf'},body:new Uint8Array(9)
+  });
+  assert.equal(response.status,413);
+  assert.equal(invoked,false);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
