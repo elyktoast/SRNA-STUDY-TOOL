@@ -3,8 +3,16 @@
 import {mountSourceLibrary} from './source-library-admin.js';
 export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',loadDocuments,loadDetails}={}){
  if(typeof getAccessToken!=='function') throw new TypeError('authenticated token provider required');
- if(typeof loadDocuments!=='function') throw new TypeError('admin document listing required');
- if(typeof loadDetails!=='function') throw new TypeError('admin document detail loader required');
+ const read=async path=>{
+  const token=await getAccessToken();
+  if(typeof token!=='string'||!token.trim())throw new Error('admin sign-in required');
+  const response=await fetch(apiBase+path,{headers:{authorization:'Bearer '+token}});
+  if(!response.ok)throw new Error('source library request failed');
+  return response.json();
+ };
+ loadDocuments=loadDocuments|| (async()=> (await read('/source/documents')).documents);
+ loadDetails=loadDetails|| (async id=>read('/source/detail?id='+encodeURIComponent(id)));
+
  const host=document.createElement('section');host.className='sl-workspace';
  host.innerHTML='<header class="sl-header"><div><h1>Textbook Source Library</h1><p>Private textbook sources for AI question generation</p></div><button type="button" class="sl-add">+ Add textbook</button></header><div class="sl-metrics" aria-label="Library totals"></div><div class="sl-controls"><input type="search" aria-label="Search textbooks" placeholder="Search textbooks…"><select aria-label="Filter by status"><option value="">All statuses</option><option value="ready">Ready</option><option value="processing">Processing</option><option value="failed">Needs attention</option></select></div><div class="sl-columns"><div class="sl-list" role="list" aria-label="Textbooks"></div><aside class="sl-details" aria-label="Textbook details"><p>Select a textbook to review its details.</p></aside></div><div class="sl-upload" hidden></div><p class="sl-feedback" role="status" aria-live="polite"></p>';
  root.replaceChildren(host);
