@@ -45,3 +45,17 @@ test('recovers uploaded R2 parts with validated sizes',async()=>{
  const result=await controller.listParts(intent,{multipartId:'r2-multipart-session'});
  assert.deepEqual(result.parts,[{PartNumber:1,ETag:'etag-one'}]);
 });
+
+test('rejects a repeated R2 pagination marker',async()=>{
+ let pages=0;
+ const client={send:async(command)=>{
+  if(!(command instanceof ListPartsCommand))throw new Error('unexpected command');
+  pages++;
+  return {Parts:[],IsTruncated:true,NextPartNumberMarker:1};
+ }};
+ const controller=createR2MultipartController({
+  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}
+ });
+ await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
+ assert.equal(pages,2);
+});
