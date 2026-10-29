@@ -26,3 +26,8 @@ test('rejects disabled row-level security',async()=>{
  const unsafe={query:async sql=>sql.includes('pg_class')?{rows:[]}:db.query(sql)};
  await assert.rejects(verifySourceRuntimeResources({db:unsafe,supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/RLS disabled/);
 });
+
+test('rejects repeated protected table names hiding an unprotected table',async()=>{
+ const duplicates={query:async sql=>sql.includes('pg_class')?{rows:Array(4).fill({relname:'ai_source_documents',relrowsecurity:true})}:db.query(sql)};
+ await assert.rejects(verifySourceRuntimeResources({db:duplicates,supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/RLS disabled/);
+});
