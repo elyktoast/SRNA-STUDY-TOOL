@@ -8,6 +8,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
  if(signal?.aborted)throw new Error('upload canceled');
  const started=await request('/source/uploads/r2/create',{uploadId});
  if(typeof started?.multipartId!=='string'||!started.multipartId||started.partBytes!==R2_PART_BYTES)throw new Error('invalid R2 upload session');
+ if(started.fileBytes!==file.size)throw new Error('PDF size does not match upload intent');
  const total=Math.ceil(file.size/R2_PART_BYTES),parts=new Array(total);
  const recovered=await request('/source/uploads/r2/parts',{uploadId,multipartId:started.multipartId});
  if(!Array.isArray(recovered?.parts))throw new Error('R2 part recovery unavailable');
