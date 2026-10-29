@@ -15,7 +15,7 @@ function mock(){
 }
 test('uploads with user JWT, fixed object path and six MiB chunks',async()=>{
  const m=mock();let progress;
- const result=await uploadSourcePdfWithTus({file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:m.tus,progress:v=>{progress=v}});
+ const result=await uploadSourcePdfWithTus({file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:m.tus,progress:v=>{progress=v}});
  assert.equal(result.uploadId,id);
  assert.equal(m.options.chunkSize,6291456);
  assert.equal(m.options.metadata.objectName,'documents/'+id+'.pdf');
@@ -24,7 +24,7 @@ test('uploads with user JWT, fixed object path and six MiB chunks',async()=>{
 });
 test('rejects mismatched intent before TUS starts',async()=>{
  const m=mock();
- await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,fileBytes:5},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:m.tus}),/does not match/);
+ await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,fileBytes:5},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:m.tus}),/does not match/);
  assert.equal(m.options,undefined);
 });
 test('rejects absent user token',async()=>{
@@ -34,14 +34,14 @@ test('rejects absent user token',async()=>{
 
 test('rejects pending intent before sending PDF bytes',async()=>{
  const m=mock();
- await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,status:'pending'},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:m.tus}),/does not match/);
+ await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,status:'pending'},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:m.tus}),/does not match/);
  assert.equal(m.options,undefined);
 });
 
 test('synchronous TUS constructor error rejects cleanly',async()=>{
  class Upload{constructor(){throw new Error('TUS initialization failed')}}
  await assert.rejects(uploadSourcePdfWithTus({
-  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:{Upload}
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:{Upload}
  }),/TUS initialization failed/);
 });
 test('already canceled upload does not initialize transport',async()=>{
@@ -49,7 +49,7 @@ test('already canceled upload does not initialize transport',async()=>{
  const controller=new AbortController();
  controller.abort();
  await assert.rejects(uploadSourcePdfWithTus({
-  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',
   tus:m.tus,signal:controller.signal
  }),/upload canceled/);
  assert.equal(m.options,undefined);
@@ -59,7 +59,7 @@ test('progress callback exceptions do not fail a successful transfer',async()=>{
  const m=mock();
  const result=await uploadSourcePdfWithTus({
   file,upload,projectId:'xqyasyambwdyhsjkftqu',
-  accessToken:'user-token',tus:m.tus,
+  accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:m.tus,
   progress:()=>{throw new Error('UI unmounted')}
  });
  assert.equal(result.bytes,file.size);
@@ -74,8 +74,16 @@ test('resume uses a previously recorded upload session',async()=>{
  }
  await uploadSourcePdfWithTus({
   file,upload,projectId:'xqyasyambwdyhsjkftqu',
-  accessToken:'user-token',tus:{Upload}
+  accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:{Upload}
  });
  assert.equal(resumed,true);
  assert.equal(started,true);
+});
+
+test('resumable fingerprint is isolated per user and intent',async()=>{
+ const m=mock();
+ await uploadSourcePdfWithTus({file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:m.tus});
+ const fingerprint=await m.options.fingerprint();
+ assert.match(fingerprint,/11111111-1111-4111-8111-111111111111/);
+ assert.match(fingerprint,/01234567-89ab-4def-8abc-0123456789ab/);
 });
