@@ -21,12 +21,12 @@ create or replace function private.ai_hybrid_source_passages(
  p_limit integer default 12
 )
 returns table(chunk_id uuid,document_id uuid,document_title text,
- section_heading text,page_start integer,page_end integer,passage text,
+ section_heading text,printed_page text,page_start integer,page_end integer,passage text,
  combined_score double precision)
 language sql stable security invoker set search_path=''
 as $$
 with eligible as (
- select c.id,c.document_id,c.section_id,c.chunk_order,c.content,
+ select c.id,c.document_id,c.section_id,c.section_heading,c.printed_page,c.chunk_order,c.content,
         c.page_start,c.page_end,c.search_vector,d.title
  from private.ai_source_chunks c
  join private.ai_source_documents d on d.id=c.document_id
@@ -49,7 +49,7 @@ with eligible as (
         (coalesce(1.0/(60+k.rnk),0.0)+coalesce(1.0/(60+s.rnk),0.0)) score
  from keyword k full outer join semantic s on s.id=k.id
 )
-select e.id,e.document_id,e.title,sec.heading,e.page_start,e.page_end,
+select e.id,e.document_id,e.title,coalesce(e.section_heading,sec.heading),e.printed_page,e.page_start,e.page_end,
        e.content,r.score::double precision
 from ranked r join eligible e on e.id=r.id
 left join private.ai_source_sections sec on sec.id=e.section_id
