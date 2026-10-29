@@ -30,7 +30,9 @@ export async function startSourceServer(env=process.env){
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
  let server;
  try{
-  server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument});
+  // Match the dedicated private bucket's conservative 40 MiB upload ceiling.
+  // Raise this only after reviewing the Storage global limit and bucket configuration.
+  server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument,maxBytes:41943040});
  }catch(error){
   await db.end();
   throw error;
