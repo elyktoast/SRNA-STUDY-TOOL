@@ -25,7 +25,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
    }
    const declaredLength=req.headers['content-length'];
    const limit=path==='/source/upload'?maxBytes:8192;
-   if(typeof declaredLength==='string' && /^\\d+$/.test(declaredLength) && Number(declaredLength)>limit)
+   if(typeof declaredLength==='string' && /^\d+$/.test(declaredLength) && Number(declaredLength)>limit)
     return send(413,{error:'request too large'});
    const parts=[];
    let size=0;
