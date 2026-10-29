@@ -59,3 +59,11 @@ test('rejects a repeated R2 pagination marker',async()=>{
  await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
  assert.equal(pages,2);
 });
+
+test('rejects an out-of-range pagination marker',async()=>{
+ const client={send:async()=>({Parts:[],IsTruncated:true,NextPartNumberMarker:99})};
+ const controller=createR2MultipartController({
+  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}
+ });
+ await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
+});
