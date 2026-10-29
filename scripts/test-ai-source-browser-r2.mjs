@@ -121,3 +121,19 @@ test('overlong recovered ETag is rejected before transfer',async()=>{
  };
  await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{throw new Error('should not transfer')}}),/invalid recovered R2 part/);
 });
+
+test('cancellation during R2 create response does not report upload success',async()=>{
+ const abort=new AbortController();
+ const paths=[];
+ const request=async(path)=>{
+  paths.push(path);
+  if(path.endsWith('/create')){
+   abort.abort();
+   return {completed:true,fileBytes:R2_PART_BYTES+8};
+  }
+  throw new Error('must not continue after cancellation');
+ };
+ await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,signal:abort.signal,
+  fetchPart:async()=>{throw new Error('must not transfer')}}),/upload canceled/);
+ assert.deepEqual(paths,['/source/uploads/r2/create']);
+});
