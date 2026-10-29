@@ -8,9 +8,9 @@ class UploadPartCommand{constructor(input){this.input=input}}
 class CompleteMultipartUploadCommand{constructor(input){this.input=input}}
 class AbortMultipartUploadCommand{constructor(input){this.input=input}}
 class ListPartsCommand{constructor(input){this.input=input}}
-function fixture(){
+function fixture(uploadedParts){
  const calls=[];
- const client={async send(command){calls.push(command);if(command instanceof ListPartsCommand)return {Parts:[{PartNumber:1,ETag:'etag-one',Size:12582912}],IsTruncated:false};return {UploadId:'r2-multipart-session'}}};
+ const client={async send(command){calls.push(command);if(command instanceof ListPartsCommand)return {Parts:uploadedParts??[{PartNumber:1,ETag:'etag-one',Size:12582912}],IsTruncated:false};return {UploadId:'r2-multipart-session'}}};
  const presign=async(_client,command)=>{calls.push(command);return 'https://example.r2.cloudflarestorage.com/signed'};
  const controller=createR2MultipartController({client,presign,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}});
  return {controller,calls};
@@ -32,14 +32,13 @@ test('refuses incomplete or untrusted multipart ETags',async()=>{
  assert.equal(calls.length,0);
 });
 test('completes ordered parts and supports explicit abort',async()=>{
- const {controller,calls}=fixture();
  const parts=[1,2].map(PartNumber=>({PartNumber,ETag:'a'.repeat(32)}));
- const list=async()=>({parts});
- controller.listParts=list;
+ const {controller,calls}=fixture(parts.map(part=>({...part,Size:12582912})));
  assert.deepEqual(await controller.complete(intent,{multipartId:'r2-multipart-session',parts}),{completed:true});
  assert.deepEqual(await controller.abort(intent,{multipartId:'r2-multipart-session'}),{aborted:true});
- assert.equal(calls[0] instanceof CompleteMultipartUploadCommand,true);
- assert.equal(calls[1] instanceof AbortMultipartUploadCommand,true);
+ assert.equal(calls[0] instanceof ListPartsCommand,true);
+ assert.equal(calls[1] instanceof CompleteMultipartUploadCommand,true);
+ assert.equal(calls[2] instanceof AbortMultipartUploadCommand,true);
 });
 
 test('recovers uploaded R2 parts with validated sizes',async()=>{
