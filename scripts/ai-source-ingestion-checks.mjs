@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 // Validate source ingestion manifests before any database write.
 export function validateSourceManifest(manifest,{minTextChars=100}={}){
  const errors=[];
@@ -16,6 +17,7 @@ export function validateSourceManifest(manifest,{minTextChars=100}={}){
    if(typeof c.content!=='string'||!c.content.trim()) errors.push('empty chunk at '+index);
    else total+=c.content.length;
    if(!/^[a-f0-9]{64}$/.test(c.contentHash??'')) errors.push('invalid content hash at '+index);
+   else if(typeof c.content==='string' && createHash('sha256').update(c.content).digest('hex')!==c.contentHash) errors.push('content hash mismatch at '+index);
    hashes.add(c.contentHash);
  }
  if(total<minTextChars) errors.push('insufficient extracted text: request OCR or review');
