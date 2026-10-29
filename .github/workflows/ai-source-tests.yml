@@ -36,5 +36,46 @@ jobs:
           for file in scripts/ai-source-*.mjs scripts/test-ai-source-*.mjs; do
             node --check "$file"
           done
-      - name: Run Source Library tests
-        run: npm run test:ai-source
+      - name: Run Source Library tests and capture failures
+        id: source-tests
+        shell: bash
+        run: |
+          set +e
+          node --test --test-reporter=json scripts/test-ai-source-*.mjs > ai-source-test-events.jsonl 2> ai-source-test-stderr.log
+          result=$?
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const lines=fs.readFileSync('ai-source-test-events.jsonl','utf8').split('\\n');
+          const failures=[],summary={};
+          for(const line of lines){
+            if(!line.trim())continue;
+            let event;
+            try{event=JSON.parse(line)}catch{continue}
+            if(event.type==='test:fail'){
+              const d=event.data||{};
+              failures.push({name:d.name,file:d.file,line:d.line,column:d.column,error:d.details?.error||null});
+            }
+            if(event.type==='test:summary')Object.assign(summary,event.data||{});
+          }
+          const output=['# AI Source Library test failures','','Total failed: '+failures.length,'',''];
+          for(const [index,f] of failures.entries()){
+            output.push('## '+(index+1)+'. '+f.name,'File: '+(f.file||'unknown')+':'+(f.line||'?'),'\\x60\\x60\\x60text',JSON.stringify(f.error,null,2),'\\x60\\x60\\x60','');
+          }
+          if(!failures.length)output.push('No test:fail events recorded. See stderr and raw JSONL logs.');
+          fs.writeFileSync('ai-source-failures.md',output.join('\\n'));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,output.slice(0,120).join('\\n')+'\\n');
+          console.log('Test summary:',JSON.stringify(summary));
+          console.log('Failed tests:',failures.length);
+          for(const f of failures)console.log('FAIL:',f.name,'-',f.error?.message||'no message');
+          NODE
+          exit "$result"
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-source-test-failures
+          path: |
+            ai-source-failures.md
+            ai-source-test-events.jsonl
+            ai-source-test-stderr.log
+          retention-days: 7
