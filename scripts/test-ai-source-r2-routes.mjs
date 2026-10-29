@@ -106,3 +106,38 @@ test('completion accepts a concurrent database winner when markComplete returns 
  assert.equal(result.status,200);
  assert.equal(result.body.completed,true);
 });
+
+test('recovers lost R2 completion acknowledgment only after HEAD verification',async()=>{
+ let inspected=0,marked=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>{marked++;return true},clearSession:async()=>true,
+  controller:{
+   complete:async()=>{const error=new Error('upload no longer exists');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>{inspected++;return {completed:true}},
+   initiate:async()=>{},signPart:async()=>{},listParts:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.completed,true);
+ assert.equal(inspected,1);
+ assert.equal(marked,1);
+});
+test('does not reconcile invalid completion requests using HEAD',async()=>{
+ let inspected=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>{throw Error('must not mark')},clearSession:async()=>true,
+  controller:{
+   complete:async()=>{throw new Error('invalid R2 multipart completion')},
+   inspectCompleted:async()=>{inspected++;return {completed:true}},
+   initiate:async()=>{},signPart:async()=>{},listParts:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(result.status,400);
+ assert.equal(inspected,0);
+});
