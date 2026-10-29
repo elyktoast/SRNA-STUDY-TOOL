@@ -11,7 +11,7 @@ function fixture({missing,unprotected,exposed=false,publicBucket=false,limit=524
   if(sql.includes('pg_class'))
    return {rows:tables.map(relname=>({relname,relrowsecurity:relname!==unprotected}))};
   if(sql.includes('information_schema.columns'))
-   return {rows:[{column_name:'printed_page'},{column_name:'section_heading'}]};
+   return {rows:(sql.includes('ai_source_upload_intents')?['r2_multipart_id','r2_completed_at']:['printed_page','section_heading']).map(column_name=>({column_name}))};
   if(sql.includes('has_table_privilege'))return {rows:exposed?[{client_role:'authenticated',table_name:'ai_source_upload_intents'}]:[]};
   if(sql.includes('has_schema_privilege'))return {rows:[]};
   if(sql.includes('has_function_privilege'))return {rows:[{anon_execute:false,authenticated_execute:true}]};
