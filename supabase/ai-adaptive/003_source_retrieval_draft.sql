@@ -47,7 +47,7 @@ as $$
     and d.processing_status='ready'
     and c.search_vector @@ websearch_to_tsquery('english',p_query)
   order by ts_rank_cd(c.search_vector,websearch_to_tsquery('english',p_query)) desc,c.chunk_order
-  limit least(greatest(p_limit,1),30)
+  limit least(greatest(coalesce(p_limit,12),1),30)
 $$;
 revoke all on function private.ai_search_source_passages(text,text,integer) from public,anon,authenticated;
 
