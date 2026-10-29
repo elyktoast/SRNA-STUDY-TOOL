@@ -137,3 +137,24 @@ test('cancellation during R2 create response does not report upload success',asy
   fetchPart:async()=>{throw new Error('must not transfer')}}),/upload canceled/);
  assert.deepEqual(paths,['/source/uploads/r2/create']);
 });
+
+test('cancel during R2 create aborts the newly returned multipart session',async()=>{
+ const controller=new AbortController(),paths=[];
+ const request=async(path,body)=>{
+  paths.push(path);
+  if(path.endsWith('/create')){
+   controller.abort();
+   return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
+  }
+  if(path.endsWith('/abort')){
+   assert.equal(body.multipartId,'session');
+   return {aborted:true};
+  }
+  throw new Error('unexpected request');
+ };
+ await assert.rejects(uploadPdfToR2({
+  file:makeFile(),uploadId,request,signal:controller.signal,
+  fetchPart:async()=>{throw Error('must not upload')}
+ }),/upload canceled/);
+ assert.deepEqual(paths,['/source/uploads/r2/create','/source/uploads/r2/abort']);
+});
