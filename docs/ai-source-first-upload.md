@@ -34,7 +34,7 @@ Do not paste tokens into chat, screenshots, commits or logs. The checker only co
 4. Test a larger PDF (over 12 MiB) to exercise multiple parts, recovery and ETag handling.
 5. Test cancel and network interruption; confirm that cancel aborts the session and transient failures can be resumed without creating duplicate documents.
 
-**Known limitation:** The current UI does not persist an upload ID for a failed upload, so manual recovery is not yet exposed there. The underlying orchestrator accepts `resumeUploadId`. Avoid treating transient failure recovery as user-tested until a recovery UI exists.
+**Recovery status:** The admin UI now offers an in-page **Resume upload** action for a failed transfer after an upload ID was received. It reuses the same selected PDF and the existing multipart session. Recovery does not survive a page reload, and live recovery has not yet been tested. If an intent-creation response is lost before the browser receives the ID, that attempt cannot be resumed from the UI.
 
 **Known risk:** If R2 multipart completion succeeds but the subsequent database `markComplete` write fails, retrying completion may not recover cleanly. Reconcile the verified R2 object and database state before relying on this flow for production textbooks.
 
