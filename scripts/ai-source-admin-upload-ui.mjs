@@ -44,10 +44,14 @@ export function mountSourceUpload({root,getAccessToken,apiBaseUrl='',fetchPart=f
   const resumeUploadId=useResume?resume.uploadId:undefined;
   controller=new AbortController();setBusy(true);progress.value=0;
   status.textContent=useResume?'Recovering uploaded parts…':'Preparing private upload…';
+  let initiatedId=null;
   const request=async(path,body)=>{
    const result=await apiRequest(path,body);
    if(path==='/source/uploads/initiate'&&typeof result?.upload?.uploadId==='string'){
-    resume={uploadId:result.upload.uploadId,name:file.name,size:file.size,lastModified:file.lastModified};
+    initiatedId=result.upload.uploadId;
+   }
+   if(path==='/source/uploads/start'&&result?.status==='uploading'&&initiatedId){
+    resume={uploadId:initiatedId,name:file.name,size:file.size,lastModified:file.lastModified};
    }
    return result;
   };
