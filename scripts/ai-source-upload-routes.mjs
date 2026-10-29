@@ -6,6 +6,8 @@ export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUpload
  if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters)
   throw new TypeError('trusted upload dependencies required');
  return async ({path,actorId,body})=>{
+  if(!['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify'].includes(path))
+   return {status:404,body:{error:'not found'}};
   if(typeof actorId!=='string'||!actorId.trim()) return {status:401,body:{error:'authentication required'}};
   if(await authorizeAdmin(actorId)!==true) return {status:403,body:{error:'access denied'}};
   if(!body||typeof body!=='object'||Array.isArray(body)) return {status:400,body:{error:'JSON object required'}};
@@ -14,7 +16,7 @@ export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUpload
     const upload=await createResumableSourceIntent({actorId,authorizeAdmin,title:body.title,fileBytes:body.fileBytes,mimeType:body.mimeType,createIntent});
     return {status:201,body:{upload}};
    }
-   if(typeof body.uploadId!=='string') return {status:400,body:{error:'upload ID required'}};
+   if(typeof body.uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.uploadId)) return {status:400,body:{error:'upload ID required'}};
    if(path==='/source/uploads/start'){
     const started=await markUploading({uploadId:body.uploadId,actorId});
     return started?{status:200,body:{status:'uploading'}}:{status:409,body:{error:'upload cannot start'}};
