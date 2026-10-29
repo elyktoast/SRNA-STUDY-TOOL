@@ -69,3 +69,14 @@ test('rejects mismatched PDF title before transferring parts',async()=>{
  const request=async()=>({multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:file.size,title:'original.pdf'});
  await assert.rejects(uploadPdfToR2({file,uploadId,request,fetchPart:async()=>{throw new Error('should not upload')}}),/PDF title does not match/);
 });
+
+test('malformed recovered ETag prevents transfer',async()=>{
+ let transfers=0;
+ const request=async(path)=>{
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
+  if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:'"unmatched'}]};
+  throw new Error('unexpected request');
+ };
+ await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{transfers++}}),/invalid recovered R2 part/);
+ assert.equal(transfers,0);
+});
