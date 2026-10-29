@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {createR2MultipartController} from './ai-source-r2-multipart.mjs';
 const id='01234567-89ab-4def-8abc-0123456789ab';
-const intent={id,storage_bucket:'srna-private-textbooks',storage_path:`documents/${id}.pdf`,file_bytes:12582912,status:'uploading'};
+const intent={id,storage_bucket:'srna-private-textbooks',storage_path:`documents/${id}.pdf`,file_bytes:25165824,status:'uploading'};
 class CreateMultipartUploadCommand{constructor(input){this.input=input}}
 class UploadPartCommand{constructor(input){this.input=input}}
 class CompleteMultipartUploadCommand{constructor(input){this.input=input}}
@@ -16,7 +16,7 @@ function fixture(){
 }
 test('starts multipart session only in private bucket',async()=>{
  const {controller,calls}=fixture();
- assert.equal((await controller.initiate(intent)).partBytes,6291456);
+ assert.equal((await controller.initiate(intent)).partBytes,12582912);
  assert.equal(calls[0].input.Bucket,'srna-private-textbooks');
  await assert.rejects(controller.initiate({...intent,storage_bucket:'other'}),/invalid active/);
 });
