@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createSourceUploadFinalizer} from './ai-source-upload-intent-db.mjs';
 const id='01234567-89ab-4def-8abc-0123456789ab';
 const path='documents/'+id+'.pdf';
-const intent={storage_path:path};
+const intent={storage_path:path,storage_bucket:'ai-textbook-sources',file_bytes:330000000};
 const input={uploadId:id,actorId:'admin',intent,sha256:'a'.repeat(64),fileBytes:330000000,mimeType:'application/pdf'};
 function harness({status='verifying',failUpdate=false}={}){
  const statements=[];let released=false;
