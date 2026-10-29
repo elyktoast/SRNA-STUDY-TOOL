@@ -5,6 +5,9 @@ import {readSourceRuntimeConfig} from './ai-source-runtime-config.mjs';
 import {createSourceRuntime} from './ai-source-runtime.mjs';
 import {createSourcePdfJsProvider} from './ai-source-pdfjs-provider.mjs';
 import {verifySourceRuntimeResources} from './ai-source-runtime-preflight.mjs';
+import {createSourceUploadIntentDb,createSourceUploadFinalizer} from './ai-source-upload-intent-db.mjs';
+import {createSourceUploadRoutes} from './ai-source-upload-routes.mjs';
+import {createSourceAdminVerifier} from './ai-source-admin-verifier.mjs';
 
 export async function startSourceServer(env=process.env){
  const {port,host}=readSourceRuntimeConfig(env);
