@@ -6,7 +6,7 @@ import {processSourceDocument} from './ai-source-pipeline.mjs';
 import {createSourceHttpHandler} from './ai-source-http-handler.mjs';
 
 test('manifest has valid checksums and physical citations',()=>{
- const m=buildSourceManifest({documentId:'book',pages:[{physicalPage:7,text:'Ventilation '.repeat(50)}]});
+ const m=buildSourceManifest({documentId:'book',pages:Array.from({length:7},(_,i)=>({physicalPage:i+1,text:i===6?'Ventilation '.repeat(50):''}))});
  assert.equal(validateSourceManifest(m).ok,true);
  assert.equal(m.chunks[0].pageStart,7);
  assert.equal(m.chunks[0].pageEnd,7);
