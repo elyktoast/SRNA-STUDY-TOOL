@@ -28,8 +28,8 @@ export async function uploadSourcePdfWithTus({
    signal?.removeEventListener?.('abort',abort);
    if(error)reject(error);else resolve({uploadId:upload.uploadId,bytes:file.size});
   };
-  const abort=()=>{Promise.resolve(task?.abort?.()).catch(()=>{});finish(new Error('upload canceled'))};
-  task=new tus.Upload(file,{
+  const abort=()=>{Promise.resolve().then(()=>task?.abort?.()).catch(()=>{});finish(new Error('upload canceled'))};
+  try{task=new tus.Upload(file,{
    endpoint,chunkSize:TUS_CHUNK_BYTES,uploadDataDuringCreation:true,
    retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
    headers:{authorization:'Bearer '+accessToken},
@@ -37,7 +37,7 @@ export async function uploadSourcePdfWithTus({
    onProgress:(done,total)=>{if(!settled&&total===file.size)progress({bytesUploaded:done,bytesTotal:total})},
    onError:error=>finish(error),
    onSuccess:()=>finish()
-  });
+  });}catch(error){finish(error);return}
   signal?.addEventListener?.('abort',abort,{once:true});
   if(signal?.aborted){abort();return}
   Promise.resolve().then(()=>task.findPreviousUploads()).then(previous=>{
