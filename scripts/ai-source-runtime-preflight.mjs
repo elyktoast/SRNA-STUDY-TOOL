@@ -11,6 +11,9 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  const rls=await db.query("select relname,relrowsecurity from pg_class where relnamespace='private'::regnamespace and relname=any($1::text[])",[required]);
  const protectedNames=new Set((rls.rows??[]).filter(row=>row.relrowsecurity===true).map(row=>row.relname));
  if(required.some(name=>!protectedNames.has(name))) throw new Error('source table RLS disabled');
+ const columns=await db.query("select column_name from information_schema.columns where table_schema='private' and table_name='ai_source_chunks' and column_name=any($1::text[])",[['printed_page','section_heading']]);
+ const citationColumns=new Set((columns.rows??[]).map(row=>row.column_name));
+ if(!citationColumns.has('printed_page')||!citationColumns.has('section_heading')) throw new Error('source citation metadata schema missing');
  const admin=await db.query("select to_regclass('private.snar_admins') as relation");
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
