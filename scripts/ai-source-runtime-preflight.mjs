@@ -20,5 +20,7 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
  if(error||!data||data.public!==false) throw new Error('private source storage bucket unavailable');
+ if(!Array.isArray(data.allowed_mime_types)||data.allowed_mime_types.length!==1||data.allowed_mime_types[0]!=='application/pdf') throw new Error('source bucket must allow PDF only');
+ if(!Number.isInteger(data.file_size_limit)||data.file_size_limit<1||data.file_size_limit>104857600) throw new Error('source bucket size limit invalid');
  return true;
 }
