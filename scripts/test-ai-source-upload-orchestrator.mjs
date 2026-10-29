@@ -21,17 +21,17 @@ function setup({startStatus='uploading',verifyId=id}={}){
 }
 test('initiates, transfers, then verifies textbook in order',async()=>{
  const h=setup();
- const doc=await submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:h.tus});
+ const doc=await submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:h.tus});
  assert.equal(doc.id,'document-1');
  assert.deepEqual(h.calls.map(x=>x.path),['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify']);
  assert.equal(h.calls[0].body.fileBytes,330000000);
 });
 test('does not transfer or verify if session start fails',async()=>{
  const h=setup({startStatus:'pending'});
- await assert.rejects(submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:h.tus}),/could not start/);
+ await assert.rejects(submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:h.tus}),/could not start/);
  assert.equal(h.calls.length,2);
 });
 test('rejects verification response for another upload',async()=>{
  const h=setup({verifyId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'});
- await assert.rejects(submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:h.tus}),/verification did not complete/);
+ await assert.rejects(submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:h.tus}),/verification did not complete/);
 });
