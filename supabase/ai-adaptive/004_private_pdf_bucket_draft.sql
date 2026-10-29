@@ -1,16 +1,24 @@
--- DESIGN DRAFT ONLY: NOT READY TO APPLY.
--- Textbooks exceed 100 MiB; a 40 MiB bucket would make this feature unusable.
--- Supabase's global upload cap applies to the COMPLETE object, even with TUS.
--- A Free project cannot store >50 MB objects in Supabase Storage.
--- Do not create a bucket until plan/global limits and actual book sizes are confirmed.
--- Intended configuration if global Storage limit is at least 500 MiB:
---   id/name: ai-textbook-sources
---   public: false
---   allowed_mime_types: ['application/pdf']
---   file_size_limit: 524288000 (500 MiB)
---   no anon/authenticated policies for storage.objects
---   admin-authorized server-side upload using TUS (6 MiB chunks)
---   original object kept private; processing streams or downloads on server
--- For books exceeding the available global limit, choose compatible private
--- object storage or a different paid tier; TUS does NOT bypass global limits.
--- No executable DDL here by design: prevent accidental undersized deployment.
+-- DRAFT ONLY. Do not apply before verifying the project's global Storage limit.
+-- This dedicated private bucket is sized for complete textbooks up to 500 MiB.
+-- TUS transfers chunks but DOES NOT bypass the global per-object size limit.
+-- This statement is safe to retry and fails if an existing bucket is misconfigured.
+insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
+values ('ai-textbook-sources','ai-textbook-sources',false,524288000,array['application/pdf']::text[])
+on conflict (id) do nothing;
+
+do $$
+begin
+ if not exists (
+  select 1 from storage.buckets
+  where id='ai-textbook-sources' and public=false
+    and file_size_limit=524288000
+    and allowed_mime_types=array['application/pdf']::text[]
+ ) then
+  raise exception 'ai-textbook-sources bucket configuration mismatch';
+ end if;
+end $$;
+
+-- No storage.objects policies are granted to browser roles.
+-- Never expose service-role credentials to browser TUS clients.
+-- Use a server-authorized resumable transfer with an appropriate restricted
+-- upload credential; verify access control and ownership before enabling.
