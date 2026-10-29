@@ -3,6 +3,13 @@ export async function resolveOcrPages(extraction,{ocrPage}={}){
  if(!Array.isArray(extraction?.pages)||!Array.isArray(extraction?.ocrPages))
    throw new TypeError('invalid PDF extraction');
  const pages=extraction.pages.map(p=>({...p}));
+ for(const [index,page] of pages.entries()){
+   if(page.physicalPage!==index+1) throw new Error('invalid PDF page sequence');
+   if(typeof page.text!=='string') throw new Error('invalid extracted page text');
+ }
+ const required=pages.filter(page=>page.needsOcr===true).map(page=>page.physicalPage);
+ if(required.length!==extraction.ocrPages.length || required.some((n,i)=>n!==extraction.ocrPages[i]))
+   throw new Error('OCR page list mismatch');
  if(extraction.ocrPages.length&&!ocrPage)
    throw new Error('OCR required for pages: '+extraction.ocrPages.join(','));
  const seen=new Set();
