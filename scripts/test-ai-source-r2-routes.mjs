@@ -158,3 +158,39 @@ test('refuses completion recovery when private object HEAD verification fails',a
  assert.equal(result.status,500);
  assert.equal(marked,0);
 });
+
+test('resume reconciles a consumed multipart session without requiring ETags',async()=>{
+ let marks=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>{marks++;return true},clearSession:async()=>true,
+  controller:{
+   listParts:async()=>{const error=new Error('multipart gone');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>({completed:true}),
+   initiate:async()=>{throw Error('must not initiate')},
+   complete:async()=>{},signPart:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.completed,true);
+ assert.equal(result.body.fileBytes,intent.file_bytes);
+ assert.equal(marks,1);
+});
+test('resume never reconciles a missing multipart session without a verified object',async()=>{
+ let marks=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>{marks++;return true},clearSession:async()=>true,
+  controller:{
+   listParts:async()=>{const error=new Error('multipart gone');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>{throw Error('object absent')},
+   initiate:async()=>{},complete:async()=>{},signPart:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(result.status,500);
+ assert.equal(marks,0);
+});
