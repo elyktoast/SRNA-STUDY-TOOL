@@ -62,7 +62,10 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,report.slice(0,50000)+'\n');
           console.log(counts.join('\n'));
           console.log('Failed cases:',failures.length);
-          for(const f of failures)console.log(f.split('\n').slice(0,2).join(' '));
+          for(const [i,f] of failures.entries()){
+            console.log('\\n=== FAILURE '+(i+1)+' ===');
+            console.log(f.slice(0,6000));
+          }
           NODE
           exit "$result"
       - name: Upload failure diagnostics
