@@ -10,12 +10,13 @@ function show(host,view,modal){host.dataset.view=view;host.closest('.admin-works
 async function drawSourceLibrary(host){
  host.replaceChildren();
  const config=window.SRNASourceLibraryConfig;
- if(typeof config?.getAccessToken!=='function'||typeof config.apiBase!=='string'||!config.apiBase){
+ if(typeof config?.apiBase!=='string'||!config.apiBase){
   host.textContent='Source Library setup pending: an authenticated backend connection is required.';
   return;
  }
  try{
   const base=new URL(config.apiBase,location.href);
+  if(base.protocol!=='https:' && !(base.protocol==='http:' && ['localhost','127.0.0.1'].includes(base.hostname))) throw Error('HTTPS source backend required');
   if(base.protocol!=='https:'&&base.hostname!=='localhost'&&base.hostname!=='127.0.0.1')throw Error('HTTPS required');
   const css=new URL('source-library-workspace.css',new URL('equipment/assets/',MBUSupabase.appRoot||location.href));
   if(!document.querySelector('[data-source-library-style]')){
@@ -23,7 +24,7 @@ async function drawSourceLibrary(host){
   }
   const module=await import(new URL('source-library-workspace.js',css).href);
   if(host.dataset.view!=='sources')return;
-  module.mountSourceLibraryWorkspace(host,{getAccessToken:config.getAccessToken,apiBase:base.href.endsWith('/')?base.href.slice(0,-1):base.href});
+  module.mountSourceLibraryWorkspace(host,{getAccessToken:config.getAccessToken||(()=>MBUSupabase.accessToken()),apiBase:base.href.endsWith('/')?base.href.slice(0,-1):base.href});
  }catch{host.textContent='Unable to initialize Source Library. Verify its private server configuration.'}
 }
 function drawOverview(host,modal){const s=cache.summary||{},reports=cache.reports||[],newReports=reports.filter(r=>r.status==='new'),sugs=(cache.suggestions||[]).filter(r=>r.status==='new');host.innerHTML='<div class="admin-page-head"><div><span class="mbu-section-kicker">At a glance</span><h3>Overview</h3></div><button class="secondary" data-refresh>Refresh data</button></div><div class="admin-metrics">'+metric('Active users',s.active_accounts||0,(s.accounts||0)+' total accounts')+metric('CAT users',s.cat_users||0,'accounts using Adaptive Mode')+metric('New reports',s.new_question_reports||0,'content issues awaiting review')+metric('First attempts',s.calibration_first_attempts||0,'all recorded first attempts')+metric('Questions with data',s.calibrated_items_any||0,'items seen by learners')+metric('Reliable difficulty',s.calibrated_items_25||0,'items with 25+ learners')+'<div class="admin-metric"><span>Exam 2 inventory</span><strong data-e2-inventory>…</strong><small>Equipment Exam 2 questions</small></div><div class="admin-metric"><span>All-course inventory</span><strong data-all-inventory>…</strong><small>Questions across the study tool</small></div>'+'</div><div class="admin-overview-grid"><section class="admin-card"><div class="admin-card-head"><div><h4>Needs attention</h4><p>Items that should be reviewed next.</p></div></div>'+((newReports.length||sugs.length)?'<div class="admin-attention">'+(newReports.length?'<button data-jump="reports"><strong>'+newReports.length+' new question report'+(newReports.length===1?'':'s')+'</strong><span>Review reported content problems →</span></button>':'')+(sugs.length?'<button data-jump="suggestions"><strong>'+sugs.length+' new suggestion'+(sugs.length===1?'':'s')+'</strong><span>Review feedback →</span></button>':'')+'</div>':'<div class="admin-empty">Nothing currently needs review.</div>')+'</section><section class="admin-card"><div class="admin-card-head"><div><h4>Question bank health</h4><p>Calibration maturity across the bank.</p></div><button class="secondary" data-jump="analytics">Explore</button></div><div class="admin-health"><div><b>'+Number(s.calibrated_items_any||0)+'</b><span>with data</span></div><div><b>'+Number(s.calibrated_items_2||0)+'</b><span>2+ learners</span></div><div><b>'+Number(s.calibrated_items_5||0)+'</b><span>5+ learners</span></div><div><b>'+Number(s.calibrated_items_25||0)+'</b><span>25+ learners</span></div></div><p class="mbu-muted">Population difficulty remains provisional until an item reaches 25 unique learners.</p></section></div>';host.querySelector('[data-refresh]').onclick=()=>refresh(host.closest('[data-admin-dashboard-host]'),modal,true);host.querySelectorAll('[data-jump]').forEach(b=>b.onclick=()=>show(host,b.dataset.jump,modal));
