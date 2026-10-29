@@ -28,7 +28,7 @@ export function mountSourceUpload({root,getAccessToken,apiBaseUrl='',fetchPart=f
  status.textContent='Choose a PDF to begin.';
  form.append(label,buttons,progress,status);wrapper.append(heading,description,form);root.replaceChildren(wrapper);
  let controller=null,resume=null;
- const sameFile=(file)=>resume&&file&&file.name===resume.name&&file.size===resume.size&&file.lastModified===resume.lastModified;
+ const sameFile=(file)=>Boolean(resume&&file===resume.file);
  const clearResume=()=>{resume=null;retry.hidden=true;};
  const setBusy=(busy)=>{submit.disabled=busy;input.disabled=busy;cancel.disabled=!busy;retry.disabled=busy;};
  input.addEventListener('change',()=>{if(!sameFile(input.files?.[0]))clearResume();});
@@ -51,7 +51,7 @@ export function mountSourceUpload({root,getAccessToken,apiBaseUrl='',fetchPart=f
     initiatedId=result.upload.uploadId;
    }
    if(path==='/source/uploads/start'&&result?.status==='uploading'&&initiatedId){
-    resume={uploadId:initiatedId,name:file.name,size:file.size,lastModified:file.lastModified};
+    resume={uploadId:initiatedId,file};
    }
    return result;
   };
