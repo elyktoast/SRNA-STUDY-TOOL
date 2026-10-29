@@ -1,4 +1,4 @@
-import {TUS_CHUNK_BYTES,MAX_TEXTBOOK_BYTES} from './ai-source-resumable-intent.mjs';
+import {TUS_CHUNK_BYTES,MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
 
 // Browser transport only. Uses the signed-in user's access token, NEVER a service-role key.
 // Requires separately reviewed Storage RLS that restricts uploads to owned active intents.
