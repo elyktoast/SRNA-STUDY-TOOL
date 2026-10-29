@@ -30,10 +30,19 @@ test('invalid PDF and malformed page data reject',async()=>{
 
 test('OCR refuses a physical page mismatch',async()=>{
  const extraction={pages:[{physicalPage:2,text:'',needsOcr:true}],ocrPages:[1]};
- await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable scanned text'}),/invalid OCR page mapping/);
+ await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable scanned text'}),/invalid PDF page sequence/);
 });
 
 test('duplicate OCR page requests are rejected',async()=>{
  const extraction={pages:[{physicalPage:1,text:'',needsOcr:true}],ocrPages:[1,1]};
- await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable page text'}),/duplicate OCR page number/);
+ await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable page text'}),/OCR page list mismatch/);
+});
+
+test('missing OCR request cannot silently skip a scanned page',async()=>{
+ const extraction={pages:[{physicalPage:1,text:'',needsOcr:true}],ocrPages:[]};
+ await assert.rejects(resolveOcrPages(extraction),/OCR page list mismatch/);
+});
+test('OCR rejects gaps in physical PDF page sequence',async()=>{
+ const extraction={pages:[{physicalPage:1,text:'Long enough text to pass'},{physicalPage:3,text:'Another page with text'}],ocrPages:[]};
+ await assert.rejects(resolveOcrPages(extraction),/invalid PDF page sequence/);
 });
