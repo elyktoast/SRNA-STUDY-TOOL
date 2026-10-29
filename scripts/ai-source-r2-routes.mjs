@@ -2,7 +2,7 @@ import {R2_PART_BYTES} from './ai-source-r2-upload-config.mjs';
 // R2 multipart endpoints. The caller supplies actorId from a verified Supabase
 // session. Never trust actor IDs, object paths or bucket names in request bodies.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const routes=new Set(['/source/uploads/r2/create','/source/uploads/r2/sign','/source/uploads/r2/complete','/source/uploads/r2/abort']);
+const routes=new Set(['/source/uploads/r2/create','/source/uploads/r2/sign','/source/uploads/r2/parts','/source/uploads/r2/complete','/source/uploads/r2/abort']);
 export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,getSession,saveSession,markComplete,clearSession}){
  if(typeof authorizeAdmin!=='function'||typeof getOwnedIntent!=='function'||!controller||
   typeof getSession!=='function'||typeof saveSession!=='function'||typeof markComplete!=='function'||typeof clearSession!=='function')
@@ -27,6 +27,10 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
    }
    if(!current?.multipart_id||current.multipart_id!==body.multipartId)
     return {status:409,body:{error:'multipart session unavailable'}};
+   if(path==='/source/uploads/r2/parts'){
+    if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
+    return {status:200,body:await controller.listParts(intent,{multipartId:body.multipartId})};
+   }
    if(path==='/source/uploads/r2/sign'){
     if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
     const signed=await controller.signPart(intent,{multipartId:body.multipartId,partNumber:body.partNumber});
