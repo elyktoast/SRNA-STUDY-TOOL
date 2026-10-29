@@ -44,7 +44,7 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     return {status:200,body:signed};
    }
    if(path==='/source/uploads/r2/complete'){
-    if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
+    if(current.r2_completed_at)return {status:200,body:{completed:true}};
     const completed=await controller.complete(intent,{multipartId:body.multipartId,parts:body.parts});
     const marked=await markComplete({uploadId:body.uploadId,actorId,multipartId:body.multipartId});
     if(!marked)throw new Error('multipart completion state unavailable');
