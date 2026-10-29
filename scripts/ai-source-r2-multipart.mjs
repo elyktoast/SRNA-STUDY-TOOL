@@ -76,6 +76,10 @@ export function createR2MultipartController({client,commands,presign}){
       !Array.isArray(parts)||parts.length!==count||
       parts.some((part,index)=>part?.PartNumber!==index+1||typeof part?.ETag!=='string'||!ETAG.test(part.ETag)))
     throw new Error('invalid R2 multipart completion');
+   const uploaded=await this.listParts(intent,{multipartId});
+   if(uploaded.parts.length!==parts.length||
+      uploaded.parts.some((part,index)=>part.PartNumber!==parts[index].PartNumber||part.ETag!==parts[index].ETag))
+    throw new Error('R2 multipart parts do not match uploaded inventory');
    await client.send(new commands.CompleteMultipartUploadCommand({
     Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path,UploadId:multipartId,
     MultipartUpload:{Parts:parts}
