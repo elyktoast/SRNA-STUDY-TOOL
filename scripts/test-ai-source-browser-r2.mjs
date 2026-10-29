@@ -112,3 +112,12 @@ test('embedded quote in recovered ETag is rejected',async()=>{
  };
  await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{throw new Error('should not transfer')}}),/invalid recovered R2 part/);
 });
+
+test('overlong recovered ETag is rejected before transfer',async()=>{
+ const request=async(path)=>{
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
+  if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:'a'.repeat(257)}]};
+  throw new Error('unexpected request');
+ };
+ await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{throw new Error('should not transfer')}}),/invalid recovered R2 part/);
+});
