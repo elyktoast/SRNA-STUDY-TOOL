@@ -20,7 +20,26 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
    const current=await getSession({uploadId:body.uploadId,actorId});
    if(path==='/source/uploads/r2/create'){
     if(current?.r2_completed_at)return {status:200,body:{completed:true,fileBytes:Number(intent.file_bytes),title:intent.title}};
-    if(current?.multipart_id)return {status:200,body:{multipartId:current.multipart_id,partBytes:R2_PART_BYTES,fileBytes:Number(intent.file_bytes),title:intent.title}};
+    if(current?.multipart_id){
+     // If R2 completed but the DB write was lost, the old upload ID disappears.
+     // Reconcile here so the browser can resume without knowing the old part ETags.
+     if(!current.r2_completed_at&&typeof controller.inspectCompleted==='function'){
+      try{
+       await controller.listParts(intent,{multipartId:current.multipart_id});
+      }catch(error){
+       if(error?.name!=='NoSuchUpload')throw error;
+       await controller.inspectCompleted(intent);
+       const marked=await markComplete({uploadId:body.uploadId,actorId,multipartId:current.multipart_id});
+       if(!marked){
+        const latest=await getSession({uploadId:body.uploadId,actorId});
+        if(latest?.multipart_id!==current.multipart_id||!latest.r2_completed_at)
+         throw new Error('multipart completion state unavailable');
+       }
+       return {status:200,body:{completed:true,fileBytes:Number(intent.file_bytes),title:intent.title}};
+      }
+     }
+     return {status:200,body:{multipartId:current.multipart_id,partBytes:R2_PART_BYTES,fileBytes:Number(intent.file_bytes),title:intent.title}};
+    }
     const created=await controller.initiate(intent);
     const saved=await saveSession({uploadId:body.uploadId,actorId,multipartId:created.multipartId});
     if(!saved){
