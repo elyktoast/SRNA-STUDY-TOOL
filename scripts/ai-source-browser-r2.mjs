@@ -60,6 +60,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
     if(signal?.aborted)throw new Error('upload canceled');
     // Refresh the signature for each retry: a previous URL may have expired.
     const signed=await request('/source/uploads/r2/sign',{uploadId,multipartId:started.multipartId,partNumber});
+    if(signal?.aborted)throw new Error('upload canceled');
     if(typeof signed?.url!=='string'||!signed.url.startsWith('https://'))throw new Error('invalid R2 signed part');
     try{
      response=await fetchPart(signed.url,{method:'PUT',body:file.slice(start,end),signal});
