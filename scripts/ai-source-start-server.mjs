@@ -37,7 +37,7 @@ export async function startSourceServer(env=process.env){
   // The legacy direct POST upload stays capped at 40 MiB.
   // Large PDFs use resumable Storage transfers and server-side verification.
   const intents=createSourceUploadIntentDb(db);
-  const uploadStorage=createSourceUploadStorageStream({supabase});
+  const uploadStorage=createSourceUploadStorageStream({supabase,storageOrigin:env.SUPABASE_URL});
   const uploadRoutes=createSourceUploadRoutes({
    authorizeAdmin:createSourceAdminVerifier(db),
    createIntent:intents.createIntent,
