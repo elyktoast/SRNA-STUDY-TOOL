@@ -142,3 +142,26 @@ test('unauthenticated library GET cannot access document metadata',async()=>{
   assert.equal(accessed,false);
  }finally{await new Promise(resolve=>server.close(resolve))}
 });
+
+test('multipart completion accepts bounded 42-part JSON metadata while other endpoints retain 8 KiB limit',async()=>{
+ let calls=0;
+ const server=createSourceNodeServer({
+  workflow:{upload:async()=>{},process:async()=>{}},
+  getAuthenticatedActor:async()=> 'verified-admin',
+  uploadRoutes:async()=>{calls++;return {status:200,body:{completed:true}}}
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base='http://127.0.0.1:'+server.address().port;
+  const body=JSON.stringify({uploadId:'22222222-2222-4222-8222-222222222222',
+   multipartId:'session',parts:Array.from({length:42},(_,i)=>({PartNumber:i+1,ETag:'a'.repeat(256)}))});
+  assert.ok(Buffer.byteLength(body)>8192);
+  assert.ok(Buffer.byteLength(body)<32768);
+  const headers={'content-type':'application/json'};
+  const complete=await fetch(base+'/source/uploads/r2/complete',{method:'POST',headers,body});
+  assert.equal(complete.status,200);
+  const sign=await fetch(base+'/source/uploads/r2/sign',{method:'POST',headers,body});
+  assert.equal(sign.status,413);
+  assert.equal(calls,1);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
