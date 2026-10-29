@@ -2,7 +2,7 @@
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store',...headers}});
 const MAX_BYTES=20*1024*1024;
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-function cors(origin){return {'access-control-allow-origin':origin,'access-control-allow-methods':'GET,POST,DELETE,OPTIONS','access-control-allow-headers':'authorization,content-type','access-control-max-age':'600','vary':'Origin'};}
+function cors(origin){return {'access-control-allow-origin':origin,'access-control-allow-methods':'GET,POST,DELETE,OPTIONS','access-control-allow-headers':'authorization,content-type,x-file-name','access-control-max-age':'600','vary':'Origin'};}
 function validKey(key,uid){return typeof key==='string'&&key.startsWith(uid+'/')&&key.length<=300&&/^[-a-zA-Z0-9_./]+$/.test(key)&&!key.includes('..')&&!key.includes('//');}
 async function identity(request,env){
  const match=/^Bearer (.+)$/.exec(request.headers.get('authorization')||'');
@@ -33,7 +33,7 @@ export default {async fetch(request,env){
    const size=Number(request.headers.get('content-length')||0);
    if(size>MAX_BYTES)return json({error:'File too large'},413,h);
    if(request.headers.get('content-type')!=='application/pdf')return json({error:'PDF required'},415,h);
-   const body=await request.arrayBuffer();
+   const reader=request.body?.getReader();if(!reader)return json({error:'Missing PDF body'},400,h);\n   const chunks=[];let total=0;while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BYTES){await reader.cancel();return json({error:'File too large'},413,h)}chunks.push(value)}\n   const body=new Uint8Array(total);let offset=0;for(const chunk of chunks){body.set(chunk,offset);offset+=chunk.byteLength}
    if(body.byteLength<5||body.byteLength>MAX_BYTES)return json({error:'Invalid PDF size'},413,h);
    const bytes=new Uint8Array(body);
    if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')return json({error:'Invalid PDF header'},415,h);
