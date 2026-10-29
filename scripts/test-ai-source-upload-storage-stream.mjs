@@ -9,7 +9,7 @@ function setup({body=[Uint8Array.of(1,2,3)],size=3}={}){
   calls.push(['bucket',bucket]);
   return {
    info:async()=>({data:{size},error:null}),
-   createSignedUrl:async()=>({data:{signedUrl:'https://example.test/private'},error:null})
+   createSignedUrl:async()=>({data:{signedUrl:'https://example.test/storage/v1/object/sign/ai-textbook-sources/documents/book.pdf?token=test'},error:null})
   };
  }}};
  const fetchImpl=async(url,options)=>{
@@ -19,7 +19,7 @@ function setup({body=[Uint8Array.of(1,2,3)],size=3}={}){
    controller.close();
   }})};
  };
- return {calls,adapter:createSourceUploadStorageStream({supabase,fetchImpl})};
+ return {calls,adapter:createSourceUploadStorageStream({supabase,storageOrigin:'https://example.test/',fetchImpl})};
 }
 test('inspects private object metadata',async()=>{
  const {adapter}=setup();
@@ -44,4 +44,12 @@ test('splits oversized transport chunks into bounded verification chunks',async(
  const sizes=[];
  for await(const chunk of adapter.readObject({bucket:'ai-textbook-sources',path}))sizes.push(chunk.length);
  assert.deepEqual(sizes,[6291456,1]);
+});
+
+test('rejects signed URLs pointing to an untrusted origin',async()=>{
+ const supabase={storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:'https://other.test/storage/v1/object/sign/ai-textbook-sources/x.pdf'}})})}};
+ let fetched=false;
+ const adapter=createSourceUploadStorageStream({supabase,storageOrigin:'https://example.test/',fetchImpl:async()=>{fetched=true}});
+ await assert.rejects(async()=>{for await(const _ of adapter.readObject({bucket:'ai-textbook-sources',path})){}},/untrusted private source URL/);
+ assert.equal(fetched,false);
 });
