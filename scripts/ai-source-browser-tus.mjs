@@ -3,7 +3,7 @@ import {TUS_CHUNK_BYTES,MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.m
 // Browser transport only. Uses the signed-in user's access token, NEVER a service-role key.
 // Requires separately reviewed Storage RLS that restricts uploads to owned active intents.
 export async function uploadSourcePdfWithTus({
- file,upload,projectId,accessToken,tus,progress=()=>{},signal
+ file,upload,projectId,accessToken,userId,tus,progress=()=>{},signal
 }){
  if(typeof tus?.Upload!=='function')throw new TypeError('TUS client required');
  if(!file||typeof file.size!=='number'||!Number.isSafeInteger(file.size)||
@@ -16,6 +16,8 @@ export async function uploadSourcePdfWithTus({
   throw new Error('invalid storage project');
  if(typeof accessToken!=='string'||!accessToken.trim())
   throw new Error('signed-in user token required');
+ if(typeof userId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId))
+  throw new Error('authenticated user ID required');
  if(signal?.aborted)throw new Error('upload canceled');
  const objectName='documents/'+upload.uploadId+'.pdf';
  const endpoint='https://'+projectId+'.storage.supabase.co/storage/v1/upload/resumable';
@@ -31,6 +33,7 @@ export async function uploadSourcePdfWithTus({
   const abort=()=>{Promise.resolve().then(()=>task?.abort?.()).catch(()=>{});finish(new Error('upload canceled'))};
   try{task=new tus.Upload(file,{
    endpoint,chunkSize:TUS_CHUNK_BYTES,uploadDataDuringCreation:true,
+   fingerprint:async()=>['ai-source',projectId,userId,upload.uploadId,file.size].join(':'),
    retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
    headers:{authorization:'Bearer '+accessToken},
    metadata:{bucketName:'ai-textbook-sources',objectName,contentType:'application/pdf'},
