@@ -20,5 +20,5 @@ test('source API smoke check distinguishes proxy and authorization failures',asy
 test('source API smoke check rejects non-JSON HTML fallback and insecure URLs',async()=>{
  const result=await checkSourceApi({...args,fetchImpl:async()=>response(200,'text/html')});
  assert.equal(result.ready,false);
- assert.throws(()=>checkSourceApi({...args,baseUrl:'http://study.example'}),/HTTPS/);
+ await assert.rejects(checkSourceApi({...args,baseUrl:'http://study.example'}),/HTTPS/);
 });
