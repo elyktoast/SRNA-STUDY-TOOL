@@ -1,3 +1,4 @@
+import {assertSourceChecksum} from './ai-source-checksum.mjs';
 // Server-only adapter. Supply a privileged Supabase client after admin authorization.
 // Never return a public URL for textbook source files.
 export function createPrivateSourceReader({supabase,bucket='ai-textbook-sources'}){
@@ -17,6 +18,7 @@ export function createPrivateSourceReader({supabase,bucket='ai-textbook-sources'
   if(!data||typeof data.arrayBuffer!=='function') throw new Error('private source download failed');
   const bytes=new Uint8Array(await data.arrayBuffer());
   if(bytes.length!==document.file_bytes) throw new Error('source file length mismatch');
+  assertSourceChecksum(bytes,document.sha256);
   return bytes;
  };
 }
