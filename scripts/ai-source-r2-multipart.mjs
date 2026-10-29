@@ -5,7 +5,7 @@ import {MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
 export const R2_PART_BYTES=12*1024*1024;
 export const R2_UPLOAD_CONCURRENCY=3;
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const ETAG=/^"?[0-9a-f]{32}"?$/i;
+const ETAG=/^"?[^"\\r\\n]{1,256}"?$/;
 export function createR2MultipartController({client,commands,presign}){
  if(typeof client?.send!=='function'||typeof presign!=='function'||
     !['CreateMultipartUploadCommand','UploadPartCommand','CompleteMultipartUploadCommand','AbortMultipartUploadCommand']
