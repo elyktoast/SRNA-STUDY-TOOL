@@ -141,3 +141,20 @@ test('does not reconcile invalid completion requests using HEAD',async()=>{
  assert.equal(result.status,400);
  assert.equal(inspected,0);
 });
+
+test('refuses completion recovery when private object HEAD verification fails',async()=>{
+ let marked=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>{marked++;return true},clearSession:async()=>true,
+  controller:{
+   complete:async()=>{const error=new Error('session absent');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>{throw new Error('completed R2 object metadata mismatch')},
+   initiate:async()=>{},signPart:async()=>{},listParts:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(result.status,500);
+ assert.equal(marked,0);
+});
