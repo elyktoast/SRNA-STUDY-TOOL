@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {verifySourceRuntimeResources} from './ai-source-runtime-preflight.mjs';
-const db={query:async sql=>sql.includes('to_regclass')?{rows:[{relation:'private.snar_admins'}]}:{rows:[{table_name:'ai_source_documents'},{table_name:'ai_source_sections'},{table_name:'ai_source_chunks'},{table_name:'ai_source_processing_jobs'}]}};
+const db={query:async sql=>sql.includes('to_regclass')?{rows:[{relation:'private.snar_admins'}]}:sql.includes('pg_class')?{rows:['ai_source_documents','ai_source_sections','ai_source_chunks','ai_source_processing_jobs'].map(relname=>({relname,relrowsecurity:true}))}:{rows:[{table_name:'ai_source_documents'},{table_name:'ai_source_sections'},{table_name:'ai_source_chunks'},{table_name:'ai_source_processing_jobs'}]}};
 test('accepts existing private schema and private bucket',async()=>{
  assert.equal(await verifySourceRuntimeResources({db,supabase:{storage:{getBucket:async()=>({data:{public:false},error:null})}}}),true);
 });
@@ -20,4 +20,9 @@ test('rejects missing sections or job tables',async()=>{
 test('rejects absent admin authorization table',async()=>{
  const missing={query:async sql=>sql.includes('to_regclass')?{rows:[{relation:null}]}:db.query(sql)};
  await assert.rejects(verifySourceRuntimeResources({db:missing,supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/admin authorization table/);
+});
+
+test('rejects disabled row-level security',async()=>{
+ const unsafe={query:async sql=>sql.includes('pg_class')?{rows:[]}:db.query(sql)};
+ await assert.rejects(verifySourceRuntimeResources({db:unsafe,supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/RLS disabled/);
 });
