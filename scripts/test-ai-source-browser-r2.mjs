@@ -35,3 +35,22 @@ test('transient transfer failure preserves R2 session for retry',async()=>{
  await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,concurrency:1,fetchPart:async()=>{throw new Error('network failed')}}),/network failed/);
  assert.equal(paths.includes('/source/uploads/r2/abort'),false);
 });
+
+test('failed part retries with a freshly signed URL',async()=>{
+ let signs=0,attempts=0;
+ const request=async(path,body)=>{
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES};
+  if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:etag}]};
+  if(path.endsWith('/sign'))return {url:'https://r2.example/part-'+(++signs)};
+  if(path.endsWith('/complete'))return {completed:true};
+  throw new Error('unexpected request');
+ };
+ const fetchPart=async(url)=>{
+  attempts++;
+  assert.equal(url,'https://r2.example/part-'+attempts);
+  return {ok:attempts===2,headers:{get:()=>etag}};
+ };
+ await uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart,concurrency:1});
+ assert.equal(signs,2);
+ assert.equal(attempts,2);
+});
