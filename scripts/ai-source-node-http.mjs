@@ -13,6 +13,8 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   if(req.method!=='POST'||!['/source/upload','/source/process'].includes(path))
    return send(404,{error:'not found'});
   try{
+   const actor=await getAuthenticatedActor({headers:req.headers});
+   if(!actor) return send(401,{error:'authentication required'});
    const parts=[];
    let size=0;
    const limit=path==='/source/upload'?maxBytes+4096:8192;
