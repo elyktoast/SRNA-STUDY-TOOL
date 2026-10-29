@@ -96,3 +96,25 @@ test('rejects invalid progress callback before constructing transport',async()=>
  }),/progress callback required/);
  assert.equal(m.options,undefined);
 });
+
+test('reports valid incremental progress and ignores corrupt transport counters',async()=>{
+ let options;
+ class Upload{
+  constructor(_file,opts){options=opts}
+  async findPreviousUploads(){return []}
+  start(){
+   options.onProgress(6291456,file.size);
+   options.onProgress(-1,file.size);
+   options.onProgress(file.size+1,file.size);
+   options.onProgress(file.size,file.size);
+   options.onSuccess();
+  }
+ }
+ const values=[];
+ await uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  userId:'11111111-1111-4111-8111-111111111111',tus:{Upload},
+  progress:value=>values.push(value.bytesUploaded)
+ });
+ assert.deepEqual(values,[6291456,file.size]);
+});
