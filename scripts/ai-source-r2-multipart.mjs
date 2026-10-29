@@ -62,7 +62,7 @@ export function createR2MultipartController({client,commands,presign}){
     if(!result.IsTruncated)break;
     const oldMarker=marker??0;
     marker=result.NextPartNumberMarker;
-    if(!Number.isInteger(marker)||marker<=oldMarker||parts.length>count)
+    if(!Number.isInteger(marker)||marker<=oldMarker||marker>count||parts.length>count)
      throw new Error('invalid R2 part pagination');
    }while(true);
    if(new Set(parts.map(part=>part.PartNumber)).size!==parts.length)
