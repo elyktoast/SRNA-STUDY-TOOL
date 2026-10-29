@@ -84,3 +84,18 @@ test('completed R2 session resumes directly to verification',async()=>{
  assert.equal(document.id,'document-1');
  assert.deepEqual(calls,['/source/uploads/r2/create','/source/uploads/verify']);
 });
+
+test('cancellation after initiating an intent prevents starting a transfer',async()=>{
+ const abort=new AbortController(),calls=[];
+ const request=async(path)=>{
+  calls.push(path);
+  if(path.endsWith('/initiate')){
+   abort.abort();
+   return {upload:{uploadId:id,fileBytes:file.size,status:'pending'}};
+  }
+  throw new Error('canceled upload must not start');
+ };
+ await assert.rejects(submitSourceTextbook({file,request,signal:abort.signal,
+  fetchPart:async()=>{throw new Error('must not transfer')}}),/upload canceled/);
+ assert.deepEqual(calls,['/source/uploads/initiate']);
+});
