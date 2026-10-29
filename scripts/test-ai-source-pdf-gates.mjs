@@ -32,3 +32,8 @@ test('OCR refuses a physical page mismatch',async()=>{
  const extraction={pages:[{physicalPage:2,text:'',needsOcr:true}],ocrPages:[1]};
  await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable scanned text'}),/invalid OCR page mapping/);
 });
+
+test('duplicate OCR page requests are rejected',async()=>{
+ const extraction={pages:[{physicalPage:1,text:'',needsOcr:true}],ocrPages:[1,1]};
+ await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable page text'}),/duplicate OCR page number/);
+});
