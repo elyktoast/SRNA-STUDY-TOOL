@@ -51,7 +51,8 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     }catch(error){
      // A completed multipart upload no longer has a ListParts inventory.
      // Reconcile only when the exact private object exists with expected metadata.
-     if(typeof controller.inspectCompleted!=='function')throw error;
+     if(typeof controller.inspectCompleted!=='function'||
+        !['NoSuchUpload','NoSuchKey'].includes(error?.name))throw error;
      try{completed=await controller.inspectCompleted(intent)}
      catch{throw error}
     }
