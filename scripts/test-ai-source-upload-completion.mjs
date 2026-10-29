@@ -58,3 +58,15 @@ test('rejects empty stream chunks',async()=>{
  await assert.rejects(verifyCompletedTextbook(f.options),/invalid upload stream chunk size/);
  assert.deepEqual(f.calls,['failed']);
 });
+
+test('accepts PDF signature split across single-byte chunks',async()=>{
+ const f=setup({readObject:async function*(){for(const byte of pdf) yield Uint8Array.of(byte)}});
+ const result=await verifyCompletedTextbook(f.options);
+ assert.equal(result.document.id,'document');
+ assert.equal(f.calls.length,1);
+});
+test('rejects stream that exceeds declared length',async()=>{
+ const f=setup({readObject:async function*(){yield pdf;yield Uint8Array.of(0)}});
+ await assert.rejects(verifyCompletedTextbook(f.options),/exceeds expected size/);
+ assert.deepEqual(f.calls,['failed']);
+});
