@@ -3,7 +3,7 @@ import {verifyCompletedTextbook} from './ai-source-upload-completion.mjs';
 
 // Trusted caller supplies actorId from verified authentication, never the JSON body.
 export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUploading,verifyAdapters}){
- if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters)
+ if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters||typeof verifyAdapters!=='object')
   throw new TypeError('trusted upload dependencies required');
  return async ({path,actorId,body})=>{
   if(!['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify'].includes(path))
@@ -22,7 +22,7 @@ export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUpload
     return started?{status:200,body:{status:'uploading'}}:{status:409,body:{error:'upload cannot start'}};
    }
    if(path==='/source/uploads/verify'){
-    const result=await verifyCompletedTextbook({actorId,uploadId:body.uploadId,authorizeAdmin,...verifyAdapters});
+    const result=await verifyCompletedTextbook({...verifyAdapters,actorId,uploadId:body.uploadId,authorizeAdmin});
     return {status:200,body:{result}};
    }
    return {status:404,body:{error:'not found'}};
