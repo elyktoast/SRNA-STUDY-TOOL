@@ -13,7 +13,7 @@ export async function verifyCompletedTextbook({
   throw new TypeError('trusted upload verification adapters required');
  if(typeof actorId!=='string'||!actorId.trim()||await authorizeAdmin(actorId)!==true)
   throw new Error('source upload access denied');
- if(typeof uploadId!=='string'||!/^[0-9a-f-]{36}$/i.test(uploadId))
+ if(typeof uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uploadId))
   throw new Error('invalid upload ID');
  const intent=await claimVerification({uploadId,actorId});
  if(!intent) throw new Error('upload unavailable for verification');
