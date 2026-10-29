@@ -17,11 +17,12 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
  host.innerHTML='<header class="sl-header"><div><h1>Textbook Source Library</h1><p>Private textbook sources for AI question generation</p></div><button type="button" class="sl-add">+ Add textbook</button></header><div class="sl-metrics" aria-label="Library totals"></div><div class="sl-controls"><input type="search" aria-label="Search textbooks" placeholder="Search textbooks…"><select aria-label="Filter by status"><option value="">All statuses</option><option value="ready">Ready</option><option value="processing">Processing</option><option value="failed">Needs attention</option></select></div><div class="sl-columns"><div class="sl-list" role="list" aria-label="Textbooks"></div><aside class="sl-details" aria-label="Textbook details"><p>Select a textbook to review its details.</p></aside></div><div class="sl-upload" hidden></div><p class="sl-feedback" role="status" aria-live="polite"></p>';
  root.replaceChildren(host);
  const list=host.querySelector('.sl-list'),details=host.querySelector('.sl-details'),metrics=host.querySelector('.sl-metrics'),search=host.querySelector('[type=search]'),filter=host.querySelector('select'),feedback=host.querySelector('.sl-feedback'),uploadHost=host.querySelector('.sl-upload');
- let documents=[],selected=null,uploadPanel=null,revision=0;
+ let documents=[],selected=null,uploadPanel=null,revision=0,detailRevision=0;
  const safeText=value=>String(value??'');
  const el=(tag,className,text)=>{const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=safeText(text);return node};
  const validStatus=value=>['ready','processing','failed','uploaded','extracting','indexing'].includes(value)?value:'unknown';
  function showDetails(doc){
+  const currentDetail=++detailRevision;
   details.replaceChildren();
   const title=el('h2','',doc.title||'Untitled textbook');
   details.append(title,el('p','sl-muted','Status: '+validStatus(doc.processing_status)));
@@ -29,11 +30,12 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
   for(const name of ['Overview','Pages & citations','AI retrieval']){
    const button=el('button','',name);button.type='button';
    button.addEventListener('click',async()=>{
+    const currentTab=++detailRevision;
     for(const child of tabs.children)child.setAttribute('aria-pressed',String(child===button));
     const content=details.querySelector('.sl-detail-content');content.replaceChildren(el('p','sl-muted','Loading…'));
     try{
      const record=await loadDetails(doc.id,name);
-     if(selected!==doc.id)return;
+     if(selected!==doc.id||currentTab!==detailRevision||!host.isConnected)return;
      if(name==='Overview'){
       content.replaceChildren(el('p','','PDF pages: '+safeText(record.pageCount??'Not available')),el('p','','Indexed chunks: '+safeText(record.chunkCount??'Not available')));
      }else if(name==='Pages & citations'){
@@ -42,7 +44,7 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
      }else{
       content.replaceChildren(el('p','sl-muted','Course assignments and retrieval settings are read-only until admin endpoints are connected.'));
      }
-    }catch{content.replaceChildren(el('p','sl-error','Unable to load document details.'))}
+    }catch{if(currentTab===detailRevision&&host.isConnected)content.replaceChildren(el('p','sl-error','Unable to load document details.'))}
    });
    tabs.append(button);
   }
@@ -51,7 +53,7 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
  }
  function render(){
   const term=search.value.trim().toLowerCase(),state=filter.value;
-  const shown=documents.filter(d=>(!state||validStatus(d.processing_status)===state)&&(!term||safeText(d.title).toLowerCase().includes(term)));
+  const shown=documents.filter(d=>(!state||(state==='processing'?['extracting','indexing','processing'].includes(validStatus(d.processing_status)):validStatus(d.processing_status)===state))&&(!term||safeText(d.title).toLowerCase().includes(term)));
   metrics.replaceChildren(...[['Textbooks',documents.length],['Ready',documents.filter(d=>d.processing_status==='ready').length],['Processing',documents.filter(d=>['processing','extracting','indexing'].includes(d.processing_status)).length],['Needs attention',documents.filter(d=>d.processing_status==='failed').length]].map(([label,count])=>{const card=el('div','sl-metric');card.append(el('strong','',count),el('span','',label));return card}));
   list.replaceChildren();
   if(!shown.length)list.append(el('p','sl-muted','No textbooks match your filters.'));
@@ -79,5 +81,5 @@ export function mountSourceLibraryWorkspace(root,{getAccessToken,apiBase='',load
   uploadPanel=mountSourceLibrary(uploadHost,{getAccessToken,apiBase});
  });
  void refresh();
- return {refresh,destroy(){revision++;host.remove()}};
+ return {refresh,destroy(){revision++;detailRevision++;uploadPanel?.destroy();host.remove()}};
 }
