@@ -12,6 +12,7 @@ export function validateSourceManifest(manifest,{minTextChars=100}={}){
    if(c.chunkOrder!==index) errors.push('nonsequential chunk order at '+index);
    if(!Number.isInteger(c.pageStart)||c.pageStart<1) errors.push('invalid page at '+index);
    if(c.pageEnd!==c.pageStart) errors.push('unexpected page span at '+index);
+   if(Number.isInteger(manifest.pagesSeen)&&c.pageStart>manifest.pagesSeen) errors.push('page outside document at '+index);
    if(c.pageStart<previous) errors.push('out-of-order pages at '+index);
    previous=c.pageStart;
    if(typeof c.content!=='string'||!c.content.trim()) errors.push('empty chunk at '+index);
