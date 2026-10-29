@@ -14,11 +14,16 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   let path;
   try{path=new URL(req.url,'http://localhost').pathname}
   catch{return send(400,{error:'invalid request path'})}
-  if(req.method!=='POST'||!['/source/upload','/source/process'].includes(path))
+  if(!((req.method==='POST'&&['/source/upload','/source/process'].includes(path))||(req.method==='GET'&&['/source/documents','/source/detail'].includes(path))))
    return send(404,{error:'not found'});
   try{
    const actor=await getAuthenticatedActor({headers:req.headers});
    if(typeof actor!=='string'||!actor.trim()) return send(401,{error:'authentication required'});
+   if(req.method==='GET'){
+    const url=new URL(req.url,'http://localhost');
+    const result=await executeAuthenticatedSourceOperation({workflow,maxBytes,path,body:{documentId:url.searchParams.get('id')},actorId:actor});
+    return send(result.status,result.body);
+   }
    if(path==='/source/upload'){
     if(req.headers['content-type']?.split(';')[0]?.trim()!=='application/pdf')
      return send(415,{error:'PDF required'});
