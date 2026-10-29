@@ -1,0 +1,38 @@
+name: Source Library staging checks
+
+on:
+  pull_request:
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'scripts/test-source-library-staging.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  push:
+    branches:
+      - feature/source-library-r2-staging
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'scripts/test-source-library-staging.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  staging-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check workers/source-library-staging/src/index.js
+          node --check equipment/assets/source-material-staging-storage.js
+          node --check scripts/test-source-library-staging.mjs
+      - name: Staging Worker tests
+        run: node --test scripts/test-source-library-staging.mjs
