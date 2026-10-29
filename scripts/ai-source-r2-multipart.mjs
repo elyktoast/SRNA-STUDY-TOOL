@@ -1,7 +1,9 @@
 // Trusted server-side multipart controller. Only call after validating a signed-in
 // administrator and an active, owned upload intent in the database.
 import {R2_SOURCE_BUCKET} from './ai-source-r2-storage.mjs';
-import {MAX_TEXTBOOK_BYTES,TUS_CHUNK_BYTES} from './ai-source-upload-constants.mjs';
+import {MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
+export const R2_PART_BYTES=12*1024*1024;
+export const R2_UPLOAD_CONCURRENCY=3;
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ETAG=/^"?[0-9a-f]{32}"?$/i;
 export function createR2MultipartController({client,commands,presign}){
@@ -23,11 +25,11 @@ export function createR2MultipartController({client,commands,presign}){
     Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path,ContentType:'application/pdf'
    }));
    if(typeof result?.UploadId!=='string'||!result.UploadId)throw new Error('R2 multipart session unavailable');
-   return {multipartId:result.UploadId,partBytes:TUS_CHUNK_BYTES};
+   return {multipartId:result.UploadId,partBytes:R2_PART_BYTES};
   },
   async signPart(intent,{multipartId,partNumber}){
    check(intent);
-   const count=Math.ceil(Number(intent.file_bytes)/TUS_CHUNK_BYTES);
+   const count=Math.ceil(Number(intent.file_bytes)/R2_PART_BYTES);
    if(typeof multipartId!=='string'||!multipartId||multipartId.length>512||
       !Number.isInteger(partNumber)||partNumber<1||partNumber>count)
     throw new Error('invalid R2 multipart part');
@@ -35,11 +37,11 @@ export function createR2MultipartController({client,commands,presign}){
     Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path,UploadId:multipartId,PartNumber:partNumber
    }),{expiresIn:300});
    if(typeof url!=='string'||!url.startsWith('https://'))throw new Error('R2 part signature unavailable');
-   return {url,partNumber,partBytes:TUS_CHUNK_BYTES};
+   return {url,partNumber,partBytes:R2_PART_BYTES};
   },
   async complete(intent,{multipartId,parts}){
    check(intent);
-   const count=Math.ceil(Number(intent.file_bytes)/TUS_CHUNK_BYTES);
+   const count=Math.ceil(Number(intent.file_bytes)/R2_PART_BYTES);
    if(typeof multipartId!=='string'||!multipartId||multipartId.length>512||
       !Array.isArray(parts)||parts.length!==count||
       parts.some((part,index)=>part?.PartNumber!==index+1||typeof part?.ETag!=='string'||!ETAG.test(part.ETag)))
