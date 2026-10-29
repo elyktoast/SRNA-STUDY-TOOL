@@ -5,6 +5,9 @@ on:
     paths:
       - 'workers/source-library-staging/**'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
       - '.github/workflows/source-library-staging.yml'
   push:
@@ -13,6 +16,9 @@ on:
     paths:
       - 'workers/source-library-staging/**'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
       - '.github/workflows/source-library-staging.yml'
   workflow_dispatch:
@@ -36,3 +42,5 @@ jobs:
           node --check scripts/test-source-library-staging.mjs
       - name: Staging Worker tests
         run: node --test scripts/test-source-library-staging.mjs
+      - name: Repository validation
+        run: npm run validate
