@@ -20,7 +20,7 @@ export function createSourceUploadStorageStream({supabase,storageOrigin,fetchImp
   if(error||typeof data?.signedUrl!=='string')throw new Error('private source URL unavailable');
   const signed=new URL(data.signedUrl);
   if(signed.protocol!=='https:'||signed.origin!==origin.origin||
-     !signed.pathname.startsWith('/storage/v1/object/sign/ai-textbook-sources/'))
+     signed.pathname!==('/storage/v1/object/sign/'+bucket+'/'+path))
    throw new Error('untrusted private source URL');
   const response=await fetchImpl(signed.href,{redirect:'error',headers:{'accept-encoding':'identity'}});
   if(!response.ok||!response.body)throw new Error('private source stream unavailable');
