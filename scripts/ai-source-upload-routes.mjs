@@ -3,7 +3,8 @@ import {verifyCompletedTextbook} from './ai-source-upload-completion.mjs';
 
 // Trusted caller supplies actorId from verified authentication, never the JSON body.
 export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUploading,verifyAdapters}){
- if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters||typeof verifyAdapters!=='object'||\n    ['claimVerification','inspectObject','readObject','completeVerifiedIntent','failVerification'].some(key=>typeof verifyAdapters[key]!=='function'))
+ if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters||typeof verifyAdapters!=='object'||
+    ['claimVerification','inspectObject','readObject','completeVerifiedIntent','failVerification'].some(key=>typeof verifyAdapters[key]!=='function'))
   throw new TypeError('trusted upload dependencies required');
  return async ({path,actorId,body})=>{
   if(!['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify'].includes(path))
