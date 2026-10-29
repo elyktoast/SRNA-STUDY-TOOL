@@ -25,6 +25,7 @@ export async function uploadSourcePdfWithTus({
  return new Promise((resolve,reject)=>{
   let settled=false;
   let task;
+  let highestProgress=0;
   const finish=(error)=>{
    if(settled)return;
    settled=true;
@@ -38,7 +39,7 @@ export async function uploadSourcePdfWithTus({
    retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
    headers:{authorization:'Bearer '+accessToken},
    metadata:{bucketName:'ai-textbook-sources',objectName,contentType:'application/pdf'},
-   onProgress:(done,total)=>{if(!settled&&total===file.size&&Number.isFinite(done)&&done>=0&&done<=total){try{progress({bytesUploaded:done,bytesTotal:total})}catch{/* UI callbacks must not abort a valid transfer */}}},
+   onProgress:(done,total)=>{if(!settled&&total===file.size&&Number.isFinite(done)&&done>=highestProgress&&done<=total){highestProgress=done;try{progress({bytesUploaded:done,bytesTotal:total})}catch{/* UI callbacks must not abort a valid transfer */}}},
    onError:error=>finish(error),
    onSuccess:()=>finish()
   });}catch(error){finish(error);return}
