@@ -79,8 +79,11 @@ export function createSourceUploadFinalizer(db){
    if(!current||current.status!=='verifying'||current.document_id||
       current.storage_bucket!=='ai-textbook-sources'||
       current.storage_path!==`documents/${uploadId}.pdf`||
+      typeof current.title!=='string'||!current.title.trim()||
       Number(current.file_bytes)!==fileBytes||current.mime_type!==mimeType||
-      intent?.storage_path!==current.storage_path)
+      intent?.storage_path!==current.storage_path||
+      intent?.storage_bucket!==current.storage_bucket||
+      Number(intent?.file_bytes)!==fileBytes)
     throw new Error('upload not eligible for finalization');
    const inserted=await client.query(
     `insert into private.ai_source_documents
