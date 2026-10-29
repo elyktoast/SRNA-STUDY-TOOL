@@ -16,6 +16,7 @@ export function buildSourceManifest({documentId,pages,maxChars=2400,overlapChars
       pageEnd:chunk.physicalPage,
       printedPage:chunk.printedPage,
       sectionHeading:chunk.sectionHeading,
+      extractionMethod:chunk.extractionMethod,
       content:chunk.content,
       contentHash:createHash('sha256').update(chunk.content).digest('hex')
     }))
