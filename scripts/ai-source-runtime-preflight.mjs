@@ -14,7 +14,10 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  const columns=await db.query("select column_name from information_schema.columns where table_schema='private' and table_name='ai_source_chunks' and column_name=any($1::text[])",[['printed_page','section_heading']]);
  const citationColumns=new Set((columns.rows??[]).map(row=>row.column_name));
  if(!citationColumns.has('printed_page')||!citationColumns.has('section_heading')) throw new Error('source citation metadata schema missing');
- const grants=await db.query("select table_name,privilege_type,grantee from information_schema.role_table_grants where table_schema='private' and table_name=any($1::text[]) and grantee=any($2::text[])",[required,['anon','authenticated','PUBLIC']]);
+ // Effective privileges catch inherited and PUBLIC grants, not just direct ACL entries.
+ const grants=await db.query(
+  "select roles.client_role, names.table_name from unnest($1::text[]) as roles(client_role) cross join unnest($2::text[]) as names(table_name) where has_table_privilege(roles.client_role, format('%I.%I','private',names.table_name), 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')",
+  [['anon','authenticated'],required]);
  if((grants.rows??[]).length) throw new Error('source tables exposed to client roles');
  const schemaGrants=await db.query("select client_role from unnest($1::text[]) as roles(client_role) where has_schema_privilege(client_role, 'private', 'USAGE')",[['anon','authenticated']]);
  if((schemaGrants.rows??[]).length) throw new Error('private source schema exposed to client roles');
