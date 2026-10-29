@@ -103,3 +103,42 @@ test('Node adapter rejects malformed JSON before processing',async()=>{
   assert.equal(called,false);
  }finally{await new Promise(resolve=>server.close(resolve))}
 });
+
+test('library GET endpoints use the authenticated actor and return private summaries',async()=>{
+ const actors=[];
+ const server=createSourceNodeServer({
+  workflow:{
+   upload:async()=>{},process:async()=>{},
+   list:async({actorId})=>{actors.push(actorId);return [{id:'book',title:'Example'}]},
+   detail:async({actorId,documentId})=>{actors.push(actorId);return documentId==='book'?{pageCount:2,chunkCount:4,passages:[]}:null}
+  },
+  getAuthenticatedActor:async()=> 'verified-admin'
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const base='http://127.0.0.1:'+server.address().port;
+  const listing=await fetch(base+'/source/documents');
+  assert.equal(listing.status,200);
+  assert.equal((await listing.json()).documents[0].title,'Example');
+  const detail=await fetch(base+'/source/detail?id=book');
+  assert.equal(detail.status,200);
+  assert.equal((await detail.json()).chunkCount,4);
+  const missing=await fetch(base+'/source/detail?id=missing');
+  assert.equal(missing.status,404);
+  assert.deepEqual(actors,['verified-admin','verified-admin','verified-admin']);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
+
+test('unauthenticated library GET cannot access document metadata',async()=>{
+ let accessed=false;
+ const server=createSourceNodeServer({
+  workflow:{upload:async()=>{},process:async()=>{},list:async()=>{accessed=true},detail:async()=>{accessed=true}},
+  getAuthenticatedActor:async()=>null
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/documents');
+  assert.equal(response.status,401);
+  assert.equal(accessed,false);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
