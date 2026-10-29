@@ -21,7 +21,12 @@ export async function startSourceServer(env=process.env){
   await db.end();
   throw new Error('textbook source resources not configured');
  }
- const getDocument=await createSourcePdfJsProvider();
+ let getDocument;
+ try{getDocument=await createSourcePdfJsProvider()}
+ catch{
+  await db.end();
+  throw new Error('textbook PDF parser unavailable');
+ }
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
  const server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument});
  try{
