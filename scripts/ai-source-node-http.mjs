@@ -4,6 +4,7 @@ import {executeAuthenticatedSourceOperation} from './ai-source-http-handler.mjs'
 // Supply a trusted session resolver and backend workflow. No secrets in the browser.
 export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=104857600}){
  if(typeof getAuthenticatedActor!=='function') throw new TypeError('session resolver required');
+ if(!Number.isSafeInteger(maxBytes)||maxBytes<8) throw new RangeError('invalid size limit');
  if(typeof workflow?.upload!=='function'||typeof workflow?.process!=='function') throw new TypeError('source workflow required');
  return createServer(async(req,res)=>{
   const send=(status,body)=>{
@@ -16,9 +17,15 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   try{
    const actor=await getAuthenticatedActor({headers:req.headers});
    if(typeof actor!=='string'||!actor.trim()) return send(401,{error:'authentication required'});
+   if(path==='/source/upload'){
+    if(req.headers['content-type']?.split(';')[0]?.trim()!=='application/pdf')
+     return send(415,{error:'PDF required'});
+    if(typeof req.headers['x-source-title']!=='string')
+     return send(400,{error:'title required'});
+   }
    const parts=[];
    let size=0;
-   const limit=path==='/source/upload'?maxBytes+4096:8192;
+   const limit=path==='/source/upload'?maxBytes:8192;
    for await(const part of req){
     size+=part.length;
     if(size>limit) return send(413,{error:'request too large'});
