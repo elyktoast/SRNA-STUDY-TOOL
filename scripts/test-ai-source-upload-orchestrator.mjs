@@ -35,3 +35,18 @@ test('rejects verification response for another upload',async()=>{
  const h=setup({verifyId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'});
  await assert.rejects(submitSourceTextbook({file,request:h.request,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:h.tus}),/verification did not complete/);
 });
+
+test('rejects invalid files before initiating a server upload intent',async()=>{
+ for(const bad of [
+  {...file,size:524288001},
+  {...file,size:0},
+  {...file,type:'application/octet-stream'}
+ ]){
+  const h=setup();
+  await assert.rejects(submitSourceTextbook({
+   file:bad,request:h.request,projectId:'xqyasyambwdyhsjkftqu',
+   accessToken:'user-token',userId:'11111111-1111-4111-8111-111111111111',tus:h.tus
+  }),/invalid PDF file/);
+  assert.equal(h.calls.length,0);
+ }
+});
