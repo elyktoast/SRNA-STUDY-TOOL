@@ -35,6 +35,16 @@ export function createSourceUploadIntentDb(db){
     [uploadId,actorId]);
    return result.rowCount===1;
   },
+  async failVerification({uploadId,actorId}){
+   if(typeof uploadId!=='string'||!/^[0-9a-f-]{36}$/i.test(uploadId)||
+      typeof actorId!=='string'||!actorId.trim()) throw new Error('invalid upload identity');
+   const result=await db.query(
+    `update private.ai_source_upload_intents
+        set status='failed',updated_at=now()
+      where id=$1 and actor_id=$2 and status='verifying'
+      returning id`,[uploadId,actorId]);
+   if(result.rowCount!==1) throw new Error('upload failure transition unavailable');
+  },
   async claimVerification({uploadId,actorId}){
    const result=await db.query(
     `update private.ai_source_upload_intents
