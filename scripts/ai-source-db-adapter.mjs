@@ -5,10 +5,14 @@ export function createSourceDbAdapter(db){
  return {
   async setStatus(documentId,status){
    if(!['extracting','indexing','ready','failed'].includes(status)) throw new Error('invalid processing status');
+   // Atomically claim processing: a second worker must not replace another worker's chunks.
+   const sql=status==='extracting'
+    ? "update private.ai_source_documents set processing_status=$2,updated_at=now() where id=$1 and processing_status in ('uploaded','ready','failed') returning id"
+    : 'update private.ai_source_documents set processing_status=$2,updated_at=now() where id=$1 returning id';
    const result=await db.query(
-    'update private.ai_source_documents set processing_status=$2,updated_at=now() where id=$1 returning id',
+    sql,
     [documentId,status]);
-   if(result.rowCount!==1) throw new Error('source document missing or inaccessible');
+   if(result.rowCount!==1) throw new Error(status==='extracting'?'source processing already active or document unavailable':'source document missing or inaccessible');
   },
   async saveChunks(documentId,chunks){
    if(!Array.isArray(chunks)||chunks.length===0) throw new Error('no chunks to save');
