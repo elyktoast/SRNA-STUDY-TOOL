@@ -15,7 +15,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   let path;
   try{path=new URL(req.url,'http://localhost').pathname}
   catch{return send(400,{error:'invalid request path'})}
-  const isUploadSession=Boolean(uploadRoutes)&&req.method==='POST'&&['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify','/source/uploads/r2/create','/source/uploads/r2/sign','/source/uploads/r2/complete','/source/uploads/r2/abort'].includes(path);
+  const isUploadSession=Boolean(uploadRoutes)&&req.method==='POST'&&['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify','/source/uploads/r2/create','/source/uploads/r2/sign','/source/uploads/r2/parts','/source/uploads/r2/complete','/source/uploads/r2/abort'].includes(path);
   if(!(isUploadSession||(req.method==='POST'&&['/source/upload','/source/process'].includes(path))||(req.method==='GET'&&['/source/documents','/source/detail'].includes(path))))
    return send(404,{error:'not found'});
   try{
