@@ -7,8 +7,10 @@ export async function loadSourcePdf(pdfBytes,{getDocument}={}){
    throw new TypeError('nonempty PDF bytes required');
  if(typeof getDocument!=='function') throw new TypeError('PDF.js getDocument adapter required');
  const task=getDocument({data:new Uint8Array(pdfBytes)});
- if(!task||typeof task.promise?.then!=='function')
+ if(!task||typeof task.promise?.then!=='function'){
+   if(typeof task?.destroy==='function') await task.destroy();
    throw new TypeError('invalid PDF.js loading task');
+ }
  let document;
  try{
    document=await task.promise;
