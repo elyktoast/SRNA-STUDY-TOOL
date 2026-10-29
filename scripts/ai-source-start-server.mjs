@@ -4,6 +4,7 @@ import {resolve} from 'node:path';
 import {readSourceRuntimeConfig} from './ai-source-runtime-config.mjs';
 import {createSourceRuntime} from './ai-source-runtime.mjs';
 import {createSourcePdfJsProvider} from './ai-source-pdfjs-provider.mjs';
+import {verifySourceRuntimeResources} from './ai-source-runtime-preflight.mjs';
 
 export async function startSourceServer(env=process.env){
  const {port,host}=readSourceRuntimeConfig(env);
@@ -14,6 +15,12 @@ export async function startSourceServer(env=process.env){
  const supabase=createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{
   auth:{persistSession:false,autoRefreshToken:false}
  });
+ try{
+  await verifySourceRuntimeResources({db,supabase});
+ }catch{
+  await db.end();
+  throw new Error('textbook source resources not configured');
+ }
  const getDocument=await createSourcePdfJsProvider();
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
  const server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument});
