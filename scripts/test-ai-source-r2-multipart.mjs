@@ -75,3 +75,11 @@ test('rejects completion when R2 uploaded part inventory disagrees',async()=>{
  await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts}),/do not match uploaded inventory/);
  assert.equal(calls.some(x=>x instanceof CompleteMultipartUploadCommand),false);
 });
+
+test('refuses multipart completion when R2 reports incorrect part size',async()=>{
+ const parts=[1,2].map(PartNumber=>({PartNumber,ETag:'a'.repeat(32)}));
+ const uploaded=parts.map(part=>({...part,Size:part.PartNumber===2?12582911:12582912}));
+ const {controller,calls}=fixture(uploaded);
+ await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts}),/invalid R2 uploaded part metadata/);
+ assert.equal(calls.some(call=>call instanceof CompleteMultipartUploadCommand),false);
+});
