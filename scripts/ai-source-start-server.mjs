@@ -51,7 +51,7 @@ export async function startSourceServer(env=process.env){
    authorizeAdmin:createSourceAdminVerifier(db),
    createIntent:intents.createIntent,
    markUploading:intents.markUploading,
-   r2:{controller:r2Controller,getOwnedIntent:intents.getOwnedIntent,getSession:intents.getSession,saveSession:intents.saveSession,markComplete:intents.markComplete},
+   r2:{controller:r2Controller,getOwnedIntent:intents.getOwnedIntent,getSession:intents.getSession,saveSession:intents.saveSession,markComplete:intents.markComplete,clearSession:intents.clearSession},
    verifyAdapters:{
     claimVerification:intents.claimVerification,
     failVerification:intents.failVerification,
