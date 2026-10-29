@@ -79,6 +79,7 @@ export function createSourceUploadIntentDb(db){
     `update private.ai_source_upload_intents
         set status='verifying',updated_at=now()
       where id=$1 and actor_id=$2 and status='uploading'
+        and storage_bucket='srna-private-textbooks' and r2_completed_at is not null
         and expires_at>now()
       returning id,storage_bucket,storage_path,file_bytes,title`,
     [uploadId,actorId]);
