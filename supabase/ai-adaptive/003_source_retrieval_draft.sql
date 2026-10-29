@@ -41,9 +41,8 @@ as $$
          c.content,ts_rank_cd(c.search_vector,websearch_to_tsquery('english',p_query))::real
   from private.ai_source_chunks c
   join private.ai_source_documents d on d.id=c.document_id
-  join private.ai_source_course_links l on l.document_id=d.id
   left join private.ai_source_sections s on s.id=c.section_id
-  where l.course_id=p_course_id
+  where exists (select 1 from private.ai_source_course_links l where l.document_id=d.id and l.course_id=p_course_id)
     and d.processing_status='ready'
     and c.search_vector @@ websearch_to_tsquery('english',p_query)
   order by ts_rank_cd(c.search_vector,websearch_to_tsquery('english',p_query)) desc,c.chunk_order
