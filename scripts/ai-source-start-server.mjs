@@ -33,6 +33,12 @@ export async function startSourceServer(env=process.env){
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
  let server;
  try{
+  const intents=createSourceUploadIntentDb(db);
+  const authorizeAdmin=createSourceAdminVerifier(db);
+  // Routes remain disabled until a private, bounded streaming Storage adapter is supplied.
+  // Never use a browser credential or an unbounded Blob download here.
+  const uploadRoutes=undefined;
+  void intents;void authorizeAdmin;void createSourceUploadFinalizer;void createSourceUploadRoutes;
   // Match the dedicated private bucket's conservative 40 MiB upload ceiling.
   // Raise this only after reviewing the Storage global limit and bucket configuration.
   server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument,maxBytes:41943040});
