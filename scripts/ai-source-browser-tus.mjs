@@ -34,7 +34,7 @@ export async function uploadSourcePdfWithTus({
    retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
    headers:{authorization:'Bearer '+accessToken},
    metadata:{bucketName:'ai-textbook-sources',objectName,contentType:'application/pdf'},
-   onProgress:(done,total)=>{if(!settled&&total===file.size)progress({bytesUploaded:done,bytesTotal:total})},
+   onProgress:(done,total)=>{if(!settled&&total===file.size){try{progress({bytesUploaded:done,bytesTotal:total})}catch{/* UI callbacks must not abort a valid transfer */}}},
    onError:error=>finish(error),
    onSuccess:()=>finish()
   });}catch(error){finish(error);return}
@@ -44,6 +44,6 @@ export async function uploadSourcePdfWithTus({
    if(settled)return;
    if(previous?.length)task.resumeFromPreviousUpload(previous[0]);
    task.start();
-  }).catch(finish);
+  }).catch(error=>{if(!settled)finish(error)});
  });
 }
