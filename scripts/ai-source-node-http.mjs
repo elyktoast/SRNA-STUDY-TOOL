@@ -23,9 +23,12 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
     if(typeof req.headers['x-source-title']!=='string')
      return send(400,{error:'title required'});
    }
+   const declaredLength=req.headers['content-length'];
+   const limit=path==='/source/upload'?maxBytes:8192;
+   if(typeof declaredLength==='string' && /^\\d+$/.test(declaredLength) && Number(declaredLength)>limit)
+    return send(413,{error:'request too large'});
    const parts=[];
    let size=0;
-   const limit=path==='/source/upload'?maxBytes:8192;
    for await(const part of req){
     size+=part.length;
     if(size>limit) return send(413,{error:'request too large'});
