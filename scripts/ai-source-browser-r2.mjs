@@ -1,6 +1,6 @@
 // Browser-side R2 multipart transfer. The authenticated request adapter must
 // enforce CSRF/session protections. No R2 credentials enter browser code.
-import {R2_PART_BYTES,R2_UPLOAD_CONCURRENCY} from './ai-source-r2-multipart.mjs';
+import {R2_PART_BYTES,R2_UPLOAD_CONCURRENCY} from './ai-source-r2-upload-config.mjs';
 export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progress=()=>{},signal,concurrency=R2_UPLOAD_CONCURRENCY}){
  if(!file||!Number.isSafeInteger(file.size)||file.size<8||file.type!=='application/pdf')throw new Error('invalid PDF');
  if(typeof request!=='function'||typeof fetchPart!=='function'||typeof progress!=='function')throw new TypeError('upload adapters required');
@@ -27,7 +27,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
    }
    if(!response?.ok)throw new Error('R2 part upload failed');
    const etag=response.headers?.get?.('etag');
-   if(typeof etag!=='string'||!/^"?[a-f0-9]{32}"?$/i.test(etag))throw new Error('R2 part ETag unavailable');
+   if(typeof etag!=='string'||!/^"?[^"\\r\\n]{1,256}"?$/.test(etag))throw new Error('R2 part ETag unavailable');
    parts[index]={PartNumber:partNumber,ETag:etag};
    done+=end-start;
    progress({bytesUploaded:done,bytesTotal:file.size});
