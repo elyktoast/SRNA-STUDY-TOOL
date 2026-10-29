@@ -4,7 +4,10 @@
 -- No browser SELECT/UPDATE/DELETE policy is created for this bucket.
 -- Storage TUS authorization behavior must be verified before enabling in production.
 
-create or replace function private.can_insert_ai_source_object(
+-- The authenticated role has USAGE on storage but not private.
+-- Keep the narrowly scoped SECURITY DEFINER helper in the non-API storage schema.
+-- Do not grant USAGE on private or table privileges to browser roles.
+create or replace function storage.can_insert_ai_source_object(
  p_bucket text, p_path text
 ) returns boolean
 language sql stable security definer
@@ -23,16 +26,16 @@ as $$
    );
 $$;
 
-revoke all on function private.can_insert_ai_source_object(text,text) from public;
-revoke all on function private.can_insert_ai_source_object(text,text) from anon;
-grant execute on function private.can_insert_ai_source_object(text,text) to authenticated;
+revoke all on function storage.can_insert_ai_source_object(text,text) from public;
+revoke all on function storage.can_insert_ai_source_object(text,text) from anon;
+grant execute on function storage.can_insert_ai_source_object(text,text) to authenticated;
 
 drop policy if exists ai_source_intent_insert on storage.objects;
 create policy ai_source_intent_insert on storage.objects
  for insert to authenticated
  with check (
   bucket_id = 'ai-textbook-sources'
-  and private.can_insert_ai_source_object(bucket_id,name)
+  and storage.can_insert_ai_source_object(bucket_id,name)
  );
 
 -- Do not grant upsert, read, list, update, or delete to browser roles.
