@@ -1,9 +1,10 @@
 import {createServer} from 'node:http';
-import {createSourceHttpHandler} from './ai-source-http-handler.mjs';
+import {executeAuthenticatedSourceOperation} from './ai-source-http-handler.mjs';
 
 // Supply a trusted session resolver and backend workflow. No secrets in the browser.
 export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=104857600}){
- const handle=createSourceHttpHandler({workflow,getAuthenticatedActor,maxBytes});
+ if(typeof getAuthenticatedActor!=='function') throw new TypeError('session resolver required');
+ if(typeof workflow?.upload!=='function'||typeof workflow?.process!=='function') throw new TypeError('source workflow required');
  return createServer(async(req,res)=>{
   const send=(status,body)=>{
    res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});
@@ -35,7 +36,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
     try{body=JSON.parse(raw.toString('utf8'))}
     catch{return send(400,{error:'invalid JSON'})}
    }
-   const result=await handle({method:req.method,path,headers:req.headers,body});
+   const result=await executeAuthenticatedSourceOperation({workflow,maxBytes,path,body,actorId:actor});
    return send(result.status,result.body);
   }catch{
    if(!res.headersSent) send(500,{error:'source operation failed'});
