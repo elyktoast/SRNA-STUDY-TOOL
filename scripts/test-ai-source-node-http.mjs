@@ -1,0 +1,30 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createSourceNodeServer} from './ai-source-node-http.mjs';
+test('Node adapter accepts PDF bytes but ignores browser actor ID',async()=>{
+ let observed;
+ const server=createSourceNodeServer({
+  workflow:{upload:async input=>{observed=input;return {id:'book-1'}},process:async()=>{}},
+  getAuthenticatedActor:async()=> 'verified-admin'
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const url='http://127.0.0.1:'+server.address().port;
+  const response=await fetch(url+'/source/upload',{method:'POST',headers:{'x-source-title':'Book','x-actor-id':'forged'},body:new Uint8Array([37,80,68,70,45,49,46,55])});
+  assert.equal(response.status,201);
+  assert.equal(observed.actorId,'verified-admin');
+  assert.equal(observed.title,'Book');
+  assert.equal(observed.bytes.length,8);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
+test('Node adapter rejects missing session',async()=>{
+ const server=createSourceNodeServer({
+  workflow:{upload:async()=>{throw Error('must not run')},process:async()=>{}},
+  getAuthenticatedActor:async()=>null
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/upload',{method:'POST',headers:{'x-source-title':'Book'},body:new Uint8Array(8)});
+  assert.equal(response.status,401);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
