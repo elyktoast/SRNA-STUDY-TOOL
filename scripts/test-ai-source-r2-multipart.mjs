@@ -34,6 +34,8 @@ test('refuses incomplete or untrusted multipart ETags',async()=>{
 test('completes ordered parts and supports explicit abort',async()=>{
  const {controller,calls}=fixture();
  const parts=[1,2].map(PartNumber=>({PartNumber,ETag:'a'.repeat(32)}));
+ const list=async()=>({parts});
+ controller.listParts=list;
  assert.deepEqual(await controller.complete(intent,{multipartId:'r2-multipart-session',parts}),{completed:true});
  assert.deepEqual(await controller.abort(intent,{multipartId:'r2-multipart-session'}),{aborted:true});
  assert.equal(calls[0] instanceof CompleteMultipartUploadCommand,true);
