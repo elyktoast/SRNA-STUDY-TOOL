@@ -27,7 +27,7 @@ test('transient transfer failure preserves R2 session for retry',async()=>{
  const paths=[];
  const request=async(path)=>{
   paths.push(path);
-  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES};
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
   if(path.endsWith('/parts'))return {parts:[]};
   if(path.endsWith('/sign'))return {url:'https://r2.example/part'};
   throw new Error('unexpected request');
@@ -39,7 +39,7 @@ test('transient transfer failure preserves R2 session for retry',async()=>{
 test('failed part retries with a freshly signed URL',async()=>{
  let signs=0,attempts=0;
  const request=async(path,body)=>{
-  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES};
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
   if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:etag}]};
   if(path.endsWith('/sign'))return {url:'https://r2.example/part-'+(++signs)};
   if(path.endsWith('/complete'))return {completed:true};
