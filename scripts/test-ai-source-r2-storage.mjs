@@ -16,7 +16,7 @@ function fixture(bytes=Buffer.from('%PDF-1.7\\nhello')){
 }
 test('inspects private R2 object size using HEAD',async()=>{
  const {adapter,calls}=fixture();
- assert.equal((await adapter.inspectObject({bucket:R2_SOURCE_BUCKET,path})).size,15);
+ assert.equal((await adapter.inspectObject({bucket:R2_SOURCE_BUCKET,path})).size,14);
  assert.deepEqual(calls[0].args,{Bucket:R2_SOURCE_BUCKET,Key:path});
 });
 test('streams R2 PDF bytes without creating signed public links',async()=>{
