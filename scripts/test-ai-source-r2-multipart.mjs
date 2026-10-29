@@ -8,11 +8,12 @@ class UploadPartCommand{constructor(input){this.input=input}}
 class CompleteMultipartUploadCommand{constructor(input){this.input=input}}
 class AbortMultipartUploadCommand{constructor(input){this.input=input}}
 class ListPartsCommand{constructor(input){this.input=input}}
+class HeadObjectCommand{constructor(input){this.input=input}}
 function fixture(uploadedParts){
  const calls=[];
- const client={async send(command){calls.push(command);if(command instanceof ListPartsCommand)return {Parts:uploadedParts??[{PartNumber:1,ETag:'etag-one',Size:12582912}],IsTruncated:false};return {UploadId:'r2-multipart-session'}}};
+ const client={async send(command){calls.push(command);if(command instanceof HeadObjectCommand)return {ContentLength:intent.file_bytes,ContentType:'application/pdf'};if(command instanceof ListPartsCommand)return {Parts:uploadedParts??[{PartNumber:1,ETag:'etag-one',Size:12582912}],IsTruncated:false};return {UploadId:'r2-multipart-session'}}};
  const presign=async(_client,command)=>{calls.push(command);return 'https://example.r2.cloudflarestorage.com/signed'};
- const controller=createR2MultipartController({client,presign,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}});
+ const controller=createR2MultipartController({client,presign,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand,HeadObjectCommand}});
  return {controller,calls};
 }
 test('starts multipart session only in private bucket',async()=>{
@@ -55,7 +56,7 @@ test('rejects a repeated R2 pagination marker',async()=>{
   return {Parts:[],IsTruncated:true,NextPartNumberMarker:1};
  }};
  const controller=createR2MultipartController({
-  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}
+  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand,HeadObjectCommand}
  });
  await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
  assert.equal(pages,2);
@@ -64,7 +65,7 @@ test('rejects a repeated R2 pagination marker',async()=>{
 test('rejects an out-of-range pagination marker',async()=>{
  const client={send:async()=>({Parts:[],IsTruncated:true,NextPartNumberMarker:99})};
  const controller=createR2MultipartController({
-  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}
+  client,presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand,HeadObjectCommand}
  });
  await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
 });
@@ -82,4 +83,15 @@ test('refuses multipart completion when R2 reports incorrect part size',async()=
  const {controller,calls}=fixture(uploaded);
  await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts}),/invalid R2 uploaded part metadata/);
  assert.equal(calls.some(call=>call instanceof CompleteMultipartUploadCommand),false);
+});
+
+test('reconciles a completed private R2 object only with matching metadata',async()=>{
+ const {controller,calls}=fixture();
+ assert.deepEqual(await controller.inspectCompleted(intent),{completed:true});
+ assert.equal(calls[0] instanceof HeadObjectCommand,true);
+ const bad=createR2MultipartController({
+  client:{send:async()=>({ContentLength:intent.file_bytes-1,ContentType:'application/pdf'})},
+  presign:async()=>'',commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand,HeadObjectCommand}
+ });
+ await assert.rejects(bad.inspectCompleted(intent),/metadata mismatch/);
 });
