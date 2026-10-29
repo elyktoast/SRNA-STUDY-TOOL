@@ -29,9 +29,13 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
     return send(413,{error:'request too large'});
    const parts=[];
    let size=0;
+   // Abort the stream immediately when the request exceeds the configured limit.
    for await(const part of req){
     size+=part.length;
-    if(size>limit) return send(413,{error:'request too large'});
+    if(size>limit){
+     req.resume();
+     return send(413,{error:'request too large'});
+    }
     parts.push(part);
    }
    const raw=Buffer.concat(parts);
