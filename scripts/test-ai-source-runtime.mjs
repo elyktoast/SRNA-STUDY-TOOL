@@ -17,7 +17,7 @@ test('runtime denies non-admin even with valid Supabase session',async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
   const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/upload',{
-   method:'POST',headers:{authorization:'Bearer valid','x-source-title':'Book'},
+   method:'POST',headers:{authorization:'Bearer valid','x-source-title':'Book','content-type':'application/pdf'},
    body:new Uint8Array([37,80,68,70,45,49,46,55])
   });
   assert.equal(response.status,403);
