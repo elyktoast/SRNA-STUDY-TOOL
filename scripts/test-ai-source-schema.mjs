@@ -43,3 +43,12 @@ test('no draft mutates existing student CAT tables',()=>{
     assert.doesNotMatch(text,/\b(?:alter|drop|truncate|delete from|update)\s+(?:table\s+)?(?:public\.)?mbu_/i);
   }
 });
+
+test('multi-exam links do not duplicate retrieval results',()=>{
+  assert.match(sql[2],/unique\(document_id,course_id,exam_id\)/i);
+  assert.match(sql[2],/where exam_id is null/i);
+  for(const text of sql.slice(2)){
+    assert.match(text,/where exists \(select 1 from private\.ai_source_course_links/i);
+    assert.doesNotMatch(text,/join private\.ai_source_course_links l on l\.document_id=d\.id/i);
+  }
+});
