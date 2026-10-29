@@ -46,3 +46,8 @@ test('OCR rejects gaps in physical PDF page sequence',async()=>{
  const extraction={pages:[{physicalPage:1,text:'Long enough text to pass'},{physicalPage:3,text:'Another page with text'}],ocrPages:[]};
  await assert.rejects(resolveOcrPages(extraction),/invalid PDF page sequence/);
 });
+
+test('short OCR fragments cannot pass as a fully extracted page',async()=>{
+ const extraction={pages:[{physicalPage:1,text:'',needsOcr:true}],ocrPages:[1]};
+ await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'one word'}),/no usable text/);
+});
