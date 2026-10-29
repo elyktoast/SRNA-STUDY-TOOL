@@ -41,3 +41,17 @@ test('rejects untrusted actor before any R2 operation',async()=>{
  const result=await f.routes({path:'/source/uploads/r2/create',actorId:'not-a-uuid',body:{uploadId}});
  assert.equal(result.status,401);
 });
+
+test('completed multipart sessions cannot be reopened',async()=>{
+ const f=fixture();
+ const completed=await f.routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(completed.status,200);
+ const reopened=await f.routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(reopened.status,409);
+});
+test('session creation returns original PDF metadata',async()=>{
+ const f=fixture();
+ const opened=await f.routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(opened.status,200);
+ assert.equal(opened.body.fileBytes,intent.file_bytes);
+});
