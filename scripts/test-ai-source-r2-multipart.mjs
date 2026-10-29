@@ -69,3 +69,10 @@ test('rejects an out-of-range pagination marker',async()=>{
  });
  await assert.rejects(controller.listParts(intent,{multipartId:'r2-multipart-session'}),/invalid R2 part pagination/);
 });
+
+test('rejects completion when R2 uploaded part inventory disagrees',async()=>{
+ const {controller,calls}=fixture();
+ const parts=[1,2].map(PartNumber=>({PartNumber,ETag:'a'.repeat(32)}));
+ await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts}),/do not match uploaded inventory/);
+ assert.equal(calls.some(x=>x instanceof CompleteMultipartUploadCommand),false);
+});
