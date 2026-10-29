@@ -28,3 +28,18 @@ test('Node adapter rejects missing session',async()=>{
   assert.equal(response.status,401);
  }finally{await new Promise(resolve=>server.close(resolve))}
 });
+
+test('Node adapter rejects unauthenticated request before consuming its body',async()=>{
+ const server=createSourceNodeServer({
+  workflow:{upload:async()=>{throw Error('must not upload')},process:async()=>{}},
+  getAuthenticatedActor:async()=>null
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+ try{
+  const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/upload',{
+   method:'POST',headers:{'x-source-title':'Book','content-type':'application/pdf'},
+   body:new Uint8Array(16)
+  });
+  assert.equal(response.status,401);
+ }finally{await new Promise(resolve=>server.close(resolve))}
+});
