@@ -13,9 +13,10 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
  if(!Number.isInteger(concurrency)||concurrency<1||concurrency>3)throw new Error('invalid concurrency');
  if(signal?.aborted)throw new Error('upload canceled');
  const started=await request('/source/uploads/r2/create',{uploadId});
- if(typeof started?.multipartId!=='string'||!started.multipartId||started.partBytes!==R2_PART_BYTES)throw new Error('invalid R2 upload session');
+ if(started?.completed!==true&&(typeof started?.multipartId!=='string'||!started.multipartId||started.partBytes!==R2_PART_BYTES))throw new Error('invalid R2 upload session');
  if(started.fileBytes!==file.size)throw new Error('PDF size does not match upload intent');
  if(typeof started.title==='string'&&typeof file.name==='string'&&started.title!==file.name.trim())throw new Error('PDF title does not match upload intent');
+ if(started.completed===true)return {uploadId,bytes:file.size};
  const total=Math.ceil(file.size/R2_PART_BYTES),parts=new Array(total);
  const recovered=await request('/source/uploads/r2/parts',{uploadId,multipartId:started.multipartId});
  if(!Array.isArray(recovered?.parts))throw new Error('R2 part recovery unavailable');
