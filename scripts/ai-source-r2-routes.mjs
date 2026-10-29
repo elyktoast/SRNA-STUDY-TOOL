@@ -1,3 +1,4 @@
+import {R2_PART_BYTES} from './ai-source-r2-upload-config.mjs';
 // R2 multipart endpoints. The caller supplies actorId from a verified Supabase
 // session. Never trust actor IDs, object paths or bucket names in request bodies.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -18,19 +19,21 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     return {status:409,body:{error:'upload unavailable'}};
    const current=await getSession({uploadId:body.uploadId,actorId});
    if(path==='/source/uploads/r2/create'){
-    if(current?.multipart_id)return {status:200,body:{multipartId:current.multipart_id,partBytes:12582912}};
+    if(current?.multipart_id)return {status:200,body:{multipartId:current.multipart_id,partBytes:R2_PART_BYTES}};
     const created=await controller.initiate(intent);
     const saved=await saveSession({uploadId:body.uploadId,actorId,multipartId:created.multipartId});
-    if(!saved)throw new Error('multipart session persistence failed');
+    if(!saved){await controller.abort(intent,{multipartId:created.multipartId});throw new Error('multipart session persistence failed');}
     return {status:200,body:created};
    }
    if(!current?.multipart_id||current.multipart_id!==body.multipartId)
     return {status:409,body:{error:'multipart session unavailable'}};
    if(path==='/source/uploads/r2/sign'){
+    if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
     const signed=await controller.signPart(intent,{multipartId:body.multipartId,partNumber:body.partNumber});
     return {status:200,body:signed};
    }
    if(path==='/source/uploads/r2/complete'){
+    if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
     const completed=await controller.complete(intent,{multipartId:body.multipartId,parts:body.parts});
     const marked=await markComplete({uploadId:body.uploadId,actorId,multipartId:body.multipartId});
     if(!marked)throw new Error('multipart completion state unavailable');
