@@ -6,10 +6,14 @@ export function chunkPages(pages,{maxChars=2400,overlapChars=250}={}){
   if(!Number.isInteger(overlapChars)||overlapChars<0||overlapChars>=maxChars)
     throw new RangeError('overlapChars must be between 0 and maxChars-1');
   const output=[];
+  const seenPages=new Set();
   for(const page of pages){
     const physicalPage=page?.physicalPage;
     if(!Number.isInteger(physicalPage)||physicalPage<1)
       throw new TypeError('physicalPage must be a positive integer');
+    if(seenPages.has(physicalPage)) throw new Error('duplicate physicalPage: '+physicalPage);
+    seenPages.add(physicalPage);
+    if(page.text!=null && typeof page.text!=='string') throw new TypeError('page text must be a string');
     const normalized=String(page.text??'').replace(/\r\n?/g,'\n').replace(/[ \t]+/g,' ').trim();
     if(!normalized) continue;
     let start=0;
