@@ -16,7 +16,7 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  if(!citationColumns.has('printed_page')||!citationColumns.has('section_heading')) throw new Error('source citation metadata schema missing');
  const grants=await db.query("select table_name,privilege_type,grantee from information_schema.role_table_grants where table_schema='private' and table_name=any($1::text[]) and grantee=any($2::text[])",[required,['anon','authenticated','PUBLIC']]);
  if((grants.rows??[]).length) throw new Error('source tables exposed to client roles');
- const schemaGrants=await db.query("select role_name from unnest($1::text[]) as role_name where has_schema_privilege(role_name, 'private', 'USAGE')",[['anon','authenticated','PUBLIC']]);
+ const schemaGrants=await db.query("select role_name from unnest($1::text[]) as role_name where has_schema_privilege(role_name, 'private', 'USAGE')",[['anon','authenticated']]);
  if((schemaGrants.rows??[]).length) throw new Error('private source schema exposed to client roles');
  const admin=await db.query("select to_regclass('private.snar_admins') as relation");
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
