@@ -85,7 +85,7 @@ test('newline in recovered ETag is rejected before part transfer',async()=>{
  let transfers=0;
  const request=async(path)=>{
   if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
-  if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:'bad\\nvalue'}]};
+  if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:'bad\nvalue'}]};
   throw new Error('unexpected request');
  };
  await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{transfers++}}),/invalid recovered R2 part/);
