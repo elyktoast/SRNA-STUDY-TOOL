@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 
-export const MAX_TEXTBOOK_BYTES=500*1024*1024;
-export const TUS_CHUNK_BYTES=6*1024*1024;
+import {MAX_TEXTBOOK_BYTES,TUS_CHUNK_BYTES} from './ai-source-upload-constants.mjs';
+export {MAX_TEXTBOOK_BYTES,TUS_CHUNK_BYTES};
 
 // Server-only intent creation. This does not grant Storage access or start a TUS transfer.
 // Actor identity must come from verified authentication, never from a request body.
