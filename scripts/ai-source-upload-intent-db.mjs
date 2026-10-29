@@ -39,7 +39,7 @@ export function createSourceUploadIntentDb(db){
    const result=await db.query(
     `update private.ai_source_upload_intents
         set status='verifying',updated_at=now()
-      where id=$1 and actor_id=$2 and status in ('pending','uploading')
+      where id=$1 and actor_id=$2 and status='uploading'
         and expires_at>now()
       returning id,storage_bucket,storage_path,file_bytes,title`,
     [uploadId,actorId]);
