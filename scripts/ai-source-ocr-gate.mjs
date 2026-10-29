@@ -8,6 +8,7 @@ export async function resolveOcrPages(extraction,{ocrPage}={}){
  for(const pageNumber of extraction.ocrPages){
    if(!Number.isInteger(pageNumber)||pageNumber<1||pageNumber>pages.length)
      throw new Error('invalid OCR page number');
+   if(pages[pageNumber-1].physicalPage!==pageNumber) throw new Error('invalid OCR page mapping');
    const replacement=await ocrPage(pageNumber);
    if(typeof replacement!=='string'||!replacement.trim())
      throw new Error('OCR produced no usable text on page '+pageNumber);
