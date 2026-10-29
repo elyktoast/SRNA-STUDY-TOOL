@@ -9,7 +9,7 @@ test('resumed upload skips confirmed first part and completes ordered inventory'
  const paths=[],sent=[],progress=[];
  const request=async(path,body)=>{
   paths.push(path);
-  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES};
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
   if(path.endsWith('/parts'))return {parts:[{PartNumber:1,ETag:etag}]};
   if(path.endsWith('/sign')){assert.equal(body.partNumber,2);return {url:'https://r2.example/part'};}
   if(path.endsWith('/complete')){sent.push(body.parts);return {completed:true};}
