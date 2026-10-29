@@ -3,6 +3,15 @@
 export function createSourceDbAdapter(db){
  if(!db||typeof db.query!=='function') throw new TypeError('database query adapter required');
  return {
+  // Inspection only: never automatically reclaim a possibly still-running worker.
+  async listStalledDocuments({olderThanMinutes=60}={}){
+   if(!Number.isSafeInteger(olderThanMinutes)||olderThanMinutes<1||olderThanMinutes>10080)
+    throw new RangeError('invalid stale-processing threshold');
+   const result=await db.query(
+    "select id,title,processing_status,updated_at from private.ai_source_documents where processing_status in ('extracting','indexing') and updated_at < now() - ($1::integer * interval '1 minute') order by updated_at asc limit 100",
+    [olderThanMinutes]);
+   return result.rows??[];
+  },
   async setStatus(documentId,status){
    if(!['extracting','indexing','ready','failed'].includes(status)) throw new Error('invalid processing status');
    // Atomically claim processing: a second worker must not replace another worker's chunks.
