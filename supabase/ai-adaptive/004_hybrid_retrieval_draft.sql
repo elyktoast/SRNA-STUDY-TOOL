@@ -30,8 +30,7 @@ with eligible as (
         c.page_start,c.page_end,c.search_vector,d.title
  from private.ai_source_chunks c
  join private.ai_source_documents d on d.id=c.document_id
- join private.ai_source_course_links l on l.document_id=d.id
- where l.course_id=p_course_id and d.processing_status='ready'
+ where exists (select 1 from private.ai_source_course_links l where l.document_id=d.id and l.course_id=p_course_id) and d.processing_status='ready'
 ), keyword as (
  select e.id,row_number() over(order by ts_rank_cd(e.search_vector,
    websearch_to_tsquery('english',p_query)) desc,e.id) as rnk
