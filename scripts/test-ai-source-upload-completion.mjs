@@ -35,3 +35,15 @@ test('rejects incorrect PDF signature',async()=>{
  await assert.rejects(verifyCompletedTextbook(f.options),/not a PDF/);
  assert.deepEqual(f.calls,['failed']);
 });
+
+test('accepts a numeric string size from Storage metadata',async()=>{
+ const f=setup({inspectObject:async()=>({size:String(pdf.length)})});
+ const result=await verifyCompletedTextbook(f.options);
+ assert.equal(result.document.id,'document');
+ assert.equal(f.calls.length,1);
+});
+test('rejects malformed Storage object size before reading',async()=>{
+ const f=setup({inspectObject:async()=>({size:'unknown'})});
+ await assert.rejects(verifyCompletedTextbook(f.options),/size mismatch/);
+ assert.deepEqual(f.calls,['failed']);
+});
