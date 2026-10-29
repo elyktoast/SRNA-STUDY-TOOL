@@ -35,7 +35,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
      return send(400,{error:'title required'});
    }
    const declaredLength=req.headers['content-length'];
-   const limit=path==='/source/upload'?maxBytes:8192;
+   const limit=path==='/source/upload'?maxBytes:path==='/source/uploads/r2/complete'?32768:8192;
    if(typeof declaredLength==='string' && (!/^\d+$/.test(declaredLength) || !Number.isSafeInteger(Number(declaredLength))))
     return send(400,{error:'invalid content length'});
    if(typeof declaredLength==='string' && Number(declaredLength)>limit)
