@@ -27,3 +27,8 @@ test('invalid PDF and malformed page data reject',async()=>{
  await assert.rejects(extractPdfPages({numPages:0}),TypeError);
  await assert.rejects(extractPdfPages({numPages:1,getPage:async()=>({getTextContent:async()=>({items:null})})}),/invalid page text/);
 });
+
+test('OCR refuses a physical page mismatch',async()=>{
+ const extraction={pages:[{physicalPage:2,text:'',needsOcr:true}],ocrPages:[1]};
+ await assert.rejects(resolveOcrPages(extraction,{ocrPage:async()=> 'Readable scanned text'}),/invalid OCR page mapping/);
+});
