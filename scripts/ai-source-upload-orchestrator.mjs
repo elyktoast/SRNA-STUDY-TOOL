@@ -14,7 +14,7 @@ export async function submitSourceTextbook({
  if(signal?.aborted)throw new Error('upload canceled');
  let uploadId=resumeUploadId;
  if(uploadId!==undefined){
-  if(typeof uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uploadId))
+  if(typeof uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(uploadId))
    throw new Error('invalid resume upload ID');
  }else{
   const created=await request('/source/uploads/initiate',{
