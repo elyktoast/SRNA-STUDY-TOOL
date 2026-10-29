@@ -3,7 +3,7 @@ import {uploadSourcePdfWithTus} from './ai-source-browser-tus.mjs';
 // Call only from an authenticated admin UI. request() must use same-origin
 // credentials and CSRF protections provided by the application.
 export async function submitSourceTextbook({
- file,request,projectId,accessToken,tus,progress,signal
+ file,request,projectId,accessToken,userId,tus,progress,signal
 }){
  if(typeof request!=='function')throw new TypeError('authenticated request adapter required');
  if(!file||typeof file.name!=='string'||!file.name.trim())throw new Error('PDF title required');
@@ -19,7 +19,7 @@ export async function submitSourceTextbook({
  if(started?.status!=='uploading')throw new Error('upload session could not start');
  await uploadSourcePdfWithTus({
   file,upload:{...created.upload,status:'uploading'},
-  projectId,accessToken,tus,progress,signal
+  projectId,accessToken,userId,tus,progress,signal
  });
  if(signal?.aborted)throw new Error('upload canceled');
  const verified=await request('/source/uploads/verify',{uploadId});
