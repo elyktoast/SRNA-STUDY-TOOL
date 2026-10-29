@@ -11,3 +11,8 @@ test('rejects public bucket',async()=>{
 test('rejects missing schema',async()=>{
  await assert.rejects(verifySourceRuntimeResources({db:{query:async()=>({rows:[]})},supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/missing private source schema/);
 });
+
+test('rejects missing sections or job tables',async()=>{
+ const incomplete={query:async()=>({rows:[{table_name:'ai_source_documents'},{table_name:'ai_source_chunks'}]})};
+ await assert.rejects(verifySourceRuntimeResources({db:incomplete,supabase:{storage:{getBucket:async()=>({data:{public:false}})}}}),/missing private source schema/);
+});
