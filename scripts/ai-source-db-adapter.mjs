@@ -24,6 +24,16 @@ export function createSourceDbAdapter(db){
   },
   async saveChunks(documentId,chunks){
    if(!Array.isArray(chunks)||chunks.length===0) throw new Error('no chunks to save');
+   // Validate the complete batch before opening a transaction or deleting existing passages.
+   const seenOrders=new Set();
+   for(const chunk of chunks){
+    if(chunk?.documentId!==documentId) throw new Error('source mismatch');
+    if(!Number.isSafeInteger(chunk.chunkOrder)||chunk.chunkOrder<0||seenOrders.has(chunk.chunkOrder))
+     throw new Error('invalid or duplicate source chunk order');
+    if(typeof chunk.content!=='string'||!chunk.content.trim()) throw new Error('invalid source chunk content');
+    if(typeof chunk.contentHash!=='string'||!chunk.contentHash.trim()) throw new Error('invalid source chunk hash');
+    seenOrders.add(chunk.chunkOrder);
+   }
    // A transaction avoids partially indexed books on interrupted writes.
    const client=typeof db.connect==='function'?await db.connect():null;
    if(!client) throw new Error('transaction-capable database adapter required');
