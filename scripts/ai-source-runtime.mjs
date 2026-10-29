@@ -6,7 +6,7 @@ import {createSourceNodeServer} from './ai-source-node-http.mjs';
 // Trusted server process only. db is a transaction-capable PostgreSQL pool.
 // supabaseStorage is a server-side privileged Storage client.
 // supabaseAuth validates user access tokens via auth.getUser(token).
-export function createSourceRuntime({db,supabaseStorage,supabaseAuth,getDocument,ocrPage,maxBytes}){
+export function createSourceRuntime({db,supabaseStorage,supabaseAuth,getDocument,ocrPage,maxBytes,uploadRoutes}){
  if(typeof db?.query!=='function'||typeof db?.connect!=='function')
   throw new TypeError('transaction-capable PostgreSQL pool required');
  const authorizeAdmin=createSourceAdminVerifier(db);
@@ -14,5 +14,5 @@ export function createSourceRuntime({db,supabaseStorage,supabaseAuth,getDocument
  const workflow=createSourceServerWorkflow({
   db,supabase:supabaseStorage,authorizeAdmin,getDocument,ocrPage
  });
- return createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes});
+ return createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes,uploadRoutes});
 }
