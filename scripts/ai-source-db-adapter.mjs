@@ -21,8 +21,8 @@ export function createSourceDbAdapter(db){
     for(const c of chunks){
      if(c.documentId!==documentId) throw new Error('source mismatch');
      await client.query(
-      'insert into private.ai_source_chunks (document_id,chunk_order,content,page_start,page_end,content_hash,extraction_method) values ($1,$2,$3,$4,$5,$6,$7)',
-      [documentId,c.chunkOrder,c.content,c.pageStart,c.pageEnd,c.contentHash,c.extractionMethod??'text']);
+      'insert into private.ai_source_chunks (document_id,chunk_order,content,page_start,page_end,printed_page,section_heading,content_hash,extraction_method) values ($1,$2,$3,$4,$5,$6,$7,$8,$9)',
+      [documentId,c.chunkOrder,c.content,c.pageStart,c.pageEnd,c.printedPage??null,c.sectionHeading??null,c.contentHash,c.extractionMethod??'text']);
     }
     await client.query('COMMIT');
    }catch(error){
