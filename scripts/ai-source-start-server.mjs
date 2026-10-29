@@ -5,6 +5,10 @@ import {readSourceRuntimeConfig} from './ai-source-runtime-config.mjs';
 import {createSourceRuntime} from './ai-source-runtime.mjs';
 import {createSourcePdfJsProvider} from './ai-source-pdfjs-provider.mjs';
 import {verifySourceRuntimeResources} from './ai-source-runtime-preflight.mjs';
+import {createSourceUploadStorageStream} from './ai-source-upload-storage-stream.mjs';
+import {createSourceUploadIntentDb,createSourceUploadFinalizer} from './ai-source-upload-intent-db.mjs';
+import {createSourceUploadRoutes} from './ai-source-upload-routes.mjs';
+import {createSourceAdminVerifier} from './ai-source-admin-verifier.mjs';
 
 export async function startSourceServer(env=process.env){
  const {port,host}=readSourceRuntimeConfig(env);
@@ -32,7 +36,21 @@ export async function startSourceServer(env=process.env){
  try{
   // Match the dedicated private bucket's conservative 40 MiB upload ceiling.
   // Raise this only after reviewing the Storage global limit and bucket configuration.
-  server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument,maxBytes:41943040});
+  const intents=createSourceUploadIntentDb(db);
+  const uploadStorage=createSourceUploadStorageStream({supabase});
+  const uploadRoutes=createSourceUploadRoutes({
+   authorizeAdmin:createSourceAdminVerifier(db),
+   createIntent:intents.createIntent,
+   markUploading:intents.markUploading,
+   verifyAdapters:{
+    claimVerification:intents.claimVerification,
+    failVerification:intents.failVerification,
+    completeVerifiedIntent:createSourceUploadFinalizer(db),
+    inspectObject:uploadStorage.inspectObject,
+    readObject:uploadStorage.readObject
+   }
+  });
+  server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument,maxBytes:41943040,uploadRoutes});
  }catch(error){
   await db.end();
   throw error;
