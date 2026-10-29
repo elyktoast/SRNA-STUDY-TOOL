@@ -19,7 +19,7 @@ export async function createResumableSourceIntent({
   throw new Error('invalid textbook file size');
  if(mimeType!=='application/pdf') throw new Error('PDF required');
  const id=newId();
- if(typeof id!=='string'||!/^[a-f0-9]{8}-[a-f0-9-]{27,}$/i.test(id))
+ if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))
   throw new Error('invalid generated transfer ID');
  const created=now();
  if(!(created instanceof Date)||!Number.isFinite(created.getTime()))
