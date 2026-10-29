@@ -194,3 +194,36 @@ test('resume never reconciles a missing multipart session without a verified obj
  assert.equal(result.status,500);
  assert.equal(marks,0);
 });
+
+test('resume accepts a concurrently reconciled database completion',async()=>{
+ let reads=0,heads=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:++reads===1?null:new Date()}),
+  saveSession:async()=>true,markComplete:async()=>false,clearSession:async()=>true,
+  controller:{
+   listParts:async()=>{const error=new Error('multipart consumed');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>{heads++;return {completed:true}},
+   initiate:async()=>{throw Error('must not initiate')},
+   complete:async()=>{},signPart:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.completed,true);
+ assert.equal(heads,1);
+});
+test('resume rejects a database completion conflict after verified R2 HEAD',async()=>{
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:null}),
+  saveSession:async()=>true,markComplete:async()=>false,clearSession:async()=>true,
+  controller:{
+   listParts:async()=>{const error=new Error('multipart consumed');error.name='NoSuchUpload';throw error},
+   inspectCompleted:async()=>({completed:true}),
+   initiate:async()=>{},complete:async()=>{},signPart:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(result.status,500);
+});
