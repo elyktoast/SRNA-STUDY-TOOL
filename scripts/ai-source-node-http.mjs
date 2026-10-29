@@ -17,11 +17,10 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   if(!((req.method==='POST'&&['/source/upload','/source/process'].includes(path))||(req.method==='GET'&&['/source/documents','/source/detail'].includes(path))))
    return send(404,{error:'not found'});
   try{
-   // Require the expected media type before accepting a request body.
-   if(req.method==='POST'&&path==='/source/process'&&req.headers['content-type']?.split(';')[0]?.trim()!=='application/json')
-    return send(415,{error:'JSON required'});
    const actor=await getAuthenticatedActor({headers:req.headers});
    if(typeof actor!=='string'||!actor.trim()) return send(401,{error:'authentication required'});
+   if(req.method==='POST'&&path==='/source/process'&&req.headers['content-type']?.split(';')[0]?.trim()!=='application/json')
+    return send(415,{error:'JSON required'});
    if(req.method==='GET'){
     const url=new URL(req.url,'http://localhost');
     const result=await executeAuthenticatedSourceOperation({workflow,maxBytes,path,body:{documentId:url.searchParams.get('id')},actorId:actor});
