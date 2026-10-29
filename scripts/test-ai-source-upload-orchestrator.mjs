@@ -70,3 +70,17 @@ test('trims PDF title when initiating upload',async()=>{
  await submitSourceTextbook({file:{...file,name:'  Nurse Anesthesia.pdf  '},request:h.request,fetchPart:h.fetchPart});
  assert.equal(h.calls[0].body.title,'Nurse Anesthesia.pdf');
 });
+
+test('completed R2 session resumes directly to verification',async()=>{
+ const calls=[];
+ const request=async(path)=>{
+  calls.push(path);
+  if(path.endsWith('/r2/create'))return {completed:true,fileBytes:file.size,title:file.name};
+  if(path.endsWith('/verify'))return {result:{uploadId:id,document:{id:'document-1'}}};
+  throw new Error('unexpected route');
+ };
+ const document=await submitSourceTextbook({file,request,resumeUploadId:id,
+  fetchPart:async()=>{throw new Error('no part transfer expected')}});
+ assert.equal(document.id,'document-1');
+ assert.deepEqual(calls,['/source/uploads/r2/create','/source/uploads/verify']);
+});
