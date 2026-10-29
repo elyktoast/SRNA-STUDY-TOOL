@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createSourceUploadRoutes} from './ai-source-upload-routes.mjs';
 const id='01234567-89ab-4def-8abc-0123456789ab';
 const make=(authorizeAdmin=async()=>true)=>createSourceUploadRoutes({
- authorizeAdmin,createIntent:async()=>{},markUploading:async()=>true,verifyAdapters:{}});
+ authorizeAdmin,createIntent:async()=>{},markUploading:async()=>true,verifyAdapters:{\n claimVerification:async()=>null,inspectObject:async()=>null,\n readObject:async function*(){},completeVerifiedIntent:async()=>null,\n failVerification:async()=>{}\n }});
 test('unknown route returns 404',async()=>{
  const result=await make()({path:'/source/uploads/unknown',actorId:'admin',body:{}});
  assert.equal(result.status,404);
@@ -28,4 +28,11 @@ test('start rejects malformed upload IDs',async()=>{
 test('start marks valid upload session',async()=>{
  const result=await make()({path:'/source/uploads/start',actorId:'admin',body:{uploadId:id}});
  assert.equal(result.status,200);
+});
+
+test('rejects incomplete verification adapters at construction',()=>{
+ assert.throws(()=>createSourceUploadRoutes({
+  authorizeAdmin:async()=>true,createIntent:async()=>{},
+  markUploading:async()=>true,verifyAdapters:{}
+ }),/trusted upload dependencies required/);
 });
