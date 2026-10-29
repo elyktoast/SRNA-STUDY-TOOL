@@ -158,3 +158,25 @@ test('cancel during R2 create aborts the newly returned multipart session',async
  }),/upload canceled/);
  assert.deepEqual(paths,['/source/uploads/r2/create','/source/uploads/r2/abort']);
 });
+
+test('cancel while signing a part prevents the PUT and aborts multipart session',async()=>{
+ const controller=new AbortController(),paths=[];
+ const request=async(path)=>{
+  paths.push(path);
+  if(path.endsWith('/create'))return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+8};
+  if(path.endsWith('/parts'))return {parts:[]};
+  if(path.endsWith('/sign')){
+   controller.abort();
+   return {url:'https://r2.example/part'};
+  }
+  if(path.endsWith('/abort'))return {aborted:true};
+  throw Error('unexpected request');
+ };
+ let puts=0;
+ await assert.rejects(uploadPdfToR2({
+  file:makeFile(),uploadId,request,signal:controller.signal,concurrency:1,
+  fetchPart:async()=>{puts++;throw Error('must not PUT')}
+ }),/upload canceled/);
+ assert.equal(puts,0);
+ assert.equal(paths.at(-1),'/source/uploads/r2/abort');
+});
