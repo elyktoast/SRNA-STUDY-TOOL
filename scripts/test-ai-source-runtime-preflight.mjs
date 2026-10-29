@@ -14,6 +14,7 @@ function fixture({missing,unprotected,exposed=false,publicBucket=false,limit=524
    return {rows:[{column_name:'printed_page'},{column_name:'section_heading'}]};
   if(sql.includes('has_table_privilege'))return {rows:exposed?[{client_role:'authenticated',table_name:'ai_source_upload_intents'}]:[]};
   if(sql.includes('has_schema_privilege'))return {rows:[]};
+  if(sql.includes('has_function_privilege'))return {rows:[{anon_execute:false,authenticated_execute:true}]};
   if(sql.includes('pg_policies'))return {rows:[{total:1}]};
   if(sql.includes('to_regprocedure'))return {rows:[{routine:'public.can_insert_ai_source_object(text,text)'}]};
   if(sql.includes('to_regclass'))return {rows:[{relation:'private.snar_admins'}]};
@@ -72,4 +73,11 @@ test('rejects a Storage insert policy not scoped to authenticated role',async()=
  const original=db.query;
  db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
  await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
+});
+
+test('rejects anonymous EXECUTE on source upload authorization helper',async()=>{
+ const {db,supabase}=fixture();
+ const query=db.query;
+ db.query=async(sql,...args)=>sql.includes('has_function_privilege')?{rows:[{anon_execute:true,authenticated_execute:true}]}:query(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db,supabase}),/helper privileges unsafe/);
 });
