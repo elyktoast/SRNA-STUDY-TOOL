@@ -5,7 +5,7 @@ import {processAdminPdf} from './ai-source-pdf-worker.mjs';
 const getDocument=()=>({
  promise:Promise.resolve({
   numPages:2,
-  async getPage(n){return {async getTextContent(){return {items:[{str:n===1?'Anesthesia equipment safety requires checking the complete breathing circuit before each case. '.repeat(4):'Ventilator pressure alarms and disconnection monitoring support safe ventilation. '.repeat(4)}]}}}}},
+  async getPage(n){return {async getTextContent(){return {items:[{str:(n===1?'Anesthesia equipment safety requires checking the complete breathing circuit before each case. ':'Ventilator pressure alarms and disconnection monitoring support safe ventilation. ').repeat(4)}]}}}},
   async destroy(){}
  })
 });
