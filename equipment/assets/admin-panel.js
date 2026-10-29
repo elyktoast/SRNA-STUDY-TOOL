@@ -17,7 +17,7 @@ async function drawSourceLibrary(host){
  try{
   const base=new URL(config.apiBase,location.href);
   if(base.protocol!=='https:'&&base.hostname!=='localhost'&&base.hostname!=='127.0.0.1')throw Error('HTTPS required');
-  const css=new URL('source-library-workspace.css',new URL('.',document.currentScript?.src||new URL('equipment/assets/',MBUSupabase.appRoot||location.href)));
+  const css=new URL('source-library-workspace.css',new URL('equipment/assets/',MBUSupabase.appRoot||location.href));
   if(!document.querySelector('[data-source-library-style]')){
    const link=document.createElement('link');link.rel='stylesheet';link.href=css.href;link.dataset.sourceLibraryStyle='';document.head.append(link);
   }
