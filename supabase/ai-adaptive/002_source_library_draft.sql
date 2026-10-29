@@ -47,6 +47,8 @@ create table if not exists private.ai_source_chunks (
   content text not null,
   page_start integer,
   page_end integer,
+  printed_page text,
+  section_heading text,
   extraction_method text,
   content_hash text not null,
   search_vector tsvector generated always as (to_tsvector('english',content)) stored,
