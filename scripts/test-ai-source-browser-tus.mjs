@@ -54,3 +54,28 @@ test('already canceled upload does not initialize transport',async()=>{
  }),/upload canceled/);
  assert.equal(m.options,undefined);
 });
+
+test('progress callback exceptions do not fail a successful transfer',async()=>{
+ const m=mock();
+ const result=await uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',
+  accessToken:'user-token',tus:m.tus,
+  progress:()=>{throw new Error('UI unmounted')}
+ });
+ assert.equal(result.bytes,file.size);
+});
+test('resume uses a previously recorded upload session',async()=>{
+ let resumed=false,started=false,options;
+ class Upload{
+  constructor(_file,opts){options=opts}
+  async findPreviousUploads(){return [{uploadUrl:'previous'}]}
+  resumeFromPreviousUpload(previous){resumed=previous.uploadUrl==='previous'}
+  start(){started=true;options.onSuccess()}
+ }
+ await uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',
+  accessToken:'user-token',tus:{Upload}
+ });
+ assert.equal(resumed,true);
+ assert.equal(started,true);
+});
