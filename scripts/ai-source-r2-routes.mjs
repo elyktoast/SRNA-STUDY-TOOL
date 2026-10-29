@@ -47,7 +47,11 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     if(current.r2_completed_at)return {status:200,body:{completed:true}};
     const completed=await controller.complete(intent,{multipartId:body.multipartId,parts:body.parts});
     const marked=await markComplete({uploadId:body.uploadId,actorId,multipartId:body.multipartId});
-    if(!marked)throw new Error('multipart completion state unavailable');
+    if(!marked){
+     const latest=await getSession({uploadId:body.uploadId,actorId});
+     if(latest?.multipart_id!==body.multipartId||!latest.r2_completed_at)
+      throw new Error('multipart completion state unavailable');
+    }
     return {status:200,body:completed};
    }
    if(path==='/source/uploads/r2/abort'){
