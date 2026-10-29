@@ -29,9 +29,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: npm
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
       - name: Check Source Library JavaScript syntax
         run: |
           for file in scripts/ai-source-*.mjs scripts/test-ai-source-*.mjs; do
