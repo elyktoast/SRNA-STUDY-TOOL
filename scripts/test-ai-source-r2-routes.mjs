@@ -47,7 +47,8 @@ test('completed multipart sessions cannot be reopened',async()=>{
  const completed=await f.routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
  assert.equal(completed.status,200);
  const reopened=await f.routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
- assert.equal(reopened.status,409);
+ assert.equal(reopened.status,200);
+ assert.equal(reopened.body.completed,true);
 });
 test('session creation returns original PDF metadata',async()=>{
  const f=fixture();
