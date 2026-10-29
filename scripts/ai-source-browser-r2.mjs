@@ -54,7 +54,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
   if(completed?.completed!==true)throw new Error('R2 completion unavailable');
   return {uploadId,bytes:file.size};
  }catch(error){
-  try{await request('/source/uploads/r2/abort',{uploadId,multipartId:started.multipartId})}catch{}
+  if(signal?.aborted){try{await request('/source/uploads/r2/abort',{uploadId,multipartId:started.multipartId})}catch{}}
   throw error;
  }
 }
