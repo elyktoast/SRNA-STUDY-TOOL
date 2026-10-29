@@ -8,6 +8,8 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
   ['private',required]);
  const found=new Set((result.rows??[]).map(row=>row.table_name));
  for(const name of required) if(!found.has(name)) throw new Error('missing private source schema');
+ const admin=await db.query("select to_regclass('private.snar_admins') as relation");
+ if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
  if(error||!data||data.public!==false) throw new Error('private source storage bucket unavailable');
  return true;
