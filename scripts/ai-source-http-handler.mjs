@@ -12,6 +12,28 @@ export function createSourceHttpHandler({workflow,getAuthenticatedActor,maxBytes
    const actorId=await getAuthenticatedActor({headers});
    if(typeof actorId!=='string'||!actorId.trim())
     return {status:401,body:{error:'authentication required'}};
+   return await execute({workflow,maxBytes,path,body,actorId});
+  }catch(error){
+   if(/access denied/i.test(error?.message??'')) return {status:403,body:{error:'forbidden'}};
+   if(/invalid|PDF bytes required|title|signature|exceeds upload limit/i.test(error?.message??''))
+    return {status:400,body:{error:'invalid request'}};
+   // Do not expose SQL errors, storage paths, stack traces, or server configuration.
+   return {status:500,body:{error:'source operation failed'}};
+  }
+ };
+}
+
+// Only trusted server transport code may supply actorId here.
+export async function executeAuthenticatedSourceOperation({workflow,maxBytes=104857600,path,body,actorId}){
+ if(typeof actorId!=='string'||!actorId.trim()) return {status:401,body:{error:'authentication required'}};
+ try{return await execute({workflow,maxBytes,path,body,actorId})}
+ catch(error){
+  if(/access denied/i.test(error?.message??'')) return {status:403,body:{error:'forbidden'}};
+  if(/invalid|PDF bytes required|title|signature|exceeds upload limit/i.test(error?.message??'')) return {status:400,body:{error:'invalid request'}};
+  return {status:500,body:{error:'source operation failed'}};
+ }
+}
+async function execute({workflow,maxBytes,path,body,actorId}){
    if(path==='/source/upload'){
     if(!(body?.bytes instanceof Uint8Array)||body.bytes.length>maxBytes)
      return {status:413,body:{error:'invalid PDF size'}};
@@ -22,12 +44,4 @@ export function createSourceHttpHandler({workflow,getAuthenticatedActor,maxBytes
     return {status:400,body:{error:'document ID required'}};
    const result=await workflow.process({actorId,documentId:body.documentId});
    return {status:200,body:{result}};
-  }catch(error){
-   if(/access denied/i.test(error?.message??'')) return {status:403,body:{error:'forbidden'}};
-   if(/invalid|PDF bytes required|title|signature|exceeds upload limit/i.test(error?.message??''))
-    return {status:400,body:{error:'invalid request'}};
-   // Do not expose SQL errors, storage paths, stack traces, or server configuration.
-   return {status:500,body:{error:'source operation failed'}};
-  }
- };
 }
