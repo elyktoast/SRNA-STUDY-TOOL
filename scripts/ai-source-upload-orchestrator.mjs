@@ -7,12 +7,13 @@ export async function submitSourceTextbook({
  file,request,projectId,accessToken,userId,tus,progress,signal
 }){
  if(typeof request!=='function')throw new TypeError('authenticated request adapter required');
- if(!file||typeof file.name!=='string'||!file.name.trim())throw new Error('PDF title required');
+ if(!file||typeof file.name!=='string'||!file.name.trim()||file.name.trim().length>250)
+  throw new Error('invalid PDF title');
  if(!Number.isSafeInteger(file.size)||file.size<8||file.size>MAX_TEXTBOOK_BYTES||file.type!=='application/pdf')
   throw new Error('invalid PDF file');
  if(signal?.aborted)throw new Error('upload canceled');
  const created=await request('/source/uploads/initiate',{
-  title:file.name,fileBytes:file.size,mimeType:file.type
+  title:file.name.trim(),fileBytes:file.size,mimeType:file.type
  });
  if(!created||typeof created.upload?.uploadId!=='string'||
     created.upload.fileBytes!==file.size||created.upload.status!=='pending')
