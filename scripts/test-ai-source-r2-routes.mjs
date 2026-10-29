@@ -74,3 +74,22 @@ test('concurrent session creation aborts orphan and reuses saved session',async(
  assert.equal(result.body.multipartId,'winner-session');
  assert.equal(aborted,1);
 });
+
+test('retrying an already completed multipart request is idempotent',async()=>{
+ let completes=0,marks=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:new Date()}),
+  saveSession:async()=>true,markComplete:async()=>{marks++;return true},clearSession:async()=>true,
+  controller:{
+   initiate:async()=>{throw new Error('must not initiate')},
+   complete:async()=>{completes++;throw new Error('must not complete twice')},
+   signPart:async()=>{},listParts:async()=>{},abort:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.completed,true);
+ assert.equal(completes,0);
+ assert.equal(marks,0);
+});
