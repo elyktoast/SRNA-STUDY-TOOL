@@ -16,6 +16,10 @@ as $$
  select p_bucket = 'ai-textbook-sources'
    and (select auth.uid()) is not null
    and exists (
+    select 1 from private.snar_admins a
+    where a.user_id = (select auth.uid())
+   )
+   and exists (
     select 1 from private.ai_source_upload_intents i
     where i.actor_id = (select auth.uid())
       and i.storage_bucket = p_bucket
