@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {uploadSourcePdfWithTus} from './ai-source-browser-tus.mjs';
 const id='01234567-89ab-4def-8abc-0123456789ab';
 const file={size:330000000,type:'application/pdf'};
-const upload={uploadId:id,fileBytes:file.size};
+const upload={uploadId:id,fileBytes:file.size,status:'uploading'};
 function mock(){
  let options;
  class Upload{
@@ -30,4 +30,10 @@ test('rejects mismatched intent before TUS starts',async()=>{
 test('rejects absent user token',async()=>{
  const m=mock();
  await assert.rejects(uploadSourcePdfWithTus({file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'',tus:m.tus}),/token required/);
+});
+
+test('rejects pending intent before sending PDF bytes',async()=>{
+ const m=mock();
+ await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,status:'pending'},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:m.tus}),/does not match/);
+ assert.equal(m.options,undefined);
 });
