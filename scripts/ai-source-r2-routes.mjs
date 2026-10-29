@@ -3,9 +3,9 @@ import {R2_PART_BYTES} from './ai-source-r2-upload-config.mjs';
 // session. Never trust actor IDs, object paths or bucket names in request bodies.
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const routes=new Set(['/source/uploads/r2/create','/source/uploads/r2/sign','/source/uploads/r2/complete','/source/uploads/r2/abort']);
-export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,getSession,saveSession,markComplete}){
+export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,getSession,saveSession,markComplete,clearSession}){
  if(typeof authorizeAdmin!=='function'||typeof getOwnedIntent!=='function'||!controller||
-  typeof getSession!=='function'||typeof saveSession!=='function'||typeof markComplete!=='function')
+  typeof getSession!=='function'||typeof saveSession!=='function'||typeof markComplete!=='function'||typeof clearSession!=='function')
   throw new TypeError('trusted R2 route adapters required');
  return async({path,actorId,body})=>{
   if(!routes.has(path))return {status:404,body:{error:'not found'}};
@@ -40,7 +40,9 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     return {status:200,body:completed};
    }
    if(path==='/source/uploads/r2/abort'){
+    if(current.r2_completed_at)return {status:409,body:{error:'multipart already completed'}};
     await controller.abort(intent,{multipartId:body.multipartId});
+    if(!await clearSession({uploadId:body.uploadId,actorId,multipartId:body.multipartId}))throw new Error('multipart session cleanup failed');
     return {status:200,body:{aborted:true}};
    }
    return {status:404,body:{error:'not found'}};
