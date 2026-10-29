@@ -55,3 +55,21 @@ test('session creation returns original PDF metadata',async()=>{
  assert.equal(opened.status,200);
  assert.equal(opened.body.fileBytes,intent.file_bytes);
 });
+
+test('concurrent session creation aborts orphan and reuses saved session',async()=>{
+ let reads=0,aborted=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:++reads===1?null:'winner-session',r2_completed_at:null}),
+  saveSession:async()=>false,markComplete:async()=>true,clearSession:async()=>true,
+  controller:{
+   initiate:async()=>({multipartId:'orphan-session',partBytes:12582912}),
+   abort:async(_intent,{multipartId})=>{assert.equal(multipartId,'orphan-session');aborted++},
+   signPart:async()=>{},complete:async()=>{},listParts:async()=>{}
+  }
+ });
+ const result=await routes({path:'/source/uploads/r2/create',actorId,body:{uploadId}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.multipartId,'winner-session');
+ assert.equal(aborted,1);
+});
