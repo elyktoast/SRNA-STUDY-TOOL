@@ -1,0 +1,33 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {test} from 'node:test';
+const source=readFileSync(new URL('../workers/source-library-staging/src/index.js',import.meta.url),'utf8');
+const worker=(await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).default;
+const origin='https://staging.srnastudytool.com';
+const uid='123e4567-e89b-42d3-a456-426614174000';
+const objects=new Map();
+const env={STAGING_ONLY:'true',ALLOWED_ORIGIN:origin,SUPABASE_URL:'https://staging-auth.example',SUPABASE_ANON_KEY:'test-public-key',ADMIN_USER_IDS:uid,TEXTBOOKS:{
+ async list({prefix}){return {objects:[...objects].filter(([key])=>key.startsWith(prefix)).map(([key,v])=>({key,size:v.length,uploaded:new Date(),customMetadata:{name:'test.pdf'}})),truncated:false}},
+ async put(key,body){objects.set(key,new Uint8Array(body))},
+ async get(key){const v=objects.get(key);return v?{body:v}:null},
+ async delete(key){objects.delete(key)}
+}};
+const previousFetch=globalThis.fetch;
+globalThis.fetch=async (url,options)=>new Response(options?.headers?.authorization==='Bearer valid'?JSON.stringify({id:uid}):'{}',{status:options?.headers?.authorization==='Bearer valid'?200:401,headers:{'content-type':'application/json'}});
+function request(path,method='GET',headers={},body){return worker.fetch(new Request('https://staging-worker.example'+path,{method,headers:{origin,authorization:'Bearer valid',...headers},body}),env)}
+test('rejects foreign origins',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin:'https://srnastudytool.com'}}),env);assert.equal(r.status,403)});
+test('requires authentication',async()=>{const r=await request('/materials','GET',{authorization:'Bearer invalid'});assert.equal(r.status,403)});
+test('requires admin allowlist',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin,authorization:'Bearer valid'}}),{...env,ADMIN_USER_IDS:'00000000-0000-4000-8000-000000000000'});assert.equal(r.status,403)});
+test('rejects non-PDF upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'not a pdf');assert.equal(r.status,415)});
+test('rejects oversized upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'%PDF-'+'.'.repeat(20*1024*1024));assert.equal(r.status,413)});
+test('uploads, lists, downloads and deletes user-owned PDF',async()=>{
+ const upload=await request('/materials','POST',{'content-type':'application/pdf','x-file-name':'test.pdf'},'%PDF-1.4\nhello');
+ assert.equal(upload.status,201);const result=await upload.json();assert.ok(result.path.startsWith(uid+'/'));
+ const list=await request('/materials');assert.equal((await list.json()).items.length,1);
+ const file=await request('/materials/item?path='+encodeURIComponent(result.path));assert.equal(file.status,200);assert.match(await file.text(),/^%PDF-/);
+ const other=await request('/materials/item?path=00000000-0000-4000-8000-000000000000%2Ffoo.pdf');assert.equal(other.status,400);
+ const deleted=await request('/materials/item?path='+encodeURIComponent(result.path),'DELETE');assert.equal(deleted.status,200);
+ const missing=await request('/materials/item?path='+encodeURIComponent(result.path));assert.equal(missing.status,404);
+});
+test('fails closed when staging configuration is missing',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin}}),{...env,TEXTBOOKS:undefined});assert.equal(r.status,503)});
+test.after(()=>{globalThis.fetch=previousFetch});
