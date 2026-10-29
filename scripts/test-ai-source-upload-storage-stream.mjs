@@ -61,3 +61,20 @@ test('rejects signed URL for a different textbook in the same bucket',async()=>{
  await assert.rejects(async()=>{for await(const _ of adapter.readObject({bucket:'ai-textbook-sources',path})){}},/untrusted private source URL/);
  assert.equal(fetched,false);
 });
+
+test('accepts a relative signed URL for the exact requested PDF',async()=>{
+ const relative='/storage/v1/object/sign/ai-textbook-sources/'+path+'?token=test';
+ const supabase={storage:{from:()=>({createSignedUrl:async()=>({data:{signedUrl:relative}})})}};
+ let fetchedUrl;
+ const adapter=createSourceUploadStorageStream({
+  supabase,storageOrigin:'https://example.test/',
+  fetchImpl:async url=>{
+   fetchedUrl=url;
+   return {ok:true,body:new ReadableStream({start(controller){controller.enqueue(Uint8Array.of(37,80,68,70));controller.close()}})};
+  }
+ });
+ const chunks=[];
+ for await(const chunk of adapter.readObject({bucket:'ai-textbook-sources',path}))chunks.push(...chunk);
+ assert.deepEqual(chunks,[37,80,68,70]);
+ assert.equal(fetchedUrl,'https://example.test'+relative);
+});
