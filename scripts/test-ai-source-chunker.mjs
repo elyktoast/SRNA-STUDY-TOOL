@@ -27,3 +27,12 @@ test('invalid options and pages fail explicitly',()=>{
   assert.throws(()=>chunkPages([],{maxChars:200}),RangeError);
   assert.throws(()=>chunkPages([],{maxChars:400,overlapChars:400}),RangeError);
 });
+
+test('duplicate pages and nontext extraction are rejected',()=>{
+  assert.throws(()=>chunkPages([{physicalPage:1,text:'a'},{physicalPage:1,text:'b'}]),/duplicate physicalPage/);
+  assert.throws(()=>chunkPages([{physicalPage:1,text:{bad:true}}]),TypeError);
+});
+test('chunking is deterministic across repeated runs',()=>{
+  const pages=[{physicalPage:4,text:'capnography '.repeat(300)}];
+  assert.deepEqual(chunkPages(pages),chunkPages(pages));
+});
