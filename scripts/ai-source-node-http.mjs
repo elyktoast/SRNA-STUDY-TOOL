@@ -2,10 +2,11 @@ import {createServer} from 'node:http';
 import {executeAuthenticatedSourceOperation} from './ai-source-http-handler.mjs';
 
 // Supply a trusted session resolver and backend workflow. No secrets in the browser.
-export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=104857600}){
+export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=104857600,uploadRoutes}){
  if(typeof getAuthenticatedActor!=='function') throw new TypeError('session resolver required');
  if(!Number.isSafeInteger(maxBytes)||maxBytes<8) throw new RangeError('invalid size limit');
  if(typeof workflow?.upload!=='function'||typeof workflow?.process!=='function') throw new TypeError('source workflow required');
+ if(uploadRoutes!==undefined&&typeof uploadRoutes!=='function') throw new TypeError('upload routes required');
  return createServer(async(req,res)=>{
   const send=(status,body)=>{
    res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});
@@ -14,12 +15,13 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
   let path;
   try{path=new URL(req.url,'http://localhost').pathname}
   catch{return send(400,{error:'invalid request path'})}
-  if(!((req.method==='POST'&&['/source/upload','/source/process'].includes(path))||(req.method==='GET'&&['/source/documents','/source/detail'].includes(path))))
+  const isUploadSession=Boolean(uploadRoutes)&&req.method==='POST'&&['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify'].includes(path);
+  if(!(isUploadSession||(req.method==='POST'&&['/source/upload','/source/process'].includes(path))||(req.method==='GET'&&['/source/documents','/source/detail'].includes(path))))
    return send(404,{error:'not found'});
   try{
    const actor=await getAuthenticatedActor({headers:req.headers});
    if(typeof actor!=='string'||!actor.trim()) return send(401,{error:'authentication required'});
-   if(req.method==='POST'&&path==='/source/process'&&req.headers['content-type']?.split(';')[0]?.trim()!=='application/json')
+   if(req.method==='POST'&&(path==='/source/process'||isUploadSession)&&req.headers['content-type']?.split(';')[0]?.trim()!=='application/json')
     return send(415,{error:'JSON required'});
    if(req.method==='GET'){
     const url=new URL(req.url,'http://localhost');
@@ -62,7 +64,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
     try{body=JSON.parse(raw.toString('utf8'))}
     catch{return send(400,{error:'invalid JSON'})}
    }
-   const result=await executeAuthenticatedSourceOperation({workflow,maxBytes,path,body,actorId:actor});
+   const result=isUploadSession?await uploadRoutes({path,actorId:actor,body}):await executeAuthenticatedSourceOperation({workflow,maxBytes,path,body,actorId:actor});
    return send(result.status,result.body);
   }catch{
    if(!res.headersSent) send(500,{error:'source operation failed'});
