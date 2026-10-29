@@ -11,7 +11,9 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
    res.writeHead(status,{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'});
    res.end(JSON.stringify(body));
   };
-  const path=new URL(req.url,'http://localhost').pathname;
+  let path;
+  try{path=new URL(req.url,'http://localhost').pathname}
+  catch{return send(400,{error:'invalid request path'})}
   if(req.method!=='POST'||!['/source/upload','/source/process'].includes(path))
    return send(404,{error:'not found'});
   try{
@@ -25,7 +27,9 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
    }
    const declaredLength=req.headers['content-length'];
    const limit=path==='/source/upload'?maxBytes:8192;
-   if(typeof declaredLength==='string' && /^\d+$/.test(declaredLength) && Number(declaredLength)>limit)
+   if(typeof declaredLength==='string' && (!/^\d+$/.test(declaredLength) || !Number.isSafeInteger(Number(declaredLength))))
+    return send(400,{error:'invalid content length'});
+   if(typeof declaredLength==='string' && Number(declaredLength)>limit)
     return send(413,{error:'request too large'});
    const parts=[];
    let size=0;
@@ -33,6 +37,7 @@ export function createSourceNodeServer({workflow,getAuthenticatedActor,maxBytes=
    for await(const part of req){
     size+=part.length;
     if(size>limit){
+     // Drain without retaining further chunks; avoid buffering unbounded uploads.
      req.resume();
      return send(413,{error:'request too large'});
     }
