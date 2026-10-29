@@ -33,7 +33,9 @@ export default {async fetch(request,env){
    const size=Number(request.headers.get('content-length')||0);
    if(size>MAX_BYTES)return json({error:'File too large'},413,h);
    if(request.headers.get('content-type')!=='application/pdf')return json({error:'PDF required'},415,h);
-   const reader=request.body?.getReader();if(!reader)return json({error:'Missing PDF body'},400,h);\n   const chunks=[];let total=0;while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BYTES){await reader.cancel();return json({error:'File too large'},413,h)}chunks.push(value)}\n   const body=new Uint8Array(total);let offset=0;for(const chunk of chunks){body.set(chunk,offset);offset+=chunk.byteLength}
+   const reader=request.body?.getReader();if(!reader)return json({error:'Missing PDF body'},400,h);
+   const chunks=[];let total=0;while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BYTES){await reader.cancel();return json({error:'File too large'},413,h)}chunks.push(value)}
+   const body=new Uint8Array(total);let offset=0;for(const chunk of chunks){body.set(chunk,offset);offset+=chunk.byteLength}
    if(body.byteLength<5||body.byteLength>MAX_BYTES)return json({error:'Invalid PDF size'},413,h);
    const bytes=new Uint8Array(body);
    if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')return json({error:'Invalid PDF header'},415,h);
