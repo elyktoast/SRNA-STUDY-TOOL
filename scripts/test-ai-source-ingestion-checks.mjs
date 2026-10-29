@@ -4,15 +4,15 @@ import {buildSourceManifest} from './ai-source-manifest.mjs';
 import {validateSourceManifest} from './ai-source-ingestion-checks.mjs';
 
 const manifest=()=>buildSourceManifest({documentId:'book-1',pages:[
- {physicalPage:7,text:'Capnography and end tidal carbon dioxide monitoring. '.repeat(10)},
- {physicalPage:8,text:'Ventilation and anesthetic circuit monitoring. '.repeat(10)}
+ {physicalPage:1,text:'Capnography and end tidal carbon dioxide monitoring. '.repeat(10)},
+ {physicalPage:2,text:'Ventilation and anesthetic circuit monitoring. '.repeat(10)}
 ]});
 test('complete indexed pages pass validation',()=>{
  const result=validateSourceManifest(manifest());
  assert.equal(result.ok,true,JSON.stringify(result.errors));
 });
 test('missing text requires OCR or review',()=>{
- const m=buildSourceManifest({documentId:'book-1',pages:[{physicalPage:7,text:'tiny'}]});
+ const m=buildSourceManifest({documentId:'book-1',pages:[{physicalPage:1,text:'tiny'}]});
  assert.equal(validateSourceManifest(m).ok,false);
 });
 test('mismatched source and out of order pages fail',()=>{
