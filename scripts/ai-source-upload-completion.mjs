@@ -18,7 +18,7 @@ export async function verifyCompletedTextbook({
  const intent=await claimVerification({uploadId,actorId});
  if(!intent) throw new Error('upload unavailable for verification');
  try{
-  if(intent.storage_bucket!=='ai-textbook-sources'||
+  if(intent.storage_bucket!=='srna-private-textbooks'||
      intent.storage_path!==`documents/${uploadId}.pdf`||
      !Number.isSafeInteger(Number(intent.file_bytes))||
      Number(intent.file_bytes)<8||Number(intent.file_bytes)>MAX_TEXTBOOK_BYTES)
