@@ -46,7 +46,7 @@ export async function startSourceServer(env=process.env){
   // Large PDFs use resumable Storage transfers and server-side verification.
   const intents=createSourceUploadIntentDb(db);
   const uploadStorage=createR2SourceStorageAdapter({client:r2Client,commands:{HeadObjectCommand,GetObjectCommand}});
-  const r2Controller=createR2MultipartController({client:r2Client,presign:getSignedUrl,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}});
+  const r2Controller=createR2MultipartController({client:r2Client,presign:getSignedUrl,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand,HeadObjectCommand}});
   const uploadRoutes=createSourceUploadRoutes({
    authorizeAdmin:createSourceAdminVerifier(db),
    createIntent:intents.createIntent,
