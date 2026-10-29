@@ -27,6 +27,7 @@ returns table (
   document_id uuid,
   document_title text,
   section_heading text,
+  printed_page text,
   page_start integer,
   page_end integer,
   passage text,
@@ -37,7 +38,7 @@ stable
 security invoker
 set search_path=''
 as $$
-  select c.id,c.document_id,d.title,s.heading,c.page_start,c.page_end,
+  select c.id,c.document_id,d.title,coalesce(c.section_heading,s.heading),c.printed_page,c.page_start,c.page_end,
          c.content,ts_rank_cd(c.search_vector,websearch_to_tsquery('english',p_query))::real
   from private.ai_source_chunks c
   join private.ai_source_documents d on d.id=c.document_id
