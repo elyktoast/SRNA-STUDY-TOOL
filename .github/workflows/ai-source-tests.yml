@@ -45,7 +45,7 @@ jobs:
           result=$?
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const lines=fs.readFileSync('ai-source-test-events.jsonl','utf8').split('\\n');
+          const lines=fs.readFileSync('ai-source-test-events.jsonl','utf8').split('\n');
           const failures=[],summary={};
           for(const line of lines){
             if(!line.trim())continue;
@@ -59,11 +59,11 @@ jobs:
           }
           const output=['# AI Source Library test failures','','Total failed: '+failures.length,'',''];
           for(const [index,f] of failures.entries()){
-            output.push('## '+(index+1)+'. '+f.name,'File: '+(f.file||'unknown')+':'+(f.line||'?'),'\\x60\\x60\\x60text',JSON.stringify(f.error,null,2),'\\x60\\x60\\x60','');
+            output.push('## '+(index+1)+'. '+f.name,'File: '+(f.file||'unknown')+':'+(f.line||'?'),'\x60\x60\x60text',JSON.stringify(f.error,null,2),'\x60\x60\x60','');
           }
           if(!failures.length)output.push('No test:fail events recorded. See stderr and raw JSONL logs.');
-          fs.writeFileSync('ai-source-failures.md',output.join('\\n'));
-          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,output.slice(0,120).join('\\n')+'\\n');
+          fs.writeFileSync('ai-source-failures.md',output.join('\n'));
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,output.slice(0,120).join('\n')+'\n');
           console.log('Test summary:',JSON.stringify(summary));
           console.log('Failed tests:',failures.length);
           for(const f of failures)console.log('FAIL:',f.name,'-',f.error?.message||'no message');
