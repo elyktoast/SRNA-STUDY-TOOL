@@ -93,3 +93,16 @@ test('retrying an already completed multipart request is idempotent',async()=>{
  assert.equal(completes,0);
  assert.equal(marks,0);
 });
+
+test('completion accepts a concurrent database winner when markComplete returns false',async()=>{
+ let reads=0;
+ const routes=createR2UploadRoutes({
+  authorizeAdmin:async()=>true,getOwnedIntent:async()=>intent,
+  getSession:async()=>({multipart_id:'session-one',r2_completed_at:++reads===1?null:new Date()}),
+  saveSession:async()=>true,markComplete:async()=>false,clearSession:async()=>true,
+  controller:{complete:async()=>({completed:true}),initiate:async()=>{},signPart:async()=>{},listParts:async()=>{},abort:async()=>{}}
+ });
+ const result=await routes({path:'/source/uploads/r2/complete',actorId,body:{uploadId,multipartId:'session-one',parts:[]}});
+ assert.equal(result.status,200);
+ assert.equal(result.body.completed,true);
+});
