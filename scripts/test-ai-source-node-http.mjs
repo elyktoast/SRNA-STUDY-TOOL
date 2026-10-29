@@ -53,7 +53,7 @@ test('Node adapter verifies the session exactly once',async()=>{
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  try{
   const response=await fetch('http://127.0.0.1:'+server.address().port+'/source/upload',{
-   method:'POST',headers:{'x-source-title':'Book'},body:new Uint8Array([37,80,68,70,45,49,46,55])
+   method:'POST',headers:{'x-source-title':'Book','content-type':'application/pdf'},body:new Uint8Array([37,80,68,70,45,49,46,55])
   });
   assert.equal(response.status,201);
   assert.equal(calls,1);
