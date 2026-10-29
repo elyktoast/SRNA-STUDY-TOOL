@@ -66,3 +66,10 @@ test('checks authenticated role and helper expression in Storage policy',async()
  assert.match(policyQuery,/authenticated/);
  assert.match(policyQuery,/can_insert_ai_source_object/);
 });
+
+test('rejects a Storage insert policy not scoped to authenticated role',async()=>{
+ const {db,supabase}=fixture();
+ const original=db.query;
+ db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
+});
