@@ -15,7 +15,7 @@ export async function startSourceServer(env=process.env){
  const {port,host}=readSourceRuntimeConfig(env);
  const require=createRequire(import.meta.url);
  const {Pool}=require('pg');
- const {S3Client,HeadObjectCommand,GetObjectCommand,CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand}=await import('@aws-sdk/client-s3');
+ const {S3Client,HeadObjectCommand,GetObjectCommand,CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}=await import('@aws-sdk/client-s3');
  const {getSignedUrl}=await import('@aws-sdk/s3-request-presigner');
  for(const name of ['R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY']){
   if(typeof env[name]!=='string'||!env[name].trim())throw new Error('R2 server credentials required');
@@ -46,7 +46,7 @@ export async function startSourceServer(env=process.env){
   // Large PDFs use resumable Storage transfers and server-side verification.
   const intents=createSourceUploadIntentDb(db);
   const uploadStorage=createR2SourceStorageAdapter({client:r2Client,commands:{HeadObjectCommand,GetObjectCommand}});
-  const r2Controller=createR2MultipartController({client:r2Client,presign:getSignedUrl,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand}});
+  const r2Controller=createR2MultipartController({client:r2Client,presign:getSignedUrl,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}});
   const uploadRoutes=createSourceUploadRoutes({
    authorizeAdmin:createSourceAdminVerifier(db),
    createIntent:intents.createIntent,
