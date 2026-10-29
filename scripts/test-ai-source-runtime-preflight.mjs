@@ -47,3 +47,22 @@ test('rejects missing private textbook Storage insert policy',async()=>{
  db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
  await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
 });
+
+test('rejects missing Storage authorization helper',async()=>{
+ const {db,supabase}=fixture();
+ const original=db.query;
+ db.query=async(sql,...args)=>sql.includes('to_regprocedure')?{rows:[{routine:null}]}:original(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload helper unavailable/);
+});
+test('checks authenticated role and helper expression in Storage policy',async()=>{
+ const {db,supabase}=fixture();
+ const original=db.query;
+ let policyQuery='';
+ db.query=async(sql,...args)=>{
+  if(sql.includes('pg_policies'))policyQuery=sql;
+  return original(sql,...args);
+ };
+ assert.equal(await verifySourceRuntimeResources({db,supabase}),true);
+ assert.match(policyQuery,/authenticated/);
+ assert.match(policyQuery,/can_insert_ai_source_object/);
+});
