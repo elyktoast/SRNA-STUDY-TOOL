@@ -29,6 +29,11 @@ export function createSourceDbAdapter(db){
    if(!client) throw new Error('transaction-capable database adapter required');
    try{
     await client.query('BEGIN');
+    // Serialize writes for this document and refuse writes outside the indexing stage.
+    const state=await client.query(
+     'select processing_status from private.ai_source_documents where id=$1 for update',[documentId]);
+    if(state.rows?.[0]?.processing_status!=='indexing')
+     throw new Error('source document not in indexing state');
     await client.query('delete from private.ai_source_chunks where document_id=$1',[documentId]);
     for(const c of chunks){
      if(c.documentId!==documentId) throw new Error('source mismatch');
