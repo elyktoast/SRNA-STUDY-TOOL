@@ -37,3 +37,20 @@ test('rejects pending intent before sending PDF bytes',async()=>{
  await assert.rejects(uploadSourcePdfWithTus({file,upload:{...upload,status:'pending'},projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:m.tus}),/does not match/);
  assert.equal(m.options,undefined);
 });
+
+test('synchronous TUS constructor error rejects cleanly',async()=>{
+ class Upload{constructor(){throw new Error('TUS initialization failed')}}
+ await assert.rejects(uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',tus:{Upload}
+ }),/TUS initialization failed/);
+});
+test('already canceled upload does not initialize transport',async()=>{
+ const m=mock();
+ const controller=new AbortController();
+ controller.abort();
+ await assert.rejects(uploadSourcePdfWithTus({
+  file,upload,projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  tus:m.tus,signal:controller.signal
+ }),/upload canceled/);
+ assert.equal(m.options,undefined);
+});
