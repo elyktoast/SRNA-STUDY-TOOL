@@ -23,7 +23,13 @@ export function createR2UploadRoutes({authorizeAdmin,getOwnedIntent,controller,g
     if(current?.multipart_id)return {status:200,body:{multipartId:current.multipart_id,partBytes:R2_PART_BYTES,fileBytes:Number(intent.file_bytes),title:intent.title}};
     const created=await controller.initiate(intent);
     const saved=await saveSession({uploadId:body.uploadId,actorId,multipartId:created.multipartId});
-    if(!saved){await controller.abort(intent,{multipartId:created.multipartId});throw new Error('multipart session persistence failed');}
+    if(!saved){
+     await controller.abort(intent,{multipartId:created.multipartId});
+     const existing=await getSession({uploadId:body.uploadId,actorId});
+     if(existing?.multipart_id&&!existing.r2_completed_at)
+      return {status:200,body:{multipartId:existing.multipart_id,partBytes:R2_PART_BYTES,fileBytes:Number(intent.file_bytes),title:intent.title}};
+     throw new Error('multipart session persistence failed');
+    }
     return {status:200,body:{...created,fileBytes:Number(intent.file_bytes),title:intent.title}};
    }
    if(!current?.multipart_id||current.multipart_id!==body.multipartId)
