@@ -50,3 +50,16 @@ test('scanned textbook without OCR never becomes ready',async()=>{
  }),/OCR required/);
  assert.deepEqual(statuses,['extracting','failed']);
 });
+
+test('PDF loading failure marks document failed without saving chunks',async()=>{
+ const statuses=[];
+ let saved=false;
+ await assert.rejects(processAdminPdf({
+  documentId:'book',actorId:'admin',authorizeAdmin:async()=>true,
+  readPrivatePdf:async()=>new Uint8Array([37,80,68,70,45]),
+  getDocument:()=>({promise:Promise.reject(new Error('corrupt PDF'))}),
+  saveChunks:async()=>{saved=true},setStatus:async(id,status)=>statuses.push(status)
+ }),/corrupt PDF/);
+ assert.equal(saved,false);
+ assert.deepEqual(statuses,['extracting','failed']);
+});
