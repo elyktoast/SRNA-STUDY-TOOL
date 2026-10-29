@@ -15,6 +15,6 @@ const setup=(missing=[],publicBucket=false,rlsOff=[],missingColumns=[])=>({
 test('private resources pass startup checks',async()=>assert.equal(await verifySourceRuntimeResources(setup()),true));
 test('missing course links prevent startup',async()=>assert.rejects(verifySourceRuntimeResources(setup(['ai_source_course_links'])),/missing private source schema/));
 test('RLS disabled prevents startup',async()=>assert.rejects(verifySourceRuntimeResources(setup([],false,['ai_source_chunks'])),/RLS disabled/));
-test('public textbook bucket prevents startup',async()=>assert.rejects(verifySourceRuntimeResources(setup([],true)),/private source storage bucket unavailable/));
+test('legacy Supabase bucket flag does not bypass private database checks',async()=>assert.equal(await verifySourceRuntimeResources(setup([],true)),true));
 
 test('missing printed-page metadata blocks startup',async()=>assert.rejects(verifySourceRuntimeResources(setup([],false,[],['printed_page'])),/citation metadata schema missing/));
