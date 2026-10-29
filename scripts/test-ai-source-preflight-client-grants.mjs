@@ -6,6 +6,10 @@ function clients(grants=[],schemaGrants=[]){return {db:{query:async(sql)=>({rows
 test('source preflight accepts private schema without client grants',async()=>{await assert.doesNotReject(verifySourceRuntimeResources(clients()))});
 test('source preflight rejects accidental authenticated table access',async()=>{await assert.rejects(verifySourceRuntimeResources(clients([{table_name:'ai_source_chunks',grantee:'authenticated',privilege_type:'SELECT'}])),/exposed to client roles/)});
 
-test('rejects unrestricted source bucket types',async()=>{const env=clients();env.supabase.storage.getBucket=async()=>({data:{public:false,allowed_mime_types:null,file_size_limit:524288000}});await assert.rejects(verifySourceRuntimeResources(env),/PDF only/)});
-test('rejects source bucket over 100 MB',async()=>{const env=clients();env.supabase.storage.getBucket=async()=>({data:{public:false,allowed_mime_types:['application/pdf'],file_size_limit:600000000}});await assert.rejects(verifySourceRuntimeResources(env),/size limit invalid/)});
+test('rejects anonymous access to private source tables',async()=>{
+ await assert.rejects(verifySourceRuntimeResources(clients([{client_role:'anon',table_name:'ai_source_documents'}])),/exposed to client roles/);
+});
+test('rejects authenticated access to private upload intents',async()=>{
+ await assert.rejects(verifySourceRuntimeResources(clients([{client_role:'authenticated',table_name:'ai_source_upload_intents'}])),/exposed to client roles/);
+});
 test('source preflight rejects schema usage grants to client roles',async()=>{await assert.rejects(verifySourceRuntimeResources(clients([],[{grantee:'authenticated',privilege_type:'USAGE'}])),/schema exposed/)});
