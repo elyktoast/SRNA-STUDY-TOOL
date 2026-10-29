@@ -1,10 +1,10 @@
-import {uploadSourcePdfWithTus} from './ai-source-browser-tus.mjs';
+import {uploadPdfToR2} from './ai-source-browser-r2.mjs';
 import {MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
 
 // Call only from an authenticated admin UI. request() must use same-origin
 // credentials and CSRF protections provided by the application.
 export async function submitSourceTextbook({
- file,request,projectId,accessToken,userId,tus,progress,signal
+ file,request,fetchPart,progress,signal
 }){
  if(typeof request!=='function')throw new TypeError('authenticated request adapter required');
  if(!file||typeof file.name!=='string'||!file.name.trim()||file.name.trim().length>250)
@@ -21,10 +21,7 @@ export async function submitSourceTextbook({
  const uploadId=created.upload.uploadId;
  const started=await request('/source/uploads/start',{uploadId});
  if(started?.status!=='uploading')throw new Error('upload session could not start');
- await uploadSourcePdfWithTus({
-  file,upload:{...created.upload,status:'uploading'},
-  projectId,accessToken,userId,tus,progress,signal
- });
+ await uploadPdfToR2({file,uploadId,request,fetchPart,progress,signal});
  if(signal?.aborted)throw new Error('upload canceled');
  const verified=await request('/source/uploads/verify',{uploadId});
  if(verified?.result?.uploadId!==uploadId||!verified.result.document?.id)
