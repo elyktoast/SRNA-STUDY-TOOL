@@ -23,6 +23,8 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  if((schemaGrants.rows??[]).length) throw new Error('private source schema exposed to client roles');
  const admin=await db.query("select to_regclass('private.snar_admins') as relation");
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
+ const helper=await db.query("select to_regprocedure('storage.can_insert_ai_source_object(text,text)') as routine");
+ if(!helper.rows?.[0]?.routine) throw new Error('source upload helper unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
  if(error||!data||data.public!==false) throw new Error('private source storage bucket unavailable');
  if(!Array.isArray(data.allowed_mime_types)||data.allowed_mime_types.length!==1||data.allowed_mime_types[0]!=='application/pdf') throw new Error('source bucket must allow PDF only');
