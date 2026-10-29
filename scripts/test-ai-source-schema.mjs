@@ -29,7 +29,7 @@ test('retrieval functions are invoker-only and private',()=>{
 });
 test('search results retain source and page references',()=>{
   for(const text of sql.slice(2)){
-    for(const field of ['document_title','section_heading','page_start','page_end','passage'])
+    for(const field of ['document_title','section_heading','printed_page','page_start','page_end','passage'])
       assert.ok(text.includes(field),field);
   }
 });
