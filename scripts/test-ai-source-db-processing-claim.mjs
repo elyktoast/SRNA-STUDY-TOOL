@@ -7,7 +7,7 @@ test('processing claim is conditional and rejects concurrent work',async()=>{
  const db={query:async(sql,params)=>{calls.push({sql,params});return {rowCount:0}}};
  const adapter=createSourceDbAdapter(db);
  await assert.rejects(adapter.setStatus('doc-1','extracting'),/already active/);
- assert.match(calls[0].sql,/processing_status in \('uploaded','ready','failed'\)/);
+ assert.match(calls[0].sql,/processing_status=any\(\$3::text\[\]\)/);
  assert.deepEqual(calls[0].params,['doc-1','extracting',['uploaded','ready','failed']]);
 });
 
