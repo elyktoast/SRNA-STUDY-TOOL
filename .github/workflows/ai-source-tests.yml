@@ -1,0 +1,41 @@
+name: AI Source Library tests
+
+on:
+  push:
+    branches:
+      - feat/ai-adaptive-foundation
+    paths:
+      - 'scripts/ai-source-*.mjs'
+      - 'scripts/test-ai-source-*.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/ai-source-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ai-source-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  source-tests:
+    name: Node 22 Source Library regression tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check Source Library JavaScript syntax
+        run: |
+          for file in scripts/ai-source-*.mjs scripts/test-ai-source-*.mjs; do
+            node --check "$file"
+          done
+      - name: Run Source Library tests
+        run: npm run test:ai-source
