@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {MAX_TEXTBOOK_BYTES} from './ai-source-resumable-intent.mjs';
+import {MAX_TEXTBOOK_BYTES,TUS_CHUNK_BYTES} from './ai-source-upload-constants.mjs';
 
 // Server-only finalization. Caller must resolve actor from verified session.
 // A TUS success notification alone is not proof of an intact textbook.
@@ -32,7 +32,8 @@ export async function verifyCompletedTextbook({
   let count=0;
   let signature=Buffer.alloc(0);
   for await(const part of readObject({bucket:intent.storage_bucket,path:intent.storage_path})){
-   if(!(part instanceof Uint8Array)||part.length===0) throw new Error('invalid upload stream');
+   if(!(part instanceof Uint8Array)||part.length===0||part.length>TUS_CHUNK_BYTES)
+    throw new Error('invalid upload stream chunk size');
    if(signature.length<5) signature=Buffer.concat([signature,Buffer.from(part.subarray(0,5-signature.length))]);
    count+=part.length;
    if(count>size) throw new Error('uploaded object exceeds expected size');
