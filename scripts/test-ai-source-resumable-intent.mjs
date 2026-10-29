@@ -44,3 +44,10 @@ test('rejects invalid title and file size',async()=>{
 test('persistence failure propagates without returning a usable upload ID',async()=>{
  await assert.rejects(createResumableSourceIntent({...base,createIntent:async()=>{throw new Error('database unavailable')}}),/database unavailable/);
 });
+
+test('rejects malformed generated upload UUID before persistence',async()=>{
+ let persisted=false;
+ await assert.rejects(createResumableSourceIntent({...base,newId:()=> '01234567-89ab-4def-8abc-0123456789ab-extra',
+  createIntent:async()=>{persisted=true}}),/invalid generated transfer ID/);
+ assert.equal(persisted,false);
+});
