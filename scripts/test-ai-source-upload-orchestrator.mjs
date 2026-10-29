@@ -50,3 +50,22 @@ test('rejects invalid files before initiating a server upload intent',async()=>{
   assert.equal(h.calls.length,0);
  }
 });
+
+test('rejects oversized PDF title before creating upload intent',async()=>{
+ const h=setup();
+ await assert.rejects(submitSourceTextbook({
+  file:{...file,name:'a'.repeat(251)},request:h.request,
+  projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  userId:'11111111-1111-4111-8111-111111111111',tus:h.tus
+ }),/invalid PDF title/);
+ assert.equal(h.calls.length,0);
+});
+test('trims PDF title before initiating upload',async()=>{
+ const h=setup();
+ await submitSourceTextbook({
+  file:{...file,name:'  Nurse Anesthesia.pdf  '},request:h.request,
+  projectId:'xqyasyambwdyhsjkftqu',accessToken:'user-token',
+  userId:'11111111-1111-4111-8111-111111111111',tus:h.tus
+ });
+ assert.equal(h.calls[0].body.title,'Nurse Anesthesia.pdf');
+});
