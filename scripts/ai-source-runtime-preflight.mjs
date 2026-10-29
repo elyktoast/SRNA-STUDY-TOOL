@@ -14,6 +14,8 @@ export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textb
  const columns=await db.query("select column_name from information_schema.columns where table_schema='private' and table_name='ai_source_chunks' and column_name=any($1::text[])",[['printed_page','section_heading']]);
  const citationColumns=new Set((columns.rows??[]).map(row=>row.column_name));
  if(!citationColumns.has('printed_page')||!citationColumns.has('section_heading')) throw new Error('source citation metadata schema missing');
+ const grants=await db.query("select table_name,privilege_type,grantee from information_schema.role_table_grants where table_schema='private' and table_name=any($1::text[]) and grantee=any($2::text[])",[required,['anon','authenticated','PUBLIC']]);
+ if((grants.rows??[]).length) throw new Error('source tables exposed to client roles');
  const admin=await db.query("select to_regclass('private.snar_admins') as relation");
  if(!admin.rows?.[0]?.relation) throw new Error('private admin authorization table unavailable');
  const {data,error}=await supabase.storage.getBucket(bucket);
