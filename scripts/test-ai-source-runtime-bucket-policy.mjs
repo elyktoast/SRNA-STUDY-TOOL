@@ -7,3 +7,5 @@ test('accepts PDF-only private storage',async()=>{assert.equal(await verifySourc
 test('rejects public storage',async()=>{await assert.rejects(verifySourceRuntimeResources(setup({public:true,allowed_mime_types:['application/pdf'],file_size_limit:524288000})),/private source storage/)});
 test('rejects unrestricted MIME types',async()=>{await assert.rejects(verifySourceRuntimeResources(setup({public:false,allowed_mime_types:null,file_size_limit:524288000})),/PDF only/)});
 test('rejects oversized bucket limit',async()=>{await assert.rejects(verifySourceRuntimeResources(setup({public:false,allowed_mime_types:['application/pdf'],file_size_limit:524288001})),/size limit invalid/)});
+
+test('rejects a bucket too small for a 330 MiB textbook',async()=>{await assert.rejects(verifySourceRuntimeResources(setup({public:false,allowed_mime_types:['application/pdf'],file_size_limit:104857600})),/330 MiB/)});
