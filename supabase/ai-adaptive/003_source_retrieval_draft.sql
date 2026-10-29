@@ -5,10 +5,13 @@ create table if not exists private.ai_source_course_links (
   course_id text not null,
   exam_id text,
   created_at timestamptz not null default now(),
-  primary key(document_id,course_id)
+  unique(document_id,course_id,exam_id)
 );
 alter table private.ai_source_course_links enable row level security;
 revoke all on private.ai_source_course_links from public,anon,authenticated;
+-- NULL exam_id denotes a course-wide source; prevent duplicate course-wide links.
+create unique index if not exists ai_source_course_wide_unique
+  on private.ai_source_course_links(document_id,course_id) where exam_id is null;
 create index if not exists ai_source_course_links_course_idx on private.ai_source_course_links(course_id,document_id);
 
 -- Keyword retrieval uses the existing GIN index and course metadata.
