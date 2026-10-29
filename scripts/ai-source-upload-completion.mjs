@@ -25,7 +25,8 @@ export async function verifyCompletedTextbook({
    throw new Error('invalid upload intent metadata');
   const size=Number(intent.file_bytes);
   const object=await inspectObject({bucket:intent.storage_bucket,path:intent.storage_path});
-  if(!object||object.size!==size) throw new Error('uploaded object size mismatch');
+  if(!object||!Number.isSafeInteger(Number(object.size))||Number(object.size)!==size)
+   throw new Error('uploaded object size mismatch');
   // readObject must yield bounded Uint8Array chunks from private server storage.
   const hash=createHash('sha256');
   let count=0;
