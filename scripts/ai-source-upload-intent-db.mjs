@@ -46,6 +46,15 @@ export function createSourceUploadIntentDb(db){
       returning id`,[uploadId,actorId,multipartId]);
    return result.rowCount===1;
   },
+  async clearSession({uploadId,actorId,multipartId}){
+   const result=await db.query(
+    `update private.ai_source_upload_intents
+        set r2_multipart_id=null,updated_at=now()
+      where id=$1 and actor_id=$2 and status='uploading'
+        and r2_multipart_id=$3 and r2_completed_at is null
+      returning id`,[uploadId,actorId,multipartId]);
+   return result.rowCount===1;
+  },
   async markComplete({uploadId,actorId,multipartId}){
    const result=await db.query(
     `update private.ai_source_upload_intents
