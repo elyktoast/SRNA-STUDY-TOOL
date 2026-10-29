@@ -7,7 +7,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ETAG=/^(?:[^"\r\n]{1,256}|"[^"\r\n]{1,256}")$/;
 export function createR2MultipartController({client,commands,presign}){
  if(typeof client?.send!=='function'||typeof presign!=='function'||
-    !['CreateMultipartUploadCommand','UploadPartCommand','CompleteMultipartUploadCommand','AbortMultipartUploadCommand','ListPartsCommand']
+    !['CreateMultipartUploadCommand','UploadPartCommand','CompleteMultipartUploadCommand','AbortMultipartUploadCommand','ListPartsCommand','HeadObjectCommand']
       .every(name=>typeof commands?.[name]==='function'))
   throw new TypeError('trusted R2 multipart dependencies required');
  const check=(intent)=>{
@@ -84,6 +84,16 @@ export function createR2MultipartController({client,commands,presign}){
     Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path,UploadId:multipartId,
     MultipartUpload:{Parts:parts}
    }));
+   return {completed:true};
+  },
+  async inspectCompleted(intent){
+   check(intent);
+   const result=await client.send(new commands.HeadObjectCommand({
+    Bucket:R2_SOURCE_BUCKET,Key:intent.storage_path
+   }));
+   if(Number(result?.ContentLength)!==Number(intent.file_bytes)||
+      result?.ContentType!=='application/pdf')
+    throw new Error('completed R2 object metadata mismatch');
    return {completed:true};
   },
   async abort(intent,{multipartId}){
