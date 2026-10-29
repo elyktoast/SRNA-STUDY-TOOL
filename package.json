@@ -18,7 +18,8 @@
     "simulate:cat": "node scripts/cat-simulator.mjs --runs=100 --questions=50 --write",
     "review:all": "node scripts/all-course-question-quality.mjs",
     "review:all:write": "node scripts/all-course-question-quality.mjs --write",
-    "test:quality-report": "node scripts/test-all-course-question-quality.mjs"
+    "test:quality-report": "node scripts/test-all-course-question-quality.mjs",
+    "test:ai-source": "node --test scripts/test-ai-source-*.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.55.0"
