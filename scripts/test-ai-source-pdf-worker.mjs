@@ -19,6 +19,7 @@ test('PDF worker indexes both extracted and OCR pages',async()=>{
  const result=await processAdminPdf(args);
  assert.equal(result.status,'ready');
  assert.deepEqual([...new Set(chunks.map(c=>c.pageStart))],[1,2]);
+ assert.equal(chunks.find(c=>c.pageStart===2).extractionMethod,'ocr');
 });
 test('missing OCR never marks textbook ready',async()=>{
  const args=base();delete args.ocrPage;
