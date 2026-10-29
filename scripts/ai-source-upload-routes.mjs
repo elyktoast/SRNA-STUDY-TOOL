@@ -17,7 +17,7 @@ export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUpload
     const upload=await createResumableSourceIntent({actorId,authorizeAdmin,title:body.title,fileBytes:body.fileBytes,mimeType:body.mimeType,createIntent});
     return {status:201,body:{upload}};
    }
-   if(typeof body.uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.uploadId)) return {status:400,body:{error:'upload ID required'}};
+   if(typeof body.uploadId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.uploadId)) return {status:400,body:{error:'upload ID required'}};
    if(path==='/source/uploads/start'){
     const started=await markUploading({uploadId:body.uploadId,actorId});
     return started?{status:200,body:{status:'uploading'}}:{status:409,body:{error:'upload cannot start'}};
