@@ -34,8 +34,8 @@ export async function startSourceServer(env=process.env){
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
  let server;
  try{
-  // Match the dedicated private bucket's conservative 40 MiB upload ceiling.
-  // Raise this only after reviewing the Storage global limit and bucket configuration.
+  // The legacy direct POST upload stays capped at 40 MiB.
+  // Large PDFs use resumable Storage transfers and server-side verification.
   const intents=createSourceUploadIntentDb(db);
   const uploadStorage=createSourceUploadStorageStream({supabase});
   const uploadRoutes=createSourceUploadRoutes({
