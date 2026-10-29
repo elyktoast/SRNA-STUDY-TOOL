@@ -34,3 +34,16 @@ test('claims verification only from uploadable state, for owner, before expiry',
  assert.match(sql,/expires_at>now\(\)/);
  assert.deepEqual(params,[id,'actor']);
 });
+
+test('marks only an owned verifying upload as failed',async()=>{
+ let sql,params;
+ const adapter=createSourceUploadIntentDb({query:async(s,p)=>{sql=s;params=p;return {rowCount:1}}});
+ await adapter.failVerification({uploadId:id,actorId:'actor'});
+ assert.ok(sql.includes("status='verifying'"));
+ assert.ok(sql.includes("status='failed'"));
+ assert.deepEqual(params,[id,'actor']);
+});
+test('rejects failed transition when another worker owns state',async()=>{
+ const adapter=createSourceUploadIntentDb({query:async()=>({rowCount:0})});
+ await assert.rejects(adapter.failVerification({uploadId:id,actorId:'actor'}),/transition unavailable/);
+});
