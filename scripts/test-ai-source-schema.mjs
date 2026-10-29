@@ -23,7 +23,7 @@ test('every new table has RLS and no browser grants',()=>{
 test('retrieval functions are invoker-only and private',()=>{
   for(const text of sql.slice(2)){
     assert.match(text,/security invoker/i);
-    assert.doesNotMatch(text,/security definer/i);
+    assert.doesNotMatch(text.replace(/^\s*--.*$/gm,''),/security definer/i);
     assert.match(text,/revoke all on function private\./i);
   }
 });
