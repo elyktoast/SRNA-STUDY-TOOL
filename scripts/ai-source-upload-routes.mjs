@@ -1,12 +1,15 @@
+import {createR2UploadRoutes} from './ai-source-r2-routes.mjs';
 import {createResumableSourceIntent} from './ai-source-resumable-intent.mjs';
 import {verifyCompletedTextbook} from './ai-source-upload-completion.mjs';
 
 // Trusted caller supplies actorId from verified authentication, never the JSON body.
-export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUploading,verifyAdapters}){
+export function createSourceUploadRoutes({authorizeAdmin,createIntent,markUploading,verifyAdapters,r2}){
  if(typeof authorizeAdmin!=='function'||typeof createIntent!=='function'||typeof markUploading!=='function'||!verifyAdapters||typeof verifyAdapters!=='object'||
     ['claimVerification','inspectObject','readObject','completeVerifiedIntent','failVerification'].some(key=>typeof verifyAdapters[key]!=='function'))
   throw new TypeError('trusted upload dependencies required');
+ const r2Routes=r2?createR2UploadRoutes({authorizeAdmin,...r2}):null;
  return async ({path,actorId,body})=>{
+  if(path.startsWith('/source/uploads/r2/'))return r2Routes?await r2Routes({path,actorId,body}):{status:503,body:{error:'R2 not configured'}};
   if(!['/source/uploads/initiate','/source/uploads/start','/source/uploads/verify'].includes(path))
    return {status:404,body:{error:'not found'}};
   if(typeof actorId!=='string'||!actorId.trim()) return {status:401,body:{error:'authentication required'}};
