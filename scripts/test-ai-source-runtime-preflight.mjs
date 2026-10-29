@@ -14,6 +14,7 @@ function fixture({missing,unprotected,exposed=false,publicBucket=false,limit=524
    return {rows:[{column_name:'printed_page'},{column_name:'section_heading'}]};
   if(sql.includes('has_table_privilege'))return {rows:exposed?[{client_role:'authenticated',table_name:'ai_source_upload_intents'}]:[]};
   if(sql.includes('has_schema_privilege'))return {rows:[]};
+  if(sql.includes('pg_policies'))return {rows:[{total:1}]};
   if(sql.includes('to_regprocedure'))return {rows:[{routine:'storage.can_insert_ai_source_object(text,text)'}]};
   if(sql.includes('to_regclass'))return {rows:[{relation:'private.snar_admins'}]};
   throw new Error('unexpected preflight query');
@@ -38,4 +39,11 @@ test('rejects public Storage bucket',async()=>{
 });
 test('rejects bucket smaller than required large PDF',async()=>{
  await assert.rejects(verifySourceRuntimeResources(fixture({limit:41943040})),/330 MiB/);
+});
+
+test('rejects missing private textbook Storage insert policy',async()=>{
+ const {db,supabase}=fixture();
+ const original=db.query;
+ db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
 });
