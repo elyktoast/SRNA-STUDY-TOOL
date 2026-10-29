@@ -1,4 +1,5 @@
 import {uploadSourcePdfWithTus} from './ai-source-browser-tus.mjs';
+import {MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
 
 // Call only from an authenticated admin UI. request() must use same-origin
 // credentials and CSRF protections provided by the application.
@@ -7,6 +8,8 @@ export async function submitSourceTextbook({
 }){
  if(typeof request!=='function')throw new TypeError('authenticated request adapter required');
  if(!file||typeof file.name!=='string'||!file.name.trim())throw new Error('PDF title required');
+ if(!Number.isSafeInteger(file.size)||file.size<8||file.size>MAX_TEXTBOOK_BYTES||file.type!=='application/pdf')
+  throw new Error('invalid PDF file');
  if(signal?.aborted)throw new Error('upload canceled');
  const created=await request('/source/uploads/initiate',{
   title:file.name,fileBytes:file.size,mimeType:file.type
