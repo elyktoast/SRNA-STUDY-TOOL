@@ -5,9 +5,12 @@ export async function resolveOcrPages(extraction,{ocrPage}={}){
  const pages=extraction.pages.map(p=>({...p}));
  if(extraction.ocrPages.length&&!ocrPage)
    throw new Error('OCR required for pages: '+extraction.ocrPages.join(','));
+ const seen=new Set();
  for(const pageNumber of extraction.ocrPages){
    if(!Number.isInteger(pageNumber)||pageNumber<1||pageNumber>pages.length)
      throw new Error('invalid OCR page number');
+   if(seen.has(pageNumber)) throw new Error('duplicate OCR page number');
+   seen.add(pageNumber);
    if(pages[pageNumber-1].physicalPage!==pageNumber) throw new Error('invalid OCR page mapping');
    const replacement=await ocrPage(pageNumber);
    if(typeof replacement!=='string'||!replacement.trim())
