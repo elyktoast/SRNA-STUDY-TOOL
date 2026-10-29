@@ -6,7 +6,7 @@ export function createSourceHttpHandler({workflow,getAuthenticatedActor,maxBytes
  if(typeof getAuthenticatedActor!=='function') throw new TypeError('session resolver required');
  if(!Number.isSafeInteger(maxBytes)||maxBytes<8) throw new RangeError('invalid size limit');
  return async function handle({method,path,headers={},body}){
-  if(method!=='POST'||!['/source/upload','/source/process'].includes(path))
+  if(!((method==='POST'&&['/source/upload','/source/process'].includes(path))||(method==='GET'&&['/source/documents','/source/detail'].includes(path))))
    return {status:404,body:{error:'not found'}};
   try{
    const actorId=await getAuthenticatedActor({headers});
@@ -34,6 +34,11 @@ export async function executeAuthenticatedSourceOperation({workflow,maxBytes=104
  }
 }
 async function execute({workflow,maxBytes,path,body,actorId}){
+   if(path==='/source/documents')return {status:200,body:{documents:await workflow.list({actorId})}};
+   if(path==='/source/detail'){
+    const result=await workflow.detail({actorId,documentId:body?.documentId});
+    return result?{status:200,body:result}:{status:404,body:{error:'document not found'}};
+   }
    if(path==='/source/upload'){
     if(!(body?.bytes instanceof Uint8Array)||body.bytes.length>maxBytes)
      return {status:413,body:{error:'invalid PDF size'}};
