@@ -13,6 +13,14 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
  if(!Number.isInteger(concurrency)||concurrency<1||concurrency>3)throw new Error('invalid concurrency');
  if(signal?.aborted)throw new Error('upload canceled');
  const started=await request('/source/uploads/r2/create',{uploadId});
+ // Cancellation can arrive while the server creates a new multipart session.
+ // Clean up that session before checking the response or returning to the UI.
+ if(signal?.aborted){
+  if(typeof started?.multipartId==='string'&&started.multipartId){
+   try{await request('/source/uploads/r2/abort',{uploadId,multipartId:started.multipartId})}catch{}
+  }
+  throw new Error('upload canceled');
+ }
  if(started?.completed!==true&&(typeof started?.multipartId!=='string'||!started.multipartId||started.partBytes!==R2_PART_BYTES))throw new Error('invalid R2 upload session');
  if(started.fileBytes!==file.size)throw new Error('PDF size does not match upload intent');
  if(typeof started.title==='string'&&typeof file.name==='string'&&started.title!==file.name.trim())throw new Error('PDF title does not match upload intent');
