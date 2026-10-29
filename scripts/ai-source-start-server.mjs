@@ -28,7 +28,13 @@ export async function startSourceServer(env=process.env){
   throw new Error('textbook PDF parser unavailable');
  }
  // No OCR provider is configured: scanned pages will fail closed, never be silently skipped.
- const server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument});
+ let server;
+ try{
+  server=createSourceRuntime({db,supabaseStorage:supabase,supabaseAuth:supabase,getDocument});
+ }catch(error){
+  await db.end();
+  throw error;
+ }
  try{
   await new Promise((resolve,reject)=>{
    server.once('error',reject);
