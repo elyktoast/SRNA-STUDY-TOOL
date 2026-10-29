@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {verifyCompletedTextbook} from './ai-source-upload-completion.mjs';
 const uploadId='01234567-89ab-4def-8abc-0123456789ab';
 const pdf=new TextEncoder().encode('%PDF-1.7 sample');
-const intent={storage_bucket:'ai-textbook-sources',storage_path:'documents/'+uploadId+'.pdf',file_bytes:pdf.length};
+const intent={storage_bucket:'srna-private-textbooks',storage_path:'documents/'+uploadId+'.pdf',file_bytes:pdf.length};
 function setup(overrides={}){
  const calls=[];
  const options={actorId:'admin',uploadId,authorizeAdmin:async()=>true,
@@ -36,13 +36,13 @@ test('rejects incorrect PDF signature',async()=>{
  assert.deepEqual(f.calls,['failed']);
 });
 
-test('accepts a numeric string size from Storage metadata',async()=>{
+test('accepts a numeric string size from R2 metadata',async()=>{
  const f=setup({inspectObject:async()=>({size:String(pdf.length)})});
  const result=await verifyCompletedTextbook(f.options);
  assert.equal(result.document.id,'document');
  assert.equal(f.calls.length,1);
 });
-test('rejects malformed Storage object size before reading',async()=>{
+test('rejects malformed R2 object size before reading',async()=>{
  const f=setup({inspectObject:async()=>({size:'unknown'})});
  await assert.rejects(verifyCompletedTextbook(f.options),/size mismatch/);
  assert.deepEqual(f.calls,['failed']);
