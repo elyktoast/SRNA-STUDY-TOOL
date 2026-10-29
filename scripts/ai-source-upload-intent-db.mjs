@@ -3,7 +3,7 @@ export function createSourceUploadIntentDb(db){
  if(typeof db?.query!=='function') throw new TypeError('database query adapter required');
  return {
   async createIntent(intent){
-   if(!intent||intent.status!=='pending'||intent.bucket!=='ai-textbook-sources')
+   if(!intent||intent.status!=='pending'||intent.bucket!=='srna-private-textbooks')
     throw new Error('invalid upload intent');
    const result=await db.query(
     `insert into private.ai_source_upload_intents
@@ -77,7 +77,7 @@ export function createSourceUploadFinalizer(db){
       where id=$1 and actor_id=$2 for update`,[uploadId,actorId]);
    const current=row.rows?.[0];
    if(!current||current.status!=='verifying'||current.document_id||
-      current.storage_bucket!=='ai-textbook-sources'||
+      current.storage_bucket!=='srna-private-textbooks'||
       current.storage_path!==`documents/${uploadId}.pdf`||
       typeof current.title!=='string'||!current.title.trim()||
       Number(current.file_bytes)!==fileBytes||current.mime_type!==mimeType||
