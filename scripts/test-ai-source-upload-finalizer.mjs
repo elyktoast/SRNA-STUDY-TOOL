@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {createSourceUploadFinalizer} from './ai-source-upload-intent-db.mjs';
 const id='01234567-89ab-4def-8abc-0123456789ab';
 const path='documents/'+id+'.pdf';
-const intent={storage_path:path,storage_bucket:'ai-textbook-sources',file_bytes:330000000};
+const intent={storage_path:path,storage_bucket:'srna-private-textbooks',file_bytes:330000000};
 const input={uploadId:id,actorId:'admin',intent,sha256:'a'.repeat(64),fileBytes:330000000,mimeType:'application/pdf'};
 function harness({status='verifying',failUpdate=false}={}){
  const statements=[];let released=false;
@@ -11,7 +11,7 @@ function harness({status='verifying',failUpdate=false}={}){
   statements.push(sql);
   if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK')return {};
   if(sql.includes('from private.ai_source_upload_intents')&&sql.includes('for update'))
-   return {rows:[{id,title:'Book',file_bytes:330000000,mime_type:'application/pdf',storage_bucket:'ai-textbook-sources',storage_path:path,status,document_id:null}]};
+   return {rows:[{id,title:'Book',file_bytes:330000000,mime_type:'application/pdf',storage_bucket:'srna-private-textbooks',storage_path:path,status,document_id:null}]};
   if(sql.includes('insert into private.ai_source_documents'))
    return {rows:[{id:'doc-1',processing_status:'uploaded'}]};
   if(sql.includes('update private.ai_source_upload_intents'))
