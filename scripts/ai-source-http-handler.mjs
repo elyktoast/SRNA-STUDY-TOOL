@@ -8,10 +8,10 @@ export function createSourceHttpHandler({workflow,getAuthenticatedActor,maxBytes
  return async function handle({method,path,headers={},body}){
   if(method!=='POST'||!['/source/upload','/source/process'].includes(path))
    return {status:404,body:{error:'not found'}};
-  const actorId=await getAuthenticatedActor({headers});
-  if(typeof actorId!=='string'||!actorId.trim())
-   return {status:401,body:{error:'authentication required'}};
   try{
+   const actorId=await getAuthenticatedActor({headers});
+   if(typeof actorId!=='string'||!actorId.trim())
+    return {status:401,body:{error:'authentication required'}};
    if(path==='/source/upload'){
     if(!(body?.bytes instanceof Uint8Array)||body.bytes.length>maxBytes)
      return {status:413,body:{error:'invalid PDF size'}};
