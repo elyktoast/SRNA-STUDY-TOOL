@@ -1,5 +1,5 @@
 // Admin-only Source Library upload panel. Host application supplies a verified Supabase session token.
-export function mountSourceLibrary(root,{getAccessToken,apiBase=''}={}){
+export function mountSourceLibrary(root,{getAccessToken,apiBase='',onChanged}={}){
  if(!(root instanceof HTMLElement)) throw new TypeError('mount element required');
  if(typeof getAccessToken!=='function') throw new TypeError('session token provider required');
  const wrapper=document.createElement('section');
@@ -34,6 +34,7 @@ export function mountSourceLibrary(root,{getAccessToken,apiBase=''}={}){
    const payload=await request('/source/upload',{method:'POST',headers:{'content-type':'application/pdf','x-source-title':title.value.trim()},body:selected});
    if(typeof payload.document?.id!=='string') throw new Error('Upload returned no document ID');
    documentId=payload.document.id;status.textContent='Upload complete. Ready to process.';
+   if(typeof onChanged==='function')onChanged();
   }catch(error){status.textContent=error.message||'Upload failed'}
   finally{setBusy(false)}
  });
@@ -43,6 +44,7 @@ export function mountSourceLibrary(root,{getAccessToken,apiBase=''}={}){
   try{
    const payload=await request('/source/process',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({documentId})});
    status.textContent=payload.result?.status==='ready'?'Textbook indexed successfully.':'Processing completed; verify document status.';
+   if(typeof onChanged==='function')onChanged();
   }catch(error){status.textContent=error.message||'Processing failed'}
   finally{setBusy(false)}
  });
