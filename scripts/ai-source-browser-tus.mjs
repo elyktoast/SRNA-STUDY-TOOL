@@ -9,7 +9,7 @@ export async function uploadSourcePdfWithTus({
  if(!file||typeof file.size!=='number'||!Number.isSafeInteger(file.size)||
     file.size<8||file.size>MAX_TEXTBOOK_BYTES||file.type!=='application/pdf')
   throw new Error('invalid PDF file');
- if(!upload||upload.fileBytes!==file.size||typeof upload.uploadId!=='string'||
+ if(!upload||upload.status!=='uploading'||upload.fileBytes!==file.size||typeof upload.uploadId!=='string'||
     !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(upload.uploadId))
   throw new Error('upload intent does not match PDF');
  if(typeof projectId!=='string'||!/^[a-z0-9]{10,40}$/.test(projectId))
@@ -28,7 +28,7 @@ export async function uploadSourcePdfWithTus({
    signal?.removeEventListener?.('abort',abort);
    if(error)reject(error);else resolve({uploadId:upload.uploadId,bytes:file.size});
   };
-  const abort=()=>{task?.abort?.();finish(new Error('upload canceled'))};
+  const abort=()=>{Promise.resolve(task?.abort?.()).catch(()=>{});finish(new Error('upload canceled'))};
   task=new tus.Upload(file,{
    endpoint,chunkSize:TUS_CHUNK_BYTES,uploadDataDuringCreation:true,
    retryDelays:[0,3000,5000,10000,20000],removeFingerprintOnSuccess:true,
