@@ -2,8 +2,7 @@
 // administrator and an active, owned upload intent in the database.
 import {R2_SOURCE_BUCKET} from './ai-source-r2-storage.mjs';
 import {MAX_TEXTBOOK_BYTES} from './ai-source-upload-constants.mjs';
-export const R2_PART_BYTES=12*1024*1024;
-export const R2_UPLOAD_CONCURRENCY=3;
+import {R2_PART_BYTES} from './ai-source-r2-upload-config.mjs';
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const ETAG=/^"?[^"\\r\\n]{1,256}"?$/;
 export function createR2MultipartController({client,commands,presign}){
