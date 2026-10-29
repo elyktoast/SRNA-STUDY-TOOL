@@ -27,7 +27,7 @@ test('signs only valid part numbers for expected file size',async()=>{
 });
 test('refuses incomplete or untrusted multipart ETags',async()=>{
  const {controller,calls}=fixture();
- await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts:[{PartNumber:1,ETag:'not-a-hash'}]}),/invalid R2 multipart completion/);
+ await assert.rejects(controller.complete(intent,{multipartId:'r2-multipart-session',parts:[{PartNumber:1,ETag:'bad\nvalue'}]}),/invalid R2 multipart completion/);
  assert.equal(calls.length,0);
 });
 test('completes ordered parts and supports explicit abort',async()=>{
