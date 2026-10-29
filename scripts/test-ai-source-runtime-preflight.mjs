@@ -35,49 +35,23 @@ test('rejects upload intents without RLS',async()=>{
 test('rejects client table privileges on upload intents',async()=>{
  await assert.rejects(verifySourceRuntimeResources(fixture({exposed:true})),/exposed to client roles/);
 });
-test('rejects public Storage bucket',async()=>{
- await assert.rejects(verifySourceRuntimeResources(fixture({publicBucket:true})),/private source storage bucket/);
+test('rejects missing R2 multipart session column',async()=>{
+ const {db}=fixture();const query=db.query;
+ db.query=async(sql,...args)=>sql.includes("table_name='ai_source_upload_intents'")?{rows:[{column_name:'r2_completed_at'}]}:query(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db}),/R2 session schema missing/);
 });
-test('rejects bucket smaller than required large PDF',async()=>{
- await assert.rejects(verifySourceRuntimeResources(fixture({limit:41943040})),/330 MiB/);
+test('rejects missing R2 completion timestamp column',async()=>{
+ const {db}=fixture();const query=db.query;
+ db.query=async(sql,...args)=>sql.includes("table_name='ai_source_upload_intents'")?{rows:[{column_name:'r2_multipart_id'}]}:query(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db}),/R2 session schema missing/);
 });
-
-test('rejects missing private textbook Storage insert policy',async()=>{
- const {db,supabase}=fixture();
- const original=db.query;
- db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
- await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
+test('rejects missing private admin authorization relation',async()=>{
+ const {db}=fixture();const query=db.query;
+ db.query=async(sql,...args)=>sql.includes('to_regclass')?{rows:[{relation:null}]}:query(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db}),/admin authorization table unavailable/);
 });
-
-test('rejects missing Storage authorization helper',async()=>{
- const {db,supabase}=fixture();
- const original=db.query;
- db.query=async(sql,...args)=>sql.includes('to_regprocedure')?{rows:[{routine:null}]}:original(sql,...args);
- await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload helper unavailable/);
-});
-test('checks authenticated role and helper expression in Storage policy',async()=>{
- const {db,supabase}=fixture();
- const original=db.query;
- let policyQuery='';
- db.query=async(sql,...args)=>{
-  if(sql.includes('pg_policies'))policyQuery=sql;
-  return original(sql,...args);
- };
- assert.equal(await verifySourceRuntimeResources({db,supabase}),true);
- assert.match(policyQuery,/authenticated/);
- assert.match(policyQuery,/can_insert_ai_source_object/);
-});
-
-test('rejects a Storage insert policy not scoped to authenticated role',async()=>{
- const {db,supabase}=fixture();
- const original=db.query;
- db.query=async(sql,...args)=>sql.includes('pg_policies')?{rows:[{total:0}]}:original(sql,...args);
- await assert.rejects(verifySourceRuntimeResources({db,supabase}),/source upload policy unavailable/);
-});
-
-test('rejects anonymous EXECUTE on source upload authorization helper',async()=>{
- const {db,supabase}=fixture();
- const query=db.query;
- db.query=async(sql,...args)=>sql.includes('has_function_privilege')?{rows:[{anon_execute:true,authenticated_execute:true}]}:query(sql,...args);
- await assert.rejects(verifySourceRuntimeResources({db,supabase}),/helper privileges unsafe/);
+test('rejects schema usage granted to authenticated clients',async()=>{
+ const {db}=fixture();const query=db.query;
+ db.query=async(sql,...args)=>sql.includes('has_schema_privilege')?{rows:[{client_role:'authenticated'}]}:query(sql,...args);
+ await assert.rejects(verifySourceRuntimeResources({db}),/schema exposed to client roles/);
 });
