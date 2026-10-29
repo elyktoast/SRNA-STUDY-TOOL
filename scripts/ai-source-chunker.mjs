@@ -29,6 +29,7 @@ export function chunkPages(pages,{maxChars=2400,overlapChars=250}={}){
         physicalPage,
         printedPage:page.printedPage??null,
         sectionHeading:page.sectionHeading??null,
+        extractionMethod:page.extractionMethod??'text',
         content
       });
       if(end===normalized.length) break;
