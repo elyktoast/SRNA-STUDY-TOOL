@@ -25,7 +25,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
  progress({bytesUploaded:done,bytesTotal:file.size});
  let next=0,failure;
  const worker=async()=>{
-  while(next<total&&!failure){
+  while(next<total&&!failure&&!signal?.aborted){
    if(signal?.aborted)throw new Error('upload canceled');
    const index=next++,partNumber=index+1;
    if(parts[index])continue;
