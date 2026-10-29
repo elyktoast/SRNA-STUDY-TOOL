@@ -1,0 +1,47 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createSourceUploadStorageStream} from './ai-source-upload-storage-stream.mjs';
+
+const path='documents/01234567-89ab-4def-8abc-0123456789ab.pdf';
+function setup({body=[Uint8Array.of(1,2,3)],size=3}={}){
+ const calls=[];
+ const supabase={storage:{from(bucket){
+  calls.push(['bucket',bucket]);
+  return {
+   info:async()=>({data:{size},error:null}),
+   createSignedUrl:async()=>({data:{signedUrl:'https://example.test/private'},error:null})
+  };
+ }}};
+ const fetchImpl=async(url,options)=>{
+  calls.push(['fetch',url,options]);
+  return {ok:true,body:new ReadableStream({start(controller){
+   for(const part of body)controller.enqueue(part);
+   controller.close();
+  }})};
+ };
+ return {calls,adapter:createSourceUploadStorageStream({supabase,fetchImpl})};
+}
+test('inspects private object metadata',async()=>{
+ const {adapter}=setup();
+ assert.deepEqual(await adapter.inspectObject({bucket:'ai-textbook-sources',path}),{size:3});
+});
+test('streams private bytes without buffering the whole PDF',async()=>{
+ const {adapter,calls}=setup();
+ const chunks=[];
+ for await(const chunk of adapter.readObject({bucket:'ai-textbook-sources',path}))chunks.push(...chunk);
+ assert.deepEqual(chunks,[1,2,3]);
+ assert.equal(calls.find(x=>x[0]==='fetch')[2].redirect,'error');
+});
+test('rejects other buckets and unsafe paths before network calls',async()=>{
+ const {adapter,calls}=setup();
+ await assert.rejects(adapter.inspectObject({bucket:'other',path}),/invalid private textbook object path/);
+ await assert.rejects(async()=>{for await(const _ of adapter.readObject({bucket:'ai-textbook-sources',path:'../secret.pdf'})){}},/invalid private textbook object path/);
+ assert.equal(calls.length,0);
+});
+test('splits oversized transport chunks into bounded verification chunks',async()=>{
+ const bytes=new Uint8Array(6291457);
+ const {adapter}=setup({body:[bytes],size:bytes.length});
+ const sizes=[];
+ for await(const chunk of adapter.readObject({bucket:'ai-textbook-sources',path}))sizes.push(chunk.length);
+ assert.deepEqual(sizes,[6291456,1]);
+});
