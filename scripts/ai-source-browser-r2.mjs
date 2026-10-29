@@ -27,7 +27,7 @@ export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progr
    }
    if(!response?.ok)throw new Error('R2 part upload failed');
    const etag=response.headers?.get?.('etag');
-   if(typeof etag!=='string'||!/^"?[^"\\r\\n]{1,256}"?$/.test(etag))throw new Error('R2 part ETag unavailable');
+   if(typeof etag!=='string'||!/^"?[^"\r\n]{1,256}"?$/.test(etag))throw new Error('R2 part ETag unavailable');
    parts[index]={PartNumber:partNumber,ETag:etag};
    done+=end-start;
    progress({bytesUploaded:done,bytesTotal:file.size});
