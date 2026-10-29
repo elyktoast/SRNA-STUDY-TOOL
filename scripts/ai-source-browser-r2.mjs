@@ -5,7 +5,7 @@ function validR2Etag(value){
  return typeof value==='string'&&value.length<=258&&
   !value.includes('\r')&&!value.includes('\n')&&
   (value.startsWith('"')===value.endsWith('"'))&&
-  value.replace(/^"|"$/g,'').length>=1;
+  /^(?:[^"\r\n]{1,256}|"[^"\r\n]{1,256}")$/.test(value);
 }
 export async function uploadPdfToR2({file,uploadId,request,fetchPart=fetch,progress=()=>{},signal,concurrency=R2_UPLOAD_CONCURRENCY}){
  if(!file||!Number.isSafeInteger(file.size)||file.size<8||file.type!=='application/pdf')throw new Error('invalid PDF');
