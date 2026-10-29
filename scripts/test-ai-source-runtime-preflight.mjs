@@ -14,6 +14,7 @@ function fixture({missing,unprotected,exposed=false,publicBucket=false,limit=524
    return {rows:[{column_name:'printed_page'},{column_name:'section_heading'}]};
   if(sql.includes('has_table_privilege'))return {rows:exposed?[{client_role:'authenticated',table_name:'ai_source_upload_intents'}]:[]};
   if(sql.includes('has_schema_privilege'))return {rows:[]};
+  if(sql.includes('to_regprocedure'))return {rows:[{routine:'storage.can_insert_ai_source_object(text,text)'}]};
   if(sql.includes('to_regclass'))return {rows:[{relation:'private.snar_admins'}]};
   throw new Error('unexpected preflight query');
  }};
