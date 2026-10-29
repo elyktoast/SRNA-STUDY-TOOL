@@ -27,3 +27,15 @@ test('source API adapter forwards sanitized API failures',async()=>{
   fetchImpl:async()=>({ok:false,json:async()=>({error:'upload not ready'})})});
  await assert.rejects(request('/source/uploads/verify',{uploadId:'id'}),/upload not ready/);
 });
+
+test('source API adapter rejects URL credentials, query strings, and path prefixes',()=>{
+ for(const baseUrl of [
+  'https://user:secret@source.example',
+  'https://source.example/path',
+  'https://source.example/?redirect=other',
+  'https://source.example/#fragment',
+  'https://source.example.evil.test/path'
+ ]){
+  assert.throws(()=>createSourceApiRequest({baseUrl,getAccessToken:async()=> 'token'}),/HTTPS origin/);
+ }
+});
