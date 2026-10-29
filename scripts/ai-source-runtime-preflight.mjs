@@ -2,7 +2,7 @@
 export async function verifySourceRuntimeResources({db,supabase,bucket='ai-textbook-sources'}){
  if(typeof db?.query!=='function'||typeof supabase?.storage?.getBucket!=='function')
   throw new TypeError('database and storage clients required');
- const required=['ai_source_documents','ai_source_sections','ai_source_chunks','ai_source_processing_jobs','ai_source_course_links'];
+ const required=['ai_source_documents','ai_source_sections','ai_source_chunks','ai_source_processing_jobs','ai_source_course_links','ai_source_upload_intents'];
  const result=await db.query(
   "select table_name from information_schema.tables where table_schema=$1 and table_name=any($2::text[])",
   ['private',required]);
