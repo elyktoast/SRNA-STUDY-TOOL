@@ -54,3 +54,18 @@ test('failed part retries with a freshly signed URL',async()=>{
  assert.equal(signs,2);
  assert.equal(attempts,2);
 });
+
+test('rejects mismatched PDF size before recovering or uploading parts',async()=>{
+ const paths=[];
+ const request=async(path)=>{
+  paths.push(path);
+  return {multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:R2_PART_BYTES+9};
+ };
+ await assert.rejects(uploadPdfToR2({file:makeFile(),uploadId,request,fetchPart:async()=>{throw new Error('should not upload')}}),/PDF size does not match/);
+ assert.deepEqual(paths,['/source/uploads/r2/create']);
+});
+test('rejects mismatched PDF title before transferring parts',async()=>{
+ const file={...makeFile(),name:'different.pdf'};
+ const request=async()=>({multipartId:'session',partBytes:R2_PART_BYTES,fileBytes:file.size,title:'original.pdf'});
+ await assert.rejects(uploadPdfToR2({file,uploadId,request,fetchPart:async()=>{throw new Error('should not upload')}}),/PDF title does not match/);
+});
