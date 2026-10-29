@@ -19,6 +19,7 @@ export async function uploadSourcePdfWithTus({
  if(typeof userId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId))
   throw new Error('authenticated user ID required');
  if(signal?.aborted)throw new Error('upload canceled');
+ if(typeof progress!=='function')throw new TypeError('progress callback required');
  const objectName='documents/'+upload.uploadId+'.pdf';
  const endpoint='https://'+projectId+'.storage.supabase.co/storage/v1/upload/resumable';
  return new Promise((resolve,reject)=>{
