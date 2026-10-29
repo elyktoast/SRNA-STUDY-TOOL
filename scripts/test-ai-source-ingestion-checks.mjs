@@ -27,3 +27,11 @@ test('corrupt hashes and chunk order fail',()=>{
  m.chunks[0].chunkOrder=3;
  assert.equal(validateSourceManifest(m).ok,false);
 });
+
+test('tampered passage is rejected even when hash is syntactically valid',()=>{
+ const m=manifest();
+ m.chunks[0].content+=' unauthorized modification';
+ const result=validateSourceManifest(m);
+ assert.equal(result.ok,false);
+ assert.ok(result.errors.some(e=>e.includes('content hash mismatch')));
+});
