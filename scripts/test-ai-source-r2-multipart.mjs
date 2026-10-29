@@ -7,11 +7,12 @@ class CreateMultipartUploadCommand{constructor(input){this.input=input}}
 class UploadPartCommand{constructor(input){this.input=input}}
 class CompleteMultipartUploadCommand{constructor(input){this.input=input}}
 class AbortMultipartUploadCommand{constructor(input){this.input=input}}
+class ListPartsCommand{constructor(input){this.input=input}}
 function fixture(){
  const calls=[];
- const client={async send(command){calls.push(command);return {UploadId:'r2-multipart-session'}}};
+ const client={async send(command){calls.push(command);if(command instanceof ListPartsCommand)return {Parts:[{PartNumber:1,ETag:'etag-one',Size:12582912}],IsTruncated:false};return {UploadId:'r2-multipart-session'}}};
  const presign=async(_client,command)=>{calls.push(command);return 'https://example.r2.cloudflarestorage.com/signed'};
- const controller=createR2MultipartController({client,presign,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand}});
+ const controller=createR2MultipartController({client,presign,commands:{CreateMultipartUploadCommand,UploadPartCommand,CompleteMultipartUploadCommand,AbortMultipartUploadCommand,ListPartsCommand}});
  return {controller,calls};
 }
 test('starts multipart session only in private bucket',async()=>{
@@ -37,4 +38,10 @@ test('completes ordered parts and supports explicit abort',async()=>{
  assert.deepEqual(await controller.abort(intent,{multipartId:'r2-multipart-session'}),{aborted:true});
  assert.equal(calls[0] instanceof CompleteMultipartUploadCommand,true);
  assert.equal(calls[1] instanceof AbortMultipartUploadCommand,true);
+});
+
+test('recovers uploaded R2 parts with validated sizes',async()=>{
+ const {controller}=fixture();
+ const result=await controller.listParts(intent,{multipartId:'r2-multipart-session'});
+ assert.deepEqual(result.parts,[{PartNumber:1,ETag:'etag-one'}]);
 });
