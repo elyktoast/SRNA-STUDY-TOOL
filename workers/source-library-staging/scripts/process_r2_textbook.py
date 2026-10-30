@@ -49,7 +49,7 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
             "original_name": head.get("Metadata", {}).get("name")}
 
 
-def run(owner_uid, key, apply=False, client=None):
+def run(owner_uid, key, apply=False, client=None, ocr=False):
     # Validate the untrusted key before constructing a local download path.
     if (not isinstance(key, str) or not key.startswith(owner_uid + "/")
             or ".." in key or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", Path(key).name, re.I)
@@ -85,7 +85,7 @@ def run(owner_uid, key, apply=False, client=None):
         if local_digest != expected["sha256"]:
             raise ValueError("Downloaded PDF changed before extraction")
         result = process(source, root / "index", owner_uid, key, apply=apply,
-                         expected_sha256=expected["sha256"])
+                         expected_sha256=expected["sha256"], ocr=ocr)
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
         result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
@@ -96,11 +96,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--r2-key", required=True)
+    parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(run(args.owner_uid, args.r2_key, apply=args.apply), indent=2))
+    print(json.dumps(run(args.owner_uid, args.r2_key, apply=args.apply, ocr=args.ocr), indent=2))
 
 
 if __name__ == "__main__":
