@@ -143,8 +143,13 @@ def main():
         parser.error("--force-reindex requires --apply")
     if args.apply and not os.environ.get("DATABASE_URL"):
         parser.error("DATABASE_URL required for --apply")
-    if args.apply and args.force_reindex and args.limit > 10:
+    if args.apply and args.force_reindex and args.r2_key is None and args.limit > 10:
         parser.error("Forced reindex batch is limited to 10 textbooks")
+    if args.r2_key is not None:
+        try:
+            validate_target_key(args.r2_key, args.owner_uid)
+        except ValueError as exc:
+            parser.error(str(exc))
     import boto3
     client = boto3.client(
         "s3", endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
@@ -165,10 +170,6 @@ def main():
                 ready = indexed_keys(conn, args.owner_uid)
     if args.r2_key is not None:
         key = args.r2_key
-        try:
-            validate_target_key(key, args.owner_uid)
-        except ValueError as exc:
-            parser.error(str(exc))
         if ready is not None and key in ready and not args.force_reindex:
             summary = {"mode": "apply" if args.apply else "dry-run", "results": [],
                        "succeeded": 0, "failed": 0, "skipped": 1}
