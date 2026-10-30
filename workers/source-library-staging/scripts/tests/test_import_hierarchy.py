@@ -20,6 +20,7 @@ class Cursor:
         self.batches = []
         self.last_id = None
         self.next_section = 0
+        self.existing_sections = 0
 
     def __enter__(self):
         return self
@@ -31,6 +32,8 @@ class Cursor:
         self.executed.append((sql, params))
         if "insert into source_library_staging.textbooks" in sql:
             self.last_id = "book-id"
+        elif "select count(*) from source_library_staging.sections" in sql:
+            self.last_id = self.existing_sections
         elif "insert into source_library_staging.sections" in sql:
             self.next_section += 1
             self.last_id = f"section-{self.next_section}"
