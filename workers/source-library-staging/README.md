@@ -32,3 +32,14 @@ GitHub Actions validates source code and mocked Worker behavior only. It does **
 The existing SRNA Supabase project has RLS enabled on all eight public tables. The database also exposes several `SECURITY DEFINER` RPCs to signed-in users; `snar_admin_accounts` and `can_insert_ai_source_object` explicitly check private admin membership, and `snar_admin_status` checks the same membership. This does **not** prove every RPC or policy is safe. Do not enroll the staging-only test user in `private.snar_admins`, and do not grant it elevated production access. Before live testing, verify its production `snar_admin_status` reports `is_admin: false`, and attempt a production admin RPC using that account to confirm rejection.
 
 A shared Supabase identity provider means a staging JWT is valid for authentication on production Supabase endpoints; the Worker allowlist only controls the staging Worker. Never claim complete environment isolation under this no-cost design. Test against a dedicated low-privilege account and avoid real learner data.
+
+## Operator setup: no new Supabase project
+
+1. Open the **existing SRNA** Supabase dashboard, **Authentication → Users → Add user**, and create a new dedicated test user with a unique email address. Do not use an existing production admin account. Keep the test account out of `private.snar_admins` and any production course memberships. Record its UUID; never commit credentials.
+2. Sign in as that test user on the intended staging hostname only. Confirm `snar_admin_status` returns `is_admin: false` and an admin-only RPC rejects it. If the staging site cannot use a separate browser session without altering production behavior, stop and correct the staging sign-in flow first.
+3. Configure Cloudflare Worker secrets `SUPABASE_URL` (existing SRNA project URL), `SUPABASE_ANON_KEY` (public key), and `ADMIN_USER_IDS` (only test UUID). Keep `STAGING_ONLY=true`, `ALLOWED_ORIGIN=https://staging.srnastudytool.com`, and the private `srna-staging-textbooks` R2 binding. Do not use a service-role key.
+4. Configure a dedicated HTTPS staging API host/route. Set `window.MBU_SOURCE_LIBRARY_STAGING` only in the staging website before Study Studio loads. Never add the staging API host or feature flag to the production site.
+5. Run live negative tests for unrelated user, anonymous identity, wrong Origin, missing auth, and cross-user object paths. Only then upload/list/download/delete a small dummy PDF. Check that no object appears in production R2.
+6. Leave PR #34 unmerged until tests pass. The 20 MiB cap is for small-PDF smoke tests only; large textbooks need a separate multipart upload design.
+
+Do not paste JWTs, passwords, or Worker secrets into GitHub issues, PR comments, or chat logs.
