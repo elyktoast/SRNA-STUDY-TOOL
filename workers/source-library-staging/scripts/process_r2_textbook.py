@@ -25,7 +25,8 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
     if (not isinstance(owner_uid, str) or not isinstance(key, str)
             or key.count("/") != 1 or not key.startswith(owner_uid + "/")
             or ".." in key or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
-                                               Path(key).name, re.I)):
+                                               Path(key).name, re.I)
+            or Path(key).name in (".pdf", "..pdf")):
         raise ValueError("Invalid owner-scoped R2 key")
     head = client.head_object(Bucket=bucket, Key=key)
     size = head.get("ContentLength")
