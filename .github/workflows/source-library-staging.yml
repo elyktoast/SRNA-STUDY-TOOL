@@ -44,5 +44,10 @@ jobs:
           node --check scripts/test-source-library-staging.mjs
       - name: Staging Worker tests
         run: node --test scripts/test-source-library-staging.mjs
+      - name: Python staging pipeline tests
+        run: |
+          python3 -m pip install --disable-pip-version-check pymupdf
+          python3 -m compileall -q workers/source-library-staging/scripts
+          python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
       - name: Repository validation
         run: npm run validate
