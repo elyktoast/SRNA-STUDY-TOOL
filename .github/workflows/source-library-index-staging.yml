@@ -90,6 +90,9 @@ jobs:
           if [[ "$APPLY" == "true" && -z "$DATABASE_URL" ]]; then
             echo "Missing staging database environment secret"; exit 1
           fi
+          if [[ "$FORCE_REINDEX" == "true" && "$APPLY" != "true" ]]; then
+            echo 'Force reindex requires apply'; exit 1
+          fi
           args=(--owner-uid "$OWNER_UID" --limit "$LIMIT")
           if [[ -n "$R2_KEY" ]]; then args+=(--r2-key "$R2_KEY"); fi
           if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
