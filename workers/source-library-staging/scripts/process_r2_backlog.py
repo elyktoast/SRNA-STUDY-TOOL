@@ -84,6 +84,8 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
         raise ValueError("Limit must be 1..100")
     if force_reindex and not apply:
         raise ValueError("--force-reindex requires --apply")
+    if apply and limit > 10:
+        raise ValueError("Apply batch is limited to 10 textbooks")
     results = []
     excluded = ready_keys if not force_reindex else None
     skipped = 0
