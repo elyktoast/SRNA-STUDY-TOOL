@@ -73,7 +73,12 @@ def run(owner_uid, key, apply=False, client=None):
                 renamed = root / name
                 source.rename(renamed)
                 source = renamed
+        # Verify the exact R2 bytes match the extraction manifest before reporting success.
+        # In apply mode the importer itself verifies the local PDF before DB writes.
         result = process(source, root / "index", owner_uid, key, apply=apply)
+        manifest = json.loads((root / "index" / "manifest.json").read_text(encoding="utf-8"))
+        if manifest.get("sha256") != expected["sha256"]:
+            raise ValueError("R2 checksum does not match extracted PDF")
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
         result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
