@@ -28,13 +28,14 @@ class FakeBody:
 
 
 class FakeR2:
-    def __init__(self, data, declared=None):
+    def __init__(self, data, declared=None, metadata=None):
         self.data = data
         self.declared = len(data) if declared is None else declared
         self.body = FakeBody(data)
+        self.metadata = metadata or {}
 
     def head_object(self, Bucket, Key):
-        return {"ContentLength": self.declared}
+        return {"ContentLength": self.declared, "Metadata": self.metadata}
 
     def get_object(self, Bucket, Key):
         return {"Body": self.body}
@@ -54,6 +55,20 @@ class R2RunnerTests(unittest.TestCase):
             result = module.run(self.owner, self.key, apply=False, client=FakeR2(payload))
         self.assertEqual(process.call_args.args[0].name, "book.pdf")
         self.assertEqual(result["r2_key"], self.key)
+
+    def test_runner_uses_safe_original_name(self):
+        payload = b"%PDF-1.7 fake contents"
+        client = FakeR2(payload, metadata={"name": "Nurse_Anesthesia_7e.pdf"})
+        with patch.object(module, "process", return_value={"passages": 1}) as process:
+            module.run(self.owner, self.key, client=client)
+        self.assertEqual(process.call_args.args[0].name, "Nurse_Anesthesia_7e.pdf")
+
+    def test_runner_rejects_unsafe_metadata_filename(self):
+        payload = b"%PDF-1.7 fake contents"
+        client = FakeR2(payload, metadata={"name": "../another.pdf"})
+        with patch.object(module, "process", return_value={"passages": 1}) as process:
+            module.run(self.owner, self.key, client=client)
+        self.assertEqual(process.call_args.args[0].name, "book.pdf")
 
     def test_download_and_hash(self):
         import hashlib
