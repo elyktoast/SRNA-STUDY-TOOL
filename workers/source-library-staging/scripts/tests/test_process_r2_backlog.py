@@ -92,6 +92,14 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
 
+    def test_dry_run_skips_known_ready_books(self):
+        with patch.object(module, "run", return_value={"indexed": False}) as runner:
+            result = module.process_backlog(
+                Client(), OWNER, apply=False, ready_keys={OWNER + "/one.pdf"})
+        self.assertEqual(result["mode"], "dry-run")
+        self.assertEqual(result["succeeded"], 1)
+        self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
+
     def test_force_reindex_processes_ready_books(self):
         with patch.object(module, "run", return_value={"indexed": True}) as runner:
             result = module.process_backlog(
