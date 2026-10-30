@@ -80,6 +80,10 @@ def validate(folder):
         if page < previous_page:
             raise ValueError("PDF bookmark sections must be ordered by page")
         previous_page = page
+    # Check the section metadata against the extracted page stream before DB writes.
+    # A PDF page number is a physical position, not a verified printed citation.
+    if manifest.get("page_numbering") not in (None, "physical_pdf_page_1_based"):
+        raise ValueError("Unsupported page numbering")
     return manifest
 
 
