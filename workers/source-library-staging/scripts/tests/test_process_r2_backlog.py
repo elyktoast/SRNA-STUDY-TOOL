@@ -143,6 +143,22 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
 
+    def test_enumeration_deduplicates_across_pages(self):
+        class RepeatingClient:
+            def get_paginator(self, name):
+                class P:
+                    def paginate(self, **kwargs):
+                        yield {"Contents": [{"Key": OWNER + "/one.pdf"}]}
+                        yield {"Contents": [
+                            {"Key": OWNER + "/one.pdf"},
+                            {"Key": OWNER + "/two.pdf"},
+                        ]}
+                return P()
+        self.assertEqual(
+            module.enumerate_keys(RepeatingClient(), OWNER, limit=3),
+            [OWNER + "/one.pdf", OWNER + "/two.pdf"],
+        )
+
     def test_duplicate_r2_listing_keys_processed_only_once(self):
         class RepeatingClient:
             def get_paginator(self, name):
