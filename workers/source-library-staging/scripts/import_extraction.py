@@ -113,16 +113,24 @@ def import_passages(folder, manifest, connection):
             # Import bookmark headings in original order; a page may have
             # multiple headings. Assign each passage to the most recent heading.
             section_ids = []
+            parent_stack = []
             sections_path = folder / "sections.jsonl"
             if sections_path.exists():
                 for order, section in enumerate(read_jsonl(sections_path)):
+                    level = section["level"]
+                    while parent_stack and parent_stack[-1][0] >= level:
+                        parent_stack.pop()
+                    parent_id = parent_stack[-1][1] if parent_stack else None
                     cur.execute(
                         """insert into source_library_staging.sections
-                           (textbook_id,heading,section_order,start_page)
-                           values (%s,%s,%s,%s) returning id""",
-                        (textbook_id, section["heading"], order, section["start_page"]),
+                           (textbook_id,parent_section_id,heading,section_order,start_page)
+                           values (%s,%s,%s,%s,%s) returning id""",
+                        (textbook_id, parent_id, section["heading"], order,
+                         section["start_page"]),
                     )
-                    section_ids.append((section["start_page"], cur.fetchone()[0]))
+                    section_id = cur.fetchone()[0]
+                    parent_stack.append((level, section_id))
+                    section_ids.append((section["start_page"], section_id))
             batch = []
             for item in read_jsonl(folder / "passages.jsonl"):
                 section_id = next((sid for page, sid in reversed(section_ids)
