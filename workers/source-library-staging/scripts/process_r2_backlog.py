@@ -86,15 +86,23 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
     results = []
     excluded = ready_keys if not force_reindex else None
     skipped = 0
-    if excluded:
-        # Only count matching R2 objects, not stale database records.
-        paginator = client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
-            for item in page.get("Contents", []):
-                key = item.get("Key")
-                if isinstance(key, str) and key in excluded:
-                    skipped += 1
-    for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
+    pending = []
+    # Scan once: count only valid ready objects and select up to limit pending PDFs.
+    paginator = client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
+        for item in page.get("Contents", []):
+            key = item.get("Key")
+            if (not isinstance(key, str) or key.count("/") != 1
+                    or not key.startswith(owner_uid + "/") or ".." in key
+                    or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+                                        PurePosixPath(key).name, re.I)
+                    or PurePosixPath(key).name in (".pdf", "..pdf")):
+                continue
+            if excluded and key in excluded:
+                skipped += 1
+            elif len(pending) < limit:
+                pending.append(key)
+    for key in pending:
         try:
             result = run(owner_uid, key, apply=apply, client=client, ocr=ocr)
             results.append({"key": key, "ok": True, "result": {
