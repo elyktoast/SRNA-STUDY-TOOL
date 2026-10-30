@@ -124,12 +124,13 @@ def main():
     # A dry run should also avoid reprocessing already indexed textbooks when
     # the database is configured. Without DATABASE_URL it remains an R2-only
     # extraction check and reports no ready-state exclusions.
-    if not args.force_reindex and os.environ.get("DATABASE_URL"):
+    if os.environ.get("DATABASE_URL"):
         import psycopg
         with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
             if args.apply:
                 assert_staging_schema_ready(conn)
-            ready = indexed_keys(conn, args.owner_uid)
+            if not args.force_reindex:
+                ready = indexed_keys(conn, args.owner_uid)
     summary = process_backlog(client, args.owner_uid, args.limit,
                               args.apply, ready, args.force_reindex, args.ocr)
     print(json.dumps(summary, indent=2))
