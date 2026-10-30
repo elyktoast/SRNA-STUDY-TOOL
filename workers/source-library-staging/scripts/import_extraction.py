@@ -36,6 +36,10 @@ def validate(folder):
     if manifest.get("citation_verified") is not False:
         raise ValueError("Extraction must not claim citation verification")
     owner, key = manifest.get("owner_uid"), manifest.get("r2_key")
+    if not isinstance(manifest.get("sha256"), str) or len(manifest["sha256"]) != 64:
+        raise ValueError("Missing PDF SHA-256 digest")
+    if not isinstance(manifest.get("size_bytes"), int) or not 5 <= manifest["size_bytes"] <= 300 * 1024 * 1024:
+        raise ValueError("Invalid source PDF size")
     if not isinstance(owner, str) or not isinstance(key, str) or not key.startswith(owner + "/"):
         raise ValueError("Invalid owner/key relationship")
     count, last = 0, -1
