@@ -194,6 +194,7 @@ def main():
                                                    "source_sha256": result.get("source_sha256"),
                                                    "requires_ocr_review": result.get("requires_ocr_review"),
                                                    "low_text_pages": result.get("low_text_pages", []),
+                                                   "low_text_details": result.get("low_text_details", []),
                                                    "ocr_pages_count": len(result.get("ocr_pages", [])),
                                                    "ocr_pages": result.get("ocr_pages", []),
                                                    "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
