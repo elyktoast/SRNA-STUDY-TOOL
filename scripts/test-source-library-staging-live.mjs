@@ -26,7 +26,8 @@ async function check(path, origin) {
       challenge: response.headers.get('cf-mitigated'),
       html: /<!doctype html|<html/i.test(text.slice(0, 300)),
     };
-    throw new Error(`Non-JSON staging response: ${JSON.stringify(diagnostic)}`);
+    const kind = diagnostic.challenge === 'challenge' ? 'CLOUDFLARE_SECURITY_CHALLENGE' : 'NON_JSON_RESPONSE';
+    throw new Error(`${kind}: ${JSON.stringify(diagnostic)}`);
   }
   return {response, body};
 }
