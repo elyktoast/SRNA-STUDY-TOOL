@@ -78,6 +78,21 @@ class SearchTests(unittest.TestCase):
             module.search(FakeConnection(), "airway", "895ed357-27c3-4d4b-a98a-77b0de20760c",
                           limit=True)
 
+    def test_page_range_filter_uses_overlap_and_bound_parameters(self):
+        conn = FakeConnection()
+        module.search(conn, "airway", "895ed357-27c3-4d4b-a98a-77b0de20760c",
+                      page_start=12, page_end=25)
+        self.assertIn("p.page_end >= %s", conn.cur.sql)
+        self.assertIn("p.page_start <= %s", conn.cur.sql)
+        self.assertEqual(conn.cur.params[-3:], [12, 25, 10])
+
+    def test_page_range_rejects_invalid_values_before_database_access(self):
+        for start, end in ((0, None), (None, -1), (20, 10), (True, 3), (1, False)):
+            with self.subTest(start=start, end=end), self.assertRaises(ValueError):
+                module.search(FakeConnection(), "airway",
+                              "895ed357-27c3-4d4b-a98a-77b0de20760c",
+                              page_start=start, page_end=end)
+
     def test_missing_query_rejected(self):
         with self.assertRaisesRegex(ValueError, "query required"):
             module.search(FakeConnection(), " ", "895ed357-27c3-4d4b-a98a-77b0de20760c")
