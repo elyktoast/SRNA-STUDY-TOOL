@@ -51,7 +51,7 @@ def extract(pdf,out,owner_uid,r2_key):
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
-    (out/'sections.jsonl').write_text(''.join(json.dumps(s,ensure_ascii=False)+'\\n' for s in sections),encoding='utf-8')
+    (out/'sections.jsonl').write_text(''.join(json.dumps(s,ensure_ascii=False)+'\n' for s in sections),encoding='utf-8')
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
