@@ -117,9 +117,15 @@ class ImportHierarchyTests(unittest.TestCase):
             invalid = Connection()
             invalid.cur.existing_textbook = True
             invalid.cur.existing_sections = [('saved-1', None)]
-            with self.assertRaisesRegex(ValueError, "no start page"):
+            with self.assertRaisesRegex(ValueError, "invalid start page"):
                 module.import_passages(folder, manifest, invalid)
             self.assertFalse(any('delete from' in sql for sql, _ in invalid.cur.executed))
+            out_of_range = Connection()
+            out_of_range.cur.existing_textbook = True
+            out_of_range.cur.existing_sections = [('saved-1', 4)]
+            with self.assertRaisesRegex(ValueError, "invalid start page"):
+                module.import_passages(folder, manifest, out_of_range)
+            self.assertFalse(any('delete from' in sql for sql, _ in out_of_range.cur.executed))
             changed = Connection()
             changed.cur.existing_textbook = True
             changed.cur.prior_digest = 'b' * 64
