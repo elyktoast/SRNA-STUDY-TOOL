@@ -2,9 +2,11 @@
 """Local-only human review packet. Never upload it to CI artifacts or a database."""
 import html
 from pathlib import Path
+from chapter_review import review_fingerprint
 
 def render_review_html(groups, pdf_name):
     """Escape PDF-derived headings; keep decisions unapproved by default."""
+    fingerprint = review_fingerprint(groups)
     rows = []
     for index, group in enumerate(groups, 1):
         options = []
@@ -33,7 +35,7 @@ def render_review_html(groups, pdf_name):
               'const decisions=Array.from(document.querySelectorAll("section[data-group]")).map(s=>({'
               'group:Number(s.dataset.group),decision:s.querySelector(".decision").value,'
               'notes:s.querySelector(".notes").value}));'
-              'const blob=new Blob([JSON.stringify({schema_version:1,decisions},null,2)],'
+              'const blob=new Blob([JSON.stringify({schema_version:2,review_fingerprint:"' + fingerprint + '",decisions},null,2)],'
               '{type:"application/json"});const url=URL.createObjectURL(blob);'
               'const a=document.createElement("a");a.href=url;a.download="chapter-review-decisions.json";'
               'a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);});'
