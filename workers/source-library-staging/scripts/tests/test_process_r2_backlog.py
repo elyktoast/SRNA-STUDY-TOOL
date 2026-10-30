@@ -56,6 +56,18 @@ class BacklogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "owner UUID"):
             module.enumerate_keys(Client(), "invalid")
 
+    def test_force_reindex_requires_apply(self):
+        with patch.object(module, "run") as runner:
+            with self.assertRaisesRegex(ValueError, "requires --apply"):
+                module.process_backlog(Client(), OWNER, force_reindex=True)
+            runner.assert_not_called()
+
+    def test_invalid_limit_rejected_before_processing(self):
+        with patch.object(module, "run") as runner:
+            with self.assertRaisesRegex(ValueError, "Limit"):
+                module.process_backlog(Client(), OWNER, limit=True)
+            runner.assert_not_called()
+
     def test_ready_books_are_skipped_without_reindex(self):
         with patch.object(module, "run", return_value={"indexed": True}) as runner:
             result = module.process_backlog(
