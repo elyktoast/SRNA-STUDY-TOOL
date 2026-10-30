@@ -8,13 +8,13 @@ import json
 import re
 from pathlib import Path
 
-CHAPTER = re.compile(r"^(?:chapter|chap[.]?)\\s+([0-9]{1,3}|[IVXLCDM]{1,12})(?:\\s*[:.\\-–]\\s*|\\s+)(.{0,110})$", re.I)
-CHAPTER_ONLY = re.compile(r"^(?:chapter|chap[.]?)\\s+([0-9]{1,3}|[IVXLCDM]{1,12})$", re.I)
+CHAPTER = re.compile(r"^(?:chapter|chap[.]?)\s+([0-9]{1,3}|[IVXLCDM]{1,12})(?:\s*[:.\-–]\s*|\s+)(.{0,110})$", re.I)
+CHAPTER_ONLY = re.compile(r"^(?:chapter|chap[.]?)\s+([0-9]{1,3}|[IVXLCDM]{1,12})$", re.I)
 NUMBER_ONLY = re.compile(r"^([0-9]{1,3}|[IVXLCDM]{1,8})$", re.I)
 MAX_HEADING = 120
 EXCLUDED_TITLES = {"contents", "references", "index", "bibliography", "appendix", "notes", "preface", "foreword"}
 SENTENCE_END = re.compile(r"[.!?]$")
-SENTENCE_START = re.compile(r"^(?:the|this|these|it|in|for|see|as|and|or|but|when|with)\\b", re.I)
+SENTENCE_START = re.compile(r"^(?:the|this|these|it|in|for|see|as|and|or|but|when|with)\b", re.I)
 
 
 def plausible_title(value):
