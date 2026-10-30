@@ -68,7 +68,7 @@ def validate_target_key(key, owner_uid):
     if (not isinstance(key, str) or key.count("/") != 1
             or not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid)
             or not key.startswith(owner_uid + "/") or ".." in key
-            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
                                 PurePosixPath(key).name, re.I)):
         raise ValueError("Invalid owner-scoped PDF key")
     return key
