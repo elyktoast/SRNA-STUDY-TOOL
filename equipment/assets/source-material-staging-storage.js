@@ -2,7 +2,7 @@
 // Staging-only adapter. Not loaded by production unless explicitly included in a staging build.
 const config=window.MBU_SOURCE_LIBRARY_STAGING||{};
 const sessionKey='mbu_supabase_session_v1';
-function settings(){const base=String(config.apiUrl||'').replace(/\/$/,'');if(location.hostname!=='staging.srnastudytool.com'||!config.enabled||!/^https:\/\//.test(base))throw Error('Staging Source Library is not configured.');return base;}
+function settings(){const base=String(config.apiUrl||'').replace(/\/$/,'');let url;try{url=new URL(base)}catch{}if(location.hostname!=='staging.srnastudytool.com'||!config.enabled||!url||url.protocol!=='https:'||url.username||url.password||url.search||url.hash||url.pathname!=='/'||url.hostname==='srnastudytool.com'||url.hostname==='www.srnastudytool.com')throw Error('Staging Source Library is not configured.');return url.origin;}
 function token(){let s;try{s=JSON.parse(localStorage.getItem(sessionKey)||'null')}catch{}const jwt=s?.access_token;if(!jwt)throw Error('Sign in to the staging account first.');return jwt;}
 async function call(path,options={}){
  const response=await fetch(settings()+path,{...options,headers:{Authorization:'Bearer '+token(),...(options.headers||{})}});
