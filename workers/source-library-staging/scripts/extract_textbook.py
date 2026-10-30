@@ -71,7 +71,8 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
-        'low_text_pages':low_text,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,\n        'ocr_attempted':bool(ocr),'requires_ocr_review':bool(low_text),
+        'low_text_pages':low_text,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,
+        'ocr_attempted':bool(ocr),'requires_ocr_review':bool(low_text),
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
@@ -81,6 +82,7 @@ if __name__=='__main__':
     p.add_argument('pdf',type=Path)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--owner-uid',required=True)
-    p.add_argument('--r2-key',required=True)\n    p.add_argument('--ocr',action='store_true',help='Attempt local Tesseract OCR on low-text pages')
+    p.add_argument('--r2-key',required=True)
+    p.add_argument('--ocr',action='store_true',help='Attempt local Tesseract OCR on low-text pages')
     a=p.parse_args()
     print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr),indent=2))
