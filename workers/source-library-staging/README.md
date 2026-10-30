@@ -26,3 +26,9 @@ The staging API host must be routed to this Worker separately from the staging w
 6. Keep this PR unmerged until CI is green and the isolation checks above are recorded.
 
 GitHub Actions validates source code and mocked Worker behavior only. It does **not** establish a separate identity provider or confirm a live R2 upload.
+
+## Shared-project security audit (read-only, 2026-10-29)
+
+The existing SRNA Supabase project has RLS enabled on all eight public tables. The database also exposes several `SECURITY DEFINER` RPCs to signed-in users; `snar_admin_accounts` and `can_insert_ai_source_object` explicitly check private admin membership, and `snar_admin_status` checks the same membership. This does **not** prove every RPC or policy is safe. Do not enroll the staging-only test user in `private.snar_admins`, and do not grant it elevated production access. Before live testing, verify its production `snar_admin_status` reports `is_admin: false`, and attempt a production admin RPC using that account to confirm rejection.
+
+A shared Supabase identity provider means a staging JWT is valid for authentication on production Supabase endpoints; the Worker allowlist only controls the staging Worker. Never claim complete environment isolation under this no-cost design. Test against a dedicated low-privilege account and avoid real learner data.
