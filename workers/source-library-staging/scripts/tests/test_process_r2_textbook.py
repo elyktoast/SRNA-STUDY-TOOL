@@ -81,6 +81,12 @@ class R2RunnerTests(unittest.TestCase):
                     module.run(self.owner, self.key, apply=True, client=client)
                 processor.assert_not_called()
 
+    def test_runner_passes_ocr_flag_to_processor(self):
+        payload = b"%PDF-1.7 fake contents"
+        with patch.object(module, "process", return_value={"passages": 1}) as processor:
+            module.run(self.owner, self.key, client=FakeR2(payload), ocr=True)
+        self.assertIs(processor.call_args.kwargs["ocr"], True)
+
     def test_runner_passes_original_digest_to_processor(self):
         import hashlib
         payload = b"%PDF-1.7 fake contents"
