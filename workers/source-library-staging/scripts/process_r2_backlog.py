@@ -91,7 +91,8 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
         paginator = client.get_paginator("list_objects_v2")
         for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
             for item in page.get("Contents", []):
-                if item.get("Key") in excluded:
+                key = item.get("Key")
+                if isinstance(key, str) and key in excluded:
                     skipped += 1
     for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
         try:
