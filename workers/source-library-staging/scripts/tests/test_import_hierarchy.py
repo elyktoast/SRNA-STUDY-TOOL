@@ -93,6 +93,14 @@ class ImportHierarchyTests(unittest.TestCase):
             self.assertEqual([row[1] for row in conn.cur.batches[0][1]],
                              ["section-1", "section-2", "section-3"])
             self.assertTrue(any("status='ready'" in sql for sql, _ in conn.cur.executed))
+            protected = Connection()
+            protected.cur.existing_sections = 3
+            with self.assertRaisesRegex(ValueError, 'Reindex blocked'):
+                module.import_passages(folder, manifest, protected)
+            self.assertFalse(any(
+                'delete from source_library_staging' in sql
+                for sql, _ in protected.cur.executed
+            ))
 
 
 if __name__ == "__main__":
