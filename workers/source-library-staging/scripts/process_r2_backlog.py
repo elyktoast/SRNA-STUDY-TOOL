@@ -75,7 +75,7 @@ def validate_target_key(key, owner_uid):
     return key
 
 
-def process_backlog(client, owner_uid, limit=20, apply=False,
+def process_backlog(client, owner_uid, limit=10, apply=False,
                     ready_keys=None, force_reindex=False, ocr=False):
     # Fail fast on invalid inputs even when no R2 objects are returned.
     if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
