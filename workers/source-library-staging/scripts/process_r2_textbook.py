@@ -59,6 +59,11 @@ def run(owner_uid, key, apply=False, client=None):
             aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
             region_name="auto",
         )
+    # Validate the untrusted key before constructing a local download path.
+    if (not isinstance(key, str) or not key.startswith(owner_uid + "/")
+            or ".." in key or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", Path(key).name, re.I)
+            or Path(key).name in (".pdf", "..pdf")):
+        raise ValueError("Invalid owner-scoped R2 PDF key")
     with tempfile.TemporaryDirectory(prefix="srna-source-staging-") as tmp:
         root = Path(tmp)
         # Keep the R2 object basename as the indexed filename rather than source.pdf.
