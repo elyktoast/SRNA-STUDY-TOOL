@@ -108,8 +108,13 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(result["skipped"], 0)
         self.assertEqual(runner.call_count, 2)
 
+    def test_ocr_option_reaches_r2_runner(self):
+        with patch.object(module, "run", return_value={"indexed": False}) as runner:
+            module.process_backlog(Client(), OWNER, ocr=True)
+        self.assertEqual(runner.call_args.kwargs["ocr"], True)
+
     def test_default_dry_run_and_error_isolation(self):
-        def fake_run(owner, key, apply, client):
+        def fake_run(owner, key, apply, client, ocr=False):
             if key.endswith("two.pdf"):
                 raise RuntimeError("private error details")
             return {"indexed": False}
