@@ -32,6 +32,27 @@ class Client:
 
 
 class BacklogTests(unittest.TestCase):
+    def test_schema_preflight_requires_source_versions(self):
+        class FakeCursor:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def execute(self, sql): self.sql = sql
+            def fetchone(self): return ("textbooks", "sections", "passages", None)
+        class FakeConnection:
+            def cursor(self): return FakeCursor()
+        with self.assertRaisesRegex(RuntimeError, "migrations 001-003"):
+            module.assert_staging_schema_ready(FakeConnection())
+
+    def test_schema_preflight_accepts_complete_schema(self):
+        class FakeCursor:
+            def __enter__(self): return self
+            def __exit__(self, *args): return False
+            def execute(self, sql): pass
+            def fetchone(self): return ("textbooks", "sections", "passages", "source_versions")
+        class FakeConnection:
+            def cursor(self): return FakeCursor()
+        self.assertIsNone(module.assert_staging_schema_ready(FakeConnection()))
+
     def test_owner_filter_and_limit(self):
         self.assertEqual(module.enumerate_keys(Client(), OWNER, 1), [OWNER + "/one.pdf"])
         self.assertEqual(len(module.enumerate_keys(Client(), OWNER)), 2)
