@@ -17,9 +17,11 @@ from extract_textbook import extract
 from import_extraction import import_passages, validate
 
 
-def process(pdf, out, owner_uid, r2_key, apply=False):
+def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None):
     manifest = extract(pdf, out, owner_uid, r2_key)
     validated = validate(out)
+    if expected_sha256 is not None and validated["sha256"] != expected_sha256:
+        raise ValueError("Extracted PDF digest differs from original R2 download")
     if validated["sha256"] != manifest["sha256"]:
         raise ValueError("Extraction manifest changed during validation")
     # Verify the source bytes again before any database write. A manifest alone
