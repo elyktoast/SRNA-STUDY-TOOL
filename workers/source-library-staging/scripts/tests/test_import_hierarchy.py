@@ -23,6 +23,7 @@ class Cursor:
         self.existing_sections = 0
         self.existing_textbook = False
         self.prior_digest = 'a' * 64
+        self.duplicate_r2_key = None
 
     def __enter__(self):
         return self
@@ -36,6 +37,8 @@ class Cursor:
             self.last_id = "book-id" if self.existing_textbook else None
         elif "select source_sha256 from source_library_staging.source_versions" in sql:
             self.last_id = self.prior_digest
+        elif "select r2_key from source_library_staging.source_versions" in sql:
+            self.last_id = self.duplicate_r2_key
         elif "insert into source_library_staging.textbooks" in sql:
             self.last_id = "book-id"
         elif "select count(*) from source_library_staging.sections" in sql:
@@ -107,6 +110,14 @@ class ImportHierarchyTests(unittest.TestCase):
             self.assertFalse(any(
                 'delete from source_library_staging' in sql
                 for sql, _ in protected.cur.executed
+            ))
+            duplicate = Connection()
+            duplicate.cur.duplicate_r2_key = manifest["owner_uid"] + "/another.pdf"
+            with self.assertRaisesRegex(ValueError, "Duplicate textbook content"):
+                module.import_passages(folder, manifest, duplicate)
+            self.assertFalse(any(
+                "insert into source_library_staging.textbooks" in sql
+                for sql, _ in duplicate.cur.executed
             ))
 
 
