@@ -21,6 +21,8 @@ class Cursor:
         self.last_id = None
         self.next_section = 0
         self.existing_sections = 0
+        self.existing_textbook = False
+        self.prior_digest = 'a' * 64
 
     def __enter__(self):
         return self
@@ -30,7 +32,11 @@ class Cursor:
 
     def execute(self, sql, params):
         self.executed.append((sql, params))
-        if "insert into source_library_staging.textbooks" in sql:
+        if "where r2_key=%s for update" in sql:
+            self.last_id = "book-id" if self.existing_textbook else None
+        elif "select source_sha256 from source_library_staging.source_versions" in sql:
+            self.last_id = self.prior_digest
+        elif "insert into source_library_staging.textbooks" in sql:
             self.last_id = "book-id"
         elif "select count(*) from source_library_staging.sections" in sql:
             self.last_id = self.existing_sections
@@ -39,7 +45,7 @@ class Cursor:
             self.last_id = f"section-{self.next_section}"
 
     def fetchone(self):
-        return (self.last_id,)
+        return (self.last_id,) if self.last_id is not None else None
 
     def executemany(self, sql, params):
         self.batches.append((sql, list(params)))
@@ -84,7 +90,7 @@ class ImportHierarchyTests(unittest.TestCase):
             conn = Connection()
             manifest = {"owner_uid": "895ed357-27c3-4d4b-a98a-77b0de20760c",
                         "r2_key": "895ed357-27c3-4d4b-a98a-77b0de20760c/book.pdf",
-                        "filename": "book.pdf", "size_bytes": 1234,
+                        "filename": "book.pdf", "size_bytes": 1234, "sha256": "a" * 64,
                         "pdf_page_count": 3, "requires_ocr_review": False, "low_text_pages": []}
             self.assertEqual(module.import_passages(folder, manifest, conn), "book-id")
             inserts = [params for sql, params in conn.cur.executed
@@ -95,6 +101,7 @@ class ImportHierarchyTests(unittest.TestCase):
             self.assertTrue(any("status='ready'" in sql for sql, _ in conn.cur.executed))
             protected = Connection()
             protected.cur.existing_sections = 3
+            protected.cur.existing_textbook = True
             with self.assertRaisesRegex(ValueError, 'Reindex blocked'):
                 module.import_passages(folder, manifest, protected)
             self.assertFalse(any(
