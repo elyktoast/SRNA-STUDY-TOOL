@@ -61,7 +61,15 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
     for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
         try:
             result = run(owner_uid, key, apply=apply, client=client, ocr=ocr)
-            results.append({"key": key, "ok": True, "result": result})
+            results.append({"key": key, "ok": True, "result": {
+                "pdf_pages": result.get("pdf_pages"),
+                "passages": result.get("passages"),
+                "indexed": result.get("indexed"),
+                "requires_ocr_review": result.get("requires_ocr_review"),
+                "ocr_pages_count": len(result.get("ocr_pages", [])),
+                "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
+                "citation_verified": result.get("citation_verified", False),
+            }})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
             results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
