@@ -43,3 +43,7 @@ A shared Supabase identity provider means a staging JWT is valid for authenticat
 6. Leave PR #34 unmerged until tests pass. The 20 MiB cap is for small-PDF smoke tests only; large textbooks need a separate multipart upload design.
 
 Do not paste JWTs, passwords, or Worker secrets into GitHub issues, PR comments, or chat logs.
+
+## Approved staging test account (2026-10-29)
+
+The operator confirmed that the dedicated staging test account is a **normal, non-admin Supabase user**. Its UUID is `895ed357-27c3-4d4b-a98a-77b0de20760c`. Set the staging Worker's `ADMIN_USER_IDS` secret to this UUID only; do not add it to production `private.snar_admins`. This approval is for the **staging Worker allowlist only** and does not elevate database privileges. Verify live negative and positive auth cases before uploading.
