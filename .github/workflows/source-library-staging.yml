@@ -43,6 +43,7 @@ jobs:
         run: |
           node --check workers/source-library-staging/src/index.js
           node --check equipment/assets/source-material-staging-storage.js
+          node --check equipment/assets/chapter-review-staging.js
           node --check scripts/test-source-library-staging.mjs
       - name: Staging Worker tests
         run: node --test scripts/test-source-library-staging.mjs
