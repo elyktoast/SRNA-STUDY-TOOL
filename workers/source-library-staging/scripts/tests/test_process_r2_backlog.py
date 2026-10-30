@@ -20,6 +20,7 @@ class Paginator:
             {"Key": OWNER + "/one.pdf"},
             {"Key": "other/two.pdf"},
             {"Key": OWNER + "/notes.txt"},
+            {"Key": OWNER + "/bad name.pdf"},
             {"Key": OWNER + "/two.pdf"},
         ]}
 
@@ -34,6 +35,11 @@ class BacklogTests(unittest.TestCase):
     def test_owner_filter_and_limit(self):
         self.assertEqual(module.enumerate_keys(Client(), OWNER, 1), [OWNER + "/one.pdf"])
         self.assertEqual(len(module.enumerate_keys(Client(), OWNER)), 2)
+
+    def test_invalid_pdf_key_does_not_consume_batch_limit(self):
+        keys = module.enumerate_keys(Client(), OWNER, limit=2)
+        self.assertEqual(keys, [OWNER + "/one.pdf", OWNER + "/two.pdf"])
+        self.assertNotIn(OWNER + "/bad name.pdf", keys)
 
     def test_limit_counts_pending_not_ready(self):
         pending = module.enumerate_keys(
