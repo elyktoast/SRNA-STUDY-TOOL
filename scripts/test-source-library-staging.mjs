@@ -13,10 +13,17 @@ const env={STAGING_ONLY:'true',ALLOWED_ORIGIN:origin,SUPABASE_URL:'https://stagi
  async delete(key){objects.delete(key)}
 }};
 const previousFetch=globalThis.fetch;
-globalThis.fetch=async (url,options)=>new Response(options?.headers?.authorization==='Bearer valid'?JSON.stringify({id:uid}):'{}',{status:options?.headers?.authorization==='Bearer valid'?200:401,headers:{'content-type':'application/json'}});
+const authCalls=[];
+globalThis.fetch=async (url,options)=>{authCalls.push(String(url));return new Response(options?.headers?.authorization==='Bearer valid'?JSON.stringify({id:uid}):'{}',{status:options?.headers?.authorization==='Bearer valid'?200:401,headers:{'content-type':'application/json'}})};
 function request(path,method='GET',headers={},body){return worker.fetch(new Request('https://staging-worker.example'+path,{method,headers:{origin,authorization:'Bearer valid',...headers},body}),env)}
 test('rejects foreign origins',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin:'https://srnastudytool.com'}}),env);assert.equal(r.status,403)});
 test('requires authentication',async()=>{const r=await request('/materials','GET',{authorization:'Bearer invalid'});assert.equal(r.status,403)});
+test('rejects production JWT and validates against staging identity endpoint',async()=>{
+ const before=authCalls.length;
+ const r=await request('/materials','GET',{authorization:'Bearer production-token'});
+ assert.equal(r.status,403);
+ assert.deepEqual(authCalls.slice(before),['https://staging-auth.example/auth/v1/user']);
+});
 test('requires admin allowlist',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin,authorization:'Bearer valid'}}),{...env,ADMIN_USER_IDS:'00000000-0000-4000-8000-000000000000'});assert.equal(r.status,403)});
 test('rejects non-PDF upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'not a pdf');assert.equal(r.status,415)});
 test('rejects oversized upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'%PDF-'+'.'.repeat(20*1024*1024));assert.equal(r.status,413)});
