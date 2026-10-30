@@ -76,6 +76,13 @@ def validate(folder):
             or len(set(low_pages)) != len(low_pages)
             or manifest["requires_ocr_review"] != bool(low_pages)):
         raise ValueError("Invalid low-text page metadata")
+    image_pages = manifest.get("image_pages", [])
+    if (not isinstance(image_pages, list)
+            or any(type(p) is not int or p < 1 or p > page_count for p in image_pages)
+            or len(set(image_pages)) != len(image_pages)):
+        raise ValueError("Invalid embedded-image page metadata")
+    # An embedded image can be a photo, chart, or decorative asset. Do not
+    # equate image presence with missing text or successful OCR.
     # PDF bookmarks are provisional section boundaries, not verified print citations.
     sections_path = folder / "sections.jsonl"
     sections = list(read_jsonl(sections_path)) if sections_path.exists() else []
