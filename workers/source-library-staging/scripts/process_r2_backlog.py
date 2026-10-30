@@ -31,9 +31,24 @@ def enumerate_keys(client, owner_uid, limit=20):
     return keys
 
 
-def process_backlog(client, owner_uid, limit=20, apply=False):
+def indexed_keys(conn, owner_uid):
+    """Only ready records are skipped; failed and incomplete uploads can retry."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """select r2_key from source_library_staging.textbooks
+               where owner_uid=%s::uuid and status='ready'""",
+            (owner_uid,),
+        )
+        return {row[0] for row in cur.fetchall()}
+
+
+def process_backlog(client, owner_uid, limit=20, apply=False,
+                    ready_keys=None, force_reindex=False):
     results = []
     for key in enumerate_keys(client, owner_uid, limit):
+        if not force_reindex and ready_keys is not None and key in ready_keys:
+            results.append({"key": key, "ok": True, "skipped": "already_ready"})
+            continue
         try:
             result = run(owner_uid, key, apply=apply, client=client)
             results.append({"key": key, "ok": True, "result": result})
@@ -42,7 +57,8 @@ def process_backlog(client, owner_uid, limit=20, apply=False):
             results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
     return {"mode": "apply" if apply else "dry-run", "results": results,
             "succeeded": sum(bool(x["ok"]) for x in results),
-            "failed": sum(not x["ok"] for x in results)}
+            "failed": sum(not x["ok"] for x in results),
+            "skipped": sum(x.get("skipped") == "already_ready" for x in results)}
 
 
 def main():
@@ -51,6 +67,8 @@ def main():
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
+    parser.add_argument("--force-reindex", action="store_true",
+                        help="Reprocess ready textbooks; use only for intentional reindexing")
     args = parser.parse_args()
     import boto3
     client = boto3.client(
@@ -59,7 +77,13 @@ def main():
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
         region_name="auto",
     )
-    print(json.dumps(process_backlog(client, args.owner_uid, args.limit, args.apply), indent=2))
+    ready = None
+    if args.apply and not args.force_reindex:
+        import psycopg
+        with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+            ready = indexed_keys(conn, args.owner_uid)
+    print(json.dumps(process_backlog(client, args.owner_uid, args.limit,
+                                     args.apply, ready, args.force_reindex), indent=2))
 
 
 if __name__ == "__main__":
