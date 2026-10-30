@@ -97,6 +97,9 @@ class ImportHierarchyTests(unittest.TestCase):
                         "filename": "book.pdf", "size_bytes": 1234, "sha256": "a" * 64,
                         "pdf_page_count": 3, "requires_ocr_review": False, "low_text_pages": []}
             self.assertEqual(module.import_passages(folder, manifest, conn), "book-id")
+            self.assertIn("pg_advisory_xact_lock", conn.cur.executed[0][0])
+            self.assertIn(manifest["r2_key"], conn.cur.executed[0][1][0])
+
             inserts = [params for sql, params in conn.cur.executed
                        if "insert into source_library_staging.sections" in sql]
             self.assertEqual([x[1] for x in inserts], [None, "section-1", None])
