@@ -34,8 +34,15 @@ def extract(pdf,out,owner_uid,r2_key):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[]
+    sections=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
+        # Use explicit PDF bookmarks where available; never infer chapter titles
+        # from arbitrary text and present them as verified metadata.
+        for level, heading, page in doc.get_toc(simple=True):
+            if isinstance(page,int) and 1 <= page <= page_count and str(heading).strip():
+                sections.append({'level':level,'heading':str(heading).strip(),
+                                 'start_page':page,'source':'pdf_bookmark'})
         for i in range(page_count):
             page=i+1
             text=re.sub(r'[ \t]+',' ',doc.load_page(i).get_text('text',sort=True).replace('\x00','')).strip()
@@ -44,9 +51,11 @@ def extract(pdf,out,owner_uid,r2_key):
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
+    (out/'sections.jsonl').write_text(''.join(json.dumps(s,ensure_ascii=False)+'\\n' for s in sections),encoding='utf-8')
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
-        'passage_count':total,'low_text_pages':low_text,'requires_ocr_review':bool(low_text),
+        'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
+        'low_text_pages':low_text,'requires_ocr_review':bool(low_text),
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
