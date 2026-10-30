@@ -53,6 +53,22 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(result["image_pages"], [1])
         self.assertEqual(result["low_text_details"], [])
 
+    def test_image_only_page_requires_visual_review(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        page = doc.new_page()
+        pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 12, 12), False)
+        page.insert_image(fitz.Rect(80, 100, 120, 140), pixmap=pix)
+        target = self.base / "image_only.pdf"
+        doc.save(target)
+        doc.close()
+        result = module.extract(target, self.base / "image-only-index",
+                                self.owner, self.owner + "/image_only.pdf")
+        self.assertEqual(result["low_text_pages"], [3])
+        self.assertEqual(result["low_text_details"][0]["review_category"],
+                         "image_content_review")
+        self.assertTrue(result["requires_ocr_review"])
+
     def test_ocr_recovers_text_from_scanned_page(self):
         import fitz
         source = fitz.open()
