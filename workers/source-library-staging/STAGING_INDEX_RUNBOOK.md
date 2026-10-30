@@ -1,6 +1,6 @@
 # Staging textbook indexing — operator runbook
 
-This workflow is **manual only**. Do not run against production, merge the staging branch, or enable scheduled indexing until the first import is reviewed.
+This workflow is **manual only**. The attempted scheduled trigger was removed because GitHub schedules run from the default branch, not this unmerged feature branch. Do not run against production, merge the staging branch, or enable scheduled indexing until the first import is reviewed.
 
 ## GitHub environment setup
 
@@ -34,3 +34,11 @@ If the workflow cannot start because the GitHub environment or secrets are missi
 ## Limitations
 
 The runner currently processes the owner's backlog in R2 key order and skips records already marked `ready` when the database is configured. It is not an upload-triggered service, has no automated retries or AI vision interpretation, and should not be treated as citation verification.
+
+## Fingerprint migration prerequisite
+
+Before running an import with `apply=true`, apply `migrations/003_source_versions.sql` to the confirmed staging database after migrations 001 and 002. Check that the private `source_library_staging.source_versions` table exists. Existing indexed records with no source fingerprint cannot be safely reindexed automatically; review their original PDF provenance first. Do not apply the migration to a production database or bypass the guard.
+
+## Background indexing status
+
+Automatic upload-triggered indexing is **not implemented**. The manual workflow is the supported staging path until a separately approved staging scheduler or queue runner exists. A scheduled workflow in an unmerged branch cannot provide background processing. Do not set an auto-index flag expecting it to work.
