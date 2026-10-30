@@ -37,6 +37,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         "ocr_attempted": validated.get("ocr_attempted", False),
         "ocr_pages": validated.get("ocr_pages", []),
         "ocr_failed_pages": validated.get("ocr_failed_pages", []),
+        "source_sha256": validated["sha256"],
         "indexed": False,
         "citation_verified": False,
     }
