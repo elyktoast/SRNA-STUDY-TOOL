@@ -54,7 +54,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
             if len(text)<30 and ocr:
                 try:
                     ocr_page = doc.load_page(i).get_textpage_ocr(language="eng", dpi=200, full=True)
-                    recovered = re.sub(r'[ \\t]+', ' ', doc.load_page(i).get_text('text', textpage=ocr_page, sort=True).replace('\\x00', '')).strip()
+                    recovered = re.sub(r'[ \t]+', ' ', doc.load_page(i).get_text('text', textpage=ocr_page, sort=True).replace('\x00', '')).strip()
                     if len(recovered)>len(text):
                         text=recovered
                         ocr_pages.append(page)
