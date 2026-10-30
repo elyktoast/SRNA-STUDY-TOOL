@@ -8,7 +8,7 @@ const uid='123e4567-e89b-42d3-a456-426614174000';
 const objects=new Map();
 const env={STAGING_ONLY:'true',ALLOWED_ORIGIN:origin,SUPABASE_URL:'https://staging-auth.example',SUPABASE_ANON_KEY:'test-public-key',ADMIN_USER_IDS:uid,TEXTBOOKS:{
  async list({prefix}){return {objects:[...objects].filter(([key])=>key.startsWith(prefix)).map(([key,v])=>({key,size:v.length,uploaded:new Date(),customMetadata:{name:'test.pdf'}})),truncated:false}},
- async put(key,body){objects.set(key,new Uint8Array(body))},
+ async put(key,body){objects.set(key,typeof body==='string'?new TextEncoder().encode(body):new Uint8Array(body))},
  async get(key){const v=objects.get(key);return v?{body:v,text:async()=>new TextDecoder().decode(v)}:null},
  async head(key){return objects.has(key)?{key}:null},
  async delete(key){objects.delete(key)}
