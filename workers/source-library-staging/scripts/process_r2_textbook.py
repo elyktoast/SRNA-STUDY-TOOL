@@ -73,6 +73,12 @@ def run(owner_uid, key, apply=False, client=None):
                 renamed = root / name
                 source.rename(renamed)
                 source = renamed
+        # Check R2 download integrity before extraction or any database mutation.
+        # process() separately rechecks source integrity before import.
+        with source.open("rb") as handle:
+            local_digest = hashlib.file_digest(handle, "sha256").hexdigest()
+        if local_digest != expected["sha256"]:
+            raise ValueError("Downloaded PDF changed before extraction")
         result = process(source, root / "index", owner_uid, key, apply=apply)
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
