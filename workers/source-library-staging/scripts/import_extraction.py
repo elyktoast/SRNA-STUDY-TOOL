@@ -12,6 +12,7 @@ Never use the Supabase anon key, browser tokens, or a production database URL.
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 
 MAX_BATCH = 200
@@ -36,11 +37,11 @@ def validate(folder):
     if manifest.get("citation_verified") is not False:
         raise ValueError("Extraction must not claim citation verification")
     owner, key = manifest.get("owner_uid"), manifest.get("r2_key")
-    if not isinstance(manifest.get("sha256"), str) or len(manifest["sha256"]) != 64:
+    if not isinstance(manifest.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]):
         raise ValueError("Missing PDF SHA-256 digest")
     if not isinstance(manifest.get("size_bytes"), int) or not 5 <= manifest["size_bytes"] <= 300 * 1024 * 1024:
         raise ValueError("Invalid source PDF size")
-    if not isinstance(owner, str) or not isinstance(key, str) or not key.startswith(owner + "/"):
+    if not isinstance(owner, str) or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", owner, re.I) or not isinstance(key, str) or not key.startswith(owner + "/") or ".." in key or not key.lower().endswith(".pdf"):
         raise ValueError("Invalid owner/key relationship")
     count, last = 0, -1
     for passage in read_jsonl(folder / "passages.jsonl"):
