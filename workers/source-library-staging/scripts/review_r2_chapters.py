@@ -15,6 +15,7 @@ from extract_textbook import extract
 from process_r2_textbook import BUCKET, fetch_r2
 from propose_chapters import propose
 from propose_layout_chapters import propose_layout
+from chapter_review import review_groups, public_review_summary
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
@@ -35,12 +36,13 @@ def audit(owner_uid, key, client, ocr=False):
         with (root / "extracted" / "pages.jsonl").open(encoding="utf-8") as handle:
             candidates = propose(json.loads(line) for line in handle if line.strip())
         layout = propose_layout(pdf)
+        review = public_review_summary(review_groups(candidates, layout))
         return {"status": "review_only", "pdf_pages": manifest["pdf_page_count"],
                 "candidate_count": len(candidates),
                 "layout_candidate_count": len(layout),
                 "layout_candidate_pdf_pages": [c["pdf_page"] for c in layout],
                 "candidate_pdf_pages": [c["pdf_page"] for c in candidates],
-                "citation_verified": False, "database_written": False}
+                **review, "citation_verified": False, "database_written": False}
 
 
 def main():
