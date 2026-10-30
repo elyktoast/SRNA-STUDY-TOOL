@@ -11,6 +11,10 @@ on:
         required: true
         default: '1'
         type: string
+      r2_key:
+        description: 'Optional exact owner-scoped R2 PDF key; blank scans backlog'
+        required: false
+        type: string
       apply:
         description: 'Write extracted passages to staging Supabase (false = dry run)'
         required: true
@@ -64,6 +68,7 @@ jobs:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           OWNER_UID: ${{ inputs.owner_uid }}
           LIMIT: ${{ inputs.limit }}
+          R2_KEY: ${{ inputs.r2_key }}
           APPLY: ${{ inputs.apply }}
           OCR: ${{ inputs.ocr }}
           TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
@@ -76,6 +81,7 @@ jobs:
             echo "Missing staging database environment secret"; exit 1
           fi
           args=(--owner-uid "$OWNER_UID" --limit "$LIMIT")
+          if [[ -n "$R2_KEY" ]]; then args+=(--r2-key "$R2_KEY"); fi
           if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
           if [[ "$OCR" == "true" ]]; then args+=(--ocr); fi
           python workers/source-library-staging/scripts/process_r2_backlog.py "${args[@]}"
