@@ -129,6 +129,13 @@ class R2RunnerTests(unittest.TestCase):
             module.run(self.owner, self.key, client=client)
         self.assertEqual(process.call_args.args[0].name, "book.pdf")
 
+    def test_runner_rejects_empty_basename_in_metadata(self):
+        payload = b"%PDF-1.7 fake contents"
+        client = FakeR2(payload, metadata={"name": ".pdf"})
+        with patch.object(module, "process", return_value={"passages": 1}) as processor:
+            module.run(self.owner, self.key, client=client)
+        self.assertEqual(processor.call_args.args[0].name, "book.pdf")
+
     def test_download_and_hash(self):
         import hashlib
         payload = b"%PDF-1.7 fake contents"
