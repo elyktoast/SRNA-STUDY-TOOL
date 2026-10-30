@@ -62,6 +62,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
         try:
             result = run(owner_uid, key, apply=apply, client=client, ocr=ocr)
             results.append({"key": key, "ok": True, "result": {
+                "source_sha256": result.get("source_sha256"),
                 "pdf_pages": result.get("pdf_pages"),
                 "passages": result.get("passages"),
                 "indexed": result.get("indexed"),
