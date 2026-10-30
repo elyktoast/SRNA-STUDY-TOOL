@@ -1,9 +1,11 @@
 """Local review HTML must escape textbook text and never approve sections."""
 import importlib.util
+import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 path = Path(__file__).resolve().parents[1] / "chapter_review_export.py"
 spec = importlib.util.spec_from_file_location("chapter_review_export", path)
 module = importlib.util.module_from_spec(spec)
