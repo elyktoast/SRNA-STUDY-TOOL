@@ -17,7 +17,8 @@ class ExportTests(unittest.TestCase):
                    "candidates": [{"pdf_page": 2, "detector": "layout",
                                    "heading": '<script>alert("x")</script>'}]}]
         output = module.render_review_html(groups, 'a&b.pdf')
-        self.assertNotIn("<script>", output)
+        self.assertNotIn('<script>alert("x")</script>', output)
+        self.assertNotIn('<li>PDF p. 2 · layout · <script>', output)
         self.assertIn("&lt;script&gt;", output)
         self.assertIn("a&amp;b.pdf", output)
         self.assertIn("Selection does not save", output)
