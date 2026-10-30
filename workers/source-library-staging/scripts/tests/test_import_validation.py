@@ -113,6 +113,33 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "No searchable passages"):
             module.validate(self.folder)
 
+    def test_rejects_boolean_chunk_index(self):
+        self.passages[1]["chunk_index"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_page_reference(self):
+        self.passages[0]["page_start"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page reference"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_page_count(self):
+        self.manifest["pdf_page_count"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page count"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_bookmark_level(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            json.dumps({"level": True, "heading": "Airway", "start_page": 1,
+                        "source": "pdf_bookmark"}) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "bookmark section"):
+            module.validate(self.folder)
+
     def test_rejects_cross_owner_key(self):
         self.manifest["r2_key"] = "other/sample.pdf"
         self.write()
