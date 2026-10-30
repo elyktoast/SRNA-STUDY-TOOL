@@ -58,8 +58,16 @@ export default {async fetch(request,env){
    }
    const declared=Number(request.headers.get('content-length')||0);
    if(declared>MAX_REVIEW_BYTES)return json({error:'Review draft too large'},413,h);
-   const raw=await request.text();
-   if(new TextEncoder().encode(raw).byteLength>MAX_REVIEW_BYTES)return json({error:'Review draft too large'},413,h);
+   const reader=request.body?.getReader();
+   if(!reader)return json({error:'Missing review draft'},400,h);
+   const chunks=[];let total=0;
+   while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
+     if(total>MAX_REVIEW_BYTES){await reader.cancel();return json({error:'Review draft too large'},413,h)}
+     chunks.push(value);
+   }
+   const bytes=new Uint8Array(total);let pos=0;
+   for(const chunk of chunks){bytes.set(chunk,pos);pos+=chunk.byteLength}
+   const raw=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    let draft;try{draft=JSON.parse(raw)}catch{return json({error:'Invalid JSON'},400,h)}
    if(!validReviewDraft(draft))return json({error:'Invalid review draft'},400,h);
    // This is only a private, unapproved draft. Fingerprint validation against
