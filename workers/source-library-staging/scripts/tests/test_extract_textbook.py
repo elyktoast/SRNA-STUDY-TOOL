@@ -79,7 +79,8 @@ class ExtractorTests(unittest.TestCase):
                 except Exception as exc:
                     self.fail(f"OCR engine failure on synthetic fixture: {type(exc).__name__}: {str(exc)[:300]}")
         self.assertEqual(result["ocr_pages"], [1], msg=f"OCR metadata: {result}")
-        self.assertEqual(result["low_text_pages"], [])
+        self.assertEqual(result["low_text_pages"], [1])
+        self.assertTrue(result["requires_ocr_review"])
         passages = (out / "passages.jsonl").read_text(encoding="utf-8")
         self.assertIn("AIRWAY", passages.upper())
 
