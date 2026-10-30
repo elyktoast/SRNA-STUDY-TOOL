@@ -44,6 +44,7 @@ class BacklogTests(unittest.TestCase):
             result = module.process_backlog(
                 Client(), OWNER, apply=True, ready_keys={OWNER + "/one.pdf"})
         self.assertEqual(result["skipped"], 1)
+        self.assertEqual(result["succeeded"], 1)
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
 
