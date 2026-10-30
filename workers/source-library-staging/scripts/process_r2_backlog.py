@@ -49,6 +49,13 @@ def indexed_keys(conn, owner_uid):
 
 def process_backlog(client, owner_uid, limit=20, apply=False,
                     ready_keys=None, force_reindex=False):
+    # Fail fast on invalid inputs even when no R2 objects are returned.
+    if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
+        raise ValueError("Invalid owner UUID")
+    if type(limit) is not int or not 1 <= limit <= 100:
+        raise ValueError("Limit must be 1..100")
+    if force_reindex and not apply:
+        raise ValueError("--force-reindex requires --apply")
     results = []
     excluded = ready_keys if not force_reindex else None
     for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
