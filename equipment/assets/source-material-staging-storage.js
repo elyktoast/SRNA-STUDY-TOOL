@@ -32,5 +32,8 @@ async function list(){const response=await call('/materials');const data=await r
 async function file(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();return new File([blob],name||'source-material.pdf',{type:'application/pdf'});}
 async function download(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name||'source-material.pdf';a.click()}finally{setTimeout(()=>URL.revokeObjectURL(url),1000)}}
 async function remove(path){await call('/materials/item?path='+key(path),{method:'DELETE'});}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,remove});
+async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
+async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
+async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
 })();
