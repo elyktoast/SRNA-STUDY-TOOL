@@ -86,6 +86,8 @@ def main():
         parser.error("Limit must be 1..100")
     if args.force_reindex and not args.apply:
         parser.error("--force-reindex requires --apply")
+    if args.apply and not os.environ.get("DATABASE_URL"):
+        parser.error("DATABASE_URL required for --apply")
     import boto3
     client = boto3.client(
         "s3", endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
