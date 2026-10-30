@@ -68,6 +68,8 @@ def apply_plan(connection, owner_uid, textbook_id, plan, expected_fingerprint):
             if row is None:
                 raise ValueError("Ready textbook not found for owner")
             sections = validate_plan(plan, row[1])
+            # Clear referencing FKs before deleting old sections; transaction rolls back on failure.
+            cur.execute("update source_library_staging.passages set section_id=null where textbook_id=%s::uuid", (textbook_id,))
             cur.execute("delete from source_library_staging.sections where textbook_id=%s::uuid", (textbook_id,))
             current_chapter = None
             assigned = []
