@@ -30,8 +30,10 @@ class ExportTests(unittest.TestCase):
         with TemporaryDirectory() as temp:
             target = Path(temp) / "review.html"
             module.write_local_review([], "a.pdf", target)
+            original = target.read_text(encoding="utf-8")
             with self.assertRaises(FileExistsError):
-                module.write_local_review([], "a.pdf", target)
+                module.write_local_review([], "different.pdf", target)
+            self.assertEqual(target.read_text(encoding="utf-8"), original)
 
 if __name__ == "__main__":
     unittest.main()
