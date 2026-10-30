@@ -27,7 +27,7 @@ def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
         for item in page.get("Contents", []):
             key = item.get("Key", "")
             if (isinstance(key, str) and key.count("/") == 1 and key.startswith(owner_uid + "/") and key.lower().endswith(".pdf")
-                    and ".." not in key and key not in exclude_keys
+                    and ".." not in key and key not in exclude_keys and key not in keys
                     and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", PurePosixPath(key).name, re.I)
                     and PurePosixPath(key).name not in (".pdf", "..pdf")):
                 keys.append(key)
