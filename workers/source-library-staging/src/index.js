@@ -67,7 +67,7 @@ export default {async fetch(request,env){
    }
    const bytes=new Uint8Array(total);let pos=0;
    for(const chunk of chunks){bytes.set(chunk,pos);pos+=chunk.byteLength}
-   const raw=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+   let raw;try{raw=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{return json({error:'Review draft must be UTF-8'},400,h)}
    let draft;try{draft=JSON.parse(raw)}catch{return json({error:'Invalid JSON'},400,h)}
    if(!validReviewDraft(draft))return json({error:'Invalid review draft'},400,h);
    // This is only a private, unapproved draft. Fingerprint validation against
