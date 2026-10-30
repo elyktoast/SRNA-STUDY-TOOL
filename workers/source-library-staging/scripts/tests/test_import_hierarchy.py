@@ -20,7 +20,7 @@ class Cursor:
         self.batches = []
         self.last_id = None
         self.next_section = 0
-        self.existing_sections = 0
+        self.existing_sections = []
         self.existing_textbook = False
         self.prior_digest = 'a' * 64
         self.duplicate_r2_key = None
@@ -41,11 +41,12 @@ class Cursor:
             self.last_id = self.duplicate_r2_key
         elif "insert into source_library_staging.textbooks" in sql:
             self.last_id = "book-id"
-        elif "select count(*) from source_library_staging.sections" in sql:
-            self.last_id = self.existing_sections
         elif "insert into source_library_staging.sections" in sql:
             self.next_section += 1
             self.last_id = f"section-{self.next_section}"
+
+    def fetchall(self):
+        return list(self.existing_sections)
 
     def fetchone(self):
         return (self.last_id,) if self.last_id is not None else None
@@ -103,14 +104,22 @@ class ImportHierarchyTests(unittest.TestCase):
                              ["section-1", "section-2", "section-3"])
             self.assertTrue(any("status='ready'" in sql for sql, _ in conn.cur.executed))
             protected = Connection()
-            protected.cur.existing_sections = 3
+            protected.cur.existing_sections = [('saved-1', 1), ('saved-2', 2)]
             protected.cur.existing_textbook = True
-            with self.assertRaisesRegex(ValueError, 'Reindex blocked'):
-                module.import_passages(folder, manifest, protected)
+            self.assertEqual(module.import_passages(folder, manifest, protected), "book-id")
             self.assertFalse(any(
-                'delete from source_library_staging' in sql
+                'delete from source_library_staging.sections' in sql
+                or 'insert into source_library_staging.sections' in sql
                 for sql, _ in protected.cur.executed
             ))
+            self.assertEqual([row[1] for row in protected.cur.batches[0][1]],
+                             ['saved-1', 'saved-2', 'saved-2'])
+            changed = Connection()
+            changed.cur.existing_textbook = True
+            changed.cur.prior_digest = 'b' * 64
+            with self.assertRaisesRegex(ValueError, "source PDF changed"):
+                module.import_passages(folder, manifest, changed)
+            self.assertFalse(any('delete from' in sql for sql, _ in changed.cur.executed))
             duplicate = Connection()
             duplicate.cur.duplicate_r2_key = manifest["owner_uid"] + "/another.pdf"
             with self.assertRaisesRegex(ValueError, "Duplicate textbook content"):
