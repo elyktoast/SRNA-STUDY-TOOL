@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """Validate offline chapter review decisions. Does not approve or write sections."""
 import json
+from chapter_review import review_fingerprint
 
 CHOICES = {"Needs review", "Chapter", "Subsection", "Reject"}
 
 def validate_decisions(payload, groups):
-    if not isinstance(payload, dict) or payload.get("schema_version") != 1:
+    if not isinstance(payload, dict) or payload.get("schema_version") != 2:
         raise ValueError("Unsupported review format")
+    if payload.get("review_fingerprint") != review_fingerprint(groups):
+        raise ValueError("Review fingerprint mismatch; regenerate the review packet")
     decisions = payload.get("decisions")
     if not isinstance(decisions, list) or len(decisions) != len(groups):
         raise ValueError("Every review group must have one decision")
