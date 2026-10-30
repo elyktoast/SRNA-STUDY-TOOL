@@ -8,6 +8,7 @@ import json
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,19 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual([(r["page_start"], r["page_end"]) for r in rows], [(1, 1), (2, 2)])
         self.assertIn("intubation", rows[0]["content"])
         self.assertIn("Volatile", rows[1]["content"])
+
+    def test_source_mutation_after_extraction_is_rejected(self):
+        original_extract = module.extract
+
+        def mutate_source(pdf, out, owner_uid, r2_key):
+            result = original_extract(pdf, out, owner_uid, r2_key)
+            with pdf.open("ab") as handle:
+                handle.write(b"changed after extraction")
+            return result
+
+        with patch.object(module, "extract", side_effect=mutate_source):
+            with self.assertRaisesRegex(ValueError, "changed after extraction"):
+                module.process(self.pdf, self.folder / "index", self.owner, self.key)
 
     def test_invalid_owner_rejected_before_index(self):
         with self.assertRaisesRegex(ValueError, "prefix"):
