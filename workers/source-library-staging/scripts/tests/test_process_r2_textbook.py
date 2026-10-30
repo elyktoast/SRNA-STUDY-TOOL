@@ -1,0 +1,78 @@
+"""No-network tests for staging R2 streaming download and processing."""
+import importlib.util
+import io
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+spec = importlib.util.spec_from_file_location("process_r2_textbook", ROOT / "process_r2_textbook.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+
+class FakeBody:
+    def __init__(self, data):
+        self.data = data
+        self.closed = False
+
+    def iter_chunks(self, chunk_size):
+        yield self.data[:4]
+        yield self.data[4:]
+
+    def close(self):
+        self.closed = True
+
+
+class FakeR2:
+    def __init__(self, data, declared=None):
+        self.data = data
+        self.declared = len(data) if declared is None else declared
+        self.body = FakeBody(data)
+
+    def head_object(self, Bucket, Key):
+        return {"ContentLength": self.declared}
+
+    def get_object(self, Bucket, Key):
+        return {"Body": self.body}
+
+
+class R2RunnerTests(unittest.TestCase):
+    def setUp(self):
+        self.owner = "895ed357-27c3-4d4b-a98a-77b0de20760c"
+        self.key = self.owner + "/book.pdf"
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.path = Path(self.temp.name) / "download.pdf"
+
+    def test_download_and_hash(self):
+        import hashlib
+        payload = b"%PDF-1.7 fake contents"
+        client = FakeR2(payload)
+        result = module.fetch_r2(self.path, self.owner, self.key, client)
+        self.assertEqual(self.path.read_bytes(), payload)
+        self.assertEqual(result["sha256"], hashlib.sha256(payload).hexdigest())
+        self.assertTrue(client.body.closed)
+
+    def test_rejects_wrong_owner_before_request(self):
+        with self.assertRaisesRegex(ValueError, "owner-scoped"):
+            module.fetch_r2(self.path, self.owner, "someone-else/book.pdf", FakeR2(b"%PDF-"))
+
+    def test_rejects_short_download(self):
+        client = FakeR2(b"%PDF-1.7", declared=100)
+        with self.assertRaisesRegex(ValueError, "Incomplete"):
+            module.fetch_r2(self.path, self.owner, self.key, client)
+        self.assertTrue(client.body.closed)
+
+    def test_rejects_oversized_download(self):
+        client = FakeR2(b"%PDF-1.7 too long", declared=5)
+        with self.assertRaisesRegex(ValueError, "exceeded"):
+            module.fetch_r2(self.path, self.owner, self.key, client)
+        self.assertTrue(client.body.closed)
+
+
+if __name__ == "__main__":
+    unittest.main()
