@@ -160,6 +160,14 @@ class R2RunnerTests(unittest.TestCase):
                            client=FakeR2(b"%PDF-"))
             downloader.assert_not_called()
 
+    def test_fetch_rejects_empty_pdf_basename_before_request(self):
+        class NeverCall:
+            def head_object(self, **kwargs):
+                raise AssertionError("Unexpected R2 request")
+        with self.assertRaisesRegex(ValueError, "owner-scoped"):
+            module.fetch_r2(self.path, self.owner,
+                            self.owner + "/.pdf", NeverCall())
+
     def test_rejects_wrong_owner_before_request(self):
         with self.assertRaisesRegex(ValueError, "owner-scoped"):
             module.fetch_r2(self.path, self.owner, "someone-else/book.pdf", FakeR2(b"%PDF-"))
