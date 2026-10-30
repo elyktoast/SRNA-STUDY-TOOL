@@ -94,7 +94,10 @@ def main():
         region_name="auto",
     )
     ready = None
-    if args.apply and not args.force_reindex:
+    # A dry run should also avoid reprocessing already indexed textbooks when
+    # the database is configured. Without DATABASE_URL it remains an R2-only
+    # extraction check and reports no ready-state exclusions.
+    if not args.force_reindex and os.environ.get("DATABASE_URL"):
         import psycopg
         with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
             ready = indexed_keys(conn, args.owner_uid)
