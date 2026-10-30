@@ -13,7 +13,7 @@ UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{
 
 
 def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
-           include_subsections=False):
+           include_subsections=False, page_start=None, page_end=None):
     if not query or not query.strip():
         raise ValueError("Search query required")
     if not isinstance(owner_uid, str) or not UUID_RE.fullmatch(owner_uid):
@@ -23,6 +23,11 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
             raise ValueError(f"Invalid {label} UUID")
     if type(limit) is not int or not 1 <= limit <= 50:
         raise ValueError("Limit must be 1..50")
+    for label, value in (("page_start", page_start), ("page_end", page_end)):
+        if value is not None and (type(value) is not int or value < 1):
+            raise ValueError(f"{label} must be a positive integer")
+    if page_start is not None and page_end is not None and page_start > page_end:
+        raise ValueError("page_start cannot exceed page_end")
     if include_subsections and not section_id:
         raise ValueError("Section ID required to include subsections")
     sql = """
@@ -59,6 +64,12 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
         else:
             sql += " and p.section_id=%s::uuid"
             params.append(section_id)
+    if page_start is not None:
+        sql += " and p.page_end >= %s"
+        params.append(page_start)
+    if page_end is not None:
+        sql += " and p.page_start <= %s"
+        params.append(page_end)
     sql += " order by rank desc, t.id, p.chunk_index limit %s"
     params.append(limit)
     with conn.cursor() as cur:
@@ -80,7 +91,7 @@ def main():
     parser.add_argument("--textbook-id")
     parser.add_argument("--section-id")
     parser.add_argument("--include-subsections", action="store_true")
-    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--limit", type=int, default=10)\n    parser.add_argument("--page-start", type=int)\n    parser.add_argument("--page-end", type=int)
     args = parser.parse_args()
     url = os.environ.get("DATABASE_URL")
     if not url:
@@ -88,7 +99,7 @@ def main():
     import psycopg
     with psycopg.connect(url) as conn:
         rows = search(conn, args.query, args.owner_uid, args.limit, args.textbook_id, args.section_id,
-                      args.include_subsections)
+                      args.include_subsections, args.page_start, args.page_end)
     print(json.dumps({"results": rows, "note": "PDF page references are not verified printed-page citations"}, indent=2))
 
 
