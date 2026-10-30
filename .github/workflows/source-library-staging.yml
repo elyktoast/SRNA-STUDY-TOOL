@@ -9,6 +9,7 @@ on:
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
       - '.github/workflows/source-library-staging.yml'
   push:
     branches:
@@ -20,6 +21,7 @@ on:
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
       - '.github/workflows/source-library-staging.yml'
   workflow_dispatch:
 
@@ -51,3 +53,5 @@ jobs:
           python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
       - name: Repository validation
         run: npm run validate
+      - name: Live Cloudflare staging Worker smoke test (read-only)
+        run: node scripts/test-source-library-staging-live.mjs
