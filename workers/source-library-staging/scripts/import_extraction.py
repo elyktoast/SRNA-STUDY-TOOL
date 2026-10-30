@@ -190,36 +190,36 @@ def import_passages(folder, manifest, connection):
                    on conflict (textbook_id,source_sha256) do nothing""",
                 (textbook_id, manifest["owner_uid"], manifest["sha256"],
                  manifest["size_bytes"], manifest["r2_key"]))
-            # Fail closed until approved-section provenance can be reconciled.
-            # Reindexing must not silently erase reviewed chapter boundaries.
+            # Reindex only passage text when sections already exist.
+            # Preserve reviewed headings, page boundaries, hierarchy and UUIDs.
             cur.execute(
-                "select count(*) from source_library_staging.sections where textbook_id=%s",
-                (textbook_id,),
-            )
-            assert_safe_reindex(cur.fetchone()[0])
+                """select id,start_page from source_library_staging.sections
+                   where textbook_id=%s order by section_order""", (textbook_id,))
+            preserved_sections = cur.fetchall()
+            if preserved_sections and any(page is None for _, page in preserved_sections):
+                raise ValueError("Reindex blocked: existing section has no start page")
             cur.execute("delete from source_library_staging.passages where textbook_id=%s", (textbook_id,))
-            cur.execute("delete from source_library_staging.sections where textbook_id=%s", (textbook_id,))
-            # Import bookmark headings in original order; a page may have
-            # multiple headings. Assign each passage to the most recent heading.
-            section_ids = []
-            parent_stack = []
-            sections_path = folder / "sections.jsonl"
-            if sections_path.exists():
-                for order, section in enumerate(read_jsonl(sections_path)):
-                    level = section["level"]
-                    while parent_stack and parent_stack[-1][0] >= level:
-                        parent_stack.pop()
-                    parent_id = parent_stack[-1][1] if parent_stack else None
-                    cur.execute(
-                        """insert into source_library_staging.sections
-                           (textbook_id,parent_section_id,heading,section_order,start_page)
-                           values (%s,%s,%s,%s,%s) returning id""",
-                        (textbook_id, parent_id, section["heading"], order,
-                         section["start_page"]),
-                    )
-                    section_id = cur.fetchone()[0]
-                    parent_stack.append((level, section_id))
-                    section_ids.append((section["start_page"], section_id))
+            section_ids = [(page, sid) for sid, page in preserved_sections]
+            if not preserved_sections:
+                # Initial indexing only: PDF bookmarks are provisional.
+                parent_stack = []
+                sections_path = folder / "sections.jsonl"
+                if sections_path.exists():
+                    for order, section in enumerate(read_jsonl(sections_path)):
+                        level = section["level"]
+                        while parent_stack and parent_stack[-1][0] >= level:
+                            parent_stack.pop()
+                        parent_id = parent_stack[-1][1] if parent_stack else None
+                        cur.execute(
+                            """insert into source_library_staging.sections
+                               (textbook_id,parent_section_id,heading,section_order,start_page)
+                               values (%s,%s,%s,%s,%s) returning id""",
+                            (textbook_id, parent_id, section["heading"], order,
+                             section["start_page"]),
+                        )
+                        section_id = cur.fetchone()[0]
+                        parent_stack.append((level, section_id))
+                        section_ids.append((section["start_page"], section_id))
             batch = []
             for item in read_jsonl(folder / "passages.jsonl"):
                 section_id = next((sid for page, sid in reversed(section_ids)
