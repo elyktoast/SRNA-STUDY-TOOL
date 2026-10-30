@@ -71,7 +71,7 @@ def validate(folder):
         raise ValueError("Manifest passage count mismatch")
     if count == 0:
         raise ValueError("No searchable passages extracted; OCR or manual review required")
-    # PDF bookmarks are provisional section boundaries, not verified print citations.
+    low_pages = manifest.get("low_text_pages")\n    if (not isinstance(low_pages, list) or any(type(p) is not int or p < 1 or p > page_count for p in low_pages)\n            or len(set(low_pages)) != len(low_pages)\n            or manifest["requires_ocr_review"] != bool(low_pages)):\n        raise ValueError("Invalid low-text page metadata")\n    # PDF bookmarks are provisional section boundaries, not verified print citations.
     sections_path = folder / "sections.jsonl"
     sections = list(read_jsonl(sections_path)) if sections_path.exists() else []
     if type(manifest.get("section_count", 0)) is not int or len(sections) != manifest.get("section_count", 0):
@@ -103,16 +103,16 @@ def import_passages(folder, manifest, connection):
         with connection.cursor() as cur:
             cur.execute(
                 """insert into source_library_staging.textbooks
-                   (owner_uid,r2_key,filename,file_size_bytes,status,page_count)
-                   values (%s,%s,%s,%s,'indexing',%s)
+                   (owner_uid,r2_key,filename,file_size_bytes,status,page_count,requires_ocr_review,low_text_page_count)
+                   values (%s,%s,%s,%s,'indexing',%s,%s,%s)
                    on conflict (r2_key) do update
                    set filename=excluded.filename,file_size_bytes=excluded.file_size_bytes,
-                       page_count=excluded.page_count,status='indexing',error_message=null,
+                       page_count=excluded.page_count,requires_ocr_review=excluded.requires_ocr_review,\n                       low_text_page_count=excluded.low_text_page_count,status='indexing',error_message=null,
                        updated_at=now()
                    where source_library_staging.textbooks.owner_uid=excluded.owner_uid
                    returning id""",
                 (manifest["owner_uid"], manifest["r2_key"], manifest["filename"],
-                 manifest["size_bytes"], manifest["pdf_page_count"]),
+                 manifest["size_bytes"], manifest["pdf_page_count"],\n                 manifest["requires_ocr_review"], len(manifest.get("low_text_pages", []))),
             )
             row = cur.fetchone()
             if row is None:
