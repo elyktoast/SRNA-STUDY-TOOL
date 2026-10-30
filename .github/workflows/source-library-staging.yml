@@ -28,6 +28,11 @@ on:
       - 'scripts/test-source-library-staging-live.mjs'
       - '.github/workflows/source-library-staging.yml'
   workflow_dispatch:
+    inputs:
+      run_live_smoke:
+        description: 'Run deployed staging smoke test'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -63,5 +68,5 @@ jobs:
       - name: Repository validation
         run: npm run validate
       - name: Live Cloudflare staging Worker smoke test (read-only, manual)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true
         run: node scripts/test-source-library-staging-live.mjs
