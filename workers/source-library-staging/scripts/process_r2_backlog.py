@@ -88,6 +88,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
     excluded = ready_keys if not force_reindex else None
     skipped = 0
     pending = []
+    seen = set()
     # Scan once: count only valid ready objects and select up to limit pending PDFs.
     paginator = client.get_paginator("list_objects_v2")
     for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
@@ -99,9 +100,12 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
                                         PurePosixPath(key).name, re.I)
                     or PurePosixPath(key).name in (".pdf", "..pdf")):
                 continue
+            if key in seen:
+                continue
+            seen.add(key)
             if excluded and key in excluded:
                 skipped += 1
-            elif len(pending) < limit and key not in pending:
+            elif len(pending) < limit:
                 pending.append(key)
     for key in pending:
         try:
