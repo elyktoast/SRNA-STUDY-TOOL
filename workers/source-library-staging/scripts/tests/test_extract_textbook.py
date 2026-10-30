@@ -114,6 +114,7 @@ class ExtractorTests(unittest.TestCase):
             "pdf_page": 3, "characters": 0, "has_images": False,
             "ocr_improved": False, "ocr_failed": False,
             "review_category": "blank_candidate_review",
+            "image_placement_count": 0, "image_coverage_upper_bound": 0.0,
         }])
         self.assertFalse(result["citation_verified"])
 
