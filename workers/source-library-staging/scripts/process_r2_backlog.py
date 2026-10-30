@@ -99,6 +99,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--r2-key", help="Process exactly one owner-scoped PDF")
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
     parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
@@ -133,8 +134,35 @@ def main():
                 assert_staging_schema_ready(conn)
             if not args.force_reindex:
                 ready = indexed_keys(conn, args.owner_uid)
-    summary = process_backlog(client, args.owner_uid, args.limit,
-                              args.apply, ready, args.force_reindex, args.ocr)
+    if args.r2_key is not None:
+        key = args.r2_key
+        if (not isinstance(key, str) or key.count("/") != 1
+                or not key.startswith(args.owner_uid + "/")
+                or ".." in key
+                or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+                                    PurePosixPath(key).name, re.I)):
+            parser.error("Invalid owner-scoped PDF key")
+        if ready is not None and key in ready and not args.force_reindex:
+            summary = {"mode": "apply" if args.apply else "dry-run", "results": [],
+                       "succeeded": 0, "failed": 0, "skipped": 1}
+        else:
+            try:
+                result = run(args.owner_uid, key, apply=args.apply, client=client, ocr=args.ocr)
+                summary = {"mode": "apply" if args.apply else "dry-run",
+                           "results": [{"key": key, "ok": True,
+                                        "result": {"indexed": result.get("indexed"),
+                                                   "passages": result.get("passages"),
+                                                   "pdf_pages": result.get("pdf_pages"),
+                                                   "citation_verified": False}}],
+                           "succeeded": 1, "failed": 0, "skipped": 0}
+            except Exception as exc:
+                summary = {"mode": "apply" if args.apply else "dry-run",
+                           "results": [{"key": key, "ok": False,
+                                        "error_type": type(exc).__name__}],
+                           "succeeded": 0, "failed": 1, "skipped": 0}
+    else:
+        summary = process_backlog(client, args.owner_uid, args.limit,
+                                  args.apply, ready, args.force_reindex, args.ocr)
     print(json.dumps(summary, indent=2))
     if summary["failed"]:
         raise SystemExit(1)
