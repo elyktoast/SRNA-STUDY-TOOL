@@ -3,7 +3,7 @@
 
 Requires: pip install 'psycopg[binary]'
 Usage:
-  DATABASE_URL=... python import_extraction.py ./extracted --dry-run
+  python import_extraction.py ./extracted --dry-run
   DATABASE_URL=... python import_extraction.py ./extracted --apply
 
 Only server-side operators with explicit staging database credentials should run this.
@@ -54,6 +54,8 @@ def validate(folder):
         count += 1
     if count != manifest.get("passage_count"):
         raise ValueError("Manifest passage count mismatch")
+    if count == 0:
+        raise ValueError("No searchable passages extracted; OCR or manual review required")
     return manifest
 
 
