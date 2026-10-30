@@ -16,11 +16,12 @@ from process_r2_textbook import BUCKET, fetch_r2
 from propose_chapters import propose
 from propose_layout_chapters import propose_layout
 from chapter_review import review_groups, public_review_summary
+from chapter_review_export import write_local_review
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
 
-def audit(owner_uid, key, client, ocr=False):
+def audit(owner_uid, key, client, ocr=False, local_review_html=None):
     if not OWNER_RE.fullmatch(owner_uid):
         raise ValueError("Invalid owner UUID")
     if not isinstance(key, str) or not key.startswith(owner_uid + "/") or not re.fullmatch(
@@ -36,7 +37,12 @@ def audit(owner_uid, key, client, ocr=False):
         with (root / "extracted" / "pages.jsonl").open(encoding="utf-8") as handle:
             candidates = propose(json.loads(line) for line in handle if line.strip())
         layout = propose_layout(pdf)
-        review = public_review_summary(review_groups(candidates, layout))
+        groups = review_groups(candidates, layout)
+        review = public_review_summary(groups)
+        if local_review_html is not None:
+            if os.environ.get('GITHUB_ACTIONS') == 'true':
+                raise ValueError('Local review export is prohibited in GitHub Actions')
+            write_local_review(groups, Path(key).name, local_review_html)
         return {"status": "review_only", "pdf_pages": manifest["pdf_page_count"],
                 "candidate_count": len(candidates),
                 "layout_candidate_count": len(layout),
@@ -50,13 +56,14 @@ def main():
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--r2-key", required=True)
     parser.add_argument("--ocr", action="store_true")
+    parser.add_argument("--local-review-html", help="Local-only HTML; forbidden in GitHub Actions")
     args = parser.parse_args()
     import boto3
     client = boto3.client(
         "s3", endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
         aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto")
-    print(json.dumps(audit(args.owner_uid, args.r2_key, client, args.ocr), indent=2))
+    print(json.dumps(audit(args.owner_uid, args.r2_key, client, args.ocr, args.local_review_html), indent=2))
 
 
 if __name__ == "__main__":
