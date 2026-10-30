@@ -21,7 +21,7 @@ class ImportValidationTests(unittest.TestCase):
             "schema_version": 1, "status": "extracted_not_indexed",
             "citation_verified": False, "owner_uid": self.owner,
             "r2_key": self.owner + "/sample.pdf", "filename": "sample.pdf",
-            "size_bytes": 1024, "pdf_page_count": 2,
+            "size_bytes": 1024, "sha256": "a" * 64, "pdf_page_count": 2,
             "passage_count": 2, "requires_ocr_review": False,
         }
         self.passages = [
@@ -60,6 +60,12 @@ class ImportValidationTests(unittest.TestCase):
         self.manifest["citation_verified"] = True
         self.write()
         with self.assertRaisesRegex(ValueError, "citation verification"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_digest(self):
+        del self.manifest["sha256"]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
             module.validate(self.folder)
 
     def test_rejects_empty_extraction(self):
