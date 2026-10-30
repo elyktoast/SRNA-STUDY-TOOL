@@ -1,0 +1,38 @@
+name: Source Library staging chapter audit (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      owner_uid:
+        description: 'Staging owner UUID'
+        required: true
+        type: string
+      r2_key:
+        description: 'Owner-scoped R2 PDF key'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  audit:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          python -m pip install 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Read-only chapter proposal audit
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          OWNER_UID: ${{ inputs.owner_uid }}
+          R2_KEY: ${{ inputs.r2_key }}
+        run: |
+          python workers/source-library-staging/scripts/review_r2_chapters.py --owner-uid "$OWNER_UID" --r2-key "$R2_KEY"
