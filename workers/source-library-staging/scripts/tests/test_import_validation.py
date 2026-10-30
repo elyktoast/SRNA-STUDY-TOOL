@@ -62,6 +62,19 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "citation verification"):
             module.validate(self.folder)
 
+    def test_rejects_nonhex_digest(self):
+        self.manifest["sha256"] = "z" * 64
+        self.write()
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            module.validate(self.folder)
+
+    def test_rejects_malformed_owner(self):
+        self.manifest["owner_uid"] = "not-a-uuid"
+        self.manifest["r2_key"] = "not-a-uuid/sample.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "owner/key"):
+            module.validate(self.folder)
+
     def test_rejects_missing_digest(self):
         del self.manifest["sha256"]
         self.write()
