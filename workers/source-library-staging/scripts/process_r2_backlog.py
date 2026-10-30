@@ -85,6 +85,14 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
         raise ValueError("--force-reindex requires --apply")
     results = []
     excluded = ready_keys if not force_reindex else None
+    skipped = 0
+    if excluded:
+        # Only count matching R2 objects, not stale database records.
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
+            for item in page.get("Contents", []):
+                if item.get("Key") in excluded:
+                    skipped += 1
     for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
         try:
             result = run(owner_uid, key, apply=apply, client=client, ocr=ocr)
@@ -104,7 +112,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
     return {"mode": "apply" if apply else "dry-run", "results": results,
             "succeeded": sum(bool(x["ok"]) and not x.get("skipped") for x in results),
             "failed": sum(not x["ok"] for x in results),
-            "skipped": sum(x.get("skipped") == "already_ready" for x in results)}
+            "skipped": skipped}
 
 
 def main():
