@@ -54,6 +54,29 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("intubation", rows[0]["content"])
         self.assertIn("Volatile", rows[1]["content"])
 
+    def test_bookmark_hierarchy_survives_complete_dry_run(self):
+        import fitz
+        document = fitz.open(self.pdf)
+        document.set_toc([[1, "Airway", 1], [2, "Tube confirmation", 1],
+                          [1, "Pharmacology", 2]])
+        source = self.folder / "chaptered.pdf"
+        document.save(source)
+        document.close()
+        out = self.folder / "chapter-index"
+        result = module.process(source, out, self.owner,
+                                self.owner + "/chaptered.pdf")
+        self.assertEqual(result["passages"], 2)
+        from import_extraction import validate
+        manifest = validate(out)
+        self.assertEqual(manifest["section_count"], 3)
+        sections = [json.loads(line) for line in
+                    (out / "sections.jsonl").read_text(encoding="utf-8").splitlines()]
+        self.assertEqual([(s["level"], s["start_page"]) for s in sections],
+                         [(1, 1), (2, 1), (1, 2)])
+        self.assertEqual([s["heading"] for s in sections],
+                         ["Airway", "Tube confirmation", "Pharmacology"])
+        self.assertFalse(manifest["citation_verified"])
+
     def test_r2_digest_mismatch_rejected_before_database_import(self):
         with patch.object(module, "import_passages") as importer:
             with self.assertRaisesRegex(ValueError, "differs from original R2"):
