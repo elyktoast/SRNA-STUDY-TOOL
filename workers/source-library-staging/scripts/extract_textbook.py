@@ -75,11 +75,28 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                     review_category = 'short_text_review'
                 else:
                     review_category = 'blank_candidate_review'
+                # Use actual page placements rather than intrinsic image dimensions.
+                # A small logo should not be mistaken for a full-page scan.
+                page_area = max(0.0, float(pdf_page.rect.get_area()))
+                image_rects = []
+                for image_info in pdf_page.get_images(full=True):
+                    try:
+                        image_rects.extend(pdf_page.get_image_rects(image_info[0]))
+                    except (ValueError, RuntimeError):
+                        pass
+                # Sum of visible placements is an upper bound (overlaps may
+                # double count); never interpret it as exact union coverage.
+                visible_area = sum(max(0.0, float((rect & pdf_page.rect).get_area()))
+                                   for rect in image_rects)
+                image_coverage_upper_bound = (round(min(1.0, visible_area / page_area), 3)
+                                              if page_area else 0.0)
                 low_text_details.append({'pdf_page':page,'characters':len(text),
                                          'has_images':has_images,
                                          'ocr_improved':page in ocr_pages,
                                          'ocr_failed':page in ocr_failures,
-                                         'review_category':review_category})
+                                         'review_category':review_category,
+                                         'image_placement_count':len(image_rects),
+                                         'image_coverage_upper_bound':image_coverage_upper_bound})
             # Image presence is a review signal, not proof that OCR is needed.
             if pdf_page.get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
