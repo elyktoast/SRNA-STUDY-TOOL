@@ -72,7 +72,7 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, out, self.owner,
                                 self.owner + "/scanned.pdf", ocr=True)
         self.assertTrue(result["ocr_attempted"])
-        self.assertEqual(result["ocr_pages"], [1])
+        self.assertEqual(result["ocr_pages"], [1], msg=f"OCR metadata: {result}")
         self.assertEqual(result["low_text_pages"], [])
         passages = (out / "passages.jsonl").read_text(encoding="utf-8")
         self.assertIn("AIRWAY", passages.upper())
