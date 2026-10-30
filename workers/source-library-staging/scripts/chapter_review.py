@@ -5,6 +5,8 @@ Grouping is not deduplication: all source candidates remain visible in the
 returned review groups. No textbook content is logged by the R2 audit.
 """
 import re
+import hashlib
+import json
 
 def normalize_heading(heading):
     return re.sub(r"[^a-z0-9]+", " ", heading.casefold()).strip()
@@ -41,3 +43,14 @@ def public_review_summary(groups):
             "review_group_page_ranges": [[g["first_page"], g["last_page"]] for g in groups],
             "groups_with_both_detectors": sum(len(g["detectors"]) == 2 for g in groups),
             "review_required": True, "sections_approved": 0}
+
+def review_fingerprint(groups):
+    """Bind decisions to exact detected candidates, not mutable group numbers."""
+    evidence = [
+        {"first_page": g["first_page"], "last_page": g["last_page"],
+         "candidates": [{"pdf_page": c["pdf_page"], "heading": c["heading"],
+                         "detector": c["detector"]} for c in g["candidates"]]}
+        for g in groups
+    ]
+    canonical = json.dumps(evidence, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
