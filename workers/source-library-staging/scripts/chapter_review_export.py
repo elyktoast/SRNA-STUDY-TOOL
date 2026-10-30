@@ -45,6 +45,8 @@ def write_local_review(groups, pdf_name, destination):
     destination = Path(destination)
     if destination.exists():
         raise FileExistsError("Refusing to overwrite an existing review")
+    payload = render_review_html(groups, pdf_name)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(render_review_html(groups, pdf_name), encoding="utf-8")
+    with destination.open('x', encoding='utf-8') as handle:
+        handle.write(payload)
     return destination
