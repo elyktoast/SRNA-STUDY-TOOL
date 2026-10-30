@@ -42,3 +42,7 @@ Before running an import with `apply=true`, apply `migrations/003_source_version
 ## Background indexing status
 
 Automatic upload-triggered indexing is **not implemented**. The manual workflow is the supported staging path until a separately approved staging scheduler or queue runner exists. A scheduled workflow in an unmerged branch cannot provide background processing. Do not set an auto-index flag expecting it to work.
+
+## Target a specific uploaded PDF
+
+The manual indexing workflow accepts optional `r2_key`, the exact owner-scoped object path returned by the staging uploader. With `r2_key` set, the indexer processes only that PDF, not the next item in the backlog. Leave it blank to scan pending objects. Use `apply=false` first; set `apply=true` only after the staging schema migration preflight and dry-run review. Ready textbooks are skipped unless intentionally forced for reindexing. This is not an automatic upload trigger.
