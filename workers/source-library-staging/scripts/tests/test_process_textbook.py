@@ -54,6 +54,13 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("intubation", rows[0]["content"])
         self.assertIn("Volatile", rows[1]["content"])
 
+    def test_r2_digest_mismatch_rejected_before_database_import(self):
+        with patch.object(module, "import_passages") as importer:
+            with self.assertRaisesRegex(ValueError, "differs from original R2"):
+                module.process(self.pdf, self.folder / "index", self.owner, self.key,
+                               apply=True, expected_sha256="0" * 64)
+            importer.assert_not_called()
+
     def test_source_mutation_after_extraction_is_rejected(self):
         original_extract = module.extract
 
