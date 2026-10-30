@@ -1,0 +1,41 @@
+(()=>{'use strict';
+const status=document.getElementById('status'),app=document.getElementById('app'),summary=document.getElementById('summary'),exportButton=document.getElementById('export');
+let draft=null;
+function validate(payload){
+ if(!payload||payload.schema_version!==2||!/^[a-f0-9]{64}$/.test(payload.review_fingerprint)||!Array.isArray(payload.decisions)||!payload.decisions.length||payload.decisions.length>1000)throw Error('Invalid or unsupported review draft');
+ const choices=new Set(['Needs review','Chapter','Subsection','Reject']);
+ for(let i=0;i<payload.decisions.length;i++){
+  const d=payload.decisions[i];
+  if(!d||d.group!==i+1||!choices.has(d.decision)||typeof d.notes!=='string'||d.notes.length>2000)throw Error('Invalid or out-of-order review decision at group '+(i+1));
+ }
+ return payload;
+}
+async function boot(){
+ if(location.hostname!=='staging.srnastudytool.com'||!window.MBUSourceMaterialStagingStorage){status.textContent='This page is available only in staging.';return;}
+ try{
+  // The staging Worker checks the live Supabase user and explicit admin UID allowlist.
+  await window.MBUSourceMaterialStagingStorage.list();
+  app.hidden=false;status.textContent='Staging admin access verified. Local drafts only.';
+ }catch(e){status.textContent='Access denied: '+e.message;}
+}
+document.getElementById('decisions').addEventListener('change',async e=>{
+ draft=null;exportButton.disabled=true;summary.textContent='';
+ const file=e.target.files?.[0];if(!file)return;
+ if(file.size>250000){summary.textContent='Draft exceeds size limit.';return;}
+ try{
+  const data=validate(JSON.parse(await file.text()));draft=data;
+  const counts={};for(const d of data.decisions)counts[d.decision]=(counts[d.decision]||0)+1;
+  summary.textContent='Validated draft structure: '+data.decisions.length+' groups; '+Object.entries(counts).map(([k,v])=>k+': '+v).join(', ')+'. Fingerprint and group correspondence must still be checked against source candidates before approval.';
+  exportButton.disabled=false;
+ }catch(e){summary.textContent='Rejected: '+e.message;}
+});
+document.getElementById('packet').addEventListener('change',e=>{
+ const f=e.target.files?.[0];if(f)status.textContent='Selected local review packet: '+f.name+'. Open it locally to inspect headings; this page does not execute or upload HTML.';
+});
+exportButton.addEventListener('click',()=>{
+ if(!draft)return;
+ const blob=new Blob([JSON.stringify(draft,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+ const a=document.createElement('a');a.href=url;a.download='chapter-review-validated-draft.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+boot();
+})();
