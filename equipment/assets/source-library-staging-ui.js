@@ -7,7 +7,7 @@ style.textContent=`#staging-source-launch{position:fixed;right:18px;bottom:18px;
 document.head.append(style);
 const launch=document.createElement('button');launch.id='staging-source-launch';launch.type='button';launch.textContent='Source Library (Staging)';
 const dialog=document.createElement('dialog');dialog.id='staging-source-dialog';
-dialog.innerHTML='<div class="sl-body"><div class="sl-head"><h2>Source Library · Staging</h2><button type="button" id="sl-close" aria-label="Close">Close</button></div><p class="sl-muted">Private staging PDF storage. Maximum 20 MiB per file. No textbook indexing yet.</p><div class="sl-row"><input type="file" id="sl-file" accept=".pdf,application/pdf" aria-label="Choose PDF"><button type="button" id="sl-upload">Upload PDF</button><button type="button" id="sl-refresh">Refresh</button></div><p id="sl-status" role="status" aria-live="polite"></p><div id="sl-list"></div></div>';
+dialog.innerHTML='<div class="sl-body"><div class="sl-head"><h2>Source Library · Staging</h2><button type="button" id="sl-close" aria-label="Close">Close</button></div><p class="sl-muted">Private staging PDF storage. Maximum 300 MiB per file. No textbook indexing yet.</p><div class="sl-row"><input type="file" id="sl-file" accept=".pdf,application/pdf" aria-label="Choose PDF"><button type="button" id="sl-upload">Upload PDF</button><button type="button" id="sl-refresh">Refresh</button></div><p id="sl-status" role="status" aria-live="polite"></p><div id="sl-list"></div></div>';
 document.body.append(launch,dialog);
 const el=id=>dialog.querySelector('#'+id), status=el('sl-status'), list=el('sl-list'), file=el('sl-file');
 let busy=false;
@@ -19,5 +19,5 @@ launch.onclick=()=>{dialog.showModal();run(async()=>{await refresh();message('Li
 el('sl-close').onclick=()=>dialog.close();
 dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
 el('sl-refresh').onclick=()=>run(async()=>{await refresh();message('Library refreshed.');});
-el('sl-upload').onclick=()=>run(async()=>{const f=file.files?.[0];if(!f)throw Error('Choose a PDF first.');if(!f.name.toLowerCase().endsWith('.pdf')||f.type&&f.type!=='application/pdf')throw Error('Choose a PDF file.');if(f.size>20*1024*1024)throw Error('PDF exceeds 20 MiB limit.');message('Uploading…');await storage.save(f);file.value='';await refresh();message('PDF uploaded successfully.');});
+el('sl-upload').onclick=()=>run(async()=>{const f=file.files?.[0];if(!f)throw Error('Choose a PDF first.');if(!f.name.toLowerCase().endsWith('.pdf')||f.type&&f.type!=='application/pdf')throw Error('Choose a PDF file.');if(f.size>300*1024*1024)throw Error('PDF exceeds 300 MiB limit.');message('Uploading…');await storage.save(f);file.value='';await refresh();message('PDF uploaded successfully.');});
 })();
