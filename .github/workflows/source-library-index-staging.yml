@@ -69,8 +69,12 @@ jobs:
           TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
         run: |
           set -euo pipefail
-          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
-          if [[ "$APPLY" == "true" ]]; then test -n "$DATABASE_URL"; fi
+          if [[ -z "$R2_ACCOUNT_ID" || -z "$R2_ACCESS_KEY_ID" || -z "$R2_SECRET_ACCESS_KEY" ]]; then
+            echo 'Missing staging R2 environment secrets'; exit 1
+          fi
+          if [[ "$APPLY" == "true" && -z "$DATABASE_URL" ]]; then
+            echo "Missing staging database environment secret"; exit 1
+          fi
           args=(--owner-uid "$OWNER_UID" --limit "$LIMIT")
           if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
           if [[ "$OCR" == "true" ]]; then args+=(--ocr); fi
