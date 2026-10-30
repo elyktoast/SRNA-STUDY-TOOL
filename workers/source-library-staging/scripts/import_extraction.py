@@ -147,6 +147,21 @@ def import_passages(folder, manifest, connection):
                     (existing[0],))
                 prior = cur.fetchone()
                 validate_source_replacement(True, prior[0] if prior else None, manifest["sha256"])
+            # Serialize imports of identical content for the same owner.
+            cur.execute(
+                """select pg_advisory_xact_lock(
+                     hashtextextended(%s, 0))""",
+                (manifest["owner_uid"] + ":" + manifest["sha256"],))
+            cur.execute(
+                """select r2_key from source_library_staging.source_versions
+                   where owner_uid=%s and source_sha256=%s and r2_key<>%s
+                   limit 1""",
+                (manifest["owner_uid"], manifest["sha256"], manifest["r2_key"]))
+            duplicate = cur.fetchone()
+            if duplicate is not None:
+                raise ValueError(
+                    "Duplicate textbook content already indexed under another R2 key"
+                )
             cur.execute(
                 """insert into source_library_staging.textbooks
                    (owner_uid,r2_key,filename,file_size_bytes,status,page_count,requires_ocr_review,low_text_page_count)
