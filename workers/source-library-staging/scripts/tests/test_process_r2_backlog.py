@@ -279,6 +279,8 @@ class BacklogTests(unittest.TestCase):
         self.assertIn('"requires_ocr_review": result.get("requires_ocr_review")', source)
         self.assertIn('"ocr_pages_count": len(result.get("ocr_pages", []))', source)
         self.assertIn('"ocr_failed_pages_count": len(result.get("ocr_failed_pages", []))', source)
+        self.assertIn('"ocr_pages": result.get("ocr_pages", [])', source)
+        self.assertIn('"ocr_failed_pages": result.get("ocr_failed_pages", [])', source)
 
     def test_default_dry_run_and_error_isolation(self):
         def fake_run(owner, key, apply, client, ocr=False):
