@@ -65,6 +65,22 @@ class R2RunnerTests(unittest.TestCase):
         self.assertFalse(result["indexed"])
         self.assertEqual(result["r2_sha256"], __import__("hashlib").sha256(payload).hexdigest())
 
+    def test_rejects_changed_download_before_processing(self):
+        payload = b"%PDF-1.7 fake contents"
+        client = FakeR2(payload)
+        original_fetch = module.fetch_r2
+
+        def corrupted_fetch(path, owner, key, r2_client):
+            result = original_fetch(path, owner, key, r2_client)
+            path.write_bytes(b"%PDF-1.7 tampered contents")
+            return result
+
+        with patch.object(module, "fetch_r2", side_effect=corrupted_fetch):
+            with patch.object(module, "process") as processor:
+                with self.assertRaisesRegex(ValueError, "changed before extraction"):
+                    module.run(self.owner, self.key, apply=True, client=client)
+                processor.assert_not_called()
+
     def test_runner_preserves_pdf_filename(self):
         payload = b"%PDF-1.7 fake contents"
         with patch.object(module, "process", return_value={"passages": 1, "indexed": False}) as process:
