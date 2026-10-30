@@ -62,6 +62,18 @@ def assert_staging_schema_ready(conn):
             raise RuntimeError("Staging indexing schema incomplete; apply migrations 001-003 first")
 
 
+
+def validate_target_key(key, owner_uid):
+    """Validate an exact R2 key without listing or reading another owner's files."""
+    if (not isinstance(key, str) or key.count("/") != 1
+            or not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid)
+            or not key.startswith(owner_uid + "/") or ".." in key
+            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+                                PurePosixPath(key).name, re.I)):
+        raise ValueError("Invalid owner-scoped PDF key")
+    return key
+
+
 def process_backlog(client, owner_uid, limit=20, apply=False,
                     ready_keys=None, force_reindex=False, ocr=False):
     # Fail fast on invalid inputs even when no R2 objects are returned.
@@ -136,12 +148,10 @@ def main():
                 ready = indexed_keys(conn, args.owner_uid)
     if args.r2_key is not None:
         key = args.r2_key
-        if (not isinstance(key, str) or key.count("/") != 1
-                or not key.startswith(args.owner_uid + "/")
-                or ".." in key
-                or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
-                                    PurePosixPath(key).name, re.I)):
-            parser.error("Invalid owner-scoped PDF key")
+        try:
+            validate_target_key(key, args.owner_uid)
+        except ValueError as exc:
+            parser.error(str(exc))
         if ready is not None and key in ready and not args.force_reindex:
             summary = {"mode": "apply" if args.apply else "dry-run", "results": [],
                        "succeeded": 0, "failed": 0, "skipped": 1}
