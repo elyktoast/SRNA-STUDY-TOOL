@@ -113,6 +113,8 @@ def main():
         parser.error("--force-reindex requires --apply")
     if args.apply and not os.environ.get("DATABASE_URL"):
         parser.error("DATABASE_URL required for --apply")
+    if args.apply and args.force_reindex and args.limit > 10:
+        parser.error("Forced reindex batch is limited to 10 textbooks")
     import boto3
     client = boto3.client(
         "s3", endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
