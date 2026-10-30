@@ -140,6 +140,24 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bookmark section"):
             module.validate(self.folder)
 
+    def test_rejects_boolean_file_size(self):
+        self.manifest["size_bytes"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "PDF size"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_passage_count(self):
+        self.manifest["passage_count"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_section_count(self):
+        self.manifest["section_count"] = False
+        self.write()
+        with self.assertRaisesRegex(ValueError, "section count mismatch"):
+            module.validate(self.folder)
+
     def test_rejects_cross_owner_key(self):
         self.manifest["r2_key"] = "other/sample.pdf"
         self.write()
