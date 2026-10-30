@@ -17,7 +17,17 @@ async function check(path, origin) {
   const text = await response.text();
   let body;
   try { body = JSON.parse(text); }
-  catch { throw new Error(`Non-JSON staging response (HTTP ${response.status})`); }
+  catch {
+    const diagnostic = {
+      status: response.status,
+      contentType: response.headers.get('content-type'),
+      server: response.headers.get('server'),
+      cfRay: response.headers.get('cf-ray'),
+      challenge: response.headers.get('cf-mitigated'),
+      html: /<!doctype html|<html/i.test(text.slice(0, 300)),
+    };
+    throw new Error(`Non-JSON staging response: ${JSON.stringify(diagnostic)}`);
+  }
   return {response, body};
 }
 
