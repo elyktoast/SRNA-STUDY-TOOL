@@ -66,6 +66,7 @@ def validate(folder):
     sections = list(read_jsonl(sections_path)) if sections_path.exists() else []
     if len(sections) != manifest.get("section_count", 0):
         raise ValueError("Manifest section count mismatch")
+    previous_page = 0
     for section in sections:
         page = section.get("start_page")
         if (not isinstance(page, int) or isinstance(page, bool)
@@ -76,6 +77,9 @@ def validate(folder):
                 or not isinstance(section.get("level"), int)
                 or not 1 <= section["level"] <= 32):
             raise ValueError("Invalid PDF bookmark section")
+        if page < previous_page:
+            raise ValueError("PDF bookmark sections must be ordered by page")
+        previous_page = page
     return manifest
 
 
