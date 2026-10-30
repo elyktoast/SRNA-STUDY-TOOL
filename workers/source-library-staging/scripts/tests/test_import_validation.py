@@ -38,6 +38,31 @@ class ImportValidationTests(unittest.TestCase):
     def test_valid(self):
         self.assertEqual(module.validate(self.folder)["passage_count"], 2)
 
+    def test_valid_bookmark_sections(self):
+        self.manifest["section_count"] = 2
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            "".join(json.dumps(s) + "\n" for s in [
+                {"level": 1, "heading": "Airway", "start_page": 1, "source": "pdf_bookmark"},
+                {"level": 1, "heading": "Pharmacology", "start_page": 2, "source": "pdf_bookmark"},
+            ]), encoding="utf-8")
+        self.assertEqual(module.validate(self.folder)["section_count"], 2)
+
+    def test_rejects_section_outside_pdf(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            json.dumps({"level": 1, "heading": "Invalid", "start_page": 3,
+                        "source": "pdf_bookmark"}) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Invalid PDF bookmark section"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_section_records(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        with self.assertRaisesRegex(ValueError, "section count mismatch"):
+            module.validate(self.folder)
+
     def test_rejects_mismatched_count(self):
         self.manifest["passage_count"] = 3
         self.write()
