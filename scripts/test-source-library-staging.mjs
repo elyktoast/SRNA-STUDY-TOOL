@@ -9,7 +9,8 @@ const objects=new Map();
 const env={STAGING_ONLY:'true',ALLOWED_ORIGIN:origin,SUPABASE_URL:'https://staging-auth.example',SUPABASE_ANON_KEY:'test-public-key',ADMIN_USER_IDS:uid,TEXTBOOKS:{
  async list({prefix}){return {objects:[...objects].filter(([key])=>key.startsWith(prefix)).map(([key,v])=>({key,size:v.length,uploaded:new Date(),customMetadata:{name:'test.pdf'}})),truncated:false}},
  async put(key,body){objects.set(key,new Uint8Array(body))},
- async get(key){const v=objects.get(key);return v?{body:v}:null},
+ async get(key){const v=objects.get(key);return v?{body:v,text:async()=>new TextDecoder().decode(v)}:null},
+ async head(key){return objects.has(key)?{key}:null},
  async delete(key){objects.delete(key)}
 }};
 const previousFetch=globalThis.fetch;
@@ -48,3 +49,30 @@ test('uploads, lists, downloads and deletes user-owned PDF',async()=>{
 });
 test('fails closed when staging configuration is missing',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin}}),{...env,TEXTBOOKS:undefined});assert.equal(r.status,503)});
 test.after(()=>{globalThis.fetch=previousFetch});
+
+test('saves, loads and deletes an unapproved owner-scoped review draft',async()=>{
+ const pdf=uid+'/chapter-review-test.pdf';
+ objects.set(pdf,new TextEncoder().encode('%PDF-1.4'));
+ const path='/chapter-reviews/draft?path='+encodeURIComponent(pdf);
+ const payload={schema_version:2,review_fingerprint:'a'.repeat(64),decisions:[{group:1,decision:'Chapter',notes:'reviewed'}]};
+ const saved=await request(path,'PUT',{'content-type':'application/json'},JSON.stringify(payload));
+ assert.equal(saved.status,200);
+ assert.equal((await saved.json()).approved,false);
+ const loaded=await request(path);
+ assert.equal(loaded.status,200);
+ assert.deepEqual(await loaded.json(),payload);
+ const listed=await request('/materials');
+ assert.ok(!(await listed.json()).items.some(x=>x.path.includes('_review_drafts')));
+ const removed=await request(path,'DELETE');
+ assert.equal(removed.status,200);
+ assert.equal((await request(path)).status,404);
+ objects.delete(pdf);
+});
+test('rejects foreign owner and invalid review drafts',async()=>{
+ const pdf=uid+'/invalid-review-test.pdf';objects.set(pdf,new TextEncoder().encode('%PDF-1.4'));
+ const foreign=await request('/chapter-reviews/draft?path=00000000-0000-4000-8000-000000000000%2Ffile.pdf','PUT',{},'{}');
+ assert.equal(foreign.status,400);
+ const invalid=await request('/chapter-reviews/draft?path='+encodeURIComponent(pdf),'PUT',{'content-type':'application/json'},JSON.stringify({schema_version:2,review_fingerprint:'a'.repeat(64),decisions:[{group:2,decision:'Chapter',notes:''}]}));
+ assert.equal(invalid.status,400);
+ objects.delete(pdf);
+});
