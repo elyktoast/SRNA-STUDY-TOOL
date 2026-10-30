@@ -188,6 +188,10 @@ def main():
                                         "result": {"indexed": result.get("indexed"),
                                                    "passages": result.get("passages"),
                                                    "pdf_pages": result.get("pdf_pages"),
+                                                   "source_sha256": result.get("source_sha256"),
+                                                   "requires_ocr_review": result.get("requires_ocr_review"),
+                                                   "ocr_pages_count": len(result.get("ocr_pages", [])),
+                                                   "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
                                                    "citation_verified": False}}],
                            "succeeded": 1, "failed": 0, "skipped": 0}
             except Exception as exc:
