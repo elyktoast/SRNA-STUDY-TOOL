@@ -272,6 +272,14 @@ class BacklogTests(unittest.TestCase):
         self.assertNotIn("private-credential", str(summary))
         self.assertNotIn("private textbook passage", str(summary))
 
+    def test_targeted_dry_run_reports_digest_and_ocr_counts(self):
+        # Ensure the explicit-key result remains useful for provenance/OCR review.
+        source = (ROOT / "process_r2_backlog.py").read_text()
+        self.assertIn('"source_sha256": result.get("source_sha256")', source)
+        self.assertIn('"requires_ocr_review": result.get("requires_ocr_review")', source)
+        self.assertIn('"ocr_pages_count": len(result.get("ocr_pages", []))', source)
+        self.assertIn('"ocr_failed_pages_count": len(result.get("ocr_failed_pages", []))', source)
+
     def test_default_dry_run_and_error_isolation(self):
         def fake_run(owner, key, apply, client, ocr=False):
             if key.endswith("two.pdf"):
