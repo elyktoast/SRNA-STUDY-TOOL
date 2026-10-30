@@ -44,7 +44,8 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
         response["Body"].close()
     if received != size:
         raise ValueError("Incomplete R2 download")
-    return {"size_bytes": received, "sha256": digest.hexdigest()}
+    return {"size_bytes": received, "sha256": digest.hexdigest(),
+            "original_name": head.get("Metadata", {}).get("name")}
 
 
 def run(owner_uid, key, apply=False, client=None):
@@ -63,6 +64,14 @@ def run(owner_uid, key, apply=False, client=None):
         # The object key is untrusted: discard directory components.
         source = root / Path(key).name
         expected = fetch_r2(source, owner_uid, key, client)
+        # Prefer the original upload filename stored in R2 metadata. Never trust
+        # metadata as a path, and keep the source bytes inside this temp folder.
+        name = expected.get("original_name")
+        if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf", name, re.I):
+            if name != source.name:
+                renamed = root / name
+                source.rename(renamed)
+                source = renamed
         result = process(source, root / "index", owner_uid, key, apply=apply)
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
