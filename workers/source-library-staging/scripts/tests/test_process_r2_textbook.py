@@ -90,6 +90,13 @@ class R2RunnerTests(unittest.TestCase):
             processor.call_args.kwargs["expected_sha256"],
             hashlib.sha256(payload).hexdigest())
 
+    def test_runner_rejects_unsafe_key_before_download(self):
+        client = FakeR2(b"%PDF-1.7")
+        with patch.object(module, "fetch_r2") as downloader:
+            with self.assertRaisesRegex(ValueError, "PDF key"):
+                module.run(self.owner, self.owner + "/unsafe name.pdf", client=client)
+            downloader.assert_not_called()
+
     def test_runner_preserves_pdf_filename(self):
         payload = b"%PDF-1.7 fake contents"
         with patch.object(module, "process", return_value={"passages": 1, "indexed": False}) as process:
