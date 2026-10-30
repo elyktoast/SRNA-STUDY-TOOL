@@ -79,7 +79,7 @@ def run(owner_uid, key, apply=False, client=None):
             local_digest = hashlib.file_digest(handle, "sha256").hexdigest()
         if local_digest != expected["sha256"]:
             raise ValueError("Downloaded PDF changed before extraction")
-        result = process(source, root / "index", owner_uid, key, apply=apply)
+        result = process(source, root / "index", owner_uid, key, apply=apply,\n                         expected_sha256=expected["sha256"])
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
         result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
