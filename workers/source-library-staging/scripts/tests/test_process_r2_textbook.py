@@ -97,6 +97,11 @@ class R2RunnerTests(unittest.TestCase):
                 module.run(self.owner, self.owner + "/unsafe name.pdf", client=client)
             downloader.assert_not_called()
 
+    def test_invalid_key_rejected_before_credentials(self):
+        with patch.dict("os.environ", {}, clear=True):
+            with self.assertRaisesRegex(ValueError, "PDF key"):
+                module.run(self.owner, self.owner + "/unsafe name.pdf")
+
     def test_runner_preserves_pdf_filename(self):
         payload = b"%PDF-1.7 fake contents"
         with patch.object(module, "process", return_value={"passages": 1, "indexed": False}) as process:
