@@ -134,6 +134,11 @@ def import_passages(folder, manifest, connection):
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
         with connection.cursor() as cur:
+            # Serialize even first-time imports of the same R2 key, before row creation.
+            # Row locks alone cannot protect a textbook that does not exist yet.
+            cur.execute(
+                "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
+                ("r2:" + manifest["owner_uid"] + ":" + manifest["r2_key"],))
             # Lock the existing textbook row before changing any index state.
             # A legacy record without a fingerprint must be reviewed, not guessed.
             cur.execute(
