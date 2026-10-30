@@ -26,6 +26,15 @@ test('rejects a non-allowlisted token through configured Supabase identity endpo
 });
 test('rejects anonymous identity even if allowlisted',async()=>{const r=await request('/materials','GET',{authorization:'Bearer anonymous'});assert.equal(r.status,403)});
 test('requires admin allowlist',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin,authorization:'Bearer valid'}}),{...env,ADMIN_USER_IDS:'00000000-0000-4000-8000-000000000000'});assert.equal(r.status,403)});
+test('accepts additional staging admin without removing original admin',async()=>{
+ const second='c003287a-10ce-4cc9-926e-ef7c3a162a26';
+ const old=globalThis.fetch;
+ globalThis.fetch=async()=>new Response(JSON.stringify({id:second}),{status:200,headers:{'content-type':'application/json'}});
+ try {
+  const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin,authorization:'Bearer valid'}}),{...env,ADDITIONAL_ADMIN_USER_IDS:second});
+  assert.equal(r.status,200);
+ } finally {globalThis.fetch=old;}
+});
 test('rejects non-PDF upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'not a pdf');assert.equal(r.status,415)});
 test('rejects oversized upload',async()=>{const r=await request('/materials','POST',{'content-type':'application/pdf'},'%PDF-'+'.'.repeat(20*1024*1024));assert.equal(r.status,413)});
 test('uploads, lists, downloads and deletes user-owned PDF',async()=>{
