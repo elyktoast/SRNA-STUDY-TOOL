@@ -2,6 +2,13 @@
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store',...headers}});
 const WORKER_VERSION='multipart-upload-id-validation-v3';
 const MAX_BYTES=20*1024*1024;
+const MAX_REVIEW_BYTES=256*1024;
+function validReviewDraft(d){
+ if(!d||d.schema_version!==2||typeof d.review_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(d.review_fingerprint)||!Array.isArray(d.decisions)||!d.decisions.length||d.decisions.length>1000)return false;
+ const allowed=new Set(['Needs review','Chapter','Subsection','Reject']);
+ return d.decisions.every((x,i)=>x&&Object.keys(x).every(k=>['group','decision','notes'].includes(k))&&Object.keys(x).length===3&&x.group===i+1&&allowed.has(x.decision)&&typeof x.notes==='string'&&x.notes.length<=2000);
+}
+
 const PART_BYTES=8*1024*1024;
 const MAX_LARGE_BYTES=300*1024*1024;
 // R2 multipart upload IDs are opaque; do not assume URL-safe base64 or a fixed length.
@@ -32,6 +39,32 @@ export default {async fetch(request,env){
  if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,environment:'staging',version:WORKER_VERSION},200,h);
  let uid;try{uid=await identity(request,env)}catch{return json({error:'Authentication unavailable'},503,h);}
  if(!uid)return json({error:'Forbidden'},403,h);
+ // Owner-scoped staging review drafts. R2 persistence is NOT chapter approval.
+ if(url.pathname==='/chapter-reviews/draft'&&['GET','PUT','DELETE'].includes(request.method)){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const draftKey=uid+'/_review_drafts/'+key.slice(uid.length+1)+'.json';
+   if(request.method==='GET'){
+     const saved=await env.TEXTBOOKS.get(draftKey);
+     if(!saved)return json({error:'No saved draft'},404,h);
+     const payload=await saved.text();
+     return new Response(payload,{status:200,headers:{...h,'content-type':'application/json','cache-control':'no-store'}});
+   }
+   if(request.method==='DELETE'){
+     await env.TEXTBOOKS.delete(draftKey);
+     return json({ok:true,approved:false},200,h);
+   }
+   const declared=Number(request.headers.get('content-length')||0);
+   if(declared>MAX_REVIEW_BYTES)return json({error:'Review draft too large'},413,h);
+   const raw=await request.text();
+   if(new TextEncoder().encode(raw).byteLength>MAX_REVIEW_BYTES)return json({error:'Review draft too large'},413,h);
+   let draft;try{draft=JSON.parse(raw)}catch{return json({error:'Invalid JSON'},400,h)}
+   if(!validReviewDraft(draft))return json({error:'Invalid review draft'},400,h);
+   // This is only a private, unapproved draft. Fingerprint validation against
+   // current R2 source candidates happens in the trusted approval pipeline.
+   await env.TEXTBOOKS.put(draftKey,JSON.stringify(draft),{httpMetadata:{contentType:'application/json'}});
+   return json({ok:true,saved:true,approved:false,sections_applied:0},200,h);
+ }
  if(url.pathname==='/materials'&&request.method==='GET'){
    const results=await env.TEXTBOOKS.list({prefix:uid+'/',limit:100});
    return json({items:results.objects.map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf'})),truncated:results.truncated},200,h);
