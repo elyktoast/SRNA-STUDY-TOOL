@@ -51,7 +51,7 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, self.base / "image-index",
                                 self.owner, self.owner + "/with_image.pdf")
         self.assertEqual(result["image_pages"], [1])
-        self.assertFalse(result["citation_verified"])
+        self.assertEqual(result["low_text_details"], [])
 
     def test_ocr_recovers_text_from_scanned_page(self):
         import fitz
@@ -97,6 +97,7 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(result["low_text_details"], [{
             "pdf_page": 3, "characters": 0, "has_images": False,
             "ocr_improved": False, "ocr_failed": False,
+            "review_category": "blank_candidate_review",
         }])
         self.assertFalse(result["citation_verified"])
 
