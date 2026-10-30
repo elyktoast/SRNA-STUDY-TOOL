@@ -62,6 +62,13 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "citation verification"):
             module.validate(self.folder)
 
+    def test_rejects_empty_extraction(self):
+        self.passages = []
+        self.manifest["passage_count"] = 0
+        self.write()
+        with self.assertRaisesRegex(ValueError, "No searchable passages"):
+            module.validate(self.folder)
+
     def test_rejects_cross_owner_key(self):
         self.manifest["r2_key"] = "other/sample.pdf"
         self.write()
