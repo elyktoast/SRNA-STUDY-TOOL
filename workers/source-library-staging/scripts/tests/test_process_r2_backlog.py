@@ -32,6 +32,21 @@ class Client:
 
 
 class BacklogTests(unittest.TestCase):
+    def test_exact_pdf_key_accepts_owner_pdf(self):
+        self.assertEqual(module.validate_target_key(OWNER + "/one.pdf", OWNER),
+                         OWNER + "/one.pdf")
+
+    def test_exact_pdf_key_rejects_other_owner_and_traversal(self):
+        invalid = [
+            "other/one.pdf", OWNER + "/../one.pdf",
+            OWNER + "/folder/one.pdf", OWNER + "/notes.txt",
+            OWNER + "/bad name.pdf", OWNER + "/.pdf",
+        ]
+        for key in invalid:
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(ValueError, "owner-scoped"):
+                    module.validate_target_key(key, OWNER)
+
     def test_schema_preflight_requires_source_versions(self):
         class FakeCursor:
             def __enter__(self): return self
