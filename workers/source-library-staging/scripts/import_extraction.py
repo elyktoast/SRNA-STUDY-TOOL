@@ -39,7 +39,7 @@ def validate(folder):
     owner, key = manifest.get("owner_uid"), manifest.get("r2_key")
     filename = manifest.get("filename")
     if (not isinstance(filename, str)
-            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf", filename, re.I)
+            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", filename, re.I)
             or filename in (".pdf", "..pdf")):
         raise ValueError("Invalid source PDF filename")
     if type(manifest.get("requires_ocr_review")) is not bool:
