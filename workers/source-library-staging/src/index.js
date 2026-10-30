@@ -1,5 +1,6 @@
 // Dedicated staging-only Source Library API. Never bind a production bucket here.
 const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store',...headers}});
+const WORKER_VERSION='multipart-diagnostics-v2';
 const MAX_BYTES=20*1024*1024;
 const PART_BYTES=8*1024*1024;
 const MAX_LARGE_BYTES=300*1024*1024;
@@ -28,7 +29,7 @@ export default {async fetch(request,env){
  const h=cors(allowed);
  if(request.method==='OPTIONS')return new Response(null,{status:204,headers:h});
  const url=new URL(request.url);
- if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,environment:'staging'},200,h);
+ if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,environment:'staging',version:WORKER_VERSION},200,h);
  let uid;try{uid=await identity(request,env)}catch{return json({error:'Authentication unavailable'},503,h);}
  if(!uid)return json({error:'Forbidden'},403,h);
  if(url.pathname==='/materials'&&request.method==='GET'){
@@ -67,7 +68,7 @@ export default {async fetch(request,env){
    const action=url.pathname.slice('/materials/multipart/'.length);
    if(!['part','complete','abort'].includes(action))return json({error:'Not found'},404,h);
    const key=url.searchParams.get('path');const uploadId=url.searchParams.get('uploadId');
-   if(!validKey(key,uid)||!validUploadId(uploadId))return json({error:'Invalid upload reference'},400,h);
+   if(!validKey(key,uid)||!validUploadId(uploadId))return json({error:'Invalid upload reference',version:WORKER_VERSION,invalidPath:!validKey(key,uid),invalidUploadId:!validUploadId(uploadId)},400,h);
    const upload=env.TEXTBOOKS.resumeMultipartUpload(key,uploadId);
    if(action==='part'&&request.method==='PUT'){
      const part=Number(url.searchParams.get('part'));
