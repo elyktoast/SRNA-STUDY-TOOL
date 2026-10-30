@@ -61,6 +61,21 @@ def validate(folder):
         raise ValueError("Manifest passage count mismatch")
     if count == 0:
         raise ValueError("No searchable passages extracted; OCR or manual review required")
+    # PDF bookmarks are provisional section boundaries, not verified print citations.
+    sections_path = folder / "sections.jsonl"
+    sections = list(read_jsonl(sections_path)) if sections_path.exists() else []
+    if len(sections) != manifest.get("section_count", 0):
+        raise ValueError("Manifest section count mismatch")
+    for section in sections:
+        page = section.get("start_page")
+        if (not isinstance(page, int) or isinstance(page, bool)
+                or not 1 <= page <= manifest["pdf_page_count"]
+                or not isinstance(section.get("heading"), str)
+                or not section["heading"].strip()
+                or section.get("source") != "pdf_bookmark"
+                or not isinstance(section.get("level"), int)
+                or not 1 <= section["level"] <= 32):
+            raise ValueError("Invalid PDF bookmark section")
     return manifest
 
 
@@ -87,21 +102,36 @@ def import_passages(folder, manifest, connection):
             textbook_id = row[0]
             cur.execute("delete from source_library_staging.passages where textbook_id=%s", (textbook_id,))
             cur.execute("delete from source_library_staging.sections where textbook_id=%s", (textbook_id,))
+            # Import bookmark headings in original order; a page may have
+            # multiple headings. Assign each passage to the most recent heading.
+            section_ids = []
+            sections_path = folder / "sections.jsonl"
+            if sections_path.exists():
+                for order, section in enumerate(read_jsonl(sections_path)):
+                    cur.execute(
+                        """insert into source_library_staging.sections
+                           (textbook_id,heading,section_order,start_page)
+                           values (%s,%s,%s,%s) returning id""",
+                        (textbook_id, section["heading"], order, section["start_page"]),
+                    )
+                    section_ids.append((section["start_page"], cur.fetchone()[0]))
             batch = []
             for item in read_jsonl(folder / "passages.jsonl"):
-                batch.append((textbook_id,item["chunk_index"],item["page_start"],
+                section_id = next((sid for page, sid in reversed(section_ids)
+                                   if page <= item["page_start"]), None)
+                batch.append((textbook_id,section_id,item["chunk_index"],item["page_start"],
                               item["page_end"],item["content"]))
                 if len(batch) >= MAX_BATCH:
                     cur.executemany(
                         """insert into source_library_staging.passages
-                           (textbook_id,chunk_index,page_start,page_end,content)
-                           values (%s,%s,%s,%s,%s)""", batch)
+                           (textbook_id,section_id,chunk_index,page_start,page_end,content)
+                           values (%s,%s,%s,%s,%s,%s)""", batch)
                     batch.clear()
             if batch:
                 cur.executemany(
                     """insert into source_library_staging.passages
-                       (textbook_id,chunk_index,page_start,page_end,content)
-                       values (%s,%s,%s,%s,%s)""", batch)
+                       (textbook_id,section_id,chunk_index,page_start,page_end,content)
+                       values (%s,%s,%s,%s,%s,%s)""", batch)
             # 'ready' means searchable text exists, not verified citations or OCR completeness.
             cur.execute(
                 """update source_library_staging.textbooks
