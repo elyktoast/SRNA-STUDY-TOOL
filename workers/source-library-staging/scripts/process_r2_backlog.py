@@ -148,6 +148,8 @@ def main():
         parser.error("--force-reindex requires --apply")
     if args.apply and not os.environ.get("DATABASE_URL"):
         parser.error("DATABASE_URL required for --apply")
+    if args.apply and args.r2_key is None and args.limit > 10:
+        parser.error("Apply batch is limited to 10 textbooks")
     if args.apply and args.force_reindex and args.r2_key is None and args.limit > 10:
         parser.error("Forced reindex batch is limited to 10 textbooks")
     if args.r2_key is not None:
