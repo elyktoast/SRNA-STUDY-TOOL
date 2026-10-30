@@ -24,13 +24,19 @@ def validate_plan(plan, page_count):
         raise ValueError("Invalid textbook page count")
     previous = 0
     chapter_seen = False
-    previous_kind = None
+    previous_group = 0
     for section in sections:
         if not isinstance(section, dict):
             raise ValueError("Invalid section")
         page = section.get("start_page")
         heading = section.get("heading")
         kind = section.get("kind")
+        group = section.get("group")
+        detector = section.get("detector")
+        if type(group) is not int or group <= previous_group:
+            raise ValueError("Section review groups must be strictly increasing")
+        if detector not in ("text", "layout"):
+            raise ValueError("Unknown chapter detector")
         if type(page) is not int or not previous < page <= page_count:
             raise ValueError("Section pages must be strictly increasing and within PDF")
         if not isinstance(heading, str) or not heading.strip() or len(heading) > 500:
@@ -41,7 +47,7 @@ def validate_plan(plan, page_count):
             raise ValueError("Subsection without parent chapter")
         if kind == "Chapter":
             chapter_seen = True
-        previous_kind = kind
+        previous_group = group
         previous = page
     return sections
 
