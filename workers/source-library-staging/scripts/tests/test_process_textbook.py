@@ -70,6 +70,7 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(result["low_text_details"], [{
             "pdf_page": 3, "characters": 0, "has_images": False,
             "ocr_improved": False, "ocr_failed": False,
+            "review_category": "blank_candidate_review",
         }])
         self.assertFalse(result["indexed"])
 
