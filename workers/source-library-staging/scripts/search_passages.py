@@ -91,7 +91,9 @@ def main():
     parser.add_argument("--textbook-id")
     parser.add_argument("--section-id")
     parser.add_argument("--include-subsections", action="store_true")
-    parser.add_argument("--limit", type=int, default=10)\n    parser.add_argument("--page-start", type=int)\n    parser.add_argument("--page-end", type=int)
+    parser.add_argument("--limit", type=int, default=10)
+    parser.add_argument("--page-start", type=int)
+    parser.add_argument("--page-end", type=int)
     args = parser.parse_args()
     url = os.environ.get("DATABASE_URL")
     if not url:
