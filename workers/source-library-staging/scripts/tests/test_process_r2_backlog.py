@@ -123,10 +123,20 @@ class BacklogTests(unittest.TestCase):
         with patch.object(module, "run", return_value={"indexed": True}) as runner:
             result = module.process_backlog(
                 Client(), OWNER, apply=True, ready_keys={OWNER + "/one.pdf"})
-        self.assertEqual(result["skipped"], 0)
+        self.assertEqual(result["skipped"], 1)
         self.assertEqual(result["succeeded"], 1)
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
+
+    def test_all_ready_is_successful_noop(self):
+        with patch.object(module, "run") as runner:
+            result = module.process_backlog(
+                Client(), OWNER, apply=True,
+                ready_keys={OWNER + "/one.pdf", OWNER + "/two.pdf"})
+        self.assertEqual(result["succeeded"], 0)
+        self.assertEqual(result["failed"], 0)
+        self.assertEqual(result["skipped"], 2)
+        runner.assert_not_called()
 
     def test_dry_run_skips_known_ready_books(self):
         with patch.object(module, "run", return_value={"indexed": False}) as runner:
