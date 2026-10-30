@@ -134,7 +134,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--owner-uid", required=True)
-    parser.add_argument("--limit", type=int, default=20)
+    parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--r2-key", help="Process exactly one owner-scoped PDF")
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
@@ -152,8 +152,6 @@ def main():
         parser.error("DATABASE_URL required for --apply")
     if args.apply and args.r2_key is None and args.limit > 10:
         parser.error("Apply batch is limited to 10 textbooks")
-    if args.apply and args.force_reindex and args.r2_key is None and args.limit > 10:
-        parser.error("Forced reindex batch is limited to 10 textbooks")
     if args.r2_key is not None:
         try:
             validate_target_key(args.r2_key, args.owner_uid)
