@@ -19,10 +19,11 @@ from process_textbook import process
 
 MAX_BYTES = 300 * 1024 * 1024
 BUCKET = "srna-staging-textbooks"
+OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
 
 def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
-    if (not isinstance(owner_uid, str) or not isinstance(key, str)
+    if (not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid) or not isinstance(key, str)
             or key.count("/") != 1 or not key.startswith(owner_uid + "/")
             or ".." in key or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
                                                Path(key).name, re.I)
@@ -55,7 +56,7 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
 
 def run(owner_uid, key, apply=False, client=None, ocr=False):
     # Validate the untrusted key before constructing a local download path.
-    if (not isinstance(owner_uid, str) or not isinstance(key, str)
+    if (not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid) or not isinstance(key, str)
             or key.count("/") != 1 or not key.startswith(owner_uid + "/")
             or ".." in key or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", Path(key).name, re.I)
             or Path(key).name in (".pdf", "..pdf")):
