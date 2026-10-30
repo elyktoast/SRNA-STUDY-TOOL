@@ -139,7 +139,7 @@ def main():
         if (not isinstance(key, str) or key.count("/") != 1
                 or not key.startswith(args.owner_uid + "/")
                 or ".." in key
-                or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+                or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
                                     PurePosixPath(key).name, re.I)):
             parser.error("Invalid owner-scoped PDF key")
         if ready is not None and key in ready and not args.force_reindex:
