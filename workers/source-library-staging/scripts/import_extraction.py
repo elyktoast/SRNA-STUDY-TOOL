@@ -43,15 +43,18 @@ def validate(folder):
         raise ValueError("Invalid source PDF size")
     if not isinstance(owner, str) or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", owner, re.I) or not isinstance(key, str) or not key.startswith(owner + "/") or ".." in key or not key.lower().endswith(".pdf"):
         raise ValueError("Invalid owner/key relationship")
+    page_count = manifest.get("pdf_page_count")
+    if type(page_count) is not int or page_count < 1:
+        raise ValueError("Invalid PDF page count")
     count, last = 0, -1
     for passage in read_jsonl(folder / "passages.jsonl"):
         idx = passage.get("chunk_index")
         start, end = passage.get("page_start"), passage.get("page_end")
-        if not isinstance(idx, int) or idx != last + 1:
+        if type(idx) is not int or idx != last + 1:
             raise ValueError("Passages must have contiguous indexes")
-        if not isinstance(start, int) or not isinstance(end, int) or start < 1 or end < start:
+        if type(start) is not int or type(end) is not int or start < 1 or end < start:
             raise ValueError("Invalid passage page reference")
-        if end > manifest.get("pdf_page_count", 0):
+        if end > page_count:
             raise ValueError("Passage outside document")
         if not isinstance(passage.get("content"), str) or not passage["content"].strip():
             raise ValueError("Empty passage")
@@ -74,7 +77,7 @@ def validate(folder):
                 or not isinstance(section.get("heading"), str)
                 or not section["heading"].strip()
                 or section.get("source") != "pdf_bookmark"
-                or not isinstance(section.get("level"), int)
+                or type(section.get("level")) is not int
                 or not 1 <= section["level"] <= 32):
             raise ValueError("Invalid PDF bookmark section")
         if page < previous_page:
