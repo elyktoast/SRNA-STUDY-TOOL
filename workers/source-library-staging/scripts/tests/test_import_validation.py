@@ -57,6 +57,30 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "low-text page"):
             module.validate(self.folder)
 
+    def test_accepts_image_pages_without_ocr_claim(self):
+        self.manifest["image_pages"] = [1]
+        self.write()
+        self.assertEqual(module.validate(self.folder)["image_pages"], [1])
+        self.assertFalse(module.validate(self.folder)["requires_ocr_review"])
+
+    def test_rejects_image_page_outside_pdf(self):
+        self.manifest["image_pages"] = [3]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
+    def test_rejects_duplicate_image_page(self):
+        self.manifest["image_pages"] = [1, 1]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_image_page(self):
+        self.manifest["image_pages"] = [True]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
     def test_valid_bookmark_sections(self):
         self.manifest["section_count"] = 2
         self.write()
