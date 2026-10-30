@@ -227,6 +227,16 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(result["skipped"], 2)
         runner.assert_not_called()
 
+    def test_explicit_ready_pdf_dry_run_is_read_only(self):
+        # Exact-key dry runs must extract without writing or requiring force.
+        # The CLI's explicit-key condition is intentionally distinct from
+        # backlog scans, which still exclude ready textbooks.
+        source = (ROOT / "process_r2_backlog.py").read_text()
+        self.assertIn(
+            "if args.apply and ready is not None and key in ready and not args.force_reindex:",
+            source,
+        )
+
     def test_dry_run_skips_known_ready_books(self):
         with patch.object(module, "run", return_value={"indexed": False}) as runner:
             result = module.process_backlog(
