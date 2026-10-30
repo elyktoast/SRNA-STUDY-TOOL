@@ -113,6 +113,20 @@ class BacklogTests(unittest.TestCase):
             module.process_backlog(Client(), OWNER, ocr=True)
         self.assertEqual(runner.call_args.kwargs["ocr"], True)
 
+    def test_summary_excludes_private_runner_fields(self):
+        with patch.object(module, "run", return_value={
+            "pdf_pages": 12, "passages": 38, "indexed": False,
+            "ocr_pages": [3], "ocr_failed_pages": [8],
+            "database_url": "postgres://private-credential",
+            "passage_text": "private textbook passage",
+        }):
+            summary = module.process_backlog(Client(), OWNER, limit=1)
+        self.assertEqual(summary["results"][0]["result"]["pdf_pages"], 12)
+        self.assertEqual(summary["results"][0]["result"]["ocr_pages_count"], 1)
+        self.assertEqual(summary["results"][0]["result"]["ocr_failed_pages_count"], 1)
+        self.assertNotIn("private-credential", str(summary))
+        self.assertNotIn("private textbook passage", str(summary))
+
     def test_default_dry_run_and_error_isolation(self):
         def fake_run(owner, key, apply, client, ocr=False):
             if key.endswith("two.pdf"):
