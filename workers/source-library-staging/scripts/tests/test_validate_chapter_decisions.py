@@ -10,7 +10,7 @@ mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 from chapter_review import review_fingerprint
 
-GROUPS = [{"first_page": 20, "last_page": 24}, {"first_page": 65, "last_page": 65}]
+GROUPS = [{"first_page": 20, "last_page": 24, "candidates": [{"pdf_page": 20, "heading": "Chapter One", "detector": "text"}]}, {"first_page": 65, "last_page": 65, "candidates": [{"pdf_page": 65, "heading": "Chapter Two", "detector": "layout"}]}]
 def packet():
     return {"schema_version": 2, "review_fingerprint": review_fingerprint(GROUPS), "decisions": [
         {"group": 1, "decision": "Chapter", "notes": ""},
