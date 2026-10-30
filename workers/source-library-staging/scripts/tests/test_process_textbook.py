@@ -56,6 +56,23 @@ class PipelineTests(unittest.TestCase):
         self.assertIn("intubation", rows[0]["content"])
         self.assertIn("Volatile", rows[1]["content"])
 
+    def test_low_text_details_propagate_through_dry_run(self):
+        import fitz
+        document = fitz.open(self.pdf)
+        document.new_page()
+        source = self.folder / "with_blank.pdf"
+        document.save(source)
+        document.close()
+        out = self.folder / "blank-index"
+        result = module.process(source, out, self.owner,
+                                self.owner + "/with_blank.pdf", apply=False)
+        self.assertEqual(result["low_text_pages"], [3])
+        self.assertEqual(result["low_text_details"], [{
+            "pdf_page": 3, "characters": 0, "has_images": False,
+            "ocr_improved": False, "ocr_failed": False,
+        }])
+        self.assertFalse(result["indexed"])
+
     def test_bookmark_hierarchy_survives_complete_dry_run(self):
         import fitz
         document = fitz.open(self.pdf)
