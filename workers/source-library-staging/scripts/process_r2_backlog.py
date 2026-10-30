@@ -94,7 +94,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
             key = item.get("Key")
             if (not isinstance(key, str) or key.count("/") != 1
                     or not key.startswith(owner_uid + "/") or ".." in key
-                    or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf",
+                    or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf",
                                         PurePosixPath(key).name, re.I)
                     or PurePosixPath(key).name in (".pdf", "..pdf")):
                 continue
