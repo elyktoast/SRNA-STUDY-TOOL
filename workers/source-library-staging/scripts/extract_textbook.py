@@ -21,7 +21,7 @@ def chunks(text,limit=1600,overlap=180):
         if end==len(text):break
         pos=max(pos+1,end-overlap)
 
-def extract(pdf,out,owner_uid,r2_key):
+def extract(pdf,out,owner_uid,r2_key,ocr=False):
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
         raise ValueError('R2 key outside owner PDF prefix')
@@ -37,7 +37,7 @@ def extract(pdf,out,owner_uid,r2_key):
     out.mkdir(parents=True,exist_ok=True)
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
-    total=0;low_text=[];image_pages=[]
+    total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[]
     sections=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
@@ -51,6 +51,15 @@ def extract(pdf,out,owner_uid,r2_key):
         for i in range(page_count):
             page=i+1
             text=re.sub(r'[ \t]+',' ',doc.load_page(i).get_text('text',sort=True).replace('\x00','')).strip()
+            if len(text)<30 and ocr:
+                try:
+                    ocr_page = doc.load_page(i).get_textpage_ocr(language="eng", dpi=200, full=True)
+                    recovered = re.sub(r'[ \\t]+', ' ', doc.load_page(i).get_text('text', textpage=ocr_page, sort=True).replace('\\x00', '')).strip()
+                    if len(recovered)>len(text):
+                        text=recovered
+                        ocr_pages.append(page)
+                except Exception:
+                    ocr_failures.append(page)
             if len(text)<30:low_text.append(page)
             # Image presence is a review signal, not proof that OCR is needed.
             if doc.load_page(i).get_images(full=False): image_pages.append(page)
@@ -62,7 +71,7 @@ def extract(pdf,out,owner_uid,r2_key):
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
-        'low_text_pages':low_text,'image_pages':image_pages,'requires_ocr_review':bool(low_text),
+        'low_text_pages':low_text,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,\n        'ocr_attempted':bool(ocr),'requires_ocr_review':bool(low_text),
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
@@ -72,6 +81,6 @@ if __name__=='__main__':
     p.add_argument('pdf',type=Path)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--owner-uid',required=True)
-    p.add_argument('--r2-key',required=True)
+    p.add_argument('--r2-key',required=True)\n    p.add_argument('--ocr',action='store_true',help='Attempt local Tesseract OCR on low-text pages')
     a=p.parse_args()
-    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key),indent=2))
+    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr),indent=2))
