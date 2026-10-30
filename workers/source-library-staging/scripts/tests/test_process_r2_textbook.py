@@ -49,6 +49,22 @@ class R2RunnerTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / "download.pdf"
 
+    def test_real_pdf_through_fake_r2_to_extraction(self):
+        """Exercise the actual PDF extractor and validation with fake R2 bytes."""
+        import fitz
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text((72, 72), "Airway assessment and intubation safety.")
+        doc.set_toc([[1, "Airway", 1]])
+        payload = doc.tobytes()
+        doc.close()
+        client = FakeR2(payload, metadata={"name": "Anesthesia_Textbook.pdf"})
+        result = module.run(self.owner, self.key, apply=False, client=client)
+        self.assertEqual(result["pdf_pages"], 1)
+        self.assertEqual(result["passages"], 1)
+        self.assertFalse(result["indexed"])
+        self.assertEqual(result["r2_sha256"], __import__("hashlib").sha256(payload).hexdigest())
+
     def test_runner_preserves_pdf_filename(self):
         payload = b"%PDF-1.7 fake contents"
         with patch.object(module, "process", return_value={"passages": 1, "indexed": False}) as process:
