@@ -72,6 +72,12 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, out, self.owner,
                                 self.owner + "/scanned.pdf", ocr=True)
         self.assertTrue(result["ocr_attempted"])
+        if result["ocr_failed_pages"]:
+            with fitz.open(target) as scanned:
+                try:
+                    scanned[0].get_textpage_ocr(language="eng", dpi=200, full=True)
+                except Exception as exc:
+                    self.fail(f"OCR engine failure on synthetic fixture: {type(exc).__name__}: {str(exc)[:300]}")
         self.assertEqual(result["ocr_pages"], [1], msg=f"OCR metadata: {result}")
         self.assertEqual(result["low_text_pages"], [])
         passages = (out / "passages.jsonl").read_text(encoding="utf-8")
