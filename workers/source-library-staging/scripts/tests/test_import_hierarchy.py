@@ -126,6 +126,15 @@ class ImportHierarchyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "invalid start page"):
                 module.import_passages(folder, manifest, out_of_range)
             self.assertFalse(any('delete from' in sql for sql, _ in out_of_range.cur.executed))
+            legacy = Connection()
+            legacy.cur.existing_textbook = True
+            legacy.cur.prior_digest = None
+            with self.assertRaisesRegex(ValueError, "fingerprint is unknown"):
+                module.import_passages(folder, manifest, legacy)
+            self.assertFalse(any(
+                "delete from source_library_staging.passages" in sql
+                for sql, _ in legacy.cur.executed
+            ))
             changed = Connection()
             changed.cur.existing_textbook = True
             changed.cur.prior_digest = 'b' * 64
