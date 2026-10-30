@@ -104,8 +104,13 @@ def main():
         import psycopg
         with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
             ready = indexed_keys(conn, args.owner_uid)
-    print(json.dumps(process_backlog(client, args.owner_uid, args.limit,
-                                     args.apply, ready, args.force_reindex, args.ocr), indent=2))
+    summary = process_backlog(client, args.owner_uid, args.limit,
+                              args.apply, ready, args.force_reindex, args.ocr)
+    print(json.dumps(summary, indent=2))
+    if summary["failed"]:
+        raise SystemExit(1)
+    if args.apply and not summary["succeeded"] and not summary["skipped"]:
+        raise SystemExit("No staging textbooks were indexed")
 
 
 if __name__ == "__main__":
