@@ -35,6 +35,17 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(module.enumerate_keys(Client(), OWNER, 1), [OWNER + "/one.pdf"])
         self.assertEqual(len(module.enumerate_keys(Client(), OWNER)), 2)
 
+    def test_limit_counts_pending_not_ready(self):
+        pending = module.enumerate_keys(
+            Client(), OWNER, limit=1, exclude_keys={OWNER + "/one.pdf"})
+        self.assertEqual(pending, [OWNER + "/two.pdf"])
+
+    def test_all_ready_returns_no_pending(self):
+        pending = module.enumerate_keys(
+            Client(), OWNER, limit=1,
+            exclude_keys={OWNER + "/one.pdf", OWNER + "/two.pdf"})
+        self.assertEqual(pending, [])
+
     def test_invalid_owner_rejected(self):
         with self.assertRaisesRegex(ValueError, "owner UUID"):
             module.enumerate_keys(Client(), "invalid")
@@ -43,7 +54,7 @@ class BacklogTests(unittest.TestCase):
         with patch.object(module, "run", return_value={"indexed": True}) as runner:
             result = module.process_backlog(
                 Client(), OWNER, apply=True, ready_keys={OWNER + "/one.pdf"})
-        self.assertEqual(result["skipped"], 1)
+        self.assertEqual(result["skipped"], 0)
         self.assertEqual(result["succeeded"], 1)
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
