@@ -16,9 +16,9 @@ OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]
 
 
 def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
-    if not OWNER_RE.fullmatch(owner_uid):
+    if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
         raise ValueError("Invalid owner UUID")
-    if not 1 <= limit <= 100:
+    if type(limit) is not int or not 1 <= limit <= 100:
         raise ValueError("Limit must be 1..100")
     keys = []
     exclude_keys = exclude_keys or set()
@@ -26,7 +26,7 @@ def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
     for page in paginator.paginate(Bucket=BUCKET, Prefix=owner_uid + "/"):
         for item in page.get("Contents", []):
             key = item.get("Key", "")
-            if (key.startswith(owner_uid + "/") and key.lower().endswith(".pdf")
+            if (isinstance(key, str) and key.startswith(owner_uid + "/") and key.lower().endswith(".pdf")
                     and ".." not in key and key not in exclude_keys
                     and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", PurePosixPath(key).name, re.I)
                     and PurePosixPath(key).name not in (".pdf", "..pdf")):
@@ -80,6 +80,12 @@ def main():
     parser.add_argument("--force-reindex", action="store_true",
                         help="Reprocess ready textbooks; use only for intentional reindexing")
     args = parser.parse_args()
+    if not OWNER_RE.fullmatch(args.owner_uid):
+        parser.error("Invalid owner UUID")
+    if not 1 <= args.limit <= 100:
+        parser.error("Limit must be 1..100")
+    if args.force_reindex and not args.apply:
+        parser.error("--force-reindex requires --apply")
     import boto3
     client = boto3.client(
         "s3", endpoint_url=f"https://{os.environ['R2_ACCOUNT_ID']}.r2.cloudflarestorage.com",
