@@ -43,6 +43,8 @@ export default {async fetch(request,env){
  if(url.pathname==='/chapter-reviews/draft'&&['GET','PUT','DELETE'].includes(request.method)){
    const key=url.searchParams.get('path');
    if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const source=await env.TEXTBOOKS.head(key);
+   if(!source)return json({error:'Source PDF not found'},404,h);
    const draftKey=uid+'/_review_drafts/'+key.slice(uid.length+1)+'.json';
    if(request.method==='GET'){
      const saved=await env.TEXTBOOKS.get(draftKey);
@@ -67,7 +69,7 @@ export default {async fetch(request,env){
  }
  if(url.pathname==='/materials'&&request.method==='GET'){
    const results=await env.TEXTBOOKS.list({prefix:uid+'/',limit:100});
-   return json({items:results.objects.map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf'})),truncated:results.truncated},200,h);
+   return json({items:results.objects.filter(o=>o.key.toLowerCase().endsWith('.pdf')&&!o.key.includes('/_review_drafts/')).map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf'})),truncated:results.truncated},200,h);
  }
  if(url.pathname==='/materials'&&request.method==='POST'){
    const size=Number(request.headers.get('content-length')||0);
