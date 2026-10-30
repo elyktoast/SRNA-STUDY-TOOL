@@ -120,6 +120,16 @@ def assert_safe_reindex(existing_sections):
         )
 
 
+def validate_source_replacement(exists, prior_digest, incoming_digest):
+    """Fail closed for legacy records and changed source content."""
+    if not exists:
+        return
+    if prior_digest is None:
+        raise ValueError("Reindex blocked: existing source fingerprint is unknown")
+    if prior_digest != incoming_digest:
+        raise ValueError("Reindex blocked: source PDF changed; create a new version")
+
+
 def import_passages(folder, manifest, connection):
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
@@ -136,10 +146,7 @@ def import_passages(folder, manifest, connection):
                        where textbook_id=%s order by recorded_at desc, id desc limit 1""",
                     (existing[0],))
                 prior = cur.fetchone()
-                if prior is None:
-                    raise ValueError("Reindex blocked: existing source fingerprint is unknown")
-                if prior[0] != manifest["sha256"]:
-                    raise ValueError("Reindex blocked: source PDF changed; create a new version")
+                validate_source_replacement(True, prior[0] if prior else None, manifest["sha256"])
             cur.execute(
                 """insert into source_library_staging.textbooks
                    (owner_uid,r2_key,filename,file_size_bytes,status,page_count,requires_ocr_review,low_text_page_count)
