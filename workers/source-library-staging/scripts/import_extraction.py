@@ -37,6 +37,13 @@ def validate(folder):
     if manifest.get("citation_verified") is not False:
         raise ValueError("Extraction must not claim citation verification")
     owner, key = manifest.get("owner_uid"), manifest.get("r2_key")
+    filename = manifest.get("filename")
+    if (not isinstance(filename, str)
+            or not re.fullmatch(r"[A-Za-z0-9._-]{1,150}\\.pdf", filename, re.I)
+            or filename in (".pdf", "..pdf")):
+        raise ValueError("Invalid source PDF filename")
+    if type(manifest.get("requires_ocr_review")) is not bool:
+        raise ValueError("Invalid OCR review flag")
     if not isinstance(manifest.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]):
         raise ValueError("Missing PDF SHA-256 digest")
     if type(manifest.get("size_bytes")) is not int or not 5 <= manifest["size_bytes"] <= 300 * 1024 * 1024:
