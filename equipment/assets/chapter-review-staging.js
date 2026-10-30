@@ -19,7 +19,7 @@ async function boot(){
   // The staging Worker checks the live Supabase user and explicit admin UID allowlist.
   const books=await window.MBUSourceMaterialStagingStorage.list();
   for(const book of books){const option=document.createElement('option');option.value=book.path;option.textContent=book.name;textbook.appendChild(option)}
-  app.hidden=false;status.textContent='Staging admin access verified. Local drafts only.';
+  app.hidden=false;status.textContent='Staging admin access verified. Private drafts are unapproved.';
  }catch(e){status.textContent='Access denied: '+e.message;}
 }
 document.getElementById('decisions').addEventListener('change',async e=>{
