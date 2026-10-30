@@ -77,7 +77,7 @@ export default {async fetch(request,env){
  }
  if(url.pathname==='/materials'&&request.method==='GET'){
    const results=await env.TEXTBOOKS.list({prefix:uid+'/',limit:100});
-   return json({items:results.objects.filter(o=>o.key.toLowerCase().endsWith('.pdf')&&!o.key.includes('/_review_drafts/')).map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf'})),truncated:results.truncated},200,h);
+   return json({items:results.objects.filter(o=>o.key.toLowerCase().endsWith('.pdf')&&!o.key.includes('/_review_drafts/')).map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf',indexStatus:'not_verified',indexStatusLabel:'Index status not yet confirmed',citationVerified:false})),truncated:results.truncated},200,h);
  }
  if(url.pathname==='/materials'&&request.method==='POST'){
    const size=Number(request.headers.get('content-length')||0);
