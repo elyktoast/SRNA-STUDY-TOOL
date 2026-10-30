@@ -7,13 +7,21 @@ Never expose this script or the database credential to student browsers.
 import argparse
 import json
 import os
+import re
+
+UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
 
 def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
            include_subsections=False):
     if not query or not query.strip():
         raise ValueError("Search query required")
-    if not 1 <= limit <= 50:
+    if not isinstance(owner_uid, str) or not UUID_RE.fullmatch(owner_uid):
+        raise ValueError("Invalid owner UUID")
+    for label, value in (("textbook", textbook_id), ("section", section_id)):
+        if value is not None and (not isinstance(value, str) or not UUID_RE.fullmatch(value)):
+            raise ValueError(f"Invalid {label} UUID")
+    if type(limit) is not int or not 1 <= limit <= 50:
         raise ValueError("Limit must be 1..50")
     if include_subsections and not section_id:
         raise ValueError("Section ID required to include subsections")
