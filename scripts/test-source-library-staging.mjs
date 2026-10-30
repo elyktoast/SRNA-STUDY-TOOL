@@ -76,3 +76,19 @@ test('rejects foreign owner and invalid review drafts',async()=>{
  assert.equal(invalid.status,400);
  objects.delete(pdf);
 });
+
+test('rejects oversized streamed review draft without saving',async()=>{
+ const pdf=uid+'/oversized-review-test.pdf';objects.set(pdf,new TextEncoder().encode('%PDF-1.4'));
+ const path='/chapter-reviews/draft?path='+encodeURIComponent(pdf);
+ const before=objects.size;
+ const response=await request(path,'PUT',{'content-type':'application/json'},' '.repeat(256*1024+1));
+ assert.equal(response.status,413);
+ assert.equal(objects.size,before);
+ objects.delete(pdf);
+});
+test('rejects invalid UTF-8 review draft with a client error',async()=>{
+ const pdf=uid+'/invalid-encoding-test.pdf';objects.set(pdf,new TextEncoder().encode('%PDF-1.4'));
+ const response=await request('/chapter-reviews/draft?path='+encodeURIComponent(pdf),'PUT',{'content-type':'application/json'},new Uint8Array([0xff,0xfe]));
+ assert.equal(response.status,400);
+ objects.delete(pdf);
+});
