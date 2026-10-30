@@ -64,10 +64,22 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                     ocr_error_types.append(type(exc).__name__)
             if len(text)<30:
                 low_text.append(page)
+                has_images = bool(pdf_page.get_images(full=False))
+                # Conservative triage: an embedded image is not proof of a scan,
+                # and a zero-character page is not necessarily visually blank.
+                if page in ocr_failures:
+                    review_category = 'ocr_error'
+                elif has_images:
+                    review_category = 'image_content_review'
+                elif text:
+                    review_category = 'short_text_review'
+                else:
+                    review_category = 'blank_candidate_review'
                 low_text_details.append({'pdf_page':page,'characters':len(text),
-                                         'has_images':bool(pdf_page.get_images(full=False)),
+                                         'has_images':has_images,
                                          'ocr_improved':page in ocr_pages,
-                                         'ocr_failed':page in ocr_failures})
+                                         'ocr_failed':page in ocr_failures,
+                                         'review_category':review_category})
             # Image presence is a review signal, not proof that OCR is needed.
             if pdf_page.get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
