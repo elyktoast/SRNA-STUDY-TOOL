@@ -128,6 +128,18 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
 
+    def test_one_listing_pass(self):
+        class CountingClient(Client):
+            calls = 0
+            def get_paginator(self, name):
+                self.calls += 1
+                return super().get_paginator(name)
+        client = CountingClient()
+        with patch.object(module, "run", return_value={"indexed": True}):
+            summary = module.process_backlog(client, OWNER, ready_keys={OWNER + "/one.pdf"})
+        self.assertEqual(client.calls, 1)
+        self.assertEqual(summary["skipped"], 1)
+
     def test_all_ready_is_successful_noop(self):
         with patch.object(module, "run") as runner:
             result = module.process_backlog(
