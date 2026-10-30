@@ -1,0 +1,73 @@
+"""Run: python -m unittest discover -s workers/source-library-staging/scripts/tests -v"""
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location("import_extraction", ROOT / "import_extraction.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+
+class ImportValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.folder = Path(self.tmp.name)
+        self.owner = "895ed357-27c3-4d4b-a98a-77b0de20760c"
+        self.manifest = {
+            "schema_version": 1, "status": "extracted_not_indexed",
+            "citation_verified": False, "owner_uid": self.owner,
+            "r2_key": self.owner + "/sample.pdf", "filename": "sample.pdf",
+            "size_bytes": 1024, "pdf_page_count": 2,
+            "passage_count": 2, "requires_ocr_review": False,
+        }
+        self.passages = [
+            {"chunk_index": 0, "page_start": 1, "page_end": 1, "content": "Airway anatomy"},
+            {"chunk_index": 1, "page_start": 2, "page_end": 2, "content": "Volatile anesthetics"},
+        ]
+        self.write()
+
+    def write(self):
+        (self.folder / "manifest.json").write_text(json.dumps(self.manifest), encoding="utf-8")
+        (self.folder / "passages.jsonl").write_text(
+            "".join(json.dumps(x) + "\n" for x in self.passages), encoding="utf-8")
+
+    def test_valid(self):
+        self.assertEqual(module.validate(self.folder)["passage_count"], 2)
+
+    def test_rejects_mismatched_count(self):
+        self.manifest["passage_count"] = 3
+        self.write()
+        with self.assertRaisesRegex(ValueError, "count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_page_outside_pdf(self):
+        self.passages[1]["page_end"] = 3
+        self.write()
+        with self.assertRaisesRegex(ValueError, "outside document"):
+            module.validate(self.folder)
+
+    def test_rejects_noncontiguous_chunks(self):
+        self.passages[1]["chunk_index"] = 4
+        self.write()
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            module.validate(self.folder)
+
+    def test_rejects_claimed_verified_citations(self):
+        self.manifest["citation_verified"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "citation verification"):
+            module.validate(self.folder)
+
+    def test_rejects_cross_owner_key(self):
+        self.manifest["r2_key"] = "other/sample.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "owner/key"):
+            module.validate(self.folder)
+
+
+if __name__ == "__main__":
+    unittest.main()
