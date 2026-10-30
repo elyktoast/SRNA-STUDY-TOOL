@@ -77,7 +77,8 @@ def run(owner_uid, key, apply=False, client=None, ocr=False):
         # Prefer the original upload filename stored in R2 metadata. Never trust
         # metadata as a path, and keep the source bytes inside this temp folder.
         name = expected.get("original_name")
-        if isinstance(name, str) and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", name, re.I):
+        if (isinstance(name, str) and name not in (".pdf", "..pdf")
+                and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", name, re.I)):
             if name != source.name:
                 renamed = root / name
                 source.rename(renamed)
