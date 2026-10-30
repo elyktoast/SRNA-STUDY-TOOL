@@ -143,6 +143,22 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(runner.call_count, 1)
         self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
 
+    def test_duplicate_r2_listing_keys_processed_only_once(self):
+        class RepeatingClient:
+            def get_paginator(self, name):
+                class P:
+                    def paginate(self, **kwargs):
+                        yield {"Contents": [{"Key": OWNER + "/one.pdf"}]}
+                        yield {"Contents": [
+                            {"Key": OWNER + "/one.pdf"},
+                            {"Key": OWNER + "/two.pdf"},
+                        ]}
+                return P()
+        with patch.object(module, "run", return_value={"indexed": True}) as runner:
+            result = module.process_backlog(RepeatingClient(), OWNER, limit=3)
+        self.assertEqual(result["succeeded"], 2)
+        self.assertEqual(runner.call_count, 2)
+
     def test_one_listing_pass(self):
         class CountingClient(Client):
             calls = 0
