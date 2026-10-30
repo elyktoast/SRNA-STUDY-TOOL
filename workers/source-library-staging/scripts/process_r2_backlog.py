@@ -47,6 +47,21 @@ def indexed_keys(conn, owner_uid):
         return {row[0] for row in cur.fetchall()}
 
 
+
+def assert_staging_schema_ready(conn):
+    """Fail before PDF extraction if the provenance migration is missing."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """select to_regclass('source_library_staging.textbooks'),
+                      to_regclass('source_library_staging.sections'),
+                      to_regclass('source_library_staging.passages'),
+                      to_regclass('source_library_staging.source_versions')"""
+        )
+        tables = cur.fetchone()
+        if not tables or any(table is None for table in tables):
+            raise RuntimeError("Staging indexing schema incomplete; apply migrations 001-003 first")
+
+
 def process_backlog(client, owner_uid, limit=20, apply=False,
                     ready_keys=None, force_reindex=False, ocr=False):
     # Fail fast on invalid inputs even when no R2 objects are returned.
@@ -112,6 +127,8 @@ def main():
     if not args.force_reindex and os.environ.get("DATABASE_URL"):
         import psycopg
         with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
+            if args.apply:
+                assert_staging_schema_ready(conn)
             ready = indexed_keys(conn, args.owner_uid)
     summary = process_backlog(client, args.owner_uid, args.limit,
                               args.apply, ready, args.force_reindex, args.ocr)
