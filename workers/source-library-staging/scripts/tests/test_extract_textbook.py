@@ -84,6 +84,22 @@ class ExtractorTests(unittest.TestCase):
         passages = (out / "passages.jsonl").read_text(encoding="utf-8")
         self.assertIn("AIRWAY", passages.upper())
 
+    def test_low_text_details_identify_blank_page_without_exposing_content(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        doc.new_page()
+        target = self.base / "blank_tail.pdf"
+        doc.save(target)
+        doc.close()
+        result = module.extract(target, self.base / "blank-index",
+                                self.owner, self.owner + "/blank_tail.pdf")
+        self.assertEqual(result["low_text_pages"], [3])
+        self.assertEqual(result["low_text_details"], [{
+            "pdf_page": 3, "characters": 0, "has_images": False,
+            "ocr_improved": False, "ocr_failed": False,
+        }])
+        self.assertFalse(result["citation_verified"])
+
     def test_pdf_bookmarks_extracted_as_sections(self):
         import fitz
         doc = fitz.open(self.pdf)
