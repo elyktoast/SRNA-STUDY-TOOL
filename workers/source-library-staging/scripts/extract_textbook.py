@@ -44,7 +44,8 @@ def extract(pdf,out,owner_uid,r2_key):
         # Use explicit PDF bookmarks where available; never infer chapter titles
         # from arbitrary text and present them as verified metadata.
         for level, heading, page in doc.get_toc(simple=True):
-            if (type(level) is int and 1 <= level <= 32 and type(page) is int\n                    and 1 <= page <= page_count and str(heading).strip()):
+            if (type(level) is int and 1 <= level <= 32 and type(page) is int
+                    and 1 <= page <= page_count and str(heading).strip()):
                 sections.append({'level':level,'heading':str(heading).strip(),
                                  'start_page':page,'source':'pdf_bookmark'})
         for i in range(page_count):
