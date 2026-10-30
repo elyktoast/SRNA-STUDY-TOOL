@@ -68,6 +68,21 @@ class BacklogTests(unittest.TestCase):
                 module.process_backlog(Client(), OWNER, limit=True)
             runner.assert_not_called()
 
+    def test_malformed_r2_object_key_is_ignored(self):
+        class MalformedClient:
+            def get_paginator(self, name):
+                class P:
+                    def paginate(self, **kwargs):
+                        yield {"Contents": [{"Key": None}, {"Key": 42},
+                                            {"Key": OWNER + "/valid.pdf"}]}
+                return P()
+        self.assertEqual(module.enumerate_keys(MalformedClient(), OWNER),
+                         [OWNER + "/valid.pdf"])
+
+    def test_enumeration_rejects_boolean_limit(self):
+        with self.assertRaisesRegex(ValueError, "Limit"):
+            module.enumerate_keys(Client(), OWNER, True)
+
     def test_ready_books_are_skipped_without_reindex(self):
         with patch.object(module, "run", return_value={"indexed": True}) as runner:
             result = module.process_backlog(
