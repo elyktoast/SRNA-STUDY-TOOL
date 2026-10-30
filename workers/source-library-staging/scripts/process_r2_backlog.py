@@ -101,7 +101,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
                 continue
             if excluded and key in excluded:
                 skipped += 1
-            elif len(pending) < limit:
+            elif len(pending) < limit and key not in pending:
                 pending.append(key)
     for key in pending:
         try:
