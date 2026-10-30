@@ -54,6 +54,14 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual([s["start_page"] for s in sections], [1, 2])
         self.assertTrue(all(s["source"] == "pdf_bookmark" for s in sections))
 
+    def test_unsafe_filename_rejected_before_output(self):
+        unsafe = self.base / "book with spaces.pdf"
+        unsafe.write_bytes(self.pdf.read_bytes())
+        output = self.base / "unsafe-output"
+        with self.assertRaisesRegex(ValueError, "filename"):
+            module.extract(unsafe, output, self.owner, self.owner + "/book.pdf")
+        self.assertFalse(output.exists())
+
     def test_invalid_pdf_signature(self):
         self.pdf.write_bytes(b"not a pdf")
         with self.assertRaisesRegex(ValueError, "signature"):
