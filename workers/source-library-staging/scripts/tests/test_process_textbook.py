@@ -48,8 +48,8 @@ class PipelineTests(unittest.TestCase):
         self.assertFalse(result["indexed"])
         self.assertFalse(result["citation_verified"])
         self.assertRegex(result["source_sha256"], r"^[0-9a-f]{64}$")
-        self.assertEqual(result["source_sha256"], manifest["sha256"])
         manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(result["source_sha256"], manifest["sha256"])
         self.assertEqual(manifest["status"], "extracted_not_indexed")
         rows = [json.loads(line) for line in (out / "passages.jsonl").read_text(encoding="utf-8").splitlines()]
         self.assertEqual([(r["page_start"], r["page_end"]) for r in rows], [(1, 1), (2, 2)])
