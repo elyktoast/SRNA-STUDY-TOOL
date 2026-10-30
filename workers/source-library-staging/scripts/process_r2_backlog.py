@@ -48,7 +48,7 @@ def indexed_keys(conn, owner_uid):
 
 
 def process_backlog(client, owner_uid, limit=20, apply=False,
-                    ready_keys=None, force_reindex=False):
+                    ready_keys=None, force_reindex=False, ocr=False):
     # Fail fast on invalid inputs even when no R2 objects are returned.
     if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
         raise ValueError("Invalid owner UUID")
@@ -60,7 +60,7 @@ def process_backlog(client, owner_uid, limit=20, apply=False,
     excluded = ready_keys if not force_reindex else None
     for key in enumerate_keys(client, owner_uid, limit, exclude_keys=excluded):
         try:
-            result = run(owner_uid, key, apply=apply, client=client)
+            result = run(owner_uid, key, apply=apply, client=client, ocr=ocr)
             results.append({"key": key, "ok": True, "result": result})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
@@ -77,6 +77,7 @@ def main():
     parser.add_argument("--limit", type=int, default=20)
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
+    parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
     parser.add_argument("--force-reindex", action="store_true",
                         help="Reprocess ready textbooks; use only for intentional reindexing")
     args = parser.parse_args()
@@ -104,7 +105,7 @@ def main():
         with psycopg.connect(os.environ["DATABASE_URL"]) as conn:
             ready = indexed_keys(conn, args.owner_uid)
     print(json.dumps(process_backlog(client, args.owner_uid, args.limit,
-                                     args.apply, ready, args.force_reindex), indent=2))
+                                     args.apply, ready, args.force_reindex, args.ocr), indent=2))
 
 
 if __name__ == "__main__":
