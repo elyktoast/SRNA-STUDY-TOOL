@@ -124,6 +124,22 @@ def import_passages(folder, manifest, connection):
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
         with connection.cursor() as cur:
+            # Lock the existing textbook row before changing any index state.
+            # A legacy record without a fingerprint must be reviewed, not guessed.
+            cur.execute(
+                """select id from source_library_staging.textbooks
+                   where r2_key=%s for update""", (manifest["r2_key"],))
+            existing = cur.fetchone()
+            if existing is not None:
+                cur.execute(
+                    """select source_sha256 from source_library_staging.source_versions
+                       where textbook_id=%s order by recorded_at desc, id desc limit 1""",
+                    (existing[0],))
+                prior = cur.fetchone()
+                if prior is None:
+                    raise ValueError("Reindex blocked: existing source fingerprint is unknown")
+                if prior[0] != manifest["sha256"]:
+                    raise ValueError("Reindex blocked: source PDF changed; create a new version")
             cur.execute(
                 """insert into source_library_staging.textbooks
                    (owner_uid,r2_key,filename,file_size_bytes,status,page_count,requires_ocr_review,low_text_page_count)
@@ -143,6 +159,15 @@ def import_passages(folder, manifest, connection):
             if row is None:
                 raise ValueError("Existing textbook belongs to another owner")
             textbook_id = row[0]
+            # Provenance is persisted in the same transaction as the index.
+            # The uniqueness constraint makes repeat imports idempotent.
+            cur.execute(
+                """insert into source_library_staging.source_versions
+                   (textbook_id,owner_uid,source_sha256,file_size_bytes,r2_key)
+                   values (%s,%s,%s,%s,%s)
+                   on conflict (textbook_id,source_sha256) do nothing""",
+                (textbook_id, manifest["owner_uid"], manifest["sha256"],
+                 manifest["size_bytes"], manifest["r2_key"]))
             # Fail closed until approved-section provenance can be reconciled.
             # Reindexing must not silently erase reviewed chapter boundaries.
             cur.execute(
