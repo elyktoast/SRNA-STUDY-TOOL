@@ -50,6 +50,20 @@ class SearchTests(unittest.TestCase):
         module.search(conn, "airway", "owner", textbook_id="book-id", section_id="section-id")
         self.assertEqual(conn.cur.params[-3:], ["book-id", "section-id", 10])
 
+    def test_recursive_chapter_search_scoped_to_owner(self):
+        conn = FakeConnection()
+        module.search(conn, "airway", "owner", section_id="chapter",
+                      include_subsections=True)
+        self.assertIn("with recursive descendants", conn.cur.sql)
+        self.assertIn("child.parent_section_id=parent.id", conn.cur.sql)
+        self.assertIn("t0.owner_uid=%s", conn.cur.sql)
+        self.assertEqual(conn.cur.params, ["airway", "owner", "airway", "chapter", "owner", 10])
+
+    def test_recursive_search_requires_section(self):
+        with self.assertRaisesRegex(ValueError, "Section ID required"):
+            module.search(FakeConnection(), "airway", "owner",
+                          include_subsections=True)
+
     def test_missing_query_rejected(self):
         with self.assertRaisesRegex(ValueError, "query required"):
             module.search(FakeConnection(), " ", "owner")
