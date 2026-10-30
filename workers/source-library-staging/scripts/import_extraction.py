@@ -196,8 +196,9 @@ def import_passages(folder, manifest, connection):
                 """select id,start_page from source_library_staging.sections
                    where textbook_id=%s order by section_order""", (textbook_id,))
             preserved_sections = cur.fetchall()
-            if preserved_sections and any(page is None for _, page in preserved_sections):
-                raise ValueError("Reindex blocked: existing section has no start page")
+            if preserved_sections and any(type(page) is not int or not 1 <= page <= manifest['pdf_page_count'] for _, page in preserved_sections):
+                raise ValueError("Reindex blocked: existing section has invalid start page")
+            preserved_sections.sort(key=lambda item: item[1])
             cur.execute("delete from source_library_staging.passages where textbook_id=%s", (textbook_id,))
             section_ids = [(page, sid) for sid, page in preserved_sections]
             if not preserved_sections:
