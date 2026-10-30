@@ -170,6 +170,18 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "page count"):
             module.validate(self.folder)
 
+    def test_rejects_unsafe_filename(self):
+        self.manifest["filename"] = "../secret.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "filename"):
+            module.validate(self.folder)
+
+    def test_rejects_nonboolean_ocr_flag(self):
+        self.manifest["requires_ocr_review"] = "false"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "OCR review flag"):
+            module.validate(self.folder)
+
     def test_rejects_cross_owner_key(self):
         self.manifest["r2_key"] = "other/sample.pdf"
         self.write()
