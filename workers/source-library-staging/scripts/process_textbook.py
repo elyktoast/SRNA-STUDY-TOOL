@@ -8,6 +8,7 @@ Example:
  python process_textbook.py book.pdf --owner-uid UUID --r2-key UUID/book.pdf --out ./index --apply
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -21,6 +22,12 @@ def process(pdf, out, owner_uid, r2_key, apply=False):
     validated = validate(out)
     if validated["sha256"] != manifest["sha256"]:
         raise ValueError("Extraction manifest changed during validation")
+    # Verify the source bytes again before any database write. A manifest alone
+    # cannot establish that passages came from the current source PDF.
+    with pdf.open("rb") as source:
+        current_sha256 = hashlib.file_digest(source, "sha256").hexdigest()
+    if current_sha256 != validated["sha256"]:
+        raise ValueError("Source PDF changed after extraction; refusing import")
     result = {
         "pdf_pages": validated["pdf_page_count"],
         "passages": validated["passage_count"],
