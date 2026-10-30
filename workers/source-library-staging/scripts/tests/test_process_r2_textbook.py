@@ -172,6 +172,19 @@ class R2RunnerTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "owner-scoped"):
             module.fetch_r2(self.path, self.owner, "someone-else/book.pdf", FakeR2(b"%PDF-"))
 
+    def test_rejects_invalid_owner_uuid_before_r2_request(self):
+        class NeverCall:
+            def head_object(self, **kwargs):
+                raise AssertionError("Unexpected R2 request")
+        with self.assertRaisesRegex(ValueError, "owner-scoped"):
+            module.fetch_r2(self.path, "not-a-uuid",
+                            "not-a-uuid/book.pdf", NeverCall())
+        with patch.object(module, "fetch_r2") as downloader:
+            with self.assertRaisesRegex(ValueError, "PDF key"):
+                module.run("not-a-uuid", "not-a-uuid/book.pdf",
+                           client=FakeR2(b"%PDF-"))
+            downloader.assert_not_called()
+
     def test_rejects_short_download(self):
         client = FakeR2(b"%PDF-1.7", declared=100)
         with self.assertRaisesRegex(ValueError, "Incomplete"):
