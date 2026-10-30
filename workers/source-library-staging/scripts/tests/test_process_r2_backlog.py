@@ -115,6 +115,21 @@ class BacklogTests(unittest.TestCase):
         self.assertEqual(module.enumerate_keys(MalformedClient(), OWNER),
                          [OWNER + "/valid.pdf"])
 
+    def test_enumeration_rejects_nested_pdf_keys(self):
+        class NestedClient:
+            def get_paginator(self, name):
+                class P:
+                    def paginate(self, **kwargs):
+                        yield {"Contents": [
+                            {"Key": OWNER + "/nested/book.pdf"},
+                            {"Key": OWNER + "/valid.pdf"},
+                        ]}
+                return P()
+        self.assertEqual(
+            module.enumerate_keys(NestedClient(), OWNER),
+            [OWNER + "/valid.pdf"],
+        )
+
     def test_enumeration_rejects_boolean_limit(self):
         with self.assertRaisesRegex(ValueError, "Limit"):
             module.enumerate_keys(Client(), OWNER, True)
