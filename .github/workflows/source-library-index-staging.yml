@@ -20,6 +20,11 @@ on:
         required: true
         default: false
         type: boolean
+      force_reindex:
+        description: 'Reindex ready PDFs only when explicitly enabled; use with apply'
+        required: true
+        default: false
+        type: boolean
       ocr:
         description: 'Use Tesseract on image-only or low-text pages'
         required: true
@@ -71,6 +76,7 @@ jobs:
           R2_KEY: ${{ inputs.r2_key }}
           APPLY: ${{ inputs.apply }}
           OCR: ${{ inputs.ocr }}
+          FORCE_REINDEX: ${{ inputs.force_reindex }}
           TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
         run: |
           set -euo pipefail
@@ -84,4 +90,5 @@ jobs:
           if [[ -n "$R2_KEY" ]]; then args+=(--r2-key "$R2_KEY"); fi
           if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
           if [[ "$OCR" == "true" ]]; then args+=(--ocr); fi
+          if [[ "$FORCE_REINDEX" == "true" ]]; then args+=(--force-reindex); fi
           python workers/source-library-staging/scripts/process_r2_backlog.py "${args[@]}"
