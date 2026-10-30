@@ -22,7 +22,7 @@ def audit(owner_uid, key, client, ocr=False):
     if not OWNER_RE.fullmatch(owner_uid):
         raise ValueError("Invalid owner UUID")
     if not isinstance(key, str) or not key.startswith(owner_uid + "/") or not re.fullmatch(
-            r"[A-Za-z0-9._-]{1,150}\\.pdf", Path(key).name, re.I):
+            r"[A-Za-z0-9._-]{1,150}\.pdf", Path(key).name, re.I):
         raise ValueError("Invalid owner-scoped R2 key")
     with tempfile.TemporaryDirectory(prefix="srna-chapter-audit-") as tmp:
         root = Path(tmp)
