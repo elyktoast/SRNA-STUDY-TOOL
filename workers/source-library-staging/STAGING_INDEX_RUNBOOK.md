@@ -46,3 +46,32 @@ Automatic upload-triggered indexing is **not implemented**. The manual workflow 
 ## Target a specific uploaded PDF
 
 The manual indexing workflow accepts optional `r2_key`, the exact owner-scoped object path returned by the staging uploader. With `r2_key` set, the indexer processes only that PDF, not the next item in the backlog. Leave it blank to scan pending objects. Use `apply=false` first; set `apply=true` only after the staging schema migration preflight and dry-run review. Ready textbooks are skipped unless intentionally forced for reindexing. This is not an automatic upload trigger.
+
+## PR #34 branch conflict resolution (staging branch only)
+
+PR #34 is draft and currently conflicts with `main` because the indexing workflow was added independently to both branches. The staging branch's workflow contains the newer `r2_key` and `force_reindex` controls; the explicit staging checkout and `persist-credentials: false` protection from `main` have already been incorporated. The chapter-audit workflow is present on both branches.
+
+Resolve by merging **`main` into `feature/source-library-r2-staging`**, retaining the feature branch's complete `.github/workflows/source-library-index-staging.yml` when Git reports an add/add conflict. Do **not** merge PR #34 into `main` as part of this operation. If any other conflict appears, stop and review it rather than automatically choosing a side.
+
+From a fresh local clone with write access:
+
+```bash
+git fetch origin main feature/source-library-r2-staging
+git switch -c source-library-conflict-fix origin/feature/source-library-r2-staging
+git merge --no-commit --no-ff origin/main
+# If the indexing workflow is conflicted, preserve the staged feature-branch version:
+git checkout --ours -- .github/workflows/source-library-index-staging.yml
+git add .github/workflows/source-library-index-staging.yml
+# Review any remaining unmerged paths before proceeding:
+git diff --name-only --diff-filter=U
+# Only after that command prints nothing:
+git diff --cached --check
+git commit -m "Merge main into staging source-library branch"
+git push origin HEAD:feature/source-library-r2-staging
+```
+
+If the chapter-audit workflow is also conflicted, compare both versions and stage the intended combined file before committing. Do not use `git push --force`, `git reset --hard`, or a PR merge button. Confirm the PR is still draft and unmerged after the push, then review the newly triggered staging checks.
+
+## Live-data safety and verification
+
+The existing staging textbook has 595 passages but no recorded `source_versions` provenance row. Do not use `force_reindex` against it or claim its citations are verified. For end-to-end testing, use a **new, separately uploaded staging-only PDF** and a controlled one-file import, then validate source digest, page references, OCR warnings, owner-scoped search, and resulting provenance before considering automated indexing.
