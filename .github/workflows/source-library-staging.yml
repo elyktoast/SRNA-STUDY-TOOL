@@ -5,6 +5,8 @@ on:
     paths:
       - 'workers/source-library-staging/**'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
       - 'equipment/assets/studio-page.js'
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
@@ -17,6 +19,8 @@ on:
     paths:
       - 'workers/source-library-staging/**'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
       - 'equipment/assets/studio-page.js'
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
