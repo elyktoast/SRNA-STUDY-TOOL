@@ -3,7 +3,7 @@
 import re
 from collections import Counter
 
-NUMBER = re.compile(r"^(?:chapter\\s+)?(?:[0-9]{1,3}|[IVXLCDM]{1,8})(?:[.:-]\\s*|\\s+)", re.I)
+NUMBER = re.compile(r"^(?:chapter\s+)?(?:[0-9]{1,3}|[IVXLCDM]{1,8})(?:[.:-]\s*|\s+)", re.I)
 EXCLUDE = {"contents", "references", "index", "bibliography", "preface", "foreword"}
 def propose_layout(pdf):
     import fitz
