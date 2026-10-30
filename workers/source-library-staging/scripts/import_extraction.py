@@ -39,7 +39,7 @@ def validate(folder):
     owner, key = manifest.get("owner_uid"), manifest.get("r2_key")
     if not isinstance(manifest.get("sha256"), str) or not re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]):
         raise ValueError("Missing PDF SHA-256 digest")
-    if not isinstance(manifest.get("size_bytes"), int) or not 5 <= manifest["size_bytes"] <= 300 * 1024 * 1024:
+    if type(manifest.get("size_bytes")) is not int or not 5 <= manifest["size_bytes"] <= 300 * 1024 * 1024:
         raise ValueError("Invalid source PDF size")
     if not isinstance(owner, str) or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", owner, re.I) or not isinstance(key, str) or not key.startswith(owner + "/") or ".." in key or not key.lower().endswith(".pdf"):
         raise ValueError("Invalid owner/key relationship")
@@ -60,14 +60,14 @@ def validate(folder):
             raise ValueError("Empty passage")
         last = idx
         count += 1
-    if count != manifest.get("passage_count"):
+    if type(manifest.get("passage_count")) is not int or count != manifest["passage_count"]:
         raise ValueError("Manifest passage count mismatch")
     if count == 0:
         raise ValueError("No searchable passages extracted; OCR or manual review required")
     # PDF bookmarks are provisional section boundaries, not verified print citations.
     sections_path = folder / "sections.jsonl"
     sections = list(read_jsonl(sections_path)) if sections_path.exists() else []
-    if len(sections) != manifest.get("section_count", 0):
+    if type(manifest.get("section_count", 0)) is not int or len(sections) != manifest.get("section_count", 0):
         raise ValueError("Manifest section count mismatch")
     previous_page = 0
     for section in sections:
