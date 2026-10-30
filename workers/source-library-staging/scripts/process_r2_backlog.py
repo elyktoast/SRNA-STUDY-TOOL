@@ -177,7 +177,7 @@ def main():
                 ready = indexed_keys(conn, args.owner_uid)
     if args.r2_key is not None:
         key = args.r2_key
-        if ready is not None and key in ready and not args.force_reindex:
+        if args.apply and ready is not None and key in ready and not args.force_reindex:
             summary = {"mode": "apply" if args.apply else "dry-run", "results": [],
                        "succeeded": 0, "failed": 0, "skipped": 1}
         else:
