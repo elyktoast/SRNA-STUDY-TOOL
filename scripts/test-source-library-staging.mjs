@@ -18,9 +18,9 @@ globalThis.fetch=async (url,options)=>{authCalls.push(String(url));return new Re
 function request(path,method='GET',headers={},body){return worker.fetch(new Request('https://staging-worker.example'+path,{method,headers:{origin,authorization:'Bearer valid',...headers},body}),env)}
 test('rejects foreign origins',async()=>{const r=await worker.fetch(new Request('https://staging-worker.example/materials',{headers:{origin:'https://srnastudytool.com'}}),env);assert.equal(r.status,403)});
 test('requires authentication',async()=>{const r=await request('/materials','GET',{authorization:'Bearer invalid'});assert.equal(r.status,403)});
-test('rejects production JWT and validates against staging identity endpoint',async()=>{
+test('rejects a non-allowlisted token through configured Supabase identity endpoint',async()=>{
  const before=authCalls.length;
- const r=await request('/materials','GET',{authorization:'Bearer production-token'});
+ const r=await request('/materials','GET',{authorization:'Bearer unrelated-token'});
  assert.equal(r.status,403);
  assert.deepEqual(authCalls.slice(before),['https://staging-auth.example/auth/v1/user']);
 });
