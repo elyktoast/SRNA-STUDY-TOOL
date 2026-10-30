@@ -87,8 +87,8 @@ class PipelineTests(unittest.TestCase):
     def test_source_mutation_after_extraction_is_rejected(self):
         original_extract = module.extract
 
-        def mutate_source(pdf, out, owner_uid, r2_key):
-            result = original_extract(pdf, out, owner_uid, r2_key)
+        def mutate_source(pdf, out, owner_uid, r2_key, ocr=False):
+            result = original_extract(pdf, out, owner_uid, r2_key, ocr=ocr)
             with pdf.open("ab") as handle:
                 handle.write(b"changed after extraction")
             return result
