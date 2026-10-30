@@ -37,7 +37,7 @@ def extract(pdf,out,owner_uid,r2_key):
     out.mkdir(parents=True,exist_ok=True)
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
-    total=0;low_text=[]
+    total=0;low_text=[];image_pages=[]
     sections=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
@@ -52,6 +52,8 @@ def extract(pdf,out,owner_uid,r2_key):
             page=i+1
             text=re.sub(r'[ \t]+',' ',doc.load_page(i).get_text('text',sort=True).replace('\x00','')).strip()
             if len(text)<30:low_text.append(page)
+            # Image presence is a review signal, not proof that OCR is needed.
+            if doc.load_page(i).get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
@@ -60,7 +62,7 @@ def extract(pdf,out,owner_uid,r2_key):
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
-        'low_text_pages':low_text,'requires_ocr_review':bool(low_text),
+        'low_text_pages':low_text,'image_pages':image_pages,'requires_ocr_review':bool(low_text),
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
