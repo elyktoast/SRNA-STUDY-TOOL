@@ -98,6 +98,16 @@ class BacklogTests(unittest.TestCase):
                 module.process_backlog(Client(), OWNER, force_reindex=True)
             runner.assert_not_called()
 
+    def test_apply_batch_cap_rejected_before_r2_listing(self):
+        class NeverList:
+            def get_paginator(self, name):
+                raise AssertionError("Unexpected R2 listing")
+        with patch.object(module, "run") as runner:
+            with self.assertRaisesRegex(ValueError, "limited to 10"):
+                module.process_backlog(NeverList(), OWNER, limit=11, apply=True)
+            runner.assert_not_called()
+        self.assertEqual(len(module.enumerate_keys(Client(), OWNER, limit=20)), 2)
+
     def test_invalid_limit_rejected_before_processing(self):
         with patch.object(module, "run") as runner:
             with self.assertRaisesRegex(ValueError, "Limit"):
