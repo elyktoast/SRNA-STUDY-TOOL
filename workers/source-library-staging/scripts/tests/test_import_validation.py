@@ -158,6 +158,18 @@ class ImportValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "section count mismatch"):
             module.validate(self.folder)
 
+    def test_rejects_duplicate_page_as_boolean(self):
+        self.passages[1]["page_end"] = False
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page reference"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_page_count(self):
+        del self.manifest["pdf_page_count"]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page count"):
+            module.validate(self.folder)
+
     def test_rejects_cross_owner_key(self):
         self.manifest["r2_key"] = "other/sample.pdf"
         self.write()
