@@ -1,5 +1,7 @@
-name: Source Library staging indexing (manual)
+name: Source Library staging indexing (manual or opt-in scheduled)
 on:
+  schedule:
+    - cron: '*/30 * * * *'
   workflow_dispatch:
     inputs:
       owner_uid:
@@ -28,7 +30,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   index:
-    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging' && (github.event_name != 'schedule' || vars.STAGING_AUTO_INDEX_ENABLED == 'true')
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: source-library-staging
@@ -39,8 +41,8 @@ jobs:
           python-version: '3.12'
       - name: Validate operator inputs
         env:
-          OWNER_UID: ${{ inputs.owner_uid }}
-          LIMIT: ${{ inputs.limit }}
+          OWNER_UID: ${{ github.event_name == 'schedule' && vars.STAGING_INDEX_OWNER_UID || inputs.owner_uid }}
+          LIMIT: ${{ github.event_name == 'schedule' && '2' || inputs.limit }}
         run: |
           python - <<'PY'
           import os, re
@@ -64,8 +66,8 @@ jobs:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           OWNER_UID: ${{ inputs.owner_uid }}
           LIMIT: ${{ inputs.limit }}
-          APPLY: ${{ inputs.apply }}
-          OCR: ${{ inputs.ocr }}
+          APPLY: ${{ github.event_name == 'schedule' && 'true' || inputs.apply }}
+          OCR: ${{ github.event_name == 'schedule' && 'true' || inputs.ocr }}
           TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
         run: |
           set -euo pipefail
