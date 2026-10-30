@@ -22,7 +22,7 @@ class ImportValidationTests(unittest.TestCase):
             "citation_verified": False, "owner_uid": self.owner,
             "r2_key": self.owner + "/sample.pdf", "filename": "sample.pdf",
             "size_bytes": 1024, "sha256": "a" * 64, "pdf_page_count": 2,
-            "passage_count": 2, "requires_ocr_review": False,
+            "passage_count": 2, "requires_ocr_review": False, "low_text_pages": [],
         }
         self.passages = [
             {"chunk_index": 0, "page_start": 1, "page_end": 1, "content": "Airway anatomy"},
@@ -37,6 +37,25 @@ class ImportValidationTests(unittest.TestCase):
 
     def test_valid(self):
         self.assertEqual(module.validate(self.folder)["passage_count"], 2)
+
+    def test_accepts_ocr_review_metadata(self):
+        self.manifest["low_text_pages"] = [2]
+        self.manifest["requires_ocr_review"] = True
+        self.write()
+        self.assertTrue(module.validate(self.folder)["requires_ocr_review"])
+
+    def test_rejects_ocr_flag_mismatch(self):
+        self.manifest["low_text_pages"] = [2]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "low-text page"):
+            module.validate(self.folder)
+
+    def test_rejects_out_of_range_ocr_page(self):
+        self.manifest["low_text_pages"] = [3]
+        self.manifest["requires_ocr_review"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "low-text page"):
+            module.validate(self.folder)
 
     def test_valid_bookmark_sections(self):
         self.manifest["section_count"] = 2
