@@ -40,6 +40,19 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual([p["pdf_page"] for p in pages], [1, 2])
         self.assertIn("Airway", pages[0]["text"])
 
+    def test_image_page_detected_without_claiming_ocr(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 12, 12), False)
+        doc[0].insert_image(fitz.Rect(80, 100, 120, 140), pixmap=pix)
+        target = self.base / "with_image.pdf"
+        doc.save(target)
+        doc.close()
+        result = module.extract(target, self.base / "image-index",
+                                self.owner, self.owner + "/with_image.pdf")
+        self.assertEqual(result["image_pages"], [1])
+        self.assertFalse(result["citation_verified"])
+
     def test_pdf_bookmarks_extracted_as_sections(self):
         import fitz
         doc = fitz.open(self.pdf)
