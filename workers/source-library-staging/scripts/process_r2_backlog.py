@@ -193,7 +193,9 @@ def main():
                                                    "requires_ocr_review": result.get("requires_ocr_review"),
                                                    "low_text_pages": result.get("low_text_pages", []),
                                                    "ocr_pages_count": len(result.get("ocr_pages", [])),
+                                                   "ocr_pages": result.get("ocr_pages", []),
                                                    "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
+                                                   "ocr_failed_pages": result.get("ocr_failed_pages", []),
                                                    "citation_verified": False}}],
                            "succeeded": 1, "failed": 0, "skipped": 0}
             except Exception as exc:
