@@ -24,6 +24,7 @@ def validate_plan(plan, page_count):
         raise ValueError("Invalid textbook page count")
     previous = 0
     chapter_seen = False
+    previous_kind = None
     for section in sections:
         if not isinstance(section, dict):
             raise ValueError("Invalid section")
@@ -40,6 +41,7 @@ def validate_plan(plan, page_count):
             raise ValueError("Subsection without parent chapter")
         if kind == "Chapter":
             chapter_seen = True
+        previous_kind = kind
         previous = page
     return sections
 
