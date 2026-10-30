@@ -138,6 +138,21 @@ class R2RunnerTests(unittest.TestCase):
         self.assertEqual(result["sha256"], hashlib.sha256(payload).hexdigest())
         self.assertTrue(client.body.closed)
 
+    def test_fetch_rejects_nested_owner_key_before_request(self):
+        class NeverCall:
+            def head_object(self, **kwargs):
+                raise AssertionError("Unexpected R2 request")
+        with self.assertRaisesRegex(ValueError, "owner-scoped"):
+            module.fetch_r2(self.path, self.owner,
+                            self.owner + "/nested/book.pdf", NeverCall())
+
+    def test_runner_rejects_nested_owner_key_before_download(self):
+        with patch.object(module, "fetch_r2") as downloader:
+            with self.assertRaisesRegex(ValueError, "PDF key"):
+                module.run(self.owner, self.owner + "/nested/book.pdf",
+                           client=FakeR2(b"%PDF-"))
+            downloader.assert_not_called()
+
     def test_rejects_wrong_owner_before_request(self):
         with self.assertRaisesRegex(ValueError, "owner-scoped"):
             module.fetch_r2(self.path, self.owner, "someone-else/book.pdf", FakeR2(b"%PDF-"))
