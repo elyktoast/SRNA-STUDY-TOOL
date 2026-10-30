@@ -19,6 +19,9 @@ class ExportTests(unittest.TestCase):
         self.assertIn("&lt;script&gt;", output)
         self.assertIn("a&amp;b.pdf", output)
         self.assertIn("Selection does not save", output)
+        self.assertIn("Export review decisions (JSON)", output)
+        self.assertIn("chapter-review-decisions.json", output)
+        self.assertIn("schema_version:1", output)
 
     def test_never_overwrites_existing_review(self):
         with TemporaryDirectory() as temp:
