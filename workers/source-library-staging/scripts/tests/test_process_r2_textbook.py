@@ -48,6 +48,13 @@ class R2RunnerTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.path = Path(self.temp.name) / "download.pdf"
 
+    def test_runner_preserves_pdf_filename(self):
+        payload = b"%PDF-1.7 fake contents"
+        with patch.object(module, "process", return_value={"passages": 1, "indexed": False}) as process:
+            result = module.run(self.owner, self.key, apply=False, client=FakeR2(payload))
+        self.assertEqual(process.call_args.args[0].name, "book.pdf")
+        self.assertEqual(result["r2_key"], self.key)
+
     def test_download_and_hash(self):
         import hashlib
         payload = b"%PDF-1.7 fake contents"
