@@ -1,7 +1,9 @@
 import importlib.util
+import sys
 import unittest
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 path = Path(__file__).resolve().parents[1] / "validate_chapter_decisions.py"
 spec = importlib.util.spec_from_file_location("validate_chapter_decisions", path)
 mod = importlib.util.module_from_spec(spec)
