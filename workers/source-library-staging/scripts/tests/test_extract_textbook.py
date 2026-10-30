@@ -53,6 +53,30 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(result["image_pages"], [1])
         self.assertFalse(result["citation_verified"])
 
+    def test_ocr_recovers_text_from_scanned_page(self):
+        import fitz
+        source = fitz.open()
+        page = source.new_page()
+        pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 600, 160), False)
+        pix.clear_with(255)
+        image_doc = fitz.open()
+        image_page = image_doc.new_page(width=600, height=160)
+        image_page.insert_text((20, 85), "ANESTHESIA AIRWAY SAFETY", fontsize=28)
+        pix = image_page.get_pixmap(matrix=fitz.Matrix(2, 2))
+        page.insert_image(page.rect, pixmap=pix)
+        target = self.base / "scanned.pdf"
+        source.save(target)
+        source.close()
+        image_doc.close()
+        out = self.base / "ocr-index"
+        result = module.extract(target, out, self.owner,
+                                self.owner + "/scanned.pdf", ocr=True)
+        self.assertTrue(result["ocr_attempted"])
+        self.assertEqual(result["ocr_pages"], [1])
+        self.assertEqual(result["low_text_pages"], [])
+        passages = (out / "passages.jsonl").read_text(encoding="utf-8")
+        self.assertIn("AIRWAY", passages.upper())
+
     def test_pdf_bookmarks_extracted_as_sections(self):
         import fitz
         doc = fitz.open(self.pdf)
