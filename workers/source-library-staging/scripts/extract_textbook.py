@@ -50,11 +50,12 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                                  'start_page':page,'source':'pdf_bookmark'})
         for i in range(page_count):
             page=i+1
-            text=re.sub(r'[ \t]+',' ',doc.load_page(i).get_text('text',sort=True).replace('\x00','')).strip()
+            pdf_page=doc.load_page(i)
+            text=re.sub(r'[ \t]+',' ',pdf_page.get_text('text',sort=True).replace('\x00','')).strip()
             if len(text)<30 and ocr:
                 try:
-                    ocr_page = doc.load_page(i).get_textpage_ocr(language="eng", dpi=200, full=True)
-                    recovered = re.sub(r'[ \t]+', ' ', doc.load_page(i).get_text('text', textpage=ocr_page, sort=True).replace('\x00', '')).strip()
+                    ocr_page = pdf_page.get_textpage_ocr(language="eng", dpi=200, full=True)
+                    recovered = re.sub(r'[ \t]+', ' ', pdf_page.get_text('text', textpage=ocr_page, sort=True).replace('\x00', '')).strip()
                     if len(recovered)>len(text):
                         text=recovered
                         ocr_pages.append(page)
@@ -63,7 +64,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                     ocr_error_types.append(type(exc).__name__)
             if len(text)<30:low_text.append(page)
             # Image presence is a review signal, not proof that OCR is needed.
-            if doc.load_page(i).get_images(full=False): image_pages.append(page)
+            if pdf_page.get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
