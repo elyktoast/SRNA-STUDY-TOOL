@@ -42,7 +42,11 @@ jobs:
     timeout-minutes: 30
     environment: source-library-staging
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out staging branch only
+        uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
