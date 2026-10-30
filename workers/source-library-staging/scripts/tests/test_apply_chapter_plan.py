@@ -11,8 +11,8 @@ FINGERPRINT = "a" * 64
 def plan():
     return {"status": "prepared_not_applied", "review_fingerprint": FINGERPRINT,
             "citation_verified": False, "database_written": False,
-            "sections": [{"kind": "Chapter", "heading": "Airway", "start_page": 21},
-                         {"kind": "Subsection", "heading": "Equipment", "start_page": 65}]}
+            "sections": [{"kind": "Chapter", "heading": "Airway", "start_page": 21, "group": 1, "detector": "layout"},
+                         {"kind": "Subsection", "heading": "Equipment", "start_page": 65, "group": 2, "detector": "text"}]}
 
 class FakeCursor:
     def __init__(self, ready=True):
@@ -64,6 +64,12 @@ class ApplyTests(unittest.TestCase):
         p = plan()
         p["sections"][1]["start_page"] = 20
         with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            validate_plan(p, 420)
+
+    def test_repeated_review_group_rejected(self):
+        p = plan()
+        p['sections'][1]['group'] = 1
+        with self.assertRaisesRegex(ValueError, 'groups must be strictly increasing'):
             validate_plan(p, 420)
 
     def test_missing_chapter_rejected(self):
