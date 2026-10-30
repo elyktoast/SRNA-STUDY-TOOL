@@ -109,6 +109,17 @@ def validate(folder):
     return manifest
 
 
+def assert_safe_reindex(existing_sections):
+    """Never replace a sectioned index until provenance-aware migration exists."""
+    if type(existing_sections) is not int or existing_sections < 0:
+        raise ValueError("Invalid existing section count")
+    if existing_sections:
+        raise ValueError(
+            "Reindex blocked: existing chapter sections require preservation "
+            "or explicit review before replacement"
+        )
+
+
 def import_passages(folder, manifest, connection):
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
@@ -138,11 +149,7 @@ def import_passages(folder, manifest, connection):
                 "select count(*) from source_library_staging.sections where textbook_id=%s",
                 (textbook_id,),
             )
-            if cur.fetchone()[0]:
-                raise ValueError(
-                    "Reindex blocked: existing chapter sections require preservation "
-                    "or explicit review before replacement"
-                )
+            assert_safe_reindex(cur.fetchone()[0])
             cur.execute("delete from source_library_staging.passages where textbook_id=%s", (textbook_id,))
             cur.execute("delete from source_library_staging.sections where textbook_id=%s", (textbook_id,))
             # Import bookmark headings in original order; a page may have
