@@ -1,0 +1,77 @@
+name: Source Library staging indexing (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      owner_uid:
+        description: 'Admin owner UUID for staging textbook records'
+        required: true
+        type: string
+      limit:
+        description: 'Maximum staging PDFs to process (1-10)'
+        required: true
+        default: '1'
+        type: string
+      apply:
+        description: 'Write extracted passages to staging Supabase (false = dry run)'
+        required: true
+        default: false
+        type: boolean
+      ocr:
+        description: 'Use Tesseract on image-only or low-text pages'
+        required: true
+        default: true
+        type: boolean
+permissions:
+  contents: read
+concurrency:
+  group: source-library-staging-index
+  cancel-in-progress: false
+jobs:
+  index:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate operator inputs
+        env:
+          OWNER_UID: ${{ inputs.owner_uid }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          python - <<'PY'
+          import os, re
+          owner=os.environ['OWNER_UID']
+          limit=os.environ['LIMIT']
+          if not re.fullmatch(r'[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}',owner,re.I):
+              raise SystemExit('Invalid owner UUID')
+          if not limit.isdecimal() or not 1 <= int(limit) <= 10:
+              raise SystemExit('Limit must be 1..10')
+          PY
+      - name: Install extraction and indexing dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Process owner-scoped staging R2 PDFs
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          OWNER_UID: ${{ inputs.owner_uid }}
+          LIMIT: ${{ inputs.limit }}
+          APPLY: ${{ inputs.apply }}
+          OCR: ${{ inputs.ocr }}
+          TESSDATA_PREFIX: /usr/share/tesseract-ocr/5/tessdata
+        run: |
+          set -euo pipefail
+          test -n "$R2_ACCOUNT_ID" && test -n "$R2_ACCESS_KEY_ID" && test -n "$R2_SECRET_ACCESS_KEY"
+          if [[ "$APPLY" == "true" ]]; then test -n "$DATABASE_URL"; fi
+          args=(--owner-uid "$OWNER_UID" --limit "$LIMIT")
+          if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
+          if [[ "$OCR" == "true" ]]; then args+=(--ocr); fi
+          python workers/source-library-staging/scripts/process_r2_backlog.py "${args[@]}"
