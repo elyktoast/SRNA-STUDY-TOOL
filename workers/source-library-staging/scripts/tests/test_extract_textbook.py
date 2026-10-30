@@ -40,6 +40,20 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual([p["pdf_page"] for p in pages], [1, 2])
         self.assertIn("Airway", pages[0]["text"])
 
+    def test_pdf_bookmarks_extracted_as_sections(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        doc.set_toc([[1, "Airway", 1], [1, "Pharmacology", 2]])
+        doc.save(self.base / "with_toc.pdf")
+        doc.close()
+        result = module.extract(self.base / "with_toc.pdf", self.base / "toc-index",
+                                self.owner, self.owner + "/with_toc.pdf")
+        self.assertEqual(result["section_count"], 2)
+        sections = [json.loads(line) for line in
+                    (self.base / "toc-index" / "sections.jsonl").read_text().splitlines()]
+        self.assertEqual([s["start_page"] for s in sections], [1, 2])
+        self.assertTrue(all(s["source"] == "pdf_bookmark" for s in sections))
+
     def test_invalid_pdf_signature(self):
         self.pdf.write_bytes(b"not a pdf")
         with self.assertRaisesRegex(ValueError, "signature"):
