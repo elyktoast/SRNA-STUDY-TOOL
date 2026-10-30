@@ -28,8 +28,11 @@ def extract(pdf,out,owner_uid,r2_key):
     if not pdf.is_file() or not 5<=pdf.stat().st_size<=MAX_BYTES:raise ValueError('Invalid PDF size')
     with pdf.open('rb') as f:
         if f.read(5)!=b'%PDF-':raise ValueError('Invalid PDF signature')
-    if out.resolve()==pdf.parent.resolve():\n        raise ValueError('Output must be a separate directory')\n    out.mkdir(parents=True,exist_ok=True)
-    with pdf.open('rb') as source:\n        digest=hashlib.file_digest(source,'sha256').hexdigest()
+    if out.resolve()==pdf.parent.resolve():
+        raise ValueError('Output must be a separate directory')
+    out.mkdir(parents=True,exist_ok=True)
+    with pdf.open('rb') as source:
+        digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
