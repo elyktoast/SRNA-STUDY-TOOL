@@ -17,8 +17,8 @@ from extract_textbook import extract
 from import_extraction import import_passages, validate
 
 
-def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None):
-    manifest = extract(pdf, out, owner_uid, r2_key)
+def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False):
+    manifest = extract(pdf, out, owner_uid, r2_key, ocr=ocr)
     validated = validate(out)
     if expected_sha256 is not None and validated["sha256"] != expected_sha256:
         raise ValueError("Extracted PDF digest differs from original R2 download")
@@ -34,6 +34,9 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None):
         "pdf_pages": validated["pdf_page_count"],
         "passages": validated["passage_count"],
         "requires_ocr_review": validated["requires_ocr_review"],
+        "ocr_attempted": validated.get("ocr_attempted", False),
+        "ocr_pages": validated.get("ocr_pages", []),
+        "ocr_failed_pages": validated.get("ocr_failed_pages", []),
         "indexed": False,
         "citation_verified": False,
     }
@@ -54,11 +57,12 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--r2-key", required=True)
+    parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply), indent=2))
+    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply, ocr=args.ocr), indent=2))
 
 
 if __name__ == "__main__":
