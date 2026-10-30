@@ -132,6 +132,17 @@ def import_passages(folder, manifest, connection):
             if row is None:
                 raise ValueError("Existing textbook belongs to another owner")
             textbook_id = row[0]
+            # Fail closed until approved-section provenance can be reconciled.
+            # Reindexing must not silently erase reviewed chapter boundaries.
+            cur.execute(
+                "select count(*) from source_library_staging.sections where textbook_id=%s",
+                (textbook_id,),
+            )
+            if cur.fetchone()[0]:
+                raise ValueError(
+                    "Reindex blocked: existing chapter sections require preservation "
+                    "or explicit review before replacement"
+                )
             cur.execute("delete from source_library_staging.passages where textbook_id=%s", (textbook_id,))
             cur.execute("delete from source_library_staging.sections where textbook_id=%s", (textbook_id,))
             # Import bookmark headings in original order; a page may have
