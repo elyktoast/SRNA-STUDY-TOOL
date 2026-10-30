@@ -82,7 +82,7 @@ class ImportHierarchyTests(unittest.TestCase):
             manifest = {"owner_uid": "895ed357-27c3-4d4b-a98a-77b0de20760c",
                         "r2_key": "895ed357-27c3-4d4b-a98a-77b0de20760c/book.pdf",
                         "filename": "book.pdf", "size_bytes": 1234,
-                        "pdf_page_count": 3}
+                        "pdf_page_count": 3, "requires_ocr_review": False, "low_text_pages": []}
             self.assertEqual(module.import_passages(folder, manifest, conn), "book-id")
             inserts = [params for sql, params in conn.cur.executed
                        if "insert into source_library_staging.sections" in sql]
