@@ -38,7 +38,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[]
-    sections=[]
+    sections=[];low_text_details=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
         # Use explicit PDF bookmarks where available; never infer chapter titles
@@ -62,7 +62,12 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                 except Exception as exc:
                     ocr_failures.append(page)
                     ocr_error_types.append(type(exc).__name__)
-            if len(text)<30:low_text.append(page)
+            if len(text)<30:
+                low_text.append(page)
+                low_text_details.append({'pdf_page':page,'characters':len(text),
+                                         'has_images':bool(pdf_page.get_images(full=False)),
+                                         'ocr_improved':page in ocr_pages,
+                                         'ocr_failed':page in ocr_failures})
             # Image presence is a review signal, not proof that OCR is needed.
             if pdf_page.get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
@@ -73,7 +78,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
-        'low_text_pages':low_text,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,
+        'low_text_pages':low_text,'low_text_details':low_text_details,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,
         'ocr_attempted':bool(ocr),'ocr_error_types':ocr_error_types,'requires_ocr_review':bool(low_text),
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
