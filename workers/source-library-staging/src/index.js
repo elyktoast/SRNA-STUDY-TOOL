@@ -3,7 +3,9 @@ const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{st
 const MAX_BYTES=20*1024*1024;
 const PART_BYTES=8*1024*1024;
 const MAX_LARGE_BYTES=300*1024*1024;
-const uploadIdPattern=/^[a-zA-Z0-9_-]{10,200}$/;
+// R2 multipart upload IDs are opaque; do not assume URL-safe base64 or a fixed length.
+// Query parameters are URL-decoded by URLSearchParams and passed unchanged to R2.
+const validUploadId=id=>typeof id==='string'&&id.length>0&&id.length<=1024&&!/[\\x00-\\x1f\\x7f]/.test(id);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 function cors(origin){return {'access-control-allow-origin':origin,'access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS','access-control-allow-headers':'authorization,content-type,x-file-name','access-control-max-age':'600','vary':'Origin'};}
 function validKey(key,uid){return typeof key==='string'&&key.startsWith(uid+'/')&&key.length<=300&&/^[-a-zA-Z0-9_./]+$/.test(key)&&!key.includes('..')&&!key.includes('//');}
@@ -65,7 +67,7 @@ export default {async fetch(request,env){
    const action=url.pathname.slice('/materials/multipart/'.length);
    if(!['part','complete','abort'].includes(action))return json({error:'Not found'},404,h);
    const key=url.searchParams.get('path');const uploadId=url.searchParams.get('uploadId');
-   if(!validKey(key,uid)||!uploadIdPattern.test(uploadId||''))return json({error:'Invalid upload reference'},400,h);
+   if(!validKey(key,uid)||!validUploadId(uploadId))return json({error:'Invalid upload reference'},400,h);
    const upload=env.TEXTBOOKS.resumeMultipartUpload(key,uploadId);
    if(action==='part'&&request.method==='PUT'){
      const part=Number(url.searchParams.get('part'));
