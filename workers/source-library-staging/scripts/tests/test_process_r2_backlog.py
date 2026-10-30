@@ -39,6 +39,22 @@ class BacklogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "owner UUID"):
             module.enumerate_keys(Client(), "invalid")
 
+    def test_ready_books_are_skipped_without_reindex(self):
+        with patch.object(module, "run", return_value={"indexed": True}) as runner:
+            result = module.process_backlog(
+                Client(), OWNER, apply=True, ready_keys={OWNER + "/one.pdf"})
+        self.assertEqual(result["skipped"], 1)
+        self.assertEqual(runner.call_count, 1)
+        self.assertEqual(runner.call_args.args[1], OWNER + "/two.pdf")
+
+    def test_force_reindex_processes_ready_books(self):
+        with patch.object(module, "run", return_value={"indexed": True}) as runner:
+            result = module.process_backlog(
+                Client(), OWNER, apply=True, ready_keys={OWNER + "/one.pdf"},
+                force_reindex=True)
+        self.assertEqual(result["skipped"], 0)
+        self.assertEqual(runner.call_count, 2)
+
     def test_default_dry_run_and_error_isolation(self):
         def fake_run(owner, key, apply, client):
             if key.endswith("two.pdf"):
