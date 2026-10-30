@@ -11,6 +11,7 @@ async function identity(request,env){
  if(!response.ok)return null;
  const user=await response.json();
  if(!uuid.test(user?.id||''))return null;
+ if(user?.is_anonymous===true)return null;
  const allowed=env.ADMIN_USER_IDS.split(',').map(x=>x.trim().toLowerCase());
  return allowed.includes(user.id.toLowerCase())?user.id:null;
 }
