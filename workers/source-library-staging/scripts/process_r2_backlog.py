@@ -9,6 +9,7 @@ import argparse
 import json
 import os
 import re
+from pathlib import PurePosixPath
 from process_r2_textbook import BUCKET, run
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
@@ -26,7 +27,9 @@ def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
         for item in page.get("Contents", []):
             key = item.get("Key", "")
             if (key.startswith(owner_uid + "/") and key.lower().endswith(".pdf")
-                    and ".." not in key and key not in exclude_keys):
+                    and ".." not in key and key not in exclude_keys
+                    and re.fullmatch(r"[A-Za-z0-9._-]{1,150}\.pdf", PurePosixPath(key).name, re.I)
+                    and PurePosixPath(key).name not in (".pdf", "..pdf")):
                 keys.append(key)
                 if len(keys) >= limit:
                     return keys
