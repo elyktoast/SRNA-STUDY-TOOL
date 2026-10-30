@@ -25,6 +25,10 @@ def extract(pdf,out,owner_uid,r2_key):
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
         raise ValueError('R2 key outside owner PDF prefix')
+    # Reject filenames that the downstream importer cannot accept.
+    # A failed import must not be the first indication of invalid metadata.
+    if not re.fullmatch(r'[A-Za-z0-9._-]{1,150}\.pdf', pdf.name, re.I) or pdf.name in ('.pdf', '..pdf'):
+        raise ValueError('Invalid source PDF filename')
     if not pdf.is_file() or not 5<=pdf.stat().st_size<=MAX_BYTES:raise ValueError('Invalid PDF size')
     with pdf.open('rb') as f:
         if f.read(5)!=b'%PDF-':raise ValueError('Invalid PDF signature')
