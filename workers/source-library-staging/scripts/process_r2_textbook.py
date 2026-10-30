@@ -59,7 +59,7 @@ def run(owner_uid, key, apply=False, client=None):
         )
     with tempfile.TemporaryDirectory(prefix="srna-source-staging-") as tmp:
         root = Path(tmp)
-        source = root / "source.pdf"
+        # Keep the R2 object basename as the indexed filename rather than source.pdf.\n        # The object key is untrusted: discard directory components.\n        source = root / Path(key).name
         expected = fetch_r2(source, owner_uid, key, client)
         result = process(source, root / "index", owner_uid, key, apply=apply)
         if result["passages"] < 1:
