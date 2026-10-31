@@ -68,7 +68,8 @@ def main():
     parser.add_argument("--r2-key", required=True)
     parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
     parser.add_argument("--review-images", action="store_true", help="Generate local visual-review PNGs; do not upload to GitHub")
-    parser.add_argument("--reviewed-page", type=int, action="append", default=[],\n                        help="PDF page manually reviewed against original; repeat per page")
+    parser.add_argument("--reviewed-page", type=int, action="append", default=[],
+                        help="PDF page manually reviewed against original; repeat per page")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
