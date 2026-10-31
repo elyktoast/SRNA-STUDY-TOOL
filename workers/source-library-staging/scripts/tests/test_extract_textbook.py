@@ -90,7 +90,9 @@ class ExtractorTests(unittest.TestCase):
         detail = result["low_text_details"][0]
         self.assertEqual(detail["image_placement_count"], 2)
         self.assertEqual(detail["image_coverage_upper_bound"], 1.0)
-        self.assertEqual(detail["image_coverage_fraction"], 1.0)
+        # PyMuPDF preserves the square source aspect ratio, centering each
+        # 150x150 image within its 150x200 target rectangle.
+        self.assertEqual(detail["image_coverage_fraction"], 0.75)
 
     def test_ocr_recovers_text_from_scanned_page(self):
         import fitz
