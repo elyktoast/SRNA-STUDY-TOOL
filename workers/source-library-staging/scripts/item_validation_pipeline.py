@@ -7,13 +7,14 @@ separate verified integrations; never mark them passed by default.
 import re
 from item_standard_v2 import check
 from item_duplicate_checks import detect
+from item_text_checks import check as text_check
 
 STAGES = ("schema", "deterministic_text", "math", "evidence",
           "duplicates", "blind_model", "human_review")
 PENDING = "pending"
 
 
-def screen(item, *, known_stems=()):
+def screen(item, *, known_stems=(), source_texts=()):
     schema_errors = check(item)
     stages = {name: {"status": PENDING, "issues": []} for name in STAGES}
     stages["schema"] = {"status": "fail" if schema_errors else "pass",
@@ -30,6 +31,7 @@ def screen(item, *, known_stems=()):
                 issues.append({"rule_id": "R-6.10", "message": "Absolute wording requires editorial review"})
         if any(re.search(r"\b(all|none) of the above\b", option["text"], re.I) for option in item["options"]):
             issues.append({"rule_id": "R-6.11", "message": "Forbidden option"})
+    issues.extend(text_check(item, source_texts))
     stages["deterministic_text"] = {"status": "flag" if issues else "pass", "issues": issues}
     duplicates = detect(item, known_stems)
     stages["duplicates"] = {"status": "fail" if duplicates else "pass", "issues": duplicates}
