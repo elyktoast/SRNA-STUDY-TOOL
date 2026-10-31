@@ -58,7 +58,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[]
-    sections=[];low_text_details=[];review_pages=[];image_inventory=[];image_assets=[]
+    sections=[];low_text_details=[];review_pages=[];image_inventory=[];image_assets=[];passage_image_links=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
         # Use explicit PDF bookmarks where available; never infer chapter titles
@@ -167,10 +167,20 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                             'source':'original_pdf',
                             'review_status':'unreviewed'
                         })
+            page_asset_ids = [a['asset_id'] for a in image_assets if a['pdf_page']==page]
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
             for part in chunks(text):
+                if page_asset_ids:
+                    # Page-level candidate association, NOT a verified claim
+                    # that the passage describes the pictured material.
+                    passage_image_links.append({
+                        'chunk_index':total,'pdf_page':page,
+                        'candidate_asset_ids':page_asset_ids,
+                        'association':'same_pdf_page_unverified'
+                    })
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
+    (out/'passage_image_links.json').write_text(json.dumps(passage_image_links,indent=2)+'\n',encoding='utf-8')
     (out/'image_assets.json').write_text(json.dumps(image_assets,indent=2)+'\n',encoding='utf-8')
     (out/'image_inventory.json').write_text(json.dumps(image_inventory,indent=2)+'\n',encoding='utf-8')
     (out/'visual_review.json').write_text(
