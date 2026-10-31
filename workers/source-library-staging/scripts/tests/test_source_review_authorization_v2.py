@@ -28,8 +28,7 @@ class AuthorizationTests(unittest.TestCase):
                 authenticated_reviewer_uid="reviewer", reviewer_is_admin=False)
     def test_central_import_rejects_missing_authentication(self):
         with self.assertRaisesRegex(ValueError, "Authenticated reviewer"):
-            import_passages(None, SOURCE, None, trusted_approval=APPROVAL,
-                            reviewer_is_admin=True)
+            import_passages(None, SOURCE, None, reviewer_is_admin=True)
 
 if __name__ == "__main__":
     unittest.main()
