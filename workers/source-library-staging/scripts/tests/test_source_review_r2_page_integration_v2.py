@@ -65,7 +65,7 @@ class R2PageIntegrationTests(unittest.TestCase):
 
     def test_real_pdf_render_from_verified_r2(self):
         result = self.render()
-        self.assertTrue(result["png"].startswith(b"\\x89PNG\\r\\n\\x1a\\n"))
+        self.assertTrue(result["png"].startswith(bytes([137,80,78,71,13,10,26,10])))
         self.assertEqual(result["image_sha256"], hashlib.sha256(result["png"]).hexdigest())
         self.assertEqual(result["source_sha256"], self.sha)
         self.assertTrue(self.r2.body.closed)
