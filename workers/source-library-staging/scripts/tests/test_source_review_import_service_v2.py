@@ -46,5 +46,25 @@ class VerifiedImportTests(unittest.TestCase):
                 access_token="valid", auth_provider=Auth(), protected_role_store=Roles(True))
         importer.assert_not_called()
 
+    @patch("source_review_import_service_v2.import_with_verified_reviewer")
+    @patch("source_review_roles_supabase_v2.ProtectedReviewerRoleStore")
+    @patch("source_review_auth_supabase_v2.SupabaseAuthProvider")
+    def test_supabase_composition(self, auth_cls, roles_cls, verified_import):
+        from source_review_import_service_v2 import import_with_supabase_reviewer
+        auth_cls.return_value = object()
+        roles_cls.return_value = object()
+        verified_import.return_value = "imported"
+        result = import_with_supabase_reviewer(
+            "folder", {"owner_uid": UID}, "connection",
+            access_token="token", supabase_url="https://example.supabase.co",
+            supabase_api_key="public-key")
+        self.assertEqual(result, "imported")
+        auth_cls.assert_called_once_with("https://example.supabase.co", "public-key")
+        roles_cls.assert_called_once_with("connection")
+        verified_import.assert_called_once_with(
+            "folder", {"owner_uid": UID}, "connection",
+            access_token="token", auth_provider=auth_cls.return_value,
+            protected_role_store=roles_cls.return_value)
+
 if __name__ == "__main__":
     unittest.main()
