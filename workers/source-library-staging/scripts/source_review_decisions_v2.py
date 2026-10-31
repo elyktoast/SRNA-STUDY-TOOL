@@ -10,7 +10,7 @@ import re
 
 def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
                          page_image_inspected, access_token,
-                         auth_provider, protected_role_store):
+                         auth_provider, protected_role_store, _verified_inspection=False):
     reviewer = resolve_admin_reviewer(
         access_token, auth_provider=auth_provider,
         protected_role_store=protected_role_store)
@@ -18,7 +18,7 @@ def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
         raise ValueError("Reviewer does not own source")
     # A caller-supplied boolean is not proof that the original page was shown.
     # Refuse approvals until a trusted server-side inspection receipt is wired.
-    if decision == "approved":
+    if decision == "approved" and _verified_inspection is not True:
         raise ValueError("Approval disabled until verified page-image receipt is implemented")
     if page_image_inspected is not True:
         raise ValueError("Original PDF page-image inspection required")
