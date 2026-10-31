@@ -27,14 +27,29 @@ def evaluate(search, fixtures, *, min_recall_at_k=0.8):
         if not isinstance(results, list):
             raise ValueError("Search must return passage records")
         found = [r.get("passage_id") for r in results if isinstance(r, dict)]
+        expected_pages = case.get("expected_pdf_pages", {})
+        if not isinstance(expected_pages, dict) or any(
+                passage_id not in expected or type(page) is not int or page < 1
+                for passage_id, page in expected_pages.items()):
+            raise ValueError("Invalid expected PDF page fixtures")
+        pages_ok = True
+        for result in results:
+            if not isinstance(result, dict):
+                raise ValueError("Invalid search result")
+            pid = result.get("passage_id")
+            if pid in expected_pages:
+                start, end = result.get("pdf_page_start"), result.get("pdf_page_end")
+                if type(start) is not int or type(end) is not int or not start <= expected_pages[pid] <= end:
+                    pages_ok = False
         if any(not isinstance(p, str) for p in found):
             raise ValueError("Invalid search result")
         hits = len(set(expected) & set(found))
         cases.append({"query": query, "expected_count": len(expected),
                       "matched_count": hits, "recall_at_k": hits / len(expected),
-                      "first_result_relevant": bool(found and found[0] in expected)})
+                      "first_result_relevant": bool(found and found[0] in expected),
+                      "page_references_valid": pages_ok})
     recall = sum(c["matched_count"] for c in cases) / sum(c["expected_count"] for c in cases)
-    return {"passed": recall >= min_recall_at_k,
+    return {"passed": recall >= min_recall_at_k and all(c["page_references_valid"] for c in cases),
             "recall_at_k": recall, "threshold": min_recall_at_k,
             "case_count": len(cases), "cases": cases,
             "note": "Retrieval relevance only; original PDF page and clinical claims require separate review"}
