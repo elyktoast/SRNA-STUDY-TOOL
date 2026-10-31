@@ -198,17 +198,6 @@ def import_passages(folder, manifest, connection, *,
             raise ValueError("Unresolved extraction review metadata")
         if reviewer_is_admin is not True or not authenticated_reviewer_uid:
             raise ValueError("Trusted server-side review approval required")
-        with connection.transaction():
-            approval = load_approved_pages(
-                connection, manifest,
-                authenticated_reviewer_uid=authenticated_reviewer_uid,
-                reviewer_is_admin=reviewer_is_admin)
-            approved = approved_pages_for_import(
-                manifest, approval,
-                authenticated_reviewer_uid=authenticated_reviewer_uid,
-                reviewer_is_admin=reviewer_is_admin)
-            if not flagged.issubset(approved):
-                raise ValueError("Unresolved extraction review pages")
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
         with connection.cursor() as cur:
@@ -217,6 +206,19 @@ def import_passages(folder, manifest, connection, *,
             cur.execute(
                 "select pg_advisory_xact_lock(hashtextextended(%s, 0))",
                 ("r2:" + manifest["owner_uid"] + ":" + manifest["r2_key"],))
+            # Approval rows are locked in the SAME transaction as indexing.
+            # A concurrent revocation must wait until import commits or rolls back.
+            if flagged:
+                approval = load_approved_pages(
+                    connection, manifest,
+                    authenticated_reviewer_uid=authenticated_reviewer_uid,
+                    reviewer_is_admin=reviewer_is_admin)
+                approved = approved_pages_for_import(
+                    manifest, approval,
+                    authenticated_reviewer_uid=authenticated_reviewer_uid,
+                    reviewer_is_admin=reviewer_is_admin)
+                if not flagged.issubset(approved):
+                    raise ValueError("Unresolved extraction review pages")
             # Lock the existing textbook row before changing any index state.
             # A legacy record without a fingerprint must be reviewed, not guessed.
             cur.execute(
