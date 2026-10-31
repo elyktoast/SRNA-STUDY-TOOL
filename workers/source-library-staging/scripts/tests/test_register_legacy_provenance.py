@@ -68,6 +68,7 @@ class LegacyProvenanceTests(unittest.TestCase):
 
         result, sql = run_case(True, [(digest, UUID(owner), 100, key)])
         self.assertTrue(result["already_registered"])
+        self.assertFalse(result["provenance_registered"])
         self.assertFalse(any("insert into" in q for q in sql))
 
 
