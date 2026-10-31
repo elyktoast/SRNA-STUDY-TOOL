@@ -90,7 +90,7 @@ class HttpTests(unittest.TestCase):
     def test_image_is_verified_and_never_issues_receipt(self, manifest, fetch, render):
         manifest.return_value = self.manifest
         fetch.return_value = b"%PDF-fixture"
-        png = b"\\x89PNG\\r\\n\\x1a\\nfixture"
+        png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
         render.return_value = {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(),
                                "source_sha256": "a" * 64}
         status, headers, body = self.call()
