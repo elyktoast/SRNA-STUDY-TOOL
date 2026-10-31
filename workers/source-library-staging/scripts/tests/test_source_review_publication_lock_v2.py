@@ -35,7 +35,13 @@ class FakeDatabase:
             def transaction(self):
                 return self
             def cursor(self):
-                return self
+                connection = self
+                class Cursor:
+                    def __enter__(self):
+                        return connection
+                    def __exit__(self, *args):
+                        return False
+                return Cursor()
             def execute(self, query, params):
                 assert query == "SELECT pg_try_advisory_xact_lock(%s)"
                 self.requested = params[0]
