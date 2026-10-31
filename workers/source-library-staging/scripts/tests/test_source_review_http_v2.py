@@ -115,6 +115,25 @@ class HttpTests(unittest.TestCase):
     def test_attestation_failure_is_conflict(self, loader):
         self.assertEqual(self.call()[0], 409)
 
+    @patch("source_review_http_v2.load_verified_review_page")
+    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_image_or_source_digest_mismatch_never_served(self, manifest, fetch, render):
+        manifest.return_value = self.manifest
+        png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
+        cases = (
+            {"png": png, "image_sha256": "0" * 64, "source_sha256": "a" * 64},
+            {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(), "source_sha256": "b" * 64},
+            {"png": b"not-a-png", "image_sha256": hashlib.sha256(b"not-a-png").hexdigest(), "source_sha256": "a" * 64},
+        )
+        for page in cases:
+            with self.subTest(page=page):
+                render.return_value = page
+                status, headers, body = self.call()
+                self.assertEqual(status, 409)
+                self.assertNotEqual(headers["Content-Type"], "image/png")
+                self.assertNotIn("X-Inspection-Receipt", headers)
+
     def test_approval_routes_are_not_exposed(self):
         self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
         self.assertEqual(self.call("/review/approve")[0], 404)
