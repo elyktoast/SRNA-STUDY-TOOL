@@ -82,6 +82,21 @@ class ReceiptServiceTests(unittest.TestCase):
             register(Conn(), page={**PAGE, "owner_uid": "c" * 36})
         insert.assert_not_called()
 
+    @patch("source_review_receipt_service_v2.time.time", return_value=1234.75)
+    @patch("source_review_receipt_service_v2.register_inspection_nonce")
+    def test_single_timestamp_for_receipt_and_database_expiry(self, insert, clock):
+        from source_review_receipts_v2 import verify_receipt
+        receipt = register_delivered_page_receipt(
+            Conn(), page=PAGE, access_token="valid",
+            auth_provider=Auth(), protected_role_store=Roles(),
+            signing_secret=SECRET,
+            delivered_image_sha256=PAGE["image_sha256"])
+        self.assertEqual(insert.call_args.kwargs["issued_at"], 1234.75)
+        verify_receipt(
+            SECRET, receipt, reviewer_uid=UID, owner_uid=UID,
+            source_sha256=PAGE["source_sha256"], r2_key=PAGE["r2_key"],
+            pdf_page=1, image_sha256=PAGE["image_sha256"], now=1234)
+
     @patch("source_review_receipt_service_v2.register_inspection_nonce", side_effect=ValueError("DB unavailable"))
     def test_database_failure_never_returns_receipt(self, insert):
         with self.assertRaisesRegex(ValueError, "DB unavailable"):
