@@ -16,6 +16,10 @@ class PublicationLock:
     def assert_held(self, key):
         if not self.active or key != self.key or self.connection.closed:
             raise ValueError("Publication lock not held for source")
+        # A lock is transaction-scoped; if the transaction has ended,
+        # the connection can remain open while the lock is already gone.
+        if not self.connection.info.transaction_status == 2:
+            raise ValueError("Publication lock transaction is no longer active")
 
 
 @contextmanager
