@@ -51,6 +51,18 @@ class HttpTests(unittest.TestCase):
         body = b"".join(self.app(env, start))
         return int(status[0].split()[0]), dict(headers), body
 
+    def test_security_headers_on_all_read_only_responses(self):
+        for path, method in (("/health", "GET"), ("/review/approve", "POST"),
+                             ("/missing", "GET")):
+            with self.subTest(path=path, method=method):
+                status, headers, _ = self.call(path, method=method, token=None)
+                self.assertIn(status, (200, 404, 405))
+                self.assertEqual(headers["X-Frame-Options"], "DENY")
+                self.assertEqual(headers["Referrer-Policy"], "no-referrer")
+                self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
+                self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
+                self.assertEqual(headers["Cache-Control"], "private, no-store")
+
     def test_health_is_read_only(self):
         status, headers, body = self.call("/health", token=None)
         self.assertEqual(status, 200)
