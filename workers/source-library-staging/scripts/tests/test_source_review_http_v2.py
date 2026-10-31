@@ -33,7 +33,7 @@ class HttpTests(unittest.TestCase):
         self.manifest = {"owner_uid": UID, "r2_key": KEY,
                          "sha256": "a" * 64, "pdf_page_count": 2}
 
-    def call(self, path="/review/page.png", query=None, token="valid", method="GET"):
+    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None):
         headers = []
         status = []
         def start(s, h):
@@ -41,6 +41,10 @@ class HttpTests(unittest.TestCase):
             headers.extend(h)
         env = {"REQUEST_METHOD": method, "PATH_INFO": path,
                "QUERY_STRING": query if query is not None else "path=" + KEY + "&page=1"}
+        if origin is not None:
+            env["HTTP_ORIGIN"] = origin
+        if preflight_method is not None:
+            env["HTTP_ACCESS_CONTROL_REQUEST_METHOD"] = preflight_method
         if token is not None:
             env["HTTP_AUTHORIZATION"] = "Bearer " + token
         body = b"".join(self.app(env, start))
@@ -160,6 +164,50 @@ class HttpTests(unittest.TestCase):
                 self.assertEqual(self.call()[0], 409)
                 self.assertEqual(self.call("/review/manifest", query="path=" + KEY)[0], 409)
         fetch.assert_not_called()
+
+    def test_staging_origin_preflight_is_strict_and_has_no_receipt(self):
+        status, headers, body = self.call(method="OPTIONS", token=None,
+            origin="https://staging.srnastudytool.com", preflight_method="GET")
+        self.assertEqual(status, 204)
+        self.assertEqual(body, b"")
+        self.assertEqual(headers["Access-Control-Allow-Origin"], "https://staging.srnastudytool.com")
+        self.assertEqual(headers["Access-Control-Allow-Headers"], "Authorization")
+        self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
+        self.assertNotIn("X-Inspection-Receipt", headers)
+
+    def test_other_origins_and_unsafe_preflights_are_denied(self):
+        for origin, method in (
+            ("https://srnastudytool.com", "GET"),
+            ("https://staging.srnastudytool.com.evil.test", "GET"),
+            ("null", "GET"),
+            ("https://staging.srnastudytool.com", "POST"),
+            ("https://staging.srnastudytool.com", None),
+        ):
+            with self.subTest(origin=origin, method=method):
+                status, headers, _ = self.call(method="OPTIONS", token=None,
+                    origin=origin, preflight_method=method)
+                self.assertEqual(status, 403)
+                if origin != "https://staging.srnastudytool.com":
+                    self.assertNotIn("Access-Control-Allow-Origin", headers)
+                self.assertNotIn("X-Inspection-Receipt", headers)
+
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_disallowed_origin_rejected_before_storage_access(self, loader):
+        status, headers, _ = self.call(origin="https://srnastudytool.com")
+        self.assertEqual(status, 403)
+        self.assertNotIn("Access-Control-Allow-Origin", headers)
+        loader.assert_not_called()
+
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_staging_origin_can_read_manifest_and_verification_headers(self, loader):
+        loader.return_value = self.manifest
+        status, headers, _ = self.call("/review/manifest", query="path=" + KEY,
+            origin="https://staging.srnastudytool.com")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["Access-Control-Allow-Origin"], "https://staging.srnastudytool.com")
+        self.assertIn("X-Verified-Source-SHA256", headers["Access-Control-Expose-Headers"])
+        self.assertIn("X-Review-Approval-Enabled", headers["Access-Control-Expose-Headers"])
+        self.assertEqual(headers["Vary"], "Origin")
 
     def test_approval_routes_are_not_exposed(self):
         self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
