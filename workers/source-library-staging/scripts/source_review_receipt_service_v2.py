@@ -8,6 +8,8 @@ this service only after its delivery confirmation; a browser-supplied hash or
 
 The nonce and receipt are bound to the same trusted page/source identity.
 """
+import time
+
 from source_review_identity_v2 import resolve_admin_reviewer
 from source_review_receipts_v2 import issue_receipt, verify_receipt
 from source_review_nonces_v2 import register_inspection_nonce
@@ -24,10 +26,11 @@ def register_delivered_page_receipt(conn, *, page, access_token, auth_provider,
     image_sha = page.get("image_sha256")
     if not isinstance(image_sha, str) or delivered_image_sha256 != image_sha:
         raise ValueError("Delivered image does not match trusted rendering")
+    issued_at = time.time() if now is None else now
     receipt = issue_receipt(
         signing_secret, reviewer_uid=reviewer.uid, owner_uid=reviewer.uid,
         source_sha256=page["source_sha256"], r2_key=page["r2_key"],
-        pdf_page=page["pdf_page"], image_sha256=image_sha, now=now)
+        pdf_page=page["pdf_page"], image_sha256=image_sha, now=issued_at)
     nonce = verify_receipt(
         signing_secret, receipt, reviewer_uid=reviewer.uid,
         owner_uid=reviewer.uid, source_sha256=page["source_sha256"],
@@ -39,5 +42,5 @@ def register_delivered_page_receipt(conn, *, page, access_token, auth_provider,
             conn, nonce=nonce, reviewer_uid=reviewer.uid,
             owner_uid=reviewer.uid, source_sha256=page["source_sha256"],
             r2_key=page["r2_key"], pdf_page=page["pdf_page"],
-            issued_at=now if now is not None else __import__("time").time())
+            issued_at=issued_at)
     return receipt
