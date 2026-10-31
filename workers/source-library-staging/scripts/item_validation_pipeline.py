@@ -8,13 +8,15 @@ import re
 from item_standard_v2 import check
 from item_duplicate_checks import detect
 from item_text_checks import check as text_check
+from item_math_checks import check as math_check
+from item_evidence_checks import check as evidence_check
 
 STAGES = ("schema", "deterministic_text", "math", "evidence",
           "duplicates", "blind_model", "human_review")
 PENDING = "pending"
 
 
-def screen(item, *, known_stems=(), source_texts=()):
+def screen(item, *, known_stems=(), source_texts=(), passages=None, calculation=None):
     schema_errors = check(item)
     stages = {name: {"status": PENDING, "issues": []} for name in STAGES}
     stages["schema"] = {"status": "fail" if schema_errors else "pass",
@@ -33,8 +35,15 @@ def screen(item, *, known_stems=(), source_texts=()):
             issues.append({"rule_id": "R-6.11", "message": "Forbidden option"})
     issues.extend(text_check(item, source_texts))
     stages["deterministic_text"] = {"status": "flag" if issues else "pass", "issues": issues}
+    math_issues = math_check(item, calculation)
+    stages["math"] = {"status": "fail" if math_issues else "pass", "issues": math_issues}
+    if passages is not None:
+        evidence_issues = evidence_check(item, passages)
+        stages["evidence"] = {"status": "fail" if evidence_issues else "pass", "issues": evidence_issues}
     duplicates = detect(item, known_stems)
     stages["duplicates"] = {"status": "fail" if duplicates else "pass", "issues": duplicates}
     return {"can_publish": False, "stages": stages,
-            "next_state": "needs_editorial_review" if issues or duplicates else "draft",
+            "next_state": ("needs_source_review" if stages["evidence"]["status"] == "fail"
+                           else "needs_editorial_review" if issues or duplicates
+                           else "draft"),
             "rewrite_attempts_allowed": 1}
