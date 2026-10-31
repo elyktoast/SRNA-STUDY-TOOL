@@ -30,3 +30,13 @@ Status: **NOT COMPLETE**. This checklist is an implementation and release gate, 
 ## Verified queue publication boundary (2026-10-31)
 
 `source_review_queue_publish_v2.prepare_queue_artifacts` now produces a fingerprint-bound queue and a **proposed** PDF metadata update from a local verified extraction. It deliberately performs **no R2 writes**. A trusted server publisher is still required to (1) read and hash the actual private R2 object, (2) compare its bytes to the extracted local PDF and manifest, (3) safely persist the SHA-256 in R2 object metadata without losing the original object or racing concurrent replacement, (4) write the matching private review queue, and (5) verify the endpoint can retrieve the pair. Do not use browser-supplied queue JSON or trust an unverified local PDF to represent R2 bytes. R2 metadata cannot be assumed to support an in-place patch; plan a safe copy/rewrite strategy with source identity checks. The API intentionally returns unavailable until this publication step is completed. No approval or import is authorized by a review queue.
+
+### Operator publication command (not yet run)
+
+From `workers/source-library-staging/scripts`, after producing a trusted extraction directory with `manifest.json`, use:
+
+```bash
+python source_review_r2_publish_v2.py --r2-key 'OWNER_UUID/OBJECT.pdf' --extraction-dir '/path/to/extraction' --dry-run
+```
+
+Only after reviewing the dry-run, explicitly authorized staging publication can use `--apply` with the same arguments. Requires `boto3` and server-side `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. Never expose these to a browser. The script does not extract a PDF, index passages, record page inspection, or approve any content. This is a manual operator tool, **not an automatic upload hook**. Concurrent publishers are still unsupported; serialize publications per source. The API compares the queue digest and current PDF ETag/size but is not a transactional database.
