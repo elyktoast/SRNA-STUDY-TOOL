@@ -75,6 +75,23 @@ class ExtractorTests(unittest.TestCase):
                          "image_content_review")
         self.assertTrue(result["requires_ocr_review"])
 
+    def test_image_coverage_uses_union_of_overlapping_placements(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        page = doc.new_page(width=200, height=200)
+        pix = fitz.Pixmap(fitz.csRGB, fitz.IRect(0, 0, 12, 12), False)
+        page.insert_image(fitz.Rect(0, 0, 150, 200), pixmap=pix)
+        page.insert_image(fitz.Rect(50, 0, 200, 200), pixmap=pix)
+        target = self.base / "overlapping_images.pdf"
+        doc.save(target)
+        doc.close()
+        result = module.extract(target, self.base / "overlap-index",
+                                self.owner, self.owner + "/overlapping_images.pdf")
+        detail = result["low_text_details"][0]
+        self.assertEqual(detail["image_placement_count"], 2)
+        self.assertEqual(detail["image_coverage_upper_bound"], 1.0)
+        self.assertEqual(detail["image_coverage_fraction"], 1.0)
+
     def test_ocr_recovers_text_from_scanned_page(self):
         import fitz
         source = fitz.open()
