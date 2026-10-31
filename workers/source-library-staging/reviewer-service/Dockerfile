@@ -5,7 +5,6 @@ COPY workers/source-library-staging/reviewer-service/requirements.txt /app/requi
 RUN pip install --no-cache-dir -r /app/requirements.txt && useradd --system --uid 10001 reviewer
 COPY workers/source-library-staging/scripts/ /app/
 USER reviewer
-# No EXPOSE declaration: this container must not advertise a public service port.
-# Bind loopback only. Deploy behind a same-host TLS-terminating authenticated
-# reverse proxy or private service network; do not expose this port publicly.
-CMD ["gunicorn","--bind","127.0.0.1:8789","--workers","1","--threads","2","--timeout","120","source_review_wsgi_v2:app"]
+# Internal Cloudflare Container listener. No public port mapping or public route.
+# The staging Worker authenticates and forwards only read-only requests.
+CMD ["gunicorn","--bind","0.0.0.0:8789","--workers","1","--threads","2","--timeout","120","source_review_wsgi_v2:app"]
