@@ -83,9 +83,9 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
                 "size_bytes": size,
                 "queue_sha256": hashlib.sha256(artifacts["queue_json"].encode("utf-8")).hexdigest(),
             }, separators=(",", ":"), sort_keys=True)
-            # Invalidate any old attestation first; an interrupted publication
-            # must not leave an old proof paired with a newly written queue.
-            client.delete_object(Bucket=bucket, Key=attestation_key)
+            # The attestation was proven absent while the source-scoped
+            # lock was held. Do not issue an unnecessary destructive delete.
+            # All authorized publishers must use the same coordinator.
             publication_lock.assert_held(pdf_key)
             client.put_object(Bucket=bucket, Key=queue_key,
                               Body=artifacts["queue_json"].encode("utf-8"),
