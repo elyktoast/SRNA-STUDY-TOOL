@@ -15,7 +15,14 @@ textarea{display:block;width:95%;min-height:4rem}button{cursor:pointer}#status{m
 <p>Open the generated review packet locally to inspect its headings and export decisions. Import the resulting JSON below for structural validation, private draft storage, or download.</p>
 <label>Review decisions (.json) <input id="decisions" type="file" accept=".json,application/json"></label>
 <label>Textbook <select id="textbook"><option value="">Select a textbook</option></select></label>
-<div id="summary"></div><button id="export" disabled>Download validated draft</button> <button id="save" disabled>Save private draft</button> <button id="load" disabled>Load saved draft</button>
+<section aria-labelledby="verified-heading">
+<h2 id="verified-heading">Verified original PDF page (read-only)</h2>
+<p>This preview requires a separately deployed, authenticated staging reviewer service. It does not approve pages.</p>
+<label>Physical PDF page <input id="verified-page-number" type="number" min="1" step="1" value="1"></label>
+<button id="verified-preview" type="button">Open verified page</button>
+<p id="verified-status" role="status"></p>
+<img id="verified-image" alt="Verified original textbook PDF page" hidden style="max-width:100%;height:auto">
+</section><div id="summary"></div><button id="export" disabled>Download validated draft</button> <button id="save" disabled>Save private draft</button> <button id="load" disabled>Load saved draft</button>
 </div>
 <script>if(location.hostname==='staging.srnastudytool.com'){window.MBU_SOURCE_LIBRARY_STAGING=Object.freeze({enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com'});}</script>
 <script src="/equipment/assets/source-material-staging-storage.js"></script>
