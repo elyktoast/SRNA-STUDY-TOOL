@@ -17,13 +17,17 @@ def audit(connection, textbook_id):
             cur.execute("""
                 select t.status,t.page_count,t.owner_uid,t.r2_key,
                        (select count(*) from source_library_staging.source_versions v
-                        where v.textbook_id=t.id)
+                        where v.textbook_id=t.id),
+                       (select count(*) from source_library_staging.sections sec
+                        where sec.textbook_id=t.id),
+                       (select source_sha256 from source_library_staging.source_versions v
+                        where v.textbook_id=t.id order by recorded_at desc,id desc limit 1)
                 from source_library_staging.textbooks t where t.id=%s
             """, (textbook_id,))
             record = cur.fetchone()
             if record is None:
                 raise ValueError("Textbook not found")
-            status, pages, owner, key, versions = record
+            status, pages, owner, key, versions, sections, latest_digest = record
             cur.execute("""
                 select count(*), count(distinct chunk_index), min(chunk_index),
                        max(chunk_index), count(*) filter (where length(btrim(content))=0),
@@ -48,12 +52,19 @@ def audit(connection, textbook_id):
         "valid_passages": blank == 0 and invalid == 0,
         "airway_search_returns_results": bool(hits),
         "source_provenance_recorded": versions > 0,
+        "no_existing_sections_to_replace": sections == 0,
     }
     return {"textbook_id": str(textbook_id), "page_count": pages,
             "passage_count": total, "search_hits": hits, "checks": checks,
             "index_integrity_passed": all(v for k,v in checks.items()
                                           if k != "source_provenance_recorded"),
-            "safe_to_reindex": checks["source_provenance_recorded"]}
+            "safe_to_reindex": False,
+            "reindex_requirements": {
+                "matching_source_digest_required": True,
+                "latest_recorded_digest": latest_digest,
+                "existing_sections": sections,
+                "note": "A recorded digest alone never proves the incoming PDF matches."
+            }}
 
 
 def main():
