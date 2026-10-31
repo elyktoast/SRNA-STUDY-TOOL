@@ -8,6 +8,7 @@ import html
 import json
 import os
 import tempfile
+import secrets
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
@@ -45,6 +46,7 @@ def serve(index_dir, sheet_dir, port=8765):
     validate_review(index_dir, json.loads(review_path.read_text(encoding="utf-8")))
     assets = json.loads((index_dir / "image_assets.json").read_text(encoding="utf-8"))
     asset_ids = {a["asset_id"] for a in assets}
+    csrf_token = secrets.token_urlsafe(32)
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             path = urlsplit(self.path).path
@@ -67,6 +69,7 @@ def serve(index_dir, sheet_dir, port=8765):
                                  "' alt='Source image'><p>" + html.escape(aid) +
                                  " — " + html.escape(item["decision"]) +
                                  "</p><form method='post' action='/decision'>" +
+                                 "<input type='hidden' name='csrf_token' value='" + csrf_token + "'>" +
                                  "<input type='hidden' name='asset_id' value='" +
                                  html.escape(aid, quote=True) + "'>" + controls + "</form></article>")
                 body = ("<!doctype html><html lang='en'><meta charset='utf-8'>"
@@ -95,7 +98,10 @@ def serve(index_dir, sheet_dir, port=8765):
             if urlsplit(self.path).path != "/decision":
                 self.send_error(404)
                 return
-            if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{port}"):
+            if self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+                self.send_error(403)
+                return
+            if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{port}", f"http://localhost:{port}"):
                 self.send_error(403)
                 return
             if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/x-www-form-urlencoded":
@@ -106,8 +112,10 @@ def serve(index_dir, sheet_dir, port=8765):
                 if not 0 <= length <= 1024:
                     raise ValueError("Invalid payload size")
                 fields = parse_qs(self.rfile.read(length).decode("utf-8"), strict_parsing=True)
-                if set(fields) != {"asset_id", "decision"} or any(len(v) != 1 for v in fields.values()):
+                if set(fields) != {"asset_id", "decision", "csrf_token"} or any(len(v) != 1 for v in fields.values()):
                     raise ValueError("Invalid form")
+                if not secrets.compare_digest(fields["csrf_token"][0], csrf_token):
+                    raise ValueError("Invalid review form token")
                 save_decision(index_dir, review_path, fields["asset_id"][0], fields["decision"][0])
             except (ValueError, UnicodeError, KeyError, json.JSONDecodeError):
                 self.send_error(400)
