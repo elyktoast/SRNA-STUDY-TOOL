@@ -104,3 +104,18 @@ test('mobile acceptance rejects forged page fingerprints and wrong host',async()
  await assert.rejects(foreign.api.mobileReviewerAcceptance(pdf),/Staging-only/);
  assert.equal(foreign.calls.length,0);
 });
+
+test('mobile acceptance reports auth and gateway errors instead of misleading unsafe response',async()=>{
+ for(const [status,error] of [[401,'authentication_required'],[403,'forbidden'],[502,'unsafe_upstream']]){
+  const {api,calls}=setup({handler:()=>new Response(JSON.stringify({error}),{
+   status,headers:{'Content-Type':'application/json'}
+  })});
+  await assert.rejects(api.mobileReviewerAcceptance(pdf),
+   new RegExp('Reviewer acceptance HTTP '+status+' \\('+error+'\\)'));
+  assert.equal(calls.length,1);
+ }
+});
+test('mobile acceptance rejects successful response without disabled-approval header',async()=>{
+ const {api}=setup({handler:()=>new Response('{}',{status:200})});
+ await assert.rejects(api.mobileReviewerAcceptance(pdf),/successful response missing disabled-approval header/);
+});
