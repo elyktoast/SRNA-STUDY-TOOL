@@ -40,3 +40,15 @@ python source_review_r2_publish_v2.py --r2-key 'OWNER_UUID/OBJECT.pdf' --extract
 ```
 
 Only after reviewing the dry-run, explicitly authorized staging publication can use `--apply` with the same arguments. Requires `boto3` and server-side `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`. Never expose these to a browser. The script does not extract a PDF, index passages, record page inspection, or approve any content. This is a manual operator tool, **not an automatic upload hook**. Concurrent publishers are still unsupported; serialize publications per source. The API compares the queue digest and current PDF ETag/size but is not a transactional database.
+
+### Integrated extraction-to-queue operator workflow
+
+`process_r2_textbook.py` now supports `--review-queue-mode dry-run` and `--review-queue-mode apply`. Both require the existing `--dry-run` indexing mode, keeping queue publication separate from database imports. The runner downloads the private PDF, extracts it, verifies the extraction manifest and R2 source fingerprint, then invokes the trusted queue publisher before its temporary extraction files are deleted.
+
+Example verification only:
+
+```bash
+python process_r2_textbook.py --owner-uid OWNER_UUID --r2-key 'OWNER_UUID/OBJECT.pdf' --ocr --dry-run --review-queue-mode dry-run
+```
+
+After explicit operator authorization, replace the final `dry-run` with `apply` **only in `--review-queue-mode`** to write review metadata to staging R2. This does not apply a database import or approve any page. It is not an automatic upload trigger. Concurrent publication still requires serialized operator access.
