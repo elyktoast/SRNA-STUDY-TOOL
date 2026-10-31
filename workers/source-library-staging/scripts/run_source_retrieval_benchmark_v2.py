@@ -60,6 +60,8 @@ def main():
             report = run(conn, owner_uid=args.owner_uid, fixtures=fixtures,
                          limit=args.limit, min_recall_at_k=args.min_recall)
     print(json.dumps(report, indent=2))
+    if not report["passed"]:
+        raise SystemExit(1)
 
 if __name__ == "__main__":
     main()
