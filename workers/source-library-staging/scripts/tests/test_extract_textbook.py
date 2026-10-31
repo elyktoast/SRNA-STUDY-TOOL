@@ -57,6 +57,9 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, self.base / "image-index",
                                 self.owner, self.owner + "/with_image.pdf")
         self.assertEqual(result["image_pages"], [1])
+        inventory = json.loads((self.base / "image-index" / "image_inventory.json").read_text())
+        self.assertEqual(inventory, [{"pdf_page": 1, "embedded_image_count": 1,
+                                      "low_text_review": False}])
         self.assertEqual(result["low_text_details"], [])
 
     def test_image_only_page_requires_visual_review(self):
