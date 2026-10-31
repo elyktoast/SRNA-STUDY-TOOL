@@ -109,3 +109,12 @@ Run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41230443878 execut
 Commit `170a41cd` made the optional external smoke diagnostic non-gating, without changing the Worker or disabling its authorization. Run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41230542957 reported the standard staging test job successful; the disposable acceptance job was skipped by design.
 
 **Required operator decision:** Review the Cloudflare Security Event by Ray ID, determine which rule challenges GitHub-hosted runners, and configure an appropriately scoped trusted test path or credential. Do not broadly disable WAF/Bot protection, or claim that a 403 HTML challenge verifies Worker authentication. After CI can reach the Worker, rerun live unauthenticated/origin checks and authenticated disposable-queue HTTP 200/409 tests. No staging deployment or security-rule mutation was authorized in this batch.
+
+
+## Deployed staging Worker authorization evidence — 2026-10-31
+
+Cloudflare Security Event identified Bot Fight Mode managed challenge for GitHub Actions `GET /health` (Ray `a534c878bdae1da7`). Without changing production Bot Fight Mode or the existing custom domain, enabled the staging Worker's account `workers.dev` subdomain; preview URLs remain disabled. **Important:** the alternate hostname is publicly reachable and must be disabled after the acceptance campaign; it is not a private service-token tunnel.
+
+GitHub Actions run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41231170920, commit `1ffeb06b`: `staging-unit-tests` succeeded, including the required live read-only Worker smoke step. Verified live `/health` 200, staging CORS, anonymous `/materials` 403, production-origin `/health` 403, anonymous review-queue/review-pdf/chapter-draft/material-item 403, and production-origin review endpoints 403. These were real Worker responses, not Cloudflare challenge pages. No R2 mutation or authenticated request occurred in this run. Disposable acceptance job was skipped by design.
+
+**Remaining gates:** Authenticated owner and cross-owner tests; live disposable queue source binding and tamper/replacement/missing attestation HTTP 409; reviewer UI navigation and protected approval/nonce behavior; trusted role/approval/import integration; real retrieval benchmark; final evidence and reviewer signoff. Do not claim Phase B complete. Disable the additional `workers.dev` route after live tests, preserving existing custom-domain routing.
