@@ -16,6 +16,7 @@ import tempfile
 from pathlib import Path
 
 from process_textbook import process
+from source_review_r2_publish_v2 import publish_verified_queue
 
 MAX_BYTES = 300 * 1024 * 1024
 BUCKET = "srna-staging-textbooks"
@@ -54,7 +55,11 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
             "original_name": head.get("Metadata", {}).get("name")}
 
 
-def run(owner_uid, key, apply=False, client=None, ocr=False):
+def run(owner_uid, key, apply=False, client=None, ocr=False, review_queue_mode='off'):
+    if review_queue_mode not in ('off', 'dry-run', 'apply'):
+        raise ValueError('Invalid review queue publication mode')
+    if apply and review_queue_mode != 'off':
+        raise ValueError('Review queue publication must run separately from database indexing')
     # Validate the untrusted key before constructing a local download path.
     if (not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid) or not isinstance(key, str)
             or key.count("/") != 1 or not key.startswith(owner_uid + "/")
@@ -96,6 +101,9 @@ def run(owner_uid, key, apply=False, client=None, ocr=False):
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
         result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
+        if review_queue_mode != 'off':
+            result["review_queue_publication"] = publish_verified_queue(
+                client, BUCKET, key, root / "index", apply=review_queue_mode == 'apply')
         return result
 
 
@@ -107,8 +115,10 @@ def main():
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
+    parser.add_argument("--review-queue-mode", choices=("off", "dry-run", "apply"), default="off",
+                        help="Separate operator-controlled review queue publication; never implies page approval")
     args = parser.parse_args()
-    print(json.dumps(run(args.owner_uid, args.r2_key, apply=args.apply, ocr=args.ocr), indent=2))
+    print(json.dumps(run(args.owner_uid, args.r2_key, apply=args.apply, ocr=args.ocr, review_queue_mode=args.review_queue_mode), indent=2))
 
 
 if __name__ == "__main__":
