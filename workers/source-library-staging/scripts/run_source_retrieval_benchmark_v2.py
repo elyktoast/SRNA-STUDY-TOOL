@@ -23,6 +23,19 @@ def run(conn, *, owner_uid, fixtures, limit=10, min_recall_at_k=0.8):
     for fixture in fixtures:
         if not isinstance(fixture, dict):
             raise ValueError("Invalid benchmark fixture")
+        if not isinstance(fixture.get("query"), str) or not fixture["query"].strip():
+            raise ValueError("Benchmark query required")
+        expected = fixture.get("expected_passage_ids")
+        if not isinstance(expected, list) or not expected or any(
+                not isinstance(pid, str) or not pid.strip() for pid in expected):
+            raise ValueError("Expected passage IDs required")
+        if len(expected) != len(set(expected)):
+            raise ValueError("Duplicate expected passage IDs")
+        expected_pages = fixture.get("expected_pdf_pages", {})
+        if not isinstance(expected_pages, dict) or any(
+                pid not in expected or type(page) is not int or page < 1
+                for pid, page in expected_pages.items()):
+            raise ValueError("Invalid expected PDF pages")
         textbook_id = fixture.get("textbook_id")
         if textbook_id is not None and (
                 not isinstance(textbook_id, str) or not UUID_RE.fullmatch(textbook_id)):
