@@ -31,12 +31,11 @@ def run(conn, manifest=MANIFEST, **kwargs):
     return record_page_decision(conn, manifest, **params)
 
 class DecisionTests(unittest.TestCase):
-    def test_approval(self):
+    def test_approval_blocked_without_trusted_inspection_receipt(self):
         conn = Connection()
-        self.assertEqual(run(conn), 1)
-        self.assertIn("INSERT INTO", conn.cur.sql)
-        self.assertIn("ON CONFLICT", conn.cur.sql)
-        self.assertEqual(conn.cur.args[0], UID)
+        with self.assertRaisesRegex(ValueError, "Approval disabled"):
+            run(conn)
+        self.assertIsNone(conn.cur.sql)
     def test_rejection(self):
         conn = Connection()
         self.assertEqual(run(conn, decision="rejected"), 1)
