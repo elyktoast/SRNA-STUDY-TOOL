@@ -11,6 +11,8 @@ NCE_DOMAINS = {
     "general_principles_of_anesthesia": 35,
     "surgical_procedures_special_populations": 25,
 }
+SEE_DOMAINS = {domain: 25 for domain in NCE_DOMAINS}
+BLUEPRINTS = {"NCE": NCE_DOMAINS, "SEE": SEE_DOMAINS}
 REASONING_TARGETS = {
     "clinical_application_management": 40,
     "physiology_pharmacology_integration": 25,
