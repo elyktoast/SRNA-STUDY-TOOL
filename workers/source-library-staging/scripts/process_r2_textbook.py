@@ -17,6 +17,7 @@ from pathlib import Path
 
 from process_textbook import process
 from source_review_r2_publish_v2 import publish_verified_queue
+from source_review_publication_lock_v2 import exclusive_publication_lock
 
 MAX_BYTES = 300 * 1024 * 1024
 BUCKET = "srna-staging-textbooks"
@@ -58,8 +59,6 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
 def run(owner_uid, key, apply=False, client=None, ocr=False, review_queue_mode='off'):
     if review_queue_mode not in ('off', 'dry-run', 'apply'):
         raise ValueError('Invalid review queue publication mode')
-    if review_queue_mode == 'apply':
-        raise ValueError('Review queue publication requires a trusted exclusive lock coordinator; use dry-run')
     if apply and review_queue_mode != 'off':
         raise ValueError('Review queue publication must run separately from database indexing')
     # Validate the untrusted key before constructing a local download path.
@@ -103,9 +102,13 @@ def run(owner_uid, key, apply=False, client=None, ocr=False, review_queue_mode='
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
         result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
-        if review_queue_mode != 'off':
+        if review_queue_mode == 'apply':
+            with exclusive_publication_lock(os.environ.get("DATABASE_URL"), BUCKET, key) as lock:
+                result["review_queue_publication"] = publish_verified_queue(
+                    client, BUCKET, key, root / "index", apply=True, publication_lock=lock)
+        elif review_queue_mode == 'dry-run':
             result["review_queue_publication"] = publish_verified_queue(
-                client, BUCKET, key, root / "index", apply=review_queue_mode == 'apply')
+                client, BUCKET, key, root / "index", apply=False)
         return result
 
 
