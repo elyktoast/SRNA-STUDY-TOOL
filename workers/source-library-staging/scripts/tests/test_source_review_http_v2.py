@@ -34,7 +34,7 @@ class HttpTests(unittest.TestCase):
         self.manifest = {"owner_uid": UID, "r2_key": KEY,
                          "sha256": "a" * 64, "pdf_page_count": 2}
 
-    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None):
+    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None, preflight_headers="Authorization"):
         headers = []
         status = []
         def start(s, h):
@@ -46,6 +46,8 @@ class HttpTests(unittest.TestCase):
             env["HTTP_ORIGIN"] = origin
         if preflight_method is not None:
             env["HTTP_ACCESS_CONTROL_REQUEST_METHOD"] = preflight_method
+        if method == "OPTIONS" and preflight_headers is not None:
+            env["HTTP_ACCESS_CONTROL_REQUEST_HEADERS"] = preflight_headers
         if token is not None:
             env["HTTP_AUTHORIZATION"] = "Bearer " + token
         body = b"".join(self.app(env, start))
@@ -187,6 +189,19 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(headers["Access-Control-Allow-Headers"], "Authorization")
         self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
         self.assertNotIn("X-Inspection-Receipt", headers)
+
+    def test_preflight_rejects_unapproved_routes_and_headers(self):
+        for path, headers in (("/health", "Authorization"),
+                              ("/review/approve", "Authorization"),
+                              ("/review/manifest", "Authorization, X-Admin"),
+                              ("/review/page.png", ""),
+                              ("/review/page.png", "X-Receipt")):
+            with self.subTest(path=path, headers=headers):
+                status, response_headers, _ = self.call(path, method="OPTIONS",
+                    token=None, origin="https://staging.srnastudytool.com",
+                    preflight_method="GET", preflight_headers=headers)
+                self.assertEqual(status, 403)
+                self.assertNotIn("X-Inspection-Receipt", response_headers)
 
     def test_other_origins_and_unsafe_preflights_are_denied(self):
         for origin, method in (
