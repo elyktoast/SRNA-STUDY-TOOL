@@ -146,6 +146,21 @@ class HttpTests(unittest.TestCase):
         self.assertNotIn("X-Page-Image-SHA256", headers)
         self.assertNotIn("X-Inspection-Receipt", headers)
 
+    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_mismatched_manifest_identity_fails_before_source_fetch(self, manifest, fetch):
+        for changed in (
+            {"owner_uid": "00000000-0000-4000-8000-000000000000"},
+            {"r2_key": UID + "/different.pdf"},
+            {"pdf_page_count": 0},
+            {"sha256": "bad"},
+        ):
+            with self.subTest(changed=changed):
+                manifest.return_value = {**self.manifest, **changed}
+                self.assertEqual(self.call()[0], 409)
+                self.assertEqual(self.call("/review/manifest", query="path=" + KEY)[0], 409)
+        fetch.assert_not_called()
+
     def test_approval_routes_are_not_exposed(self):
         self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
         self.assertEqual(self.call("/review/approve")[0], 404)
