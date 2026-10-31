@@ -7,7 +7,7 @@ const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'no
 function respond(status,origin,body=''){
  const headers={...common,'Content-Type':'application/json'};
  if(origin===ORIGIN){headers['Access-Control-Allow-Origin']=ORIGIN;headers.Vary='Origin';}
- return new Response(body,{status,headers});
+ return new Response(status===204?null:body,{status,headers});
 }
 export default {
  async fetch(request,env){
