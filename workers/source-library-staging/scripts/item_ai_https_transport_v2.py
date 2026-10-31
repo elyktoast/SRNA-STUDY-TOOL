@@ -11,6 +11,11 @@ from urllib.parse import urlsplit
 class TransportError(RuntimeError):
     pass
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise TransportError("Provider redirect prohibited")
+
+
 def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=262144):
     hosts = frozenset(allowed_hosts)
     if not hosts or any(not isinstance(h, str) or not h or "/" in h or ":" in h for h in hosts):
@@ -19,6 +24,8 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
         raise ValueError("Timeout must be 1-60 seconds")
     if type(max_response_bytes) is not int or not 1024 <= max_response_bytes <= 1048576:
         raise ValueError("Response limit must be 1 KiB to 1 MiB")
+
+    opener = urllib.request.build_opener(_NoRedirect())
 
     def transport(*, endpoint, headers, body):
         url = urlsplit(endpoint)
@@ -31,7 +38,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
             raise TransportError("Request exceeds 512 KiB")
         req = urllib.request.Request(endpoint, data=encoded, headers=headers, method="POST")
         try:
-            with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
+            with opener.open(req, timeout=timeout_seconds) as response:
                 if response.geturl() != endpoint:
                     raise TransportError("Redirected provider response prohibited")
                 raw = response.read(max_response_bytes + 1)
