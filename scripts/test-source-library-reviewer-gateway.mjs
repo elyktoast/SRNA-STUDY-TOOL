@@ -9,7 +9,7 @@ const calls={auth:0,container:0};
 const oldFetch=globalThis.fetch;
 globalThis.fetch=async()=>{calls.auth++;return Response.json({id:'user-1',is_anonymous:false})};
 const env={STAGING_ONLY:'true',SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',SUPABASE_ANON_KEY:'test',
- REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>{calls.container++;return new Response('{"approval_enabled":false}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json'}})}})}};
+ REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>{calls.container++;return new Response('{"approval_enabled":false}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})}})}};
 const request=(url=base,{method='GET',headers={}}={})=>gateway.fetch(new Request(url,{method,headers:{Origin:origin,Authorization:'Bearer valid',...headers}}),env);
 test('authenticated staging request forwards only read-only manifest',async()=>{
  const r=await request();assert.equal(r.status,200);assert.equal(r.headers.get('X-Review-Approval-Enabled'),'false');
@@ -33,5 +33,14 @@ test('invalid bearer token, extra query parameters, and disabled staging fail cl
  assert.equal((await request(base,{headers:{Authorization:'bad'}})).status,401);
  assert.equal((await request(base+'&approved=true')).status,400);
  assert.equal((await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),{...env,STAGING_ONLY:'false'})).status,503);
+});
+test('rejects upstream success without verified source digest',async()=>{
+ const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>new Response('{}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json'}})})}};
+ const r=await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+ assert.equal(r.status,502);
+});
+test('rejects preview without PNG digest',async()=>{
+ const r=await request('https://gateway.example/review/page.png?path=owner%2Fbook.pdf&page=1');
+ assert.equal(r.status,502);
 });
 test.after(()=>{globalThis.fetch=oldFetch});

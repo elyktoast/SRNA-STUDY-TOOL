@@ -12,7 +12,7 @@ function respond(status,origin,body=''){
 export default {
  async fetch(request,env){
   const url=new URL(request.url),origin=request.headers.get('Origin');
-  if(env.STAGING_ONLY!=='true'||env.SUPABASE_URL!==PROJECT||!env.REVIEWER_CONTAINER)
+  if(env.STAGING_ONLY!=='true'||env.SUPABASE_URL!==PROJECT||!env.SUPABASE_ANON_KEY||!env.REVIEWER_CONTAINER)
    return respond(503,null,'{"error":"staging_not_configured"}');
   if(origin!==ORIGIN||!paths.has(url.pathname))return respond(403,null,'{"error":"forbidden"}');
   if(request.method==='OPTIONS'){
@@ -56,6 +56,15 @@ export default {
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
    if(upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(upstream.ok){
+    const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
+    const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
+    if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
+    if(url.pathname==='/review/page.png'){
+      if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||''))
+       return respond(502,origin,'{"error":"invalid_page_integrity"}');
+    }else if(!type.startsWith('application/json'))return respond(502,origin,'{"error":"invalid_manifest_type"}');
+   }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch{return respond(503,origin,'{"error":"reviewer_unavailable"}');}
  }
