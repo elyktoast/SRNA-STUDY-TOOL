@@ -9,17 +9,26 @@ import json
 import os
 import tempfile
 import secrets
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from review_image_assets import validate_review, ALLOWED
 
+# Serialize read-modify-write operations within the review server.
+_REVIEW_LOCK = threading.Lock()
+
 
 def save_decision(index_dir, review_path, asset_id, decision):
     if decision not in ALLOWED or decision == "pending":
         raise ValueError("Invalid decision")
     review_path = Path(review_path)
+    with _REVIEW_LOCK:
+        return _save_decision_locked(index_dir, review_path, asset_id, decision)
+
+
+def _save_decision_locked(index_dir, review_path, asset_id, decision):
     review = json.loads(review_path.read_text(encoding="utf-8"))
     validate_review(index_dir, review)
     matches = [item for item in review["decisions"] if item["asset_id"] == asset_id]
@@ -47,9 +56,11 @@ def serve(index_dir, sheet_dir, port=8765):
     assets = json.loads((index_dir / "image_assets.json").read_text(encoding="utf-8"))
     asset_ids = {a["asset_id"] for a in assets}
     csrf_token = secrets.token_urlsafe(32)
+    # Bind first so ephemeral port 0 resolves to the actual listening port.
+    allowed_port = [port]
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
-            if self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+            if self.headers.get("Host") not in (f"127.0.0.1:{allowed_port[0]}", f"localhost:{allowed_port[0]}"):
                 self.send_error(403)
                 return
             path = urlsplit(self.path).path
@@ -104,7 +115,7 @@ def serve(index_dir, sheet_dir, port=8765):
             if self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
                 self.send_error(403)
                 return
-            if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{port}", f"http://localhost:{port}"):
+            if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{allowed_port[0]}", f"http://localhost:{allowed_port[0]}"):
                 self.send_error(403)
                 return
             if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/x-www-form-urlencoded":
@@ -139,6 +150,7 @@ def serve(index_dir, sheet_dir, port=8765):
             self.wfile.write(body)
 
     server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+    allowed_port[0] = server.server_port
     print(f"Private review: http://127.0.0.1:{server.server_port}/", flush=True)
     try:
         server.serve_forever()
