@@ -9,6 +9,11 @@ Status: **NOT COMPLETE**. This checklist is an implementation and release gate, 
 - Read-only retrieval benchmark with per-case recall and PDF-page expectations; nonzero exit on failure.
 - Unit tests; passing CI is **not** a live staging acceptance test.
 
+## Database role design warning
+- The draft approval table uses FORCE ROW LEVEL SECURITY with no policies. A regular table owner is blocked; a role with BYPASSRLS and SELECT can read it. The preflight now checks both properties on the current connection, but BYPASSRLS is a powerful privilege and must **not** be granted to browser roles or treated as human reviewer authentication.
+- Use a dedicated, secret-bearing server-only database connection with narrowly scoped operational access. Before migration, review whether a protected SECURITY DEFINER function owned by a privileged role offers a safer alternative to broad BYPASSRLS credentials. Neither option is implemented or approved yet.
+- Keep the reviewer session/role verification independent of the DB service connection; never infer that a service account proves the human reviewer is an admin.
+
 ## Critical integration gaps
 1. **Verified identity and roles:** `import_passages` accepts `authenticated_reviewer_uid` and `reviewer_is_admin` from its caller. These are NOT independently verified. Never expose this API to untrusted clients or treat a boolean/UID argument as proof of identity. Add a trusted server entrypoint that validates the authenticated session and admin authorization from protected server-side records. Test nonadmin, cross-owner, forged reviewer, expired session, and revoked role.
 2. **Protected approval writes:** `page_review_approvals_v2.sql` is a DRAFT, not applied. Implement a privileged approval/rejection/revocation writer with audited reviewer identity and PDF page-image inspection. Ordinary browser roles must not have table privileges. Test concurrent revocation/import on real Postgres.
