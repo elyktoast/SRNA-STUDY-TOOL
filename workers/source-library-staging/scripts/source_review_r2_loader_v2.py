@@ -9,7 +9,7 @@ import re
 
 BUCKET = "srna-staging-textbooks"
 MAX_BYTES = 75 * 1024 * 1024
-OWNER_KEY = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9._-]{1,150}\\.pdf$", re.I)
+OWNER_KEY = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9._-]{1,150}\.pdf$", re.I)
 
 
 def fetch_verified_staging_pdf(client, *, owner_uid, r2_key, expected_sha256,
