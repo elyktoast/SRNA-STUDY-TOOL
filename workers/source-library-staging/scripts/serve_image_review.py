@@ -49,6 +49,9 @@ def serve(index_dir, sheet_dir, port=8765):
     csrf_token = secrets.token_urlsafe(32)
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.headers.get("Host") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+                self.send_error(403)
+                return
             path = urlsplit(self.path).path
             if path == "/":
                 review = json.loads(review_path.read_text(encoding="utf-8"))
