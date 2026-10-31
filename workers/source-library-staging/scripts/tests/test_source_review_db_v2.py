@@ -32,6 +32,14 @@ class DatabaseApprovalTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Verified admin"):
             load_approved_pages(None,MANIFEST,
                 authenticated_reviewer_uid="reviewer",reviewer_is_admin=False)
+    def test_out_of_range_db_approval_rejected(self):
+        with self.assertRaisesRegex(ValueError, "database-approved PDF page"):
+            load_approved_pages(Connection([(11,)]), MANIFEST,
+                authenticated_reviewer_uid="reviewer", reviewer_is_admin=True)
+    def test_boolean_db_approval_rejected(self):
+        with self.assertRaisesRegex(ValueError, "database-approved PDF page"):
+            load_approved_pages(Connection([(True,)]), MANIFEST,
+                authenticated_reviewer_uid="reviewer", reviewer_is_admin=True)
     def test_duplicate_db_rows_rejected(self):
         with self.assertRaisesRegex(ValueError,"Duplicate"):
             load_approved_pages(Connection([(2,),(2,)]),MANIFEST,
