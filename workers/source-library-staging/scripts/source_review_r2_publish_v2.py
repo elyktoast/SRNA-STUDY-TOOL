@@ -13,14 +13,14 @@ import tempfile
 from pathlib import Path
 
 from source_review_queue_publish_v2 import prepare_queue_artifacts
-from source_review_publication_lock_v2 import exclusive_publication_lock
+from source_review_publication_lock_v2 import exclusive_publication_lock, PublicationLock
 
 MAX_BYTES = 300 * 1024 * 1024
 
 
 def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=False, publication_lock=None):
-    if apply and publication_lock is None:
-        raise ValueError("An exclusive publication lock is required for R2 writes")
+    if apply and (not isinstance(publication_lock, PublicationLock)):
+        raise ValueError("A trusted exclusive publication lock is required for R2 writes")
     if bucket != "srna-staging-textbooks":
         raise ValueError("Staging bucket required")
     extraction_dir = Path(extraction_dir)
