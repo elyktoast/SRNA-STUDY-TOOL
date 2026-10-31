@@ -1,6 +1,6 @@
 {
   "name": "srna-source-reviewer-gateway-staging",
-  "main": "src/index.js",
+  "main": "src/entry.js",
   "compatibility_date": "2026-10-31",
   "vars": {
     "STAGING_ONLY": "true",
