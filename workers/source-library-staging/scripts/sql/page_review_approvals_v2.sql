@@ -16,6 +16,7 @@ create table if not exists source_library_staging.page_review_approvals_v2 (
 );
 alter table source_library_staging.page_review_approvals_v2 enable row level security;
 revoke all on source_library_staging.page_review_approvals_v2 from public, anon, authenticated;
+revoke create on schema source_library_staging from public, anon, authenticated;
 -- No RLS policies: ordinary roles cannot read/write approvals.
 -- Only a separately verified, privileged server process should manage records.
 create index if not exists page_review_approvals_lookup_v2
