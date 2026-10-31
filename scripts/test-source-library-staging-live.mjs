@@ -47,4 +47,23 @@ const wrongOrigin = await check('/health', 'https://srnastudytool.com');
 assert.equal(wrongOrigin.response.status, 403, 'production origin must be rejected');
 console.log('PASS: production origin rejected by staging Worker');
 
+
+const protectedPaths = [
+  '/materials/review-queue?path=00000000-0000-4000-8000-000000000000%2Ffake.pdf',
+  '/materials/review-pdf?path=00000000-0000-4000-8000-000000000000%2Ffake.pdf',
+  '/chapter-reviews/draft?path=00000000-0000-4000-8000-000000000000%2Ffake.pdf',
+  '/materials/item?path=00000000-0000-4000-8000-000000000000%2Ffake.pdf',
+];
+for (const path of protectedPaths) {
+  const result = await check(path, staging);
+  assert.equal(result.response.status, 403, 'anonymous request must be forbidden: '+path);
+}
+console.log('PASS: deployed protected review, preview, draft and item routes reject anonymous requests');
+
+for (const path of ['/materials/review-queue','/materials/review-pdf','/chapter-reviews/draft']) {
+  const result = await check(path, 'https://srnastudytool.com');
+  assert.equal(result.response.status, 403, 'production origin must be forbidden: '+path);
+}
+console.log('PASS: deployed review routes reject production origin');
+
 console.log('Live staging smoke tests passed (read-only; no R2 mutations).');
