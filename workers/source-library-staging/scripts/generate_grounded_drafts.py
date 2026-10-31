@@ -10,6 +10,7 @@ import urllib.error
 import urllib.request
 
 from prepare_grounded_generation import prepare
+from board_item_quality import review_item
 
 
 def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
@@ -66,7 +67,7 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
         matching_passages = [pid for pid, text in allowed_passages.items() if excerpt in text]
         # An exact source quotation establishes traceability, not medical correctness.
         # Paraphrases and invented excerpts remain unverified for human review.
-        drafts.append({
+        draft = {
             **question,
             "status": "draft",
             "candidateSourcePassageIds": payload["evidence"]["passage_ids"],
@@ -75,7 +76,12 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
             "evidenceVerificationStatus": "unverified",
             "citationVerified": False,
             "requiresHumanReview": True,
-        })
+            "nceDomain": question.get("nceDomain"),
+            "reasoningCategory": question.get("reasoningCategory"),
+            "difficultyTier": question.get("difficultyTier"),
+        }
+        draft["boardQualityReview"] = review_item(draft, known_stems=[d["stem"] for d in drafts])
+        drafts.append(draft)
     return {"drafts": drafts, "count": len(drafts),
             "provider": raw.get("provider"), "model": raw.get("model"),
             "autoApproved": False, "sourceEvidence": payload["evidence"]}
