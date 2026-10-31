@@ -52,7 +52,7 @@ class FakeR2:
 class HeldLock(PublicationLock):
     def __init__(self):
         self.key = KEY
-        self.connection = type("FakeConnection", (), {"closed": False})()
+        self.connection = type("FakeConnection", (), {"closed": False, "info": type("Info", (), {"transaction_status": 2})()})()
         self.active = True
 
 
