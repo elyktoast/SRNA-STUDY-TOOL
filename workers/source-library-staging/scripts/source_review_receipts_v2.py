@@ -71,7 +71,7 @@ def verify_receipt(secret, receipt, *, reviewer_uid, owner_uid, source_sha256,
                        "pdf_page": pdf_page, "image_sha256": image_sha256}
     if not isinstance(body, dict) or any(body.get(k) != v or type(body.get(k)) is not type(v) for k, v in expected_fields.items()):
         raise ValueError("Receipt source/reviewer/page mismatch")
-    if type(body.get("iat")) is not int or body["iat"] > current + 30 or current - body["iat"] > TTL_SECONDS:
+    if type(body.get("iat")) is not int or body["iat"] > current or current - body["iat"] > TTL_SECONDS:
         raise ValueError("Receipt expired or not yet valid")
     if not isinstance(body.get("nonce"), str) or len(body["nonce"]) != 32:
         raise ValueError("Invalid receipt nonce")
