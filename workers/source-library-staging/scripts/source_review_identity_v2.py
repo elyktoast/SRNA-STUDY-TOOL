@@ -39,10 +39,15 @@ def resolve_admin_reviewer(access_token, *, auth_provider, protected_role_store)
         raise ValueError("Authenticated reviewer session required")
     if auth_provider is None or protected_role_store is None:
         raise ValueError("Trusted reviewer verification adapters required")
+    # Fail closed if the trusted authentication or role provider errors. In
+    # particular, caller-supplied JWT claims and metadata are never a fallback.
     user = auth_provider.get_user(access_token)
     if not isinstance(user, dict) or user.get("active") is not True:
         raise ValueError("Reviewer session is invalid")
     uid = _uuid(user.get("id"))
+    # The verified auth UID is the only identity passed to the protected role
+    # lookup. Authorization must be evaluated at import time, not cached from
+    # a caller-provided flag.
     is_admin = protected_role_store.is_active_admin(uid)
     if is_admin is not True:
         raise ValueError("Active admin reviewer required")
