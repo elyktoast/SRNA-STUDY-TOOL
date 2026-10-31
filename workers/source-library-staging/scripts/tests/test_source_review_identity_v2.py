@@ -35,6 +35,25 @@ class ReviewerIdentityTests(unittest.TestCase):
         for user in ({"id": UID, "active": False}, {"id": "bad", "active": True}, None):
             with self.subTest(user=user), self.assertRaises(ValueError):
                 resolve_admin_reviewer("verified-token", auth_provider=Auth(user), protected_role_store=Roles())
+    def test_auth_provider_failure_is_fail_closed(self):
+        class FailingAuth:
+            def get_user(self, token):
+                raise RuntimeError("Auth provider unavailable")
+        roles = Roles()
+        with self.assertRaisesRegex(RuntimeError, "Auth provider unavailable"):
+            resolve_admin_reviewer("verified-token",
+                auth_provider=FailingAuth(), protected_role_store=roles)
+        self.assertEqual(roles.lookups, [])
+
+    def test_role_store_failure_is_fail_closed(self):
+        class FailingRoles:
+            def is_active_admin(self, uid):
+                raise RuntimeError("Role store unavailable")
+        with self.assertRaisesRegex(RuntimeError, "Role store unavailable"):
+            resolve_admin_reviewer("verified-token",
+                auth_provider=Auth({"id": UID, "active": True}),
+                protected_role_store=FailingRoles())
+
     def test_missing_adapters_or_token_rejected(self):
         for token, auth, roles in (("", Auth(), Roles()), ("verified-token", None, Roles()),
                                    ("verified-token", Auth(), None)):
