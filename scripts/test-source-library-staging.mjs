@@ -92,3 +92,21 @@ test('rejects invalid UTF-8 review draft with a client error',async()=>{
  assert.equal(response.status,400);
  objects.delete(pdf);
 });
+
+
+test('review PDF preview is read-only, owner-scoped and cannot approve',async()=>{
+ const pdf=uid+'/review-preview.pdf';
+ objects.set(pdf,new TextEncoder().encode('%PDF-1.4\\npreview'));
+ const path='/materials/review-pdf?path='+encodeURIComponent(pdf);
+ const response=await request(path);
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('content-type'),'application/pdf');
+ assert.equal(response.headers.get('x-review-approval-enabled'),'false');
+ assert.match(response.headers.get('cache-control'),/no-store/);
+ assert.match(await response.text(),/^%PDF-1.4/);
+ assert.equal((await request('/materials/review-pdf?path='+encodeURIComponent('00000000-0000-4000-8000-000000000000/foreign.pdf'))).status,400);
+ assert.equal((await request('/materials/review-pdf?path='+encodeURIComponent(uid+'/missing.pdf'))).status,404);
+ assert.equal((await request(path,'POST')).status,404);
+ assert.equal((await request(path,'GET',{authorization:'Bearer invalid'})).status,403);
+ objects.delete(pdf);
+});
