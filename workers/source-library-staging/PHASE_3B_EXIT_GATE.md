@@ -74,3 +74,29 @@ The current automated lock tests simulate database coordination; they do not est
 ### Opt-in real database concurrency acceptance test
 
 A separate `test_source_review_publication_lock_postgres_v2.py` exercises **two simultaneous PostgreSQL connections** against the same source key, an independent key, and lock reacquisition after release. It skips unless `SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL` is explicitly set to a disposable test database. It does not read or write R2, modify tables, or require a migration. Never point the test at production credentials. This complements but does not replace the end-to-end R2 staging publication test.
+
+
+## Live acceptance evidence — 2026-10-31 (partial; release gate remains OPEN)
+
+GitHub Actions run: https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41230051550
+Commit: `c8789a6238bdffbf4b38e47325aaa163b1e4cb55`.
+Both `staging-unit-tests` and `phase3b-disposable-acceptance` completed successfully.
+
+**Verified in live staging:**
+- Two-connection PostgreSQL source-scoped advisory-lock concurrency test passed, including independent-source lock and release/reacquisition assertions.
+- Synthetic owner-scoped PDF uploaded to `srna-staging-textbooks` (not the production bucket).
+- Dry-run produced no published queue; publication produced a queue and source attestation.
+- Original PDF bytes and SHA-256 remained unchanged; queue and source SHA-256 matched attestation; duplicate publication was refused.
+- Workflow reported `Cleanup complete: 3 disposable objects`. It did not perform a subsequent list/read-back check of deletion.
+- Standard Worker, Python, and repository validation jobs passed.
+- Earlier run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41229655021 failed because staging R2 credentials were read-only; owner corrected permission and retry passed.
+
+**Not yet validated (do not infer from green CI):**
+- Deployed Worker API returns verified source binding for a live published disposable queue, or HTTP 409 on queue tampering, PDF replacement, malformed/missing attestation.
+- Owner and cross-owner authenticated session tests, reviewer UI flagged-page navigation, and protected approval/nonce restrictions against the deployed Worker.
+- Forced process crash/recovery and real two-publisher process race beyond the separate two-connection PostgreSQL lock test.
+- Privileged trusted reviewer identity and role verification, approved-page import/revocation, and real passage retrieval relevance benchmark.
+- Broader source formats and release checks listed above.
+- Reviewer sign-off and complete source/queue/attestation evidence record.
+
+**Decision:** Phase 3B / Workstream B is **NOT COMPLETE**. Do not deploy, merge, enable automatic publication, or proceed to Phase C solely on this evidence.
