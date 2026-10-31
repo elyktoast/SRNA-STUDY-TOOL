@@ -5,6 +5,7 @@ The caller supplies a short-lived, authenticated staging JWT. Never log tokens,
 source passages, or generated medical content. No questions are auto-approved.
 """
 import json
+import re
 import urllib.error
 import urllib.request
 
@@ -38,6 +39,10 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
     questions = raw.get("questions") if isinstance(raw, dict) else None
     if not isinstance(questions, list) or not questions or len(questions) > count:
         raise ValueError("Invalid generated question count")
+    source_blocks = re.findall(r"\[SOURCE \d+ \| passage_id=([^ |]+) \| textbook_id=[^\]]+\]\n(.*?)(?=\n\n\[SOURCE |\Z)", payload["material"], flags=re.S)
+    if not source_blocks:
+        raise ValueError("Indexed source passage references missing")
+    allowed_passages = {pid: text for pid, text in source_blocks}
     drafts = []
     for question in questions:
         if not isinstance(question, dict):
@@ -57,11 +62,16 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
             raise ValueError("Invalid answer type")
         if not isinstance(question.get("sourceExcerpt"), str) or not question["sourceExcerpt"].strip():
             raise ValueError("Generated question lacks source support statement")
+        excerpt = question["sourceExcerpt"].strip()
+        matching_passages = [pid for pid, text in allowed_passages.items() if excerpt in text]
+        # An exact source quotation establishes traceability, not medical correctness.
+        # Paraphrases and invented excerpts remain unverified for human review.
         drafts.append({
             **question,
             "status": "draft",
             "candidateSourcePassageIds": payload["evidence"]["passage_ids"],
-            "sourcePassageIds": [],
+            "sourcePassageIds": matching_passages,
+            "sourceExcerptMatch": "exact" if matching_passages else "unmatched",
             "evidenceVerificationStatus": "unverified",
             "citationVerified": False,
             "requiresHumanReview": True,
