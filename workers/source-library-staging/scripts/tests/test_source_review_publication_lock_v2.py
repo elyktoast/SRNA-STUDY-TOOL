@@ -24,6 +24,7 @@ class FakeDatabase:
 
         class Connection:
             closed = False
+            info = type("Info", (), {"transaction_status": 2})()
             lock_id = None
             def __enter__(self):
                 return self
