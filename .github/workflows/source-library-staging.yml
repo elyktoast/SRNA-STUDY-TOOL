@@ -6,6 +6,7 @@ on:
       - 'workers/source-library-staging/**'
       - 'equipment/build.json'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/source-library-staging-ui.js'
       - 'equipment/assets/chapter-review-staging.js'
       - 'equipment/source-library-chapter-review-staging.html'
       - 'equipment/assets/studio-page.js'
@@ -24,6 +25,7 @@ on:
       - 'workers/source-library-staging/**'
       - 'equipment/build.json'
       - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/source-library-staging-ui.js'
       - 'equipment/assets/chapter-review-staging.js'
       - 'equipment/source-library-chapter-review-staging.html'
       - 'equipment/assets/studio-page.js'
@@ -59,6 +61,7 @@ jobs:
         run: |
           node --check workers/source-library-staging/src/index.js
           node --check equipment/assets/source-material-staging-storage.js
+          node --check equipment/assets/source-library-staging-ui.js
           node --check equipment/assets/chapter-review-staging.js
           node --check scripts/test-source-library-staging.mjs
           node --check scripts/test-source-library-reviewer-browser.mjs
