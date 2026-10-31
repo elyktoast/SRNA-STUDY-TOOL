@@ -184,3 +184,35 @@ test('verified PDF preview checks source bytes, queue attestation and owner isol
   assert.equal((await request(path)).status,409);
  }finally{env.TEXTBOOKS.get=oldGet;env.TEXTBOOKS.head=oldHead}
 });
+
+
+test('verified PDF endpoint rejects invalid attested page metadata and queue byte mismatches',async()=>{
+ const pdf=uid+'/invalid-attested-pages.pdf',queueKey=uid+'/_review_queues/invalid-attested-pages.pdf.json';
+ const data=new TextEncoder().encode('%PDF-1.4\\nfixture');
+ const digest=async b=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',b))).map(x=>x.toString(16).padStart(2,'0')).join('');
+ const sha=await digest(data);
+ const base={r2_key:pdf,source_sha256:sha,approval_enabled:false,pdf_page_count:2,pages:[]};
+ const oldGet=env.TEXTBOOKS.get,oldHead=env.TEXTBOOKS.head;
+ let queue=base,declaredLength=null;
+ const queueBytes=()=>new TextEncoder().encode(JSON.stringify(queue));
+ env.TEXTBOOKS.head=async key=>key===pdf?{size:data.length,etag:'stable'}:oldHead(key);
+ env.TEXTBOOKS.get=async key=>{
+  if(key===pdf)return {size:data.length,etag:'stable',arrayBuffer:async()=>data.slice().buffer};
+  if(key===queueKey)return {size:declaredLength??queueBytes().length,arrayBuffer:async()=>queueBytes().buffer};
+  if(key===queueKey+'.source.json')return {text:async()=>JSON.stringify({schema_version:1,r2_key:pdf,source_sha256:sha,source_etag:'stable',size_bytes:data.length,queue_sha256:await digest(queueBytes())})};
+  return oldGet(key);
+ };
+ const path='/materials/verified-review-pdf?path='+encodeURIComponent(pdf);
+ const page={pdf_page:1,review_category:'ocr_error',characters:0};
+ try{
+  for(const pages of [[page,page],[{...page,pdf_page:3}],[{...page,review_category:'approved'}],[{...page,characters:-1}]]){
+   queue={...base,pages};
+   assert.equal((await request(path)).status,409);
+  }
+  queue={...base,pages:[page]};
+  assert.equal((await request(path)).status,200);
+  declaredLength=queueBytes().length+1;
+  assert.equal((await request(path)).status,409);
+  declaredLength=null;
+ }finally{env.TEXTBOOKS.get=oldGet;env.TEXTBOOKS.head=oldHead}
+});
