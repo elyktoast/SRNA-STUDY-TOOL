@@ -54,6 +54,8 @@ class StagingConfigurationTests(unittest.TestCase):
             ("SUPABASE_URL", "https://xqyasyambwdyhsjkftqu.supabase.co/extra"),
             ("STAGING_DATABASE_URL", "postgresql://evil.xqyasyambwdyhsjkftqu:fake@aws-0-us-east-1.pooler.supabase.com:6543/postgres"),
             ("STAGING_DATABASE_URL", "postgresql://postgres:fake@db.xqyasyambwdyhsjkftqu.supabase.co:5432/other"),
+            ("STAGING_DATABASE_URL", "postgresql://postgres.xqyasyambwdyhsjkftqu:fake@db.xqyasyambwdyhsjkftqu.supabase.co:5432/postgres"),
+            ("STAGING_DATABASE_URL", "postgresql://postgres:fake@aws-0-us-east-1.pooler.supabase.com:6543/postgres"),
         ):
             with self.subTest(key=key, value=value):
                 with self.assertRaises(RuntimeError):
