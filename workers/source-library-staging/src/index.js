@@ -133,6 +133,21 @@ export default {async fetch(request,env){
    if(action==='abort'&&request.method==='DELETE'){await upload.abort();return json({ok:true},200,h)}
    return json({error:'Method not allowed'},405,h);
  }
+ // Read-only reviewer PDF delivery. The browser can fetch this with the
+ // existing bearer token and display a Blob URL with #page=N. This is NOT
+ // page-image inspection evidence and never issues an approval receipt.
+ if(url.pathname==='/materials/review-pdf'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const object=await env.TEXTBOOKS.get(key);
+   if(!object)return json({error:'Source PDF not found'},404,h);
+   return new Response(object.body,{status:200,headers:{
+     ...h,'content-type':'application/pdf','cache-control':'no-store, private',
+     'x-content-type-options':'nosniff','content-disposition':'inline; filename="review.pdf"',
+     'content-security-policy':"default-src 'none'; sandbox",
+     'x-review-approval-enabled':'false'
+   }});
+ }
  if(url.pathname==='/materials/item'&&(request.method==='GET'||request.method==='DELETE')){
    const key=url.searchParams.get('path');
    if(!validKey(key,uid))return json({error:'Invalid path'},400,h);
