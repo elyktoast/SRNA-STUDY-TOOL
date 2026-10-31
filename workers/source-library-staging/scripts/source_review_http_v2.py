@@ -5,6 +5,7 @@ pages: a completed application write cannot prove client delivery. Its purpose
 is to deploy the real trusted PyMuPDF renderer safely before the receipt
 acknowledgment protocol is designed and accepted.
 """
+import hashlib
 import json
 import os
 from urllib.parse import parse_qs
@@ -84,7 +85,12 @@ def create_app(runtime):
                 owner_uid=reviewer.uid, r2_key=key, pdf_page=page_number,
                 manifest_loader=lambda owner, source_key: manifest,
                 source_loader=lambda owner, source_key: source)
-            return response(start_response, "200 OK", page["png"], "image/png",
+            png = page["png"]
+            if (not isinstance(png, bytes) or not png.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+                    or hashlib.sha256(png).hexdigest() != page["image_sha256"]
+                    or page["source_sha256"] != manifest["sha256"]):
+                raise ValueError("Rendered page integrity mismatch")
+            return response(start_response, "200 OK", png, "image/png",
                             [("X-Verified-Source-SHA256", page["source_sha256"]),
                              ("X-Page-Image-SHA256", page["image_sha256"])])
         except ValueError:
