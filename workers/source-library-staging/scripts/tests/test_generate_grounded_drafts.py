@@ -22,10 +22,10 @@ class GroundedGenerationTests(unittest.TestCase):
     def test_valid_questions_remain_unapproved(self):
         result = self.call({"questions": [{
             "stem": "Which mechanism?", "options": ["A", "B", "C", "D"],
-            "answer": [0], "explanation": "Reason", "type": "single"}]})
+            "answer": [0], "explanation": "Reason", "type": "single", "sourceExcerpt": "source"}]})
         self.assertEqual(result["count"], 1)
         self.assertFalse(result["autoApproved"])
-        self.assertEqual(result["drafts"][0]["sourcePassageIds"], ["p1"])
+        self.assertEqual(result["drafts"][0]["candidateSourcePassageIds"], ["p1"])\n        self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])\n        self.assertEqual(result["drafts"][0]["evidenceVerificationStatus"], "unverified")
         self.assertTrue(result["drafts"][0]["requiresHumanReview"])
 
     def test_rejects_malformed_answer(self):
@@ -33,7 +33,7 @@ class GroundedGenerationTests(unittest.TestCase):
             self.call({"questions": [{"stem": "Which?", "options": ["A", "B", "C", "D"],
                                       "answer": [5], "explanation": "Reason"}]})
 
-    def test_rejects_insecure_endpoint(self):
+    def test_rejects_unverified_source_statement(self):\n        with self.assertRaisesRegex(ValueError, "source support"):\n            self.call({"questions": [{"stem": "Which?", "options": ["A", "B", "C", "D"],\n                                      "answer": [0], "explanation": "Reason", "type": "single"}]})\n\n    def test_rejects_insecure_endpoint(self):
         with self.assertRaises(ValueError):
             generate_drafts(object(), OWNER, "airway", endpoint="http://localhost/functions/v1/generate-questions",
                             jwt="token", apikey="key")
