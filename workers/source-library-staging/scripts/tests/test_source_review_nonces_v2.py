@@ -38,6 +38,16 @@ class NonceTests(unittest.TestCase):
     def test_missing_or_consumed_nonce_fails_closed(self):
         with self.assertRaises(ValueError):
             consume_inspection_nonce(Conn(0), **ARGS)
+    def test_invalid_bindings_never_reach_database(self):
+        bad = (dict(nonce="wrong"), dict(owner_uid="not-a-uuid"),
+               dict(source_sha256="z"*64), dict(r2_key="other/book.pdf"),
+               dict(pdf_page=True), dict(pdf_page=0))
+        for change in bad:
+            with self.subTest(change=change):
+                conn = Conn()
+                with self.assertRaises(ValueError):
+                    consume_inspection_nonce(conn, **dict(ARGS, **change))
+                self.assertEqual(conn.cur.calls, [])
     def test_failed_registration(self):
         with self.assertRaises(ValueError):
             register_inspection_nonce(Conn(0), issued_at=1000, **ARGS)
