@@ -33,8 +33,10 @@ class PageApprovalPreflightTests(unittest.TestCase):
     def test_ready_schema(self):
         c = connection()
         self.assertTrue(preflight(c)["ready"])
-        self.assertEqual(len(c.cursor_obj.queries[-2][1]), 8)
-        self.assertEqual(len(c.cursor_obj.queries[-1][1]), 2)
+        self.assertEqual(len(c.cursor_obj.queries[-4][1]), 8)
+        self.assertEqual(len(c.cursor_obj.queries[-3][1]), 2)
+        self.assertIsNone(c.cursor_obj.queries[-2][1])
+        self.assertEqual(len(c.cursor_obj.queries[-1][1]), 1)
     def test_missing_column(self):
         self.assertIn("column_mismatch:revoked_at",
                       preflight(connection(columns=COLUMNS[:-2]+COLUMNS[-1:]))["issues"])
