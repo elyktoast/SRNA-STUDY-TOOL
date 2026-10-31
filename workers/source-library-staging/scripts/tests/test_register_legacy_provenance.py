@@ -46,8 +46,8 @@ class LegacyProvenanceTests(unittest.TestCase):
                 [(0, 1, 1, "passage")],
                 versions,
             ]
-            with patch("register_legacy_provenance.validate", return_value=manifest), \\
-                 patch("register_legacy_provenance.verify_pdf", return_value=digest), \\
+            with patch("register_legacy_provenance.validate", return_value=manifest), \
+                 patch("register_legacy_provenance.verify_pdf", return_value=digest), \
                  patch("register_legacy_provenance.compare_passages",
                        return_value={"matched": True, "passage_count": 1}):
                 result = register(".", "source.pdf", connection, apply=apply,
