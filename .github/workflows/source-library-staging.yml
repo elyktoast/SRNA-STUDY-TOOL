@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'workers/source-library-staging/**'
+      - 'equipment/build.json'
       - 'equipment/assets/source-material-staging-storage.js'
       - 'equipment/assets/chapter-review-staging.js'
       - 'equipment/source-library-chapter-review-staging.html'
@@ -18,6 +19,7 @@ on:
       - feature/source-library-r2-staging
     paths:
       - 'workers/source-library-staging/**'
+      - 'equipment/build.json'
       - 'equipment/assets/source-material-staging-storage.js'
       - 'equipment/assets/chapter-review-staging.js'
       - 'equipment/source-library-chapter-review-staging.html'
