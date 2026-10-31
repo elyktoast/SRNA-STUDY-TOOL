@@ -93,6 +93,17 @@ class PublishTests(unittest.TestCase):
             publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
         self.assertEqual(r2.writes, {})
 
+    def test_replacement_after_queue_write_does_not_publish_attestation(self):
+        class ReplacedDuringWrite(FakeR2):
+            def put_object(self, Bucket, Key, Body, ContentType):
+                super().put_object(Bucket=Bucket, Key=Key, Body=Body, ContentType=ContentType)
+                if Key.endswith("book.pdf.json"):
+                    self.etag = "etag-replaced"
+        r2 = ReplacedDuringWrite(self.data)
+        with self.assertRaisesRegex(ValueError, "changed during publication"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        self.assertFalse(any(k.endswith(".source.json") for k in r2.writes))
+
     def test_interrupted_publication_leaves_no_attestation(self):
         class FailingR2(FakeR2):
             def put_object(self, Bucket, Key, Body, ContentType):
