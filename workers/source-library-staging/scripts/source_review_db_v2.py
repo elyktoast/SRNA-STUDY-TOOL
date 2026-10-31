@@ -25,6 +25,11 @@ def load_approved_pages(conn, manifest, *, authenticated_reviewer_uid, reviewer_
             (manifest["owner_uid"], manifest["sha256"], manifest["r2_key"],
              authenticated_reviewer_uid))
         pages = [row[0] for row in cur.fetchall()]
+    count = manifest.get("pdf_page_count")
+    if type(count) is not int or count < 1:
+        raise ValueError("Invalid source page count")
+    if any(type(page) is not int or page < 1 or page > count for page in pages):
+        raise ValueError("Invalid database-approved PDF page")
     if len(pages) != len(set(pages)):
         raise ValueError("Duplicate database page approval")
     return TrustedReviewApproval(
