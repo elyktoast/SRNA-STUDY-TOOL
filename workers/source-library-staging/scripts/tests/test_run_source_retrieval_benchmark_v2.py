@@ -23,6 +23,16 @@ class RetrievalIntegrationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 run(object(), owner_uid="bad", fixtures=[{"query":"x","expected_passage_ids":["p"]}])
             mock.assert_not_called()
+    def test_invalid_later_fixture_blocks_all_queries(self):
+        fixtures = [
+            {"query":"valid","expected_passage_ids":["p1"]},
+            {"query":"invalid","expected_passage_ids":["p2"],
+             "expected_pdf_pages":{"not-expected":2}},
+        ]
+        with patch("run_source_retrieval_benchmark_v2.search") as mock:
+            with self.assertRaisesRegex(ValueError, "expected PDF pages"):
+                run(object(), owner_uid=OWNER, fixtures=fixtures)
+            mock.assert_not_called()
     def test_missing_passage_is_reported(self):
         with patch("run_source_retrieval_benchmark_v2.search", return_value=[]):
             result = run(object(), owner_uid=OWNER,
