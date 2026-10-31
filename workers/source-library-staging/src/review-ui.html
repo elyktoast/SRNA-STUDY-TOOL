@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Staging PDF page review</title>
+<style>
+:root{font:15px system-ui;color-scheme:light dark}body{margin:0;padding:1rem;max-width:1200px;margin-inline:auto}
+header,form,.toolbar{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}input{padding:.55rem;min-width:14rem}
+button{padding:.6rem 1rem;cursor:pointer}iframe{width:100%;height:min(75vh,900px);border:1px solid #888;border-radius:8px}
+.notice{padding:.8rem;background:Canvas;border:1px solid #888;border-radius:8px}label{font-weight:600}
+#status{min-height:1.5rem}main{margin-top:1rem}
+</style>
+<header><h1>Textbook PDF review — staging</h1></header>
+<p class="notice"><strong>Read-only reviewer preview.</strong> This page does not record an inspection, issue approval receipts, or approve passages. Only use staging textbooks.</p>
+<form id="form"><label>Staging API URL <input id="api" type="url" required placeholder="https://your-staging-worker.example"></label>
+<label>Supabase access token <input id="token" type="password" required autocomplete="off"></label>
+<label>Owner-scoped PDF path <input id="path" required placeholder="your-uid/document.pdf"></label>
+<label>Physical PDF page <input id="page" type="number" min="1" step="1" value="1" required></label>
+<button type="submit">Open PDF page</button><button type="button" id="clear">Clear preview</button></form>
+<p id="status" role="status" aria-live="polite"></p>
+<main><iframe id="viewer" title="Original textbook PDF preview" referrerpolicy="no-referrer"></iframe></main>
+<script>
+(()=>{'use strict';
+const el=id=>document.getElementById(id);
+let objectUrl=null;
+function clear(){if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}el('viewer').removeAttribute('src')}
+el('clear').onclick=()=>{clear();el('token').value='';el('status').textContent='Preview cleared'};
+el('form').onsubmit=async event=>{
+ event.preventDefault();clear();
+ const api=el('api').value.trim().replace(/\/$/,'');
+ const page=Number(el('page').value),path=el('path').value.trim();
+ if(!Number.isSafeInteger(page)||page<1){el('status').textContent='Invalid physical PDF page';return}
+ if(!/^https:\/\//.test(api)){el('status').textContent='HTTPS staging API required';return}
+ el('status').textContent='Loading authenticated PDF…';
+ try{
+  const response=await fetch(api+'/materials/review-pdf?path='+encodeURIComponent(path),{
+   headers:{authorization:'Bearer '+el('token').value},cache:'no-store'});
+  if(!response.ok)throw new Error('Preview unavailable (HTTP '+response.status+')');
+  const blob=await response.blob();
+  if(blob.type!=='application/pdf')throw new Error('Server did not return a PDF');
+  objectUrl=URL.createObjectURL(blob);
+  el('viewer').src=objectUrl+'#page='+page;
+  el('status').textContent='Showing physical PDF page '+page+'. Preview only; no approval recorded.';
+ }catch(error){el('status').textContent=error.message;clear()}
+};
+window.addEventListener('pagehide',clear);
+})();
+</script></html>
