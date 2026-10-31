@@ -13,7 +13,7 @@ class RetrievalIntegrationTests(unittest.TestCase):
         fixtures = [{"query": "airway", "textbook_id": BOOK,
                      "expected_passage_ids": ["p1"]}]
         with patch("run_source_retrieval_benchmark_v2.search",
-                   return_value=[{"passage_id": "p1"}]) as mock:
+                   return_value=[{"passage_id": "p1", "pdf_page_start": 8, "pdf_page_end": 8}]) as mock:
             report = run(object(), owner_uid=OWNER, fixtures=fixtures)
         self.assertTrue(report["passed"])
         self.assertEqual(mock.call_args.kwargs["textbook_id"], BOOK)
