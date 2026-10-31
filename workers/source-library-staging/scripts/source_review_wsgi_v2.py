@@ -16,7 +16,6 @@ def validate_staging_configuration(env):
     # Fail closed if a deployment accidentally points at a non-staging backend.
     from urllib.parse import urlparse
     db = urlparse(env["STAGING_DATABASE_URL"])
-    supabase = urlparse(env["SUPABASE_URL"])
     if (db.scheme not in ("postgres", "postgresql") or
             not db.hostname or
             not (db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" or
@@ -24,7 +23,8 @@ def validate_staging_configuration(env):
                   db.username == "postgres.xqyasyambwdyhsjkftqu")) or
             env["SUPABASE_URL"] != "https://xqyasyambwdyhsjkftqu.supabase.co" or
             db.path != "/postgres" or db.fragment or db.query or
-            db.username not in ("postgres", "postgres.xqyasyambwdyhsjkftqu")):
+            ((db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" and db.username != "postgres") or
+             (db.hostname.endswith(".pooler.supabase.com") and db.username != "postgres.xqyasyambwdyhsjkftqu"))):
         raise RuntimeError("Reviewer service must use the designated staging Supabase project")
     return True
 
