@@ -15,6 +15,7 @@ on:
       - 'scripts/test-source-library-reviewer-browser.mjs'
       - 'scripts/test-source-library-reviewer-gateway.mjs'
       - 'scripts/test-source-library-staging-live.mjs'
+      - 'scripts/test-source-library-reviewer-live.mjs'
       - '.github/workflows/source-library-staging.yml'
   push:
     branches:
@@ -63,6 +64,9 @@ jobs:
           node --check scripts/test-source-library-reviewer-browser.mjs
           node --check scripts/test-source-library-reviewer-gateway.mjs
           node --check workers/source-library-staging/reviewer-gateway/src/index.js
+          node --check workers/source-library-staging/reviewer-gateway/src/container.js
+          node --check workers/source-library-staging/reviewer-gateway/src/entry.js
+          node --check scripts/test-source-library-reviewer-live.mjs
       - name: Staging Worker tests
         run: node --test scripts/test-source-library-staging.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs
       - name: Python staging pipeline tests
@@ -83,6 +87,26 @@ jobs:
         env:
           SRNA_STAGING_WORKER_TEST_URL: https://srna-source-library-staging.dalley-kyle.workers.dev
         run: node scripts/test-source-library-staging-live.mjs
+
+  reviewer-live-boundary:
+    if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reviewer staging boundary acceptance (when URL configured)
+        env:
+          SRNA_REVIEWER_GATEWAY_URL: ${{ vars.SRNA_REVIEWER_GATEWAY_URL }}
+        run: |
+          if [ -z "$SRNA_REVIEWER_GATEWAY_URL" ]; then
+            echo "Reviewer gateway URL not configured; live reviewer acceptance is blocked."
+            exit 1
+          fi
+          node scripts/test-source-library-reviewer-live.mjs
 
   phase3b-disposable-acceptance:
     # Opt in on a single staging-branch push via a deliberate commit marker.
