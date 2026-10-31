@@ -34,6 +34,8 @@ class FakeR2:
         return {"ContentLength": len(self.data), "ETag": self.etag}
     def get_object(self, Bucket, Key):
         return {"Body": Body(self.data)}
+    def delete_object(self, Bucket, Key):
+        self.writes.pop(Key, None)
     def put_object(self, Bucket, Key, Body, ContentType):
         self.writes[Key] = Body
 
@@ -90,6 +92,19 @@ class PublishTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "changed before publication"):
             publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
         self.assertEqual(r2.writes, {})
+
+    def test_interrupted_publication_leaves_no_attestation(self):
+        class FailingR2(FakeR2):
+            def put_object(self, Bucket, Key, Body, ContentType):
+                if Key.endswith(".source.json"):
+                    raise RuntimeError("simulated attestation failure")
+                super().put_object(Bucket=Bucket, Key=Key, Body=Body, ContentType=ContentType)
+        r2 = FailingR2(self.data)
+        old_key = UID + "/_review_queues/book.pdf.json.source.json"
+        r2.writes[old_key] = b"old attestation"
+        with self.assertRaisesRegex(RuntimeError, "simulated"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        self.assertNotIn(old_key, r2.writes)
 
     def test_rejects_nonstaging_bucket(self):
         r2 = FakeR2(self.data)
