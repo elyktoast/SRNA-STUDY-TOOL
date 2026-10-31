@@ -3,7 +3,7 @@
 // Requires only public staging endpoints; no admin token or secrets.
 import assert from 'node:assert/strict';
 
-const base = 'https://source-library-staging.srnastudytool.com';
+const base = process.env.SRNA_STAGING_WORKER_TEST_URL || 'https://source-library-staging.srnastudytool.com';
 const staging = 'https://staging.srnastudytool.com';
 const timeout = 15000;
 
