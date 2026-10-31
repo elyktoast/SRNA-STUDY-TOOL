@@ -38,7 +38,8 @@ class GroundedGenerationTests(unittest.TestCase):
             "sourceExcerpt": "invented source claim"}]})
         self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])
         self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "unmatched")
-        self.assertFalse(result["drafts"][0]["citationVerified"])\n
+        self.assertFalse(result["drafts"][0]["citationVerified"])
+
     def test_rejects_malformed_answer(self):
         with self.assertRaises(ValueError):
             self.call({"questions": [{"stem": "Which?", "options": ["A", "B", "C", "D"],
