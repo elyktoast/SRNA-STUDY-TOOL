@@ -12,6 +12,10 @@ def import_with_verified_reviewer(folder, manifest, connection, *,
     reviewer = resolve_admin_reviewer(
         access_token, auth_provider=auth_provider,
         protected_role_store=protected_role_store)
+    # An administrator may review a source owned by another user only through
+    # a separately authorized workflow; this importer is owner-scoped.
+    if manifest.get("owner_uid") != reviewer.uid:
+        raise ValueError("Reviewer does not own source")
     return import_passages(
         folder, manifest, connection,
         authenticated_reviewer_uid=reviewer.uid,
