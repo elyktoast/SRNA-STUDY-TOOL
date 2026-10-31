@@ -74,6 +74,10 @@ async function verifiedReviewPage(path,page){
  const blob=await response.blob();
  if(blob.type!=='image/png')throw Error('Invalid image payload type.');
  if(blob.size===0||blob.size>32*1024*1024)throw Error('Invalid reviewer image size.');
+ if(!globalThis.crypto?.subtle)throw Error('Browser SHA-256 verification unavailable.');
+ const bytes=await blob.arrayBuffer();
+ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),b=>b.toString(16).padStart(2,'0')).join('');
+ if(hash!==digest)throw Error('Reviewer image fingerprint mismatch.');
  return {blob,sourceSha256:source,imageSha256:digest,approvalEnabled:false};
 }
 async function remove(path){await call('/materials/item?path='+key(path),{method:'DELETE'});}
