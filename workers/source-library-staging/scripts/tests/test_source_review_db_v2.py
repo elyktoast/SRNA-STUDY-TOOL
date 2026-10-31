@@ -15,6 +15,7 @@ class Cursor:
     def execute(self,sql,params):
         assert "%s" in sql and len(params)==4
         assert "revoked_at is null" in sql
+        assert "for share" in sql.lower()
         assert params[3]=="reviewer"
     def fetchall(self): return self.rows
 class Connection:
