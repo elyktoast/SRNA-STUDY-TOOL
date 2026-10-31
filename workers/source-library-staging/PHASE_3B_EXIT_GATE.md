@@ -118,3 +118,12 @@ Cloudflare Security Event identified Bot Fight Mode managed challenge for GitHub
 GitHub Actions run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41231170920, commit `1ffeb06b`: `staging-unit-tests` succeeded, including the required live read-only Worker smoke step. Verified live `/health` 200, staging CORS, anonymous `/materials` 403, production-origin `/health` 403, anonymous review-queue/review-pdf/chapter-draft/material-item 403, and production-origin review endpoints 403. These were real Worker responses, not Cloudflare challenge pages. No R2 mutation or authenticated request occurred in this run. Disposable acceptance job was skipped by design.
 
 **Remaining gates:** Authenticated owner and cross-owner tests; live disposable queue source binding and tamper/replacement/missing attestation HTTP 409; reviewer UI navigation and protected approval/nonce behavior; trusted role/approval/import integration; real retrieval benchmark; final evidence and reviewer signoff. Do not claim Phase B complete. Disable the additional `workers.dev` route after live tests, preserving existing custom-domain routing.
+
+
+## Staging nonce migration applied and verified — 2026-10-31
+
+Owner explicitly authorized the persistent staging-only migration `scripts/sql/page_inspection_nonces_v2.sql`. Applied through the Supabase migration API to SRNA project `xqyasyambwdyhsjkftqu`, schema `source_library_staging`, migration name `source_library_staging_page_inspection_nonces_v2`; result `success:true`.
+
+Post-migration read-only verification: `page_inspection_nonces_v2` exists, `relrowsecurity=true`, `relforcerowsecurity=true`, zero policies, neither `anon` nor `authenticated` has SELECT/INSERT/UPDATE/DELETE privileges, and row count is zero. This validates schema configuration, **not** successful privileged runtime access, receipt issuance, consumption, role verification, or approval/import. Those require a separately tested trusted server entrypoint and disposable end-to-end staging acceptance.
+
+Do not reapply migration merely because the SQL source file's comment says NOT APPLIED; reconcile that comment with this evidence when updating the source file.
