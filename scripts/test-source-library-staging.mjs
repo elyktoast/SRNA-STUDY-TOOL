@@ -110,3 +110,16 @@ test('review PDF preview is read-only, owner-scoped and cannot approve',async()=
  assert.equal((await request(path,'GET',{authorization:'Bearer invalid'})).status,403);
  objects.delete(pdf);
 });
+
+
+test('review queue endpoint fails closed without verified PDF digest and denies cross-owner access',async()=>{
+ const pdf=uid+'/review-queue-test.pdf';
+ objects.set(pdf,new TextEncoder().encode('%PDF-1.4'));
+ const path='/materials/review-queue?path='+encodeURIComponent(pdf);
+ const response=await request(path);
+ assert.equal(response.status,404);
+ assert.equal((await response.json()).error,'Verified extraction queue unavailable');
+ assert.equal((await request('/materials/review-queue?path='+encodeURIComponent('00000000-0000-4000-8000-000000000000/other.pdf'))).status,400);
+ assert.equal((await request(path,'GET',{authorization:'Bearer invalid'})).status,403);
+ objects.delete(pdf);
+});
