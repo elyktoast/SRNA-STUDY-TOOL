@@ -103,7 +103,7 @@ class ManifestPageIntegrationTests(unittest.TestCase):
     def test_page_outside_manifest_fails_before_pdf_fetch(self):
         with self.assertRaisesRegex(ValueError, "outside trusted manifest"):
             self.render(3)
-        self.assertFalse(any(body.getbuffer().nbytes == len(self.pdf) for body in self.r2.bodies))
+        self.assertNotIn(KEY, self.r2.requested_keys)
 
 
 if __name__ == "__main__":
