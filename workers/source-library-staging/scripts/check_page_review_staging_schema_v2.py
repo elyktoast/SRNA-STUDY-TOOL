@@ -39,6 +39,10 @@ def preflight(conn):
             "has_schema_privilege('authenticated',%s,'CREATE')",
             ("source_library_staging", "source_library_staging"))
         schema_create_grants = cur.fetchone()
+        cur.execute("SELECT rolbypassrls FROM pg_roles WHERE rolname=current_user")
+        service_role_row = cur.fetchone()
+        cur.execute("SELECT has_table_privilege(current_user,%s,'SELECT')", (TABLE,))
+        service_select_row = cur.fetchone()
     issues = ["column_mismatch:" + name for name, kind in REQUIRED.items()
               if columns.get(name) != kind]
     if not rls_row or rls_row[0] is not True:
@@ -49,6 +53,10 @@ def preflight(conn):
         issues.append("client_table_privilege_present")
     if not schema_create_grants or any(value is not False for value in schema_create_grants):
         issues.append("client_schema_create_privilege_present")
+    if not service_role_row or service_role_row[0] is not True:
+        issues.append("service_role_cannot_bypass_forced_rls")
+    if not service_select_row or service_select_row[0] is not True:
+        issues.append("service_role_missing_select")
     return {"ready": not issues, "database": db_name,
             "reason": "ok" if not issues else "schema_or_permission_mismatch",
             "issues": issues}
