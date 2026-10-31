@@ -14,6 +14,11 @@ def load_approved_pages(conn, manifest, *, authenticated_reviewer_uid, reviewer_
     for key in ("owner_uid", "r2_key", "sha256"):
         if not isinstance(manifest.get(key), str) or not manifest[key]:
             raise ValueError("Missing source identity")
+    # Fail closed when the protected staging schema is absent or unsafe.
+    from check_page_review_staging_schema_v2 import preflight
+    readiness = preflight(conn)
+    if not readiness['ready']:
+        raise ValueError('Protected page-review schema unavailable or unsafe')
     # Bind all identifiers; never interpolate source or reviewer data into SQL.
     with conn.cursor() as cur:
         cur.execute(
