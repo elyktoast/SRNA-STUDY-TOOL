@@ -60,6 +60,13 @@ class ManifestTests(unittest.TestCase):
         self.assertEqual(result["owner_uid"], UID)
         self.assertTrue(all(body.closed for body in self.r2.bodies))
 
+    def test_manifest_key_accepts_valid_pdf_and_rejects_non_pdf(self):
+        self.assertEqual(self.load()["r2_key"], KEY)
+        for key in (UID + "/fixtureXpdf", UID + "/fixture\\\\.pdf", UID + "/nested/fixture.pdf"):
+            with self.subTest(key=key):
+                with self.assertRaisesRegex(ValueError, "owner-scoped"):
+                    load_staging_review_manifest(self.r2, owner_uid=UID, r2_key=key)
+
     def test_foreign_owner_rejected_before_storage(self):
         with self.assertRaisesRegex(ValueError, "owner-scoped"):
             load_staging_review_manifest(self.r2, owner_uid="00000000-0000-4000-8000-000000000000", r2_key=KEY)
