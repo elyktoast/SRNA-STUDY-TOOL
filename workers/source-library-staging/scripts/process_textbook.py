@@ -33,7 +33,9 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
     if current_sha256 != validated["sha256"]:
         raise ValueError("Source PDF changed after extraction; refusing import")
     if apply and reviewed_pages:
-        raise ValueError('Unattested --reviewed-page values cannot authorize indexing; use --page-review-file')
+        raise ValueError("Unattested page flags cannot authorize indexing")
+    if apply and page_review_file:
+        raise ValueError("Local page review JSON is not authenticated; import requires trusted server-side approval")
     verified_pages = load_reviewed_pages(page_review_file, validated) if page_review_file else ()
     quality = assess(validated, reviewed_pages=verified_pages if apply else tuple(set(verified_pages) | set(reviewed_pages)))
     result = {
