@@ -30,4 +30,35 @@ for (const authorization of ['Bearer invalid-token', 'Bearer malformed.invalid.t
  assert.match(response.headers.get('Cache-Control')||'',/no-store/);
  console.log('Invalid bearer rejected:',response.status);
 }
-console.log('Unauthenticated live staging reviewer boundary acceptance passed');
+
+// Optional authenticated acceptance: only a dedicated GitHub Actions secret may
+// supply a staging admin access token. Never log it or include it in URLs.
+const authenticatedToken=process.env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;
+const authenticatedPath=process.env.SRNA_STAGING_REVIEWER_PDF_KEY;
+if(Boolean(authenticatedToken)!==Boolean(authenticatedPath)){
+ throw Error('Both authenticated staging acceptance inputs must be configured together');
+}
+if(authenticatedToken){
+ assert.match(authenticatedPath,/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+\.pdf$/i);
+ const headers={Origin:origin,Authorization:'Bearer '+authenticatedToken};
+ const manifestResponse=await request('/review/manifest?path='+encodeURIComponent(authenticatedPath),{headers});
+ assert.equal(manifestResponse.status,200,'authenticated manifest: HTTP '+manifestResponse.status);
+ const manifest=await manifestResponse.json();
+ assert.match(manifest.source_sha256,/^[0-9a-f]{64}$/);
+ assert.ok(Number.isSafeInteger(manifest.pdf_page_count)&&manifest.pdf_page_count>=1);
+ assert.equal(manifest.approval_enabled,false);
+ assert.equal(manifestResponse.headers.get('X-Verified-Source-SHA256'),manifest.source_sha256);
+ const pageResponse=await request('/review/page.png?path='+encodeURIComponent(authenticatedPath)+'&page=1',{headers});
+ assert.equal(pageResponse.status,200,'authenticated PNG: HTTP '+pageResponse.status);
+ assert.match(pageResponse.headers.get('content-type')||'',/^image\/png/i);
+ assert.equal(pageResponse.headers.get('X-Verified-Source-SHA256'),manifest.source_sha256);
+ assert.match(pageResponse.headers.get('X-Page-Image-SHA256')||'',/^[0-9a-f]{64}$/);
+ assert.equal(pageResponse.headers.get('X-Review-Approval-Enabled'),'false');
+ const image=new Uint8Array(await pageResponse.arrayBuffer());
+ assert.ok(image.length>=8 && [137,80,78,71,13,10,26,10].every((b,i)=>image[i]===b));
+ const actualHash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',image)),b=>b.toString(16).padStart(2,'0')).join('');
+ assert.equal(actualHash,pageResponse.headers.get('X-Page-Image-SHA256'));
+ console.log('PASS: authenticated staging reviewer manifest and verified PDF page PNG');
+}
+
+console.log('Live staging reviewer boundary acceptance passed');
