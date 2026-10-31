@@ -103,13 +103,26 @@ export default {async fetch(request,env){
    const queueObj=await env.TEXTBOOKS.get(queueKey);
    if(!queueObj||queueObj.size>256*1024)return json({error:'Verified review queue unavailable'},409,h);
    const queueBytes=await queueObj.arrayBuffer();
+   if(queueBytes.byteLength>256*1024||queueBytes.byteLength!==queueObj.size)
+     return json({error:'Invalid review queue byte length'},409,h);
    const hex=bytes=>Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('');
    if(hex(await crypto.subtle.digest('SHA-256',queueBytes))!==att.queue_sha256)
      return json({error:'Review queue changed'},409,h);
    let queue;try{queue=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(queueBytes))}catch{return json({error:'Invalid queue'},409,h)}
    if(queue?.r2_key!==key||queue.source_sha256!==att.source_sha256||queue.approval_enabled!==false||
-      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1)
+      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1||
+      !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
      return json({error:'Review queue source mismatch'},409,h);
+   const seenPages=new Set();
+   const reviewCategories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   for(const page of queue.pages){
+     if(!page||!Number.isSafeInteger(page.pdf_page)||page.pdf_page<1||
+        page.pdf_page>queue.pdf_page_count||seenPages.has(page.pdf_page)||
+        !reviewCategories.has(page.review_category)||
+        !Number.isSafeInteger(page.characters)||page.characters<0)
+       return json({error:'Invalid verified review page'},409,h);
+     seenPages.add(page.pdf_page);
+   }
    // The SubtleCrypto API hashes a complete buffer; bound memory use.
    if(source.size>75*1024*1024||source.size<5)return json({error:'Source exceeds verified preview limit'},413,h);
    const pdf=await env.TEXTBOOKS.get(key);
