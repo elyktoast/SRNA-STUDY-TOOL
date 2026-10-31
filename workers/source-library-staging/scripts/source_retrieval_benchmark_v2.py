@@ -49,7 +49,7 @@ def evaluate(search, fixtures, *, min_recall_at_k=0.8):
                       "first_result_relevant": bool(found and found[0] in expected),
                       "page_references_valid": pages_ok})
     recall = sum(c["matched_count"] for c in cases) / sum(c["expected_count"] for c in cases)
-    return {"passed": recall >= min_recall_at_k and all(c["page_references_valid"] for c in cases),
+    return {"passed": recall >= min_recall_at_k and all(c["recall_at_k"] >= min_recall_at_k and c["page_references_valid"] for c in cases),
             "recall_at_k": recall, "threshold": min_recall_at_k,
             "case_count": len(cases), "cases": cases,
             "note": "Retrieval relevance only; original PDF page and clinical claims require separate review"}
