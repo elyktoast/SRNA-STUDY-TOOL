@@ -85,6 +85,47 @@ export default {async fetch(request,env){
        characters:p.characters,ocr_failed:p.ocr_failed===true,has_images:p.has_images===true})),
      approval_enabled:false,verified_source_binding:true},200,h);
  }
+ // Source-bound PDF preview for authenticated reviewers. This is a verified
+ // read-only delivery path, NOT page-image evidence or approval authorization.
+ // A separately deployed renderer is still required for page inspection receipts.
+ if(url.pathname==='/materials/verified-review-pdf'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const source=await env.TEXTBOOKS.head(key);
+   if(!source)return json({error:'Source PDF not found'},404,h);
+   const queueKey=uid+'/_review_queues/'+key.slice(uid.length+1)+'.json';
+   const attObj=await env.TEXTBOOKS.get(queueKey+'.source.json');
+   if(!attObj)return json({error:'Verified source attestation unavailable'},404,h);
+   let att;try{att=JSON.parse(await attObj.text())}catch{return json({error:'Invalid attestation'},409,h)}
+   if(att?.schema_version!==1||att.r2_key!==key||!/^([0-9a-f]{64})$/.test(att.source_sha256||'')||
+      att.size_bytes!==source.size||!att.source_etag||att.source_etag!==source.etag||
+      !/^[0-9a-f]{64}$/.test(att.queue_sha256||''))return json({error:'Source attestation mismatch'},409,h);
+   const queueObj=await env.TEXTBOOKS.get(queueKey);
+   if(!queueObj||queueObj.size>256*1024)return json({error:'Verified review queue unavailable'},409,h);
+   const queueBytes=await queueObj.arrayBuffer();
+   const hex=bytes=>Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('');
+   if(hex(await crypto.subtle.digest('SHA-256',queueBytes))!==att.queue_sha256)
+     return json({error:'Review queue changed'},409,h);
+   let queue;try{queue=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(queueBytes))}catch{return json({error:'Invalid queue'},409,h)}
+   if(queue?.r2_key!==key||queue.source_sha256!==att.source_sha256||queue.approval_enabled!==false||
+      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1)
+     return json({error:'Review queue source mismatch'},409,h);
+   // The SubtleCrypto API hashes a complete buffer; bound memory use.
+   if(source.size>75*1024*1024||source.size<5)return json({error:'Source exceeds verified preview limit'},413,h);
+   const pdf=await env.TEXTBOOKS.get(key);
+   if(!pdf)return json({error:'Source changed'},409,h);
+   if(pdf.size!==source.size||pdf.etag!==source.etag)return json({error:'Source changed'},409,h);
+   const bytes=await pdf.arrayBuffer();
+   if(bytes.byteLength!==source.size||hex(await crypto.subtle.digest('SHA-256',bytes))!==att.source_sha256)
+     return json({error:'Source fingerprint mismatch'},409,h);
+   const latest=await env.TEXTBOOKS.head(key);
+   if(!latest||latest.size!==source.size||latest.etag!==source.etag)return json({error:'Source replaced during verification'},409,h);
+   return new Response(bytes,{status:200,headers:{...h,'content-type':'application/pdf',
+     'cache-control':'private, no-store','x-content-type-options':'nosniff',
+     'content-disposition':'inline; filename="verified-review.pdf"',
+     'content-security-policy':"default-src 'none'; sandbox",
+     'x-verified-source-sha256':att.source_sha256,'x-review-approval-enabled':'false'}});
+ }
  // Owner-scoped staging review drafts. R2 persistence is NOT chapter approval.
  if(url.pathname==='/chapter-reviews/draft'&&['GET','PUT','DELETE'].includes(request.method)){
    const key=url.searchParams.get('path');
