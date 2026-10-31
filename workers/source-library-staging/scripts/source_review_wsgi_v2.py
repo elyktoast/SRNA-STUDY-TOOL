@@ -19,7 +19,9 @@ def build_app():
     supabase = urlparse(os.environ["SUPABASE_URL"])
     if (db.scheme not in ("postgres", "postgresql") or
             not db.hostname or
-            "xqyasyambwdyhsjkftqu" not in db.hostname or
+            not (db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" or
+                 (db.hostname.endswith(".pooler.supabase.com") and
+                  db.username and db.username.endswith(".xqyasyambwdyhsjkftqu"))) or
             supabase.scheme != "https" or
             supabase.hostname != "xqyasyambwdyhsjkftqu.supabase.co"):
         raise RuntimeError("Reviewer service must use the designated staging Supabase project")
