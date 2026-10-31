@@ -90,6 +90,12 @@ class LockTests(unittest.TestCase):
         with exclusive_publication_lock("postgres://test", BUCKET, KEY) as lock:
             lock.assert_held(KEY)
 
+    def test_ended_transaction_fails_closed(self):
+        with exclusive_publication_lock("postgres://test", BUCKET, KEY) as lock:
+            lock.connection.info.transaction_status = 0
+            with self.assertRaisesRegex(ValueError, "transaction is no longer active"):
+                lock.assert_held(KEY)
+
     def test_missing_database_url_rejected(self):
         with self.assertRaisesRegex(ValueError, "DATABASE_URL"):
             with exclusive_publication_lock("", BUCKET, KEY):
