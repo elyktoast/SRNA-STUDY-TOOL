@@ -66,6 +66,12 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(assets[0]["source"], "original_pdf")
         self.assertEqual(assets[0]["review_status"], "unreviewed")
         self.assertEqual(len(assets[0]["bbox"]), 4)
+        links = json.loads((self.base / "image-index" / "passage_image_links.json").read_text())
+        self.assertEqual(len(links), 1)
+        self.assertEqual(links[0]["chunk_index"], 0)
+        self.assertEqual(links[0]["pdf_page"], 1)
+        self.assertEqual(links[0]["candidate_asset_ids"], [assets[0]["asset_id"]])
+        self.assertEqual(links[0]["association"], "same_pdf_page_unverified")
         self.assertEqual(result["low_text_details"], [])
 
     def test_image_only_page_requires_visual_review(self):
