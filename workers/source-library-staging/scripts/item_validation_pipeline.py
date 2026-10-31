@@ -6,13 +6,14 @@ separate verified integrations; never mark them passed by default.
 """
 import re
 from item_standard_v2 import check
+from item_duplicate_checks import detect
 
 STAGES = ("schema", "deterministic_text", "math", "evidence",
           "duplicates", "blind_model", "human_review")
 PENDING = "pending"
 
 
-def screen(item):
+def screen(item, *, known_stems=()):
     schema_errors = check(item)
     stages = {name: {"status": PENDING, "issues": []} for name in STAGES}
     stages["schema"] = {"status": "fail" if schema_errors else "pass",
@@ -30,6 +31,8 @@ def screen(item):
         if any(re.search(r"\b(all|none) of the above\b", option["text"], re.I) for option in item["options"]):
             issues.append({"rule_id": "R-6.11", "message": "Forbidden option"})
     stages["deterministic_text"] = {"status": "flag" if issues else "pass", "issues": issues}
+    duplicates = detect(item, known_stems)
+    stages["duplicates"] = {"status": "fail" if duplicates else "pass", "issues": duplicates}
     return {"can_publish": False, "stages": stages,
-            "next_state": "needs_editorial_review" if issues else "draft",
+            "next_state": "needs_editorial_review" if issues or duplicates else "draft",
             "rewrite_attempts_allowed": 1}
