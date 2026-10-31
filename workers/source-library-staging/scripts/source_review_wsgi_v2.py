@@ -21,9 +21,10 @@ def validate_staging_configuration(env):
             not db.hostname or
             not (db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" or
                  (db.hostname.endswith(".pooler.supabase.com") and
-                  db.username and db.username.endswith(".xqyasyambwdyhsjkftqu"))) or
-            supabase.scheme != "https" or
-            supabase.hostname != "xqyasyambwdyhsjkftqu.supabase.co"):
+                  db.username == "postgres.xqyasyambwdyhsjkftqu")) or
+            env["SUPABASE_URL"] != "https://xqyasyambwdyhsjkftqu.supabase.co" or
+            db.path != "/postgres" or db.fragment or db.query or
+            db.username not in ("postgres", "postgres.xqyasyambwdyhsjkftqu")):
         raise RuntimeError("Reviewer service must use the designated staging Supabase project")
     return True
 
