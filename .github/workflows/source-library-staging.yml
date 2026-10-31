@@ -67,8 +67,8 @@ jobs:
           TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
       - name: Repository validation
         run: npm run validate
-      - name: Live Cloudflare staging Worker smoke test (read-only, manual)
-        if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true
+      - name: Live Cloudflare staging Worker smoke test (read-only)
+        if: (github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-smoke]'))
         run: node scripts/test-source-library-staging-live.mjs
 
   phase3b-disposable-acceptance:
