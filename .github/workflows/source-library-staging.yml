@@ -65,6 +65,8 @@ jobs:
           tesseract --list-langs
           python3 -c 'import fitz; print(fitz.__doc__)'
           TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
+      - name: Staging reviewer container build
+        run: docker build -f workers/source-library-staging/reviewer-service/Dockerfile -t srna-reviewer-staging:test .
       - name: Repository validation
         run: npm run validate
       - name: Live Cloudflare staging Worker smoke test (read-only)
