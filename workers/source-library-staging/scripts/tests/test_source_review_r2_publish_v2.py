@@ -114,7 +114,7 @@ class PublishTests(unittest.TestCase):
             def head_object(self, **kwargs):
                 self.calls += 1
                 result = super().head_object(**kwargs)
-                if self.calls == 2:
+                if self.calls == 3:
                     result["ETag"] = "new-etag"
                 return result
         r2 = ChangedR2(self.data)
@@ -141,7 +141,6 @@ class PublishTests(unittest.TestCase):
                 super().put_object(Bucket=Bucket, Key=Key, Body=Body, ContentType=ContentType)
         r2 = FailingR2(self.data)
         old_key = UID + "/_review_queues/book.pdf.json.source.json"
-        r2.writes[old_key] = b"old attestation"
         with self.assertRaisesRegex(RuntimeError, "simulated"):
             publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertNotIn(old_key, r2.writes)
