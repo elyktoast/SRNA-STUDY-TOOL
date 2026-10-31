@@ -33,9 +33,51 @@ async function file(path,name){const response=await call('/materials/item?path='
 async function download(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name||'source-material.pdf';a.click()}finally{setTimeout(()=>URL.revokeObjectURL(url),1000)}}
 async function reviewQueue(path){const response=await call('/materials/review-queue?path='+key(path));return response.json();}
 async function reviewPdf(path){const response=await call('/materials/review-pdf?path='+key(path));const blob=await response.blob();if(blob.type!=='application/pdf')throw Error('Review endpoint did not return a PDF.');return blob;}
+function reviewerSettings(){
+ const base=String(config.reviewerApiUrl||'');let url;
+ try{url=new URL(base)}catch{}
+ if(location.hostname!=='staging.srnastudytool.com'||!config.enabled||!url||
+    url.protocol!=='https:'||url.username||url.password||url.search||url.hash||
+    url.pathname!=='/'||!url.hostname.endsWith('.srnastudytool.com')||
+    url.hostname==='srnastudytool.com'||url.hostname==='www.srnastudytool.com'||
+    url.hostname==='staging.srnastudytool.com')
+   throw Error('Verified reviewer service is not configured for staging.');
+ return url.origin;
+}
+async function reviewerCall(path){
+ const response=await fetch(reviewerSettings()+path,{
+  method:'GET',headers:{Authorization:'Bearer '+token()},cache:'no-store',
+  credentials:'omit',redirect:'error'
+ });
+ if(!response.ok)throw Error('Verified reviewer request failed ('+response.status+').');
+ if(response.headers.get('X-Review-Approval-Enabled')!=='false')
+  throw Error('Unexpected reviewer approval state.');
+ return response;
+}
+async function verifiedReviewManifest(path){
+ const response=await reviewerCall('/review/manifest?path='+key(path));
+ const data=await response.json();
+ if(!/^[a-f0-9]{64}$/.test(data.source_sha256||'')||
+    !Number.isSafeInteger(data.pdf_page_count)||data.pdf_page_count<1||
+    data.approval_enabled!==false)
+  throw Error('Invalid verified reviewer manifest.');
+ return data;
+}
+async function verifiedReviewPage(path,page){
+ if(!Number.isSafeInteger(page)||page<1)throw Error('Invalid physical PDF page.');
+ const response=await reviewerCall('/review/page.png?path='+key(path)+'&page='+page);
+ if(response.headers.get('Content-Type')!=='image/png')throw Error('Invalid reviewer page image.');
+ const source=response.headers.get('X-Verified-Source-SHA256');
+ const digest=response.headers.get('X-Page-Image-SHA256');
+ if(!/^[a-f0-9]{64}$/.test(source||'')||!/^[a-f0-9]{64}$/.test(digest||''))
+  throw Error('Missing verified page fingerprints.');
+ const blob=await response.blob();
+ if(blob.size===0||blob.size>32*1024*1024)throw Error('Invalid reviewer image size.');
+ return {blob,sourceSha256:source,imageSha256:digest,approvalEnabled:false};
+}
 async function remove(path){await call('/materials/item?path='+key(path),{method:'DELETE'});}
 async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
 })();
