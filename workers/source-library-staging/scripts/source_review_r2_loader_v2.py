@@ -29,7 +29,13 @@ def fetch_verified_staging_pdf(client, *, owner_uid, r2_key, expected_sha256,
     received = 0
     digest = hashlib.sha256()
     try:
+        if response.get("ContentLength", size) != size:
+            raise ValueError("R2 response size differs from verified HEAD")
+        if response.get("ETag", head.get("ETag")) != head.get("ETag"):
+            raise ValueError("R2 response ETag differs from verified HEAD")
         for chunk in response["Body"].iter_chunks(chunk_size=1024 * 1024):
+            if not isinstance(chunk, bytes):
+                raise ValueError("R2 returned non-byte content")
             if not chunk:
                 continue
             received += len(chunk)
