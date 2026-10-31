@@ -25,7 +25,7 @@ class FakeCursor:
             if self.db.exists: raise ValueError("Duplicate")
             self.db.exists = True
         elif sql.startswith("UPDATE"):
-            self.db.claimed = self.db.exists and not self.db.consumed and params[2] == "r1" and params[3] == "q1" and params[4] == OWNER
+            self.db.claimed = self.db.exists and not self.db.consumed and params[1] == "r1" and params[2] == "q1" and params[3] == OWNER
             if self.db.claimed: self.db.consumed = True
     def fetchone(self): return ("r1",) if self.db.claimed else None
 class FakeDB:
