@@ -15,7 +15,11 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
                     textbook_id=None, count=5, transport=None):
     if not isinstance(endpoint, str) or not endpoint.startswith("https://"):
         raise ValueError("HTTPS generator endpoint required")
-    from urllib.parse import urlsplit\n    parsed = urlsplit(endpoint)\n    if parsed.username or parsed.password or parsed.query or parsed.fragment or not parsed.hostname or parsed.hostname in ("localhost", "127.0.0.1"):\n        raise ValueError("Invalid generator endpoint")\n    if parsed.path != "/functions/v1/generate-questions":
+    from urllib.parse import urlsplit
+    parsed = urlsplit(endpoint)
+    if parsed.username or parsed.password or parsed.query or parsed.fragment or not parsed.hostname or parsed.hostname in ("localhost", "127.0.0.1"):
+        raise ValueError("Invalid generator endpoint")
+    if parsed.path != "/functions/v1/generate-questions":
         raise ValueError("Unexpected generator endpoint")
     if not jwt or not apikey:
         raise ValueError("Authenticated generator credentials required")
@@ -49,10 +53,16 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
                 not isinstance(question.get("explanation"), str) or
                 not question["explanation"].strip()):
             raise ValueError("Invalid generated question structure")
-        if question.get("type") not in ("single", "multi") or (question["type"] == "single" and len(answers) != 1) or (question["type"] == "multi" and len(answers) < 2):\n            raise ValueError("Invalid answer type")\n        if not isinstance(question.get("sourceExcerpt"), str) or not question["sourceExcerpt"].strip():\n            raise ValueError("Generated question lacks source support statement")\n        drafts.append({
+        if question.get("type") not in ("single", "multi") or (question["type"] == "single" and len(answers) != 1) or (question["type"] == "multi" and len(answers) < 2):
+            raise ValueError("Invalid answer type")
+        if not isinstance(question.get("sourceExcerpt"), str) or not question["sourceExcerpt"].strip():
+            raise ValueError("Generated question lacks source support statement")
+        drafts.append({
             **question,
             "status": "draft",
-            "candidateSourcePassageIds": payload["evidence"]["passage_ids"],\n            "sourcePassageIds": [],\n            "evidenceVerificationStatus": "unverified",
+            "candidateSourcePassageIds": payload["evidence"]["passage_ids"],
+            "sourcePassageIds": [],
+            "evidenceVerificationStatus": "unverified",
             "citationVerified": False,
             "requiresHumanReview": True,
         })
