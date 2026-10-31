@@ -23,7 +23,7 @@ def exclusive_publication_lock(database_url, bucket, pdf_key):
     if not database_url:
         raise ValueError("DATABASE_URL required for exclusive publication locking")
     import psycopg
-    identity = (bucket + "\\0" + pdf_key).encode("utf-8")
+    identity = (bucket + "\0" + pdf_key).encode("utf-8")
     lock_id = int.from_bytes(hashlib.sha256(identity).digest()[:8], "big", signed=True)
     with psycopg.connect(database_url, autocommit=False) as connection:
         with connection.transaction():
