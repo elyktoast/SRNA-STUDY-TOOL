@@ -9,7 +9,7 @@ from source_review_authorization_v2 import TrustedReviewApproval
 SCHEMA = "source_library_staging"
 
 def load_approved_pages(conn, manifest, *, authenticated_reviewer_uid, reviewer_is_admin):
-    if reviewer_is_admin is not True or not authenticated_reviewer_uid:
+    if reviewer_is_admin is not True or not isinstance(authenticated_reviewer_uid, str) or not authenticated_reviewer_uid:
         raise ValueError("Verified admin reviewer required")
     for key in ("owner_uid", "r2_key", "sha256"):
         if not isinstance(manifest.get(key), str) or not manifest[key]:
