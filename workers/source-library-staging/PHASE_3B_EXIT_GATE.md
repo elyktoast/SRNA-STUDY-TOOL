@@ -52,3 +52,9 @@ python process_r2_textbook.py --owner-uid OWNER_UUID --r2-key 'OWNER_UUID/OBJECT
 ```
 
 After explicit operator authorization, replace the final `dry-run` with `apply` **only in `--review-queue-mode`** to write review metadata to staging R2. This does not apply a database import or approve any page. It is not an automatic upload trigger. Concurrent publication still requires serialized operator access.
+
+### Serialized operator publication (2026-10-31 implementation)
+
+The operator CLI and R2 extraction runner now acquire a source-scoped PostgreSQL transaction advisory lock before publishing. Configure a reachable `DATABASE_URL` using the same trusted coordination database for **all** publisher instances. The lock is held until queue and attestation writes finish; competing cooperative publishers fail closed. Repeated publication of an already attested queue is refused. No migration is required for PostgreSQL advisory locks.
+
+**Limits:** This is cooperative coordination, not an R2 transaction or a distributed lock against external writers. Do not permit other clients to write review-queue or attestation keys. A crash after writing a queue but before attestation can leave an unpublished queue; re-run with the same trusted extraction after inspecting the state. Source PDF replacement still requires explicit invalidation/reprocessing. The new lock path requires live staging validation before any production use. The operator must explicitly authorize `--apply`; no live writes have been performed.
