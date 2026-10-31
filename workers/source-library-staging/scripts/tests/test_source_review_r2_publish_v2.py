@@ -12,6 +12,10 @@ KEY = UID + "/book.pdf"
 BUCKET = "srna-staging-textbooks"
 
 
+class MissingObject(Exception):
+    response = {"Error": {"Code": "404"}}
+
+
 class Body:
     def __init__(self, data):
         self.data = data
@@ -29,6 +33,10 @@ class FakeR2:
         self.writes = {}
         self.replace_before_publish = False
     def head_object(self, Bucket, Key):
+        if Key != KEY:
+            if Key not in self.writes:
+                raise MissingObject()
+            return {"ContentLength": len(self.writes[Key]), "ETag": "stored"}
         if self.replace_before_publish and self.writes is not None:
             self.etag = "etag-replaced"
         return {"ContentLength": len(self.data), "ETag": self.etag}
@@ -72,6 +80,15 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(queue["source_sha256"], self.manifest["sha256"])
         self.assertEqual(attestation["source_etag"], "etag-original")
         self.assertFalse(queue["approval_enabled"])
+
+    def test_existing_publication_is_not_overwritten(self):
+        r2 = FakeR2(self.data)
+        first = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        snapshot = dict(r2.writes)
+        with self.assertRaisesRegex(ValueError, "already published"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        self.assertEqual(snapshot, r2.writes)
+        self.assertIn(first["attestation_r2_key"], r2.writes)
 
     def test_rejects_modified_r2_bytes_without_writes(self):
         r2 = FakeR2(b"%PDF-1.4\nmodified")
