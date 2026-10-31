@@ -4,6 +4,7 @@ Targets are authoring preferences, not claims of NBCRNA psychometric calibration
 Official NCE domain weights: NBCRNA content outline effective January 2024.
 """
 import re
+from nbcrna_item_formats import validate as validate_format
 
 NCE_DOMAINS = {
     "basic_sciences": 20,
@@ -38,23 +39,9 @@ def review_item(item, *, known_stems=()):
     if not isinstance(item, dict):
         return {"errors": ["Invalid item"], "pending_review": list(REVIEW_GATES), "eligible_for_approval": False}
     kind = item.get("type", "single")
-    if kind not in ITEM_FORMATS:
-        errors.append("Unsupported item format")
+    errors.extend(validate_format(item))
     if not isinstance(item.get("stem"), str) or not item["stem"].strip():
         errors.append("Question stem required")
-    if kind in ("single", "multi"):
-        options = item.get("options")
-        answers = item.get("answer")
-        if not isinstance(options, list) or len(options) != 4 or not all(isinstance(x, str) and x.strip() for x in options):
-            errors.append("Exactly four nonempty options required")
-        elif len(set(x.strip().casefold() for x in options)) != 4:
-            errors.append("Duplicate options")
-        if not isinstance(answers, list) or not answers or not all(type(x) is int and 0 <= x < 4 for x in answers) or len(set(answers)) != len(answers):
-            errors.append("Invalid answer indexes")
-        elif (kind == "single" and len(answers) != 1) or (kind == "multi" and len(answers) < 2):
-            errors.append("Incorrect number of keyed answers")
-    if kind in ("calculation", "drag_drop", "hotspot", "graphics"):
-        errors.append("Alternative item renderer and schema not yet implemented")
     explanation = item.get("explanation", "")
     if not isinstance(explanation, str) or any(section not in explanation for section in EXPLANATION_SECTIONS):
         errors.append("Required explanation sections missing")
