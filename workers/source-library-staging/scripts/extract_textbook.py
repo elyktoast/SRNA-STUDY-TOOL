@@ -99,9 +99,14 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                 # A small logo should not be mistaken for a full-page scan.
                 page_area = max(0.0, float(pdf_page.rect.get_area()))
                 image_rects = []
+                seen_xrefs = set()
                 for image_info in pdf_page.get_images(full=True):
+                    xref = image_info[0]
+                    if xref in seen_xrefs:
+                        continue
+                    seen_xrefs.add(xref)
                     try:
-                        image_rects.extend(pdf_page.get_image_rects(image_info[0]))
+                        image_rects.extend(pdf_page.get_image_rects(xref))
                     except (ValueError, RuntimeError):
                         pass
                 # Sum of visible placements is an upper bound (overlaps may
