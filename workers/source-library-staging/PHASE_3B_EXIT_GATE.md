@@ -26,3 +26,7 @@ Status: **NOT COMPLETE**. This checklist is an implementation and release gate, 
 - Owner approved and the page-review SQL migration was applied to staging only. Do not apply further migrations, deploy, merge, or make paid AI calls without authorization.
 - Next: verify privileged server access, session validity and reviewer authority, conduct reviewed-page import and retrieval benchmark, then decide whether B acceptance criteria are met.
 - Phase C may have preparatory code but **do not mark a B→C transition** until the above checks pass.
+
+## Verified queue publication boundary (2026-10-31)
+
+`source_review_queue_publish_v2.prepare_queue_artifacts` now produces a fingerprint-bound queue and a **proposed** PDF metadata update from a local verified extraction. It deliberately performs **no R2 writes**. A trusted server publisher is still required to (1) read and hash the actual private R2 object, (2) compare its bytes to the extracted local PDF and manifest, (3) safely persist the SHA-256 in R2 object metadata without losing the original object or racing concurrent replacement, (4) write the matching private review queue, and (5) verify the endpoint can retrieve the pair. Do not use browser-supplied queue JSON or trust an unverified local PDF to represent R2 bytes. R2 metadata cannot be assumed to support an in-place patch; plan a safe copy/rewrite strategy with source identity checks. The API intentionally returns unavailable until this publication step is completed. No approval or import is authorized by a review queue.
