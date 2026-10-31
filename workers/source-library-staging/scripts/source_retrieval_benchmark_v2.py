@@ -32,7 +32,9 @@ def evaluate(search, fixtures, *, min_recall_at_k=0.8):
                 passage_id not in expected or type(page) is not int or page < 1
                 for passage_id, page in expected_pages.items()):
             raise ValueError("Invalid expected PDF page fixtures")
-        pages_ok = True
+        # Page evidence cannot pass if a page-constrained expected passage
+        # was never retrieved, even when the recall threshold is below 1.
+        pages_ok = all(pid in found for pid in expected_pages)
         for result in results:
             if not isinstance(result, dict):
                 raise ValueError("Invalid search result")
