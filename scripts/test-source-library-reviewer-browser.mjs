@@ -71,3 +71,36 @@ test('browser validates physical page number before fetching',async()=>{
  await assert.rejects(api.verifiedReviewPage(pdf,0),/Invalid physical PDF page/);
  assert.equal(calls.length,0);
 });
+
+test('mobile acceptance reuses session and verifies real page bytes without exporting token',async()=>{
+ const sourceSha='b'.repeat(64),digest=await sha(png);
+ const {api,calls}=setup({handler:(url)=>{
+  if(String(url).includes('/review/manifest?'))return new Response(JSON.stringify({
+   source_sha256:sourceSha,pdf_page_count:2,approval_enabled:false
+  }),{headers:{'Content-Type':'application/json','X-Review-Approval-Enabled':'false',
+   'X-Verified-Source-SHA256':sourceSha}});
+  return response(png,sourceSha,digest);
+ }});
+ const result=await api.mobileReviewerAcceptance(pdf);
+ assert.equal(result.verified,true);
+ assert.equal(result.pdfPages,2);
+ assert.equal(calls.length,2);
+ for(const call of calls){
+  assert.ok(call.url.startsWith('https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/review/'));
+  assert.equal(call.options.headers.Authorization,'Bearer staging-jwt');
+  assert.equal(call.options.credentials,'omit');
+  assert.equal(call.options.cache,'no-store');
+  assert.equal(call.options.redirect,'error');
+ }
+});
+test('mobile acceptance rejects forged page fingerprints and wrong host',async()=>{
+ const sourceSha='b'.repeat(64);
+ const {api}=setup({handler:url=>String(url).includes('/review/manifest?')?
+  new Response(JSON.stringify({source_sha256:sourceSha,pdf_page_count:1,approval_enabled:false}),{
+   headers:{'X-Review-Approval-Enabled':'false','X-Verified-Source-SHA256':sourceSha}
+  }):response(png,sourceSha,'0'.repeat(64))});
+ await assert.rejects(api.mobileReviewerAcceptance(pdf),/integrity verification failed/);
+ const foreign=setup({hostname:'srnastudytool.com',handler:()=>{throw Error('Must not fetch')}});
+ await assert.rejects(foreign.api.mobileReviewerAcceptance(pdf),/Staging-only/);
+ assert.equal(foreign.calls.length,0);
+});
