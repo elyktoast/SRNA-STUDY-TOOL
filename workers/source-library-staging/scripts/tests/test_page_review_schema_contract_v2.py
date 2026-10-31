@@ -7,6 +7,7 @@ class ApprovalSchemaContractTests(unittest.TestCase):
     def test_private_by_default(self):
         self.assertIn("enable row level security", SQL)
         self.assertIn("revoke all", SQL)
+        self.assertIn("revoke create on schema source_library_staging from public, anon, authenticated", SQL)
         self.assertIn("from public, anon, authenticated", SQL)
         self.assertNotIn("create policy", SQL.lower())
     def test_source_and_reviewer_scoped(self):
