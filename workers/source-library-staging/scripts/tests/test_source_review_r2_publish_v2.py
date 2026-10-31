@@ -48,6 +48,12 @@ class FakeR2:
         self.writes[Key] = Body
 
 
+class HeldLock:
+    def assert_held(self, key):
+        if key != KEY:
+            raise ValueError("Unexpected lock scope")
+
+
 class PublishTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -65,6 +71,12 @@ class PublishTests(unittest.TestCase):
         }
         (self.root / "manifest.json").write_text(json.dumps(self.manifest))
 
+    def test_apply_without_exclusive_lock_is_rejected(self):
+        r2 = FakeR2(self.data)
+        with self.assertRaisesRegex(ValueError, "exclusive publication lock"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        self.assertEqual(r2.writes, {})
+
     def test_dry_run_has_no_writes(self):
         r2 = FakeR2(self.data)
         result = publish_verified_queue(r2, BUCKET, KEY, self.root)
@@ -73,7 +85,7 @@ class PublishTests(unittest.TestCase):
 
     def test_apply_publishes_queue_and_attestation(self):
         r2 = FakeR2(self.data)
-        result = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        result = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertTrue(result["published"])
         queue = json.loads(r2.writes[result["queue_r2_key"]])
         attestation = json.loads(r2.writes[result["attestation_r2_key"]])
@@ -83,17 +95,17 @@ class PublishTests(unittest.TestCase):
 
     def test_existing_publication_is_not_overwritten(self):
         r2 = FakeR2(self.data)
-        first = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+        first = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         snapshot = dict(r2.writes)
         with self.assertRaisesRegex(ValueError, "already published"):
-            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertEqual(snapshot, r2.writes)
         self.assertIn(first["attestation_r2_key"], r2.writes)
 
     def test_rejects_modified_r2_bytes_without_writes(self):
         r2 = FakeR2(b"%PDF-1.4\nmodified")
         with self.assertRaises(ValueError):
-            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertEqual(r2.writes, {})
 
     def test_rejects_changed_object_before_publication(self):
@@ -107,7 +119,7 @@ class PublishTests(unittest.TestCase):
                 return result
         r2 = ChangedR2(self.data)
         with self.assertRaisesRegex(ValueError, "changed before publication"):
-            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertEqual(r2.writes, {})
 
     def test_replacement_after_queue_write_does_not_publish_attestation(self):
@@ -118,7 +130,7 @@ class PublishTests(unittest.TestCase):
                     self.etag = "etag-replaced"
         r2 = ReplacedDuringWrite(self.data)
         with self.assertRaisesRegex(ValueError, "changed during publication"):
-            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertFalse(any(k.endswith(".source.json") for k in r2.writes))
 
     def test_interrupted_publication_leaves_no_attestation(self):
@@ -131,13 +143,13 @@ class PublishTests(unittest.TestCase):
         old_key = UID + "/_review_queues/book.pdf.json.source.json"
         r2.writes[old_key] = b"old attestation"
         with self.assertRaisesRegex(RuntimeError, "simulated"):
-            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True)
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertNotIn(old_key, r2.writes)
 
     def test_rejects_nonstaging_bucket(self):
         r2 = FakeR2(self.data)
         with self.assertRaises(ValueError):
-            publish_verified_queue(r2, "production-bucket", KEY, self.root, apply=True)
+            publish_verified_queue(r2, "production-bucket", KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertEqual(r2.writes, {})
 
 
