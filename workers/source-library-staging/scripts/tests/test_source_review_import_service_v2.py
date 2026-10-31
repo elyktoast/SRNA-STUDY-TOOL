@@ -38,5 +38,13 @@ class VerifiedImportTests(unittest.TestCase):
                 access_token="expired", auth_provider=Auth(), protected_role_store=Roles(True))
         importer.assert_not_called()
 
+    @patch("source_review_import_service_v2.import_passages")
+    def test_cross_owner_admin_cannot_import(self, importer):
+        other_uid = "d7c8ad4c-673d-4d87-a122-7d9bff4451bc"
+        with self.assertRaisesRegex(ValueError, "does not own source"):
+            import_with_verified_reviewer("folder", {"owner_uid": other_uid}, "conn",
+                access_token="valid", auth_provider=Auth(), protected_role_store=Roles(True))
+        importer.assert_not_called()
+
 if __name__ == "__main__":
     unittest.main()
