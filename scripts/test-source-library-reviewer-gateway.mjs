@@ -9,7 +9,7 @@ const calls={auth:0,container:0};
 const oldFetch=globalThis.fetch;
 globalThis.fetch=async()=>{calls.auth++;return Response.json({id:'user-1',is_anonymous:false})};
 const env={STAGING_ONLY:'true',SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',SUPABASE_ANON_KEY:'test',
- REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>{calls.container++;return new Response('{"approval_enabled":false}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})}})}};
+ REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>{calls.container++;return new Response('{"approval_enabled":false,"source_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","pdf_page_count":2}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})}})}};
 const request=(url=base,{method='GET',headers={}}={})=>gateway.fetch(new Request(url,{method,headers:{Origin:origin,Authorization:'Bearer valid',...headers}}),env);
 test('authenticated staging request forwards only read-only manifest',async()=>{
  const r=await request();assert.equal(r.status,200);assert.equal(r.headers.get('X-Review-Approval-Enabled'),'false');
@@ -41,6 +41,16 @@ test('rejects upstream success without verified source digest',async()=>{
 });
 test('rejects preview without PNG digest',async()=>{
  const r=await request('https://gateway.example/review/page.png?path=owner%2Fbook.pdf&page=1');
+ assert.equal(r.status,502);
+});
+test('rejects manifest whose body does not match attested header',async()=>{
+ const wrong={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>new Response(JSON.stringify({source_sha256:'b'.repeat(64),pdf_page_count:2,approval_enabled:false}),{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})})}};
+ const r=await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),wrong);
+ assert.equal(r.status,502);
+});
+test('rejects manifest that enables approvals despite safe response header',async()=>{
+ const unsafe={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>new Response(JSON.stringify({source_sha256:'a'.repeat(64),pdf_page_count:2,approval_enabled:true}),{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})})}};
+ const r=await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),unsafe);
  assert.equal(r.status,502);
 });
 test.after(()=>{globalThis.fetch=oldFetch});

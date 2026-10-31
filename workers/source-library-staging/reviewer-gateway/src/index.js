@@ -63,7 +63,15 @@ export default {
     if(url.pathname==='/review/page.png'){
       if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||''))
        return respond(502,origin,'{"error":"invalid_page_integrity"}');
-    }else if(!type.startsWith('application/json'))return respond(502,origin,'{"error":"invalid_manifest_type"}');
+    }else{
+     if(!type.startsWith('application/json'))return respond(502,origin,'{"error":"invalid_manifest_type"}');
+     let manifest;
+     try{manifest=await upstream.clone().json()}catch{return respond(502,origin,'{"error":"invalid_manifest"}');}
+     if(manifest?.source_sha256!==digest||
+        !Number.isSafeInteger(manifest?.pdf_page_count)||manifest.pdf_page_count<1||
+        manifest.approval_enabled!==false)
+      return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
+    }
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch{return respond(503,origin,'{"error":"reviewer_unavailable"}');}
