@@ -71,11 +71,22 @@ def create_app(runtime):
         try:
             manifest = load_staging_review_manifest(
                 runtime.r2, owner_uid=reviewer.uid, r2_key=key)
+            if (manifest.get("owner_uid") != reviewer.uid or manifest.get("r2_key") != key
+                    or not isinstance(manifest.get("sha256"), str)
+                    or len(manifest["sha256"]) != 64
+                    or type(manifest.get("pdf_page_count")) is not int
+                    or manifest["pdf_page_count"] < 1):
+                raise ValueError("Trusted manifest identity mismatch")
             if path == "/review/manifest":
                 body = json.dumps({"source_sha256": manifest["sha256"],
                                    "pdf_page_count": manifest["pdf_page_count"],
                                    "approval_enabled": False}, separators=(",", ":")).encode()
                 return response(start_response, "200 OK", body)
+            if (manifest.get("owner_uid") != reviewer.uid or manifest.get("r2_key") != key
+                    or not isinstance(manifest.get("sha256"), str)
+                    or len(manifest["sha256"]) != 64
+                    or type(manifest.get("pdf_page_count")) is not int):
+                raise ValueError("Trusted manifest identity mismatch")
             if page_number > manifest["pdf_page_count"]:
                 raise ValueError("Page outside verified manifest")
             source = fetch_verified_staging_pdf(
