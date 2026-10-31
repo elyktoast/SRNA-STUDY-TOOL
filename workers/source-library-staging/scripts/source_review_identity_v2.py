@@ -35,7 +35,7 @@ def resolve_admin_reviewer(access_token, *, auth_provider, protected_role_store)
     protected_role_store.is_active_admin(uid) must query a server-protected
     role store, not client claims or mutable user_metadata.
     """
-    if not isinstance(access_token, str) or not access_token.strip():
+    if not isinstance(access_token, str) or not access_token.strip() or access_token != access_token.strip():
         raise ValueError("Authenticated reviewer session required")
     if auth_provider is None or protected_role_store is None:
         raise ValueError("Trusted reviewer verification adapters required")
