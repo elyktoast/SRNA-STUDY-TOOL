@@ -16,9 +16,10 @@ from pathlib import Path
 from extract_textbook import extract
 from import_extraction import import_passages, validate
 from source_extraction_quality_v2 import assess
+from source_page_review_v2 import load_reviewed_pages
 
 
-def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False, review_images=False, reviewed_pages=()):
+def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False, review_images=False, reviewed_pages=(), page_review_file=None):
     manifest = extract(pdf, out, owner_uid, r2_key, ocr=ocr, review_images=review_images)
     validated = validate(out)
     if expected_sha256 is not None and validated["sha256"] != expected_sha256:
@@ -31,7 +32,10 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         current_sha256 = hashlib.file_digest(source, "sha256").hexdigest()
     if current_sha256 != validated["sha256"]:
         raise ValueError("Source PDF changed after extraction; refusing import")
-    quality = assess(validated, reviewed_pages=reviewed_pages)
+    if apply and reviewed_pages:
+        raise ValueError('Unattested --reviewed-page values cannot authorize indexing; use --page-review-file')
+    verified_pages = load_reviewed_pages(page_review_file, validated) if page_review_file else ()
+    quality = assess(validated, reviewed_pages=verified_pages if apply else tuple(set(verified_pages) | set(reviewed_pages)))
     result = {
         "extraction_quality": quality,
         "pdf_pages": validated["pdf_page_count"],
@@ -70,11 +74,13 @@ def main():
     parser.add_argument("--review-images", action="store_true", help="Generate local visual-review PNGs; do not upload to GitHub")
     parser.add_argument("--reviewed-page", type=int, action="append", default=[],
                         help="PDF page manually reviewed against original; repeat per page")
+    parser.add_argument("--page-review-file", type=Path,
+                        help="Source-bound JSON attestations for reviewed PDF pages")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply, ocr=args.ocr, review_images=args.review_images, reviewed_pages=args.reviewed_page), indent=2))
+    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply, ocr=args.ocr, review_images=args.review_images, reviewed_pages=args.reviewed_page, page_review_file=args.page_review_file), indent=2))
 
 
 if __name__ == "__main__":
