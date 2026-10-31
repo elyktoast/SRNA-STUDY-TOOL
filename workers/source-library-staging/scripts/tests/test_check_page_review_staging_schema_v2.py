@@ -22,9 +22,9 @@ class Connection:
     def __init__(self, responses): self.cursor_obj = Cursor(responses)
     def cursor(self): return self.cursor_obj
 
-def connection(columns=COLUMNS, rls=True, grants=(False,)*8, exists=True, schema_create=(False,False), force_rls=True):
+def connection(columns=COLUMNS, rls=True, grants=(False,)*8, exists=True, schema_create=(False,False), force_rls=True, service_bypass=True, service_select=True):
     return Connection([("staging","server"), ("approval_table",) if exists else (None,),
-                       columns, (rls, force_rls), grants, schema_create])
+                       columns, (rls, force_rls), grants, schema_create, (service_bypass,), (service_select,)])
 
 class PageApprovalPreflightTests(unittest.TestCase):
     def test_missing_migration_fails_closed(self):
@@ -45,6 +45,11 @@ class PageApprovalPreflightTests(unittest.TestCase):
     def test_client_schema_create_grant(self):
         self.assertIn("client_schema_create_privilege_present",
                       preflight(connection(schema_create=(True,False)))["issues"])
+    def test_server_role_requires_explicit_access(self):
+        self.assertIn("service_role_cannot_bypass_forced_rls",
+                      preflight(connection(service_bypass=False))["issues"])
+        self.assertIn("service_role_missing_select",
+                      preflight(connection(service_select=False))["issues"])
     def test_client_grant(self):
         self.assertIn("client_table_privilege_present",
                       preflight(connection(grants=(False,True)+(False,)*6))["issues"])
