@@ -34,12 +34,19 @@ def preflight(conn):
             "has_table_privilege('authenticated',%s,'DELETE')",
             (TABLE,) * 8)
         grants = cur.fetchone()
+        cur.execute(
+            "SELECT has_schema_privilege('anon',%s,'CREATE'),"
+            "has_schema_privilege('authenticated',%s,'CREATE')",
+            ("source_library_staging", "source_library_staging"))
+        schema_create_grants = cur.fetchone()
     issues = ["column_mismatch:" + name for name, kind in REQUIRED.items()
               if columns.get(name) != kind]
     if not rls_row or rls_row[0] is not True:
         issues.append("rls_not_enabled")
     if not grants or any(value is not False for value in grants):
         issues.append("client_table_privilege_present")
+    if not schema_create_grants or any(value is not False for value in schema_create_grants):
+        issues.append("client_schema_create_privilege_present")
     return {"ready": not issues, "database": db_name,
             "reason": "ok" if not issues else "schema_or_permission_mismatch",
             "issues": issues}
