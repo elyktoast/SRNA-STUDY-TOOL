@@ -173,6 +173,18 @@ def validate_source_replacement(exists, prior_digest, incoming_digest):
 
 
 def import_passages(folder, manifest, connection):
+    # This is the central DB write boundary, including direct CLI and R2 imports.
+    # Unauthenticated local page-review files must never clear extraction warnings.
+    low = manifest.get("low_text_pages", [])
+    failed = manifest.get("ocr_failed_pages", [])
+    if (not isinstance(low, list) or not isinstance(failed, list)
+            or any(type(p) is not int for p in low + failed)):
+        raise ValueError("Invalid extraction review metadata")
+    if low or failed or manifest.get("requires_ocr_review") is True:
+        raise ValueError(
+            "Unresolved extraction review: central import requires trusted "
+            "server-side page approval before indexing"
+        )
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
         with connection.cursor() as cur:
