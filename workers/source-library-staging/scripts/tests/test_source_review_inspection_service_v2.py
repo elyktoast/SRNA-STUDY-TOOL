@@ -37,6 +37,7 @@ class InspectionServiceTests(unittest.TestCase):
         def write(data, **kwargs):
             seen.append((data, kwargs))
             self.assertFalse(register.called)
+            return len(data)
         result = run(write)
         self.assertEqual(result["receipt"], "signed")
         self.assertEqual(seen[0][0], b"trusted-png")
@@ -50,6 +51,20 @@ class InspectionServiceTests(unittest.TestCase):
             raise OSError("stream failed")
         with self.assertRaisesRegex(OSError, "stream failed"):
             run(fail)
+        register.assert_not_called()
+
+    @patch("source_review_inspection_service_v2.register_delivered_page_receipt")
+    @patch("source_review_inspection_service_v2.load_verified_review_page", return_value=PAGE)
+    def test_partial_delivery_never_registers(self, load, register):
+        with self.assertRaisesRegex(ValueError, "not confirmed"):
+            run(lambda data, **kwargs: len(data) - 1)
+        register.assert_not_called()
+
+    @patch("source_review_inspection_service_v2.register_delivered_page_receipt")
+    @patch("source_review_inspection_service_v2.load_verified_review_page", return_value=PAGE)
+    def test_ambiguous_writer_return_never_registers(self, load, register):
+        with self.assertRaisesRegex(ValueError, "not confirmed"):
+            run(lambda data, **kwargs: None)
         register.assert_not_called()
 
     @patch("source_review_inspection_service_v2.register_delivered_page_receipt")
