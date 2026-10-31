@@ -1,0 +1,66 @@
+name: Deploy private staging reviewer
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify staging deployment inputs
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          DB: ${{ secrets.STAGING_DATABASE_URL }}
+          R2_ACCOUNT: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_KEY: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          ANON: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SIGNING: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: |
+          for name in CF_TOKEN CF_ACCOUNT DB R2_ACCOUNT R2_KEY R2_SECRET ANON SIGNING; do
+            test -n "${!name}" || { echo "::error::Missing required staging secret: $name"; exit 1; }
+          done
+          node -e "const c=require('./workers/source-library-staging/reviewer-gateway/wrangler.json'); if(c.name!=='srna-source-reviewer-gateway-staging'||c.vars.STAGING_ONLY!=='true'||c.vars.SUPABASE_URL!=='https://xqyasyambwdyhsjkftqu.supabase.co')process.exit(1)"
+      - name: Install deployment dependencies
+        working-directory: workers/source-library-staging/reviewer-gateway
+        run: npm install --no-audit --no-fund
+      - name: Set isolated reviewer secrets
+        working-directory: workers/source-library-staging/reviewer-gateway
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: |
+          for name in STAGING_DATABASE_URL STAGING_R2_ACCOUNT_ID STAGING_R2_ACCESS_KEY_ID STAGING_R2_SECRET_ACCESS_KEY SUPABASE_ANON_KEY STAGING_RECEIPT_SIGNING_SECRET; do
+            printf '%s' "${!name}" | npx wrangler secret put "$name"
+          done
+      - name: Deploy isolated gateway and reviewer Container
+        working-directory: workers/source-library-staging/reviewer-gateway
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+      - name: Confirm deployed staging gateway exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          node - <<'NODE'
+          const url='https://api.cloudflare.com/client/v4/accounts/'+process.env.CLOUDFLARE_ACCOUNT_ID+'/workers/scripts/srna-source-reviewer-gateway-staging';
+          fetch(url,{headers:{Authorization:'Bearer '+process.env.CLOUDFLARE_API_TOKEN}}).then(async r=>{
+            if(!r.ok)throw Error('Gateway deployment verification failed: HTTP '+r.status);
+            console.log('Staging reviewer gateway exists; live PDF acceptance is still required.');
+          }).catch(e=>{console.error(e.message);process.exitCode=1});
+          NODE
