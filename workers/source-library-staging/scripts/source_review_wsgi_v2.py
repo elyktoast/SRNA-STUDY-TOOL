@@ -13,6 +13,16 @@ def build_app():
     missing = [name for name in names if not os.environ.get(name)]
     if missing:
         raise RuntimeError("Missing staging configuration: " + ", ".join(missing))
+    # Fail closed if a deployment accidentally points at a non-staging backend.
+    from urllib.parse import urlparse
+    db = urlparse(os.environ["STAGING_DATABASE_URL"])
+    supabase = urlparse(os.environ["SUPABASE_URL"])
+    if (db.scheme not in ("postgres", "postgresql") or
+            not db.hostname or
+            "xqyasyambwdyhsjkftqu" not in db.hostname or
+            supabase.scheme != "https" or
+            supabase.hostname != "xqyasyambwdyhsjkftqu.supabase.co"):
+        raise RuntimeError("Reviewer service must use the designated staging Supabase project")
     import boto3
     import psycopg
     # Connections are per-process. The single-worker staging configuration
