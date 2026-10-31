@@ -26,6 +26,8 @@ def register(folder, pdf_path, connection, *, apply=False, downloaded_sha256=Non
             else:
                 cur.execute("select pg_advisory_xact_lock(hashtextextended(%s,0))",
                             ("r2:" + manifest["owner_uid"] + ":" + manifest["r2_key"],))
+                cur.execute("select pg_advisory_xact_lock(hashtextextended(%s,0))",
+                            ("source-sha:" + manifest["owner_uid"] + ":" + digest,))
             cur.execute("""
                 select id, owner_uid, file_size_bytes, page_count
                 from source_library_staging.textbooks
@@ -73,7 +75,7 @@ def register(folder, pdf_path, connection, *, apply=False, downloaded_sha256=Non
                     """, (tid, owner, digest, size, manifest["r2_key"]))
             return {"matched_passages": comparison["passage_count"],
                     "pdf_digest_verified": True,
-                    "provenance_registered": bool(apply),
+                    "provenance_registered": bool(apply and not versions),
                     "already_registered": bool(versions)}
 
 
