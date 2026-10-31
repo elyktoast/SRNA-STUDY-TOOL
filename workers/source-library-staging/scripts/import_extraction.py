@@ -81,6 +81,44 @@ def validate(folder):
             or any(type(p) is not int or p < 1 or p > page_count for p in image_pages)
             or len(set(image_pages)) != len(image_pages)):
         raise ValueError("Invalid embedded-image page metadata")
+    # Optional visual sidecars are metadata only. Reject corrupted references
+    # before any database writes, without treating proximity as verified meaning.
+    assets_path = folder / "image_assets.json"
+    links_path = folder / "passage_image_links.json"
+    if assets_path.exists() != links_path.exists():
+        raise ValueError("Incomplete image association sidecars")
+    if assets_path.exists():
+        assets = json.loads(assets_path.read_text(encoding="utf-8"))
+        links = json.loads(links_path.read_text(encoding="utf-8"))
+        if not isinstance(assets, list) or not isinstance(links, list):
+            raise ValueError("Invalid image association sidecars")
+        asset_pages = {}
+        for asset in assets:
+            aid, page = asset.get("asset_id"), asset.get("pdf_page")
+            bbox = asset.get("bbox")
+            if (not isinstance(aid, str) or not re.fullmatch(r"p[0-9]{4,}-x[0-9]+-n[0-9]+", aid)
+                    or aid in asset_pages or type(page) is not int or page not in image_pages
+                    or asset.get("source") != "original_pdf"
+                    or asset.get("review_status") != "unreviewed"
+                    or not isinstance(bbox, list) or len(bbox) != 4
+                    or any(type(v) not in (int, float) or not -1e7 < v < 1e7 for v in bbox)
+                    or bbox[0] >= bbox[2] or bbox[1] >= bbox[3]):
+                raise ValueError("Invalid image asset reference")
+            asset_pages[aid] = page
+        passage_pages = {p["chunk_index"]:p["page_start"]
+                         for p in read_jsonl(folder / "passages.jsonl")}
+        linked = set()
+        for link in links:
+            idx, page = link.get("chunk_index"), link.get("pdf_page")
+            ids = link.get("candidate_asset_ids")
+            if (type(idx) is not int or idx in linked
+                    or type(page) is not int or passage_pages.get(idx) != page
+                    or link.get("association") != "same_pdf_page_unverified"
+                    or not isinstance(ids, list) or not ids
+                    or any(not isinstance(aid, str) or asset_pages.get(aid) != page for aid in ids)
+                    or len(ids) != len(set(ids))):
+                raise ValueError("Invalid passage image association")
+            linked.add(idx)
     # An embedded image can be a photo, chart, or decorative asset. Do not
     # equate image presence with missing text or successful OCR.
     # PDF bookmarks are provisional section boundaries, not verified print citations.
