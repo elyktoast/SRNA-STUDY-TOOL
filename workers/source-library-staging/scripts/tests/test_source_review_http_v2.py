@@ -134,6 +134,18 @@ class HttpTests(unittest.TestCase):
                 self.assertNotEqual(headers["Content-Type"], "image/png")
                 self.assertNotIn("X-Inspection-Receipt", headers)
 
+    @patch("source_review_http_v2.load_verified_review_page")
+    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_page_renderer_failure_never_returns_unverified_bytes(self, manifest, fetch, render):
+        manifest.return_value = self.manifest
+        render.side_effect = RuntimeError("renderer unavailable")
+        status, headers, body = self.call()
+        self.assertEqual(status, 503)
+        self.assertEqual(headers["Cache-Control"], "private, no-store")
+        self.assertNotIn("X-Page-Image-SHA256", headers)
+        self.assertNotIn("X-Inspection-Receipt", headers)
+
     def test_approval_routes_are_not_exposed(self):
         self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
         self.assertEqual(self.call("/review/approve")[0], 404)
