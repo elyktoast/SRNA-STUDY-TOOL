@@ -1,6 +1,17 @@
 name: Source Library provenance verification (manual)
 on:
   workflow_dispatch:
+    inputs:
+      register_provenance:
+        description: 'Request staging provenance registration (requires separately granted INSERT permission)'
+        required: true
+        default: false
+        type: boolean
+      confirmation:
+        description: 'For registration type REGISTER-STAGING-PROVENANCE; leave blank for read-only verification'
+        required: false
+        default: ''
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -31,6 +42,8 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          REQUEST_REGISTRATION: ${{ inputs.register_provenance }}
+          CONFIRMATION: ${{ inputs.confirmation }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -50,13 +63,16 @@ jobs:
               endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
               aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
               aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'], region_name='auto')
+          apply = os.environ.get('REQUEST_REGISTRATION') == 'true'
+          if apply and os.environ.get('CONFIRMATION') != 'REGISTER-STAGING-PROVENANCE':
+              raise SystemExit('Registration requires exact explicit confirmation')
           with tempfile.TemporaryDirectory(prefix='private-provenance-') as temp:
               root = Path(temp)
               pdf = root / 'source.pdf'
               fetched = fetch_r2(pdf, owner, key, client, BUCKET)
               extract(pdf, root / 'index', owner, key, ocr=True)
               with psycopg.connect(os.environ['DATABASE_URL']) as conn:
-                  result = register(root / 'index', pdf, conn, apply=False,
+                  result = register(root / 'index', pdf, conn, apply=apply,
                                     downloaded_sha256=fetched['sha256'])
               print(json.dumps(result))
           PY
