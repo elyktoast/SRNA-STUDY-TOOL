@@ -2,8 +2,6 @@
 
 Run with a restricted staging connection. No migrations or writes performed.
 """
-from uuid import UUID
-
 TABLE = "source_library_staging.blind_review_runs"
 REQUIRED = {
     "run_id": "text", "item_id": "text", "owner_uid": "uuid",
@@ -12,13 +10,10 @@ REQUIRED = {
     "consumed_at": "timestamp with time zone",
 }
 
-def preflight(conn, *, expected_project_id=None):
-    if expected_project_id is not None:
-        if not isinstance(expected_project_id, str) or not expected_project_id.strip():
-            raise ValueError("Expected project ID required")
+def preflight(conn):
     with conn.cursor() as cur:
         cur.execute("SELECT current_database(), current_user")
-        db_name, db_user = cur.fetchone()
+        db_name, _db_user = cur.fetchone()
         cur.execute("SELECT to_regclass(%s)", (TABLE,))
         row = cur.fetchone()
         if not row or row[0] is None:
