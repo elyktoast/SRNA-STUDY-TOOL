@@ -1,0 +1,72 @@
+name: Source Library staging checks
+
+on:
+  pull_request:
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
+      - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  push:
+    branches:
+      - feature/source-library-r2-staging
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
+      - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  workflow_dispatch:
+    inputs:
+      run_live_smoke:
+        description: 'Run deployed staging smoke test'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  staging-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check workers/source-library-staging/src/index.js
+          node --check equipment/assets/source-material-staging-storage.js
+          node --check equipment/assets/chapter-review-staging.js
+          node --check scripts/test-source-library-staging.mjs
+      - name: Staging Worker tests
+        run: node --test scripts/test-source-library-staging.mjs
+      - name: Python staging pipeline tests
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python3 -m pip install --disable-pip-version-check pymupdf
+          python3 -m compileall -q workers/source-library-staging/scripts
+          tesseract --version
+          tesseract --list-langs
+          python3 -c 'import fitz; print(fitz.__doc__)'
+          TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
+      - name: Repository validation
+        run: npm run validate
+      - name: Live Cloudflare staging Worker smoke test (read-only, manual)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true
+        run: node scripts/test-source-library-staging-live.mjs

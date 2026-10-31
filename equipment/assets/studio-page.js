@@ -1,4 +1,8 @@
-window.MBU_GENERATOR_CLASSROOM_HIDDEN=true; // Hide generator controls and generated banks from the student-facing Studio; retain stored data and generator implementation.
+if(location.hostname==='staging.srnastudytool.com'){window.MBU_SOURCE_LIBRARY_STAGING=Object.freeze({enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com'});}
+window.MBU_GENERATOR_CLASSROOM_HIDDEN=true;
+// Load the staging adapter independently of the disabled student-facing generator.
+if(location.hostname==='staging.srnastudytool.com'&&window.MBU_SOURCE_LIBRARY_STAGING?.enabled){window.MBU_SOURCE_LIBRARY_ADAPTER_READY=window.MBUBuild?.loadScript?.('source-material-staging-storage.js');}
+ // Hide generator controls and generated banks from the student-facing Studio; retain stored data and generator implementation.
 let byId=id=>document.getElementById(id);const STORE=MBUStudio.STORE;let DB=MBUStudio.db();if(!DB.active)DB.active=null;DB.crosses=DB.crosses||{};let BANK_MANIFEST=null,STUDIO_SOURCE_CATALOG=[],STUDIO_SOURCES=[],STUDIO_SOURCE_ORDER=[],STUDIO_SOURCE_BY_KEY=new Map(),STUDIO_SOURCE_STATE=new Map(),STUDIO_LOAD_GENERATION=0;let ALL=[],ALL_BY_UID=new Map(),BANK_QUESTIONS=new Map(),STUDIO_BANK_LABELS=new Map(),STUDIO_SET_NAMES=new Map(),STUDIO_SET_COUNTS=new Map(),STUDIO_TOPIC_COUNTS=new Map(),STUDIO_LECTURE_COUNTS=new Map(),session=[],pos=0,sel=new Set(),graded=false,autoTimer=null;function seedStudioSourceCatalog(){
 STUDIO_BANK_LABELS.clear();STUDIO_SET_NAMES.clear();STUDIO_SET_COUNTS.clear();for(const src of STUDIO_SOURCE_CATALOG){
 if(!src.bank.startsWith('h'))STUDIO_BANK_LABELS.set(src.bank,src.label);for(const set of src.sets){

@@ -1,0 +1,236 @@
+"""Run: python -m unittest discover -s workers/source-library-staging/scripts/tests -v"""
+import importlib.util
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location("import_extraction", ROOT / "import_extraction.py")
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+
+
+class ImportValidationTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.folder = Path(self.tmp.name)
+        self.owner = "895ed357-27c3-4d4b-a98a-77b0de20760c"
+        self.manifest = {
+            "schema_version": 1, "status": "extracted_not_indexed",
+            "citation_verified": False, "owner_uid": self.owner,
+            "r2_key": self.owner + "/sample.pdf", "filename": "sample.pdf",
+            "size_bytes": 1024, "sha256": "a" * 64, "pdf_page_count": 2,
+            "passage_count": 2, "requires_ocr_review": False, "low_text_pages": [],
+        }
+        self.passages = [
+            {"chunk_index": 0, "page_start": 1, "page_end": 1, "content": "Airway anatomy"},
+            {"chunk_index": 1, "page_start": 2, "page_end": 2, "content": "Volatile anesthetics"},
+        ]
+        self.write()
+
+    def write(self):
+        (self.folder / "manifest.json").write_text(json.dumps(self.manifest), encoding="utf-8")
+        (self.folder / "passages.jsonl").write_text(
+            "".join(json.dumps(x) + "\n" for x in self.passages), encoding="utf-8")
+
+    def test_valid(self):
+        self.assertEqual(module.validate(self.folder)["passage_count"], 2)
+
+    def test_accepts_ocr_review_metadata(self):
+        self.manifest["low_text_pages"] = [2]
+        self.manifest["requires_ocr_review"] = True
+        self.write()
+        self.assertTrue(module.validate(self.folder)["requires_ocr_review"])
+
+    def test_rejects_ocr_flag_mismatch(self):
+        self.manifest["low_text_pages"] = [2]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "low-text page"):
+            module.validate(self.folder)
+
+    def test_rejects_out_of_range_ocr_page(self):
+        self.manifest["low_text_pages"] = [3]
+        self.manifest["requires_ocr_review"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "low-text page"):
+            module.validate(self.folder)
+
+    def test_accepts_image_pages_without_ocr_claim(self):
+        self.manifest["image_pages"] = [1]
+        self.write()
+        self.assertEqual(module.validate(self.folder)["image_pages"], [1])
+        self.assertFalse(module.validate(self.folder)["requires_ocr_review"])
+
+    def test_rejects_image_page_outside_pdf(self):
+        self.manifest["image_pages"] = [3]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
+    def test_rejects_duplicate_image_page(self):
+        self.manifest["image_pages"] = [1, 1]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_image_page(self):
+        self.manifest["image_pages"] = [True]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "embedded-image"):
+            module.validate(self.folder)
+
+    def test_valid_bookmark_sections(self):
+        self.manifest["section_count"] = 2
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            "".join(json.dumps(s) + "\n" for s in [
+                {"level": 1, "heading": "Airway", "start_page": 1, "source": "pdf_bookmark"},
+                {"level": 1, "heading": "Pharmacology", "start_page": 2, "source": "pdf_bookmark"},
+            ]), encoding="utf-8")
+        self.assertEqual(module.validate(self.folder)["section_count"], 2)
+
+    def test_rejects_section_outside_pdf(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            json.dumps({"level": 1, "heading": "Invalid", "start_page": 3,
+                        "source": "pdf_bookmark"}) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Invalid PDF bookmark section"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_section_records(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        with self.assertRaisesRegex(ValueError, "section count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_mismatched_count(self):
+        self.manifest["passage_count"] = 3
+        self.write()
+        with self.assertRaisesRegex(ValueError, "count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_page_outside_pdf(self):
+        self.passages[1]["page_end"] = 3
+        self.write()
+        with self.assertRaisesRegex(ValueError, "outside document"):
+            module.validate(self.folder)
+
+    def test_rejects_noncontiguous_chunks(self):
+        self.passages[1]["chunk_index"] = 4
+        self.write()
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            module.validate(self.folder)
+
+    def test_rejects_claimed_verified_citations(self):
+        self.manifest["citation_verified"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "citation verification"):
+            module.validate(self.folder)
+
+    def test_rejects_nonhex_digest(self):
+        self.manifest["sha256"] = "z" * 64
+        self.write()
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            module.validate(self.folder)
+
+    def test_rejects_malformed_owner(self):
+        self.manifest["owner_uid"] = "not-a-uuid"
+        self.manifest["r2_key"] = "not-a-uuid/sample.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "owner/key"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_digest(self):
+        del self.manifest["sha256"]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            module.validate(self.folder)
+
+    def test_rejects_empty_extraction(self):
+        self.passages = []
+        self.manifest["passage_count"] = 0
+        self.write()
+        with self.assertRaisesRegex(ValueError, "No searchable passages"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_chunk_index(self):
+        self.passages[1]["chunk_index"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "contiguous"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_page_reference(self):
+        self.passages[0]["page_start"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page reference"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_page_count(self):
+        self.manifest["pdf_page_count"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page count"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_bookmark_level(self):
+        self.manifest["section_count"] = 1
+        self.write()
+        (self.folder / "sections.jsonl").write_text(
+            json.dumps({"level": True, "heading": "Airway", "start_page": 1,
+                        "source": "pdf_bookmark"}) + "\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "bookmark section"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_file_size(self):
+        self.manifest["size_bytes"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "PDF size"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_passage_count(self):
+        self.manifest["passage_count"] = True
+        self.write()
+        with self.assertRaisesRegex(ValueError, "count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_boolean_section_count(self):
+        self.manifest["section_count"] = False
+        self.write()
+        with self.assertRaisesRegex(ValueError, "section count mismatch"):
+            module.validate(self.folder)
+
+    def test_rejects_duplicate_page_as_boolean(self):
+        self.passages[1]["page_end"] = False
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page reference"):
+            module.validate(self.folder)
+
+    def test_rejects_missing_page_count(self):
+        del self.manifest["pdf_page_count"]
+        self.write()
+        with self.assertRaisesRegex(ValueError, "page count"):
+            module.validate(self.folder)
+
+    def test_rejects_unsafe_filename(self):
+        self.manifest["filename"] = "../secret.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "filename"):
+            module.validate(self.folder)
+
+    def test_rejects_nonboolean_ocr_flag(self):
+        self.manifest["requires_ocr_review"] = "false"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "OCR review flag"):
+            module.validate(self.folder)
+
+    def test_rejects_cross_owner_key(self):
+        self.manifest["r2_key"] = "other/sample.pdf"
+        self.write()
+        with self.assertRaisesRegex(ValueError, "owner/key"):
+            module.validate(self.folder)
+
+
+if __name__ == "__main__":
+    unittest.main()
