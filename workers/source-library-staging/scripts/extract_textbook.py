@@ -58,7 +58,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[]
-    sections=[];low_text_details=[];review_pages=[]
+    sections=[];low_text_details=[];review_pages=[];image_inventory=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
         # Use explicit PDF bookmarks where available; never infer chapter titles
@@ -137,11 +137,20 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                                          'image_coverage_upper_bound':image_coverage_upper_bound,
                                          'image_coverage_fraction':image_coverage_fraction})
             # Image presence is a review signal, not proof that OCR is needed.
-            if pdf_page.get_images(full=False): image_pages.append(page)
+            if pdf_page.get_images(full=False):
+                image_pages.append(page)
+                # Inventory all image-bearing pages, not only OCR exceptions.
+                # No image bytes or source text enter the inventory.
+                image_inventory.append({'pdf_page':page,
+                                        'embedded_image_count':len({
+                                            info[0] for info in pdf_page.get_images(full=True)
+                                        }),
+                                        'low_text_review':page in low_text})
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
+    (out/'image_inventory.json').write_text(json.dumps(image_inventory,indent=2)+'\n',encoding='utf-8')
     (out/'visual_review.json').write_text(
         json.dumps({'preview_generated':bool(review_images),
                     'pages':review_pages},indent=2)+'\n',encoding='utf-8')
