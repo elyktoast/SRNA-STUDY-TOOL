@@ -4,7 +4,6 @@ Targets are authoring preferences, not claims of NBCRNA psychometric calibration
 Official NCE domain weights: NBCRNA content outline effective January 2024.
 """
 import re
-from collections import Counter
 
 NCE_DOMAINS = {
     "basic_sciences": 20,
