@@ -25,6 +25,9 @@ class ProcessQualityTests(unittest.TestCase):
                     "process_textbook.validate", return_value=manifest):
                 with self.assertRaisesRegex(ValueError, "Unresolved OCR"):
                     process(pdf, root / "index", "owner", "owner/book.pdf", apply=True)
+                with self.assertRaisesRegex(ValueError, "not authenticated"):
+                    process(pdf, root / "index", "owner", "owner/book.pdf", apply=True,
+                            page_review_file=root / "untrusted.json")
                 dry = process(pdf, root / "index", "owner", "owner/book.pdf", apply=False)
                 self.assertEqual(dry["extraction_quality"]["unresolved_pdf_pages"], [2])
                 self.assertFalse(dry["indexed"])
