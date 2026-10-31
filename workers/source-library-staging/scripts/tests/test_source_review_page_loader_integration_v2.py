@@ -47,7 +47,7 @@ class RealPdfPageLoaderTests(unittest.TestCase):
 
     def test_renders_actual_second_page_with_reproducible_digest(self):
         result = self.load()
-        self.assertTrue(result["png"].startswith(b"\\x89PNG\\r\\n\\x1a\\n"))
+        self.assertTrue(result["png"].startswith(bytes.fromhex("89504e470d0a1a0a")))
         self.assertEqual(hashlib.sha256(result["png"]).hexdigest(), result["image_sha256"])
         self.assertEqual(result["source_sha256"], self.manifest["sha256"])
         self.assertEqual(result["pdf_page"], 2)
