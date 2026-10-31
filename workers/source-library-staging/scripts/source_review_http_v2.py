@@ -86,7 +86,7 @@ def create_app(runtime):
                 manifest_loader=lambda owner, source_key: manifest,
                 source_loader=lambda owner, source_key: source)
             png = page["png"]
-            if (not isinstance(png, bytes) or not png.startswith(b"\\x89PNG\\r\\n\\x1a\\n")
+            if (not isinstance(png, bytes) or not png.startswith(bytes([137, 80, 78, 71, 13, 10, 26, 10]))
                     or hashlib.sha256(png).hexdigest() != page["image_sha256"]
                     or page["source_sha256"] != manifest["sha256"]):
                 raise ValueError("Rendered page integrity mismatch")
