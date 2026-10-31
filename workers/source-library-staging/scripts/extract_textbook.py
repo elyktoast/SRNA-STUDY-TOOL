@@ -41,7 +41,7 @@ def rectangle_union_area(rectangles):
         area += (height + end - start) * (right - left)
     return area
 
-def extract(pdf,out,owner_uid,r2_key,ocr=False):
+def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
         raise ValueError('R2 key outside owner PDF prefix')
@@ -58,7 +58,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[]
-    sections=[];low_text_details=[]
+    sections=[];low_text_details=[];review_pages=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
         # Use explicit PDF bookmarks where available; never infer chapter titles
@@ -118,6 +118,16 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                                            if page_area else 0.0)
                 image_coverage_upper_bound = (round(min(1.0, visible_area / page_area), 3)
                                               if page_area else 0.0)
+                if review_images:
+                    # Local-only preview; never print, upload or index copyrighted pixels.
+                    preview_dir = out / 'review_previews'
+                    preview_dir.mkdir(parents=True, exist_ok=True)
+                    preview_name = f'page-{page:04d}.png'
+                    pdf_page.get_pixmap(matrix=fitz.Matrix(1, 1), alpha=False).save(
+                        str(preview_dir / preview_name))
+                    review_pages.append({'pdf_page':page,
+                                         'local_preview':f'review_previews/{preview_name}',
+                                         'review_category':review_category})
                 low_text_details.append({'pdf_page':page,'characters':len(text),
                                          'has_images':has_images,
                                          'ocr_improved':page in ocr_pages,
@@ -132,6 +142,9 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
+    (out/'visual_review.json').write_text(
+        json.dumps({'preview_generated':bool(review_images),
+                    'pages':review_pages},indent=2)+'\n',encoding='utf-8')
     (out/'sections.jsonl').write_text(''.join(json.dumps(s,ensure_ascii=False)+'\n' for s in sections),encoding='utf-8')
     manifest={'schema_version':1,'filename':pdf.name,'owner_uid':owner_uid,'r2_key':r2_key,
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
@@ -149,5 +162,6 @@ if __name__=='__main__':
     p.add_argument('--owner-uid',required=True)
     p.add_argument('--r2-key',required=True)
     p.add_argument('--ocr',action='store_true',help='Attempt local Tesseract OCR on low-text pages')
+    p.add_argument('--review-images',action='store_true',help='Save local PNG previews of low-text pages for visual review')
     a=p.parse_args()
-    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr),indent=2))
+    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr,review_images=a.review_images),indent=2))
