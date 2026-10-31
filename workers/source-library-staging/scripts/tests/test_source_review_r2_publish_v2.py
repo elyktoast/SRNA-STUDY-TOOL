@@ -93,6 +93,14 @@ class PublishTests(unittest.TestCase):
         self.assertEqual(attestation["source_etag"], "etag-original")
         self.assertFalse(queue["approval_enabled"])
 
+    def test_first_publication_never_deletes_attestation(self):
+        class NoDeleteR2(FakeR2):
+            def delete_object(self, Bucket, Key):
+                raise AssertionError("First-time publication must not delete existing attestation")
+        r2 = NoDeleteR2(self.data)
+        result = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
+        self.assertTrue(result["published"])
+
     def test_existing_publication_is_not_overwritten(self):
         r2 = FakeR2(self.data)
         first = publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
