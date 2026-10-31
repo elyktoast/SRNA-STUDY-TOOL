@@ -1,5 +1,6 @@
 """Integration contract: extraction and queue publication remain operator-controlled."""
 import hashlib
+from contextlib import contextmanager
 import json
 import tempfile
 import unittest
@@ -57,12 +58,23 @@ class R2ReviewIntegrationTests(unittest.TestCase):
             self.assertEqual(result["review_queue_publication"], {"published": False})
             self.assertFalse(publisher.call_args.kwargs["apply"])
 
-    def test_publication_apply_rejected_until_lock_coordinator_exists(self):
-        with self.assertRaisesRegex(ValueError, "exclusive lock coordinator"):
-            run(UID, KEY, client=self.r2, review_queue_mode="apply")
+    def test_publication_apply_uses_exclusive_lock_without_indexing(self):
+        @contextmanager
+        def held_lock(database_url, bucket, key):
+            self.assertEqual(key, KEY)
+            self.assertEqual(bucket, "srna-staging-textbooks")
+            yield object()
+        with patch("process_r2_textbook.process", side_effect=self.fake_process), \
+             patch("process_r2_textbook.exclusive_publication_lock", side_effect=held_lock), \
+             patch("process_r2_textbook.publish_verified_queue") as publisher:
+            publisher.return_value = {"published": True}
+            result = run(UID, KEY, client=self.r2, review_queue_mode="apply")
+            self.assertFalse(result["indexed"])
+            self.assertTrue(publisher.call_args.kwargs["apply"])
+            self.assertIsNotNone(publisher.call_args.kwargs["publication_lock"])
 
     def test_database_apply_cannot_combine_with_publication(self):
-        with self.assertRaisesRegex(ValueError, "exclusive lock coordinator"):
+        with self.assertRaisesRegex(ValueError, "separately"):
             run(UID, KEY, apply=True, client=self.r2, review_queue_mode="apply")
 
     def test_invalid_mode_rejected(self):
