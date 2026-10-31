@@ -1,0 +1,23 @@
+# Master Phase 3 / v2.0 Workstream B — exit gate (staging only)
+
+Status: **NOT COMPLETE**. This checklist is an implementation and release gate, not proof of completion.
+
+## What is implemented
+- PDF extraction, selective OCR, private passage indexing and owner-scoped search.
+- Extraction quality reports and a central importer that refuses flagged pages without DB-loaded approvals.
+- Draft private `page_review_approvals_v2` schema, read-only schema preflight, row-locked approval lookup.
+- Read-only retrieval benchmark with per-case recall and PDF-page expectations; nonzero exit on failure.
+- Unit tests; passing CI is **not** a live staging acceptance test.
+
+## Critical integration gaps
+1. **Verified identity and roles:** `import_passages` accepts `authenticated_reviewer_uid` and `reviewer_is_admin` from its caller. These are NOT independently verified. Never expose this API to untrusted clients or treat a boolean/UID argument as proof of identity. Add a trusted server entrypoint that validates the authenticated session and admin authorization from protected server-side records. Test nonadmin, cross-owner, forged reviewer, expired session, and revoked role.
+2. **Protected approval writes:** `page_review_approvals_v2.sql` is a DRAFT, not applied. Implement a privileged approval/rejection/revocation writer with audited reviewer identity and PDF page-image inspection. Ordinary browser roles must not have table privileges. Test concurrent revocation/import on real Postgres.
+3. **Extraction entrypoint:** `process_textbook.py --apply` currently rejects unresolved extraction warnings before calling the importer, even when DB approvals might exist. This is intentionally fail-closed. Only a trusted server import workflow may pass verified identity into the central importer; do not enable local JSON or CLI reviewer flags as a workaround.
+4. **Real retrieval relevance:** Run `run_source_retrieval_benchmark_v2.py` using read-only staging credentials and manually verified fixtures (real passage IDs and expected physical PDF pages). Confirm every required case passes and inspect original page images. Do not fabricate expected IDs, log source excerpts, or equate physical PDF pages with printed textbook page numbers.
+5. **Broader formats:** PDF/OCR path does not yet establish production-quality PPTX, DOCX, figures, equations or scanned-image handling. Validate representative source formats before declaring the entire upload requirement complete.
+6. **Release checks:** Verify ownership isolation, storage access, idempotent reindex/versioning, source deletion and citation provenance on staging. Keep existing 7,000 questions and student progress unchanged.
+
+## Owner approval required
+- Do not apply SQL migrations, deploy, merge, or make paid AI calls without authorization.
+- Once authorized: apply migration **to staging only**, run schema preflight, verify server auth, conduct reviewed-page import and retrieval benchmark, then decide whether B acceptance criteria are met.
+- Phase C may have preparatory code but **do not mark a B→C transition** until the above checks pass.
