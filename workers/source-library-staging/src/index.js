@@ -39,6 +39,40 @@ export default {async fetch(request,env){
  if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,environment:'staging',version:WORKER_VERSION},200,h);
  let uid;try{uid=await identity(request,env)}catch{return json({error:'Authentication unavailable'},503,h);}
  if(!uid)return json({error:'Forbidden'},403,h);
+ // Trusted, owner-scoped flagged-page queue. This route deliberately fails closed
+ // until an ingestion process stores a SHA-256-bound queue and matching PDF
+ // metadata. Browser-uploaded review JSON must never become an approval source.
+ if(url.pathname==='/materials/review-queue'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const pdf=await env.TEXTBOOKS.head(key);
+   if(!pdf)return json({error:'Source PDF not found'},404,h);
+   const digest=pdf.customMetadata?.sha256;
+   if(typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest))
+     return json({error:'Verified extraction queue unavailable'},404,h);
+   const queueKey=uid+'/_review_queues/'+key.slice(uid.length+1)+'.json';
+   const stored=await env.TEXTBOOKS.get(queueKey);
+   if(!stored)return json({error:'Verified extraction queue unavailable'},404,h);
+   if(stored.size>256*1024)return json({error:'Invalid review queue size'},409,h);
+   let queue;try{queue=JSON.parse(await stored.text())}catch{return json({error:'Invalid stored review queue'},409,h)}
+   if(!queue||queue.source_sha256!==digest||queue.r2_key!==key||queue.approval_enabled!==false||
+      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1||
+      !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
+      return json({error:'Review queue source mismatch'},409,h);
+   const seen=new Set();
+   const categories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   for(const item of queue.pages){
+     if(!item||!Number.isSafeInteger(item.pdf_page)||item.pdf_page<1||item.pdf_page>queue.pdf_page_count||
+        seen.has(item.pdf_page)||!categories.has(item.review_category)||
+        !Number.isSafeInteger(item.characters)||item.characters<0)
+       return json({error:'Invalid review queue page'},409,h);
+     seen.add(item.pdf_page);
+   }
+   return json({source_sha256:digest,r2_key:key,pdf_page_count:queue.pdf_page_count,
+     pages:queue.pages.map(p=>({pdf_page:p.pdf_page,review_category:p.review_category,
+       characters:p.characters,ocr_failed:p.ocr_failed===true,has_images:p.has_images===true})),
+     approval_enabled:false,verified_source_binding:true},200,h);
+ }
  // Owner-scoped staging review drafts. R2 persistence is NOT chapter approval.
  if(url.pathname==='/chapter-reviews/draft'&&['GET','PUT','DELETE'].includes(request.method)){
    const key=url.searchParams.get('path');
