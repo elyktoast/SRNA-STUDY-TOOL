@@ -16,6 +16,10 @@ def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
         protected_role_store=protected_role_store)
     if not isinstance(manifest, dict) or manifest.get("owner_uid") != reviewer.uid:
         raise ValueError("Reviewer does not own source")
+    # A caller-supplied boolean is not proof that the original page was shown.
+    # Refuse approvals until a trusted server-side inspection receipt is wired.
+    if decision == "approved":
+        raise ValueError("Approval disabled until verified page-image receipt is implemented")
     if page_image_inspected is not True:
         raise ValueError("Original PDF page-image inspection required")
     count = manifest.get("pdf_page_count")
