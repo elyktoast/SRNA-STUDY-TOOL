@@ -48,6 +48,7 @@ def register_inspection_nonce(conn, *, nonce, reviewer_uid, owner_uid,
 
 def consume_inspection_nonce(conn, *, nonce, reviewer_uid, owner_uid,
                              source_sha256, r2_key, pdf_page):
+    _validate_nonce_binding(nonce, reviewer_uid, owner_uid, source_sha256, r2_key, pdf_page)
     digest = hashlib.sha256(nonce.encode("ascii")).hexdigest()
     with conn.cursor() as cur:
         cur.execute(
