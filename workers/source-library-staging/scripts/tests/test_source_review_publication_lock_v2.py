@@ -96,6 +96,14 @@ class LockTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "transaction is no longer active"):
                 lock.assert_held(KEY)
 
+    def test_invalid_scope_rejected_before_database_connection(self):
+        for bucket, key in (("production-textbooks", KEY), (BUCKET, ""), (BUCKET, "book.pdf")):
+            with self.subTest(bucket=bucket, key=key):
+                with self.assertRaisesRegex(ValueError, "staging bucket|owner-scoped"):
+                    with exclusive_publication_lock("postgres://test", bucket, key):
+                        self.fail("Invalid scope accepted")
+        self.assertEqual(self.db.keys, [])
+
     def test_missing_database_url_rejected(self):
         with self.assertRaisesRegex(ValueError, "DATABASE_URL"):
             with exclusive_publication_lock("", BUCKET, KEY):
