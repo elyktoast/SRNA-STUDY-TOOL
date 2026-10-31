@@ -180,6 +180,14 @@ def import_passages(folder, manifest, connection):
     if (not isinstance(low, list) or not isinstance(failed, list)
             or any(type(p) is not int for p in low + failed)):
         raise ValueError("Invalid extraction review metadata")
+    if type(manifest.get("requires_ocr_review")) is not bool:
+        raise ValueError("Invalid extraction review flag")
+    count = manifest.get("pdf_page_count")
+    if type(count) is not int or count < 1 or any(
+            p < 1 or p > count for p in low + failed):
+        raise ValueError("Invalid extraction review page range")
+    if len(set(low)) != len(low) or len(set(failed)) != len(failed):
+        raise ValueError("Duplicate extraction review pages")
     if low or failed or manifest.get("requires_ocr_review") is True:
         raise ValueError(
             "Unresolved extraction review: central import requires trusted "
