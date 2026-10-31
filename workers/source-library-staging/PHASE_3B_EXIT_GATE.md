@@ -127,3 +127,12 @@ Owner explicitly authorized the persistent staging-only migration `scripts/sql/p
 Post-migration read-only verification: `page_inspection_nonces_v2` exists, `relrowsecurity=true`, `relforcerowsecurity=true`, zero policies, neither `anon` nor `authenticated` has SELECT/INSERT/UPDATE/DELETE privileges, and row count is zero. This validates schema configuration, **not** successful privileged runtime access, receipt issuance, consumption, role verification, or approval/import. Those require a separately tested trusted server entrypoint and disposable end-to-end staging acceptance.
 
 Do not reapply migration merely because the SQL source file's comment says NOT APPLIED; reconcile that comment with this evidence when updating the source file.
+
+
+## Trusted page-image inspection implementation gate — 2026-10-31
+
+Source audit confirms `src/index.js` currently serves the **whole PDF** via authenticated owner-scoped `GET /materials/review-pdf`, with `x-review-approval-enabled:false`. A browser Blob URL with `#page=N` is **not** trusted proof that a specific physical page was rendered or inspected. No server-side page-image renderer or nonce-registration endpoint exists in the deployed Worker; `source_review_receipts_v2.py` can sign a receipt, but must never be called solely because a client reports a page number or image hash.
+
+Required before enabling approval: a trusted backend fetches the immutable R2 PDF, verifies the current source SHA-256/ETag and owner scope, renders the requested physical PDF page server-side, hashes the actual rendered image, authorizes the live reviewer and private role, returns the page image, and registers a one-time nonce bound to the verified source, reviewer, physical page, and image hash. Issue the signed receipt only after successful image delivery; verify the receipt and atomically consume its nonce with approval. Test replacement races, revoked sessions/roles, cross-owner access, replay, expiry, malformed inputs, and concurrent revocation/import. Browser display does not establish human attention; reviewer must explicitly attest inspection.
+
+Do not deploy a receipt issuer that trusts client-provided page-image bytes, source hash, or PDF page number without server verification. Keep approvals disabled until the trusted backend and privileged DB connection are implemented and tested.
