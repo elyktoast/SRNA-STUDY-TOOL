@@ -68,6 +68,11 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
             client.put_object(Bucket=bucket, Key=queue_key,
                               Body=artifacts["queue_json"].encode("utf-8"),
                               ContentType="application/json")
+            # Check source identity again after the queue write. If a source
+            # replacement occurred, leave the queue unpublished.
+            latest = client.head_object(Bucket=bucket, Key=pdf_key)
+            if latest.get("ETag") != head.get("ETag") or latest.get("ContentLength") != size:
+                raise ValueError("R2 source changed during publication")
             client.put_object(Bucket=bucket, Key=attestation_key,
                               Body=attestation.encode("utf-8"),
                               ContentType="application/json")
