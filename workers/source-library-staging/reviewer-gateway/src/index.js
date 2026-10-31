@@ -33,7 +33,7 @@ export default {
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length)return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
-  if(!/^Bearer [^\\s]{1,8192}$/.test(token))return respond(401,origin,'{"error":"authentication_required"}');
+  if(!/^Bearer [^\s]{1,8192}$/.test(token))return respond(401,origin,'{"error":"authentication_required"}');
   // Verify the staging identity before starting or contacting the private container.
   let identity;
   try{
