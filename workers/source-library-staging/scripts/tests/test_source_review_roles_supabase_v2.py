@@ -22,8 +22,8 @@ class ProtectedRolesTests(unittest.TestCase):
         conn = Connection((True,))
         self.assertTrue(ProtectedReviewerRoleStore(conn).is_active_admin(UID))
         sql, args = conn.cur.calls[0]
-        self.assertIn("revoked_at IS NULL", sql)
-        self.assertIn("active IS TRUE", sql)
+        self.assertIn("private.snar_admins", sql)
+        self.assertIn("operator_admin", sql)
         self.assertEqual(args, (UID,))
     def test_revoked_or_missing_admin(self):
         self.assertFalse(ProtectedReviewerRoleStore(Connection((False,))).is_active_admin(UID))
