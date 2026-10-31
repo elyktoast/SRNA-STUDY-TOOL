@@ -91,10 +91,18 @@ async function mobileReviewerAcceptance(path){
  const request=async(route)=>{
   const response=await fetch(endpoint+route,{method:'GET',
    headers:{Authorization:auth},cache:'no-store',credentials:'omit',redirect:'error'});
+  // Error responses may omit the approval header (e.g. gateway auth rejection).
+  // Surface the HTTP failure first, without ever treating it as a verified page.
+  if(!response.ok){
+   const errorBody=await response.json().catch(()=>null);
+   const reason=typeof errorBody?.error==='string'&&/^[a-z_]{1,64}$/.test(errorBody.error)
+    ?' ('+errorBody.error+')':'';
+   throw Error('Reviewer acceptance HTTP '+response.status+reason+
+    (response.status===409?' — PDF review queue may be unpublished or source changed':
+     response.status===401||response.status===403?' — check staging admin authorization':''));
+  }
   if(response.headers.get('X-Review-Approval-Enabled')!=='false')
-   throw Error('Unsafe reviewer response.');
-  if(!response.ok)throw Error('Reviewer acceptance HTTP '+response.status+
-   (response.status===409?' (PDF review queue not published or source changed)':''));
+   throw Error('Unsafe reviewer response: successful response missing disabled-approval header.');
   return response;
  };
  const manifestResponse=await request('/review/manifest?path='+key(path));
