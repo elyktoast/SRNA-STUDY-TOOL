@@ -70,3 +70,7 @@ The operator CLI and R2 extraction runner now acquire a source-scoped PostgreSQL
 7. **Final gate:** Run full Python, Worker, and equipment CI; inspect failures and security logs; record source SHA, queue SHA, attestation ETag, tests, and reviewer sign-off. Do not merge or enable automatic uploads until all checks pass.
 
 The current automated lock tests simulate database coordination; they do not establish live PostgreSQL/R2 atomicity. The publication lock is cooperative and cannot prevent arbitrary external R2 writes. Do not use production textbooks for destructive acceptance tests.
+
+### Opt-in real database concurrency acceptance test
+
+A separate `test_source_review_publication_lock_postgres_v2.py` exercises **two simultaneous PostgreSQL connections** against the same source key, an independent key, and lock reacquisition after release. It skips unless `SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL` is explicitly set to a disposable test database. It does not read or write R2, modify tables, or require a migration. Never point the test at production credentials. This complements but does not replace the end-to-end R2 staging publication test.
