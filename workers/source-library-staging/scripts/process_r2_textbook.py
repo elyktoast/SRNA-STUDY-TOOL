@@ -58,6 +58,8 @@ def fetch_r2(pdf_path, owner_uid, key, client, bucket=BUCKET):
 def run(owner_uid, key, apply=False, client=None, ocr=False, review_queue_mode='off'):
     if review_queue_mode not in ('off', 'dry-run', 'apply'):
         raise ValueError('Invalid review queue publication mode')
+    if review_queue_mode == 'apply':
+        raise ValueError('Review queue publication requires a trusted exclusive lock coordinator; use dry-run')
     if apply and review_queue_mode != 'off':
         raise ValueError('Review queue publication must run separately from database indexing')
     # Validate the untrusted key before constructing a local download path.
