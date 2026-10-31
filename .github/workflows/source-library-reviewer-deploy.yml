@@ -28,6 +28,21 @@ jobs:
             test -n "${!name}" || { echo "::error::Missing required staging secret: $name"; exit 1; }
           done
           node -e "const c=require('./workers/source-library-staging/reviewer-gateway/wrangler.json'); if(c.name!=='srna-source-reviewer-gateway-staging'||c.vars.STAGING_ONLY!=='true'||c.vars.SUPABASE_URL!=='https://xqyasyambwdyhsjkftqu.supabase.co')process.exit(1)"
+      - name: Verify staging database target before deploying
+        env:
+          DB: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          node - <<'NODE'
+          const u = new URL(process.env.DB);
+          const direct = u.hostname === 'db.xqyasyambwdyhsjkftqu.supabase.co' && u.username === 'postgres';
+          const pooler = u.hostname.endsWith('.pooler.supabase.com') && u.username === 'postgres.xqyasyambwdyhsjkftqu';
+          if (!['postgres:', 'postgresql:'].includes(u.protocol) || (!direct && !pooler) ||
+              u.pathname !== '/postgres' || u.search || u.hash) {
+            console.error('::error::Staging database URL must point to designated source-library Supabase project');
+            process.exit(1);
+          }
+          console.log('Staging database target verified');
+          NODE
       - name: Install deployment dependencies
         working-directory: workers/source-library-staging/reviewer-gateway
         run: npm install --no-audit --no-fund
