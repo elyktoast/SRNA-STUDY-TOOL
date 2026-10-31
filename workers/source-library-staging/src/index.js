@@ -57,12 +57,16 @@ export default {async fetch(request,env){
    if(attestation?.schema_version!==1||attestation?.r2_key!==key||
       typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest)||
       attestation?.size_bytes!==pdf.size||
-      !attestation.source_etag||attestation.source_etag!==pdf.etag)
+      !attestation.source_etag||attestation.source_etag!==pdf.etag||
+      typeof attestation.queue_sha256!=='string'||!/^[0-9a-f]{64}$/.test(attestation.queue_sha256))
      return json({error:'Review queue source attestation mismatch'},409,h);
    const stored=await env.TEXTBOOKS.get(queueKey);
    if(!stored)return json({error:'Verified extraction queue unavailable'},404,h);
    if(stored.size>256*1024)return json({error:'Invalid review queue size'},409,h);
-   let queue;try{queue=JSON.parse(await stored.text())}catch{return json({error:'Invalid stored review queue'},409,h)}
+   const queueText=await stored.text();
+   const queueDigest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(queueText)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+   if(queueDigest!==attestation.queue_sha256)return json({error:'Review queue attestation mismatch'},409,h);
+   let queue;try{queue=JSON.parse(queueText)}catch{return json({error:'Invalid stored review queue'},409,h)}
    if(!queue||queue.source_sha256!==digest||queue.r2_key!==key||queue.approval_enabled!==false||
       !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1||
       !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
