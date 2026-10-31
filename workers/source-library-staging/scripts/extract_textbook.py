@@ -58,7 +58,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
     total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[]
-    sections=[];low_text_details=[];review_pages=[];image_inventory=[]
+    sections=[];low_text_details=[];review_pages=[];image_inventory=[];image_assets=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
         # Use explicit PDF bookmarks where available; never infer chapter titles
@@ -146,10 +146,32 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                                             info[0] for info in pdf_page.get_images(full=True)
                                         }),
                                         'low_text_review':page in low_text})
+                # Record reusable image references without writing or publishing
+                # copyrighted pixels. The original owner-scoped PDF remains
+                # the source of truth for later authorized asset rendering.
+                for xref in sorted({info[0] for info in pdf_page.get_images(full=True)}):
+                    try:
+                        placements = pdf_page.get_image_rects(xref)
+                    except (ValueError, RuntimeError):
+                        continue
+                    for ordinal, rect in enumerate(placements, 1):
+                        clipped = rect & pdf_page.rect
+                        if clipped.is_empty:
+                            continue
+                        image_assets.append({
+                            'asset_id':f'p{page:04d}-x{xref}-n{ordinal}',
+                            'pdf_page':page,
+                            'pdf_xref':xref,
+                            'placement':ordinal,
+                            'bbox':[round(float(v), 2) for v in clipped],
+                            'source':'original_pdf',
+                            'review_status':'unreviewed'
+                        })
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
             for part in chunks(text):
                 passages.write(json.dumps({'chunk_index':total,'page_start':page,'page_end':page,'content':part},ensure_ascii=False)+'\n')
                 total+=1
+    (out/'image_assets.json').write_text(json.dumps(image_assets,indent=2)+'\n',encoding='utf-8')
     (out/'image_inventory.json').write_text(json.dumps(image_inventory,indent=2)+'\n',encoding='utf-8')
     (out/'visual_review.json').write_text(
         json.dumps({'preview_generated':bool(review_images),
