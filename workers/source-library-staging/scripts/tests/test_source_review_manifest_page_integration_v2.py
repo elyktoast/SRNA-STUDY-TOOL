@@ -32,12 +32,14 @@ class R2:
         self.queue_override = None
         self.pdf_override = None
         self.bodies = []
+        self.requested_keys = []
 
     def head_object(self, *, Bucket, Key):
         assert Bucket == "srna-staging-textbooks" and Key == KEY
         return {"ContentLength": len(self.pdf), "ETag": self.etag}
 
     def get_object(self, *, Bucket, Key):
+        self.requested_keys.append(Key)
         queue_bytes = json.dumps(self.queue).encode()
         if Key == QUEUE:
             data = self.queue_override if self.queue_override is not None else queue_bytes
@@ -90,7 +92,7 @@ class ManifestPageIntegrationTests(unittest.TestCase):
         self.r2.queue_override = b'{"tampered":true}'
         with self.assertRaisesRegex(ValueError, "fingerprint mismatch"):
             self.render()
-        self.assertFalse(any(body.getbuffer().nbytes == len(self.pdf) for body in self.r2.bodies))
+        self.assertNotIn(KEY, self.r2.requested_keys)
 
     def test_source_tampering_fails_before_image(self):
         self.r2.pdf_override = b"%PDF-1.4\\ntampered"
