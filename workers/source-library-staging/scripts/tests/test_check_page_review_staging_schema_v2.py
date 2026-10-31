@@ -22,9 +22,9 @@ class Connection:
     def __init__(self, responses): self.cursor_obj = Cursor(responses)
     def cursor(self): return self.cursor_obj
 
-def connection(columns=COLUMNS, rls=True, grants=(False,)*8, exists=True, schema_create=(False,False)):
+def connection(columns=COLUMNS, rls=True, grants=(False,)*8, exists=True, schema_create=(False,False), force_rls=True):
     return Connection([("staging","server"), ("approval_table",) if exists else (None,),
-                       columns, (rls,), grants, schema_create])
+                       columns, (rls, force_rls), grants, schema_create])
 
 class PageApprovalPreflightTests(unittest.TestCase):
     def test_missing_migration_fails_closed(self):
@@ -38,6 +38,8 @@ class PageApprovalPreflightTests(unittest.TestCase):
     def test_missing_column(self):
         self.assertIn("column_mismatch:revoked_at",
                       preflight(connection(columns=COLUMNS[:-2]+COLUMNS[-1:]))["issues"])
+    def test_rls_not_forced(self):
+        self.assertIn("rls_not_forced", preflight(connection(force_rls=False))["issues"])
     def test_rls_disabled(self):
         self.assertIn("rls_not_enabled", preflight(connection(rls=False))["issues"])
     def test_client_schema_create_grant(self):
