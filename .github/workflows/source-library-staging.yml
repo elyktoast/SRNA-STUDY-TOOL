@@ -154,13 +154,61 @@ jobs:
                   assert "already published" in str(exc)
               else:
                   raise AssertionError("Duplicate publication accepted")
+              # Exercise tampering against disposable staging objects only.
+              # These are storage-level integrity assertions; API HTTP 409 is
+              # separately required and must not be inferred from this test.
+              original_queue = qbytes
+              original_attestation = client.get_object(Bucket=bucket,Key=attestation)["Body"].read()
+              original_head = client.head_object(Bucket=bucket,Key=key)
+              try:
+                  client.put_object(Bucket=bucket,Key=queue,Body=qbytes+b"\\n",ContentType="application/json")
+                  changed = client.get_object(Bucket=bucket,Key=queue)["Body"].read()
+                  assert hashlib.sha256(changed).hexdigest() != meta["queue_sha256"], "Queue tampering not detectable"
+              finally:
+                  client.put_object(Bucket=bucket,Key=queue,Body=original_queue,ContentType="application/json")
+              assert hashlib.sha256(client.get_object(Bucket=bucket,Key=queue)["Body"].read()).hexdigest() == meta["queue_sha256"]
+              try:
+                  client.put_object(Bucket=bucket,Key=attestation,Body=b"{invalid-json",ContentType="application/json")
+                  corrupted = client.get_object(Bucket=bucket,Key=attestation)["Body"].read()
+                  try:
+                      json.loads(corrupted)
+                  except json.JSONDecodeError:
+                      pass
+                  else:
+                      raise AssertionError("Malformed attestation unexpectedly parsed")
+              finally:
+                  client.put_object(Bucket=bucket,Key=attestation,Body=original_attestation,ContentType="application/json")
+              assert json.loads(client.get_object(Bucket=bucket,Key=attestation)["Body"].read()) == meta
+              # Source replacement is simulated with a different disposable
+              # payload, then restored. This is not a deployed API response test.
+              try:
+                  client.put_object(Bucket=bucket,Key=key,Body=data+b"replacement",ContentType="application/pdf")
+                  replacement_head = client.head_object(Bucket=bucket,Key=key)
+                  assert (replacement_head["ContentLength"] != meta["size_bytes"] or
+                          replacement_head["ETag"] != meta["source_etag"]), "Source replacement not detectable"
+              finally:
+                  client.put_object(Bucket=bucket,Key=key,Body=data,ContentType="application/pdf")
+              assert client.get_object(Bucket=bucket,Key=key)["Body"].read() == data
+              assert client.head_object(Bucket=bucket,Key=key)["ContentLength"] == original_head["ContentLength"]
               print("PASS: dry-run, publication, fingerprints, PDF integrity, duplicate rejection")
+              print("PASS: disposable queue tamper, malformed attestation, and source replacement detection")
           finally:
+              failures=[]
               for object_key in reversed(created):
                   try:
                       client.delete_object(Bucket=bucket,Key=object_key)
                   except Exception as exc:
-                      print("CLEANUP FAILURE:",type(exc).__name__)
-                      raise
-              print("Cleanup complete:",len(created),"disposable objects")
+                      failures.append((object_key,type(exc).__name__))
+              # Confirm every disposable key is actually absent after cleanup.
+              for object_key in created:
+                  try:
+                      client.head_object(Bucket=bucket,Key=object_key)
+                  except ClientError as exc:
+                      if str(exc.response.get("Error",{}).get("Code")) not in ("404","NoSuchKey","NotFound"):
+                          failures.append((object_key,"readback: "+str(exc.response.get("Error",{}).get("Code"))))
+                  else:
+                      failures.append((object_key,"still exists"))
+              if failures:
+                  raise AssertionError("Disposable staging cleanup failed: "+repr(failures))
+              print("PASS: cleanup read-back verified",len(created),"disposable objects absent")
           PY
