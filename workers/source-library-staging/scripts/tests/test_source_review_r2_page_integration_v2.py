@@ -30,15 +30,22 @@ class FakeR2:
         self.etag = "original"
         self.replace_on_read = False
         self.body = None
+        self.get_length_override = None
+        self.get_etag_override = None
+        self.invalid_chunk = False
     def head_object(self, *, Bucket, Key):
         assert Bucket == "srna-staging-textbooks" and Key == KEY
         return {"ContentLength": len(self.pdf), "ETag": self.etag}
     def get_object(self, *, Bucket, Key):
         assert Bucket == "srna-staging-textbooks" and Key == KEY
         self.body = Body(self.pdf)
+        if self.invalid_chunk:
+            self.body.iter_chunks = lambda chunk_size: iter([self.pdf[:10], "not bytes"])
         if self.replace_on_read:
             self.etag = "replacement"
-        return {"Body": self.body}
+        return {"Body": self.body,
+                "ContentLength": self.get_length_override if self.get_length_override is not None else len(self.pdf),
+                "ETag": self.get_etag_override if self.get_etag_override is not None else "original"}
 
 
 class R2PageIntegrationTests(unittest.TestCase):
@@ -68,6 +75,22 @@ class R2PageIntegrationTests(unittest.TestCase):
         self.assertTrue(result["png"].startswith(bytes([137,80,78,71,13,10,26,10])))
         self.assertEqual(result["image_sha256"], hashlib.sha256(result["png"]).hexdigest())
         self.assertEqual(result["source_sha256"], self.sha)
+        self.assertTrue(self.r2.body.closed)
+
+    def test_get_metadata_mismatch_fails_and_closes_body(self):
+        for field, value in (("get_length_override", len(self.pdf) + 1),
+                             ("get_etag_override", "different")):
+            with self.subTest(field=field):
+                setattr(self.r2, field, value)
+                with self.assertRaisesRegex(ValueError, "response"):
+                    self.render()
+                self.assertTrue(self.r2.body.closed)
+                setattr(self.r2, field, None)
+
+    def test_non_byte_stream_chunk_fails_and_closes_body(self):
+        self.r2.invalid_chunk = True
+        with self.assertRaisesRegex(ValueError, "non-byte"):
+            self.render()
         self.assertTrue(self.r2.body.closed)
 
     def test_tampered_manifest_fails_before_r2(self):
