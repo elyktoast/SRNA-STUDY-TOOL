@@ -100,3 +100,12 @@ Both `staging-unit-tests` and `phase3b-disposable-acceptance` completed successf
 - Reviewer sign-off and complete source/queue/attestation evidence record.
 
 **Decision:** Phase 3B / Workstream B is **NOT COMPLETE**. Do not deploy, merge, enable automatic publication, or proceed to Phase C solely on this evidence.
+
+
+## Live Worker smoke diagnostic — 2026-10-31
+
+Run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41230443878 executed 409 Python tests successfully (one skipped) and passed repository validation, but the live HTTP smoke test did **not** reach the Worker. Cloudflare edge returned a managed security challenge (HTTP 403 HTML, `cf-mitigated: challenge`, Ray ID `a534c878bdae1da7-LAX`) at the first `/health` request. Therefore no live API authorization, tamper HTTP 409, or reviewer UI outcome can be claimed from that run.
+
+Commit `170a41cd` made the optional external smoke diagnostic non-gating, without changing the Worker or disabling its authorization. Run https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/41230542957 reported the standard staging test job successful; the disposable acceptance job was skipped by design.
+
+**Required operator decision:** Review the Cloudflare Security Event by Ray ID, determine which rule challenges GitHub-hosted runners, and configure an appropriately scoped trusted test path or credential. Do not broadly disable WAF/Bot protection, or claim that a 403 HTML challenge verifies Worker authentication. After CI can reach the Worker, rerun live unauthenticated/origin checks and authenticated disposable-queue HTTP 200/409 tests. No staging deployment or security-rule mutation was authorized in this batch.
