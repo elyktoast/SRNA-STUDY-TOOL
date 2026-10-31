@@ -1,6 +1,6 @@
 """Server-only staging reviewer role adapter.
 
-Requires a privileged, non-browser database connection. Never use an
+Uses the canonical private.snar_admins operator-admin authority.\nRequires a privileged, non-browser database connection. Never use an
 anon/authenticated database connection or accept client-supplied roles.
 """
 from uuid import UUID
@@ -24,9 +24,8 @@ class ProtectedReviewerRoleStore:
         with self.connection.cursor() as cur:
             cur.execute(
                 """SELECT EXISTS (
-                    SELECT 1 FROM source_library_staging.reviewer_roles_v2
-                    WHERE reviewer_uid = %s AND role = 'admin'
-                      AND active IS TRUE AND revoked_at IS NULL
+                    SELECT 1 FROM private.snar_admins
+                    WHERE user_id = %s AND role = 'operator_admin'
                 )""",
                 (str(parsed),),
             )
