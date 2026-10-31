@@ -75,6 +75,26 @@ class ExtractorTests(unittest.TestCase):
                          "image_content_review")
         self.assertTrue(result["requires_ocr_review"])
 
+    def test_visual_review_previews_are_opt_in_and_local(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        doc.new_page()
+        target = self.base / "review.pdf"
+        doc.save(target)
+        doc.close()
+        out = self.base / "review-output"
+        result = module.extract(target, out, self.owner,
+                                self.owner + "/review.pdf", review_images=True)
+        report = json.loads((out / "visual_review.json").read_text())
+        self.assertEqual([p["pdf_page"] for p in report["pages"]], [3])
+        self.assertTrue((out / report["pages"][0]["local_preview"]).is_file())
+        self.assertEqual(result["low_text_pages"], [3])
+        no_previews = self.base / "no-previews"
+        module.extract(target, no_previews, self.owner,
+                       self.owner + "/review.pdf")
+        self.assertFalse((no_previews / "review_previews").exists())
+        self.assertEqual(json.loads((no_previews / "visual_review.json").read_text())["pages"], [])
+
     def test_image_coverage_uses_union_of_overlapping_placements(self):
         import fitz
         doc = fitz.open(self.pdf)
