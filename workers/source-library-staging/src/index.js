@@ -47,10 +47,18 @@ export default {async fetch(request,env){
    if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
    const pdf=await env.TEXTBOOKS.head(key);
    if(!pdf)return json({error:'Source PDF not found'},404,h);
-   const digest=pdf.customMetadata?.sha256;
-   if(typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest))
-     return json({error:'Verified extraction queue unavailable'},404,h);
    const queueKey=uid+'/_review_queues/'+key.slice(uid.length+1)+'.json';
+   const attestationObject=await env.TEXTBOOKS.get(queueKey+'.source.json');
+   if(!attestationObject)return json({error:'Verified extraction queue unavailable'},404,h);
+   let attestation;try{attestation=JSON.parse(await attestationObject.text())}catch{
+     return json({error:'Invalid source attestation'},409,h);
+   }
+   const digest=attestation?.source_sha256;
+   if(attestation?.schema_version!==1||attestation?.r2_key!==key||
+      typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest)||
+      attestation?.size_bytes!==pdf.size||
+      !attestation.source_etag||attestation.source_etag!==pdf.etag)
+     return json({error:'Review queue source attestation mismatch'},409,h);
    const stored=await env.TEXTBOOKS.get(queueKey);
    if(!stored)return json({error:'Verified extraction queue unavailable'},404,h);
    if(stored.size>256*1024)return json({error:'Invalid review queue size'},409,h);
