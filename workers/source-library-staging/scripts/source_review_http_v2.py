@@ -131,8 +131,7 @@ def create_app(runtime):
 def main():
     # Reuse the WSGI entrypoint's strict staging identity checks. Never allow
     # the development server to bypass the deployment configuration guard.
-    from source_review_wsgi_v2 import build_app
-    app = build_app()
+    from source_review_wsgi_v2 import app
     # This server is only suitable for same-host private development.
     with make_server("127.0.0.1", int(os.environ.get("PORT", "8789")), app) as server:
         server.serve_forever()
