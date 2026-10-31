@@ -17,6 +17,7 @@ from source_review_manifest_r2_v2 import load_staging_review_manifest
 from source_review_r2_loader_v2 import fetch_verified_staging_pdf
 
 MAX_PATH = 2048
+STAGING_ORIGIN = "https://staging.srnastudytool.com"
 
 
 def response(start_response, status, payload, content_type="application/json", extra=()):
@@ -32,6 +33,25 @@ def create_app(runtime):
         raise ValueError("Trusted staging runtime required")
 
     def app(environ, start_response):
+        original_start_response = start_response
+
+        def start_response(status, headers, exc_info=None):
+            if environ.get("HTTP_ORIGIN") == STAGING_ORIGIN:
+                headers = [*headers, ("Access-Control-Allow-Origin", STAGING_ORIGIN),
+                           ("Access-Control-Expose-Headers",
+                            "X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256"),
+                           ("Vary", "Origin")]
+            return original_start_response(status, headers, exc_info)
+        origin = environ.get("HTTP_ORIGIN")
+        if origin and origin != STAGING_ORIGIN:
+            return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
+        if environ.get("REQUEST_METHOD") == "OPTIONS":
+            if origin != STAGING_ORIGIN or environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD") != "GET":
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden_preflight"}')
+            return response(start_response, "204 No Content", b"", extra=[
+                ("Access-Control-Allow-Methods", "GET"),
+                ("Access-Control-Allow-Headers", "Authorization"),
+                ("Access-Control-Max-Age", "300")])
         if environ.get("REQUEST_METHOD") != "GET":
             return response(start_response, "405 Method Not Allowed", b'{"error":"method_not_allowed"}')
         path = environ.get("PATH_INFO", "")
