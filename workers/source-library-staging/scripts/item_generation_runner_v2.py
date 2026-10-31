@@ -5,6 +5,7 @@ network transport or paid model invocation is provided. Responses remain drafts.
 """
 from item_generation_contract_v2 import build_step, validate_complete_item
 from item_source_reconciliation_v2 import reconcile
+from item_answer_evidence_v2 import check as answer_evidence_check
 
 CONCEPT_FIELDS = ("objective", "mechanism", "relevance", "misconception",
                   "counterfactual", "evidence_ids")
@@ -52,6 +53,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     issues = validate_complete_item(item)
     citation_issues = reconcile(item, evidence)
     issues.extend(citation_issues)
+    issues.extend(answer_evidence_check(item, evidence))
     return {"item": item, "schema_issues": issues,
             "requires_human_review": True, "auto_approved": False,
             "database_writes": False, "ready_for_intake": not bool(issues)}
