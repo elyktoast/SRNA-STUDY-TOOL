@@ -1,0 +1,85 @@
+name: Source Library legacy comparison (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      owner_uid:
+        description: 'Staging owner UUID'
+        required: true
+        default: 'c003287a-10ce-4cc9-926e-ef7c3a162a26'
+        type: string
+      r2_key:
+        description: 'Exact owner-scoped staging PDF key'
+        required: true
+        default: 'c003287a-10ce-4cc9-926e-ef7c3a162a26/810040fc-da03-4fa5-bcc0-78c25957c325.pdf'
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: source-library-legacy-compare
+  cancel-in-progress: false
+jobs:
+  compare:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install private extraction dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Verify original R2 source and compare all legacy passages without writing
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          OWNER_UID: ${{ inputs.owner_uid }}
+          R2_KEY: ${{ inputs.r2_key }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, sys, tempfile
+          from pathlib import Path
+          import boto3, psycopg
+          sys.path.insert(0, 'workers/source-library-staging/scripts')
+          from process_r2_textbook import BUCKET, fetch_r2
+          from extract_textbook import extract
+          from compare_legacy_extraction import compare_existing
+          if not all(os.environ.get(k) for k in (
+              'R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','DATABASE_URL')):
+              raise SystemExit('Missing private staging secrets')
+          owner, key = os.environ['OWNER_UID'], os.environ['R2_KEY']
+          client = boto3.client('s3',
+              endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
+              aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+              aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'], region_name='auto')
+          with tempfile.TemporaryDirectory(prefix='private-legacy-compare-') as temp:
+              root = Path(temp)
+              pdf = root / 'source.pdf'
+              downloaded = fetch_r2(pdf, owner, key, client, BUCKET)
+              extract(pdf, root / 'index', owner, key, ocr=True)
+              with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+                  result = compare_existing(root / 'index', conn, pdf)
+              if result['source_sha256_claimed_by_extraction'] != downloaded['sha256']:
+                  raise ValueError('R2 source digest mismatch')
+              # Print only booleans/counts, never private PDF text or credentials.
+              print(json.dumps({
+                  'r2_download_verified': result['local_pdf_digest_verified'],
+                  'passages_match': result['legacy_passages_match_extraction']['matched'],
+                  'passage_count': result['legacy_passages_match_extraction'].get('passage_count'),
+                  'reason': result['legacy_passages_match_extraction'].get('reason'),
+                  'first_mismatch_chunk': result['legacy_passages_match_extraction'].get('first_mismatch_chunk'),
+                  'provenance_write_authorized': False
+              }))
+              if not result['legacy_passages_match_extraction']['matched']:
+                  raise SystemExit('Legacy passage comparison failed; no writes performed')
+          PY
