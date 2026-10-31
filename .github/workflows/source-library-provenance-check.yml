@@ -1,0 +1,62 @@
+name: Source Library provenance verification (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: source-library-provenance-check
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install private extraction dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Verify source identity and legacy passages without writing
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, sys, tempfile
+          from pathlib import Path
+          import boto3, psycopg
+          sys.path.insert(0, 'workers/source-library-staging/scripts')
+          from process_r2_textbook import BUCKET, fetch_r2
+          from extract_textbook import extract
+          from register_legacy_provenance import register
+          owner = 'c003287a-10ce-4cc9-926e-ef7c3a162a26'
+          key = owner + '/810040fc-da03-4fa5-bcc0-78c25957c325.pdf'
+          if not all(os.environ.get(k) for k in (
+              'R2_ACCOUNT_ID','R2_ACCESS_KEY_ID','R2_SECRET_ACCESS_KEY','DATABASE_URL')):
+              raise SystemExit('Missing staging credentials')
+          client = boto3.client('s3',
+              endpoint_url='https://' + os.environ['R2_ACCOUNT_ID'] + '.r2.cloudflarestorage.com',
+              aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],
+              aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'], region_name='auto')
+          with tempfile.TemporaryDirectory(prefix='private-provenance-') as temp:
+              root = Path(temp)
+              pdf = root / 'source.pdf'
+              fetched = fetch_r2(pdf, owner, key, client, BUCKET)
+              extract(pdf, root / 'index', owner, key, ocr=True)
+              with psycopg.connect(os.environ['DATABASE_URL']) as conn:
+                  result = register(root / 'index', pdf, conn, apply=False,
+                                    downloaded_sha256=fetched['sha256'])
+              print(json.dumps(result))
+          PY
