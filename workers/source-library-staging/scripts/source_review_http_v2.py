@@ -22,7 +22,11 @@ STAGING_ORIGIN = "https://staging.srnastudytool.com"
 
 def response(start_response, status, payload, content_type="application/json", extra=()):
     headers = [("Content-Type", content_type), ("Cache-Control", "private, no-store"),
-               ("X-Content-Type-Options", "nosniff"), ("Content-Length", str(len(payload))),
+               ("X-Content-Type-Options", "nosniff"),
+               ("X-Frame-Options", "DENY"),
+               ("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"),
+               ("Referrer-Policy", "no-referrer"),
+               ("Content-Length", str(len(payload))),
                ("X-Review-Approval-Enabled", "false"), *extra]
     start_response(status, headers)
     return [payload]
