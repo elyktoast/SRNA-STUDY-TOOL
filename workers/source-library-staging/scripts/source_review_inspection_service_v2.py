@@ -28,8 +28,12 @@ def inspect_and_register_page(*, conn, access_token, auth_provider,
         manifest_loader=manifest_loader, source_loader=source_loader)
     # Writer must write these exact trusted PNG bytes; it must not accept a
     # client-provided image digest. A failed write must never mint a receipt.
-    write_image(page["png"], content_type="image/png",
-                cache_control="private, no-store")
+    delivered = write_image(page["png"], content_type="image/png",
+                            cache_control="private, no-store")
+    # A writer must explicitly acknowledge complete delivery. None, False,
+    # or a partial byte count cannot be treated as successful delivery.
+    if type(delivered) is not int or delivered != len(page["png"]):
+        raise ValueError("Trusted image delivery was not confirmed")
     receipt = register_delivered_page_receipt(
         conn, page=page, access_token=access_token,
         auth_provider=auth_provider,
