@@ -80,9 +80,50 @@ async function verifiedReviewPage(path,page){
  if(hash!==digest)throw Error('Reviewer image fingerprint mismatch.');
  return {blob,sourceSha256:source,imageSha256:digest,approvalEnabled:false};
 }
+// Staging-only read-only mobile acceptance. Reuses the current signed-in session
+// in memory; it never displays, exports, persists or logs the bearer token.
+// The gateway hostname is pinned, not supplied by a user or browser query.
+async function mobileReviewerAcceptance(path){
+ if(location.hostname!=='staging.srnastudytool.com'||!config.enabled)
+  throw Error('Staging-only reviewer acceptance.');
+ const endpoint='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
+ const auth='Bearer '+token();
+ const request=async(route)=>{
+  const response=await fetch(endpoint+route,{method:'GET',
+   headers:{Authorization:auth},cache:'no-store',credentials:'omit',redirect:'error'});
+  if(response.headers.get('X-Review-Approval-Enabled')!=='false')
+   throw Error('Unsafe reviewer response.');
+  if(!response.ok)throw Error('Reviewer acceptance HTTP '+response.status+
+   (response.status===409?' (PDF review queue not published or source changed)':''));
+  return response;
+ };
+ const manifestResponse=await request('/review/manifest?path='+key(path));
+ const manifest=await manifestResponse.json();
+ if(!/^[a-f0-9]{64}$/.test(manifest.source_sha256||'')||
+    !Number.isSafeInteger(manifest.pdf_page_count)||manifest.pdf_page_count<1||
+    manifest.approval_enabled!==false||
+    manifestResponse.headers.get('X-Verified-Source-SHA256')!==manifest.source_sha256)
+  throw Error('Manifest source identity verification failed.');
+ const pageResponse=await request('/review/page.png?path='+key(path)+'&page=1');
+ if(pageResponse.headers.get('Content-Type')!=='image/png'||
+    pageResponse.headers.get('X-Verified-Source-SHA256')!==manifest.source_sha256)
+  throw Error('PDF page source verification failed.');
+ const expected=pageResponse.headers.get('X-Page-Image-SHA256')||'';
+ if(!/^[a-f0-9]{64}$/.test(expected))throw Error('Missing PNG SHA-256.');
+ const data=await pageResponse.arrayBuffer();
+ if(data.byteLength<8||data.byteLength>32*1024*1024)throw Error('Invalid PNG size.');
+ const bytes=new Uint8Array(data);
+ if(![137,80,78,71,13,10,26,10].every((b,i)=>bytes[i]===b))
+  throw Error('Invalid PNG signature.');
+ if(!crypto?.subtle)throw Error('SHA-256 unavailable in this browser.');
+ const actual=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',data)),
+  b=>b.toString(16).padStart(2,'0')).join('');
+ if(actual!==expected)throw Error('PNG integrity verification failed.');
+ return {pdfPages:manifest.pdf_page_count,verified:true};
+}
 async function remove(path){await call('/materials/item?path='+key(path),{method:'DELETE'});}
 async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
 })();
