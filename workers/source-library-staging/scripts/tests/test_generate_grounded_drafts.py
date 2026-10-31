@@ -26,11 +26,20 @@ class GroundedGenerationTests(unittest.TestCase):
         self.assertEqual(result["count"], 1)
         self.assertFalse(result["autoApproved"])
         self.assertEqual(result["drafts"][0]["candidateSourcePassageIds"], ["p1"])
-        self.assertEqual(result["drafts"][0]["sourcePassageIds"], ["p1"])\n        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "exact")
+        self.assertEqual(result["drafts"][0]["sourcePassageIds"], ["p1"])
+        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "exact")
         self.assertEqual(result["drafts"][0]["evidenceVerificationStatus"], "unverified")
         self.assertTrue(result["drafts"][0]["requiresHumanReview"])
 
-    def test_unmatched_excerpt_is_not_verified(self):\n        result = self.call({"questions": [{\n            "stem": "Which mechanism?", "options": ["A", "B", "C", "D"],\n            "answer": [0], "explanation": "Reason", "type": "single",\n            "sourceExcerpt": "invented source claim"}]})\n        self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])\n        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "unmatched")\n        self.assertFalse(result["drafts"][0]["citationVerified"])\n\n    def test_rejects_malformed_answer(self):
+    def test_unmatched_excerpt_is_not_verified(self):
+        result = self.call({"questions": [{
+            "stem": "Which mechanism?", "options": ["A", "B", "C", "D"],
+            "answer": [0], "explanation": "Reason", "type": "single",
+            "sourceExcerpt": "invented source claim"}]})
+        self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])
+        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "unmatched")
+        self.assertFalse(result["drafts"][0]["citationVerified"])\n
+    def test_rejects_malformed_answer(self):
         with self.assertRaises(ValueError):
             self.call({"questions": [{"stem": "Which?", "options": ["A", "B", "C", "D"],
                                       "answer": [5], "explanation": "Reason"}]})
