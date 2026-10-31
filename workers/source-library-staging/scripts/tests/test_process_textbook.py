@@ -76,6 +76,23 @@ class PipelineTests(unittest.TestCase):
         }])
         self.assertFalse(result["indexed"])
 
+    def test_visual_review_flag_creates_local_previews(self):
+        import fitz
+        doc = fitz.open(self.pdf)
+        doc.new_page()
+        source = self.folder / "review.pdf"
+        doc.save(source)
+        doc.close()
+        out = self.folder / "review-index"
+        result = module.process(source, out, self.owner,
+                                self.owner + "/review.pdf", review_images=True)
+        self.assertTrue(result["visual_review_available_locally"])
+        report = json.loads((out / "visual_review.json").read_text())
+        self.assertEqual(len(report["pages"]), 1)
+        self.assertEqual(report["pages"][0]["pdf_page"], 3)
+        self.assertTrue((out / report["pages"][0]["local_preview"]).exists())
+        self.assertFalse(result["indexed"])
+
     def test_bookmark_hierarchy_survives_complete_dry_run(self):
         import fitz
         document = fitz.open(self.pdf)
@@ -109,8 +126,8 @@ class PipelineTests(unittest.TestCase):
     def test_source_mutation_after_extraction_is_rejected(self):
         original_extract = module.extract
 
-        def mutate_source(pdf, out, owner_uid, r2_key, ocr=False):
-            result = original_extract(pdf, out, owner_uid, r2_key, ocr=ocr)
+        def mutate_source(pdf, out, owner_uid, r2_key, ocr=False, review_images=False):
+            result = original_extract(pdf, out, owner_uid, r2_key, ocr=ocr, review_images=review_images)
             with pdf.open("ab") as handle:
                 handle.write(b"changed after extraction")
             return result
