@@ -35,7 +35,9 @@ def run(conn, *, owner_uid, fixtures, limit=10, min_recall_at_k=0.8):
             raise ValueError("Benchmark query mismatch")
         rows = search(conn, query, owner_uid, limit=limit,
                       textbook_id=case.get("textbook_id"))
-        return [{"passage_id": row["passage_id"]} for row in rows]
+        return [{"passage_id": row["passage_id"],
+                 "pdf_page_start": row["pdf_page_start"],
+                 "pdf_page_end": row["pdf_page_end"]} for row in rows]
     return evaluate(query_search, fixtures, min_recall_at_k=min_recall_at_k)
 
 
