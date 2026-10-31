@@ -94,6 +94,8 @@ def validate(folder):
             raise ValueError("Invalid image association sidecars")
         asset_pages = {}
         for asset in assets:
+            if not isinstance(asset, dict):
+                raise ValueError("Invalid image asset reference")
             aid, page = asset.get("asset_id"), asset.get("pdf_page")
             bbox = asset.get("bbox")
             if (not isinstance(aid, str) or not re.fullmatch(r"p[0-9]{4,}-x[0-9]+-n[0-9]+", aid)
@@ -109,6 +111,8 @@ def validate(folder):
                          for p in read_jsonl(folder / "passages.jsonl")}
         linked = set()
         for link in links:
+            if not isinstance(link, dict):
+                raise ValueError("Invalid passage image association")
             idx, page = link.get("chunk_index"), link.get("pdf_page")
             ids = link.get("candidate_asset_ids")
             if (type(idx) is not int or idx in linked
