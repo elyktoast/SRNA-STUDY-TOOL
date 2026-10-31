@@ -21,7 +21,7 @@ def load_approved_pages(conn, manifest, *, authenticated_reviewer_uid, reviewer_
                where owner_uid=%s and source_sha256=%s and r2_key=%s
                  and reviewer_uid=%s and decision='approved'
                  and revoked_at is null
-               order by pdf_page""",
+               order by pdf_page for share""",
             (manifest["owner_uid"], manifest["sha256"], manifest["r2_key"],
              authenticated_reviewer_uid))
         pages = [row[0] for row in cur.fetchall()]
