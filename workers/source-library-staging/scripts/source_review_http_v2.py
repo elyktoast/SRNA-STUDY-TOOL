@@ -110,7 +110,7 @@ def create_app(runtime):
                 body = json.dumps({"source_sha256": manifest["sha256"],
                                    "pdf_page_count": manifest["pdf_page_count"],
                                    "approval_enabled": False}, separators=(",", ":")).encode()
-                return response(start_response, "200 OK", body)
+                return response(start_response, "200 OK", body, extra=[("X-Verified-Source-SHA256", manifest["sha256"])])
             if page_number > manifest["pdf_page_count"]:
                 raise ValueError("Page outside verified manifest")
             source = fetch_verified_staging_pdf(

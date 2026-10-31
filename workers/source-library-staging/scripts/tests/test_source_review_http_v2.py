@@ -101,6 +101,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertNotIn(b"owner_uid", body)
         self.assertIn(b'"pdf_page_count":2', body)
+        self.assertEqual(headers["X-Verified-Source-SHA256"], "a" * 64)
         self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
 
     @patch("source_review_http_v2.load_verified_review_page")
