@@ -50,7 +50,7 @@ class R2ReviewIntegrationTests(unittest.TestCase):
         return {"passages": 1, "indexed": False}
 
     def test_dry_run_calls_publisher_without_apply(self):
-        with patch("process_r2_textbook.process", side_effect=self.fake_process), \\
+        with patch("process_r2_textbook.process", side_effect=self.fake_process), \
              patch("process_r2_textbook.publish_verified_queue") as publisher:
             publisher.return_value = {"published": False}
             result = run(UID, KEY, client=self.r2, review_queue_mode="dry-run")
@@ -58,7 +58,7 @@ class R2ReviewIntegrationTests(unittest.TestCase):
             self.assertFalse(publisher.call_args.kwargs["apply"])
 
     def test_explicit_publication_apply_still_does_not_index(self):
-        with patch("process_r2_textbook.process", side_effect=self.fake_process), \\
+        with patch("process_r2_textbook.process", side_effect=self.fake_process), \
              patch("process_r2_textbook.publish_verified_queue") as publisher:
             publisher.return_value = {"published": True}
             result = run(UID, KEY, client=self.r2, review_queue_mode="apply")
