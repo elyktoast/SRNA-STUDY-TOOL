@@ -8,7 +8,7 @@ from generate_grounded_drafts import generate_drafts
 
 OWNER = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
 ENDPOINT = "https://example.supabase.co/functions/v1/generate-questions"
-EVIDENCE = {"material": "source", "sourceName": "book", "citation": "PDF pages",
+EVIDENCE = {"material": "[SOURCE 1 | passage_id=p1 | textbook_id=t1 | PDF pages 1-2]\nsource", "sourceName": "book", "citation": "PDF pages",
             "count": 1, "evidence": {"passage_ids": ["p1"], "citation_verified": False}}
 
 
@@ -26,11 +26,11 @@ class GroundedGenerationTests(unittest.TestCase):
         self.assertEqual(result["count"], 1)
         self.assertFalse(result["autoApproved"])
         self.assertEqual(result["drafts"][0]["candidateSourcePassageIds"], ["p1"])
-        self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])
+        self.assertEqual(result["drafts"][0]["sourcePassageIds"], ["p1"])\n        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "exact")
         self.assertEqual(result["drafts"][0]["evidenceVerificationStatus"], "unverified")
         self.assertTrue(result["drafts"][0]["requiresHumanReview"])
 
-    def test_rejects_malformed_answer(self):
+    def test_unmatched_excerpt_is_not_verified(self):\n        result = self.call({"questions": [{\n            "stem": "Which mechanism?", "options": ["A", "B", "C", "D"],\n            "answer": [0], "explanation": "Reason", "type": "single",\n            "sourceExcerpt": "invented source claim"}]})\n        self.assertEqual(result["drafts"][0]["sourcePassageIds"], [])\n        self.assertEqual(result["drafts"][0]["sourceExcerptMatch"], "unmatched")\n        self.assertFalse(result["drafts"][0]["citationVerified"])\n\n    def test_rejects_malformed_answer(self):
         with self.assertRaises(ValueError):
             self.call({"questions": [{"stem": "Which?", "options": ["A", "B", "C", "D"],
                                       "answer": [5], "explanation": "Reason"}]})
