@@ -62,6 +62,9 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
                 "source_etag": head.get("ETag"),
                 "size_bytes": size,
             }, separators=(",", ":"), sort_keys=True)
+            # Invalidate any old attestation first; an interrupted publication
+            # must not leave an old proof paired with a newly written queue.
+            client.delete_object(Bucket=bucket, Key=attestation_key)
             client.put_object(Bucket=bucket, Key=queue_key,
                               Body=artifacts["queue_json"].encode("utf-8"),
                               ContentType="application/json")
