@@ -132,8 +132,8 @@ test('verified queue returns only digest-bound metadata and rejects tampering',a
  const queue={source_sha256:digest,r2_key:pdf,pdf_page_count:3,approval_enabled:false,
   pages:[{pdf_page:2,review_category:'ocr_error',characters:0,ocr_failed:true,has_images:false,extra:'must-not-leak'}]};
  const savedGet=env.TEXTBOOKS.get,savedHead=env.TEXTBOOKS.head;
- env.TEXTBOOKS.head=async key=>key===pdf?{key:pdf,customMetadata:{sha256:digest}}:savedHead(key);
- env.TEXTBOOKS.get=async key=>key===queueKey?{size:JSON.stringify(queue).length,text:async()=>JSON.stringify(queue)}:
+ env.TEXTBOOKS.head=async key=>key===pdf?{key:pdf,customMetadata:{sha256:digest},size:pdfBytes.length,etag:'etag-1'}:savedHead(key);
+ env.TEXTBOOKS.get=async key=>key===queueKey+'.source.json'?{text:async()=>JSON.stringify({schema_version:1,r2_key:pdf,source_sha256:digest,source_etag:'etag-1',size_bytes:pdfBytes.length})}:key===queueKey?{size:JSON.stringify(queue).length,text:async()=>JSON.stringify(queue)}:
   key===pdf?{body:pdfBytes,text:async()=>new TextDecoder().decode(pdfBytes)}:savedGet(key);
  try{
   const path='/materials/review-queue?path='+encodeURIComponent(pdf);
