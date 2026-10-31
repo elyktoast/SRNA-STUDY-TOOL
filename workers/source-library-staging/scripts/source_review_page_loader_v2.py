@@ -23,7 +23,7 @@ def load_verified_review_page(*, owner_uid, r2_key, pdf_page, manifest_loader,
         r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", owner_uid
     ) is None:
         raise ValueError("Invalid owner identity")
-    if not isinstance(r2_key, str) or not r2_key.startswith(owner_uid + "/"):
+    if (not isinstance(r2_key, str) or not r2_key.startswith(owner_uid + "/")\n            or any(part in ("", ".", "..") for part in r2_key.split("/"))\n            or "\\\\" in r2_key or any(ord(char) < 32 or ord(char) == 127 for char in r2_key)):
         raise ValueError("Invalid owner-scoped R2 key")
     if type(pdf_page) is not int or pdf_page < 1:
         raise ValueError("Invalid physical PDF page")
