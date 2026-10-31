@@ -11,6 +11,7 @@ import urllib.request
 
 from prepare_grounded_generation import prepare
 from board_item_quality import review_item
+from nbcrna_taxonomy import validate_classification
 
 
 def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
@@ -77,10 +78,15 @@ def generate_drafts(conn, owner_uid, topic, *, endpoint, jwt, apikey,
             "citationVerified": False,
             "requiresHumanReview": True,
             "nceDomain": question.get("nceDomain"),
+            "nceSection": question.get("nceSection"),
+            "nceObjective": question.get("nceObjective"),
+            "blueprintClassificationValid": validate_classification(question.get("nceDomain"), question.get("nceSection"), question.get("nceObjective")) and question.get("nceSection") is not None,
             "reasoningCategory": question.get("reasoningCategory"),
             "difficultyTier": question.get("difficultyTier"),
         }
         draft["boardQualityReview"] = review_item(draft, known_stems=[d["stem"] for d in drafts])
+        if not draft["blueprintClassificationValid"]:
+            draft["boardQualityReview"]["errors"].append("NBCRNA section/objective classification requires review")
         drafts.append(draft)
     return {"drafts": drafts, "count": len(drafts),
             "provider": raw.get("provider"), "model": raw.get("model"),
