@@ -28,6 +28,10 @@ class PublicationLock:
 def exclusive_publication_lock(database_url, bucket, pdf_key):
     if not database_url:
         raise ValueError("DATABASE_URL required for exclusive publication locking")
+    if not isinstance(bucket, str) or bucket != "srna-staging-textbooks":
+        raise ValueError("Exclusive publication lock requires staging bucket")
+    if not isinstance(pdf_key, str) or not pdf_key or "/" not in pdf_key:
+        raise ValueError("Exclusive publication lock requires an owner-scoped source key")
     import psycopg
     identity = (bucket + "\0" + pdf_key).encode("utf-8")
     lock_id = int.from_bytes(hashlib.sha256(identity).digest()[:8], "big", signed=True)
