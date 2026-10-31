@@ -72,6 +72,7 @@ class PipelineTests(unittest.TestCase):
             "ocr_improved": False, "ocr_failed": False,
             "review_category": "blank_candidate_review",
             "image_placement_count": 0, "image_coverage_upper_bound": 0.0,
+            "image_coverage_fraction": 0.0,
         }])
         self.assertFalse(result["indexed"])
 
