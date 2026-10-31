@@ -149,3 +149,38 @@ test('verified queue returns only digest-bound metadata and rejects tampering',a
   assert.equal((await request(path)).status,409);
  }finally{env.TEXTBOOKS.get=savedGet;env.TEXTBOOKS.head=savedHead}
 });
+
+
+test('verified PDF preview checks source bytes, queue attestation and owner isolation',async()=>{
+ const pdf=uid+'/source-bound-preview.pdf',queueKey=uid+'/_review_queues/source-bound-preview.pdf.json';
+ const data=new TextEncoder().encode('%PDF-1.4\\nverified preview');
+ const hex=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',value))).map(b=>b.toString(16).padStart(2,'0')).join('');
+ const sha=await hex(data);
+ const queue={r2_key:pdf,source_sha256:sha,approval_enabled:false,pdf_page_count:1,pages:[]};
+ const qbytes=new TextEncoder().encode(JSON.stringify(queue));
+ const att={schema_version:1,r2_key:pdf,source_sha256:sha,source_etag:'etag-stable',size_bytes:data.length,queue_sha256:await hex(qbytes)};
+ const oldGet=env.TEXTBOOKS.get,oldHead=env.TEXTBOOKS.head;
+ let sourceData=data,etag='etag-stable';
+ env.TEXTBOOKS.head=async key=>key===pdf?{size:sourceData.length,etag}:oldHead(key);
+ env.TEXTBOOKS.get=async key=>{
+  if(key===pdf)return {size:sourceData.length,etag,arrayBuffer:async()=>sourceData.buffer.slice(sourceData.byteOffset,sourceData.byteOffset+sourceData.byteLength)};
+  if(key===queueKey)return {size:qbytes.length,arrayBuffer:async()=>qbytes.buffer.slice(qbytes.byteOffset,qbytes.byteOffset+qbytes.byteLength)};
+  if(key===queueKey+'.source.json')return {text:async()=>JSON.stringify(att)};
+  return oldGet(key);
+ };
+ const path='/materials/verified-review-pdf?path='+encodeURIComponent(pdf);
+ try{
+  let r=await request(path);assert.equal(r.status,200);assert.equal(r.headers.get('x-review-approval-enabled'),'false');
+  assert.equal(r.headers.get('x-verified-source-sha256'),sha);assert.match(await r.text(),/^%PDF-/);
+  assert.equal((await request(path,'GET',{authorization:'Bearer invalid'})).status,403);
+  assert.equal((await request('/materials/verified-review-pdf?path='+encodeURIComponent('00000000-0000-4000-8000-000000000000/other.pdf'))).status,400);
+  sourceData=new TextEncoder().encode('%PDF-1.4\\nchanged content');
+  assert.equal((await request(path)).status,409);
+  sourceData=data;
+  etag='new-etag';
+  assert.equal((await request(path)).status,409);
+  etag='etag-stable';
+  att.queue_sha256='0'.repeat(64);
+  assert.equal((await request(path)).status,409);
+ }finally{env.TEXTBOOKS.get=oldGet;env.TEXTBOOKS.head=oldHead}
+});
