@@ -60,7 +60,7 @@ class PageLoaderTests(unittest.TestCase):
     def test_unsafe_r2_key_rejected_before_any_storage_access(self):
         for suffix in ("../other.pdf", "./book.pdf", "folder//book.pdf",
                        "folder/../book.pdf", "folder/./book.pdf",
-                       "folder\\\\book.pdf", "book.pdf\\n", "book.pdf\\x7f"):
+                       "folder" + chr(92) + "book.pdf", "book.pdf" + chr(10), "book.pdf" + chr(127)):
             with self.subTest(suffix=repr(suffix)):
                 with self.assertRaisesRegex(ValueError, "owner-scoped"):
                     load_verified_review_page(
