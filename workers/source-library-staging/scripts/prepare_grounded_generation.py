@@ -9,11 +9,19 @@ import json
 import os
 
 from build_question_evidence import build_evidence
+from nbcrna_taxonomy import BLUEPRINTS, SECTIONS, OBJECTIVES, validate_classification
 
 
-def prepare(conn, owner_uid, topic, *, textbook_id=None, count=5, limit=8):
+def prepare(conn, owner_uid, topic, *, textbook_id=None, count=5, limit=8,
+            exam_mode='NCE', domain=None, section=None, objective=None):
     if type(count) is not int or not 1 <= count <= 20:
         raise ValueError("Question count must be 1..20")
+    if exam_mode not in BLUEPRINTS:
+        raise ValueError("Exam mode must be NCE or SEE")
+    if domain is not None and (section is None or not validate_classification(domain, section, objective)):
+        raise ValueError("Invalid or incomplete NBCRNA classification")
+    if domain is None and (section is not None or objective is not None):
+        raise ValueError("NBCRNA domain required for section/objective")
     evidence = build_evidence(conn, owner_uid, topic, textbook_id=textbook_id, limit=limit)
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found; generation blocked")
@@ -30,6 +38,8 @@ def prepare(conn, owner_uid, topic, *, textbook_id=None, count=5, limit=8):
         "sourceName": "Indexed Source Library (staging)",
         "citation": "Physical PDF page references only; printed-page citations unverified",
         "count": count,
+        "examMode": exam_mode,
+        "blueprint": {"domain": domain, "section": section, "objective": objective},
         "evidence": {
             "passage_ids": [s["passage_id"] for s in sources],
             "citation_verified": False,
