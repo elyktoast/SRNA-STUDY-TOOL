@@ -72,6 +72,12 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(links[0]["pdf_page"], 1)
         self.assertEqual(links[0]["candidate_asset_ids"], [assets[0]["asset_id"]])
         self.assertEqual(links[0]["association"], "same_pdf_page_unverified")
+        from import_extraction import validate
+        self.assertEqual(validate(self.base / "image-index")["passage_count"], 2)
+        links[0]["candidate_asset_ids"] = ["p9999-x1-n1"]
+        (self.base / "image-index" / "passage_image_links.json").write_text(json.dumps(links))
+        with self.assertRaisesRegex(ValueError, "Invalid passage image association"):
+            validate(self.base / "image-index")
         self.assertEqual(result["low_text_details"], [])
 
     def test_image_only_page_requires_visual_review(self):
