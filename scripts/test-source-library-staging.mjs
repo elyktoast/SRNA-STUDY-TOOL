@@ -123,3 +123,29 @@ test('review queue endpoint fails closed without verified PDF digest and denies 
  assert.equal((await request(path,'GET',{authorization:'Bearer invalid'})).status,403);
  objects.delete(pdf);
 });
+
+
+test('verified queue returns only digest-bound metadata and rejects tampering',async()=>{
+ const pdf=uid+'/verified-review.pdf', queueKey=uid+'/_review_queues/verified-review.pdf.json';
+ const digest='a'.repeat(64);
+ const pdfBytes=new TextEncoder().encode('%PDF-1.4\\nverified');
+ const queue={source_sha256:digest,r2_key:pdf,pdf_page_count:3,approval_enabled:false,
+  pages:[{pdf_page:2,review_category:'ocr_error',characters:0,ocr_failed:true,has_images:false,extra:'must-not-leak'}]};
+ const savedGet=env.TEXTBOOKS.get,savedHead=env.TEXTBOOKS.head;
+ env.TEXTBOOKS.head=async key=>key===pdf?{key:pdf,customMetadata:{sha256:digest}}:savedHead(key);
+ env.TEXTBOOKS.get=async key=>key===queueKey?{size:JSON.stringify(queue).length,text:async()=>JSON.stringify(queue)}:
+  key===pdf?{body:pdfBytes,text:async()=>new TextDecoder().decode(pdfBytes)}:savedGet(key);
+ try{
+  const path='/materials/review-queue?path='+encodeURIComponent(pdf);
+  let response=await request(path);assert.equal(response.status,200);
+  const body=await response.json();assert.equal(body.verified_source_binding,true);
+  assert.equal(body.approval_enabled,false);assert.equal(body.pages[0].pdf_page,2);
+  assert.equal(body.pages[0].extra,undefined);
+  queue.source_sha256='b'.repeat(64);
+  assert.equal((await request(path)).status,409);
+  queue.source_sha256=digest;queue.pages[0].review_category='approved';
+  assert.equal((await request(path)).status,409);
+  queue.pages[0].review_category='ocr_error';queue.pages.push({...queue.pages[0]});
+  assert.equal((await request(path)).status,409);
+ }finally{env.TEXTBOOKS.get=savedGet;env.TEXTBOOKS.head=savedHead}
+});
