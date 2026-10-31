@@ -75,6 +75,8 @@ def create_app(runtime):
                                    "pdf_page_count": manifest["pdf_page_count"],
                                    "approval_enabled": False}, separators=(",", ":")).encode()
                 return response(start_response, "200 OK", body)
+            if page_number > manifest["pdf_page_count"]:
+                raise ValueError("Page outside verified manifest")
             source = fetch_verified_staging_pdf(
                 runtime.r2, owner_uid=reviewer.uid, r2_key=key,
                 expected_sha256=manifest["sha256"])
