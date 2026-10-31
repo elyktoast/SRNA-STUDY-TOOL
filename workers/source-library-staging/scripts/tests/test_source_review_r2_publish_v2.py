@@ -133,6 +133,17 @@ class PublishTests(unittest.TestCase):
             publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
         self.assertFalse(any(k.endswith(".source.json") for k in r2.writes))
 
+    def test_source_replacement_after_attestation_revokes_publication(self):
+        class ChangedAtEnd(FakeR2):
+            def put_object(self, Bucket, Key, Body, ContentType):
+                super().put_object(Bucket=Bucket, Key=Key, Body=Body, ContentType=ContentType)
+                if Key.endswith(".source.json"):
+                    self.etag = "etag-replaced-at-end"
+        r2 = ChangedAtEnd(self.data)
+        with self.assertRaisesRegex(ValueError, "changed after attestation"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=HeldLock())
+        self.assertFalse(any(key.endswith(".source.json") for key in r2.writes))
+
     def test_interrupted_publication_leaves_no_attestation(self):
         class FailingR2(FakeR2):
             def put_object(self, Bucket, Key, Body, ContentType):
