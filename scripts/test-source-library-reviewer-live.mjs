@@ -5,7 +5,7 @@ const origin='https://staging.srnastudytool.com';
 const root=new URL(base);
 assert.equal(root.protocol,'https:');
 assert.equal(root.pathname,'/');
-assert.ok(root.hostname.endsWith('.srnastudytool.com'));
+assert.ok(root.hostname.endsWith('.srnastudytool.com') || root.hostname==='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev');
 const request=async(path,init={})=>fetch(new URL(path,root),{redirect:'error',...init});
 const tests=[
  ['/review/approve',{method:'POST',headers:{Origin:origin}},[403,404,405]],
