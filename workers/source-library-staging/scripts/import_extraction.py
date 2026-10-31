@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 
 from source_review_authorization_v2 import approved_pages_for_import
+from source_review_db_v2 import load_approved_pages
 
 MAX_BATCH = 200
 SCHEMA = "source_library_staging"
@@ -174,7 +175,7 @@ def validate_source_replacement(exists, prior_digest, incoming_digest):
         raise ValueError("Reindex blocked: source PDF changed; create a new version")
 
 
-def import_passages(folder, manifest, connection, *, trusted_approval=None,
+def import_passages(folder, manifest, connection, *,
                     authenticated_reviewer_uid=None, reviewer_is_admin=False):
     # This is the central DB write boundary, including direct CLI and R2 imports.
     # Unauthenticated local page-review files must never clear extraction warnings.
@@ -193,12 +194,21 @@ def import_passages(folder, manifest, connection, *, trusted_approval=None,
         raise ValueError("Duplicate extraction review pages")
     flagged = set(low) | set(failed)
     if flagged or manifest.get("requires_ocr_review") is True:
-        approved = approved_pages_for_import(
-            manifest, trusted_approval,
-            authenticated_reviewer_uid=authenticated_reviewer_uid,
-            reviewer_is_admin=reviewer_is_admin)
-        if not flagged or not flagged.issubset(approved):
-            raise ValueError("Unresolved extraction review pages")
+        if not flagged:
+            raise ValueError("Unresolved extraction review metadata")
+        if reviewer_is_admin is not True or not authenticated_reviewer_uid:
+            raise ValueError("Trusted server-side review approval required")
+        with connection.transaction():
+            approval = load_approved_pages(
+                connection, manifest,
+                authenticated_reviewer_uid=authenticated_reviewer_uid,
+                reviewer_is_admin=reviewer_is_admin)
+            approved = approved_pages_for_import(
+                manifest, approval,
+                authenticated_reviewer_uid=authenticated_reviewer_uid,
+                reviewer_is_admin=reviewer_is_admin)
+            if not flagged.issubset(approved):
+                raise ValueError("Unresolved extraction review pages")
     # Entire replacement is atomic. A failed import leaves the old index intact.
     with connection.transaction():
         with connection.cursor() as cur:
