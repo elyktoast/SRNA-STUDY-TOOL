@@ -45,6 +45,7 @@ class DecisionTests(unittest.TestCase):
         conn = Connection()
         self.assertEqual(run(conn, decision="revoked"), 1)
         self.assertIn("UPDATE", conn.cur.sql)
+        self.assertIn("decision=", conn.cur.sql)
     def test_revocation_missing_row_rejected(self):
         with self.assertRaises(ValueError):
             run(Connection(0), decision="revoked")
