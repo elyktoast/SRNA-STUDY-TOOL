@@ -1,9 +1,38 @@
 (()=>{'use strict';
 const status=document.getElementById('status'),app=document.getElementById('app'),summary=document.getElementById('summary'),exportButton=document.getElementById('export');
-let draft=null;
+let draft=null,verifiedImageUrl=null;
+const verifiedButton=document.getElementById('verified-preview');
+const verifiedStatus=document.getElementById('verified-status');
+const verifiedImage=document.getElementById('verified-image');
+function clearVerifiedPage(){
+ if(verifiedImageUrl){URL.revokeObjectURL(verifiedImageUrl);verifiedImageUrl=null;}
+ verifiedImage.removeAttribute('src');verifiedImage.hidden=true;
+}
+verifiedButton.addEventListener('click',async()=>{
+ clearVerifiedPage();
+ const page=Number(document.getElementById('verified-page-number').value);
+ if(!textbook.value||!Number.isSafeInteger(page)||page<1){
+  verifiedStatus.textContent='Select a textbook and a valid physical PDF page.';return;
+ }
+ verifiedButton.disabled=true;
+ verifiedStatus.textContent='Checking verified source and page…';
+ try{
+  const api=window.MBUSourceMaterialStagingStorage;
+  const manifest=await api.verifiedReviewManifest(textbook.value);
+  if(page>manifest.pdf_page_count)throw Error('Page exceeds the verified PDF page count.');
+  const result=await api.verifiedReviewPage(textbook.value,page);
+  if(result.sourceSha256!==manifest.source_sha256)throw Error('Source fingerprint changed during preview.');
+  verifiedImageUrl=URL.createObjectURL(result.blob);
+  verifiedImage.src=verifiedImageUrl;
+  verifiedImage.hidden=false;
+  verifiedStatus.textContent='Verified original PDF page '+page+' of '+manifest.pdf_page_count+'. Read-only; approval disabled.';
+ }catch(e){verifiedStatus.textContent='Preview unavailable: '+e.message;}
+ finally{verifiedButton.disabled=false;}
+});
+window.addEventListener('pagehide',clearVerifiedPage);
 const textbook=document.getElementById('textbook'),saveButton=document.getElementById('save'),loadButton=document.getElementById('load');
 function updateButtons(){exportButton.disabled=!draft;saveButton.disabled=!draft||!textbook.value;loadButton.disabled=!textbook.value;}
-textbook.addEventListener('change',()=>{draft=null;summary.textContent='';updateButtons();});
+textbook.addEventListener('change',()=>{clearVerifiedPage();verifiedStatus.textContent='';draft=null;summary.textContent='';updateButtons();});
 function validate(payload){
  if(!payload||payload.schema_version!==2||!/^[a-f0-9]{64}$/.test(payload.review_fingerprint)||!Array.isArray(payload.decisions)||!payload.decisions.length||payload.decisions.length>1000)throw Error('Invalid or unsupported review draft');
  const choices=new Set(['Needs review','Chapter','Subsection','Reject']);
