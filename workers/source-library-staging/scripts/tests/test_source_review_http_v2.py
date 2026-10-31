@@ -1,5 +1,6 @@
 """HTTP boundary tests: auth before R2, owner binding, verified PNG, no approvals."""
 import hashlib
+import json
 import io
 import unittest
 from unittest.mock import patch
@@ -208,6 +209,59 @@ class HttpTests(unittest.TestCase):
         self.assertIn("X-Verified-Source-SHA256", headers["Access-Control-Expose-Headers"])
         self.assertIn("X-Review-Approval-Enabled", headers["Access-Control-Expose-Headers"])
         self.assertEqual(headers["Vary"], "Origin")
+
+    def test_real_pdf_render_via_verified_r2_adapters(self):
+        import fitz
+        from unittest.mock import patch
+        document = fitz.open()
+        page = document.new_page(width=300, height=400)
+        page.insert_text((40, 50), "Staging verified textbook page")
+        pdf = document.tobytes()
+        document.close()
+        sha = hashlib.sha256(pdf).hexdigest()
+        queue_key = UID + "/_review_queues/test.pdf.json"
+        queue = json.dumps({"r2_key": KEY, "source_sha256": sha,
+                            "approval_enabled": False, "pdf_page_count": 1,
+                            "pages": []}).encode()
+        queue_sha = hashlib.sha256(queue).hexdigest()
+        att = json.dumps({"schema_version": 1, "r2_key": KEY,
+                          "source_sha256": sha, "queue_sha256": queue_sha,
+                          "source_etag": '"fixture-etag"', "size_bytes": len(pdf)}).encode()
+
+        class Stream:
+            def __init__(self, content):
+                self.content = content
+            def read(self, n=-1):
+                return self.content[:n]
+            def iter_chunks(self, chunk_size):
+                for offset in range(0, len(self.content), chunk_size):
+                    yield self.content[offset:offset + chunk_size]
+            def close(self):
+                pass
+
+        class R2:
+            def head_object(self, *, Bucket, Key):
+                self_key = KEY
+                if Bucket != "srna-staging-textbooks" or Key != self_key:
+                    raise ValueError("Unexpected storage key")
+                return {"ETag": '"fixture-etag"', "ContentLength": len(pdf)}
+            def get_object(self, *, Bucket, Key):
+                if Bucket != "srna-staging-textbooks":
+                    raise ValueError("Wrong bucket")
+                value = {KEY: pdf, queue_key: queue,
+                         queue_key + ".source.json": att}[Key]
+                return {"Body": Stream(value), "ContentLength": len(value),
+                        "ETag": '"fixture-etag"'}
+
+        self.runtime.r2 = R2()
+        status, headers, body = self.call()
+        self.assertEqual(status, 200)
+        self.assertTrue(body.startswith(bytes([137, 80, 78, 71, 13, 10, 26, 10])))
+        self.assertEqual(headers["X-Verified-Source-SHA256"], sha)
+        self.assertEqual(headers["X-Page-Image-SHA256"], hashlib.sha256(body).hexdigest())
+        self.assertNotIn("X-Inspection-Receipt", headers)
+        status, _, _ = self.call(query="path=" + KEY + "&page=2")
+        self.assertEqual(status, 409)
 
     def test_approval_routes_are_not_exposed(self):
         self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
