@@ -26,8 +26,13 @@ def _unb64(value):
 
 def _validate(reviewer_uid, owner_uid, source_sha256, r2_key, pdf_page):
     for uid in (reviewer_uid, owner_uid):
-        if not isinstance(uid, str) or str(UUID(uid)) != uid:
+        if not isinstance(uid, str):
             raise ValueError("Invalid reviewer or owner")
+        try:
+            if str(UUID(uid)) != uid:
+                raise ValueError("Invalid reviewer or owner")
+        except (ValueError, AttributeError) as exc:
+            raise ValueError("Invalid reviewer or owner") from exc
     if not isinstance(source_sha256, str) or len(source_sha256) != 64 or any(c not in "0123456789abcdef" for c in source_sha256):
         raise ValueError("Invalid source fingerprint")
     if not isinstance(r2_key, str) or not r2_key.startswith(owner_uid + "/"):
