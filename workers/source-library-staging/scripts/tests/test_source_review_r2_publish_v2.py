@@ -73,6 +73,23 @@ class PublishTests(unittest.TestCase):
         }
         (self.root / "manifest.json").write_text(json.dumps(self.manifest))
 
+    def test_forged_lock_shape_is_rejected(self):
+        class ForgedLock:
+            def assert_held(self, key):
+                pass
+        r2 = FakeR2(self.data)
+        with self.assertRaisesRegex(ValueError, "trusted exclusive publication lock"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=ForgedLock())
+        self.assertEqual(r2.writes, {})
+
+    def test_expired_trusted_lock_is_rejected(self):
+        r2 = FakeR2(self.data)
+        lock = HeldLock()
+        lock.active = False
+        with self.assertRaisesRegex(ValueError, "not held"):
+            publish_verified_queue(r2, BUCKET, KEY, self.root, apply=True, publication_lock=lock)
+        self.assertEqual(r2.writes, {})
+
     def test_apply_without_exclusive_lock_is_rejected(self):
         r2 = FakeR2(self.data)
         with self.assertRaisesRegex(ValueError, "exclusive publication lock"):
