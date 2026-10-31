@@ -41,6 +41,8 @@ def create_app(runtime):
                            ("Access-Control-Expose-Headers",
                             "X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256"),
                            ("Vary", "Origin")]
+            if exc_info is None:
+                return original_start_response(status, headers)
             return original_start_response(status, headers, exc_info)
         origin = environ.get("HTTP_ORIGIN")
         if origin and origin != STAGING_ORIGIN:
