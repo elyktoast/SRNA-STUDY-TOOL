@@ -21,6 +21,8 @@ class ProtectedReviewerRoleStore:
             raise ValueError("Invalid reviewer UID") from exc
         if str(parsed) != uid.lower() or parsed.version is None:
             raise ValueError("Invalid reviewer UID")
+        # This query requires a trusted direct PostgreSQL connection with
+        # private-schema read access. A service-role REST key is insufficient.
         with self.connection.cursor() as cur:
             cur.execute(
                 """SELECT EXISTS (
