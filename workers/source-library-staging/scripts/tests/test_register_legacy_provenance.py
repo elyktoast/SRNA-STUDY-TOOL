@@ -71,5 +71,27 @@ class LegacyProvenanceTests(unittest.TestCase):
         self.assertFalse(any("insert into" in q for q in sql))
 
 
+    def test_rejects_passage_mismatch_without_inserting(self):
+        from unittest.mock import MagicMock
+        from uuid import UUID
+        owner = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
+        manifest = {"owner_uid": owner, "r2_key": owner + "/sample.pdf",
+                    "size_bytes": 100, "pdf_page_count": 3, "sha256": "a" * 64}
+        connection = MagicMock()
+        cursor = connection.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = (
+            UUID("2a589498-aaa4-410f-b51a-00d3ab99eafd"), UUID(owner), 100, 3)
+        cursor.fetchall.return_value = [(0, 1, 1, "unexpected")]
+        with patch("register_legacy_provenance.validate", return_value=manifest), \
+             patch("register_legacy_provenance.verify_pdf", return_value="a" * 64), \
+             patch("register_legacy_provenance.compare_passages",
+                   return_value={"matched": False, "reason": "passage_mismatch"}):
+            with self.assertRaisesRegex(ValueError, "passages differ"):
+                register(".", "source.pdf", connection, apply=True,
+                         downloaded_sha256="a" * 64)
+        sql = [str(c.args[0]).lower() for c in cursor.execute.call_args_list]
+        self.assertFalse(any("insert into" in q for q in sql))
+
+
 if __name__ == "__main__":
     unittest.main()
