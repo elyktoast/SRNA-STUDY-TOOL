@@ -21,6 +21,26 @@ def chunks(text,limit=1600,overlap=180):
         if end==len(text):break
         pos=max(pos+1,end-overlap)
 
+def rectangle_union_area(rectangles):
+    """Calculate the area covered by axis-aligned rectangles without overlaps."""
+    edges = sorted({float(x) for rect in rectangles for x in (rect.x0, rect.x1)})
+    area = 0.0
+    for left, right in zip(edges, edges[1:]):
+        spans = sorted((float(rect.y0), float(rect.y1)) for rect in rectangles
+                       if rect.x0 < right and rect.x1 > left and rect.y1 > rect.y0)
+        if not spans:
+            continue
+        start, end = spans[0]
+        height = 0.0
+        for y0, y1 in spans[1:]:
+            if y0 > end:
+                height += end - start
+                start, end = y0, y1
+            else:
+                end = max(end, y1)
+        area += (height + end - start) * (right - left)
+    return area
+
 def extract(pdf,out,owner_uid,r2_key,ocr=False):
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
@@ -88,6 +108,9 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                 # double count); never interpret it as exact union coverage.
                 visible_area = sum(max(0.0, float((rect & pdf_page.rect).get_area()))
                                    for rect in image_rects)
+                clipped_rects = [rect & pdf_page.rect for rect in image_rects]
+                image_coverage_fraction = (round(min(1.0, rectangle_union_area(clipped_rects) / page_area), 3)
+                                           if page_area else 0.0)
                 image_coverage_upper_bound = (round(min(1.0, visible_area / page_area), 3)
                                               if page_area else 0.0)
                 low_text_details.append({'pdf_page':page,'characters':len(text),
@@ -96,7 +119,8 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False):
                                          'ocr_failed':page in ocr_failures,
                                          'review_category':review_category,
                                          'image_placement_count':len(image_rects),
-                                         'image_coverage_upper_bound':image_coverage_upper_bound})
+                                         'image_coverage_upper_bound':image_coverage_upper_bound,
+                                         'image_coverage_fraction':image_coverage_fraction})
             # Image presence is a review signal, not proof that OCR is needed.
             if pdf_page.get_images(full=False): image_pages.append(page)
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
