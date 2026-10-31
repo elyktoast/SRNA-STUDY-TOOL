@@ -103,6 +103,14 @@ class HttpTests(unittest.TestCase):
         fetch.assert_called_once()
         render.assert_called_once()
 
+    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.load_staging_review_manifest")
+    def test_out_of_range_page_rejected_before_pdf_download(self, manifest, fetch):
+        manifest.return_value = self.manifest
+        status, _, _ = self.call(query="path=" + KEY + "&page=3")
+        self.assertEqual(status, 409)
+        fetch.assert_not_called()
+
     @patch("source_review_http_v2.load_staging_review_manifest", side_effect=ValueError("tampered"))
     def test_attestation_failure_is_conflict(self, loader):
         self.assertEqual(self.call()[0], 409)
