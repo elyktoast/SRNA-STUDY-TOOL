@@ -21,7 +21,7 @@ def preflight(conn):
             ("source_library_staging", "page_review_approvals_v2"))
         columns = dict(cur.fetchall())
         cur.execute(
-            "SELECT relrowsecurity FROM pg_class WHERE oid=to_regclass(%s)", (TABLE,))
+            "SELECT relrowsecurity, relforcerowsecurity FROM pg_class WHERE oid=to_regclass(%s)", (TABLE,))
         rls_row = cur.fetchone()
         cur.execute(
             "SELECT has_table_privilege('anon',%s,'SELECT'),"
@@ -43,6 +43,8 @@ def preflight(conn):
               if columns.get(name) != kind]
     if not rls_row or rls_row[0] is not True:
         issues.append("rls_not_enabled")
+    if not rls_row or len(rls_row) < 2 or rls_row[1] is not True:
+        issues.append("rls_not_forced")
     if not grants or any(value is not False for value in grants):
         issues.append("client_table_privilege_present")
     if not schema_create_grants or any(value is not False for value in schema_create_grants):
