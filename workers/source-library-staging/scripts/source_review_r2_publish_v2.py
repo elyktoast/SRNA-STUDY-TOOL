@@ -17,7 +17,9 @@ from source_review_queue_publish_v2 import prepare_queue_artifacts
 MAX_BYTES = 300 * 1024 * 1024
 
 
-def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=False):
+def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=False, publication_lock=None):
+    if apply and publication_lock is None:
+        raise ValueError("An exclusive publication lock is required for R2 writes")
     if bucket != "srna-staging-textbooks":
         raise ValueError("Staging bucket required")
     extraction_dir = Path(extraction_dir)
@@ -53,6 +55,9 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
         queue_key = artifacts["queue_r2_key"]
         attestation_key = queue_key + ".source.json"
         if apply:
+            # Caller holds a source-scoped exclusive lock throughout publication.
+            # No lock is acquired from R2: that requires a separate coordinator.
+            publication_lock.assert_held(pdf_key)
             # Refuse to overwrite an existing publication. A trusted operator
             # must explicitly retire it using a serialized maintenance workflow.
             # This prevents routine retries from deleting another publication's
@@ -80,6 +85,7 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
             # Invalidate any old attestation first; an interrupted publication
             # must not leave an old proof paired with a newly written queue.
             client.delete_object(Bucket=bucket, Key=attestation_key)
+            publication_lock.assert_held(pdf_key)
             client.put_object(Bucket=bucket, Key=queue_key,
                               Body=artifacts["queue_json"].encode("utf-8"),
                               ContentType="application/json")
@@ -88,6 +94,7 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
             latest = client.head_object(Bucket=bucket, Key=pdf_key)
             if latest.get("ETag") != head.get("ETag") or latest.get("ContentLength") != size:
                 raise ValueError("R2 source changed during publication")
+            publication_lock.assert_held(pdf_key)
             client.put_object(Bucket=bucket, Key=attestation_key,
                               Body=attestation.encode("utf-8"),
                               ContentType="application/json")
@@ -110,8 +117,10 @@ def main():
         aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto",
     )
+    if args.apply:
+        parser.error("Direct --apply is disabled until a trusted source-scoped lock coordinator is configured")
     result = publish_verified_queue(client, "srna-staging-textbooks", args.r2_key,
-                                    args.extraction_dir, apply=args.apply)
+                                    args.extraction_dir, apply=False)
     print(json.dumps(result, indent=2))
 
 
