@@ -1,0 +1,95 @@
+name: Phase 3B disposable staging acceptance (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: phase3b-disposable-staging-acceptance
+  cancel-in-progress: false
+jobs:
+  acceptance:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Real PostgreSQL concurrency acceptance
+        working-directory: workers/source-library-staging/scripts
+        env:
+          SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          test -n "$SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL" || { echo "Missing staging database secret"; exit 1; }
+          python -m unittest -v tests.test_source_review_publication_lock_postgres_v2
+      - name: Disposable PDF publication and integrity acceptance
+        working-directory: workers/source-library-staging/scripts
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, uuid
+          import boto3, fitz
+          from botocore.exceptions import ClientError
+          from process_r2_textbook import run
+
+          for name in ("R2_ACCOUNT_ID","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","DATABASE_URL"):
+              if not os.environ.get(name):
+                  raise SystemExit("Missing required staging secret: "+name)
+          owner = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
+          filename = "phase3b-disposable-" + str(uuid.uuid4()) + ".pdf"
+          key = owner + "/" + filename
+          queue = owner + "/_review_queues/" + filename + ".json"
+          attestation = queue + ".source.json"
+          bucket = "srna-staging-textbooks"
+          client = boto3.client("s3", endpoint_url="https://"+os.environ["R2_ACCOUNT_ID"]+".r2.cloudflarestorage.com", aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto")
+          doc = fitz.open()
+          page = doc.new_page()
+          page.insert_text((72,72), "Phase 3B disposable staging acceptance. This is synthetic test text only. " * 12)
+          data = doc.tobytes()
+          doc.close()
+          created = []
+          try:
+              # The random key is exclusive to this run; never touch any existing textbook.
+              try:
+                  client.head_object(Bucket=bucket, Key=key)
+              except ClientError as exc:
+                  if str(exc.response.get("Error",{}).get("Code")) not in ("404","NoSuchKey","NotFound"):
+                      raise
+              else:
+                  raise RuntimeError("Refusing to overwrite existing test key")
+              client.put_object(Bucket=bucket, Key=key, Body=data, ContentType="application/pdf")
+              created.append(key)
+              dry = run(owner, key, apply=False, client=client, review_queue_mode="dry-run")
+              assert not dry["review_queue_publication"]["published"]
+              assert dry["r2_sha256"] == hashlib.sha256(data).hexdigest()
+              published = run(owner, key, apply=False, client=client, review_queue_mode="apply")
+              created.extend([queue, attestation])
+              assert published["review_queue_publication"]["published"]
+              assert not published["review_queue_publication"]["approval_enabled"]
+              qbytes = client.get_object(Bucket=bucket,Key=queue)["Body"].read()
+              meta = json.loads(client.get_object(Bucket=bucket,Key=attestation)["Body"].read())
+              assert meta["queue_sha256"] == hashlib.sha256(qbytes).hexdigest()
+              assert meta["source_sha256"] == hashlib.sha256(data).hexdigest()
+              assert client.get_object(Bucket=bucket,Key=key)["Body"].read() == data
+              try:
+                  run(owner,key,apply=False,client=client,review_queue_mode="apply")
+              except ValueError as exc:
+                  assert "already published" in str(exc)
+              else:
+                  raise AssertionError("Duplicate publication was accepted")
+              print("PASS: dry-run, publication, fingerprints, unchanged PDF, duplicate rejection")
+          finally:
+              for object_key in reversed(created):
+                  client.delete_object(Bucket=bucket,Key=object_key)
+              print("Cleanup attempted for",len(created),"disposable objects")
+          PY
