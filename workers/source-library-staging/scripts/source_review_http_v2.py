@@ -52,7 +52,10 @@ def create_app(runtime):
         if origin and origin != STAGING_ORIGIN:
             return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
         if environ.get("REQUEST_METHOD") == "OPTIONS":
-            if origin != STAGING_ORIGIN or environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD") != "GET":
+            if (environ.get("PATH_INFO") not in ("/review/page.png", "/review/manifest")
+                    or origin != STAGING_ORIGIN
+                    or environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD") != "GET"
+                    or environ.get("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").strip().lower() != "authorization") :
                 return response(start_response, "403 Forbidden", b'{"error":"forbidden_preflight"}')
             return response(start_response, "204 No Content", b"", extra=[
                 ("Access-Control-Allow-Methods", "GET"),
