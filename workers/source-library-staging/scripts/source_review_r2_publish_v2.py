@@ -99,6 +99,12 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
             client.put_object(Bucket=bucket, Key=attestation_key,
                               Body=attestation.encode("utf-8"),
                               ContentType="application/json")
+            # Detect a source replacement that races with the final write.
+            # Revoke the attestation while the exclusive lock is held.
+            final = client.head_object(Bucket=bucket, Key=pdf_key)
+            if final.get("ETag") != head.get("ETag") or final.get("ContentLength") != size:
+                client.delete_object(Bucket=bucket, Key=attestation_key)
+                raise ValueError("R2 source changed after attestation publication")
         return {"queue_r2_key": queue_key, "attestation_r2_key": attestation_key,
                 "source_sha256": artifacts["pdf_sha256"], "published": bool(apply),
                 "approval_enabled": False}
