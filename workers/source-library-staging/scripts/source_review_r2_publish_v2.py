@@ -5,7 +5,9 @@ and publishes the review queue without modifying or replacing the original PDF.
 Uses a separate immutable SHA-256 attestation sidecar so that the original R2
 object metadata and content remain untouched.
 """
+import argparse
 import hashlib
+import os
 import json
 import tempfile
 from pathlib import Path
@@ -80,3 +82,26 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
         return {"queue_r2_key": queue_key, "attestation_r2_key": attestation_key,
                 "source_sha256": artifacts["pdf_sha256"], "published": bool(apply),
                 "approval_enabled": False}
+
+def main():
+    parser = argparse.ArgumentParser(description="Publish a verified staging PDF review queue")
+    parser.add_argument("--r2-key", required=True, help="Owner-scoped original PDF object key")
+    parser.add_argument("--extraction-dir", type=Path, required=True, help="Local trusted extraction directory containing manifest.json")
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--dry-run", action="store_true", help="Verify bytes and produce publication plan; no writes")
+    mode.add_argument("--apply", action="store_true", help="Publish queue and source attestation to staging R2")
+    args = parser.parse_args()
+    import boto3
+    account = os.environ["R2_ACCOUNT_ID"]
+    client = boto3.client(
+        "s3", endpoint_url=f"https://{account}.r2.cloudflarestorage.com",
+        aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto",
+    )
+    result = publish_verified_queue(client, "srna-staging-textbooks", args.r2_key,
+                                    args.extraction_dir, apply=args.apply)
+    print(json.dumps(result, indent=2))
+
+
+if __name__ == "__main__":
+    main()
