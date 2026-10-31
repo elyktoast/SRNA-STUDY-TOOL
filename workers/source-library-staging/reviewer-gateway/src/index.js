@@ -70,4 +70,3 @@ export default {
  }
 };
 
-export {ReviewerContainer} from './container.js';
