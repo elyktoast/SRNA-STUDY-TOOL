@@ -13,6 +13,7 @@ import tempfile
 from pathlib import Path
 
 from source_review_queue_publish_v2 import prepare_queue_artifacts
+from source_review_publication_lock_v2 import exclusive_publication_lock
 
 MAX_BYTES = 300 * 1024 * 1024
 
@@ -118,9 +119,12 @@ def main():
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto",
     )
     if args.apply:
-        parser.error("Direct --apply is disabled until a trusted source-scoped lock coordinator is configured")
-    result = publish_verified_queue(client, "srna-staging-textbooks", args.r2_key,
-                                    args.extraction_dir, apply=False)
+        with exclusive_publication_lock(os.environ.get("DATABASE_URL"), "srna-staging-textbooks", args.r2_key) as lock:
+            result = publish_verified_queue(client, "srna-staging-textbooks", args.r2_key,
+                                            args.extraction_dir, apply=True, publication_lock=lock)
+    else:
+        result = publish_verified_queue(client, "srna-staging-textbooks", args.r2_key,
+                                        args.extraction_dir, apply=False)
     print(json.dumps(result, indent=2))
 
 
