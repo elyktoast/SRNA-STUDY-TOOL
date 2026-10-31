@@ -31,10 +31,11 @@ async function save(file){
 async function list(){const response=await call('/materials');const data=await response.json();return (data.items||[]).map(x=>({...x,createdAt:x.createdAt||x.savedAt}));}
 async function file(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();return new File([blob],name||'source-material.pdf',{type:'application/pdf'});}
 async function download(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name||'source-material.pdf';a.click()}finally{setTimeout(()=>URL.revokeObjectURL(url),1000)}}
+async function reviewQueue(path){const response=await call('/materials/review-queue?path='+key(path));return response.json();}
 async function reviewPdf(path){const response=await call('/materials/review-pdf?path='+key(path));const blob=await response.blob();if(blob.type!=='application/pdf')throw Error('Review endpoint did not return a PDF.');return blob;}
 async function remove(path){await call('/materials/item?path='+key(path),{method:'DELETE'});}
 async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
 })();
