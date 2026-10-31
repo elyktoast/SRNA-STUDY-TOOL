@@ -129,31 +129,13 @@ def create_app(runtime):
 
 
 def main():
-    if os.environ.get("STAGING_ONLY") != "true":
-        raise RuntimeError("Staging-only runtime required")
-    required = ("STAGING_DATABASE_URL", "STAGING_R2_ACCOUNT_ID",
-                "STAGING_R2_ACCESS_KEY_ID", "STAGING_R2_SECRET_ACCESS_KEY",
-                "SUPABASE_URL", "SUPABASE_ANON_KEY", "STAGING_RECEIPT_SIGNING_SECRET")
-    missing = [key for key in required if not os.environ.get(key)]
-    if missing:
-        raise RuntimeError("Missing staging configuration: " + ", ".join(missing))
-    import boto3
-    import psycopg
-    r2 = boto3.client("s3",
-        endpoint_url="https://" + os.environ["STAGING_R2_ACCOUNT_ID"] + ".r2.cloudflarestorage.com",
-        aws_access_key_id=os.environ["STAGING_R2_ACCESS_KEY_ID"],
-        aws_secret_access_key=os.environ["STAGING_R2_SECRET_ACCESS_KEY"],
-        region_name="auto")
-    with psycopg.connect(os.environ["STAGING_DATABASE_URL"]) as conn:
-        runtime = StagingReviewRuntime(
-            conn=conn, r2_client=r2, supabase_url=os.environ["SUPABASE_URL"],
-            supabase_api_key=os.environ["SUPABASE_ANON_KEY"],
-            signing_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
-        # Bind to loopback only. An authenticated TLS reverse proxy is required
-        # before any remote access. Do not expose this development server.
-        with make_server("127.0.0.1", int(os.environ.get("PORT", "8789")), create_app(runtime)) as server:
-            server.serve_forever()
-
+    # Reuse the WSGI entrypoint's strict staging identity checks. Never allow
+    # the development server to bypass the deployment configuration guard.
+    from source_review_wsgi_v2 import build_app
+    app = build_app()
+    # This server is only suitable for same-host private development.
+    with make_server("127.0.0.1", int(os.environ.get("PORT", "8789")), app) as server:
+        server.serve_forever()
 
 if __name__ == "__main__":
     main()
