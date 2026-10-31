@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from source_review_r2_publish_v2 import publish_verified_queue
+from source_review_publication_lock_v2 import PublicationLock
 
 UID = "123e4567-e89b-42d3-a456-426614174000"
 KEY = UID + "/book.pdf"
@@ -48,10 +49,11 @@ class FakeR2:
         self.writes[Key] = Body
 
 
-class HeldLock:
-    def assert_held(self, key):
-        if key != KEY:
-            raise ValueError("Unexpected lock scope")
+class HeldLock(PublicationLock):
+    def __init__(self):
+        self.key = KEY
+        self.connection = type("FakeConnection", (), {"closed": False})()
+        self.active = True
 
 
 class PublishTests(unittest.TestCase):
