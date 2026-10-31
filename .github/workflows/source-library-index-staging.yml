@@ -5,6 +5,7 @@ on:
       owner_uid:
         description: 'Admin owner UUID for staging textbook records'
         required: true
+        default: 'c003287a-10ce-4cc9-926e-ef7c3a162a26'
         type: string
       limit:
         description: 'Maximum staging PDFs to process (1-10)'
@@ -14,6 +15,7 @@ on:
       r2_key:
         description: 'Optional exact owner-scoped R2 PDF key; blank scans backlog'
         required: false
+        default: 'c003287a-10ce-4cc9-926e-ef7c3a162a26/810040fc-da03-4fa5-bcc0-78c25957c325.pdf'
         type: string
       apply:
         description: 'Write extracted passages to staging Supabase (false = dry run)'
