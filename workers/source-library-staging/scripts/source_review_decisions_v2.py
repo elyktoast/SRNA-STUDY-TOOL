@@ -5,6 +5,7 @@ original PDF page image was inspected. Database privileges are independent
 of human reviewer authorization. Requires the approved staging migration.
 """
 from source_review_identity_v2 import resolve_admin_reviewer
+import re
 
 
 def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
@@ -17,13 +18,14 @@ def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
         raise ValueError("Reviewer does not own source")
     if page_image_inspected is not True:
         raise ValueError("Original PDF page-image inspection required")
-    if type(pdf_page) is not int or pdf_page < 1 or pdf_page > manifest.get("pdf_page_count", 0):
+    count = manifest.get("pdf_page_count")
+    if type(count) is not int or count < 1 or type(pdf_page) is not int or pdf_page < 1 or pdf_page > count:
         raise ValueError("Invalid physical PDF page")
-    if decision not in ("approved", "rejected", "revoked"):
+    if not isinstance(decision, str) or decision not in ("approved", "rejected", "revoked"):
         raise ValueError("Invalid review decision")
     if not isinstance(review_note, str) or not review_note.strip():
         raise ValueError("Review justification required")
-    if not isinstance(manifest.get("sha256"), str) or len(manifest["sha256"]) != 64:
+    if not isinstance(manifest.get("sha256"), str) or re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]) is None:
         raise ValueError("Source fingerprint required")
     if not isinstance(manifest.get("r2_key"), str) or not manifest["r2_key"].startswith(reviewer.uid + "/"):
         raise ValueError("Owner-scoped source key required")
@@ -49,4 +51,8 @@ def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
     with conn.cursor() as cur:
         cur.execute(sql, args)
         affected = cur.rowcount
+    if decision == "revoked" and affected != 1:
+        raise ValueError("No active approval to revoke")
+    if affected != 1:
+        raise ValueError("Unexpected page-review write count")
     return affected
