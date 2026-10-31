@@ -24,3 +24,22 @@ create index if not exists page_review_approvals_lookup_v2
   on source_library_staging.page_review_approvals_v2
   (owner_uid, source_sha256, r2_key, reviewer_uid, pdf_page)
   where decision = 'approved' and revoked_at is null;
+
+-- Server-only reviewer authorization. This table is NOT an exposed user profile.
+-- The active flag can be revoked without waiting for JWT refresh.
+create table if not exists source_library_staging.reviewer_roles_v2 (
+  reviewer_uid uuid primary key references auth.users(id) on delete cascade,
+  role text not null check (role = 'admin'),
+  active boolean not null default false,
+  granted_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  check (active = false or revoked_at is null)
+);
+alter table source_library_staging.reviewer_roles_v2 enable row level security;
+alter table source_library_staging.reviewer_roles_v2 force row level security;
+revoke all on source_library_staging.reviewer_roles_v2 from public, anon, authenticated;
+-- No browser-facing policies or role-grant RPCs. Role assignments require
+-- independently authorized, audited server-side administration.
+create index if not exists reviewer_roles_active_v2
+  on source_library_staging.reviewer_roles_v2 (reviewer_uid)
+  where role = 'admin' and active = true and revoked_at is null;
