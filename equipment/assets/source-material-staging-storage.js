@@ -72,6 +72,7 @@ async function verifiedReviewPage(path,page){
  if(!/^[a-f0-9]{64}$/.test(source||'')||!/^[a-f0-9]{64}$/.test(digest||''))
   throw Error('Missing verified page fingerprints.');
  const blob=await response.blob();
+ if(blob.type!=='image/png')throw Error('Invalid image payload type.');
  if(blob.size===0||blob.size>32*1024*1024)throw Error('Invalid reviewer image size.');
  return {blob,sourceSha256:source,imageSha256:digest,approvalEnabled:false};
 }
