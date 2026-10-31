@@ -30,6 +30,12 @@ class ExtractorTests(unittest.TestCase):
         self.owner = "895ed357-27c3-4d4b-a98a-77b0de20760c"
         self.key = self.owner + "/sample.pdf"
 
+    def test_overlapping_rectangle_union(self):
+        import fitz
+        rectangles = [fitz.Rect(0, 0, 10, 10), fitz.Rect(5, 0, 15, 10)]
+        self.assertEqual(module.rectangle_union_area(rectangles), 150.0)
+        self.assertEqual(module.rectangle_union_area([]), 0.0)
+
     def test_two_page_extraction(self):
         out = self.base / "extracted"
         result = module.extract(self.pdf, out, self.owner, self.key)
@@ -115,6 +121,7 @@ class ExtractorTests(unittest.TestCase):
             "ocr_improved": False, "ocr_failed": False,
             "review_category": "blank_candidate_review",
             "image_placement_count": 0, "image_coverage_upper_bound": 0.0,
+            "image_coverage_fraction": 0.0,
         }])
         self.assertFalse(result["citation_verified"])
 
