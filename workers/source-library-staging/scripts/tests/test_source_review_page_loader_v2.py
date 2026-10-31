@@ -57,6 +57,17 @@ class PageLoaderTests(unittest.TestCase):
                 source_loader=lambda *_: self.fail("R2 accessed"))
         render.assert_not_called()
 
+    def test_unsafe_r2_key_rejected_before_any_storage_access(self):
+        for suffix in ("../other.pdf", "./book.pdf", "folder//book.pdf",
+                       "folder/../book.pdf", "folder/./book.pdf",
+                       "folder\\\\book.pdf", "book.pdf\\n", "book.pdf\\x7f"):
+            with self.subTest(suffix=repr(suffix)):
+                with self.assertRaisesRegex(ValueError, "owner-scoped"):
+                    load_verified_review_page(
+                        owner_uid=UID, r2_key=UID + "/" + suffix, pdf_page=1,
+                        manifest_loader=lambda *_: self.fail("manifest accessed"),
+                        source_loader=lambda *_: self.fail("R2 accessed"))
+
     def test_missing_adapters_rejected(self):
         with self.assertRaisesRegex(ValueError, "adapters"):
             load_verified_review_page(
