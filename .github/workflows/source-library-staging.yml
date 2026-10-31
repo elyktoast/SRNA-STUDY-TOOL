@@ -89,7 +89,7 @@ jobs:
         run: node scripts/test-source-library-staging-live.mjs
 
   reviewer-live-boundary:
-    if: github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-smoke]'))
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: source-library-staging
