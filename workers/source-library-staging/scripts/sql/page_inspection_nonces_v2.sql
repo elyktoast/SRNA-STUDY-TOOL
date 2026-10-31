@@ -1,4 +1,6 @@
--- Staging-only proposed one-time receipt consumption. NOT APPLIED.
+-- Staging-only one-time receipt consumption. Applied to SRNA staging on 2026-10-31.
+-- Migration name: source_library_staging_page_inspection_nonces_v2.
+-- Do not apply to production without separate authorization.
 -- Never store the bearer receipt itself, only a SHA-256 digest of its nonce.
 create table if not exists source_library_staging.page_inspection_nonces_v2 (
   nonce_sha256 text primary key check (nonce_sha256 ~ '^[0-9a-f]{64}$'),
