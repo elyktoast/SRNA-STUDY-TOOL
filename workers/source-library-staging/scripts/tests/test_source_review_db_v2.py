@@ -1,6 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from source_review_db_v2 import load_approved_pages
 from source_review_authorization_v2 import approved_pages_for_import
@@ -23,6 +24,16 @@ class Connection:
     def cursor(self): return Cursor(self.rows)
 
 class DatabaseApprovalTests(unittest.TestCase):
+    def setUp(self):
+        self.preflight = patch('check_page_review_staging_schema_v2.preflight', return_value={'ready': True})
+        self.preflight.start()
+        self.addCleanup(self.preflight.stop)
+    def test_unsafe_schema_rejected(self):
+        with patch('check_page_review_staging_schema_v2.preflight', return_value={'ready': False}):
+            with self.assertRaisesRegex(ValueError, 'schema unavailable or unsafe'):
+                load_approved_pages(Connection([(2,)]), MANIFEST,
+                    authenticated_reviewer_uid='reviewer', reviewer_is_admin=True)
+
     def test_loaded_approval_matches_source(self):
         approval=load_approved_pages(Connection([(2,)]),MANIFEST,
             authenticated_reviewer_uid="reviewer",reviewer_is_admin=True)
