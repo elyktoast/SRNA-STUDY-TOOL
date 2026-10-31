@@ -15,6 +15,7 @@ create table if not exists source_library_staging.page_review_approvals_v2 (
   check (r2_key like owner_uid::text || '/%')
 );
 alter table source_library_staging.page_review_approvals_v2 enable row level security;
+alter table source_library_staging.page_review_approvals_v2 force row level security;
 revoke all on source_library_staging.page_review_approvals_v2 from public, anon, authenticated;
 revoke create on schema source_library_staging from public, anon, authenticated;
 -- No RLS policies: ordinary roles cannot read/write approvals.
