@@ -57,17 +57,12 @@ class R2ReviewIntegrationTests(unittest.TestCase):
             self.assertEqual(result["review_queue_publication"], {"published": False})
             self.assertFalse(publisher.call_args.kwargs["apply"])
 
-    def test_explicit_publication_apply_still_does_not_index(self):
-        with patch("process_r2_textbook.process", side_effect=self.fake_process), \
-             patch("process_r2_textbook.publish_verified_queue") as publisher:
-            publisher.return_value = {"published": True}
-            result = run(UID, KEY, client=self.r2, review_queue_mode="apply")
-            self.assertTrue(result["review_queue_publication"]["published"])
-            self.assertFalse(result["indexed"])
-            self.assertTrue(publisher.call_args.kwargs["apply"])
+    def test_publication_apply_rejected_until_lock_coordinator_exists(self):
+        with self.assertRaisesRegex(ValueError, "exclusive lock coordinator"):
+            run(UID, KEY, client=self.r2, review_queue_mode="apply")
 
     def test_database_apply_cannot_combine_with_publication(self):
-        with self.assertRaisesRegex(ValueError, "separately"):
+        with self.assertRaisesRegex(ValueError, "exclusive lock coordinator"):
             run(UID, KEY, apply=True, client=self.r2, review_queue_mode="apply")
 
     def test_invalid_mode_rejected(self):
