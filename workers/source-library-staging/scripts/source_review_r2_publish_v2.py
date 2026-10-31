@@ -53,6 +53,18 @@ def publish_verified_queue(client, bucket, pdf_key, extraction_dir, *, apply=Fal
         queue_key = artifacts["queue_r2_key"]
         attestation_key = queue_key + ".source.json"
         if apply:
+            # Refuse to overwrite an existing publication. A trusted operator
+            # must explicitly retire it using a serialized maintenance workflow.
+            # This prevents routine retries from deleting another publication's
+            # attestation; it is not a distributed lock for first-time writes.
+            try:
+                client.head_object(Bucket=bucket, Key=attestation_key)
+            except Exception as exc:
+                code = getattr(exc, "response", {}).get("Error", {}).get("Code")
+                if str(code) not in ("404", "NoSuchKey", "NotFound"):
+                    raise
+            else:
+                raise ValueError("Review queue already published; refuse overwrite")
             # Re-read source immediately before publication. This catches normal
             # concurrent replacements, but cannot provide atomicity across keys.
             current = client.head_object(Bucket=bucket, Key=pdf_key)
