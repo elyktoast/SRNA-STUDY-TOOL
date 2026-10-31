@@ -17,8 +17,8 @@ from extract_textbook import extract
 from import_extraction import import_passages, validate
 
 
-def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False):
-    manifest = extract(pdf, out, owner_uid, r2_key, ocr=ocr)
+def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False, review_images=False):
+    manifest = extract(pdf, out, owner_uid, r2_key, ocr=ocr, review_images=review_images)
     validated = validate(out)
     if expected_sha256 is not None and validated["sha256"] != expected_sha256:
         raise ValueError("Extracted PDF digest differs from original R2 download")
@@ -40,6 +40,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         "ocr_pages": validated.get("ocr_pages", []),
         "ocr_failed_pages": validated.get("ocr_failed_pages", []),
         "source_sha256": validated["sha256"],
+        "visual_review_available_locally": bool(review_images),
         "indexed": False,
         "citation_verified": False,
     }
@@ -61,11 +62,12 @@ def main():
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--r2-key", required=True)
     parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
+    parser.add_argument("--review-images", action="store_true", help="Generate local visual-review PNGs; do not upload to GitHub")
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true")
     mode.add_argument("--apply", action="store_true")
     args = parser.parse_args()
-    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply, ocr=args.ocr), indent=2))
+    print(json.dumps(process(args.pdf, args.out, args.owner_uid, args.r2_key, args.apply, ocr=args.ocr, review_images=args.review_images), indent=2))
 
 
 if __name__ == "__main__":
