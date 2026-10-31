@@ -1,6 +1,7 @@
 """Server-only staging reviewer role adapter.
 
-Uses the canonical private.snar_admins operator-admin authority.\nRequires a privileged, non-browser database connection. Never use an
+Uses the canonical private.snar_admins operator-admin authority.
+Requires a privileged, non-browser database connection. Never use an
 anon/authenticated database connection or accept client-supplied roles.
 """
 from uuid import UUID
