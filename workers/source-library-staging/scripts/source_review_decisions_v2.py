@@ -34,7 +34,7 @@ def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
                  SET revoked_at=now(), review_note=%s
                  WHERE owner_uid=%s AND source_sha256=%s AND r2_key=%s
                    AND pdf_page=%s AND reviewer_uid=%s
-                   AND revoked_at IS NULL"""
+                   AND decision='approved' AND revoked_at IS NULL"""
         args = (review_note, reviewer.uid, manifest["sha256"],
                 manifest["r2_key"], pdf_page, reviewer.uid)
     else:
