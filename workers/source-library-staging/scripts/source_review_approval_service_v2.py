@@ -27,6 +27,17 @@ def approve_inspected_page(conn, manifest, *, pdf_page, review_note, receipt,
         owner_uid=reviewer.uid, source_sha256=manifest["sha256"],
         r2_key=manifest["r2_key"], pdf_page=pdf_page,
         image_sha256=image_sha256, now=now)
-    # Current decision writer is intentionally fail-closed. Do not consume a
-    # receipt until that writer supports a verified internal approval path.
-    raise ValueError("Approval remains disabled pending trusted transaction integration")
+    # Both operations must commit or roll back together. A real DB connection
+    # must support transaction context management (e.g. psycopg Connection).
+    # Never call this from a browser route with caller-supplied manifest/hash.
+    with conn.transaction():
+        consume_inspection_nonce(
+            conn, nonce=nonce, reviewer_uid=reviewer.uid,
+            owner_uid=reviewer.uid, source_sha256=manifest["sha256"],
+            r2_key=manifest["r2_key"], pdf_page=pdf_page)
+        return record_page_decision(
+            conn, manifest, pdf_page=pdf_page, decision="approved",
+            review_note=review_note, page_image_inspected=True,
+            access_token=access_token, auth_provider=auth_provider,
+            protected_role_store=protected_role_store,
+            _verified_inspection=True)
