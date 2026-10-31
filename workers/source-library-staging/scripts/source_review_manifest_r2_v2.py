@@ -9,7 +9,7 @@ import re
 
 BUCKET = "srna-staging-textbooks"
 MAX_QUEUE = 256 * 1024
-KEY = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9._-]{1,150}\\.pdf$", re.I)
+KEY = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/[A-Za-z0-9._-]{1,150}\.pdf$", re.I)
 SHA = re.compile(r"^[0-9a-f]{64}$")
 CATEGORIES = {"ocr_error", "image_content_review", "short_text_review", "blank_candidate_review"}
 
