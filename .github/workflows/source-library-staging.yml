@@ -100,7 +100,7 @@ jobs:
           node-version: '22'
       - name: Reviewer staging boundary acceptance (when URL configured)
         env:
-          SRNA_REVIEWER_GATEWAY_URL: ${{ vars.SRNA_REVIEWER_GATEWAY_URL }}
+          SRNA_REVIEWER_GATEWAY_URL: ${{ vars.SRNA_REVIEWER_GATEWAY_URL || 'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/' }}
         run: |
           if [ -z "$SRNA_REVIEWER_GATEWAY_URL" ]; then
             echo "Reviewer gateway URL not configured; live reviewer acceptance is blocked."
