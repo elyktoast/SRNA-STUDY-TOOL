@@ -20,6 +20,7 @@ def load_approved_pages(conn, manifest, *, authenticated_reviewer_uid, reviewer_
             """select pdf_page from source_library_staging.page_review_approvals_v2
                where owner_uid=%s and source_sha256=%s and r2_key=%s
                  and reviewer_uid=%s and decision='approved'
+                 and revoked_at is null
                order by pdf_page""",
             (manifest["owner_uid"], manifest["sha256"], manifest["r2_key"],
              authenticated_reviewer_uid))
