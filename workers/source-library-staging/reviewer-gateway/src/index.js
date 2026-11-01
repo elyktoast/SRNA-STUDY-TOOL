@@ -12,8 +12,10 @@ function respond(status,origin,body=''){
 export default {
  async fetch(request,env){
   const url=new URL(request.url),origin=request.headers.get('Origin');
-  if(env.STAGING_ONLY!=='true'||env.SUPABASE_URL!==PROJECT||!env.SUPABASE_ANON_KEY||!env.REVIEWER_CONTAINER)
+  if(env.STAGING_ONLY!=='true'||env.SUPABASE_URL!==PROJECT||!env.SUPABASE_ANON_KEY||!env.REVIEWER_CONTAINER){
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'required_binding_unavailable'}));
    return respond(503,null,'{"error":"staging_not_configured"}');
+  }
   if(origin!==ORIGIN||!paths.has(url.pathname))return respond(403,null,'{"error":"forbidden"}');
   if(request.method==='OPTIONS'){
    if(request.headers.get('Access-Control-Request-Method')!=='GET'||
@@ -40,7 +42,10 @@ export default {
    const auth=await fetch(PROJECT+'/auth/v1/user',{headers:{Authorization:token,apikey:env.SUPABASE_ANON_KEY},redirect:'error'});
    if(!auth.ok)return respond(403,origin,'{"error":"forbidden"}');
    identity=await auth.json();
-  }catch{return respond(503,origin,'{"error":"identity_unavailable"}');}
+  }catch{
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'identity',reason:'supabase_request_failed'}));
+   return respond(503,origin,'{"error":"identity_unavailable"}');
+  }
   if(!identity?.id||identity.is_anonymous===true)return respond(403,origin,'{"error":"forbidden"}');
   // Application-side role and source ownership checks remain mandatory.
   try{
@@ -74,7 +79,10 @@ export default {
     }
    }
    return new Response(upstream.body,{status:upstream.status,headers});
-  }catch{return respond(503,origin,'{"error":"reviewer_unavailable"}');}
+  }catch{
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'container',reason:'startup_or_upstream_failed'}));
+   return respond(503,origin,'{"error":"reviewer_unavailable"}');
+  }
  }
 };
 
