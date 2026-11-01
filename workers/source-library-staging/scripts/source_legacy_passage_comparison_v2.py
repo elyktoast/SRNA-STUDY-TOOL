@@ -69,3 +69,25 @@ def compare_indexed_passages(conn, *, textbook_id, owner_uid, fresh_passages,
         "provenance_backfilled": False,
         "approved_for_citation": False,
     }
+
+
+def assess_provenance_backfill_eligibility(comparison, *, attestation_verified,
+                                          extraction_ocr_enabled, reviewer_confirmed=False):
+    """Preflight only. This never changes DB source_versions or approves citations."""
+    if not isinstance(comparison, dict):
+        raise ValueError("Comparison result required")
+    if type(attestation_verified) is not bool or type(extraction_ocr_enabled) is not bool:
+        raise ValueError("Explicit verification flags required")
+    if type(reviewer_confirmed) is not bool:
+        raise ValueError("Invalid reviewer confirmation")
+    exact = (comparison.get("same_ordered_passages_and_pages") is True
+             and type(comparison.get("indexed_passage_count")) is int
+             and comparison["indexed_passage_count"] > 0
+             and comparison.get("indexed_passage_count") == comparison.get("fresh_passage_count")
+             and comparison.get("indexed_only_fingerprints") == 0
+             and comparison.get("fresh_only_fingerprints") == 0)
+    ready = exact and attestation_verified and extraction_ocr_enabled
+    return {"eligible_for_operator_review": ready,
+            "operator_review_confirmed": ready and reviewer_confirmed,
+            "database_backfill_performed": False,
+            "chapter_or_print_citations_approved": False}
