@@ -36,7 +36,7 @@ def build_app():
     import psycopg
     # Connections are per-process. The single-worker staging configuration
     # keeps the privileged connection lifecycle explicit.
-    conn = psycopg.connect(os.environ["STAGING_DATABASE_URL"], autocommit=True)
+    conn = psycopg.connect(os.environ["STAGING_DATABASE_URL"], autocommit=True, connect_timeout=5)
     r2 = boto3.client("s3",
         endpoint_url="https://" + os.environ["STAGING_R2_ACCOUNT_ID"] + ".r2.cloudflarestorage.com",
         aws_access_key_id=os.environ["STAGING_R2_ACCESS_KEY_ID"],
@@ -65,10 +65,15 @@ def app(environ, start_response):
             if _app is None:
                 try:
                     _app = build_app()
-                except Exception:
-                    # Never expose connection strings, credentials, or driver errors.
+                except Exception as exc:
+                    # Only emit fixed error categories, never driver messages, SQL or credentials.
+                    import logging
+                    category = "configuration" if isinstance(exc, (RuntimeError, ValueError, KeyError)) else (
+                        "database" if isinstance(exc, __import__("psycopg").Error) else
+                        "dependency" if isinstance(exc, ImportError) else "backend")
+                    logging.getLogger("reviewer").error("staging_reviewer_backend_failure category=%s", category)
                     from source_review_http_v2 import response
-                    return response(start_response, "503 Service Unavailable",
-                                    b'{"error":"reviewer_backend_unavailable"}')
+                    payload = ('{"error":"reviewer_backend_unavailable","stage":"' + category + '"}').encode()
+                    return response(start_response, "503 Service Unavailable", payload)
     return _app(environ, start_response)
 
