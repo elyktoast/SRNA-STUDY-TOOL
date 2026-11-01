@@ -1,7 +1,7 @@
 name: Publish missing staging reviewer test queue (one-time)
 on:
   push:
-    branches: [feature/source-library-r2-staging]
+    branches: [fix/source-phase-b-mixed-scan-ocr]
     paths: [.github/workflows/publish-reviewer-test-queue-staging.yml]
   workflow_dispatch:
 permissions:
@@ -11,14 +11,14 @@ concurrency:
   cancel-in-progress: false
 jobs:
   publish:
-    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    if: github.ref == 'refs/heads/fix/source-phase-b-mixed-scan-ocr'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: source-library-staging
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/source-library-r2-staging
+          ref: fix/source-phase-b-mixed-scan-ocr
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
