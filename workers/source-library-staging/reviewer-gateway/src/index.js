@@ -109,6 +109,14 @@ export default {
     const rule=['configuration','database'].includes(category)&&rules.has(body?.rule)?body.rule:'NONE';
     console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_503',category,rule}));
    }
+   if(upstream.status===503){
+    const body=await upstream.clone().json().catch(()=>null);
+    if(body?.error==='trusted_review_unavailable'){
+     const allowed=new Set(['STORAGE_UNKNOWN','STORAGE_MISSING_SOURCE_OR_QUEUE','STORAGE_CREDENTIALS_OR_PERMISSION','STORAGE_RATE_LIMIT','STORAGE_PROVIDER_ERROR','STORAGE_CONNECTION','STORAGE_DEPENDENCY']);
+     const rule=allowed.has(body?.rule)?body.rule:'NONE';
+     console.error('staging_reviewer_failure',JSON.stringify({stage:'storage',reason:'trusted_manifest_unavailable',rule}));
+    }
+   }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
    headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
