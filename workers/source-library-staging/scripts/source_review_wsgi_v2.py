@@ -1,5 +1,6 @@
 """WSGI deployment entrypoint for the staging-only reviewer preview service."""
 import os
+import threading
 from source_review_http_v2 import create_app
 from source_review_runtime_v2 import StagingReviewRuntime
 
@@ -47,4 +48,28 @@ def build_app():
         signing_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"]))
 
 
-app = build_app()
+# Do not make the HTTP listener depend on an eager database connection.
+# Startup health means the listener is available, not that storage is ready.
+validate_staging_configuration(os.environ)
+_app = None
+_lock = threading.Lock()
+
+
+def app(environ, start_response):
+    global _app
+    if environ.get("PATH_INFO") == "/health" and environ.get("REQUEST_METHOD") == "GET":
+        from source_review_http_v2 import response
+        return response(start_response, "200 OK",
+                        b'{"ok":true,"environment":"staging","approval_enabled":false}')
+    if _app is None:
+        with _lock:
+            if _app is None:
+                try:
+                    _app = build_app()
+                except Exception:
+                    # Never expose connection strings, credentials, or driver errors.
+                    from source_review_http_v2 import response
+                    return response(start_response, "503 Service Unavailable",
+                                    b'{"error":"reviewer_backend_unavailable"}')
+    return _app(environ, start_response)
+
