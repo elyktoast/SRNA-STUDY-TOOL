@@ -1,6 +1,6 @@
 """No database needed: verify SQL safety and chapter/page search boundaries."""
 import unittest
-from source_retrieval_staging_v2 import search_passages
+from source_retrieval_staging_v2 import search_passages, audit_textbook_retrieval
 
 OWNER = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK = "810040fc-da03-4fa5-bcc0-78c25957c325"
@@ -54,6 +54,27 @@ class RetrievalTests(unittest.TestCase):
         self.assertNotIn("p.page_end >=", conn.cur.sql)
         self.assertEqual(conn.cur.params[-1], 20)
         self.assertIn("t.owner_uid = %s::uuid", conn.cur.sql)
+
+    def test_audit_reports_missing_chapters_without_overclaiming_citations(self):
+        conn = Connection()
+        conn.cur.fetchall = lambda: []
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 0, 0)
+        status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
+        self.assertTrue(status["text_search_ready"])
+        self.assertTrue(status["physical_page_reference_ready"])
+        self.assertFalse(status["chapter_filter_ready"])
+        self.assertFalse(status["print_page_citations_verified"])
+        self.assertEqual(conn.cur.params, (BOOK, OWNER))
+        self.assertIn("t.owner_uid=%s::uuid", conn.cur.sql)
+
+    def test_audit_requires_indexed_chapter_links(self):
+        conn = Connection()
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 0)
+        status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
+        self.assertFalse(status["chapter_filter_ready"])
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 440)
+        status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
+        self.assertTrue(status["chapter_filter_ready"])
 
     def test_invalid_requests_fail_before_database_access(self):
         cases = [
