@@ -44,7 +44,16 @@ export default {
    identity=await auth.json();
   }catch(error){
    const type=error instanceof TypeError?'type_error':error?.name==='SyntaxError'?'invalid_json':error?.name==='AbortError'?'aborted':'other_exception';
-   console.error('staging_reviewer_failure',JSON.stringify({stage:'identity',reason:'supabase_request_failed',exception_type:type}));
+   // Only log preapproved categories: exception messages can contain URLs or sensitive request data.
+   const message=String(error?.message||'').toLowerCase();
+   const cause=String(error?.cause?.message||'').toLowerCase();
+   const category=/redirect/.test(message+' '+cause)?'redirect_rejected':
+    /invalid.*header|header.*invalid/.test(message+' '+cause)?'header_rejected':
+    /dns|resolve|lookup|name_not_resolved/.test(message+' '+cause)?'dns_failure':
+    /tls|certificate|ssl/.test(message+' '+cause)?'tls_failure':
+    /network|connection|connect|fetch failed/.test(message+' '+cause)?'connection_failure':
+    'unclassified';
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'identity',reason:'supabase_request_failed',exception_type:type,failure_category:category}));
    return respond(503,origin,'{"error":"identity_unavailable"}');
   }
   if(!identity?.id||identity.is_anonymous===true)return respond(403,origin,'{"error":"forbidden"}');
