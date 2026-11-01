@@ -46,6 +46,45 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual([p["pdf_page"] for p in pages], [1, 2])
         self.assertIn("Airway", pages[0]["text"])
 
+    def test_bookmark_chapters_preserve_physical_page_provenance(self):
+        """Chapter bookmarks are provisional; passages still cite physical PDF pages."""
+        import fitz
+        from import_extraction import validate
+        doc = fitz.open(self.pdf)
+        doc.set_toc([[1, "Airway", 1], [1, "Pharmacology", 2]])
+        target = self.base / "bookmarked.pdf"
+        doc.save(target)
+        doc.close()
+        out = self.base / "bookmarked-index"
+        result = module.extract(target, out, self.owner, self.owner + "/bookmarked.pdf")
+        manifest = validate(out)
+        sections = [json.loads(line) for line in (out / "sections.jsonl").read_text().splitlines()]
+        passages = [json.loads(line) for line in (out / "passages.jsonl").read_text().splitlines()]
+        self.assertEqual(result["section_count"], 2)
+        self.assertEqual([(s["heading"], s["start_page"], s["source"]) for s in sections],
+                         [("Airway", 1, "pdf_bookmark"), ("Pharmacology", 2, "pdf_bookmark")])
+        self.assertEqual([(p["page_start"], p["page_end"]) for p in passages], [(1, 1), (2, 2)])
+        self.assertTrue(any("Airway assessment" in p["content"] for p in passages if p["page_start"] == 1))
+        self.assertTrue(any("Volatile anesthetic" in p["content"] for p in passages if p["page_start"] == 2))
+        self.assertFalse(manifest["citation_verified"])
+
+    def test_tampered_bookmark_page_rejected_before_indexing(self):
+        import fitz
+        from import_extraction import validate
+        doc = fitz.open(self.pdf)
+        doc.set_toc([[1, "Airway", 1]])
+        target = self.base / "tamper.pdf"
+        doc.save(target)
+        doc.close()
+        out = self.base / "tampered-index"
+        module.extract(target, out, self.owner, self.owner + "/tamper.pdf")
+        sections_path = out / "sections.jsonl"
+        section = json.loads(sections_path.read_text().splitlines()[0])
+        section["start_page"] = 9999
+        sections_path.write_text(json.dumps(section) + "\\n")
+        with self.assertRaisesRegex(ValueError, "Invalid PDF bookmark section"):
+            validate(out)
+
     def test_image_page_detected_without_claiming_ocr(self):
         import fitz
         doc = fitz.open(self.pdf)
