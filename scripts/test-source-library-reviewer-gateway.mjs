@@ -8,7 +8,7 @@ const base='https://gateway.example/review/manifest?path=owner%2Fbook.pdf';
 const calls={auth:0,container:0};
 const oldFetch=globalThis.fetch;
 globalThis.fetch=async()=>{calls.auth++;return Response.json({id:'user-1',is_anonymous:false})};
-const env={STAGING_ONLY:'true',SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',SUPABASE_ANON_KEY:'test',
+const env={STAGING_DATABASE_URL:'postgresql://postgres:example@db.xqyasyambwdyhsjkftqu.supabase.co:5432/postgres',STAGING_R2_ACCOUNT_ID:'test-account',STAGING_R2_ACCESS_KEY_ID:'test-access',STAGING_R2_SECRET_ACCESS_KEY:'test-secret',STAGING_RECEIPT_SIGNING_SECRET:'test-signing-secret-placeholder-not-real',STAGING_ONLY:'true',SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',SUPABASE_ANON_KEY:'test',
  REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>{calls.container++;return new Response('{"approval_enabled":false,"source_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","pdf_page_count":2}',{headers:{'X-Review-Approval-Enabled':'false','Content-Type':'application/json','X-Verified-Source-SHA256':'a'.repeat(64)}})}})}};
 const request=(url=base,{method='GET',headers={}}={})=>gateway.fetch(new Request(url,{method,headers:{Origin:origin,Authorization:'Bearer valid',...headers}}),env);
 test('authenticated staging request forwards only read-only manifest',async()=>{
