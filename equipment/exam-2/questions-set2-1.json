@@ -2712,22 +2712,22 @@
       "type": "multi",
       "difficulty": "hard",
       "topic": "Respiratory monitoring",
-      "stem": "Which conditions increase alveolar dead space and lower EtCO2 (end-tidal carbon dioxide)? Select 3.",
+      "stem": "Which conditions can increase alveolar dead space by reducing perfusion relative to ventilation? Select 3.",
       "options": [
         "Pulmonary embolism",
-        "Hypovolemia",
-        "Pulmonary hypotension",
-        "Hypoventilation",
-        "Fever",
-        "Exhausted absorbent"
+        "Hypovolemia with reduced pulmonary blood flow",
+        "Markedly reduced pulmonary arterial perfusion pressure",
+        "Hypoventilation alone",
+        "Fever alone",
+        "Exhausted carbon dioxide absorbent"
       ],
       "answer": [
         0,
         1,
         2
       ],
-      "explanation": "Reduced pulmonary perfusion increases dead space.",
-      "citation": "Franck, Respiratory Monitoring: slide 40",
+      "explanation": "Pulmonary embolism and reduced pulmonary blood flow can leave ventilated alveoli underperfused, increasing alveolar dead space and often reducing end-tidal carbon dioxide. Hypoventilation, fever, and exhausted absorbent do not independently define this mechanism.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 10, printed pp. 239–251 (end-tidal carbon dioxide and perfusion).",
       "image": null
     },
     {
@@ -3252,18 +3252,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Respiratory monitoring",
-      "stem": "Per the instructor, how often are colorimetric CO2 detectors used in the OR (operating room)?",
+      "stem": "When is a colorimetric carbon dioxide detector particularly useful?",
       "options": [
-        "Only together with mainstream analyzers",
-        "Only during emergence and extubation",
-        "For every intubation as the first check",
-        "Not usually, since capnography is available"
+        "Only when paired with a mainstream analyzer",
+        "Only during emergence",
+        "As a qualitative adjunct to assess exhaled carbon dioxide when waveform capnography is unavailable",
+        "As a replacement for continuous waveform capnography during general anesthesia"
       ],
       "answer": [
-        3
+        2
       ],
-      "explanation": "Note: CO2 detector not usually used in OR.",
-      "citation": "Franck, Respiratory Monitoring: slide 18",
+      "explanation": "A colorimetric detector changes color in response to exhaled carbon dioxide and can assist confirmation of ventilation or tracheal tube placement when continuous waveform monitoring is unavailable. It does not replace ongoing waveform capnography where that monitoring is indicated.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 8, printed pp. 205–207 (colorimetric carbon dioxide detectors).",
       "image": null
     },
     {
@@ -3663,7 +3663,7 @@
         2
       ],
       "explanation": "Gas escapes after measurement, so the reading overstates delivery.",
-      "citation": "Franck, Respiratory Monitoring: slide 26",
+      "citation": "SOURCE VERIFICATION REQUIRED — The exact leak configuration and oxygen flowmeter position must be verified; a cracked tube does not always imply the same delivered oxygen change.",
       "image": null
     },
     {
@@ -4212,18 +4212,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Respiratory monitoring",
-      "stem": "Which is listed as a cause of V/Q mismatch affecting capnography?",
+      "stem": "Which condition can increase alveolar dead space by reducing pulmonary perfusion?",
       "options": [
-        "Pulmonary hypotension",
-        "Increased CO2 production",
-        "Hyperventilation",
-        "Pulmonary hypertension"
+        "Reduced pulmonary blood flow from marked hypotension",
+        "Increased carbon dioxide production alone",
+        "Hyperventilation alone",
+        "Isolated pulmonary hypertension without impaired perfusion"
       ],
       "answer": [
         0
       ],
-      "explanation": "The slide lists pulmonary HYPOtension.",
-      "citation": "Franck, Respiratory Monitoring: slide 40",
+      "explanation": "Markedly reduced pulmonary perfusion increases the proportion of ventilated alveoli receiving insufficient blood flow, which can increase alveolar dead space and reduce end-tidal carbon dioxide. Pulmonary hypertension alone does not necessarily establish this physiology.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 10, printed pp. 239–251 (alveolar dead space and perfusion).",
       "image": null
     },
     {
@@ -4712,18 +4712,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Respiratory monitoring",
-      "stem": "Pulse oximetry's adoption as standard of care in 1986 related mainly to:",
+      "stem": "Which statement best describes the evidence surrounding pulse oximetry's adoption as an anesthesia monitoring standard?",
       "options": [
-        "Patient outcomes",
-        "Cost savings only",
-        "Billing requirements",
-        "Surgeon preference"
+        "It became standard in the 1980s despite difficulty demonstrating reduced major morbidity or mortality in controlled outcome studies",
+        "Controlled trials proved that pulse oximetry eliminates perioperative mortality",
+        "It was introduced primarily for billing compliance",
+        "It was adopted only because surgeons requested it"
       ],
       "answer": [
         0
       ],
-      "explanation": "The slide links it to patient outcomes.",
-      "citation": "Franck, Respiratory Monitoring: slide 53",
+      "explanation": "Pulse oximetry became an intraoperative standard of care during the 1980s. Studies demonstrated better detection of hypoxemia, while large controlled trials did not consistently show a statistically significant reduction in major morbidity or mortality.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 11, printed pp. 267–269 (clinical adoption and outcomes evidence).",
       "image": null
     },
     {
@@ -4752,18 +4752,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Respiratory monitoring",
-      "stem": "Per the lecture, SpO2 (peripheral oxygen saturation) is monitored in PACU (postanesthesia care unit) because:",
+      "stem": "Why is continuous pulse oximetry important during postanesthesia recovery?",
       "options": [
-        "Hypoxemia is more common there",
-        "PACU patients rarely desaturate",
-        "It’s required only after N2O",
-        "It replaces nursing assessment"
+        "Postoperative desaturation may occur and may not be predicted by routine clinical recovery scores",
+        "Patients in recovery rarely desaturate",
+        "Monitoring is needed only after nitrous oxide",
+        "Pulse oximetry replaces clinical nursing assessment"
       ],
       "answer": [
         0
       ],
-      "explanation": "Hypoxemia in PACU exceeds the OR (operating room).",
-      "citation": "Franck, Respiratory Monitoring: slide 54",
+      "explanation": "Postanesthesia desaturation can occur during transport and recovery, and traditional recovery scores may not reliably predict hypoxemia. Continuous pulse oximetry complements, rather than replaces, clinical assessment.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 11, printed pp. 267–269 (postanesthesia desaturation and pulse oximetry).",
       "image": null
     },
     {
