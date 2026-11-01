@@ -929,9 +929,9 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Temperature",
-      "stem": "To avoid iatrogenic hyperthermia in a long case, the instructor suggests what?",
+      "stem": "Which adjustment to active warming helps prevent iatrogenic hyperthermia during a prolonged case?",
       "options": [
-        "Lower the Bair Hugger as needed",
+        "Reduce or discontinue forced-air warming as indicated by measured temperature",
         "Cool the OR (operating room) to 15°C",
         "Stop monitoring temperature",
         "Use only passive blankets from the start"
