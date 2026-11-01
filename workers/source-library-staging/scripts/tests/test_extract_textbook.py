@@ -81,7 +81,7 @@ class ExtractorTests(unittest.TestCase):
         sections_path = out / "sections.jsonl"
         section = json.loads(sections_path.read_text().splitlines()[0])
         section["start_page"] = 9999
-        sections_path.write_text(json.dumps(section) + "\\n")
+        sections_path.write_text(json.dumps(section) + "\n")
         with self.assertRaisesRegex(ValueError, "Invalid PDF bookmark section"):
             validate(out)
 
