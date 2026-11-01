@@ -42,8 +42,14 @@ export default {
    const auth=await fetch(PROJECT+'/auth/v1/user',{headers:{Authorization:token,apikey:env.SUPABASE_ANON_KEY},redirect:'manual'});
    // Cloudflare Workers does not support redirect:'error'; manual prevents credential forwarding.
    // Reject redirects explicitly without following them or exposing their Location header.
-   if(auth.status>=300&&auth.status<400)return respond(403,origin,'{"error":"forbidden"}');
-   if(!auth.ok)return respond(403,origin,'{"error":"forbidden"}');
+   if(auth.status>=300&&auth.status<400){
+    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'redirect',status:auth.status}));
+    return respond(403,origin,'{"error":"forbidden"}');
+   }
+   if(!auth.ok){
+    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'identity_rejected',status:auth.status}));
+    return respond(403,origin,'{"error":"forbidden"}');
+   }
    identity=await auth.json();
   }catch(error){
    const type=error instanceof TypeError?'type_error':error?.name==='SyntaxError'?'invalid_json':error?.name==='AbortError'?'aborted':'other_exception';
