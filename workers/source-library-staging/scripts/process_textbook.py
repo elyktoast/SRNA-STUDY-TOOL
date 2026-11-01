@@ -44,6 +44,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         "passages": validated["passage_count"],
         "requires_ocr_review": validated["requires_ocr_review"],
         "low_text_pages": validated.get("low_text_pages", []),
+        "ocr_review_pages": validated.get("ocr_review_pages", []),
         "low_text_details": validated.get("low_text_details", []),
         "ocr_attempted": validated.get("ocr_attempted", False),
         "ocr_pages": validated.get("ocr_pages", []),
