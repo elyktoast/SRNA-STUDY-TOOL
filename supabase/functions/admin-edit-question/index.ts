@@ -13,8 +13,8 @@ Deno.serve(async req=>{const origin=req.headers.get("Origin")||"";if(req.method=
  const exam2Match=/^e2b([123])-(.+)$/i.exec(uid);
  const exam2Files:Record<string,string>={"1":"questions.json","2":"questions-set2-1.json","3":"questions-set2-2.json"};
  let canonicalPath=exam2Match?"equipment/exam-2/"+exam2Files[exam2Match[1]]:requestedPath;
- const isStandard=/^[a-z0-9-]+\\/[a-z0-9-]+\\/data\\/[a-z0-9-]+\\.json$/i.test(canonicalPath);
- const isExam2=/^equipment\\/exam-2\\/(?:questions|questions-set2-[12])\\.json$/i.test(canonicalPath);
+ const isStandard=/^[a-z0-9-]+\/[a-z0-9-]+\/data\/[a-z0-9-]+\.json$/i.test(canonicalPath);
+ const isExam2=/^equipment\/exam-2\/(?:questions|questions-set2-[12])\.json$/i.test(canonicalPath);
  if(!isStandard&&!isExam2)return out({error:"Canonical source file could not be resolved for this report. Include the question ID and source bank."},400,origin);
  const repo="elyktoast/SRNA-STUDY-TOOL",branch="main",gh={"Authorization":"Bearer "+token,"Accept":"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},fr=await fetch("https://api.github.com/repos/"+repo+"/contents/"+canonicalPath+"?ref="+encodeURIComponent(branch),{headers:gh});if(!fr.ok)return out({error:"Could not load canonical question bank from GitHub."},502,origin);const file=await fr.json(),doc=JSON.parse(atob(file.content.replace(/\n/g,""))),idx=(doc.questions||[]).findIndex((x:any)=>{const id=String(x.id||x.uid).toUpperCase();return id===uid.toUpperCase()||uid.toUpperCase().endsWith("-"+id)});if(idx<0)return out({error:"Canonical question was not found."},404,origin);
  const stem=clean(q.stem),options=Array.isArray(q.options)?q.options.map((x:any)=>clean(x,2000)):[],answer=Array.isArray(q.answer)?[...new Set(q.answer.map(Number))]:[],explanation=clean(q.explanation),citation=clean(q.citation,4000);if(stem.length<10||(options.length<2||options.length>8)||options.some((x:string)=>!x)||!answer.length||answer.some((x:number)=>!Number.isInteger(x)||x<0||x>=options.length)||explanation.length<10)return out({error:"Stem, choices, valid correct answer(s), and explanation are required."},400,origin);
