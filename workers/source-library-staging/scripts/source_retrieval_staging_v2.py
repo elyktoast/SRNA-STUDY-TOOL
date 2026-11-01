@@ -56,7 +56,9 @@ def search_passages(conn, *, owner_uid, textbook_id, query, chapter_id=None,
     if chapter_id is not None:
         sql += """ AND p.section_id = %s::uuid
             AND EXISTS (SELECT 1 FROM source_library_staging.sections s
-                        WHERE s.id = p.section_id AND s.textbook_id = t.id)"""
+                        WHERE s.id = p.section_id AND s.textbook_id = t.id)
+            AND EXISTS (SELECT 1 FROM source_library_staging.source_versions v
+                        WHERE v.textbook_id = t.id AND v.owner_uid = t.owner_uid)"""
         params.append(chapter_id)
     if page_start is not None:
         sql += " AND p.page_end >= %s"
