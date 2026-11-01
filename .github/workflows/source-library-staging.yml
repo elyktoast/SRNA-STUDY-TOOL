@@ -20,7 +20,7 @@ on:
       - '.github/workflows/source-library-staging.yml'
   push:
     branches:
-      - feature/source-library-r2-staging
+      - fix/source-phase-b-mixed-scan-ocr
     paths:
       - 'workers/source-library-staging/**'
       - 'equipment/build.json'
