@@ -12,6 +12,12 @@ assert.equal(clarify('diameter index safety system (DISS)'), 'diameter index saf
 assert.equal(clarify('DISS-like fitting').startsWith('diameter index safety system (DISS)-like'), true);
 assert.equal(clarify('The patient has AGS.'), 'The patient has alpha-gal syndrome (AGS).');
 assert.equal(clarify(null), null);
+assert.equal(clarify('PEEP PIP Pplat BP OR MAC FGF FRC ETT TIVA TOF PONV'), 'PEEP PIP Pplat BP OR MAC FGF FRC ETT TIVA TOF PONV');
+assert.equal(clarify('Vt and MV', {topic:'Respiratory monitoring'}), 'Vt and MV');
+assert.equal(clarify('TV and VE', {topic:'Respiratory monitoring'}), 'Vt and MV');
+assert.equal(clarify('Pmean and Raw and Ti and Te'), 'mean airway pressure (Pmean) and airway resistance (Raw) and inspiratory time (Ti) and expiratory time (Te)');
+assert.equal(clarify('Mean airway pressure and airway resistance'), 'Mean airway pressure (Pmean) and airway resistance (Raw)');
+assert.equal(clarify('PISS', {topic:'Regional and neuraxial anesthesia'}), 'PISS');
 assert.ok(Object.isFrozen(expansions));
 const loader=read('studio-loader.js');
 assert.ok(loader.includes("runtime.loadScript('acronym-clarity.js')"));
