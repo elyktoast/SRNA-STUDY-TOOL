@@ -48,7 +48,7 @@
       text = text.replace(pattern, (match, offset, whole) => {
         const following = whole.slice(offset + match.length);
         // Do not duplicate an acronym already supplied by the author.
-        if (new RegExp('^\\\s*\\\(' + short + '\\\)', 'i').test(following)) return match;
+        if (following.trimStart().startsWith('(' + short + ')')) return match;
         return short;
       });
     }
