@@ -14,6 +14,7 @@ async function start(){
   await runtime.loadScript('question-search.js');
   await window.MBUSupabase?.refreshCalibration?.().catch(()=>{});
   await runtime.loadScript('studio-page.js');
+  await runtime.loadScript('acronym-clarity.js');
   await runtime.loadScript('studio-runtime.js');
   await runtime.loadScript('studio-cat-pool.js');
   await runtime.loadScript('studio-lifecycle.js');
