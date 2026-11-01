@@ -15,15 +15,18 @@ def validate_staging_configuration(env):
     if missing:
         raise RuntimeError("Missing staging configuration: " + ", ".join(missing))
     # Fail closed if a deployment accidentally points at a non-staging backend.
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, parse_qs
     db = urlparse(env["STAGING_DATABASE_URL"])
+    options = parse_qs(db.query, strict_parsing=True) if db.query else {}
+    permitted_options = {"sslmode", "connect_timeout"}
+    allowed_options = set(options).issubset(permitted_options) and all(len(v) == 1 for v in options.values()) and options.get("sslmode", ["require"])[0] in ("require", "verify-full", "verify-ca") and (not options.get("connect_timeout") or options["connect_timeout"][0] in ("3", "5", "10"))
     if (db.scheme not in ("postgres", "postgresql") or
             not db.hostname or
             not (db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" or
                  (db.hostname.endswith(".pooler.supabase.com") and
                   db.username == "postgres.xqyasyambwdyhsjkftqu")) or
             env["SUPABASE_URL"] != "https://xqyasyambwdyhsjkftqu.supabase.co" or
-            db.path != "/postgres" or db.fragment or db.query or
+            db.path != "/postgres" or db.fragment or not allowed_options or
             ((db.hostname == "db.xqyasyambwdyhsjkftqu.supabase.co" and db.username != "postgres") or
              (db.hostname.endswith(".pooler.supabase.com") and db.username != "postgres.xqyasyambwdyhsjkftqu"))):
         raise RuntimeError("Reviewer service must use the designated staging Supabase project")
