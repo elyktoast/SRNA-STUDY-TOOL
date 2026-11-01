@@ -50,7 +50,6 @@ def build_app():
 
 # Do not make the HTTP listener depend on an eager database connection.
 # Startup health means the listener is available, not that storage is ready.
-validate_staging_configuration(os.environ)
 _app = None
 _lock = threading.Lock()
 
