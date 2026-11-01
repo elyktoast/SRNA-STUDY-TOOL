@@ -94,7 +94,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                 except Exception as exc:
                     ocr_failures.append(page)
                     ocr_error_types.append(type(exc).__name__)
-            if len(text)<30:
+            if len(text)<30 or (needs_ocr and page not in ocr_pages):
                 low_text.append(page)
                 has_images = bool(pdf_page.get_images(full=False))
                 # Conservative triage: an embedded image is not proof of a scan,
