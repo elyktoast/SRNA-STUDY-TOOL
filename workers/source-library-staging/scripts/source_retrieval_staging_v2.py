@@ -58,7 +58,9 @@ def search_passages(conn, *, owner_uid, textbook_id, query, chapter_id=None,
             AND EXISTS (SELECT 1 FROM source_library_staging.sections s
                         WHERE s.id = p.section_id AND s.textbook_id = t.id)
             AND EXISTS (SELECT 1 FROM source_library_staging.source_versions v
-                        WHERE v.textbook_id = t.id AND v.owner_uid = t.owner_uid)"""
+                        WHERE v.textbook_id = t.id AND v.owner_uid = t.owner_uid
+                          AND v.r2_key = t.r2_key
+                          AND v.file_size_bytes = t.file_size_bytes)"""
         params.append(chapter_id)
     if page_start is not None:
         sql += " AND p.page_end >= %s"
@@ -95,7 +97,8 @@ def audit_textbook_retrieval(conn, *, owner_uid, textbook_id):
                (SELECT count(*) FROM source_library_staging.passages p
                 WHERE p.textbook_id=t.id AND p.section_id IS NOT NULL),
                (SELECT count(*) FROM source_library_staging.source_versions v
-                WHERE v.textbook_id=t.id AND v.owner_uid=t.owner_uid)
+                WHERE v.textbook_id=t.id AND v.owner_uid=t.owner_uid
+                  AND v.r2_key=t.r2_key AND v.file_size_bytes=t.file_size_bytes)
         FROM source_library_staging.textbooks t
         WHERE t.id=%s::uuid AND t.owner_uid=%s::uuid
     """
