@@ -1,0 +1,47 @@
+name: Publish missing staging reviewer test queue (one-time)
+on:
+  push:
+    branches: [feature/source-library-r2-staging]
+    paths: [.github/workflows/publish-reviewer-test-queue-staging.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: srna-staging-review-queue-single-test-pdf
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/feature/source-library-r2-staging'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install private staging PDF extraction dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Publish verified review queue for one existing staging test PDF
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL"
+          test -n "$R2_ACCOUNT_ID"
+          test -n "$R2_ACCESS_KEY_ID"
+          test -n "$R2_SECRET_ACCESS_KEY"
+          # No staging Supabase indexing writes or approvals; only immutable R2 queue and attestation.
+          python workers/source-library-staging/scripts/process_r2_textbook.py \
+            --owner-uid c003287a-10ce-4cc9-926e-ef7c3a162a26 \
+            --r2-key c003287a-10ce-4cc9-926e-ef7c3a162a26/810040fc-da03-4fa5-bcc0-78c25957c325.pdf \
+            --dry-run --ocr --review-queue-mode apply
