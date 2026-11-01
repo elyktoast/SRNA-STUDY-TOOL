@@ -15,6 +15,7 @@ const keys={
  'NUR868-V034':[0], 'NUR868-S2-R280':[0], 'NUR868-S2-R295':[3],
  'NUR868-S2-B283':[2], 'NUR868-S2-T250':[0],
  'NUR868-S2-T207':[3], 'NUR868-R054':[2,3],
+ 'NUR868-T058':[0], 'NUR868-S2-M208':[2,5],
 };
 for(const [id,answer] of Object.entries(keys)){
  const q=byId.get(id);
@@ -29,4 +30,7 @@ assert.match(flow.stem,/select 2/i);
 assert.ok(flow.image?.startsWith('data:image/png;base64,'));
 const temp=byId.get('NUR868-S2-T207');
 assert.ok(temp.image?.startsWith('data:image/png;base64,'));
-console.log('10 reported-question revisions verified: stable IDs, expected answer keys and figures');
+assert.doesNotMatch(byId.get('NUR868-T058').stem,/55%/);
+assert.doesNotMatch(byId.get('NUR868-S2-M208').citation,/course lecture/i);
+assert.match(byId.get('NUR868-S2-M208').stem,/select 2/i);
+console.log('12 reported-question revisions verified: stable IDs, expected answer keys and figure presence');
