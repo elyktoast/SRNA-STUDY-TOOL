@@ -39,6 +39,20 @@ if(Boolean(authenticatedToken)!==Boolean(authenticatedPath)){
  throw Error('Both authenticated staging acceptance inputs must be configured together');
 }
 if(authenticatedToken){
+ // Log only coarse JWT validity signals. Never expose claims, identifiers, or token bytes.
+ let claims=null;
+ try {
+  const segments=authenticatedToken.split('.');
+  if(segments.length===3)claims=JSON.parse(Buffer.from(segments[1],'base64url').toString('utf8'));
+ } catch {}
+ const now=Math.floor(Date.now()/1000);
+ console.log('Staging credential diagnostics:',JSON.stringify({
+  jwt_structure_valid:!!claims,
+  issuer_matches_staging:claims?.iss==='https://xqyasyambwdyhsjkftqu.supabase.co/auth/v1',
+  unexpired:Number.isFinite(claims?.exp)&&claims.exp>now,
+  issued_in_past:Number.isFinite(claims?.iat)&&claims.iat<=now+60,
+  bearer_has_no_whitespace:!(/\\s/.test(authenticatedToken))
+ }));
  assert.match(authenticatedPath,/^[0-9a-f-]{36}\/[A-Za-z0-9._-]+\.pdf$/i);
  const headers={Origin:origin,Authorization:'Bearer '+authenticatedToken};
  const manifestResponse=await request('/review/manifest?path='+encodeURIComponent(authenticatedPath),{headers});
