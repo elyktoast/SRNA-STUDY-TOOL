@@ -64,6 +64,26 @@ def validate_staging_configuration(env):
     return True
 
 
+def database_failure_rule(exc):
+    """Classify libpq connection failures without recording credentials or raw messages."""
+    import psycopg
+    if not isinstance(exc, psycopg.Error):
+        return "NONE"
+    state = exc.sqlstate or ""
+    if state == "28P01":
+        return "DATABASE_PASSWORD_REJECTED"
+    if state in ("28000", "3D000"):
+        return "DATABASE_ROLE_OR_NAME"
+    if state in ("42501",):
+        return "DATABASE_PERMISSION"
+    if state.startswith("08"):
+        return "DATABASE_CONNECTION"
+    # libpq connection failures often have no SQLSTATE. Do not log raw messages.
+    if isinstance(exc, psycopg.OperationalError):
+        return "DATABASE_NETWORK_OR_TLS"
+    return "DATABASE_OTHER"
+
+
 def build_app():
     validate_staging_configuration(os.environ)
     import boto3
@@ -105,7 +125,7 @@ def app(environ, start_response):
                     category = "configuration" if isinstance(exc, ConfigurationError) else (
                         "database" if isinstance(exc, __import__("psycopg").Error) else
                         "dependency" if isinstance(exc, ImportError) else "backend")
-                    logging.getLogger("reviewer").error("staging_reviewer_backend_failure category=%s rule=%s", category, exc.rule if isinstance(exc, ConfigurationError) else "NONE")
+                    logging.getLogger("reviewer").error("staging_reviewer_backend_failure category=%s rule=%s", category, exc.rule if isinstance(exc, ConfigurationError) else database_failure_rule(exc))
                     from source_review_http_v2 import response
                     rule = exc.rule if isinstance(exc, ConfigurationError) else "NONE"
                     payload = ('{"error":"reviewer_backend_unavailable","stage":"' + category + '","rule":"' + rule + '"}').encode()
