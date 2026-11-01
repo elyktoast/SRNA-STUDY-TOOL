@@ -1163,18 +1163,18 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Temperature",
-      "stem": "Normothermia compared with 35°C reduces cardiac morbidity by about how much?",
+      "stem": "Which perioperative complication is associated with unintended hypothermia compared with maintaining normothermia?",
       "options": [
-        "55%",
-        "90%",
-        "It increases cardiac morbidity",
-        "15%"
+        "Increased risk of adverse cardiac events",
+        "Elimination of all cardiac events",
+        "No effect on cardiovascular risk",
+        "A guaranteed 55% reduction in cardiac morbidity"
       ],
       "answer": [
         0
       ],
-      "explanation": "Wolpaw: about a 55% reduction.",
-      "citation": "Wolpaw, Temperature Regulation: slide 11",
+      "explanation": "Unintended perioperative hypothermia is associated with increased cardiovascular complications. Maintaining normothermia may reduce perioperative cardiac events, but a universal 55% reduction is not established without specifying the original study and outcome.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 13 (perioperative hypothermia and cardiovascular complications; unsupported numerical claim removed).",
       "image": null
     },
     {
