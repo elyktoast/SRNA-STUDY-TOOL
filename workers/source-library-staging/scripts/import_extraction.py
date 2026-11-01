@@ -199,6 +199,8 @@ def import_passages(folder, manifest, connection, *,
         raise ValueError("Invalid extraction review page range")
     if len(set(low)) != len(low) or len(set(failed)) != len(failed) or len(set(mixed)) != len(mixed):
         raise ValueError("Duplicate extraction review pages")
+    if not set(mixed).issubset(set(low)):
+        raise ValueError("Mixed-scan review pages must be included in low-text review metadata")
     flagged = set(low) | set(failed) | set(mixed)
     if flagged or manifest.get("requires_ocr_review") is True:
         if not flagged:
