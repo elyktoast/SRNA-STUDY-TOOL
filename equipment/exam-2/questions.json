@@ -1183,7 +1183,7 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "Per Wolpaw, hypothermia harms the heart mainly through which mechanism?",
+      "stem": "Which catecholamine-mediated response to hypothermia can increase myocardial workload?",
       "options": [
         "Arrhythmias and hypertension from catecholamine release",
         "Shivering-induced O2 demand",
@@ -2625,7 +2625,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Vigilance and alarms",
-      "stem": "Failing to ventilate when coming off cardiopulmonary bypass is the lecture's example of which cause?",
+      "stem": "In human-factors analysis, failure to resume ventilation while separating from cardiopulmonary bypass illustrates which contributor to error?",
       "options": [
         "Task complexity",
         "False alarms",
@@ -2685,7 +2685,7 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Vigilance and alarms",
-      "stem": "The lecture's equipment-design example of error is which event?",
+      "stem": "Which event illustrates an equipment-design vulnerability during anesthesia care?",
       "options": [
         "A circuit disconnect when equipment is moved around the bed",
         "The laryngoscope bulb going out during intubation",
@@ -2996,7 +2996,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Vigilance and alarms",
-      "stem": "Per the lecture, alarm limits are most useful when set so they activate when?",
+      "stem": "To provide clinically useful early warning, when should physiologic alarm limits activate?",
       "options": [
         "Before the condition becomes critical",
         "After the provider confirms the event",
@@ -5936,10 +5936,10 @@
     {
       "id": "NUR868-R054",
       "set": 3,
-      "type": "single",
+      "type": "multi",
       "difficulty": "medium",
       "topic": "Respiratory monitoring",
-      "stem": "Which flow-time panel shows a decelerating inspiratory flow pattern?",
+      "stem": "Which two flow-time panels show decelerating inspiratory flow? Select 2.",
       "options": [
         "None of the panels",
         "Panel A",
@@ -5947,9 +5947,10 @@
         "Panel C"
       ],
       "answer": [
-        2
+        2,
+        3
       ],
-      "explanation": "Panel B's inspiratory flow peaks early and decays, typical of pressure control.",
+      "explanation": "Both panels B and C show an early inspiratory flow peak followed by a progressive decrease during inspiration. Panel A has an approximately constant inspiratory flow pattern.",
       "citation": "Franck, Respiratory Monitoring: slides 30, 32",
       "image": "data:image/png;base64,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"
     },

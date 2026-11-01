@@ -25,3 +25,5 @@ jobs:
           node --check equipment/assets/studio-runtime.js
           node --check equipment/assets/studio-loader.js
           node scripts/test-studio-acronym-clarity.mjs
+          node scripts/audit-exam2-respiratory-monitoring.mjs --baseline-check
+          node scripts/test-exam2-reviewed-report-fixes.mjs
