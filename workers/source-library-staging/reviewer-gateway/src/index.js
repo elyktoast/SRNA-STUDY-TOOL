@@ -42,8 +42,9 @@ export default {
    const auth=await fetch(PROJECT+'/auth/v1/user',{headers:{Authorization:token,apikey:env.SUPABASE_ANON_KEY},redirect:'error'});
    if(!auth.ok)return respond(403,origin,'{"error":"forbidden"}');
    identity=await auth.json();
-  }catch{
-   console.error('staging_reviewer_failure',JSON.stringify({stage:'identity',reason:'supabase_request_failed'}));
+  }catch(error){
+   const type=error instanceof TypeError?'type_error':error?.name==='SyntaxError'?'invalid_json':error?.name==='AbortError'?'aborted':'other_exception';
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'identity',reason:'supabase_request_failed',exception_type:type}));
    return respond(503,origin,'{"error":"identity_unavailable"}');
   }
   if(!identity?.id||identity.is_anonymous===true)return respond(403,origin,'{"error":"forbidden"}');
