@@ -51,3 +51,80 @@ def assign_passages_to_chapters(passages, boundaries, *, pdf_page_count):
                 chapter_index = None
         result.append(chapter_index)
     return result
+
+
+def persist_verified_chapters(conn, *, owner_uid, textbook_id, boundaries,
+                              authenticated_reviewer_uid, reviewer_is_admin=False,
+                              expected_source_sha256=None):
+    """Operator-only transaction; refuse overwrite, stale source, and unreviewed boundaries.
+
+    This is intentionally not a web endpoint. Caller must independently authenticate
+    the reviewer and verify each heading and physical page against the original PDF.
+    """
+    from uuid import UUID
+    import re
+    for name, value in (("owner_uid", owner_uid), ("textbook_id", textbook_id),
+                        ("authenticated_reviewer_uid", authenticated_reviewer_uid)):
+        if not isinstance(value, str):
+            raise ValueError("Invalid " + name)
+        try:
+            if str(UUID(value)) != value.lower():
+                raise ValueError()
+        except ValueError:
+            raise ValueError("Invalid " + name) from None
+    if reviewer_is_admin is not True:
+        raise PermissionError("Trusted admin reviewer required")
+    if not isinstance(expected_source_sha256, str) or not re.fullmatch(
+            r"[0-9a-f]{64}", expected_source_sha256):
+        raise ValueError("Verified source fingerprint required")
+    with conn.transaction():
+        with conn.cursor() as cur:
+            cur.execute(
+                """SELECT page_count, status FROM source_library_staging.textbooks
+                   WHERE id=%s::uuid AND owner_uid=%s::uuid FOR UPDATE""",
+                (textbook_id, owner_uid))
+            row = cur.fetchone()
+            if not row or row[1] != "ready":
+                raise ValueError("Owner-scoped ready textbook required")
+            reviewed = validate_chapter_boundaries(boundaries, pdf_page_count=row[0])
+            cur.execute(
+                """SELECT source_sha256 FROM source_library_staging.source_versions
+                   WHERE textbook_id=%s::uuid ORDER BY recorded_at DESC, id DESC LIMIT 1""",
+                (textbook_id,))
+            digest_row = cur.fetchone()
+            if not digest_row or digest_row[0] != expected_source_sha256:
+                raise ValueError("Source fingerprint mismatch")
+            cur.execute(
+                """SELECT count(*) FROM source_library_staging.sections
+                   WHERE textbook_id=%s::uuid""", (textbook_id,))
+            if cur.fetchone()[0] != 0:
+                raise ValueError("Existing chapters require explicit migration; refusing overwrite")
+            cur.execute(
+                """SELECT chunk_index, page_start, page_end
+                   FROM source_library_staging.passages
+                   WHERE textbook_id=%s::uuid ORDER BY chunk_index FOR UPDATE""",
+                (textbook_id,))
+            passages = cur.fetchall()
+            if not passages:
+                raise ValueError("No indexed passages")
+            mapping = assign_passages_to_chapters(
+                [{"page_start": p[1], "page_end": p[2]} for p in passages],
+                reviewed, pdf_page_count=row[0])
+            ids = []
+            for order, section in enumerate(reviewed):
+                cur.execute(
+                    """INSERT INTO source_library_staging.sections
+                       (textbook_id, parent_section_id, heading, section_order, start_page)
+                       VALUES (%s::uuid, NULL, %s, %s, %s) RETURNING id""",
+                    (textbook_id, section["heading"], order, section["start_page"]))
+                ids.append(cur.fetchone()[0])
+            for (chunk, _, _), chapter_index in zip(passages, mapping):
+                if chapter_index is not None:
+                    cur.execute(
+                        """UPDATE source_library_staging.passages SET section_id=%s::uuid
+                           WHERE textbook_id=%s::uuid AND chunk_index=%s""",
+                        (str(ids[chapter_index]), textbook_id, chunk))
+            return {"chapters_created": len(ids),
+                    "passages_linked": sum(i is not None for i in mapping),
+                    "passages_unassigned": sum(i is None for i in mapping),
+                    "print_page_citations_verified": False}
