@@ -8,8 +8,6 @@
     BJR: 'Bezold–Jarisch reflex',
     CICO: 'cannot intubate, cannot oxygenate',
     DISS: 'diameter index safety system',
-    HME: 'heat and moisture exchanger',
-    LAST: 'local anesthetic systemic toxicity',
     NMT: 'neuromuscular transmission',
     PISS: 'pin index safety system',
     RQ: 'respiratory quotient',
@@ -42,7 +40,9 @@
       });
     }
     if (/respiratory|ventilat|airway mechanics/i.test(String(options.topic||''))) {
-      text = text.replace(/\bTV\b/g, 'Vt').replace(/\bVE\b/g, 'MV');
+      text = text.replace(/\btidal volume\b(?!\s*\(Vt\))/gi, 'Vt')
+        .replace(/\bminute ventilation\b(?!\s*\(MV\))/gi, 'MV')
+        .replace(/\bTV\b/g, 'Vt').replace(/\bVE\b/g, 'MV');
     }
     const introduced = new Set();
     let result=text.replace(pattern, (short, offset, whole) => {
