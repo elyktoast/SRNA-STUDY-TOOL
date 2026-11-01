@@ -106,7 +106,8 @@ def app(environ, start_response):
                         "dependency" if isinstance(exc, ImportError) else "backend")
                     logging.getLogger("reviewer").error("staging_reviewer_backend_failure category=%s rule=%s", category, exc.rule if isinstance(exc, ConfigurationError) else "NONE")
                     from source_review_http_v2 import response
-                    payload = ('{"error":"reviewer_backend_unavailable","stage":"' + category + '"}').encode()
+                    rule = exc.rule if isinstance(exc, ConfigurationError) else "NONE"
+                    payload = ('{"error":"reviewer_backend_unavailable","stage":"' + category + '","rule":"' + rule + '"}').encode()
                     return response(start_response, "503 Service Unavailable", payload)
     return _app(environ, start_response)
 
