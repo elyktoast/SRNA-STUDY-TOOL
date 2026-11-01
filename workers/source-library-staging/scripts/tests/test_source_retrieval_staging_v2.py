@@ -42,6 +42,8 @@ class RetrievalTests(unittest.TestCase):
                          "p.page_end >= %s", "p.page_start <= %s",
                          "ORDER BY rank DESC"):
             self.assertIn(fragment, sql)
+        self.assertIn("source_library_staging.source_versions v", sql)
+        self.assertIn("v.owner_uid = t.owner_uid", sql)
         self.assertNotIn(OWNER, sql)
         self.assertNotIn("airway management", sql)
         self.assertEqual(rows[0]["page_start"], 30)
