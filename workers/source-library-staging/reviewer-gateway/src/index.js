@@ -96,7 +96,9 @@ export default {
     const body=await upstream.clone().json().catch(()=>null);
     const allowed=new Set(['configuration','database','dependency','backend']);
     const category=body?.error==='reviewer_backend_unavailable'&&allowed.has(body?.stage)?body.stage:'unclassified';
-    console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_503',category}));
+    const rules=new Set(['STAGING_ONLY','MISSING_BINDING','PROJECT_URL','SIGNING_SECRET_LENGTH','DATABASE_URL_PARSE','DATABASE_SCHEME','DATABASE_HOST','DATABASE_CREDENTIAL_FORMAT','DATABASE_PROJECT_HOST','DATABASE_USERNAME','DATABASE_PATH','DATABASE_OPTIONS']);
+    const rule=category==='configuration'&&rules.has(body?.rule)?body.rule:'NONE';
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_503',category,rule}));
    }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
