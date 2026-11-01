@@ -14,9 +14,9 @@ Audit date: 2026-11-01. Scope: 1,000 canonical Exam 2 questions across three exi
 
 All **224** questions with topic `Respiratory monitoring` were inventoried: 110 in Exam 2 bank 1 and 114 in bank 2. Bank 3 contains none. **54** are image-dependent, so any claimed figure-answer correction requires inspecting the actual embedded figure. The structural audit checks answer-index validity, missing citations, professor attributions and lecture-dependent stems; it is not proof that every rationale/answer is textbook-correct.
 
-**17** respiratory-monitoring questions still cite **Franck** as lecture material, and must remain on source-verification review rather than being silently relabeled to a textbook:
+**16** respiratory-monitoring questions still cite **Franck** as lecture material, and must remain on source-verification review rather than being silently relabeled to a textbook:
 
-Bank 1 (11): NUR868-R015, R020, R029, R054, R068, R070, R071, R072, R073, R085, R103.
+Bank 1 (10): NUR868-R020, R029, R054, R068, R070, R071, R072, R073, R085, R103.
 
 Bank 2 (6): NUR868-S2-M214, R223, R245, R274, R301, R303.
 
@@ -24,7 +24,7 @@ These counts were verified against canonical fields (stem, explanation, citation
 
 Run `node scripts/audit-exam2-respiratory-monitoring.mjs --baseline-check` to reproduce the inventory; it exits nonzero if pool or Franck counts change without an intentional re-audit.
 
-Eight Set 2 questions (M211, R201, R202, R203, R207, R208, R209, R211) were verified and corrected against Ehrenwerth 3e, Ch. 8, printed pp. 197–198, in commit 5442a38. The remaining 17 are not yet textbook-verified.\n\n## Admin report queue — 12 reports in status `new`
+Eight Set 2 questions (M211, R201, R202, R203, R207, R208, R209, R211) were verified and corrected against Ehrenwerth 3e, Ch. 8, printed pp. 197–198, in commit 5442a38. The remaining 16 are not yet textbook-verified.\n\n## Admin report queue — 12 reports in status `new`
 
 Status snapshot: 45 already `fixed`, 3 `declined`, 12 `new`. These proposals **do not automatically close reports**.
 
@@ -49,5 +49,5 @@ Previously **declined** respiratory report **48**, question NUR868-R056, concern
 
 1. Ensure all acronym unit tests and complete repository/quiz/browser quality gates pass.
 2. Review the 10 edited report questions in the admin interface and verify no unintended answer ambiguities. The figure-based R054 answer revision must be checked for learner-history/version handling. Do not close held source-verification reports on code commit alone.
-3. Verify 17 remaining Franck references against the actual primary textbook and images before replacing citations.
+3. Verify 16 remaining Franck references against the actual primary textbook and images before replacing citations.
 4. Leave status fields unchanged until a reviewer confirms the fixes; do not auto-close based on a code commit.
