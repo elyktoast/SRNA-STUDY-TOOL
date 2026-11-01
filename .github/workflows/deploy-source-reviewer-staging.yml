@@ -43,6 +43,8 @@ jobs:
             *xqyasyambwdyhsjkftqu*) ;;
             *) echo "::error::Refusing non-staging database"; exit 1;;
           esac
+          # Fail closed when a wrong key type or a key from another project is supplied.
+          node -e 'const t=process.env.SUPABASE_ANON_KEY; const p=t.split("."); if(p.length!==3) process.exit(1); let c; try{c=JSON.parse(Buffer.from(p[1],"base64url"))}catch{process.exit(1)} if(c.role!=="anon"||c.ref!=="xqyasyambwdyhsjkftqu")process.exit(1); console.log("Staging legacy anon key project and role validated.")'
           echo "Staging-only deployment prerequisites present."
       - name: Install reviewer gateway dependencies
         working-directory: workers/source-library-staging/reviewer-gateway
