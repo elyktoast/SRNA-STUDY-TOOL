@@ -14,6 +14,7 @@ assert.equal(a?.ref,'xqyasyambwdyhsjkftqu','legacy anon key project mismatch');
 assert.equal(t?.iss,project+'/auth/v1','admin token issuer mismatch');
 assert.ok(t.exp>Math.floor(Date.now()/1000),'admin token expired');
 console.log('STEP 1: staging credentials: valid structure and project');
+// Staging-only automated verification can run on branch pushes before this workflow exists on main.
 // Fetch the identity endpoint without logging any credential or server response.
 const id=await fetch(project+'/auth/v1/user',{headers:{apikey:key,Authorization:'Bearer '+token},redirect:'manual'});
 console.log('STEP 2: direct Supabase identity: HTTP',id.status);
