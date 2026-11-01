@@ -29,7 +29,7 @@
     if (typeof text !== 'string' || !text) return text;
     if (/regional|neuraxial/i.test(String(options.topic||''))) return text;
     if (/respiratory|ventilat|airway mechanics/i.test(String(options.topic||''))) {
-      text = text.replace(/\\bTV\\b/g, 'Vt').replace(/\\bVE\\b/g,'MV');
+      text = text.replace(/\bTV\b/g, 'Vt').replace(/\bVE\b/g, 'MV');
     }
     const introduced = new Set();
     let result=text.replace(pattern, (short, offset, whole) => {
