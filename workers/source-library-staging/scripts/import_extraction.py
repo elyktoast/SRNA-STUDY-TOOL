@@ -79,6 +79,12 @@ def validate(folder):
             or len(set(low_pages)) != len(low_pages)
             or manifest["requires_ocr_review"] != bool(low_pages)):
         raise ValueError("Invalid low-text page metadata")
+    ocr_review_pages = manifest.get("ocr_review_pages", [])
+    if (not isinstance(ocr_review_pages, list)
+            or any(type(p) is not int or p < 1 or p > page_count for p in ocr_review_pages)
+            or len(set(ocr_review_pages)) != len(ocr_review_pages)
+            or not set(ocr_review_pages).issubset(set(low_pages))):
+        raise ValueError("Invalid mixed-scan OCR review metadata")
     image_pages = manifest.get("image_pages", [])
     if (not isinstance(image_pages, list)
             or any(type(p) is not int or p < 1 or p > page_count for p in image_pages)
@@ -181,18 +187,19 @@ def import_passages(folder, manifest, connection, *,
     # Unauthenticated local page-review files must never clear extraction warnings.
     low = manifest.get("low_text_pages", [])
     failed = manifest.get("ocr_failed_pages", [])
-    if (not isinstance(low, list) or not isinstance(failed, list)
-            or any(type(p) is not int for p in low + failed)):
+    mixed = manifest.get("ocr_review_pages", [])
+    if (not isinstance(low, list) or not isinstance(failed, list) or not isinstance(mixed, list)
+            or any(type(p) is not int for p in low + failed + mixed)):
         raise ValueError("Invalid extraction review metadata")
     if type(manifest.get("requires_ocr_review")) is not bool:
         raise ValueError("Invalid extraction review flag")
     count = manifest.get("pdf_page_count")
     if type(count) is not int or count < 1 or any(
-            p < 1 or p > count for p in low + failed):
+            p < 1 or p > count for p in low + failed + mixed):
         raise ValueError("Invalid extraction review page range")
-    if len(set(low)) != len(low) or len(set(failed)) != len(failed):
+    if len(set(low)) != len(low) or len(set(failed)) != len(failed) or len(set(mixed)) != len(mixed):
         raise ValueError("Duplicate extraction review pages")
-    flagged = set(low) | set(failed)
+    flagged = set(low) | set(failed) | set(mixed)
     if flagged or manifest.get("requires_ocr_review") is True:
         if not flagged:
             raise ValueError("Unresolved extraction review metadata")
