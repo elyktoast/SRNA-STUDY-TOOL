@@ -5224,7 +5224,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Respiratory monitoring",
-      "stem": "Mass spectrometry can identify up to how many gases?",
+      "stem": "According to the textbook's description of anesthesia mass spectrometry, up to how many respiratory gases could be identified and quantified breath by breath?",
       "options": [
         "2",
         "4",
@@ -5234,8 +5234,8 @@
       "answer": [
         2
       ],
-      "explanation": "Mass spec separates ions into a spectrum, identifying up to 8 gases.",
-      "citation": "Franck, Respiratory Monitoring: slide 12",
+      "explanation": "A clinical mass spectrometer could identify and quantify up to eight gases in the sampled respiratory mixture. It separates ionized gas components according to mass-to-charge ratio; this technology is no longer commonly used for routine anesthesia gas monitoring.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 8, printed pp. 199–200 (mass spectrometry).",
       "image": null
     },
     {
