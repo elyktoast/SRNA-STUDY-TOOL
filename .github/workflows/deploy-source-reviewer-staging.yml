@@ -1,5 +1,5 @@
 name: Deploy private staging reviewer
-# Redeploy staging after user rotated STAGING_DATABASE_URL to session pooler.
+# Redeploy staging after database password reset; read updated staging GitHub secrets.
 on:
   workflow_dispatch:
   push:
