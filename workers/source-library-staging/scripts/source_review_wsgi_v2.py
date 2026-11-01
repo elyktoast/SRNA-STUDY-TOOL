@@ -19,8 +19,9 @@ def validate_staging_configuration(env):
     names = ("STAGING_DATABASE_URL", "STAGING_R2_ACCOUNT_ID",
              "STAGING_R2_ACCESS_KEY_ID", "STAGING_R2_SECRET_ACCESS_KEY",
              "SUPABASE_URL", "SUPABASE_ANON_KEY", "STAGING_RECEIPT_SIGNING_SECRET")
-    if any(not env.get(name) for name in names):
-        raise ConfigurationError("MISSING_BINDING")
+    for name in names:
+        if not env.get(name):
+            raise ConfigurationError("MISSING_" + name)
     if env["SUPABASE_URL"] != "https://xqyasyambwdyhsjkftqu.supabase.co":
         raise ConfigurationError("PROJECT_URL")
     if len(env["STAGING_RECEIPT_SIGNING_SECRET"]) < 32:
