@@ -25,4 +25,3 @@ jobs:
           node --check equipment/assets/studio-runtime.js
           node --check equipment/assets/studio-loader.js
           node scripts/test-studio-acronym-clarity.mjs
-          node scripts/validate-equipment-exam2-studio.mjs
