@@ -58,23 +58,29 @@ class RetrievalTests(unittest.TestCase):
     def test_audit_reports_missing_chapters_without_overclaiming_citations(self):
         conn = Connection()
         conn.cur.fetchall = lambda: []
-        conn.cur.fetchone = lambda: ("ready", 420, 595, 0, 0)
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 0, 0, 0)
         status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
         self.assertTrue(status["text_search_ready"])
         self.assertTrue(status["physical_page_reference_ready"])
         self.assertFalse(status["chapter_filter_ready"])
         self.assertFalse(status["print_page_citations_verified"])
+        self.assertFalse(status["source_provenance_ready"])
+        self.assertFalse(status["chapter_publication_ready"])
         self.assertEqual(conn.cur.params, (BOOK, OWNER))
         self.assertIn("t.owner_uid=%s::uuid", conn.cur.sql)
 
     def test_audit_requires_indexed_chapter_links(self):
         conn = Connection()
-        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 0)
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 0, 1)
         status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
         self.assertFalse(status["chapter_filter_ready"])
-        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 440)
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 440, 1)
         status = audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)
         self.assertTrue(status["chapter_filter_ready"])
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 4, 440, 0)
+        self.assertFalse(audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)["chapter_filter_ready"])
+        conn.cur.fetchone = lambda: ("ready", 420, 595, 0, 0, 1)
+        self.assertTrue(audit_textbook_retrieval(conn, owner_uid=OWNER, textbook_id=BOOK)["chapter_publication_ready"])
 
     def test_invalid_requests_fail_before_database_access(self):
         cases = [
