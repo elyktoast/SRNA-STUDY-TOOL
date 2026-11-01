@@ -51,7 +51,18 @@ export default {
     const rawCode=typeof body?.code==='string'?body.code:typeof body?.error_code==='string'?body.error_code:'';
     const allowedCodes=new Set(['invalid_credentials','bad_jwt','invalid_jwt','jwt_expired','session_not_found','session_expired','user_not_found','invalid_token','invalid_api_key','api_key_invalid']);
     const safeCode=allowedCodes.has(rawCode)?rawCode:'unclassified';
-    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'identity_rejected',status:auth.status,code:safeCode}));
+    // Supabase may use msg/message/error rather than a machine-readable code.
+    // Classify internally, emitting only a static label; never emit the response.
+    const detail=[body?.msg,body?.message,body?.error,body?.error_description]
+      .filter(x=>typeof x==='string').join(' ').toLowerCase();
+    const hint=/api.?key|apikey|invalid key|no api key/.test(detail)?'api_key':
+      /signature|signing|verification key/.test(detail)?'signature':
+      /expired|exp claim/.test(detail)?'expired':
+      /revoked|session.*not.*found|session.*invalid/.test(detail)?'session':
+      /invalid.*jwt|jwt.*invalid|bad jwt|malformed/.test(detail)?'jwt_invalid':
+      /user.*not.*found|user.*deleted/.test(detail)?'user_missing':
+      /authorization|bearer|token/.test(detail)?'credential_other':'unclassified';
+    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'identity_rejected',status:auth.status,code:safeCode,hint}));
     return respond(403,origin,'{"error":"forbidden"}');
    }
    identity=await auth.json();
