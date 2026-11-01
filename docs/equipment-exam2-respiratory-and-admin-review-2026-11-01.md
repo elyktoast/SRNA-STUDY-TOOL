@@ -1,6 +1,6 @@
 # Equipment Exam 2 — clinical readability and respiratory-monitoring review
 
-Audit date: 2026-11-01. Scope: 1,000 canonical Exam 2 questions across three existing JSON files. This is a **structural/content-screening audit**, not textbook verification. No question ID, answer index, image, or student history is intentionally changed. The regional/neuraxial source bank is not rewritten.
+Audit date: 2026-11-01. Scope: 1,000 canonical Exam 2 questions across three existing JSON files. This is a **structural/content-screening audit**, not textbook verification. No question ID, embedded image, or existing learner history is changed. One figure-confirmed answer revision changes R054 from single-answer [2] to multi-answer [2,3]; all other corrected questions retain their existing keyed answer indexes. The regional/neuraxial source bank is not rewritten.
 
 ## Anesthesia terminology policy
 
