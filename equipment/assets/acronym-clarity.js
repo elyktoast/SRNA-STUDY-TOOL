@@ -45,7 +45,7 @@
     // If the full mechanics term is already present, introduce its symbol once.
     for (const [short, meaning] of Object.entries(mechanical)) {
       if (!text.includes(short) && result.toLowerCase().includes(meaning)) {
-        const re=new RegExp('\\\\b'+meaning.replace(/ /g,'\\\\s+')+'\\\\b','i');
+        const re=new RegExp('\\b'+meaning.replace(/ /g,'\\s+')+'\\b','i');
         result=result.replace(re, m => m+' ('+short+')');
       }
     }
