@@ -1,4 +1,4 @@
-name: Audit legacy staging PDF passage provenance (one-time)
+name: Audit legacy staging PDF passage provenance (OCR comparison)
 on:
   push:
     branches: [feature/source-library-r2-staging]
