@@ -92,6 +92,12 @@ export default {
     method:'GET',headers:{Authorization:token,Origin:ORIGIN}
    }));
    containerStage='upstream_response';
+   if(upstream.status===503){
+    const body=await upstream.clone().json().catch(()=>null);
+    const allowed=new Set(['configuration','database','dependency','backend']);
+    const category=body?.error==='reviewer_backend_unavailable'&&allowed.has(body?.stage)?body.stage:'unclassified';
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_503',category}));
+   }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
    headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
