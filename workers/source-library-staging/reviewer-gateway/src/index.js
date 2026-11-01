@@ -82,12 +82,16 @@ export default {
   }
   if(!identity?.id||identity.is_anonymous===true)return respond(403,origin,'{"error":"forbidden"}');
   // Application-side role and source ownership checks remain mandatory.
+  let containerStage='binding';
   try{
    const container=env.REVIEWER_CONTAINER.getByName('staging-reviewer');
+   containerStage='startup';
    await container.startAndWaitForPorts();
+   containerStage='upstream_request';
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
     method:'GET',headers:{Authorization:token,Origin:ORIGIN}
    }));
+   containerStage='upstream_response';
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
    headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
@@ -114,7 +118,7 @@ export default {
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch{
-   console.error('staging_reviewer_failure',JSON.stringify({stage:'container',reason:'startup_or_upstream_failed'}));
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'container',reason:'startup_or_upstream_failed',substage:containerStage}));
    return respond(503,origin,'{"error":"reviewer_unavailable"}');
   }
  }
