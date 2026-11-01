@@ -72,7 +72,19 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
             page=i+1
             pdf_page=doc.load_page(i)
             text=re.sub(r'[ \t]+',' ',pdf_page.get_text('text',sort=True).replace('\x00','')).strip()
-            if len(text)<30 and ocr:
+            # A scanned page may also contain a small selectable header or watermark.
+            # Detect image-dominant pages before deciding whether OCR is needed.
+            page_area = max(0.0, float(pdf_page.rect.get_area()))
+            image_rects_for_ocr = []
+            for xref in {info[0] for info in pdf_page.get_images(full=True)}:
+                try:
+                    image_rects_for_ocr.extend(pdf_page.get_image_rects(xref))
+                except (ValueError, RuntimeError):
+                    pass
+            clipped_for_ocr = [rect & pdf_page.rect for rect in image_rects_for_ocr]
+            image_fraction = rectangle_union_area(clipped_for_ocr) / page_area if page_area else 0.0
+            needs_ocr = len(text) < 30 or (len(text) < 500 and image_fraction >= 0.6)
+            if needs_ocr and ocr:
                 try:
                     ocr_page = pdf_page.get_textpage_ocr(language="eng", dpi=200, full=True)
                     recovered = re.sub(r'[ \t]+', ' ', pdf_page.get_text('text', textpage=ocr_page, sort=True).replace('\x00', '')).strip()
