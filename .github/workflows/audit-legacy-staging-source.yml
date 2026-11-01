@@ -95,4 +95,10 @@ jobs:
                   if not ocr_comparison['same_ordered_passages_and_pages']:
                       raise SystemExit('Both extraction modes differ from legacy index; no DB writes performed')
                   print('PASS: OCR-enabled extraction exactly matches existing index')
+              from source_retrieval_acceptance_v2 import verify_retrieval_against_extraction
+              with psycopg.connect(os.environ['DATABASE_URL'],autocommit=False) as conn:
+                  conn.execute('SET TRANSACTION READ ONLY')
+                  retrieval = verify_retrieval_against_extraction(
+                      conn,owner_uid=owner,textbook_id=book,fresh_passages=ocr_passages)
+              print('Staging retrieval acceptance:',json.dumps(retrieval,sort_keys=True))
           PY
