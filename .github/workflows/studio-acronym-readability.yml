@@ -1,0 +1,28 @@
+name: Study Studio acronym readability tests
+on:
+  push:
+    branches: [fix/studio-uncommon-acronym-clarity]
+  pull_request:
+    paths:
+      - 'equipment/assets/acronym-clarity.js'
+      - 'equipment/assets/studio-loader.js'
+      - 'equipment/assets/studio-runtime.js'
+      - 'scripts/test-studio-acronym-clarity.mjs'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify shared quiz acronym rendering
+        run: |
+          node --check equipment/assets/acronym-clarity.js
+          node --check equipment/assets/studio-runtime.js
+          node --check equipment/assets/studio-loader.js
+          node scripts/test-studio-acronym-clarity.mjs
+          node scripts/validate-equipment-exam2-studio.mjs
