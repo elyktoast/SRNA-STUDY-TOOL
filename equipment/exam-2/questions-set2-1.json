@@ -2571,21 +2571,21 @@
       "type": "multi",
       "difficulty": "hard",
       "topic": "Breathing circuits",
-      "stem": "FGF (fresh gas flow) is lowered from 8 to 1 L/min in a semi-closed circle. Which are true? Select 2.",
+      "stem": "In a circle breathing system, fresh gas flow (FGF) is reduced from 8 to 1 L/min while the vaporizer setting is initially unchanged. Which statements are generally correct? Select 2.",
       "options": [
-        "Less exhaled gas is rebreathed",
-        "Inspired tension rises at the same dial setting",
-        "More exhaled gas is rebreathed",
-        "Inspired tension no longer depends on exhaled agent",
-        "The vaporizer must be turned down",
-        "The vaporizer must be turned up to keep inspired tension"
+        "The fraction of exhaled gas rebreathed decreases",
+        "Inspired anesthetic concentration always increases immediately",
+        "The fraction of exhaled gas rebreathed increases",
+        "Inspired anesthetic concentration becomes independent of uptake and rebreathing",
+        "The vaporizer setting must always be reduced",
+        "A higher vaporizer setting may be needed to maintain the desired inspired anesthetic concentration"
       ],
       "answer": [
         2,
         5
       ],
-      "explanation": "Lower FGF increases rebreathing of lower-tension exhaled gas, so the dial must go up.",
-      "citation": "Course lecture, Breathing Circuits, Humidification/Filtration, and Closed Circuit: slide 28",
+      "explanation": "Reducing fresh gas flow increases rebreathing in a circle system. At low flows, uptake and rebreathing influence inspired agent concentration, so a higher vaporizer setting may be needed to maintain the desired inspired concentration; this is not an unconditional requirement.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 19, printed pp. 433–437 (fresh gas flow and anesthetic wash-in).",
       "image": null
     },
     {
