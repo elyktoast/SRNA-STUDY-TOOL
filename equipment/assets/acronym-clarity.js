@@ -34,7 +34,7 @@
   function clarify(text, options={}) {
     if (typeof text !== 'string' || !text) return text;
     if (/regional|neuraxial/i.test(String(options.topic||''))) {
-      const re = new RegExp('\\\\b(?:' + Object.keys(regional).join('|') + ')\\\\b','g');
+      const re = new RegExp('\\b(?:' + Object.keys(regional).join('|') + ')\\b','g');
       return text.replace(re, (short, offset, full) => {
         const phrase=regional[short];
         const previous=full.slice(Math.max(0,offset-phrase.length-4),offset).toLowerCase();
