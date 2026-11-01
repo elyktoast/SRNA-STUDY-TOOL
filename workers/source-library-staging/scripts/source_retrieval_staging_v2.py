@@ -91,7 +91,9 @@ def audit_textbook_retrieval(conn, *, owner_uid, textbook_id):
                (SELECT count(*) FROM source_library_staging.sections s
                 WHERE s.textbook_id=t.id),
                (SELECT count(*) FROM source_library_staging.passages p
-                WHERE p.textbook_id=t.id AND p.section_id IS NOT NULL)
+                WHERE p.textbook_id=t.id AND p.section_id IS NOT NULL),
+               (SELECT count(*) FROM source_library_staging.source_versions v
+                WHERE v.textbook_id=t.id AND v.owner_uid=t.owner_uid)
         FROM source_library_staging.textbooks t
         WHERE t.id=%s::uuid AND t.owner_uid=%s::uuid
     """
@@ -100,12 +102,15 @@ def audit_textbook_retrieval(conn, *, owner_uid, textbook_id):
         record = cur.fetchone()
     if not record:
         raise ValueError("Textbook not available to owner")
-    status, pages, passages, chapters, linked = record
+    status, pages, passages, chapters, linked, versions = record
     return {
         "text_search_ready": status == "ready" and passages > 0,
-        "chapter_filter_ready": status == "ready" and chapters > 0 and linked > 0,
+        "chapter_filter_ready": status == "ready" and chapters > 0 and linked > 0 and versions > 0,
+        "source_provenance_ready": versions > 0,
+        "chapter_publication_ready": status == "ready" and passages > 0 and chapters == 0 and versions > 0,
         "physical_page_reference_ready": status == "ready" and pages > 0 and passages > 0,
         "pdf_page_count": pages, "passage_count": passages,
         "chapter_count": chapters, "chapter_linked_passage_count": linked,
+        "source_version_count": versions,
         "print_page_citations_verified": False,
     }
