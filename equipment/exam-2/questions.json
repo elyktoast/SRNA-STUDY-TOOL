@@ -1183,7 +1183,7 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Temperature",
-      "stem": "Per Wolpaw, hypothermia harms the heart mainly through which mechanism?",
+      "stem": "Which catecholamine-mediated response to hypothermia can increase myocardial workload?",
       "options": [
         "Arrhythmias and hypertension from catecholamine release",
         "Shivering-induced O2 demand",
@@ -2625,7 +2625,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Vigilance and alarms",
-      "stem": "Failing to ventilate when coming off cardiopulmonary bypass is the lecture's example of which cause?",
+      "stem": "In human-factors analysis, failure to resume ventilation while separating from cardiopulmonary bypass illustrates which contributor to error?",
       "options": [
         "Task complexity",
         "False alarms",
@@ -2685,7 +2685,7 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Vigilance and alarms",
-      "stem": "The lecture's equipment-design example of error is which event?",
+      "stem": "Which event illustrates an equipment-design vulnerability during anesthesia care?",
       "options": [
         "A circuit disconnect when equipment is moved around the bed",
         "The laryngoscope bulb going out during intubation",
@@ -2996,7 +2996,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Vigilance and alarms",
-      "stem": "Per the lecture, alarm limits are most useful when set so they activate when?",
+      "stem": "To provide clinically useful early warning, when should physiologic alarm limits activate?",
       "options": [
         "Before the condition becomes critical",
         "After the provider confirms the event",
