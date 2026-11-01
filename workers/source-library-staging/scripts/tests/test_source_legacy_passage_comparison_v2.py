@@ -1,5 +1,5 @@
 import unittest
-from source_legacy_passage_comparison_v2 import compare_indexed_passages
+from source_legacy_passage_comparison_v2 import compare_indexed_passages, assess_provenance_backfill_eligibility
 
 OWNER = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK = "810040fc-da03-4fa5-bcc0-78c25957c325"
@@ -49,6 +49,32 @@ class ComparisonTests(unittest.TestCase):
     def test_reordering_is_not_accepted(self):
         db = DB([(0, 2, 2, "Anesthesia safety"), (1, 1, 1, "Airway care")])
         self.assertFalse(compare_indexed_passages(db, **self.kwargs)["same_ordered_passages_and_pages"])
+
+    def test_verified_ocr_comparison_is_only_eligible_for_review(self):
+        result = {"same_ordered_passages_and_pages": True,
+                  "indexed_passage_count": 595, "fresh_passage_count": 595,
+                  "indexed_only_fingerprints": 0, "fresh_only_fingerprints": 0}
+        status = assess_provenance_backfill_eligibility(
+            result, attestation_verified=True, extraction_ocr_enabled=True)
+        self.assertTrue(status["eligible_for_operator_review"])
+        self.assertFalse(status["operator_review_confirmed"])
+        self.assertFalse(status["database_backfill_performed"])
+        self.assertFalse(status["chapter_or_print_citations_approved"])
+        status = assess_provenance_backfill_eligibility(
+            result, attestation_verified=True, extraction_ocr_enabled=False,
+            reviewer_confirmed=True)
+        self.assertFalse(status["eligible_for_operator_review"])
+        self.assertFalse(status["operator_review_confirmed"])
+
+    def test_mismatched_comparison_can_never_unlock_provenance(self):
+        result = {"same_ordered_passages_and_pages": False,
+                  "indexed_passage_count": 595, "fresh_passage_count": 593,
+                  "indexed_only_fingerprints": 4, "fresh_only_fingerprints": 2}
+        status = assess_provenance_backfill_eligibility(
+            result, attestation_verified=True, extraction_ocr_enabled=True,
+            reviewer_confirmed=True)
+        self.assertFalse(status["eligible_for_operator_review"])
+        self.assertFalse(status["database_backfill_performed"])
 
     def test_missing_source_digest_blocks_query(self):
         db = DB([])
