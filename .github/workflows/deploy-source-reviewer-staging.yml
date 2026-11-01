@@ -72,6 +72,14 @@ jobs:
           for key in STAGING_DATABASE_URL STAGING_R2_ACCOUNT_ID STAGING_R2_ACCESS_KEY_ID STAGING_R2_SECRET_ACCESS_KEY SUPABASE_ANON_KEY STAGING_RECEIPT_SIGNING_SECRET; do
             printf '%s' "${!key}" | npx wrangler secret put "$key" --config wrangler.json >/dev/null
           done
+      - name: Verify authenticated staging reviewer after deployment
+        env:
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/diagnose-source-reviewer-staging.mjs
       - name: Staging deployment completed (browser activation still gated)
         run: |
           echo "Separate reviewer Worker deployed. Do not set reviewerApiUrl until live acceptance with authenticated reviewer succeeds."
