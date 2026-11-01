@@ -47,7 +47,11 @@ export default {
     return respond(403,origin,'{"error":"forbidden"}');
    }
    if(!auth.ok){
-    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'identity_rejected',status:auth.status}));
+    const body=await auth.clone().json().catch(()=>null);
+    const rawCode=typeof body?.code==='string'?body.code:typeof body?.error_code==='string'?body.error_code:'';
+    const allowedCodes=new Set(['invalid_credentials','bad_jwt','invalid_jwt','jwt_expired','session_not_found','session_expired','user_not_found','invalid_token','invalid_api_key','api_key_invalid']);
+    const safeCode=allowedCodes.has(rawCode)?rawCode:'unclassified';
+    console.error('staging_reviewer_auth_denied',JSON.stringify({stage:'supabase',category:'identity_rejected',status:auth.status,code:safeCode}));
     return respond(403,origin,'{"error":"forbidden"}');
    }
    identity=await auth.json();
