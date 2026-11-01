@@ -130,8 +130,29 @@ def create_app(runtime):
                              ("X-Page-Image-SHA256", page["image_sha256"])])
         except ValueError:
             return response(start_response, "409 Conflict", b'{"error":"source_or_page_verification_failed"}')
-        except Exception:
-            return response(start_response, "503 Service Unavailable", b'{"error":"trusted_review_unavailable"}')
+        except Exception as exc:
+            # Report only fixed storage failure codes; never expose R2 paths, keys, or driver text.
+            rule = "STORAGE_UNKNOWN"
+            try:
+                from botocore.exceptions import ClientError, EndpointConnectionError, ConnectTimeoutError, ReadTimeoutError
+                if isinstance(exc, ClientError):
+                    code = str(exc.response.get("Error", {}).get("Code", ""))
+                    if code in ("404", "NoSuchKey", "NotFound"):
+                        rule = "STORAGE_MISSING_SOURCE_OR_QUEUE"
+                    elif code in ("403", "AccessDenied", "InvalidAccessKeyId", "SignatureDoesNotMatch"):
+                        rule = "STORAGE_CREDENTIALS_OR_PERMISSION"
+                    elif code in ("SlowDown", "Throttling", "TooManyRequests"):
+                        rule = "STORAGE_RATE_LIMIT"
+                    else:
+                        rule = "STORAGE_PROVIDER_ERROR"
+                elif isinstance(exc, (EndpointConnectionError, ConnectTimeoutError, ReadTimeoutError)):
+                    rule = "STORAGE_CONNECTION"
+            except ImportError:
+                rule = "STORAGE_DEPENDENCY"
+            import logging
+            logging.getLogger("reviewer").error("staging_review_manifest_failure rule=%s", rule)
+            return response(start_response, "503 Service Unavailable",
+                            json.dumps({"error":"trusted_review_unavailable","rule":rule}).encode())
     return app
 
 
