@@ -23,7 +23,9 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install read-only verification dependencies
-        run: python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
       - name: Compare independently re-extracted PDF against legacy passage index
         env:
           DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
@@ -71,7 +73,26 @@ jobs:
                       expected_source_sha256=trusted['sha256'])
               safe={k:v for k,v in comparison.items() if k != 'source_sha256'}
               print('Staging read-only provenance comparison:',json.dumps(safe,sort_keys=True))
-              if not comparison['same_ordered_passages_and_pages']:
-                  raise SystemExit('Existing passages differ from fresh source; no backfill or writes performed')
-              print('PASS: all indexed passages exactly match fresh extracted pages and text')
+              if comparison['same_ordered_passages_and_pages']:
+                  print('PASS: original text-only extraction exactly matches indexed text')
+              else:
+                  print('Text-only extraction differs; comparing OCR-enabled extraction read-only')
+                  ocr_dir=root/'ocr-extracted'
+                  extract(pdf,ocr_dir,owner,key,ocr=True)
+                  ocr_manifest=validate(ocr_dir)
+                  if ocr_manifest['sha256'] != trusted['sha256']:
+                      raise SystemExit('OCR-extracted source digest mismatch')
+                  ocr_passages=list(read_jsonl(ocr_dir/'passages.jsonl'))
+                  with psycopg.connect(os.environ['DATABASE_URL'],autocommit=False) as conn:
+                      conn.execute('SET TRANSACTION READ ONLY')
+                      ocr_comparison=compare_indexed_passages(
+                          conn,textbook_id=book,owner_uid=owner,
+                          fresh_passages=ocr_passages,expected_page_count=trusted['pdf_page_count'],
+                          expected_source_sha256=trusted['sha256'])
+                  safe_ocr={k:v for k,v in ocr_comparison.items() if k != 'source_sha256'}
+                  print('Staging OCR-enabled comparison:',json.dumps(safe_ocr,sort_keys=True))
+                  print('OCR pages recovered:',len(ocr_manifest.get('ocr_pages',[])))
+                  if not ocr_comparison['same_ordered_passages_and_pages']:
+                      raise SystemExit('Both extraction modes differ from legacy index; no DB writes performed')
+                  print('PASS: OCR-enabled extraction exactly matches existing index')
           PY
