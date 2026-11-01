@@ -1,5 +1,5 @@
 name: Deploy private staging reviewer
-# Redeploy on this branch to propagate refreshed environment secrets to the private Container.
+# Redeploy staging after user rotated STAGING_DATABASE_URL to session pooler.
 on:
   workflow_dispatch:
   push:
