@@ -17,7 +17,7 @@ def assess(manifest, *, reviewed_pages=()):
         raise ValueError("Extraction must not claim verified citations")
     if type(manifest.get("passage_count")) is not int or manifest["passage_count"] < 1:
         raise ValueError("No searchable passages")
-    categories = ("low_text_pages", "ocr_failed_pages")
+    categories = ("low_text_pages", "ocr_review_pages", "ocr_failed_pages")
     for name in categories:
         pages = manifest.get(name, [])
         if not isinstance(pages, list) or any(type(p) is not int or p < 1 or p > count for p in pages):
@@ -29,7 +29,7 @@ def assess(manifest, *, reviewed_pages=()):
     if manifest.get("ocr_attempted") is not True and manifest.get("ocr_pages"):
         raise ValueError("OCR recovery without OCR attempt")
     unresolved = sorted((set(manifest.get("low_text_pages", [])) |
-                         set(manifest.get("ocr_failed_pages", []))) - set(reviewed_pages))
+                         set(manifest.get("ocr_review_pages", [])) |\n                         set(manifest.get("ocr_failed_pages", []))) - set(reviewed_pages))
     return {
         "ready_for_unqualified_indexing": not unresolved,
         "requires_source_review": bool(unresolved),
