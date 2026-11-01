@@ -2726,18 +2726,18 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Ventilators",
-      "stem": "Why give O2 at emergence per the instructor?",
+      "stem": "Why is supplemental oxygen commonly administered during emergence from general anesthesia?",
       "options": [
-        "O2 prevents postoperative shivering",
-        "O2 speeds agent elimination only",
-        "O2 lowers CO2 directly",
-        "Sedatives lower drive and O2 falls"
+        "It reliably prevents postoperative shivering",
+        "It directly accelerates elimination of all inhaled anesthetics",
+        "It directly lowers arterial carbon dioxide",
+        "Residual anesthetic and sedative effects can depress ventilation and contribute to hypoxemia"
       ],
       "answer": [
         3
       ],
-      "explanation": "Note: we give sedatives → ↓O2, give O2.",
-      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6",
+      "explanation": "Residual anesthetics, opioids, and sedatives can reduce respiratory drive or airway patency during emergence, increasing the risk of hypoxemia. Supplemental oxygen helps maintain oxygenation while ventilation and airway function recover, but it does not replace monitoring or support of adequate ventilation.",
+      "citation": "Ehrenwerth, Eisenkraft, & Berry (2021), Anesthesia Equipment, 3rd ed., Ch. 6 (oxygen delivery and breathing systems; exact page verification pending)",
       "image": null
     },
     {
@@ -2746,7 +2746,7 @@
       "type": "single",
       "difficulty": "hard",
       "topic": "Ventilators",
-      "stem": "EtCO2 (end-tidal carbon dioxide) is 28 mmHg. Using the instructor's gradient, what is PaCO2 (arterial partial pressure of carbon dioxide) likely to be?",
+      "stem": "In an otherwise healthy patient with stable pulmonary perfusion, end-tidal carbon dioxide (EtCO2) is 28 mmHg. Assuming a typical arterial-to-end-tidal CO2 difference of approximately 2–5 mmHg, what is the estimated arterial carbon dioxide tension (PaCO2)?",
       "options": [
         "About 18–20 mmHg",
         "About 28 mmHg exactly",
@@ -2756,7 +2756,7 @@
       "answer": [
         2
       ],
-      "explanation": "With an arterial-to-end-tidal gradient of 2–5 mmHg, an EtCO2 of 28 estimates PaCO2 at 30–33 mmHg. This is conditional because disease or perfusion changes can alter the gradient.",
+      "explanation": "With the stated 2–5 mmHg arterial-to-end-tidal gradient, estimated PaCO2 is approximately 30–33 mmHg. This relationship is not universal; increased dead space, impaired perfusion, or lung disease can widen the gradient.",
       "citation": "Elisha, Heiner, & Nagelhout (2023), Nurse Anesthesia, 7th ed., Chapter 18, printed p. 316",
       "image": null
     },
