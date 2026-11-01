@@ -30,7 +30,7 @@
     VILI: 'ventilator-induced lung injury',
     VQ: 'ventilation–perfusion ratio',
   });
-  const pattern = new RegExp('\\b(' + Object.keys(expansions).sort((a,b) => b.length-a.length).join('|') + ')\\b','g');
+  const pattern = new RegExp('\\b(?:' + Object.keys(expansions).sort((a,b) => b.length-a.length).join('|') + ')\\b','g');
   function clarify(text) {
     if (typeof text !== 'string' || !text) return text;
     const introduced = new Set();
