@@ -1546,7 +1546,7 @@
       "type": "single",
       "difficulty": "medium",
       "topic": "Breathing circuits",
-      "stem": "To deepen anesthesia quickly with sevo, which change does the instructor list?",
+      "stem": "Which combination of changes generally accelerates sevoflurane wash-in through a circle system?",
       "options": [
         "Lower FGF (fresh gas flow) and raise the dial, nothing else",
         "Lower MV (minute ventilation) and raise FGF (fresh gas flow)",
@@ -4332,7 +4332,7 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Respiratory monitoring",
-      "stem": "Per the lecture, what is as important as capnography in sedation cases?",
+      "stem": "Which bedside assessment remains essential alongside capnography during sedation?",
       "options": [
         "Direct observation of the patient",
         "Anesthetic agent monitoring",
@@ -4592,12 +4592,12 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Respiratory monitoring",
-      "stem": "Per the lecture, the effect of sickle cell disease on pulse oximetry is:",
+      "stem": "What is the established direction of pulse-oximeter error in patients with sickle cell disease?",
       "options": [
         "No effect",
         "Always falsely low",
         "Always falsely high",
-        "Unclear"
+        "No consistent direction of error has been established"
       ],
       "answer": [
         3
