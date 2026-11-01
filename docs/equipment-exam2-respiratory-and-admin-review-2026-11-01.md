@@ -35,10 +35,10 @@ Status snapshot: 45 already `fixed`, 3 `declined`, 12 `new`. These proposals **d
 | 51 | NUR868-T058 | Hold for source verification | The numerical ~55% comparison must be verified against study population, outcome and source, not merely relabeled |
 | 52 | NUR868-S2-R280 | Wording fix in PR | Removes lecture-dependent framing; direct patient assessment remains the keyed answer |
 | 53 | NUR868-V019 | Wording fix in PR | Removes reliance on an unnamed lecture example while preserving the keyed equipment-design example |
-| 54 | NUR868-S2-T207 | Hold for image review | Must inspect labeled sites in the embedded figure; do not adjust a numbered image answer based on text alone |
+| 54 | NUR868-S2-T207 | Wording improved; visual QA remains | Inspected the embedded schematic and clarified that its red markers represent temperature measurement sites; the keyed peripheral site remains 7 |
 | 55 | NUR868-V034 | Wording fix in PR | Tests clinically useful early alarm activation rather than “per lecture” |
 | 56 | NUR868-S2-R295 | Wording/choice fix in PR | Removes “per lecture” and replaces vague answer “Unclear” with a more specific statement about inconsistent findings |
-| 57 | NUR868-R054 | Hold for figure and answer-key review | Reporter notes panels B **and** C may show decelerating inspiratory flow; do not force single answer before inspecting both waveforms |
+| 57 | NUR868-R054 | **Answer-key correction in PR** | Inspected the actual figure: both panels **B and C** show decelerating inspiratory flow. Updated to two-answer multi-select, indexes [2,3], with a corrected explanation; requires answer-revision QA before closing |
 | 58 | NUR868-S2-T250 | Wording/choice fix in PR | Replaces instructor-specific wording and device-specific response with response to measured temperature |
 | 59 | NUR868-V016 | Wording fix in PR | Removes reference to lecture, retains task-complexity answer |
 | 60 | NUR868-S2-B283 | Wording fix in PR | Specifies sevoflurane wash-in and retains the keyed combination of changes |
@@ -48,6 +48,6 @@ Previously **declined** respiratory report **48**, question NUR868-R056, concern
 ## Release gates
 
 1. Ensure all acronym unit tests and complete repository/quiz/browser quality gates pass.
-2. Review the 8 edited report questions in the admin interface and verify no unintended answer ambiguities. Do not mark the four held items as fixed.
+2. Review the 10 edited report questions in the admin interface and verify no unintended answer ambiguities. The figure-based R054 answer revision must be checked for learner-history/version handling. Do not close held source-verification reports on code commit alone.
 3. Verify 26 Franck references against the actual primary textbook and images before replacing citations.
 4. Leave status fields unchanged until a reviewer confirms the fixes; do not auto-close based on a code commit.
