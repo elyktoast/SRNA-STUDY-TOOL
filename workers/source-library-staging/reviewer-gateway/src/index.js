@@ -105,8 +105,8 @@ export default {
     const body=await upstream.clone().json().catch(()=>null);
     const allowed=new Set(['configuration','database','dependency','backend']);
     const category=body?.error==='reviewer_backend_unavailable'&&allowed.has(body?.stage)?body.stage:'unclassified';
-    const rules=new Set(['STAGING_ONLY','MISSING_BINDING','PROJECT_URL','SIGNING_SECRET_LENGTH','DATABASE_URL_PARSE','DATABASE_SCHEME','DATABASE_HOST','DATABASE_CREDENTIAL_FORMAT','DATABASE_PROJECT_HOST','DATABASE_USERNAME','DATABASE_PATH','DATABASE_OPTIONS','MISSING_STAGING_DATABASE_URL','MISSING_STAGING_R2_ACCOUNT_ID','MISSING_STAGING_R2_ACCESS_KEY_ID','MISSING_STAGING_R2_SECRET_ACCESS_KEY','MISSING_SUPABASE_URL','MISSING_SUPABASE_ANON_KEY','MISSING_STAGING_RECEIPT_SIGNING_SECRET']);
-    const rule=category==='configuration'&&rules.has(body?.rule)?body.rule:'NONE';
+    const rules=new Set(['STAGING_ONLY','MISSING_BINDING','PROJECT_URL','SIGNING_SECRET_LENGTH','DATABASE_URL_PARSE','DATABASE_SCHEME','DATABASE_HOST','DATABASE_CREDENTIAL_FORMAT','DATABASE_PROJECT_HOST','DATABASE_USERNAME','DATABASE_PATH','DATABASE_OPTIONS','MISSING_STAGING_DATABASE_URL','MISSING_STAGING_R2_ACCOUNT_ID','MISSING_STAGING_R2_ACCESS_KEY_ID','MISSING_STAGING_R2_SECRET_ACCESS_KEY','MISSING_SUPABASE_URL','MISSING_SUPABASE_ANON_KEY','MISSING_STAGING_RECEIPT_SIGNING_SECRET','DATABASE_PASSWORD_REJECTED','DATABASE_ROLE_OR_NAME','DATABASE_PERMISSION','DATABASE_CONNECTION','DATABASE_NETWORK_OR_TLS','DATABASE_OTHER']);
+    const rule=['configuration','database'].includes(category)&&rules.has(body?.rule)?body.rule:'NONE';
     console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_503',category,rule}));
    }
    const headers=new Headers(common);
