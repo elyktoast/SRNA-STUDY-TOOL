@@ -30,8 +30,9 @@ const manifestResponse=await fetch(url,{headers,redirect:'manual'});
 let safeError='none';
 if(manifestResponse.status!==200){
  const body=await manifestResponse.json().catch(()=>null);
- const allowed=new Set(['identity_unavailable','reviewer_unavailable','staging_not_configured','forbidden','unsafe_upstream','invalid_manifest','missing_source_integrity','manifest_integrity_mismatch','invalid_manifest_type']);
+ const allowed=new Set(['identity_unavailable','reviewer_unavailable','staging_not_configured','forbidden','unsafe_upstream','invalid_manifest','missing_source_integrity','manifest_integrity_mismatch','invalid_manifest_type','reviewer_backend_unavailable']);
  safeError=allowed.has(body?.error)?body.error:'unclassified';
+ if(body?.error==='reviewer_backend_unavailable' && ['configuration','database','dependency','backend'].includes(body?.stage)) safeError+=':'+body.stage;
 }
 console.log('STEP 4: authenticated Container -> manifest: HTTP',manifestResponse.status,'category',safeError);
 assert.equal(manifestResponse.status,200,'Container/manifest failed: inspect staging_reviewer_failure substage in Cloudflare');
