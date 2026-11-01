@@ -25,9 +25,22 @@
   });
   const pattern = new RegExp('\\b(?:' + Object.keys(expansions).sort((a,b) => b.length-a.length).join('|') + ')\\b','g');
   const mechanical = Object.freeze({Pmean:'mean airway pressure',Raw:'airway resistance',Ti:'inspiratory time',Te:'expiratory time'});
+  const regional = Object.freeze({SAB:'subarachnoid block', CSE:'combined spinal–epidural',
+    PNB:'peripheral nerve block', TAP:'transversus abdominis plane',
+    ESP:'erector spinae plane', QL:'quadratus lumborum',
+    PENG:'pericapsular nerve group', ACB:'adductor canal block',
+    FNB:'femoral nerve block', ISB:'interscalene block',
+    SCB:'supraclavicular block', PDPH:'post-dural puncture headache'});
   function clarify(text, options={}) {
     if (typeof text !== 'string' || !text) return text;
-    if (/regional|neuraxial/i.test(String(options.topic||''))) return text;
+    if (/regional|neuraxial/i.test(String(options.topic||''))) {
+      const re = new RegExp('\\\\b(?:' + Object.keys(regional).join('|') + ')\\\\b','g');
+      return text.replace(re, (short, offset, full) => {
+        const phrase=regional[short];
+        const previous=full.slice(Math.max(0,offset-phrase.length-4),offset).toLowerCase();
+        return previous.includes(phrase.toLowerCase()) ? short : phrase+' ('+short+')';
+      });
+    }
     if (/respiratory|ventilat|airway mechanics/i.test(String(options.topic||''))) {
       text = text.replace(/\bTV\b/g, 'Vt').replace(/\bVE\b/g, 'MV');
     }
