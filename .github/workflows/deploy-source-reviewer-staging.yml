@@ -1,4 +1,5 @@
 name: Deploy private staging reviewer
+# Redeploy on this branch to propagate refreshed environment secrets to the private Container.
 on:
   workflow_dispatch:
   push:
