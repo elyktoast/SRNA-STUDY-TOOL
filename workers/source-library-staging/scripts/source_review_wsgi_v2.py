@@ -65,7 +65,7 @@ def validate_staging_configuration(env):
 
 
 def database_failure_rule(exc):
-    """Classify libpq connection failures without recording credentials or raw messages."""
+    """Return a stable error ID without leaking libpq connection strings."""
     import psycopg
     if not isinstance(exc, psycopg.Error):
         return "NONE"
@@ -74,14 +74,32 @@ def database_failure_rule(exc):
         return "DATABASE_PASSWORD_REJECTED"
     if state in ("28000", "3D000"):
         return "DATABASE_ROLE_OR_NAME"
-    if state in ("42501",):
+    if state == "42501":
         return "DATABASE_PERMISSION"
+    if state in ("53300", "53400"):
+        return "DATABASE_CAPACITY"
     if state.startswith("08"):
         return "DATABASE_CONNECTION"
-    # libpq connection failures often have no SQLSTATE. Do not log raw messages.
     if isinstance(exc, psycopg.OperationalError):
+        # The message is examined in-memory only; never print it or send it to a client.
+        detail = str(exc).lower()
+        if "no route to host" in detail or "network is unreachable" in detail:
+            return "DATABASE_NETWORK_UNREACHABLE"
+        if "could not translate host name" in detail or "name or service not known" in detail:
+            return "DATABASE_DNS"
+        if "password authentication failed" in detail or "invalid password" in detail:
+            return "DATABASE_PASSWORD_REJECTED"
+        if "connection timed out" in detail or "timeout expired" in detail or "operation timed out" in detail:
+            return "DATABASE_TIMEOUT"
+        if "certificate verify failed" in detail or "ssl error" in detail or "tls" in detail:
+            return "DATABASE_TLS"
+        if "connection refused" in detail:
+            return "DATABASE_CONNECTION_REFUSED"
+        if "no pg_hba.conf entry" in detail:
+            return "DATABASE_ACCESS_POLICY"
         return "DATABASE_NETWORK_OR_TLS"
     return "DATABASE_OTHER"
+
 
 
 def build_app():
@@ -90,7 +108,7 @@ def build_app():
     import psycopg
     # Connections are per-process. The single-worker staging configuration
     # keeps the privileged connection lifecycle explicit.
-    conn = psycopg.connect(os.environ["STAGING_DATABASE_URL"], autocommit=True, connect_timeout=5)
+    conn = psycopg.connect(os.environ["STAGING_DATABASE_URL"], autocommit=True, connect_timeout=8, sslmode="require")
     r2 = boto3.client("s3",
         endpoint_url="https://" + os.environ["STAGING_R2_ACCOUNT_ID"] + ".r2.cloudflarestorage.com",
         aws_access_key_id=os.environ["STAGING_R2_ACCESS_KEY_ID"],
