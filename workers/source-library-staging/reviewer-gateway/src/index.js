@@ -117,8 +117,17 @@ export default {
     }
    }
    return new Response(upstream.body,{status:upstream.status,headers});
-  }catch{
-   console.error('staging_reviewer_failure',JSON.stringify({stage:'container',reason:'startup_or_upstream_failed',substage:containerStage}));
+  }catch(error){
+   // Container runtime exceptions may contain sensitive details. Only emit fixed categories.
+   const detail=String(error?.message||'').toLowerCase();
+   const category=/port|listen|connection refused/.test(detail)?'port_unavailable':
+    /image|pull|registry/.test(detail)?'image_unavailable':
+    /limit|quota|capacity|resource/.test(detail)?'capacity':
+    /timeout|timed out/.test(detail)?'timeout':
+    /secret|env|variable/.test(detail)?'environment':
+    /not found|missing/.test(detail)?'missing_resource':
+    /not running|stopped|crash|exit/.test(detail)?'process_exit':'unclassified';
+   console.error('staging_reviewer_failure',JSON.stringify({stage:'container',reason:'startup_or_upstream_failed',substage:containerStage,category}));
    return respond(503,origin,'{"error":"reviewer_unavailable"}');
   }
  }
