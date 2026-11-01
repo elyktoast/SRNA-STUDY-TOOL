@@ -72,3 +72,40 @@ def search_passages(conn, *, owner_uid, textbook_id, query, chapter_id=None,
     return [{"chunk_index": r[0], "page_start": r[1], "page_end": r[2],
              "content": r[3], "section_id": str(r[4]) if r[4] else None,
              "rank": float(r[5])} for r in rows]
+
+
+def audit_textbook_retrieval(conn, *, owner_uid, textbook_id):
+    """Read-only provenance readiness; ready text does not prove chapter citations."""
+    for name, value in (("owner_uid", owner_uid), ("textbook_id", textbook_id)):
+        if not isinstance(value, str):
+            raise ValueError("Invalid " + name)
+        try:
+            if str(UUID(value)) != value.lower():
+                raise ValueError()
+        except ValueError:
+            raise ValueError("Invalid " + name) from None
+    sql = """
+        SELECT t.status, t.page_count,
+               (SELECT count(*) FROM source_library_staging.passages p
+                WHERE p.textbook_id=t.id),
+               (SELECT count(*) FROM source_library_staging.sections s
+                WHERE s.textbook_id=t.id),
+               (SELECT count(*) FROM source_library_staging.passages p
+                WHERE p.textbook_id=t.id AND p.section_id IS NOT NULL)
+        FROM source_library_staging.textbooks t
+        WHERE t.id=%s::uuid AND t.owner_uid=%s::uuid
+    """
+    with conn.cursor() as cur:
+        cur.execute(sql, (textbook_id, owner_uid))
+        record = cur.fetchone()
+    if not record:
+        raise ValueError("Textbook not available to owner")
+    status, pages, passages, chapters, linked = record
+    return {
+        "text_search_ready": status == "ready" and passages > 0,
+        "chapter_filter_ready": status == "ready" and chapters > 0 and linked > 0,
+        "physical_page_reference_ready": status == "ready" and pages > 0 and passages > 0,
+        "pdf_page_count": pages, "passage_count": passages,
+        "chapter_count": chapters, "chapter_linked_passage_count": linked,
+        "print_page_citations_verified": False,
+    }
