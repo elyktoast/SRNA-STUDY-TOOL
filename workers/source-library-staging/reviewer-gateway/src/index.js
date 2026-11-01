@@ -86,7 +86,16 @@ export default {
   try{
    const container=env.REVIEWER_CONTAINER.getByName('staging-reviewer');
    containerStage='startup';
-   await container.startAndWaitForPorts();
+   const required=['STAGING_DATABASE_URL','STAGING_R2_ACCOUNT_ID','STAGING_R2_ACCESS_KEY_ID','STAGING_R2_SECRET_ACCESS_KEY','SUPABASE_ANON_KEY','STAGING_RECEIPT_SIGNING_SECRET'];
+   for(const key of required){
+    if(!env[key]){
+     console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'container_secret_missing',name:key}));
+     return respond(503,origin,'{"error":"staging_not_configured"}');
+    }
+   }
+   const envVars={STAGING_ONLY:'true',SUPABASE_URL:PROJECT};
+   for(const key of required)envVars[key]=env[key];
+   await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
     method:'GET',headers:{Authorization:token,Origin:ORIGIN}
