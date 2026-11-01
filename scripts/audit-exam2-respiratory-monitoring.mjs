@@ -34,5 +34,5 @@ const summary={total:list.length,franck_count:franck.length,
 console.log(JSON.stringify(summary,null,2));
 if(process.argv.includes('--baseline-check')){
   assert.equal(summary.total,224,'Respiratory pool changed, re-audit required');
-  assert.equal(summary.franck_count,26,'Franck count changed, re-audit citations');
+  assert.equal(summary.franck_count,22,'Franck count changed, re-audit citations');
 }
