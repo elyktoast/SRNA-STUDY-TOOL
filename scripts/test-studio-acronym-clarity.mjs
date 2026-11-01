@@ -18,6 +18,8 @@ assert.equal(clarify('TV and VE', {topic:'Respiratory monitoring'}), 'Vt and MV'
 assert.equal(clarify('Pmean and Raw and Ti and Te'), 'mean airway pressure (Pmean) and airway resistance (Raw) and inspiratory time (Ti) and expiratory time (Te)');
 assert.equal(clarify('Mean airway pressure and airway resistance'), 'Mean airway pressure (Pmean) and airway resistance (Raw)');
 assert.equal(clarify('PISS', {topic:'Regional and neuraxial anesthesia'}), 'PISS');
+assert.equal(clarify('TAP and TAP', {topic:'Regional and neuraxial anesthesia'}), 'transversus abdominis plane (TAP) and transversus abdominis plane (TAP)');
+assert.equal(clarify('transversus abdominis plane (TAP)', {topic:'Regional anesthesia'}), 'transversus abdominis plane (TAP)');
 assert.ok(Object.isFrozen(expansions));
 const loader=read('studio-loader.js');
 assert.ok(loader.includes("runtime.loadScript('acronym-clarity.js')"));
