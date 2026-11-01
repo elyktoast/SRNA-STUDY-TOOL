@@ -39,7 +39,10 @@ export default {
   // Verify the staging identity before starting or contacting the private container.
   let identity;
   try{
-   const auth=await fetch(PROJECT+'/auth/v1/user',{headers:{Authorization:token,apikey:env.SUPABASE_ANON_KEY},redirect:'error'});
+   const auth=await fetch(PROJECT+'/auth/v1/user',{headers:{Authorization:token,apikey:env.SUPABASE_ANON_KEY},redirect:'manual'});
+   // Cloudflare Workers does not support redirect:'error'; manual prevents credential forwarding.
+   // Reject redirects explicitly without following them or exposing their Location header.
+   if(auth.status>=300&&auth.status<400)return respond(403,origin,'{"error":"forbidden"}');
    if(!auth.ok)return respond(403,origin,'{"error":"forbidden"}');
    identity=await auth.json();
   }catch(error){
