@@ -7,8 +7,9 @@ SOURCE = Path(__file__).resolve().parents[1] / "source_review_wsgi_v2.py"
 tree = ast.parse(SOURCE.read_text())
 function = next(n for n in tree.body if isinstance(n, ast.FunctionDef)
                 and n.name == "validate_staging_configuration")
+error_class = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "ConfigurationError")
 scope = {}
-exec(compile(ast.Module(body=[function], type_ignores=[]), str(SOURCE), "exec"), scope)
+exec(compile(ast.Module(body=[error_class, function], type_ignores=[]), str(SOURCE), "exec"), scope)
 validate = scope["validate_staging_configuration"]
 
 
