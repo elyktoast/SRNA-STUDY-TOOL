@@ -7,6 +7,7 @@ on:
       - '.github/workflows/deploy-source-reviewer-staging.yml'
       - 'workers/source-library-staging/reviewer-gateway/**'
       - 'workers/source-library-staging/reviewer-service/**'
+      - 'workers/source-library-staging/scripts/**'
 permissions:
   contents: read
 concurrency:
