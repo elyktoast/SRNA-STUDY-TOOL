@@ -44,6 +44,8 @@ class RetrievalTests(unittest.TestCase):
             self.assertIn(fragment, sql)
         self.assertIn("source_library_staging.source_versions v", sql)
         self.assertIn("v.owner_uid = t.owner_uid", sql)
+        self.assertIn("v.r2_key = t.r2_key", sql)
+        self.assertIn("v.file_size_bytes = t.file_size_bytes", sql)
         self.assertNotIn(OWNER, sql)
         self.assertNotIn("airway management", sql)
         self.assertEqual(rows[0]["page_start"], 30)
@@ -70,6 +72,8 @@ class RetrievalTests(unittest.TestCase):
         self.assertFalse(status["chapter_publication_ready"])
         self.assertEqual(conn.cur.params, (BOOK, OWNER))
         self.assertIn("t.owner_uid=%s::uuid", conn.cur.sql)
+        self.assertIn("v.r2_key=t.r2_key", conn.cur.sql)
+        self.assertIn("v.file_size_bytes=t.file_size_bytes", conn.cur.sql)
 
     def test_audit_requires_indexed_chapter_links(self):
         conn = Connection()
