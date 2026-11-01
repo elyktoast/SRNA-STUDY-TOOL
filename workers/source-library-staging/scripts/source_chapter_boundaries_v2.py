@@ -88,9 +88,13 @@ def persist_verified_chapters(conn, *, owner_uid, textbook_id, boundaries,
                 raise ValueError("Owner-scoped ready textbook required")
             reviewed = validate_chapter_boundaries(boundaries, pdf_page_count=row[0])
             cur.execute(
-                """SELECT source_sha256 FROM source_library_staging.source_versions
-                   WHERE textbook_id=%s::uuid ORDER BY recorded_at DESC, id DESC LIMIT 1""",
-                (textbook_id,))
+                """SELECT v.source_sha256
+                   FROM source_library_staging.source_versions v
+                   JOIN source_library_staging.textbooks t ON t.id=v.textbook_id
+                   WHERE v.textbook_id=%s::uuid AND v.owner_uid=%s::uuid
+                     AND v.r2_key=t.r2_key AND v.file_size_bytes=t.file_size_bytes
+                   ORDER BY v.recorded_at DESC, v.id DESC LIMIT 1""",
+                (textbook_id, owner_uid))
             digest_row = cur.fetchone()
             if not digest_row or digest_row[0] != expected_source_sha256:
                 raise ValueError("Source fingerprint mismatch")
