@@ -29,8 +29,34 @@
     PENG:'pericapsular nerve group', ACB:'adductor canal block',
     FNB:'femoral nerve block', ISB:'interscalene block',
     SCB:'supraclavicular block', PDPH:'post-dural puncture headache'});
+  // Normalize only unambiguous everyday anesthesia terms for display.
+  // Preserve canonical question text, answers, and historical submissions.
+  const familiar = Object.freeze([
+    [/\\bblood pressure\\b/gi, 'BP'],
+    [/\\bend[- ]tidal (?:carbon dioxide|CO2)\\b/gi, 'EtCO2'],
+    [/\\bheart rate\\b/gi, 'HR'],
+    [/\\bmean arterial pressure\\b/gi, 'MAP'],
+    [/\\boperating room\\b/gi, 'OR'],
+    [/\\bpositive end[- ]expiratory pressure\\b/gi, 'PEEP'],
+    [/\\bpeak inspiratory pressure\\b/gi, 'PIP'],
+    [/\\bplateau pressure\\b/gi, 'Pplat'],
+    [/\\bfraction of inspired oxygen\\b/gi, 'FiO2'],
+    [/\\bperipheral oxygen saturation\\b/gi, 'SpO2'],
+  ]);
+  function normalizeFamiliar(text) {
+    for (const [pattern, short] of familiar) {
+      text = text.replace(pattern, (match, offset, whole) => {
+        const following = whole.slice(offset + match.length);
+        // Do not duplicate an acronym already supplied by the author.
+        if (new RegExp('^\\\\s*\\\\(' + short + '\\\\)', 'i').test(following)) return match;
+        return short;
+      });
+    }
+    return text;
+  }
   function clarify(text, options={}) {
     if (typeof text !== 'string' || !text) return text;
+    text = normalizeFamiliar(text);
     if (/regional|neuraxial/i.test(String(options.topic||''))) {
       const re = new RegExp('\\b(?:' + Object.keys(regional).join('|') + ')\\b','g');
       return text.replace(re, (short, offset, full) => {
