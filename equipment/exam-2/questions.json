@@ -6872,7 +6872,7 @@
       "type": "single",
       "difficulty": "easy",
       "topic": "Respiratory monitoring",
-      "stem": "Fetal hemoglobin has what effect on pulse oximetry?",
+      "stem": "How does fetal hemoglobin (HbF) generally affect the accuracy of conventional pulse oximetry?",
       "options": [
         "No effect",
         "Readings fixed near 85%",
@@ -6882,8 +6882,8 @@
       "answer": [
         0
       ],
-      "explanation": "HbF: no effect (note: HgF okay).",
-      "citation": "Franck, Respiratory Monitoring: slide 50",
+      "explanation": "Fetal hemoglobin has little effect on conventional pulse oximeter accuracy because its light absorption at 660 and 940 nm is similar to adult hemoglobin. This differs from carboxyhemoglobin and methemoglobin, which can cause important errors.",
+      "citation": "Ehrenwerth, Eisenkraft & Berry, Anesthesia Equipment: Principles and Applications, 3rd ed., Ch. 11, printed p. 258 (fetal hemoglobin and pulse oximetry).",
       "image": null
     },
     {
