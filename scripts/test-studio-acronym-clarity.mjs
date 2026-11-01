@@ -15,6 +15,8 @@ assert.equal(clarify(null), null);
 assert.equal(clarify('PEEP PIP Pplat BP OR MAC FGF FRC ETT TIVA TOF PONV'), 'PEEP PIP Pplat BP OR MAC FGF FRC ETT TIVA TOF PONV');
 assert.equal(clarify('Vt and MV', {topic:'Respiratory monitoring'}), 'Vt and MV');
 assert.equal(clarify('TV and VE', {topic:'Respiratory monitoring'}), 'Vt and MV');
+assert.equal(clarify('tidal volume and minute ventilation', {topic:'Respiratory monitoring'}), 'Vt and MV');
+assert.equal(clarify('tidal volume (Vt) and minute ventilation (MV)', {topic:'Respiratory monitoring'}), 'tidal volume (Vt) and minute ventilation (MV)');
 assert.equal(clarify('Pmean and Raw and Ti and Te'), 'mean airway pressure (Pmean) and airway resistance (Raw) and inspiratory time (Ti) and expiratory time (Te)');
 assert.equal(clarify('Mean airway pressure and airway resistance'), 'Mean airway pressure (Pmean) and airway resistance (Raw)');
 assert.equal(clarify('PISS', {topic:'Regional and neuraxial anesthesia'}), 'PISS');
