@@ -1,14 +1,9 @@
 name: Deploy private staging reviewer
 # Redeploy staging after database password reset; read updated staging GitHub secrets.
+# Deployment is manual while its short-lived admin smoke token needs renewal.
+# Avoid container rebuilds for every staging Python source/test commit.
 on:
   workflow_dispatch:
-  push:
-    branches: [feature/source-library-r2-staging]
-    paths:
-      - '.github/workflows/deploy-source-reviewer-staging.yml'
-      - 'workers/source-library-staging/reviewer-gateway/**'
-      - 'workers/source-library-staging/reviewer-service/**'
-      - 'workers/source-library-staging/scripts/**'
 permissions:
   contents: read
 concurrency:
