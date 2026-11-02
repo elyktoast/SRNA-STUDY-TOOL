@@ -158,7 +158,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
             from item_ai_https_transport_v2 import TransportError
             from item_ai_provider_v2 import ProviderError
             if isinstance(exc, TransportError):
-                rule = "PROVIDER_TRANSPORT"
+                rule = exc.rule
             elif isinstance(exc, ProviderError):
                 rule = "PROVIDER_RESPONSE"
             elif isinstance(exc, (ConnectionError, TimeoutError, URLError)):
