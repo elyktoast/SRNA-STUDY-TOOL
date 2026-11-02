@@ -1,5 +1,8 @@
 """Phase C safety regression tests; no network, database, or paid model calls."""
 import unittest
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_generation_runner_v2 import generate_one
 
 
