@@ -102,6 +102,10 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
             visually_blank, dark_fraction = visual_blank_candidate(pdf_page) if len(text) < 500 else (False, None)
             if visually_blank:
                 blank_candidates.append(page)
+            # A blank candidate must not become a searchable passage merely
+            # because an OCR layer contains noise. Preserve it in pages.jsonl
+            # for visual review and original-page citation accountability.
+            indexed_text = '' if visually_blank else text
             needs_ocr = not visually_blank and (len(text) < 30 or (len(text) < 500 and image_fraction >= 0.6))
             if needs_ocr and ocr:
                 try:
@@ -113,9 +117,11 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                 except Exception as exc:
                     ocr_failures.append(page)
                     ocr_error_types.append(type(exc).__name__)
+            if page in ocr_pages:
+                indexed_text = text
             if needs_ocr and image_fraction >= 0.6 and page not in ocr_pages:
                 ocr_review_pages.append(page)
-            if len(text)<30 or page in ocr_review_pages:
+            if len(text)<30 or page in ocr_review_pages or visually_blank:
                 low_text.append(page)
                 has_images = bool(pdf_page.get_images(full=False))
                 # Conservative triage: an embedded image is not proof of a scan,
@@ -206,7 +212,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                         })
             page_asset_ids = [a['asset_id'] for a in image_assets if a['pdf_page']==page]
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
-            for part in chunks(text):
+            for part in chunks(indexed_text):
                 if page_asset_ids:
                     # Page-level candidate association, NOT a verified claim
                     # that the passage describes the pictured material.
@@ -231,6 +237,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
         'ocr_attempted':bool(ocr),'ocr_error_types':ocr_error_types,
         'visual_blank_candidates':blank_candidates,
         'visual_blank_candidates_verified':False,'requires_ocr_review':bool(low_text),
+        'blank_candidate_passages_excluded':True,
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
