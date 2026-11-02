@@ -4,6 +4,7 @@ Mount in a trusted Python service with staging PostgreSQL; never in the
 Cloudflare upload Worker. Defaults to evidence-only preflight, no model calls.
 """
 import json
+import re
 from uuid import UUID
 
 from run_grounded_generation_v2 import execute
@@ -73,7 +74,11 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 "include_subsections": False, "page_start": None,
                 "page_end": None, "limit": 8, "format": "MC"}, **data,
                 "owner_uid": owner, "execute": False, "confirm_paid_calls": False})
-            if args.mode not in ("NCE", "SEE") or args.format not in ("MC", "MS", "SA", "DD", "HS"):
+            if (args.mode not in ("NCE", "SEE") or args.format not in ("MC", "MS", "SA", "DD", "HS")
+                    or args.domain not in ("I", "II", "III", "IV")
+                    or not re.fullmatch(r"[A-Z]", args.section)
+                    or not re.fullmatch(r"(I|II|III|IV)\.[A-Z]\.\d+(?:\.\d+)*", args.objective)
+                    or args.objective.split(".")[:2] != [args.domain, args.section]):
                 raise ValueError()
             if type(args.limit) is not int or not 1 <= args.limit <= 20:
                 raise ValueError()
