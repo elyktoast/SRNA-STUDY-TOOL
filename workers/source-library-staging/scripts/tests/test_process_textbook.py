@@ -70,7 +70,8 @@ class PipelineTests(unittest.TestCase):
         self.assertEqual(result["low_text_details"], [{
             "pdf_page": 3, "characters": 0, "has_images": False,
             "ocr_improved": False, "ocr_failed": False,
-            "review_category": "blank_candidate_review",
+            "review_category": "visual_blank_candidate_review",
+            "visual_blank_candidate": True, "dark_pixel_fraction": 0.0,
             "image_placement_count": 0, "image_coverage_upper_bound": 0.0,
             "image_coverage_fraction": 0.0,
         }])
