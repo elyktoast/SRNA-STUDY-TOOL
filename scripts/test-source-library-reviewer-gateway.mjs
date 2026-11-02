@@ -86,18 +86,21 @@ const draftId='00000000-0000-4000-8000-000000000002';
 const draftEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({
  startAndWaitForPorts:async()=>{},
  fetch:async req=>{
+  if(req.method==='POST'&&req.url.endsWith('/generation/drafts'))return Response.json({draft_id:draftId,published:false,status:'pending_review'},{status:201});
   assert.equal(req.method,'GET');
   if(req.url.endsWith('/generation/drafts'))return Response.json({drafts:[]});
   return Response.json({draft_id:draftId,published:false,status:'pending_review'});
  }
 })}};
-test('staging basket lists private drafts without permitting writes',async()=>{
+test('staging basket lists and saves private drafts without permitting review writes',async()=>{
  const list=await gateway.fetch(new Request(draftListUrl,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
  assert.equal(list.status,200);assert.deepEqual((await list.json()).drafts,[]);
  const detail=await gateway.fetch(new Request(draftListUrl+'/'+draftId,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
  assert.equal(detail.status,200);assert.equal((await detail.json()).published,false);
- const denied=await gateway.fetch(new Request(draftListUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
- assert.equal(denied.status,405);
+ const saved=await gateway.fetch(new Request(draftListUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
+ assert.equal(saved.status,201);assert.equal((await saved.json()).draft_id,draftId);
+ const preflight=await gateway.fetch(new Request(draftListUrl,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'}}),draftEnv);
+ assert.equal(preflight.status,204);
  const review=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
  assert.equal(review.status,403);
 });
