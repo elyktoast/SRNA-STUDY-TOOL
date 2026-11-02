@@ -119,3 +119,30 @@ test('mobile acceptance rejects successful response without disabled-approval he
  const {api}=setup({handler:()=>new Response('{}',{status:200})});
  await assert.rejects(api.mobileReviewerAcceptance(pdf),/successful response missing disabled-approval header/);
 });
+
+test('evidence preflight sends staging bearer only to pinned reviewer gateway',async()=>{
+ const endpoint='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/';
+ const {api,calls}=setup({handler:()=>Response.json({dry_run:true,passage_count:2})});
+ // The adapter reads the shared config object at request time.
+ const isolated=setup({handler:()=>Response.json({dry_run:true,passage_count:2})});
+ // Expose the config to the test harness through a standalone VM.
+ const captured=[];
+ const ctx={window:{MBU_SOURCE_LIBRARY_STAGING:{enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com',generationApiUrl:endpoint}},location:{hostname:'staging.srnastudytool.com'},URL,Blob,crypto:webcrypto,localStorage:{getItem:()=>JSON.stringify({access_token:'staging-jwt'})},fetch:async(url,options)=>{captured.push({url,options});return Response.json({dry_run:true,passage_count:2})}};
+ vm.runInNewContext(source,ctx);
+ const result=await ctx.window.MBUSourceMaterialStagingStorage.generationPreflight({topic:'airway'});
+ assert.equal(result.passage_count,2);
+ assert.equal(captured[0].url,endpoint+'generation/preflight');
+ assert.equal(captured[0].options.headers.Authorization,'Bearer staging-jwt');
+ assert.equal(captured[0].options.credentials,'omit');
+ assert.equal(captured[0].options.redirect,'error');
+ assert.equal(captured[0].options.cache,'no-store');
+});
+test('evidence preflight refuses arbitrary and production endpoints before network access',async()=>{
+ for(const endpoint of ['https://evil.example/','https://srnastudytool.com/','http://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/']){
+  let calls=0;
+  const ctx={window:{MBU_SOURCE_LIBRARY_STAGING:{enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com',generationApiUrl:endpoint}},location:{hostname:'staging.srnastudytool.com'},URL,Blob,crypto:webcrypto,localStorage:{getItem:()=>JSON.stringify({access_token:'staging-jwt'})},fetch:async()=>{calls++;throw Error('Unexpected network call')}};
+  vm.runInNewContext(source,ctx);
+  await assert.rejects(ctx.window.MBUSourceMaterialStagingStorage.generationPreflight({topic:'airway'}),/Invalid staging generation backend/);
+  assert.equal(calls,0);
+ }
+});
