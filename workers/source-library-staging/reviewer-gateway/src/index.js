@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36})?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -19,25 +19,26 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
+  const generateOne=url.pathname==='/generation/one';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts';
   const draftRead=draftPath.test(url.pathname);
-    const allowedMethods=generation?'POST':draftPath.test(url.pathname)?(draftPostAllowed?'GET, POST':'GET'):'GET';
+    const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((generation||generateOne||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if((generation||generateOne||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
+  if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
   if(!generation&&!draftRead&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
@@ -107,7 +108,7 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||draftWrite){
+   if(generation||generateOne||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
@@ -119,7 +120,7 @@ export default {
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||draftWrite)?{body}:{})
+    method:(generation||generateOne||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
    if(upstream.status===503){
@@ -149,6 +150,10 @@ export default {
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
     if(data?.dry_run!==true||data?.can_publish!==false||data?.database_writes!==false||!Number.isSafeInteger(data?.passage_count))return respond(502,origin,'{"error":"unsafe_preflight"}');
+   }
+   if(upstream.ok&&generateOne){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||data?.dry_run!==false||data?.can_publish!==false||data?.database_writes!==false||data?.requires_human_review!==true||!data?.item||typeof data.item!=='object')return respond(502,origin,'{"error":"unsafe_generation_response"}');
    }
    if(upstream.ok&&draftRead&&!draftWrite){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_draft_type"}');
