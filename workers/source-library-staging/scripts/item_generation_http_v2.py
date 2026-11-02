@@ -112,6 +112,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
             if "execute" in data or "confirm_paid_calls" in data:
                 raise ValueError("Execution flags cannot be supplied by client")
             live = path == "/generation/one"
+            if live and (not isinstance(data.get("textbook_id"), str) or not data["textbook_id"].strip()):
+                raise ValueError("Explicit textbook required for saving generated drafts")
             if live and environment.get("AI_GENERATION_OPT_IN") != "true":
                 return respond("403 Forbidden", {"error": "generation_disabled"})
             from types import SimpleNamespace
