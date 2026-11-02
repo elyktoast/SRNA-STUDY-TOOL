@@ -25,6 +25,26 @@ class ContractTests(unittest.TestCase):
             build_step("item_draft", **BASE, format="TF", concept_card={})
         with self.assertRaises(ValueError):
             build_step("concept_card", **dict(BASE, evidence=[]))
+    def test_all_ten_exam_mode_format_combinations_preserve_review_gates(self):
+        for mode in ("NCE", "SEE"):
+            for format_name in ("MC", "MS", "SA", "DD", "HS"):
+                with self.subTest(mode=mode, format=format_name):
+                    base = dict(BASE, mode=mode)
+                    concept = build_step("concept_card", **base)
+                    draft = build_step("item_draft", **base, format=format_name,
+                                       concept_card={"objective": "III.H.4"})
+                    rationale = build_step("rationale", **base, format=format_name,
+                                           concept_card={"objective": "III.H.4"},
+                                           draft={"stem": "Question"})
+                    self.assertEqual([concept["step"], draft["step"], rationale["step"]],
+                                     ["concept_card", "item_draft", "rationale"])
+                    for request in (concept, draft, rationale):
+                        self.assertTrue(request["human_review_required"])
+                        self.assertFalse(request["auto_publish"])
+                        self.assertEqual(request["mode"], mode)
+                    self.assertEqual(draft["format"], format_name)
+                    self.assertEqual(rationale["format"], format_name)
+
     def test_schema_validation(self):
         self.assertEqual(validate_complete_item(sample()), [])
         self.assertTrue(validate_complete_item({"rules_version": "1.0"}))
