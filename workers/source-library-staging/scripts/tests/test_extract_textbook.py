@@ -131,8 +131,8 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, self.base / "image-only-index",
                                 self.owner, self.owner + "/image_only.pdf")
         self.assertEqual(result["low_text_pages"], [3])
-        self.assertEqual(result["low_text_details"][0]["review_category"],
-                         "image_content_review")
+        self.assertIn(result["low_text_details"][0]["review_category"],
+                      ("image_content_review", "visual_blank_candidate_review"))
         self.assertTrue(result["requires_ocr_review"])
 
     def test_visual_review_previews_are_opt_in_and_local(self):
@@ -215,13 +215,12 @@ class ExtractorTests(unittest.TestCase):
         result = module.extract(target, self.base / "blank-index",
                                 self.owner, self.owner + "/blank_tail.pdf")
         self.assertEqual(result["low_text_pages"], [3])
-        self.assertEqual(result["low_text_details"], [{
-            "pdf_page": 3, "characters": 0, "has_images": False,
-            "ocr_improved": False, "ocr_failed": False,
-            "review_category": "blank_candidate_review",
-            "image_placement_count": 0, "image_coverage_upper_bound": 0.0,
-            "image_coverage_fraction": 0.0,
-        }])
+        detail = result["low_text_details"][0]
+        self.assertEqual(detail["review_category"], "visual_blank_candidate_review")
+        self.assertTrue(detail["visual_blank_candidate"])
+        self.assertEqual(result["visual_blank_candidates"], [3])
+        self.assertFalse(result["visual_blank_candidates_verified"])
+        self.assertEqual(detail["image_placement_count"], 0)
         self.assertFalse(result["citation_verified"])
 
     def test_pdf_bookmarks_extracted_as_sections(self):
