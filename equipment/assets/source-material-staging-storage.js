@@ -143,7 +143,7 @@ async function generationRequest(path,request){
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
  const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
  const data=await response.json().catch(()=>({}));
- if(!response.ok)throw Error(data.error||'Staging generation request failed ('+response.status+').');
+ if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';throw Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);}
  return data;
 }
 async function generateOne(request){return generationRequest('/generation/one',request);}
