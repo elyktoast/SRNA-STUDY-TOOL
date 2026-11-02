@@ -11,6 +11,36 @@ ARGS = dict(mode="NCE", domain="III", section="H", objective="III.H.4",
             item_id="new-1")
 
 class ScreenedGenerationTests(unittest.TestCase):
+    @patch("item_generation_screened_v2.intake")
+    def test_real_three_step_generator_hands_off_to_screening(self, intake):
+        from test_item_standard_v2 import sample
+        calls = []
+        def adapter(request):
+            calls.append(request["step"])
+            if request["step"] == "concept_card":
+                return dict(objective="III.H.4", mechanism="m", relevance="r",
+                            misconception="x", counterfactual="y", evidence_ids=["p1"])
+            if request["step"] == "item_draft":
+                draft = sample()
+                draft["evidence"] = [{"textbook_id": "t1", "passage_id": "p1",
+                                      "pdf_page": 12, "excerpt": "Trusted source"}]
+                return draft
+            return dict(core_concept="a", why_key_wins="b", trap="c",
+                        distractor_breakdown={"B": "wrong"})
+        intake.return_value = {"draft_reviews": [{"status": "draft",
+                                                  "screening": {"stages": {"human_review": {"status": "pending"}}}}]}
+        result = generate_and_screen(adapter, **ARGS)
+        self.assertEqual(calls, ["concept_card", "item_draft", "rationale"])
+        if result["generator_issues"]:
+            self.assertIsNone(result["screening"])
+            self.assertFalse(intake.called)
+        else:
+            intake.assert_called_once()
+            self.assertIsNotNone(result["screening"])
+        self.assertTrue(result["requires_human_review"])
+        self.assertFalse(result["can_publish"])
+        self.assertFalse(result["database_writes"])
+
     @patch("item_generation_screened_v2.generate_one")
     def test_generator_issues_block_intake(self, generate):
         generate.return_value = {"item": {"item_id": "new-1"},
