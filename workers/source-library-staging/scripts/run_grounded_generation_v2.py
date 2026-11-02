@@ -19,6 +19,8 @@ def execute(conn, args, environ=None):
     env = os.environ if environ is None else environ
     if env.get("STAGING_ONLY") != "true":
         raise ValueError("Staging-only execution required")
+    if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
+        raise ValueError("Paid model calls require explicit opt-in and confirmation")
     evidence = build_evidence(conn, args.owner_uid, args.topic,
                               textbook_id=args.textbook_id, limit=args.limit,
                               section_id=args.section_id,
@@ -32,8 +34,6 @@ def execute(conn, args, environ=None):
                "database_writes": False}
     if not args.execute:
         return summary
-    if env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls:
-        raise ValueError("Paid model calls require explicit opt-in and confirmation")
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
