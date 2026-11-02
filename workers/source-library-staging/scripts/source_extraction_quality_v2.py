@@ -29,7 +29,8 @@ def assess(manifest, *, reviewed_pages=()):
     if manifest.get("ocr_attempted") is not True and manifest.get("ocr_pages"):
         raise ValueError("OCR recovery without OCR attempt")
     unresolved = sorted((set(manifest.get("low_text_pages", [])) |
-                         set(manifest.get("ocr_review_pages", [])) |\n                         set(manifest.get("ocr_failed_pages", []))) - set(reviewed_pages))
+                         set(manifest.get("ocr_review_pages", [])) |
+                         set(manifest.get("ocr_failed_pages", []))) - set(reviewed_pages))
     return {
         "ready_for_unqualified_indexing": not unresolved,
         "requires_source_review": bool(unresolved),
