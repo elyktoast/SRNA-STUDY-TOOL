@@ -31,7 +31,7 @@ class HttpPreflightTests(unittest.TestCase):
         body = b"".join(self.app(env, lambda status, headers: seen.append(status)))
         return seen[0], json.loads(body)
 
-    @patch("item_generation_http_v2.execute", return_value={"dry_run": True, "passage_count": 2})
+    @patch("item_generation_http_v2.execute", return_value={"dry_run": True, "passage_count": 2, "can_publish": False, "database_writes": False})
     def test_admin_preflight_only(self, execute):
         status, data = self.call()
         self.assertEqual(status, "200 OK")
@@ -55,6 +55,24 @@ class HttpPreflightTests(unittest.TestCase):
     def test_other_origin_rejected(self, execute):
         status, _ = self.call(origin="https://srnastudytool.com")
         self.assertEqual(status, "403 Forbidden")
+        execute.assert_not_called()
+
+    @patch("item_generation_http_v2.execute")
+    def test_paid_confirmation_rejected(self, execute):
+        status, _ = self.call({**PAYLOAD, "confirm_paid_calls": True})
+        self.assertEqual(status, "400 Bad Request")
+        execute.assert_not_called()
+
+    @patch("item_generation_http_v2.execute")
+    def test_boolean_limit_rejected(self, execute):
+        status, _ = self.call({**PAYLOAD, "limit": True})
+        self.assertEqual(status, "400 Bad Request")
+        execute.assert_not_called()
+
+    @patch("item_generation_http_v2.execute")
+    def test_duplicate_unknown_field_rejected(self, execute):
+        status, _ = self.call({**PAYLOAD, "admin_override": True})
+        self.assertEqual(status, "400 Bad Request")
         execute.assert_not_called()
 
     @patch("item_generation_http_v2.execute")
