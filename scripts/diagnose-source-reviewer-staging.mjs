@@ -48,11 +48,12 @@ const manifestResponse=await fetch(url,{headers,redirect:'manual'});
 let safeError='none';
 if(manifestResponse.status!==200){
  const body=await manifestResponse.json().catch(()=>null);
- const allowed=new Set(['identity_unavailable','reviewer_unavailable','staging_not_configured','forbidden','unsafe_upstream','invalid_manifest','missing_source_integrity','manifest_integrity_mismatch','invalid_manifest_type','reviewer_backend_unavailable']);
+ const allowed=new Set(['trusted_review_conflict','source_integrity_conflict','review_queue_conflict','review_queue_invalid','review_manifest_conflict','invalid_review_queue','invalid_source_attestation','source_changed','identity_unavailable','reviewer_unavailable','staging_not_configured','forbidden','unsafe_upstream','invalid_manifest','missing_source_integrity','manifest_integrity_mismatch','invalid_manifest_type','reviewer_backend_unavailable']);
  safeError=allowed.has(body?.error)?body.error:'unclassified';
  if(body?.error==='reviewer_backend_unavailable' && ['configuration','database','dependency','backend'].includes(body?.stage)) safeError+=':'+body.stage;
 }
 console.log('STEP 4: authenticated Container -> manifest: HTTP',manifestResponse.status,'category',safeError);
+if(manifestResponse.status===409)console.log('STEP 4: conflict diagnostic: HTTP 409; safe error category',safeError,'(raw response intentionally omitted)');
 assert.equal(manifestResponse.status,200,'Container/manifest failed: inspect staging_reviewer_failure substage in Cloudflare');
 const manifest=await manifestResponse.json();
 assert.match(manifest.source_sha256,/^[a-f0-9]{64}$/);
