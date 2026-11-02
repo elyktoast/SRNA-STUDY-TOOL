@@ -18,7 +18,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
     if not isinstance(endpoint, str) or urlsplit(endpoint).scheme != "https":
         raise ValueError("HTTPS provider endpoint required")
     url = urlsplit(endpoint)
-    if not url.hostname or url.username or url.password or url.fragment:
+    if not url.hostname or url.username or url.password or url.fragment or url.query or url.port not in (None, 443):
         raise ValueError("Invalid provider endpoint")
     if not isinstance(api_key, str) or not api_key.strip():
         raise ValueError("Provider credential required")
@@ -48,6 +48,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             raise ProviderError("Provider response must be an object")
         try:
             content = response["choices"][0]["message"]["content"]
+            if not isinstance(content, str) or len(content) > 262144:
+                raise ValueError("Invalid provider content")
             parsed = json.loads(content)
         except (KeyError, IndexError, TypeError, ValueError) as exc:
             raise ProviderError("Provider did not return a valid JSON object") from None
