@@ -1,11 +1,6 @@
 name: Diagnose staged reviewer integration
 on:
   workflow_dispatch:
-  push:
-    branches: [fix/source-phase-b-mixed-scan-ocr]
-    paths:
-      - 'scripts/diagnose-source-reviewer-staging.mjs'
-      - '.github/workflows/diagnose-source-reviewer-staging.yml'
 permissions:
   contents: read
 jobs:
@@ -15,8 +10,6 @@ jobs:
     environment: source-library-staging
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: fix/source-phase-b-mixed-scan-ocr
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
