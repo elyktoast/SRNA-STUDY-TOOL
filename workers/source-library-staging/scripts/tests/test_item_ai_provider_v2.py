@@ -23,6 +23,19 @@ class ProviderTests(unittest.TestCase):
     def test_https_required(self):
         with self.assertRaises(ValueError):
             make_adapter(**self.config(endpoint="http://provider.example"))
+    def test_rejects_provider_query_and_nonstandard_port(self):
+        for endpoint in ("https://provider.example/v1/chat?token=secret",
+                         "https://provider.example:8443/v1/chat"):
+            with self.subTest(endpoint=endpoint):
+                with self.assertRaisesRegex(ValueError, "Invalid provider endpoint"):
+                    make_adapter(**self.config(endpoint=endpoint))
+
+    def test_rejects_oversized_content_before_parsing(self):
+        adapter = make_adapter(**self.config(transport=lambda **kw: {
+            "choices": [{"message": {"content": "x" * 262145}}]}))
+        with self.assertRaises(ProviderError):
+            adapter(REQUEST)
+
     def test_sends_contract_and_parses_json(self):
         seen = []
         def transport(**kwargs):
