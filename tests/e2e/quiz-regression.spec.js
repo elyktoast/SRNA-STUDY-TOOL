@@ -2158,6 +2158,7 @@ test.describe('canonical quiz regression', () => {
     await page.evaluate(() => MBUAppCore.openAccount(document.querySelector('[data-course-link]')));
     const account=page.locator('#mbu-account-panel');
     await expect(account).toBeVisible();
+    await expect.poll(() => page.evaluate(() => document.activeElement?.closest('#mbu-account-panel') !== null)).toBe(true);
     await page.keyboard.press('Shift+Tab');
     expect(await page.evaluate(() => document.activeElement?.closest('#mbu-account-panel')!==null)).toBe(true);
     await page.keyboard.press('Escape');
