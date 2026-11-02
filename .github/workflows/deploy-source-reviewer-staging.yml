@@ -1,6 +1,6 @@
 name: Deploy private staging reviewer
 # Redeploy staging after database password reset; read updated staging GitHub secrets.
-# Deployment is manual while its short-lived admin smoke token needs renewal.
+# Deployment is manual; authenticated smoke checks use fresh credentials when configured.
 # Avoid container rebuilds for every staging Python source/test commit.
 on:
   workflow_dispatch:
@@ -70,6 +70,8 @@ jobs:
           done
       - name: Verify authenticated staging reviewer after deployment
         env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
