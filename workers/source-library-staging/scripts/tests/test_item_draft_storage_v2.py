@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from item_draft_storage_v2 import save, review, list_drafts
+from item_draft_storage_v2 import save, review, list_drafts, get_draft
 
 OWNER="c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK="2a589498-aaa4-410f-b51a-00d3ab99eafd"
@@ -57,6 +57,24 @@ class StorageTests(unittest.TestCase):
         self.assertFalse(result["published"])
         self.assertIn("d.status in ('pending_review','needs_revision')",cur.sql)
         self.assertEqual(cur.params[-2:],(OWNER,OWNER))
+
+    def test_get_draft_returns_full_private_record(self):
+        now = datetime(2026,11,2,tzinfo=timezone.utc)
+        row = (DRAFT,BOOK,"airway","NCE","MC","I","A","I.A.1",
+               "test","test",{"stem":"Example"},{"issues":[]},
+               [{"passage_id":"p1","textbook_id":BOOK}],
+               "pending_review",None,None,None,now,now)
+        cur = Cursor(row=row)
+        result = get_draft(Conn(cur),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertEqual(result["question"]["stem"],"Example")
+        self.assertEqual(result["evidence"][0]["textbook_id"],BOOK)
+        self.assertFalse(result["published"])
+        self.assertEqual(cur.params,(DRAFT,OWNER,OWNER))
+        self.assertIn("t.owner_uid=%s::uuid",cur.sql)
+
+    def test_get_draft_rejects_missing_or_unowned_record(self):
+        with self.assertRaisesRegex(ValueError,"Draft not found"):
+            get_draft(Conn(Cursor(row=None)),owner_uid=OWNER,draft_id=DRAFT)
 
     def test_list_is_owner_scoped_and_bounded(self):
         cur=Cursor(rows=[(DRAFT,"airway","NCE","MC","pending_review",
