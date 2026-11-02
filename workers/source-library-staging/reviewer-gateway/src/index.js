@@ -16,11 +16,13 @@ export default {
    console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'required_binding_unavailable'}));
    return respond(503,null,'{"error":"staging_not_configured"}');
   }
-  if(origin!==ORIGIN||!paths.has(url.pathname))return respond(403,null,'{"error":"forbidden"}');
+  if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
+  const draftRead=draftPath.test(url.pathname);
+  const requestMethod=requestMethod;
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
-   if(request.headers.get('Access-Control-Request-Method')!==(generation?'POST':'GET')||
+   if(request.headers.get('Access-Control-Request-Method')!==requestMethod||
       !(generation?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
@@ -30,11 +32,12 @@ export default {
    return response;
   }
   if(request.method!==(generation?'POST':'GET'))return respond(405,origin,'{"error":"method_not_allowed"}');
+  if((generation||draftRead)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
   if(generation&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!draftRead&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -138,13 +141,18 @@ export default {
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!generation&&!draftRead&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&generation){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
     if(data?.dry_run!==true||data?.can_publish!==false||data?.database_writes!==false||!Number.isSafeInteger(data?.passage_count))return respond(502,origin,'{"error":"unsafe_preflight"}');
    }
-   if(upstream.ok&&!generation){
+   if(upstream.ok&&draftRead){
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_draft_type"}');
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!data||typeof data!=='object'||data.published!==false&&!(Array.isArray(data.drafts)&&data.drafts.every(x=>x&&typeof x==='object'&&typeof x.draft_id==='string')))return respond(502,origin,'{"error":"unsafe_draft_response"}');
+   }
+   if(upstream.ok&&!generation&&!draftRead){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
