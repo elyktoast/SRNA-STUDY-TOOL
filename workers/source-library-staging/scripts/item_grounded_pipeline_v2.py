@@ -30,8 +30,18 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     if not packet["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found; generation blocked")
     evidence = packet["sources"]
-    if not evidence or any(p.get("citation_verified") is not False for p in evidence):
-        raise ValueError("Unexpected indexed evidence verification state")
+    if (not isinstance(evidence, list) or not evidence
+            or any(not isinstance(p, dict)
+                   or not all(isinstance(p.get(k), str) and p[k].strip()
+                              for k in ("passage_id", "textbook_id", "excerpt"))
+                   or type(p.get("pdf_page_start")) is not int
+                   or p["pdf_page_start"] < 1
+                   or type(p.get("pdf_page_end")) is not int
+                   or p["pdf_page_end"] < p["pdf_page_start"]
+                   or p.get("citation_verified") is not False
+                   for p in evidence)
+            or len({p["passage_id"] for p in evidence}) != len(evidence)):
+        raise ValueError("Invalid or unverified indexed evidence; generation blocked")
     result = generate_and_screen(
         adapter, mode=mode, domain=domain, section=section,
         objective=objective, evidence=evidence, format=format, item_id=item_id,
