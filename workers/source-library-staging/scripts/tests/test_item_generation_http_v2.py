@@ -39,6 +39,26 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertFalse(execute.call_args.args[1].execute)
         self.assertEqual(execute.call_args.args[1].owner_uid, UID)
 
+    @patch("item_generation_http_v2.execute", return_value={"dry_run": False, "item": {"stem": "Sample"}, "can_publish": False, "database_writes": False})
+    def test_single_question_requires_server_opt_in(self, execute):
+        raw = json.dumps(PAYLOAD).encode()
+        env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer valid",
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        body = b"".join(self.app(env, lambda status, headers: seen.append(status)))
+        self.assertEqual(seen[0], "403 Forbidden")
+        execute.assert_not_called()
+        enabled = create_app(conn_factory=Connection, resolve_admin=lambda token: UID if token == "valid" else None,
+                             environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"})
+        seen.clear()
+        body = b"".join(enabled({**env, "wsgi.input": io.BytesIO(raw)}, lambda status, headers: seen.append(status)))
+        self.assertEqual(seen[0], "200 OK")
+        self.assertEqual(json.loads(body)["item"]["stem"], "Sample")
+        self.assertTrue(execute.call_args.args[1].execute)
+        self.assertTrue(execute.call_args.args[1].confirm_paid_calls)
+
     @patch("item_generation_http_v2.execute")
     def test_no_model_execution_from_http(self, execute):
         status, _ = self.call({**PAYLOAD, "execute": True})
