@@ -42,7 +42,19 @@ def audit(conn, textbook_id):
             continue
         covered[start - 1:end] = b"\x01" * (end - start + 1)
     missing = [i + 1 for i, hit in enumerate(covered) if not hit]
+    # Missing passages are not necessarily failed OCR: blank, illustrated, and
+    # back-matter pages require original-page inspection before classification.
+    # Never mark a page verified solely from neighboring extracted text.
+    inspection = [
+        {"pdf_page": page, "status": "needs_original_page_inspection",
+         "action": "Inspect source PDF; OCR only if meaningful text is visible"}
+        for page in missing
+    ]
     return {
+        "uncovered_page_inspection_queue": inspection,
+        "accounted_pages": total - len(missing),
+        "verified_nontext_pages": 0,
+        "accountability_percent": round(100 * (total - len(missing)) / total, 2),
         "textbook_id": str(textbook_id), "filename": filename, "status": status,
         "pdf_pages": total, "passages": len(ranges),
         "covered_pages": total - len(missing), "uncovered_pages": missing,
@@ -54,7 +66,7 @@ def audit(conn, textbook_id):
             status == "ready" and not missing and not invalid
             and not ocr_flag and versions > 0
         ),
-        "next_action": "Visually inspect uncovered/low-text PDF pages, verify R2 digest and OCR before reindexing.",
+        "next_action": "Inspect each uncovered and low-text original PDF page, verify R2 digest, and record a reviewed outcome before selective OCR/reindexing.",
         "warning": "Coverage means a passage spans a PDF page, not that all page content was extracted."
     }
 
