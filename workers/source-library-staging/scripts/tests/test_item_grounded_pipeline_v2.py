@@ -5,7 +5,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_grounded_pipeline_v2 import generate_from_index
 
-KW = dict(mode="NCE", domain="III", section="III.H", objective="III.H.4",
+KW = dict(mode="NCE", domain="III", section="H", objective="III.H.4",
           item_id="draft-1")
 SOURCE = {"passage_id": "p1", "textbook_id": "t1", "excerpt": "Indexed text",
           "pdf_page_start": 10, "pdf_page_end": 11, "citation_verified": False}
