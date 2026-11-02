@@ -9,7 +9,7 @@ from run_grounded_generation_v2 import execute
 ARGS = SimpleNamespace(owner_uid="owner", topic="airway", textbook_id=None, limit=8,
     section_id=None, include_subsections=False, page_start=None, page_end=None,
     mode="NCE", format="MC", execute=False, confirm_paid_calls=False,
-    domain="III", section="III.H", objective="III.H.4", item_id="draft-1")
+    domain="III", section="H", objective="III.H.4", item_id="draft-1")
 EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1"}]}
 
@@ -75,6 +75,20 @@ class GenerationCliTests(unittest.TestCase):
             execute(object(), args, env)
         transport.assert_not_called()
         generate.assert_not_called()
+
+    @patch("run_grounded_generation_v2.build_evidence")
+    @patch("run_grounded_generation_v2.make_transport")
+    def test_invalid_blueprint_rejected_before_retrieval_and_provider(self, transport, evidence):
+        for change in ({"section": "III.H"}, {"objective": "II.H.4"},
+                       {"domain": "V"}, {"format": "TF"}):
+            with self.subTest(change=change):
+                args = SimpleNamespace(**{**vars(ARGS), **change, "execute": True,
+                                          "confirm_paid_calls": True})
+                with self.assertRaisesRegex(ValueError, "blueprint"):
+                    execute(object(), args, {"STAGING_ONLY": "true",
+                                             "AI_GENERATION_OPT_IN": "true"})
+        evidence.assert_not_called()
+        transport.assert_not_called()
 
     @patch("run_grounded_generation_v2.build_evidence")
     def test_no_staging_no_retrieval(self, evidence):
