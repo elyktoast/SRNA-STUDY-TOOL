@@ -52,6 +52,25 @@ class IndexedPipelineTests(unittest.TestCase):
             generate_from_index(object(), "owner-1", "airway", lambda r: {}, **KW)
         screen.assert_not_called()
 
+    @patch("item_grounded_pipeline_v2.generate_and_screen")
+    @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_all_modes_and_formats_preserve_source_and_review_gate(self, retrieve, screen):
+        retrieve.return_value = PACKET
+        screen.return_value = {"next_state": "draft", "can_publish": True, "database_writes": True}
+        for mode in ("NCE", "SEE"):
+            for format_name in ("MC", "MS", "SA", "DD", "HS"):
+                with self.subTest(mode=mode, format=format_name):
+                    result = generate_from_index(object(), "owner-1", "airway", lambda r: {},
+                                                 **dict(KW, mode=mode), format=format_name)
+                    self.assertEqual(screen.call_args.kwargs["mode"], mode)
+                    self.assertEqual(screen.call_args.kwargs["format"], format_name)
+                    self.assertEqual(screen.call_args.kwargs["evidence"], [SOURCE])
+                    self.assertFalse(result["can_publish"])
+                    self.assertFalse(result["database_writes"])
+                    self.assertTrue(result["requires_human_review"])
+                    self.assertTrue(result["source_evidence"]["pdf_page_locations_only"])
+                    self.assertFalse(result["source_evidence"]["printed_page_citations_verified"])
+
     @patch("item_grounded_pipeline_v2.build_evidence")
     def test_missing_adapter_blocks_retrieval(self, retrieve):
         with self.assertRaisesRegex(ValueError, "generator adapter"):
