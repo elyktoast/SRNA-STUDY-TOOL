@@ -10,7 +10,7 @@ from item_generation_screened_v2 import generate_and_screen
 
 def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, section,
                         objective, item_id, format="MC", textbook_id=None,
-                        limit=8, known_stems=(), calculation=None,
+                        limit=8, section_id=None, include_subsections=False,\n                        page_start=None, page_end=None, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
@@ -22,7 +22,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                                       or not reviewer_model_id
                                       or generator_model_id == reviewer_model_id):
         raise ValueError("Independent blind reviewer and distinct model identities required")
-    packet = build_evidence(conn, owner_uid, topic, textbook_id=textbook_id, limit=limit)
+    packet = build_evidence(conn, owner_uid, topic, textbook_id=textbook_id,\n                            limit=limit, section_id=section_id,\n                            include_subsections=include_subsections,\n                            page_start=page_start, page_end=page_end)
     if not packet["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found; generation blocked")
     evidence = packet["sources"]
