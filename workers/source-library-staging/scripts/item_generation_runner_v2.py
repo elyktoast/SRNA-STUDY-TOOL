@@ -42,6 +42,8 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if any(not isinstance(concept.get(field), str) or not concept[field].strip()
            for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
+    if not isinstance(concept["evidence_ids"], list) or len(concept["evidence_ids"]) != len(set(map(str, concept["evidence_ids"]))):
+        raise ValueError("Concept card must reference unique passage IDs")
     if concept["objective"].strip() != objective.strip():
         raise ValueError("Concept card objective differs from selected blueprint objective")
     allowed_ids = {p["passage_id"] for p in evidence}
