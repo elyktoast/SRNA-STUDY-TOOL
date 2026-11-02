@@ -60,6 +60,7 @@ def execute(conn, args, environ=None):
                                  page_start=args.page_start, page_end=args.page_end)
     return {**summary, "dry_run": False, "item_id": result["item_id"],
             "next_state": result["next_state"],
+            "item": result["item"], "requires_human_review": True,
             "source_evidence": result["source_evidence"],
             "generator_issues": result["generator_issues"],
             "screening": result["screening"]}
