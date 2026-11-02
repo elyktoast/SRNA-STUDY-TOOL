@@ -155,7 +155,13 @@ def create_app(*, conn_factory, resolve_admin, environment):
             # Fixed categories distinguish infrastructure failures from provider failures.
             import logging
             from urllib.error import HTTPError, URLError
-            if isinstance(exc, (ConnectionError, TimeoutError, URLError)):
+            from item_ai_https_transport_v2 import TransportError
+            from item_ai_provider_v2 import ProviderError
+            if isinstance(exc, TransportError):
+                rule = "PROVIDER_TRANSPORT"
+            elif isinstance(exc, ProviderError):
+                rule = "PROVIDER_RESPONSE"
+            elif isinstance(exc, (ConnectionError, TimeoutError, URLError)):
                 rule = "UPSTREAM_CONNECTION"
             elif isinstance(exc, HTTPError):
                 rule = "UPSTREAM_HTTP"
