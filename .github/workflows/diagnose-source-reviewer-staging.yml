@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       check:
-        description: 'Select read-only check'
+        description: 'Choose integration, read-only recovery, or staging queue publication'
         required: true
         type: choice
         default: integration
@@ -36,9 +36,9 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install 'boto3>=1.35,<2' 'PyMuPDF>=1.24,<2' 'psycopg[binary]>=3.2,<4'
-        if: inputs.check == 'review-queue-recovery'
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
       - name: Verify original PDF and derive queue without uploading
-        if: inputs.check == 'review-queue-recovery'
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
         env:
           R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
           R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
