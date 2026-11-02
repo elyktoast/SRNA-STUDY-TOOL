@@ -35,7 +35,8 @@ class IndexedPipelineTests(unittest.TestCase):
                                "database_writes": True}
         result = generate_from_index(object(), "owner-1", "airway", lambda r: {},
                                      **KW, textbook_id="t1")
-        retrieve.assert_called_once()\n        self.assertEqual(retrieve.call_args.kwargs["limit"], 8)
+        retrieve.assert_called_once()
+        self.assertEqual(retrieve.call_args.kwargs["limit"], 8)
         self.assertEqual(screen.call_args.kwargs["evidence"], [SOURCE])
         self.assertEqual(result["source_evidence"]["passage_ids"], ["p1"])
         self.assertFalse(result["can_publish"])
