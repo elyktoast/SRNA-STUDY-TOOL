@@ -58,7 +58,17 @@ def execute(conn, args, environ=None):
                                  section_id=args.section_id,
                                  include_subsections=args.include_subsections,
                                  page_start=args.page_start, page_end=args.page_end)
-    return {**summary, "dry_run": False, "item_id": result["item_id"],
+    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
+                    "mode": args.mode, "format": args.format,
+                    "domain": args.domain, "section": args.section,
+                    "objective": args.objective, "provider": host,
+                    "model": env["AI_GENERATOR_MODEL"], "question": result["item"],
+                    "screening": result["screening"] or {"next_state": result["next_state"],
+                        "generator_issues": result["generator_issues"]},
+                    "evidence": [{"passage_id": p["passage_id"],
+                                  "textbook_id": p["textbook_id"]}
+                                 for p in evidence["sources"]]}
+    return {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
             "next_state": result["next_state"],
             "item": result["item"], "requires_human_review": True,
             "source_evidence": result["source_evidence"],
