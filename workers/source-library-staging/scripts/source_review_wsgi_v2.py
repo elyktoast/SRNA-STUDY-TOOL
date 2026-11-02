@@ -114,10 +114,21 @@ def build_app():
         aws_access_key_id=os.environ["STAGING_R2_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["STAGING_R2_SECRET_ACCESS_KEY"],
         region_name="auto")
-    return create_app(StagingReviewRuntime(
+    runtime = StagingReviewRuntime(
         conn=conn, r2_client=r2, supabase_url=os.environ["SUPABASE_URL"],
         supabase_api_key=os.environ["SUPABASE_ANON_KEY"],
-        signing_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"]))
+        signing_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
+    reviewer_app = create_app(runtime)
+    from item_generation_http_v2 import create_app as generation_app
+    generation = generation_app(
+        conn_factory=lambda: psycopg.connect(os.environ["STAGING_DATABASE_URL"],
+            connect_timeout=8, sslmode="require"),
+        resolve_admin=lambda token: runtime._reviewer(token).uid,
+        environment=os.environ)
+    return lambda environ, start_response: (
+        generation(environ, start_response)
+        if environ.get("PATH_INFO") == "/generation/preflight"
+        else reviewer_app(environ, start_response))
 
 
 # Do not make the HTTP listener depend on an eager database connection.
