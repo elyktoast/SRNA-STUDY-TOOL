@@ -39,9 +39,9 @@ assert.ok(completeStart>=0&&completeEnd>completeStart);
 vm.runInNewContext(runtime.slice(completeStart,completeEnd),context);
 context.matchingSelections=()=>Object.fromEntries(selects.map((s,i)=>[String(i+1),s.value]));
 
-assert.equal(context.realComplete(context.session[0]),true);
+assert.equal(context.matchingComplete(context.session[0]),true);
 selects[3].value='A';
-assert.equal(context.realComplete(context.session[0]),false,'Duplicate answers cannot complete a matching question');
+assert.equal(context.matchingComplete(context.session[0]),false,'Duplicate answers cannot complete a matching question');
 selects[3].value='D';
-assert.equal(context.realComplete(context.session[0]),true);
+assert.equal(context.matchingComplete(context.session[0]),true);
 console.log('Matching options progressively disappear and restore correctly');
