@@ -25,15 +25,23 @@ def save(conn, payload):
                  %s::jsonb,%s::jsonb,%s::jsonb
           from source_library_staging.textbooks t
           where t.id=%s::uuid and t.owner_uid=%s::uuid and t.status='ready'
+            and not exists (
+              select 1 from jsonb_array_elements(%s::jsonb) ev
+              where not exists (
+                select 1 from source_library_staging.passages p
+                where p.id::text = ev->>'passage_id'
+                  and p.textbook_id = t.id
+              )
+            )
           returning id::text
         """, (payload["topic"],payload["mode"],payload["format"],
               payload["domain"],payload["section"],payload["objective"],
               payload["provider"],payload["model"],
               json.dumps(payload["question"]),json.dumps(payload["screening"]),
-              json.dumps(payload["evidence"]),book,owner))
+              json.dumps(payload["evidence"]),book,owner,json.dumps(payload["evidence"])))
         record = cur.fetchone()
     if not record:
-        raise ValueError("Textbook not ready or not owned by admin")
+        raise ValueError("Textbook not ready, not owned by admin, or evidence not indexed in this textbook")
     return {"draft_id": record[0], **outcome}
 
 def review(conn, *, owner_uid, reviewer_uid, draft_id, status, notes):
