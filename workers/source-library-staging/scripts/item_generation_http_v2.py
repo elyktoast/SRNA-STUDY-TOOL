@@ -66,7 +66,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                     or any(not isinstance(data[k], str) or not data[k].strip()
                            for k in REQUIRED)):
                 raise ValueError()
-            if data.get("execute") is not None or data.get("confirm_paid_calls") is not None:
+            if "execute" in data or "confirm_paid_calls" in data:
                 raise ValueError("HTTP route is preflight-only")
             from types import SimpleNamespace
             args = SimpleNamespace(**{**{"textbook_id": None, "section_id": None,
@@ -78,6 +78,12 @@ def create_app(*, conn_factory, resolve_admin, environment):
             if type(args.limit) is not int or not 1 <= args.limit <= 20:
                 raise ValueError()
             if type(args.include_subsections) is not bool:
+                raise ValueError()
+            for field in ("textbook_id", "section_id"):
+                value = getattr(args, field)
+                if value is not None and (not isinstance(value, str) or not value.strip() or len(value) > 200):
+                    raise ValueError()
+            if len(args.topic) > 500 or any(len(getattr(args, field)) > 200 for field in ("mode", "domain", "section", "objective", "item_id", "format")):
                 raise ValueError()
             for page in (args.page_start, args.page_end):
                 if page is not None and (type(page) is not int or page < 1):
