@@ -26,7 +26,9 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Explicit authenticated model adapter required")
     if not isinstance(item_id, str) or not item_id.strip():
         raise ValueError("New item ID required")
-    if format not in ("MC", "MS", "SA", "DD", "HS"):\n        raise ValueError("Unsupported v2.0 question format")\n    if not isinstance(evidence, list) or not evidence or any(
+    if format not in ("MC", "MS", "SA", "DD", "HS"):
+        raise ValueError("Unsupported v2.0 question format")
+    if not isinstance(evidence, list) or not evidence or any(
         not isinstance(p, dict) or not all(p.get(k) for k in ("passage_id", "textbook_id", "excerpt"))
         for p in evidence
     ):
@@ -37,7 +39,8 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     args = dict(mode=mode, domain=domain, section=section,
                 objective=objective, evidence=evidence)
     concept = _response(adapter, build_step("concept_card", **args))
-    if any(not isinstance(concept.get(field), str) or not concept[field].strip()\n           for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
+    if any(not isinstance(concept.get(field), str) or not concept[field].strip()
+           for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
     if concept["objective"].strip() != objective.strip():
         raise ValueError("Concept card objective differs from selected blueprint objective")
