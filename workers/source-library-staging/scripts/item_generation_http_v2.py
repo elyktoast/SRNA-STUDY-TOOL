@@ -150,6 +150,25 @@ def create_app(*, conn_factory, resolve_admin, environment):
             return respond("200 OK", result)
         except ValueError:
             return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable"})
-        except Exception:
-            return respond("503 Service Unavailable", {"error": "generation_preflight_unavailable"})
+        except Exception as exc:
+            # Never log prompts, indexed passages, credentials or provider response bodies.
+            # Fixed categories distinguish infrastructure failures from provider failures.
+            import logging
+            from urllib.error import HTTPError, URLError
+            if isinstance(exc, (ConnectionError, TimeoutError, URLError)):
+                rule = "UPSTREAM_CONNECTION"
+            elif isinstance(exc, HTTPError):
+                rule = "UPSTREAM_HTTP"
+            elif isinstance(exc, (ImportError, ModuleNotFoundError)):
+                rule = "DEPENDENCY_UNAVAILABLE"
+            elif isinstance(exc, (OSError,)):
+                rule = "RUNTIME_IO"
+            else:
+                rule = "GENERATION_RUNTIME_ERROR"
+            logging.getLogger("generation").error(
+                "staging_generation_failure endpoint=%s rule=%s exception_type=%s",
+                "one" if path == "/generation/one" else "preflight",
+                rule, type(exc).__name__)
+            return respond("503 Service Unavailable",
+                           {"error": "generation_preflight_unavailable", "rule": rule})
     return app
