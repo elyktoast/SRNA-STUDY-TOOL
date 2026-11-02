@@ -55,6 +55,44 @@ class RunnerTests(unittest.TestCase):
             generate_one(adapter, **ARGS)
         self.assertEqual(calls, ["concept_card"])
 
+    def test_untrusted_draft_cannot_override_review_or_identity(self):
+        calls = []
+        def adapter(request):
+            calls.append(request["step"])
+            if request["step"] == "concept_card":
+                return dict(objective="III.H.4", mechanism="m", relevance="r",
+                            misconception="x", counterfactual="y", evidence_ids=["p1"])
+            if request["step"] == "item_draft":
+                draft = sample()
+                draft.update(item_id="model-forged-id", mode="SEE", domain="I",
+                             section="forged", objective="forged", format="MC",
+                             status="approved", rules_version="1.0")
+                return draft
+            return dict(core_concept="a", why_key_wins="b", trap="c",
+                        distractor_breakdown={"B": "wrong"})
+        result = generate_one(adapter, **ARGS)
+        item = result["item"]
+        for field, expected in (("item_id", "new-1"), ("mode", "NCE"),
+                                ("domain", "III"), ("section", "III.H"),
+                                ("objective", "III.H.4"), ("status", "draft"),
+                                ("rules_version", "2.0")):
+            with self.subTest(field=field):
+                self.assertEqual(item[field], expected)
+        self.assertEqual(calls, ["concept_card", "item_draft", "rationale"])
+        self.assertFalse(result["auto_approved"])
+        self.assertFalse(result["database_writes"])
+
+    def test_malformed_adapter_response_stops_pipeline(self):
+        for invalid in (None, [], "not-json"):
+            with self.subTest(response=repr(invalid)):
+                calls = []
+                def adapter(request):
+                    calls.append(request["step"])
+                    return invalid
+                with self.assertRaisesRegex(ValueError, "JSON object"):
+                    generate_one(adapter, **ARGS)
+                self.assertEqual(calls, ["concept_card"])
+
     def test_no_implicit_model_calls(self):
         with self.assertRaises(ValueError):
             generate_one(None, **ARGS)
