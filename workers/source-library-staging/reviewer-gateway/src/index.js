@@ -3,6 +3,7 @@
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
 const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight']);
+const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36})?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
  const headers={...common,'Content-Type':'application/json'};
@@ -19,7 +20,7 @@ export default {
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
   const draftRead=draftPath.test(url.pathname);
-  const requestMethod=requestMethod;
+  const requestMethod=generation?'POST':'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(request.headers.get('Access-Control-Request-Method')!==requestMethod||
