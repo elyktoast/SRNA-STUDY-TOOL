@@ -7,6 +7,7 @@ Does not persist drafts, print source excerpts, or approve publication.
 import argparse
 import json
 import os
+import re
 from urllib.parse import urlsplit
 
 from build_question_evidence import build_evidence
@@ -19,6 +20,13 @@ def execute(conn, args, environ=None):
     env = os.environ if environ is None else environ
     if env.get("STAGING_ONLY") != "true":
         raise ValueError("Staging-only execution required")
+    if (args.mode not in ("NCE", "SEE") or args.domain not in ("I", "II", "III", "IV")
+            or not isinstance(args.section, str) or not re.fullmatch(r"[A-Z]", args.section)
+            or not isinstance(args.objective, str)
+            or not re.fullmatch(r"(I|II|III|IV)\\.[A-Z]\\.\\d+(?:\\.\\d+)*", args.objective)
+            or args.objective.split(".")[:2] != [args.domain, args.section]
+            or args.format not in ("MC", "MS", "SA", "DD", "HS")):
+        raise ValueError("Invalid NCE/SEE blueprint classification")
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
     evidence = build_evidence(conn, args.owner_uid, args.topic,
