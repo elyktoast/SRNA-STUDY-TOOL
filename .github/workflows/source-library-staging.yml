@@ -38,6 +38,10 @@ on:
       - '.github/workflows/source-library-staging.yml'
   workflow_dispatch:
     inputs:
+      run_disposable_acceptance:
+        description: 'Run disposable staging publication acceptance (uses staging credentials and temporary objects)'
+        type: boolean
+        default: false
       run_live_smoke:
         description: 'Run deployed staging smoke test'
         type: boolean
@@ -113,7 +117,7 @@ jobs:
 
   phase3b-disposable-acceptance:
     # Opt in on a single staging-branch push via a deliberate commit marker.
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-acceptance]')
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_disposable_acceptance == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-acceptance]'))
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: source-library-staging
