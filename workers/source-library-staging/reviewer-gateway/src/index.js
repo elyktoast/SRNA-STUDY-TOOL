@@ -145,6 +145,11 @@ export default {
      console.error('staging_reviewer_failure',JSON.stringify({stage:'storage',reason:'trusted_manifest_unavailable',rule}));
     }
    }
+   if(upstream.status===409){
+    const conflict=await upstream.clone().json().catch(()=>null);
+    const category=typeof conflict?.error==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(conflict.error)?conflict.error:'unclassified';
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'manifest',reason:'upstream_409',category}));
+   }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
    headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
