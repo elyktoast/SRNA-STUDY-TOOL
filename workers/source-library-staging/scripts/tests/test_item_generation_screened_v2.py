@@ -24,6 +24,13 @@ class ScreenedGenerationTests(unittest.TestCase):
                 draft = sample()
                 draft["evidence"] = [{"textbook_id": "t1", "passage_id": "p1",
                                       "pdf_page": 12, "excerpt": "Trusted source"}]
+                draft["distractor_evidence"] = {
+                    option["id"]: {
+                        "verdict": "supports_key" if option["id"] == "A" else "refutes_distractor",
+                        "passage_ids": ["p1"],
+                        "explanation": "Linked to trusted indexed passage",
+                    } for option in draft["options"]
+                }
                 return draft
             return dict(core_concept="a", why_key_wins="b", trap="c",
                         distractor_breakdown={"B": "wrong"})
@@ -31,12 +38,14 @@ class ScreenedGenerationTests(unittest.TestCase):
                                                   "screening": {"stages": {"human_review": {"status": "pending"}}}}]}
         result = generate_and_screen(adapter, **ARGS)
         self.assertEqual(calls, ["concept_card", "item_draft", "rationale"])
-        if result["generator_issues"]:
-            self.assertIsNone(result["screening"])
-            self.assertFalse(intake.called)
-        else:
-            intake.assert_called_once()
-            self.assertIsNotNone(result["screening"])
+        self.assertEqual(result["generator_issues"], [], result["generator_issues"])
+        intake.assert_called_once()
+        self.assertIsNotNone(result["screening"])
+        submitted = intake.call_args.args[0]["questions"][0]
+        self.assertEqual(submitted["item_id"], "new-1")
+        self.assertEqual(submitted["status"], "draft")
+        self.assertEqual(submitted["evidence"][0]["pdf_page"], 12)
+        self.assertEqual(intake.call_args.kwargs["passages"]["p1"]["text"], "Trusted source")
         self.assertTrue(result["requires_human_review"])
         self.assertFalse(result["can_publish"])
         self.assertFalse(result["database_writes"])
