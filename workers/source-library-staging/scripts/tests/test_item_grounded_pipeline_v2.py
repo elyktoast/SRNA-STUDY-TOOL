@@ -71,6 +71,45 @@ class IndexedPipelineTests(unittest.TestCase):
                     self.assertTrue(result["source_evidence"]["pdf_page_locations_only"])
                     self.assertFalse(result["source_evidence"]["printed_page_citations_verified"])
 
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_real_index_to_three_stage_generator_to_screening(self, retrieve, intake):
+        from test_item_standard_v2 import sample
+        retrieve.return_value = PACKET
+        steps = []
+        def adapter(request):
+            steps.append(request["step"])
+            if request["step"] == "concept_card":
+                return dict(objective="III.H.4", mechanism="m", relevance="r",
+                            misconception="x", counterfactual="y", evidence_ids=["p1"])
+            if request["step"] == "item_draft":
+                item = sample()
+                item["evidence"] = [{"textbook_id": "t1", "passage_id": "p1",
+                                    "pdf_page": 10, "excerpt": "Indexed text"}]
+                item["distractor_evidence"] = {
+                    option["id"]: {
+                        "verdict": "supports_key" if option["id"] == "A" else "refutes_distractor",
+                        "passage_ids": ["p1"], "explanation": "Indexed source justification"
+                    } for option in item["options"]
+                }
+                return item
+            return dict(core_concept="a", why_key_wins="b", trap="c",
+                        distractor_breakdown={"B": "wrong"})
+        intake.return_value = {"draft_reviews": [{
+            "status": "draft", "screening": {"stages": {"human_review": {"status": "pending"}}}
+        }]}
+        result = generate_from_index(object(), "owner-1", "airway", adapter, **KW)
+        self.assertEqual(steps, ["concept_card", "item_draft", "rationale"])
+        self.assertEqual(result["generator_issues"], [], result["generator_issues"])
+        intake.assert_called_once()
+        self.assertEqual(intake.call_args.kwargs["passages"]["p1"]["text"], "Indexed text")
+        self.assertEqual(result["item"]["status"], "draft")
+        self.assertEqual(result["source_evidence"]["passage_ids"], ["p1"])
+        self.assertFalse(result["source_evidence"]["printed_page_citations_verified"])
+        self.assertTrue(result["requires_human_review"])
+        self.assertFalse(result["can_publish"])
+        self.assertFalse(result["database_writes"])
+
     @patch("item_grounded_pipeline_v2.build_evidence")
     def test_missing_adapter_blocks_retrieval(self, retrieve):
         with self.assertRaisesRegex(ValueError, "generator adapter"):
