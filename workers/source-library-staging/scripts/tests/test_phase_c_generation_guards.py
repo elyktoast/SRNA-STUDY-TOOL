@@ -19,6 +19,21 @@ class GenerationGuardTests(unittest.TestCase):
                 "relevance": "relevance", "misconception": "misconception",
                 "counterfactual": "counterfactual", "evidence_ids": ["p-1"]}
 
+    def test_rejects_unsupported_format_before_ai_call(self):
+        with self.assertRaisesRegex(ValueError, "Unsupported v2.0"):
+            generate_one(self.adapter, **{**self.kw, "format": "TRUE_FALSE"})
+        self.assertEqual(self.calls, [])
+
+    def test_rejects_malformed_concept_card_before_draft(self):
+        def malformed(request):
+            self.calls.append(request["step"])
+            return {"objective": "III.H.4", "mechanism": ["not text"],
+                    "relevance": "relevance", "misconception": "misconception",
+                    "counterfactual": "counterfactual", "evidence_ids": ["p-1"]}
+        with self.assertRaisesRegex(ValueError, "Concept card incomplete"):
+            generate_one(malformed, **self.kw)
+        self.assertEqual(self.calls, ["concept_card"])
+
     def test_rejects_missing_evidence_before_ai_call(self):
         with self.assertRaisesRegex(ValueError, "Verified indexed evidence"):
             generate_one(self.adapter, **{**self.kw, "evidence": []})
