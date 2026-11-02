@@ -134,5 +134,29 @@ async function saveReviewDraft(path,draft){const response=await call('/chapter-r
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
 async function generationPreflight(request){const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;if(!raw||!cfg.enabled)throw Error('Generation preflight is disabled on staging.');const u=new URL(raw);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');if(location.hostname!=='staging.srnastudytool.com')throw Error('Staging only.');const response=await fetch(u.origin+'/generation/preflight',{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Generation evidence preflight failed ('+response.status+').');return data;}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight});
+async function generationRequest(path,request){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw)throw Error('Staging generation backend disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(data.error||'Staging generation request failed ('+response.status+').');
+ return data;
+}
+async function generateOne(request){return generationRequest('/generation/one',request);}
+async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
+async function listGeneratedDrafts(){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw)throw Error('Staging generation backend disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/drafts',{headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft list unavailable ('+response.status+').');return data;
+}
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,generateOne,saveGeneratedDraft,listGeneratedDrafts});
 })();
