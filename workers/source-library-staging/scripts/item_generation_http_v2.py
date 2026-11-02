@@ -8,6 +8,7 @@ import re
 from uuid import UUID
 
 from run_grounded_generation_v2 import execute
+from item_draft_storage_v2 import list_drafts, get_draft, review
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
@@ -32,7 +33,9 @@ def create_app(*, conn_factory, resolve_admin, environment):
                                    ("Content-Length", str(len(data)))])
             return [data]
 
-        if environ.get("PATH_INFO") != "/generation/preflight":
+        path = environ.get("PATH_INFO", "")
+        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review)?", path)
+        if path not in ("/generation/preflight", "/generation/drafts") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
@@ -46,7 +49,12 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 ("Access-Control-Allow-Headers", "Authorization, Content-Type"),
                 ("Cache-Control", "private, no-store"), ("Vary", "Origin")])
             return [b""]
-        if environ.get("REQUEST_METHOD") != "POST":
+        method = environ.get("REQUEST_METHOD")
+        if path != "/generation/preflight":
+            allowed = ("GET",) if path == "/generation/drafts" or (draft_match and not draft_match.group(2)) else ("POST",)
+            if method not in allowed:
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+        elif method != "POST":
             return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         bearer = environ.get("HTTP_AUTHORIZATION", "")
         if not bearer.startswith("Bearer ") or len(bearer) > 8192:
@@ -57,6 +65,29 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if path != "/generation/preflight":
+            try:
+                if method == "GET":
+                    with conn_factory() as conn:
+                        result = (list_drafts(conn, owner_uid=owner)
+                                  if path == "/generation/drafts" else
+                                  get_draft(conn, owner_uid=owner, draft_id=draft_match.group(1)))
+                    return respond("200 OK", {"drafts": result} if path == "/generation/drafts" else result)
+                length = int(environ.get("CONTENT_LENGTH", "0"))
+                if length < 1 or length > MAX_BODY:
+                    raise ValueError("Invalid body size")
+                payload = json.loads(environ["wsgi.input"].read(length))
+                if not isinstance(payload, dict) or set(payload) != {"status", "notes"}:
+                    raise ValueError("Invalid review body")
+                with conn_factory() as conn:
+                    result = review(conn, owner_uid=owner, reviewer_uid=owner,
+                                    draft_id=draft_match.group(1),
+                                    status=payload["status"], notes=payload["notes"])
+                return respond("200 OK", result)
+            except (ValueError, TypeError, KeyError):
+                return respond("422 Unprocessable Entity", {"error": "invalid_or_unavailable_draft"})
+            except Exception:
+                return respond("503 Service Unavailable", {"error": "draft_service_unavailable"})
         try:
             length = int(environ.get("CONTENT_LENGTH", "0"))
             if length < 1 or length > MAX_BODY:
