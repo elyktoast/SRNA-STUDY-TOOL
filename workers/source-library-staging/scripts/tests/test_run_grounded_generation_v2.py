@@ -11,7 +11,7 @@ ARGS = SimpleNamespace(owner_uid="owner", topic="airway", textbook_id=None, limi
     mode="NCE", format="MC", execute=False, confirm_paid_calls=False,
     domain="III", section="H", objective="III.H.4", item_id="draft-1")
 EVIDENCE = {"topic": "airway", "evidence_count": 1,
-            "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1"}]}
+            "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
@@ -37,6 +37,7 @@ class GenerationCliTests(unittest.TestCase):
     def test_opted_in_execution_hands_off_to_screened_pipeline(
             self, evidence, transport, adapter, generate):
         args = SimpleNamespace(**{**vars(ARGS), "execute": True,
+                                  "textbook_id": "00000000-0000-4000-8000-000000000002",
                                   "confirm_paid_calls": True})
         env = {"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true",
                "AI_PROVIDER_ENDPOINT": "https://provider.example/v1/chat/completions",
@@ -55,6 +56,8 @@ class GenerationCliTests(unittest.TestCase):
         self.assertEqual(result["next_state"], "needs_editorial_review")
         self.assertEqual(result["item"]["stem"], "Synthetic test item")
         self.assertTrue(result["requires_human_review"])
+        self.assertEqual(result["save_payload"]["evidence"][0]["passage_id"], "p1")
+        self.assertEqual(result["save_payload"]["question"]["stem"], "Synthetic test item")
         transport.assert_called_once_with(allowed_hosts=["provider.example"])
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
