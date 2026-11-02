@@ -43,7 +43,9 @@ class StorageTests(unittest.TestCase):
         self.assertEqual(result["draft_id"],DRAFT)
         self.assertFalse(result["published"])
         self.assertIn("t.owner_uid=%s::uuid",cur.sql)
-        self.assertEqual(cur.params[-2:],(BOOK,OWNER))
+        self.assertEqual(cur.params[-3:-1],(BOOK,OWNER))
+        self.assertIn("source_library_staging.passages p",cur.sql)
+        self.assertIn("p.textbook_id = t.id",cur.sql)
 
     def test_save_rejects_unowned_textbook(self):
         with self.assertRaises(ValueError):
