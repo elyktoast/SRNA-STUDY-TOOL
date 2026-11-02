@@ -50,3 +50,21 @@ const hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)
 assert.equal(hash,pageResponse.headers.get('X-Page-Image-SHA256'),'PNG digest mismatch');
 assert.equal(pageResponse.headers.get('X-Verified-Source-SHA256'),manifest.source_sha256,'PDF digest mismatch');
 console.log('STEP 7: PDF and page SHA256 integrity: passed');
+
+const preflightOptions=await fetch(gateway+'/generation/preflight',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'},redirect:'manual'});
+console.log('STEP 8: generation CORS preflight: HTTP',preflightOptions.status);
+assert.equal(preflightOptions.status,204,'generation CORS route unavailable');
+const anonymousGeneration=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}',redirect:'manual'});
+console.log('STEP 9: unauthenticated generation boundary: HTTP',anonymousGeneration.status);
+assert.equal(anonymousGeneration.status,401,'generation endpoint must reject anonymous callers');
+const evidenceResponse=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({topic:'airway',mode:'NCE',domain:'unassigned',section:'unassigned',objective:'Evidence availability only',item_id:'preflight',format:'MC'}),redirect:'manual'});
+const evidence=await evidenceResponse.json().catch(()=>null);
+const evidenceStatus=evidenceResponse.status===200?'indexed_evidence_found':evidenceResponse.status===422&&evidence?.error==='no_indexed_evidence'?'no_indexed_evidence':'unexpected_response';
+console.log('STEP 10: authenticated generation preflight: HTTP',evidenceResponse.status,'category',evidenceStatus);
+assert.ok(evidenceStatus!=='unexpected_response','generation preflight failed or service unavailable');
+if(evidenceResponse.status===200){
+ assert.equal(evidence?.dry_run,true);
+ assert.equal(evidence?.can_publish,false);
+ assert.equal(evidence?.database_writes,false);
+ assert.ok(Number.isSafeInteger(evidence?.passage_count)&&evidence.passage_count>0);
+}
