@@ -53,4 +53,32 @@ test('rejects manifest that enables approvals despite safe response header',asyn
  const r=await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),unsafe);
  assert.equal(r.status,502);
 });
+const generationUrl='https://gateway.example/generation/preflight';
+const generationEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+ calls.container++;
+ assert.equal(req.method,'POST');
+ assert.equal(req.headers.get('Content-Type'),'application/json');
+ return Response.json({topic:'airway',passage_count:3,dry_run:true,can_publish:false,database_writes:false});
+}})}};
+test('generation preflight accepts authenticated bounded JSON and never publishes',async()=>{
+ const res=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({topic:'airway'})}),generationEnv);
+ assert.equal(res.status,200);assert.equal((await res.json()).passage_count,3);
+});
+test('generation preflight OPTIONS requires POST and both headers',async()=>{
+ const good=await request(generationUrl,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Content-Type, Authorization'}});
+ assert.equal(good.status,204);
+ assert.equal(good.headers.get('Access-Control-Allow-Methods'),'POST');
+ const bad=await request(generationUrl,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}});
+ assert.equal(bad.status,403);
+});
+test('generation preflight rejects oversize body before container',async()=>{
+ const before=calls.container;
+ const res=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'x'.repeat(8193)}),generationEnv);
+ assert.equal(res.status,413);assert.equal(calls.container,before);
+});
+test('generation preflight rejects unsafe successful upstream responses',async()=>{
+ const unsafe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({passage_count:3,dry_run:false,can_publish:false,database_writes:false})})}};
+ const res=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),unsafe);
+ assert.equal(res.status,502);
+});
 test.after(()=>{globalThis.fetch=oldFetch});
