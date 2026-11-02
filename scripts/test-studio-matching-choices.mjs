@@ -32,4 +32,17 @@ selects[3].value='D';
 context.updateMatchingSubmit();
 assert.equal(submit.disabled,false);
 for(const s of selects)assert.equal(s.options.filter(o=>o.value&& !o.hidden).length,1);
+// Validate the real completion guard, including an invalid duplicate restored state.
+const completeStart=runtime.indexOf('function matchingComplete(q){');
+const completeEnd=runtime.indexOf('\nfunction ',completeStart+1);
+assert.ok(completeStart>=0&&completeEnd>completeStart);
+vm.runInNewContext(runtime.slice(completeStart,completeEnd),context);
+context.matchingSelections=()=>Object.fromEntries(selects.map((s,i)=>[String(i+1),s.value]));
+context.matchingComplete=()=>context.realComplete(context.session[0]);
+vm.runInNewContext('realComplete=matchingComplete',context);
+assert.equal(context.realComplete(context.session[0]),true);
+selects[3].value='A';
+assert.equal(context.realComplete(context.session[0]),false,'Duplicate answers cannot complete a matching question');
+selects[3].value='D';
+assert.equal(context.realComplete(context.session[0]),true);
 console.log('Matching options progressively disappear and restore correctly');
