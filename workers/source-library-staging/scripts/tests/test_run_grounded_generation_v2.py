@@ -45,6 +45,7 @@ class GenerationCliTests(unittest.TestCase):
         generate.return_value = {
             "item_id": "draft-1", "next_state": "needs_editorial_review",
             "source_evidence": {"evidence_count": 1},
+            "item": {"id": "draft-1", "stem": "Synthetic test item"},
             "generator_issues": [], "screening": {"can_publish": False},
         }
         result = execute(object(), args, env)
@@ -52,6 +53,8 @@ class GenerationCliTests(unittest.TestCase):
         self.assertFalse(result["can_publish"])
         self.assertFalse(result["database_writes"])
         self.assertEqual(result["next_state"], "needs_editorial_review")
+        self.assertEqual(result["item"]["stem"], "Synthetic test item")
+        self.assertTrue(result["requires_human_review"])
         transport.assert_called_once_with(allowed_hosts=["provider.example"])
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
