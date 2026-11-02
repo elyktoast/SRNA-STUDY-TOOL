@@ -9,7 +9,7 @@ from item_generation_http_v2 import create_app
 
 UID = "00000000-0000-4000-8000-000000000001"
 PAYLOAD = {"topic": "airway", "mode": "NCE", "domain": "III",
-           "section": "III.H", "objective": "III.H.4", "item_id": "draft-1"}
+           "section": "H", "objective": "III.H.4", "item_id": "draft-1"}
 
 class Connection:
     def __enter__(self):
@@ -61,6 +61,15 @@ class HttpPreflightTests(unittest.TestCase):
     def test_paid_confirmation_rejected(self, execute):
         status, _ = self.call({**PAYLOAD, "confirm_paid_calls": True})
         self.assertEqual(status, "400 Bad Request")
+        execute.assert_not_called()
+
+    @patch("item_generation_http_v2.execute")
+    def test_invalid_blueprint_rejected_before_database(self, execute):
+        for change in ({"section": "III.H"}, {"objective": "II.H.4"},
+                       {"domain": "V"}, {"format": "TF"}):
+            with self.subTest(change=change):
+                status, _ = self.call({**PAYLOAD, **change})
+                self.assertEqual(status, "400 Bad Request")
         execute.assert_not_called()
 
     @patch("item_generation_http_v2.execute")
