@@ -19,6 +19,22 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertIsNone(result["screening"])
         self.assertEqual(result["next_state"], "needs_source_review")
         self.assertFalse(result["can_publish"])
+    @patch("item_generation_screened_v2.generate_one")
+    def test_all_five_formats_reject_invalid_generator_output_before_screening(self, generate):
+        for format_name in ("MC", "MS", "SA", "DD", "HS"):
+            with self.subTest(format=format_name):
+                generate.return_value = {
+                    "item": {"item_id": "new-1", "format": format_name},
+                    "schema_issues": [{"rule_id": "R-17", "message": "unsupported source"}],
+                }
+                result = generate_and_screen(None, **ARGS, format=format_name)
+                self.assertEqual(generate.call_args.kwargs["format"], format_name)
+                self.assertEqual(result["next_state"], "needs_source_review")
+                self.assertIsNone(result["screening"])
+                self.assertTrue(result["requires_human_review"])
+                self.assertFalse(result["can_publish"])
+                self.assertFalse(result["database_writes"])
+
     @patch("item_generation_screened_v2.attach_blind")
     @patch("item_generation_screened_v2.blind_review")
     @patch("item_generation_screened_v2.intake")
