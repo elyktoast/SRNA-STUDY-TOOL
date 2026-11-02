@@ -4,10 +4,13 @@ Never publishes or persists drafts. Missing verification inputs remain pending.
 """
 from item_generation_runner_v2 import generate_one
 from item_draft_intake import intake
+from item_independent_blind_v2 import review as blind_review
+from item_screening_blind_handoff_v2 import attach as attach_blind
 
 def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         format="MC", item_id, known_stems=(), calculation=None,
-                        embedding=None, neighbors=None):
+                        embedding=None, neighbors=None, blind_reviewer=None,
+                        generator_model_id=None, reviewer_model_id=None):
     generated = generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id)
@@ -30,7 +33,15 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     embeddings={item_id: embedding} if embedding is not None else None,
                     neighbors=neighbors)
     result = review["draft_reviews"][0]
+    screening = result["screening"]
+    next_state = result["status"]
+    if blind_reviewer is not None:
+        blind = blind_review(generated["item"], blind_reviewer,
+                             generator_model_id=generator_model_id,
+                             reviewer_model_id=reviewer_model_id)
+        screening = attach_blind(screening, blind)
+        next_state = screening.get("next_state", next_state)
     return {"item_id": item_id, "item": generated["item"],
-            "generator_issues": [], "screening": result["screening"],
-            "next_state": result["status"], "requires_human_review": True,
+            "generator_issues": [], "screening": screening,
+            "next_state": next_state, "requires_human_review": True,
             "can_publish": False, "database_writes": False}
