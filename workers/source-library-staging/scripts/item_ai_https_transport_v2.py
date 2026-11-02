@@ -29,7 +29,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
 
     def transport(*, endpoint, headers, body):
         url = urlsplit(endpoint)
-        if url.scheme != "https" or url.hostname not in hosts or url.username or url.password or url.fragment or url.port not in (None, 443):
+        if url.scheme != "https" or url.hostname not in hosts or url.username or url.password or url.fragment or url.port not in (None, 443) or url.query:
             raise TransportError("Provider endpoint not allowed")
         if not isinstance(headers, dict) or not isinstance(body, dict):
             raise TransportError("Invalid request")
