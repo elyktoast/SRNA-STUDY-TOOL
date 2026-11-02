@@ -81,4 +81,24 @@ test('generation preflight rejects unsafe successful upstream responses',async()
  const res=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),unsafe);
  assert.equal(res.status,502);
 });
+const draftListUrl='https://gateway.example/generation/drafts';
+const draftId='00000000-0000-4000-8000-000000000002';
+const draftEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({
+ startAndWaitForPorts:async()=>{},
+ fetch:async req=>{
+  assert.equal(req.method,'GET');
+  if(req.url.endsWith('/generation/drafts'))return Response.json({drafts:[]});
+  return Response.json({draft_id:draftId,published:false,status:'pending_review'});
+ }
+})}};
+test('staging basket lists private drafts without permitting writes',async()=>{
+ const list=await gateway.fetch(new Request(draftListUrl,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
+ assert.equal(list.status,200);assert.deepEqual((await list.json()).drafts,[]);
+ const detail=await gateway.fetch(new Request(draftListUrl+'/'+draftId,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
+ assert.equal(detail.status,200);assert.equal((await detail.json()).published,false);
+ const denied=await gateway.fetch(new Request(draftListUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
+ assert.equal(denied.status,405);
+ const review=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
+ assert.equal(review.status,403);
+});
 test.after(()=>{globalThis.fetch=oldFetch});
