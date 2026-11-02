@@ -11,10 +11,14 @@ import os
 from search_passages import search
 
 
-def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,\n                   section_id=None, include_subsections=False,\n                   page_start=None, page_end=None):
+def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
+                   section_id=None, include_subsections=False,
+                   page_start=None, page_end=None):
     if not isinstance(topic, str) or not topic.strip() or len(topic) > 500:
         raise ValueError("Topic must be 1..500 characters")
-    rows = search(conn, topic.strip(), owner_uid, limit=limit, textbook_id=textbook_id,\n                  section_id=section_id, include_subsections=include_subsections,\n                  page_start=page_start, page_end=page_end)
+    rows = search(conn, topic.strip(), owner_uid, limit=limit, textbook_id=textbook_id,
+                  section_id=section_id, include_subsections=include_subsections,
+                  page_start=page_start, page_end=page_end)
     sources = []
     for row in rows:
         sources.append({
