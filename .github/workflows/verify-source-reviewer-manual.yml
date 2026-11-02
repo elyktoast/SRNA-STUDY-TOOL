@@ -1,0 +1,26 @@
+name: Verify staging reviewer (manual)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - name: Check out staging feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/source-library-r2-staging
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify deployed staging reviewer gateway
+        env:
+          SRNA_REVIEWER_GATEWAY_URL: https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: node scripts/test-source-library-reviewer-live.mjs
