@@ -10,6 +10,7 @@ on:
         options:
           - integration
           - review-queue-recovery
+          - publish-review-queue
 permissions:
   contents: read
 jobs:
@@ -31,10 +32,10 @@ jobs:
           SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
         run: node scripts/diagnose-source-reviewer-staging.mjs
       - uses: actions/setup-python@v5
-        if: inputs.check == 'review-queue-recovery'
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
         with:
           python-version: '3.11'
-      - run: python -m pip install 'boto3>=1.35,<2' 'PyMuPDF>=1.24,<2'
+      - run: python -m pip install 'boto3>=1.35,<2' 'PyMuPDF>=1.24,<2' 'psycopg[binary]>=3.2,<4'
         if: inputs.check == 'review-queue-recovery'
       - name: Verify original PDF and derive queue without uploading
         if: inputs.check == 'review-queue-recovery'
@@ -43,6 +44,8 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
           PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          RECOVERY_MODE: ${{ inputs.check }}
         run: |
           python - <<'PY'
           import os,sys,tempfile,json,hashlib
@@ -78,5 +81,11 @@ jobs:
                       if e.response.get('Error',{}).get('Code') not in ('404','NoSuchKey','NotFound'):raise
                       print('Missing:',candidate.split('/')[-1])
                   else:print('Already exists:',candidate.split('/')[-1])
-              print('Verified read-only:',json.dumps({'sha256':manifest['sha256'],'pages':manifest['pdf_page_count'],'review_pages':len(manifest['low_text_pages']),'queue_sha256':hashlib.sha256(artifacts['queue_json'].encode()).hexdigest(),'published':False}))
+              if os.environ.get('RECOVERY_MODE') == 'publish-review-queue':
+                  from source_review_r2_publish_v2 import publish_verified_queue
+                  from source_review_publication_lock_v2 import exclusive_publication_lock
+                  with exclusive_publication_lock(os.environ['DATABASE_URL'], bucket, key) as lock:
+                      result=publish_verified_queue(client,bucket,key,extraction,apply=True,publication_lock=lock)
+                  print('Published staging queue:',json.dumps(result))
+              print('Verified extraction:',json.dumps({'sha256':manifest['sha256'],'pages':manifest['pdf_page_count'],'review_pages':len(manifest['low_text_pages']),'queue_sha256':hashlib.sha256(artifacts['queue_json'].encode()).hexdigest(),'publish_requested':os.environ.get('RECOVERY_MODE') == 'publish-review-queue'}))
           PY
