@@ -1,0 +1,36 @@
+"""Phase C safety regression tests; no network, database, or paid model calls."""
+import unittest
+from item_generation_runner_v2 import generate_one
+
+
+class GenerationGuardTests(unittest.TestCase):
+    def setUp(self):
+        self.calls = []
+        self.passage = {"passage_id": "p-1", "textbook_id": "book-1", "excerpt": "Illustrative source text"}
+        self.kw = dict(mode="NCE", domain="III", section="H", objective="III.H.4",
+                       evidence=[self.passage], format="MC", item_id="draft-1")
+
+    def adapter(self, request):
+        self.calls.append(request["step"])
+        return {"objective": "III.H.5", "mechanism": "mechanism",
+                "relevance": "relevance", "misconception": "misconception",
+                "counterfactual": "counterfactual", "evidence_ids": ["p-1"]}
+
+    def test_rejects_missing_evidence_before_ai_call(self):
+        with self.assertRaisesRegex(ValueError, "Verified indexed evidence"):
+            generate_one(self.adapter, **{**self.kw, "evidence": []})
+        self.assertEqual(self.calls, [])
+
+    def test_rejects_duplicate_passages_before_ai_call(self):
+        with self.assertRaisesRegex(ValueError, "Duplicate passage IDs"):
+            generate_one(self.adapter, **{**self.kw, "evidence": [self.passage, dict(self.passage)]})
+        self.assertEqual(self.calls, [])
+
+    def test_rejects_mismatched_blueprint_objective_before_draft(self):
+        with self.assertRaisesRegex(ValueError, "blueprint objective"):
+            generate_one(self.adapter, **self.kw)
+        self.assertEqual(self.calls, ["concept_card"])
+
+
+if __name__ == "__main__":
+    unittest.main()
