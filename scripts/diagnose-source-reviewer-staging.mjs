@@ -53,7 +53,11 @@ if(manifestResponse.status!==200){
  if(body?.error==='reviewer_backend_unavailable' && ['configuration','database','dependency','backend'].includes(body?.stage)) safeError+=':'+body.stage;
 }
 console.log('STEP 4: authenticated Container -> manifest: HTTP',manifestResponse.status,'category',safeError);
-if(manifestResponse.status===409)console.log('STEP 4: conflict diagnostic: HTTP 409; safe error category',safeError,'(raw response intentionally omitted)');
+if(manifestResponse.status===409){
+ const body=await manifestResponse.clone().json().catch(()=>null);
+ const allowedRules=new Set(['ATTESTATION_MISMATCH','QUEUE_FINGERPRINT_MISMATCH','QUEUE_SOURCE_MISMATCH','QUEUE_PAGE_INVALID','SOURCE_CHANGED','MANIFEST_IDENTITY_MISMATCH','PAGE_OUT_OF_RANGE','PAGE_INTEGRITY_MISMATCH','SOURCE_MISSING','ATTESTATION_MISSING','QUEUE_MISSING','ATTESTATION_SIZE_INVALID','ATTESTATION_JSON_INVALID','QUEUE_SIZE_INVALID','QUEUE_JSON_INVALID','SOURCE_VERIFICATION_UNKNOWN']);
+ console.log('STEP 4: conflict diagnostic: HTTP 409; safe error category',safeError,'rule',allowedRules.has(body?.rule)?body.rule:'UNCLASSIFIED');
+}
 assert.equal(manifestResponse.status,200,'Container/manifest failed: inspect staging_reviewer_failure substage in Cloudflare');
 const manifest=await manifestResponse.json();
 assert.match(manifest.source_sha256,/^[a-f0-9]{64}$/);
