@@ -220,6 +220,9 @@ class ExtractorTests(unittest.TestCase):
         self.assertTrue(detail["visual_blank_candidate"])
         self.assertEqual(result["visual_blank_candidates"], [3])
         self.assertFalse(result["visual_blank_candidates_verified"])
+        self.assertTrue(result["blank_candidate_passages_excluded"])
+        passages = [json.loads(line) for line in (self.base / "blank-index" / "passages.jsonl").read_text().splitlines()]
+        self.assertFalse(any(p["page_start"] == 3 for p in passages))
         self.assertEqual(detail["image_placement_count"], 0)
         self.assertFalse(result["citation_verified"])
 
