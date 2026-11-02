@@ -109,7 +109,8 @@ export default {
      if(total>8192){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
-    body=new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(chunks.flatMap(chunk=>Array.from(chunk))));
+    const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+    body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
     method:generation?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...(generation?{'Content-Type':'application/json'}:{})},...(generation?{body}:{})
