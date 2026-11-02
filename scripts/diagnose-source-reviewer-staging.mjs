@@ -44,7 +44,18 @@ const negative=await fetch(gateway+'/review/manifest?path=invalid.pdf',{headers:
 console.log('STEP 3: unauthenticated gateway boundary: HTTP',negative.status);
 assert.equal(negative.status,401);
 const url=gateway+'/review/manifest?path='+encodeURIComponent(pdf);
-const manifestResponse=await fetch(url,{headers,redirect:'manual'});
+// A newly deployed Container can briefly exit/restart during cold startup.
+// Retry only that transient gateway response; never retry authentication,
+// integrity failures, generation calls, or unexpected upstream errors.
+let manifestResponse;
+for(let attempt=1;attempt<=3;attempt++){
+ manifestResponse=await fetch(url,{headers,redirect:'manual'});
+ if(manifestResponse.status!==503||attempt===3)break;
+ const transient=await manifestResponse.clone().json().catch(()=>null);
+ if(transient?.error!=='reviewer_unavailable')break;
+ console.log('STEP 4: reviewer container temporarily unavailable; bounded startup retry',attempt,'of 2');
+ await new Promise(resolve=>setTimeout(resolve,5000));
+}
 let safeError='none';
 if(manifestResponse.status!==200){
  const body=await manifestResponse.json().catch(()=>null);
