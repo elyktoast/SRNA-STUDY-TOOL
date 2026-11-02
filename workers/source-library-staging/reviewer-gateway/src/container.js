@@ -9,6 +9,14 @@ export class ReviewerContainer extends Container {
    if(!this.env[name])throw new Error('Missing staging secret: '+name);
    result[name]=this.env[name];
   }
+  const aiKeys = ['AI_PROVIDER_ENDPOINT', 'AI_ALLOWED_HOSTS', 'AI_PROVIDER_API_KEY', 'AI_GENERATOR_MODEL'];
+  if (this.env.AI_GENERATION_OPT_IN === 'true') {
+   for (const key of aiKeys) {
+    if (!this.env[key]) throw new Error('Missing staging AI configuration: ' + key);
+    result[key] = this.env[key];
+   }
+   result.AI_GENERATION_OPT_IN = 'true';
+  }
   return result;
  }
 }
