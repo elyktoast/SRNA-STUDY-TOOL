@@ -16,13 +16,26 @@ PACKET = {"topic": "airway", "can_generate_grounded_questions": True,
 class IndexedPipelineTests(unittest.TestCase):
     @patch("item_grounded_pipeline_v2.generate_and_screen")
     @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_chapter_and_page_filters_forwarded(self, retrieve, screen):
+        retrieve.return_value = PACKET
+        screen.return_value = {"next_state": "draft", "screening": {}}
+        generate_from_index(object(), "owner-1", "airway", lambda r: {}, **KW,
+                            section_id="section-1", include_subsections=True,
+                            page_start=10, page_end=20)
+        self.assertEqual(retrieve.call_args.kwargs["section_id"], "section-1")
+        self.assertTrue(retrieve.call_args.kwargs["include_subsections"])
+        self.assertEqual(retrieve.call_args.kwargs["page_start"], 10)
+        self.assertEqual(retrieve.call_args.kwargs["page_end"], 20)
+
+    @patch("item_grounded_pipeline_v2.generate_and_screen")
+    @patch("item_grounded_pipeline_v2.build_evidence")
     def test_retrieval_to_screening_preserves_review_gate(self, retrieve, screen):
         retrieve.return_value = PACKET
         screen.return_value = {"next_state": "draft", "can_publish": True,
                                "database_writes": True}
         result = generate_from_index(object(), "owner-1", "airway", lambda r: {},
                                      **KW, textbook_id="t1")
-        retrieve.assert_called_once()
+        retrieve.assert_called_once()\n        self.assertEqual(retrieve.call_args.kwargs["limit"], 8)
         self.assertEqual(screen.call_args.kwargs["evidence"], [SOURCE])
         self.assertEqual(result["source_evidence"]["passage_ids"], ["p1"])
         self.assertFalse(result["can_publish"])
