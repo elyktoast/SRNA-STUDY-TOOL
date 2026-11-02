@@ -111,6 +111,26 @@ class IndexedPipelineTests(unittest.TestCase):
         self.assertFalse(result["database_writes"])
 
     @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_invalid_indexed_evidence_blocks_all_model_steps(self, retrieve):
+        invalid = [
+            [{**SOURCE, "citation_verified": True}],
+            [{**SOURCE, "excerpt": ""}],
+            [{**SOURCE, "pdf_page_start": 0}],
+            [{**SOURCE, "pdf_page_end": 9}],
+            [{**SOURCE, "pdf_page_start": "10"}],
+            [SOURCE, {**SOURCE}],
+            [{**SOURCE, "passage_id": None}],
+        ]
+        for sources in invalid:
+            with self.subTest(sources=sources):
+                retrieve.return_value = {**PACKET, "sources": sources}
+                steps = []
+                with self.assertRaisesRegex(ValueError, "Invalid or unverified"):
+                    generate_from_index(object(), "owner-1", "airway",
+                                        lambda request: steps.append(request), **KW)
+                self.assertEqual(steps, [])
+
+    @patch("item_grounded_pipeline_v2.build_evidence")
     def test_missing_adapter_blocks_retrieval(self, retrieve):
         with self.assertRaisesRegex(ValueError, "generator adapter"):
             generate_from_index(object(), "owner-1", "airway", None, **KW)
