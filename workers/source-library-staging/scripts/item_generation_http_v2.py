@@ -35,7 +35,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
 
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review)?", path)
-        if path not in ("/generation/preflight", "/generation/drafts") and not draft_match:
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
@@ -53,7 +53,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 ("Cache-Control", "private, no-store"), ("Vary", "Origin")])
             return [b""]
         method = environ.get("REQUEST_METHOD")
-        if path != "/generation/preflight":
+        if path not in ("/generation/preflight", "/generation/one"):
             allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if draft_match and not draft_match.group(2) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
@@ -68,7 +68,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
-        if path != "/generation/preflight":
+        if path not in ("/generation/preflight", "/generation/one"):
             try:
                 if method == "GET":
                     with conn_factory() as conn:
@@ -110,12 +110,15 @@ def create_app(*, conn_factory, resolve_admin, environment):
                            for k in REQUIRED)):
                 raise ValueError()
             if "execute" in data or "confirm_paid_calls" in data:
-                raise ValueError("HTTP route is preflight-only")
+                raise ValueError("Execution flags cannot be supplied by client")
+            live = path == "/generation/one"
+            if live and environment.get("AI_GENERATION_OPT_IN") != "true":
+                return respond("403 Forbidden", {"error": "generation_disabled"})
             from types import SimpleNamespace
             args = SimpleNamespace(**{**{"textbook_id": None, "section_id": None,
                 "include_subsections": False, "page_start": None,
                 "page_end": None, "limit": 8, "format": "MC"}, **data,
-                "owner_uid": owner, "execute": False, "confirm_paid_calls": False})
+                "owner_uid": owner, "execute": live, "confirm_paid_calls": live})
             if (args.mode not in ("NCE", "SEE") or args.format not in ("MC", "MS", "SA", "DD", "HS")
                     or args.domain not in ("I", "II", "III", "IV")
                     or not re.fullmatch(r"[A-Z]", args.section)
@@ -144,7 +147,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 result = execute(conn, args, environment)
             return respond("200 OK", result)
         except ValueError:
-            return respond("422 Unprocessable Entity", {"error": "no_indexed_evidence"})
+            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable"})
         except Exception:
             return respond("503 Service Unavailable", {"error": "generation_preflight_unavailable"})
     return app
