@@ -4,7 +4,6 @@ Mount in a trusted Python service with staging PostgreSQL; never in the
 Cloudflare upload Worker. Defaults to evidence-only preflight, no model calls.
 """
 import json
-from io import BytesIO
 from uuid import UUID
 
 from run_grounded_generation_v2 import execute
@@ -53,7 +52,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
             return respond("401 Unauthorized", {"error": "authentication_required"})
         try:
             owner = resolve_admin(bearer[7:])
-            UUID(owner)
+            if str(UUID(owner)) != owner.lower():
+                raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
         try:
