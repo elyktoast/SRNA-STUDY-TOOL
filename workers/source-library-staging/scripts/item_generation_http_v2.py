@@ -25,16 +25,29 @@ def create_app(*, conn_factory, resolve_admin, environment):
     def app(environ, start_response):
         def respond(status, body):
             data = json.dumps(body).encode()
-            start_response(status, [("Content-Type", "application/json"),
+            start_response(status, [("Access-Control-Allow-Origin", "https://staging.srnastudytool.com"),
+                                   ("Vary", "Origin"), ("Content-Type", "application/json"),
                                    ("Cache-Control", "private, no-store"),
                                    ("X-Content-Type-Options", "nosniff"),
                                    ("Content-Length", str(len(data)))])
             return [data]
 
-        if environ.get("PATH_INFO") != "/generation/preflight" or environ.get("REQUEST_METHOD") != "POST":
+        if environ.get("PATH_INFO") != "/generation/preflight":
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
+        if environ.get("REQUEST_METHOD") == "OPTIONS":
+            if (environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD") != "POST"
+                    or environ.get("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").lower().replace(" ", "") not in
+                    ("authorization,content-type", "content-type,authorization")):
+                return respond("403 Forbidden", {"error": "forbidden_preflight"})
+            start_response("204 No Content", [("Access-Control-Allow-Origin", "https://staging.srnastudytool.com"),
+                ("Access-Control-Allow-Methods", "POST"),
+                ("Access-Control-Allow-Headers", "Authorization, Content-Type"),
+                ("Cache-Control", "private, no-store"), ("Vary", "Origin")])
+            return [b""]
+        if environ.get("REQUEST_METHOD") != "POST":
+            return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         bearer = environ.get("HTTP_AUTHORIZATION", "")
         if not bearer.startswith("Bearer ") or len(bearer) > 8192:
             return respond("401 Unauthorized", {"error": "authentication_required"})
