@@ -81,6 +81,18 @@ test('generation preflight rejects unsafe successful upstream responses',async()
  const res=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),unsafe);
  assert.equal(res.status,502);
 });
+test('single-question generation forwards only authenticated staging POST and rejects unsafe results',async()=>{
+ const endpoint='https://gateway.example/generation/one';
+ const generated={dry_run:false,can_publish:false,database_writes:false,requires_human_review:true,item:{stem:'Sample question'}};
+ const safe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  assert.equal(req.method,'POST');return Response.json(generated);
+ }})}};
+ const request=()=>new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'});
+ const res=await gateway.fetch(request(),safe);
+ assert.equal(res.status,200);assert.equal((await res.json()).item.stem,'Sample question');
+ const unsafe={...safe,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({...generated,can_publish:true})})}};
+ assert.equal((await gateway.fetch(request(),unsafe)).status,502);
+});
 const draftListUrl='https://gateway.example/generation/drafts';
 const draftId='00000000-0000-4000-8000-000000000002';
 const draftEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({
