@@ -49,7 +49,7 @@ class TransportTests(unittest.TestCase):
         from urllib.error import HTTPError
         from io import BytesIO
         for status, rule in [(400, "PROVIDER_REQUEST_REJECTED"),
-                             (401, "PROVIDER_AUTH"), (403, "PROVIDER_AUTH"),
+                             (401, "PROVIDER_AUTH"), (403, "PROVIDER_FORBIDDEN"),
                              (429, "PROVIDER_RATE_LIMIT"), (500, "PROVIDER_UPSTREAM")]:
             with self.subTest(status=status):
                 opener = self.setup_transport(FakeResponse(b"{}"))
