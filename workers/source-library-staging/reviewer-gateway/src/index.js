@@ -19,23 +19,25 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
+  const draftWrite=draftPath.test(url.pathname)&&request.method==='POST';
   const draftRead=draftPath.test(url.pathname);
   const requestMethod=generation?'POST':'GET';
+  const allowedMethods=generation?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':url.pathname==='/generation/drafts'?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
-   if(request.headers.get('Access-Control-Request-Method')!==requestMethod||
-      !(generation?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+   if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
+      !((generation||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
-   response.headers.set('Access-Control-Allow-Methods',generation?'POST':'GET');
-   response.headers.set('Access-Control-Allow-Headers',generation?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Methods',allowedMethods);
+   response.headers.set('Access-Control-Allow-Headers',(generation||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
-  if(request.method!==(generation?'POST':'GET'))return respond(405,origin,'{"error":"method_not_allowed"}');
+  if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if(generation&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if((generation||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
+  if(url.search.length>2048||(!generation&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
   if(!generation&&!draftRead&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
@@ -105,7 +107,7 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation){
+   if(generation||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
@@ -117,7 +119,7 @@ export default {
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:generation?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...(generation?{'Content-Type':'application/json'}:{})},...(generation?{body}:{})
+    method:(generation||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
    if(upstream.status===503){
@@ -148,10 +150,14 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(data?.dry_run!==true||data?.can_publish!==false||data?.database_writes!==false||!Number.isSafeInteger(data?.passage_count))return respond(502,origin,'{"error":"unsafe_preflight"}');
    }
-   if(upstream.ok&&draftRead){
+   if(upstream.ok&&draftRead&&!draftWrite){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_draft_type"}');
     const data=await upstream.clone().json().catch(()=>null);
     if(!data||typeof data!=='object'||data.published!==false&&!(Array.isArray(data.drafts)&&data.drafts.every(x=>x&&typeof x==='object'&&typeof x.draft_id==='string')))return respond(502,origin,'{"error":"unsafe_draft_response"}');
+   }
+   if(upstream.ok&&draftWrite){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
    if(upstream.ok&&!generation&&!draftRead){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
