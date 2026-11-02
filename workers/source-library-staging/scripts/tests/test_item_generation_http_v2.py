@@ -41,7 +41,7 @@ class HttpPreflightTests(unittest.TestCase):
 
     @patch("item_generation_http_v2.execute", return_value={"dry_run": False, "item": {"stem": "Sample"}, "can_publish": False, "database_writes": False})
     def test_single_question_requires_server_opt_in(self, execute):
-        raw = json.dumps(PAYLOAD).encode()
+        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
         env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
                "HTTP_ORIGIN": "https://staging.srnastudytool.com",
                "HTTP_AUTHORIZATION": "Bearer valid",
