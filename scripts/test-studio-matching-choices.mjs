@@ -38,8 +38,7 @@ const completeEnd=runtime.indexOf('\nfunction ',completeStart+1);
 assert.ok(completeStart>=0&&completeEnd>completeStart);
 vm.runInNewContext(runtime.slice(completeStart,completeEnd),context);
 context.matchingSelections=()=>Object.fromEntries(selects.map((s,i)=>[String(i+1),s.value]));
-context.matchingComplete=()=>context.realComplete(context.session[0]);
-vm.runInNewContext('realComplete=matchingComplete',context);
+
 assert.equal(context.realComplete(context.session[0]),true);
 selects[3].value='A';
 assert.equal(context.realComplete(context.session[0]),false,'Duplicate answers cannot complete a matching question');
