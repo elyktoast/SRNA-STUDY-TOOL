@@ -19,10 +19,10 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
-  const draftWrite=draftPath.test(url.pathname)&&request.method==='POST';
+  const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
+  const draftPostAllowed=url.pathname==='/generation/drafts';
   const draftRead=draftPath.test(url.pathname);
-  const requestMethod=generation?'POST':'GET';
-  const allowedMethods=generation?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':url.pathname==='/generation/drafts'?'GET, POST':'GET'):'GET';
+    const allowedMethods=generation?'POST':draftPath.test(url.pathname)?(draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
