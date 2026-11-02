@@ -105,6 +105,12 @@ export default {
    }
    const envVars={STAGING_ONLY:'true',SUPABASE_URL:PROJECT};
    for(const key of required)envVars[key]=env[key];
+   // Model credentials remain server-side. Incomplete configuration disables generation.
+   const aiKeys=['AI_PROVIDER_ENDPOINT','AI_ALLOWED_HOSTS','AI_PROVIDER_API_KEY','AI_GENERATOR_MODEL'];
+   if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
+    envVars.AI_GENERATION_OPT_IN='true';
+    for(const key of aiKeys)envVars[key]=env[key];
+   }
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
