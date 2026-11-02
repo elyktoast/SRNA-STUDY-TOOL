@@ -1,12 +1,30 @@
 import assert from 'node:assert/strict';
-const token=process.env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;
+let token=process.env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;
 const key=process.env.STAGING_SUPABASE_ANON_KEY;
 const pdf=process.env.SRNA_STAGING_REVIEWER_PDF_KEY;
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const origin='https://staging.srnastudytool.com';
 function check(value,name){if(!value)throw Error(name+': missing secret or variable')}
-for(const [v,n] of [[token,'admin token'],[key,'staging anon key'],[pdf,'test PDF']])check(v,n);
+for(const [v,n] of [[key,'staging anon key'],[pdf,'test PDF']])check(v,n);
+const email=process.env.STAGING_TEST_ADMIN_EMAIL;
+const password=process.env.STAGING_TEST_ADMIN_PASSWORD;
+if(email||password){
+ check(email,'admin email');
+ check(password,'admin password');
+ const response=await fetch(project+'/auth/v1/token?grant_type=password',{
+  method:'POST',
+  headers:{apikey:key,'Content-Type':'application/json'},
+  body:JSON.stringify({email,password}),
+  redirect:'error'
+ });
+ if(!response.ok)throw Error('Staging admin sign-in failed: HTTP '+response.status);
+ const session=await response.json();
+ if(typeof session.access_token!=='string')throw Error('Staging sign-in returned no access token');
+ token=session.access_token;
+ console.log('Fresh staging admin token acquired for diagnostic run');
+}
+check(token,'admin token');
 function jwt(value){try{return JSON.parse(Buffer.from(value.split('.')[1],'base64url').toString('utf8'))}catch{return null}}
 const a=jwt(key),t=jwt(token);
 assert.equal(a?.role,'anon','legacy anon key role mismatch');
