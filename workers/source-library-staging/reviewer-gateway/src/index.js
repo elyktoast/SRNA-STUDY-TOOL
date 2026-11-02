@@ -41,7 +41,7 @@ export default {
   if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!draftRead&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!draftRead&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -164,7 +164,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!generation&&!draftRead){
+   if(upstream.ok&&!generation&&!generateOne&&!draftRead){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
