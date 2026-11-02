@@ -27,6 +27,12 @@ class TransportTests(unittest.TestCase):
         with self.assertRaises(TransportError):
             self.call("https://evil.example/v1/chat")
         opener.open.assert_not_called()
+    def test_rejects_query_string_before_network(self):
+        opener = self.setup_transport(FakeResponse(b"{}"))
+        with self.assertRaises(TransportError):
+            self.call("https://api.example.test/v1/chat?token=secret")
+        opener.open.assert_not_called()
+
     def test_parses_bounded_json(self):
         self.setup_transport(FakeResponse(b'{"choices":[]}'))
         self.assertEqual(self.call(), {"choices": []})
