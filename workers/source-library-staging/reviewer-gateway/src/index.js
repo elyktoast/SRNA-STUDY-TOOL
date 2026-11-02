@@ -31,7 +31,7 @@ export default {
   }
   if(request.method!==(generation?'POST':'GET'))return respond(405,origin,'{"error":"method_not_allowed"}');
   if(generation&&(url.search||!/^application\\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||request.headers.get('Content-Length')||request.headers.get('Transfer-Encoding'))
+  if(url.search.length>2048||(!generation&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
   if(!generation&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
