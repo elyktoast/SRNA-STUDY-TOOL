@@ -1,0 +1,62 @@
+"""Protected staging page-review decision writer (server-only, no HTTP route).
+
+The caller must supply a verified reviewer identity and evidence that the
+original PDF page image was inspected. Database privileges are independent
+of human reviewer authorization. Requires the approved staging migration.
+"""
+from source_review_identity_v2 import resolve_admin_reviewer
+import re
+
+
+def record_page_decision(conn, manifest, *, pdf_page, decision, review_note,
+                         page_image_inspected, access_token,
+                         auth_provider, protected_role_store, _verified_inspection=False):
+    reviewer = resolve_admin_reviewer(
+        access_token, auth_provider=auth_provider,
+        protected_role_store=protected_role_store)
+    if not isinstance(manifest, dict) or manifest.get("owner_uid") != reviewer.uid:
+        raise ValueError("Reviewer does not own source")
+    # A caller-supplied boolean is not proof that the original page was shown.
+    # Refuse approvals until a trusted server-side inspection receipt is wired.
+    if decision == "approved" and _verified_inspection is not True:
+        raise ValueError("Approval disabled until verified page-image receipt is implemented")
+    if page_image_inspected is not True:
+        raise ValueError("Original PDF page-image inspection required")
+    count = manifest.get("pdf_page_count")
+    if type(count) is not int or count < 1 or type(pdf_page) is not int or pdf_page < 1 or pdf_page > count:
+        raise ValueError("Invalid physical PDF page")
+    if not isinstance(decision, str) or decision not in ("approved", "rejected", "revoked"):
+        raise ValueError("Invalid review decision")
+    if not isinstance(review_note, str) or not review_note.strip():
+        raise ValueError("Review justification required")
+    if not isinstance(manifest.get("sha256"), str) or re.fullmatch(r"[0-9a-f]{64}", manifest["sha256"]) is None:
+        raise ValueError("Source fingerprint required")
+    if not isinstance(manifest.get("r2_key"), str) or not manifest["r2_key"].startswith(reviewer.uid + "/"):
+        raise ValueError("Owner-scoped source key required")
+    if decision == "revoked":
+        sql = """UPDATE source_library_staging.page_review_approvals_v2
+                 SET revoked_at=now(), review_note=%s
+                 WHERE owner_uid=%s AND source_sha256=%s AND r2_key=%s
+                   AND pdf_page=%s AND reviewer_uid=%s
+                   AND decision='approved' AND revoked_at IS NULL"""
+        args = (review_note, reviewer.uid, manifest["sha256"],
+                manifest["r2_key"], pdf_page, reviewer.uid)
+    else:
+        sql = """INSERT INTO source_library_staging.page_review_approvals_v2
+                 (owner_uid, source_sha256, r2_key, pdf_page,
+                  reviewer_uid, decision, review_note, revoked_at)
+                 VALUES (%s,%s,%s,%s,%s,%s,%s,NULL)
+                 ON CONFLICT (owner_uid,source_sha256,r2_key,pdf_page,reviewer_uid)
+                 DO UPDATE SET decision=excluded.decision,
+                   review_note=excluded.review_note, reviewed_at=now(),
+                   revoked_at=NULL"""
+        args = (reviewer.uid, manifest["sha256"], manifest["r2_key"],
+                pdf_page, reviewer.uid, decision, review_note)
+    with conn.cursor() as cur:
+        cur.execute(sql, args)
+        affected = cur.rowcount
+    if decision == "revoked" and affected != 1:
+        raise ValueError("No active approval to revoke")
+    if affected != 1:
+        raise ValueError("Unexpected page-review write count")
+    return affected

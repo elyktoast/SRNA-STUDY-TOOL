@@ -1,0 +1,81 @@
+name: Deploy private staging reviewer
+# Redeploy staging after database password reset; read updated staging GitHub secrets.
+# Deployment is manual while its short-lived admin smoke token needs renewal.
+# Avoid container rebuilds for every staging Python source/test commit.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: source-reviewer-staging-deployment
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify all required staging deployment secrets
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: |
+          set -euo pipefail
+          missing=0
+          for key in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID STAGING_DATABASE_URL STAGING_R2_ACCOUNT_ID STAGING_R2_ACCESS_KEY_ID STAGING_R2_SECRET_ACCESS_KEY SUPABASE_ANON_KEY STAGING_RECEIPT_SIGNING_SECRET; do
+            if [ -z "${!key}" ]; then echo "::error::Missing deployment secret $key"; missing=1; fi
+          done
+          if [ "$missing" -ne 0 ]; then exit 1; fi
+          case "$STAGING_DATABASE_URL" in
+            *xqyasyambwdyhsjkftqu*) ;;
+            *) echo "::error::Refusing non-staging database"; exit 1;;
+          esac
+          # Fail closed when a wrong key type or a key from another project is supplied.
+          node -e 'const t=process.env.SUPABASE_ANON_KEY; const p=t.split("."); if(p.length!==3) process.exit(1); let c; try{c=JSON.parse(Buffer.from(p[1],"base64url"))}catch{process.exit(1)} if(c.role!=="anon"||c.ref!=="xqyasyambwdyhsjkftqu")process.exit(1); console.log("Staging legacy anon key project and role validated.")'
+          echo "Staging-only deployment prerequisites present."
+      - name: Install reviewer gateway dependencies
+        working-directory: workers/source-library-staging/reviewer-gateway
+        run: npm install --no-audit --no-fund
+      - name: Build container from repo root and deploy separate staging Worker
+        working-directory: workers/source-library-staging/reviewer-gateway
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler.json
+      - name: Configure staging-only reviewer secrets
+        working-directory: workers/source-library-staging/reviewer-gateway
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: |
+          set -euo pipefail
+          for key in STAGING_DATABASE_URL STAGING_R2_ACCOUNT_ID STAGING_R2_ACCESS_KEY_ID STAGING_R2_SECRET_ACCESS_KEY SUPABASE_ANON_KEY STAGING_RECEIPT_SIGNING_SECRET; do
+            printf '%s' "${!key}" | npx wrangler secret put "$key" --config wrangler.json >/dev/null
+          done
+      - name: Verify authenticated staging reviewer after deployment
+        env:
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: |
+          set -euo pipefail
+          node scripts/diagnose-source-reviewer-staging.mjs
+      - name: Staging deployment completed (browser activation still gated)
+        run: |
+          echo "Separate reviewer Worker deployed. Do not set reviewerApiUrl until live acceptance with authenticated reviewer succeeds."

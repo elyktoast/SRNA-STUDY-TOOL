@@ -1,0 +1,260 @@
+// Dedicated staging-only Source Library API. Never bind a production bucket here.
+const json=(value,status=200,headers={})=>new Response(JSON.stringify(value),{status,headers:{'content-type':'application/json','cache-control':'no-store',...headers}});
+const WORKER_VERSION='multipart-upload-id-validation-v3';
+const MAX_BYTES=20*1024*1024;
+const MAX_REVIEW_BYTES=256*1024;
+function validReviewDraft(d){
+ if(!d||d.schema_version!==2||typeof d.review_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(d.review_fingerprint)||!Array.isArray(d.decisions)||!d.decisions.length||d.decisions.length>1000)return false;
+ const allowed=new Set(['Needs review','Chapter','Subsection','Reject']);
+ return d.decisions.every((x,i)=>x&&Object.keys(x).every(k=>['group','decision','notes'].includes(k))&&Object.keys(x).length===3&&x.group===i+1&&allowed.has(x.decision)&&typeof x.notes==='string'&&x.notes.length<=2000);
+}
+
+const PART_BYTES=8*1024*1024;
+const MAX_LARGE_BYTES=300*1024*1024;
+// R2 multipart upload IDs are opaque; do not assume URL-safe base64 or a fixed length.
+// Query parameters are URL-decoded by URLSearchParams and passed unchanged to R2.
+const validUploadId=id=>typeof id==='string'&&id.length>0&&id.length<=1024;
+const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+function cors(origin){return {'access-control-allow-origin':origin,'access-control-allow-methods':'GET,POST,PUT,DELETE,OPTIONS','access-control-allow-headers':'authorization,content-type,x-file-name','access-control-max-age':'600','vary':'Origin'};}
+function validKey(key,uid){return typeof key==='string'&&key.startsWith(uid+'/')&&key.length<=300&&/^[-a-zA-Z0-9_./]+$/.test(key)&&!key.includes('..')&&!key.includes('//');}
+async function identity(request,env){
+ const match=/^Bearer (.+)$/.exec(request.headers.get('authorization')||'');
+ if(!match||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY||!env.ADMIN_USER_IDS)return null;
+ const response=await fetch(env.SUPABASE_URL.replace(/\/$/,'')+'/auth/v1/user',{headers:{authorization:'Bearer '+match[1],apikey:env.SUPABASE_ANON_KEY}});
+ if(!response.ok)return null;
+ const user=await response.json();
+ if(!uuid.test(user?.id||''))return null;
+ if(user?.is_anonymous===true)return null;
+ const allowed=[env.ADMIN_USER_IDS,env.ADDITIONAL_ADMIN_USER_IDS||''].join(',').split(',').map(x=>x.trim().toLowerCase());
+ return allowed.includes(user.id.toLowerCase())?user.id:null;
+}
+export default {async fetch(request,env){
+ const origin=request.headers.get('origin')||'';
+ const allowed=env.ALLOWED_ORIGIN||'https://staging.srnastudytool.com';
+ if(env.STAGING_ONLY!=='true'||!env.TEXTBOOKS||!env.SUPABASE_URL||!env.SUPABASE_ANON_KEY||!env.ADMIN_USER_IDS)return json({error:'Staging configuration incomplete'},503);
+ if(origin!==allowed)return json({error:'Origin forbidden'},403);
+ const h=cors(allowed);
+ if(request.method==='OPTIONS')return new Response(null,{status:204,headers:h});
+ const url=new URL(request.url);
+ if(url.pathname==='/health'&&request.method==='GET')return json({ok:true,environment:'staging',version:WORKER_VERSION},200,h);
+ let uid;try{uid=await identity(request,env)}catch{return json({error:'Authentication unavailable'},503,h);}
+ if(!uid)return json({error:'Forbidden'},403,h);
+ // Trusted, owner-scoped flagged-page queue. This route deliberately fails closed
+ // until an ingestion process stores a SHA-256-bound queue and matching PDF
+ // metadata. Browser-uploaded review JSON must never become an approval source.
+ if(url.pathname==='/materials/review-queue'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const pdf=await env.TEXTBOOKS.head(key);
+   if(!pdf)return json({error:'Source PDF not found'},404,h);
+   const queueKey=uid+'/_review_queues/'+key.slice(uid.length+1)+'.json';
+   const attestationObject=await env.TEXTBOOKS.get(queueKey+'.source.json');
+   if(!attestationObject)return json({error:'Verified extraction queue unavailable'},404,h);
+   let attestation;try{attestation=JSON.parse(await attestationObject.text())}catch{
+     return json({error:'Invalid source attestation'},409,h);
+   }
+   const digest=attestation?.source_sha256;
+   if(attestation?.schema_version!==1||attestation?.r2_key!==key||
+      typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest)||
+      attestation?.size_bytes!==pdf.size||
+      !attestation.source_etag||attestation.source_etag!==pdf.etag||
+      typeof attestation.queue_sha256!=='string'||!/^[0-9a-f]{64}$/.test(attestation.queue_sha256))
+     return json({error:'Review queue source attestation mismatch'},409,h);
+   const stored=await env.TEXTBOOKS.get(queueKey);
+   if(!stored)return json({error:'Verified extraction queue unavailable'},404,h);
+   if(stored.size>256*1024)return json({error:'Invalid review queue size'},409,h);
+   const queueText=await stored.text();
+   const queueDigest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(queueText)))).map(b=>b.toString(16).padStart(2,'0')).join('');
+   if(queueDigest!==attestation.queue_sha256)return json({error:'Review queue attestation mismatch'},409,h);
+   let queue;try{queue=JSON.parse(queueText)}catch{return json({error:'Invalid stored review queue'},409,h)}
+   if(!queue||queue.source_sha256!==digest||queue.r2_key!==key||queue.approval_enabled!==false||
+      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1||
+      !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
+      return json({error:'Review queue source mismatch'},409,h);
+   const seen=new Set();
+   const categories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   for(const item of queue.pages){
+     if(!item||!Number.isSafeInteger(item.pdf_page)||item.pdf_page<1||item.pdf_page>queue.pdf_page_count||
+        seen.has(item.pdf_page)||!categories.has(item.review_category)||
+        !Number.isSafeInteger(item.characters)||item.characters<0)
+       return json({error:'Invalid review queue page'},409,h);
+     seen.add(item.pdf_page);
+   }
+   return json({source_sha256:digest,r2_key:key,pdf_page_count:queue.pdf_page_count,
+     pages:queue.pages.map(p=>({pdf_page:p.pdf_page,review_category:p.review_category,
+       characters:p.characters,ocr_failed:p.ocr_failed===true,has_images:p.has_images===true})),
+     approval_enabled:false,verified_source_binding:true},200,h);
+ }
+ // Source-bound PDF preview for authenticated reviewers. This is a verified
+ // read-only delivery path, NOT page-image evidence or approval authorization.
+ // A separately deployed renderer is still required for page inspection receipts.
+ if(url.pathname==='/materials/verified-review-pdf'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const source=await env.TEXTBOOKS.head(key);
+   if(!source)return json({error:'Source PDF not found'},404,h);
+   const queueKey=uid+'/_review_queues/'+key.slice(uid.length+1)+'.json';
+   const attObj=await env.TEXTBOOKS.get(queueKey+'.source.json');
+   if(!attObj)return json({error:'Verified source attestation unavailable'},404,h);
+   let att;try{att=JSON.parse(await attObj.text())}catch{return json({error:'Invalid attestation'},409,h)}
+   if(att?.schema_version!==1||att.r2_key!==key||!/^([0-9a-f]{64})$/.test(att.source_sha256||'')||
+      att.size_bytes!==source.size||!att.source_etag||att.source_etag!==source.etag||
+      !/^[0-9a-f]{64}$/.test(att.queue_sha256||''))return json({error:'Source attestation mismatch'},409,h);
+   const queueObj=await env.TEXTBOOKS.get(queueKey);
+   if(!queueObj||queueObj.size>256*1024)return json({error:'Verified review queue unavailable'},409,h);
+   const queueBytes=await queueObj.arrayBuffer();
+   if(queueBytes.byteLength>256*1024||queueBytes.byteLength!==queueObj.size)
+     return json({error:'Invalid review queue byte length'},409,h);
+   const hex=bytes=>Array.from(new Uint8Array(bytes)).map(b=>b.toString(16).padStart(2,'0')).join('');
+   if(hex(await crypto.subtle.digest('SHA-256',queueBytes))!==att.queue_sha256)
+     return json({error:'Review queue changed'},409,h);
+   let queue;try{queue=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(queueBytes))}catch{return json({error:'Invalid queue'},409,h)}
+   if(queue?.r2_key!==key||queue.source_sha256!==att.source_sha256||queue.approval_enabled!==false||
+      !Number.isSafeInteger(queue.pdf_page_count)||queue.pdf_page_count<1||
+      !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
+     return json({error:'Review queue source mismatch'},409,h);
+   const seenPages=new Set();
+   const reviewCategories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   for(const page of queue.pages){
+     if(!page||!Number.isSafeInteger(page.pdf_page)||page.pdf_page<1||
+        page.pdf_page>queue.pdf_page_count||seenPages.has(page.pdf_page)||
+        !reviewCategories.has(page.review_category)||
+        !Number.isSafeInteger(page.characters)||page.characters<0)
+       return json({error:'Invalid verified review page'},409,h);
+     seenPages.add(page.pdf_page);
+   }
+   // The SubtleCrypto API hashes a complete buffer; bound memory use.
+   if(source.size>75*1024*1024||source.size<5)return json({error:'Source exceeds verified preview limit'},413,h);
+   const pdf=await env.TEXTBOOKS.get(key);
+   if(!pdf)return json({error:'Source changed'},409,h);
+   if(pdf.size!==source.size||pdf.etag!==source.etag)return json({error:'Source changed'},409,h);
+   const bytes=await pdf.arrayBuffer();
+   if(bytes.byteLength!==source.size||hex(await crypto.subtle.digest('SHA-256',bytes))!==att.source_sha256)
+     return json({error:'Source fingerprint mismatch'},409,h);
+   const latest=await env.TEXTBOOKS.head(key);
+   if(!latest||latest.size!==source.size||latest.etag!==source.etag)return json({error:'Source replaced during verification'},409,h);
+   return new Response(bytes,{status:200,headers:{...h,'content-type':'application/pdf',
+     'cache-control':'private, no-store','x-content-type-options':'nosniff',
+     'content-disposition':'inline; filename="verified-review.pdf"',
+     'content-security-policy':"default-src 'none'; sandbox",
+     'x-verified-source-sha256':att.source_sha256,'x-review-approval-enabled':'false'}});
+ }
+ // Owner-scoped staging review drafts. R2 persistence is NOT chapter approval.
+ if(url.pathname==='/chapter-reviews/draft'&&['GET','PUT','DELETE'].includes(request.method)){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const source=await env.TEXTBOOKS.head(key);
+   if(!source)return json({error:'Source PDF not found'},404,h);
+   const draftKey=uid+'/_review_drafts/'+key.slice(uid.length+1)+'.json';
+   if(request.method==='GET'){
+     const saved=await env.TEXTBOOKS.get(draftKey);
+     if(!saved)return json({error:'No saved draft'},404,h);
+     const payload=await saved.text();
+     return new Response(payload,{status:200,headers:{...h,'content-type':'application/json','cache-control':'no-store'}});
+   }
+   if(request.method==='DELETE'){
+     await env.TEXTBOOKS.delete(draftKey);
+     return json({ok:true,approved:false},200,h);
+   }
+   const declared=Number(request.headers.get('content-length')||0);
+   if(declared>MAX_REVIEW_BYTES)return json({error:'Review draft too large'},413,h);
+   const reader=request.body?.getReader();
+   if(!reader)return json({error:'Missing review draft'},400,h);
+   const chunks=[];let total=0;
+   while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
+     if(total>MAX_REVIEW_BYTES){await reader.cancel();return json({error:'Review draft too large'},413,h)}
+     chunks.push(value);
+   }
+   const bytes=new Uint8Array(total);let pos=0;
+   for(const chunk of chunks){bytes.set(chunk,pos);pos+=chunk.byteLength}
+   let raw;try{raw=new TextDecoder('utf-8',{fatal:true}).decode(bytes)}catch{return json({error:'Review draft must be UTF-8'},400,h)}
+   let draft;try{draft=JSON.parse(raw)}catch{return json({error:'Invalid JSON'},400,h)}
+   if(!validReviewDraft(draft))return json({error:'Invalid review draft'},400,h);
+   // This is only a private, unapproved draft. Fingerprint validation against
+   // current R2 source candidates happens in the trusted approval pipeline.
+   await env.TEXTBOOKS.put(draftKey,JSON.stringify(draft),{httpMetadata:{contentType:'application/json'}});
+   return json({ok:true,saved:true,approved:false,sections_applied:0},200,h);
+ }
+ if(url.pathname==='/materials'&&request.method==='GET'){
+   const results=await env.TEXTBOOKS.list({prefix:uid+'/',limit:100});
+   return json({items:results.objects.filter(o=>o.key.toLowerCase().endsWith('.pdf')&&!o.key.includes('/_review_drafts/')).map(o=>({path:o.key,name:o.customMetadata?.name||o.key.split('/').pop(),size:o.size,createdAt:o.uploaded.toISOString(),type:'application/pdf',indexStatus:'not_verified',indexStatusLabel:'Index status not yet confirmed',citationVerified:false})),truncated:results.truncated},200,h);
+ }
+ if(url.pathname==='/materials'&&request.method==='POST'){
+   const size=Number(request.headers.get('content-length')||0);
+   if(size>MAX_BYTES)return json({error:'File too large'},413,h);
+   if(request.headers.get('content-type')!=='application/pdf')return json({error:'PDF required'},415,h);
+   const reader=request.body?.getReader();if(!reader)return json({error:'Missing PDF body'},400,h);
+   const chunks=[];let total=0;while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_BYTES){await reader.cancel();return json({error:'File too large'},413,h)}chunks.push(value)}
+   const body=new Uint8Array(total);let offset=0;for(const chunk of chunks){body.set(chunk,offset);offset+=chunk.byteLength}
+   if(body.byteLength<5||body.byteLength>MAX_BYTES)return json({error:'Invalid PDF size'},413,h);
+   const bytes=new Uint8Array(body);
+   if(String.fromCharCode(...bytes.slice(0,5))!=='%PDF-')return json({error:'Invalid PDF header'},415,h);
+   const name=(request.headers.get('x-file-name')||'document.pdf').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,150);
+   const key=uid+'/'+crypto.randomUUID()+'.pdf';
+   await env.TEXTBOOKS.put(key,body,{httpMetadata:{contentType:'application/pdf'},customMetadata:{name}});
+   return json({path:key,name,size:body.byteLength,type:'application/pdf',savedAt:new Date().toISOString()},201,h);
+ }
+
+ // Multipart uploads are isolated to the authenticated user's R2 prefix.
+ if(url.pathname==='/materials/multipart/start'&&request.method==='POST'){
+   let data;try{data=await request.json()}catch{return json({error:'Invalid JSON'},400,h)}
+   const size=Number(data?.size);
+   if(!Number.isSafeInteger(size)||size<=MAX_BYTES||size>MAX_LARGE_BYTES)return json({error:'Allowed size: over 20 MiB through 300 MiB'},413,h);
+   const name=String(data?.name||'');
+   if(!name.toLowerCase().endsWith('.pdf')||name.length>150)return json({error:'PDF filename required'},415,h);
+   const safeName=name.replace(/[^a-zA-Z0-9._-]/g,'_');
+   const key=uid+'/'+crypto.randomUUID()+'.pdf';
+   const upload=await env.TEXTBOOKS.createMultipartUpload(key,{httpMetadata:{contentType:'application/pdf'},customMetadata:{name:safeName,size:String(size)}});
+   return json({path:key,uploadId:upload.uploadId,partSize:PART_BYTES,maxSize:MAX_LARGE_BYTES},201,h);
+ }
+ if(url.pathname.startsWith('/materials/multipart/')&&['PUT','POST','DELETE'].includes(request.method)){
+   const action=url.pathname.slice('/materials/multipart/'.length);
+   if(!['part','complete','abort'].includes(action))return json({error:'Not found'},404,h);
+   const key=url.searchParams.get('path');const uploadId=url.searchParams.get('uploadId');
+   if(!validKey(key,uid)||!validUploadId(uploadId))return json({error:'Invalid upload reference',version:WORKER_VERSION,invalidPath:!validKey(key,uid),invalidUploadId:!validUploadId(uploadId)},400,h);
+   const upload=env.TEXTBOOKS.resumeMultipartUpload(key,uploadId);
+   if(action==='part'&&request.method==='PUT'){
+     const part=Number(url.searchParams.get('part'));
+     if(!Number.isInteger(part)||part<1||part>40)return json({error:'Invalid part number'},400,h);
+     const length=Number(request.headers.get('content-length')||0);
+     if(length>PART_BYTES)return json({error:'Part too large'},413,h);
+     const body=await request.arrayBuffer();
+     if(!body.byteLength||body.byteLength>PART_BYTES)return json({error:'Invalid part size'},413,h);
+     const result=await upload.uploadPart(part,body);
+     return json({partNumber:result.partNumber,etag:result.etag},200,h);
+   }
+   if(action==='complete'&&request.method==='POST'){
+     let data;try{data=await request.json()}catch{return json({error:'Invalid JSON'},400,h)}
+     const parts=data?.parts;
+     if(!Array.isArray(parts)||parts.length<3||parts.length>40||parts.some((p,i)=>p?.partNumber!==i+1||typeof p?.etag!=='string'||!p.etag))return json({error:'Invalid ordered parts'},400,h);
+     await upload.complete(parts);
+     return json({ok:true,path:key},200,h);
+   }
+   if(action==='abort'&&request.method==='DELETE'){await upload.abort();return json({ok:true},200,h)}
+   return json({error:'Method not allowed'},405,h);
+ }
+ // Read-only reviewer PDF delivery. The browser can fetch this with the
+ // existing bearer token and display a Blob URL with #page=N. This is NOT
+ // page-image inspection evidence and never issues an approval receipt.
+ if(url.pathname==='/materials/review-pdf'&&request.method==='GET'){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid)||!key.toLowerCase().endsWith('.pdf'))return json({error:'Invalid owner-scoped PDF path'},400,h);
+   const object=await env.TEXTBOOKS.get(key);
+   if(!object)return json({error:'Source PDF not found'},404,h);
+   return new Response(object.body,{status:200,headers:{
+     ...h,'content-type':'application/pdf','cache-control':'no-store, private',
+     'x-content-type-options':'nosniff','content-disposition':'inline; filename="review.pdf"',
+     'content-security-policy':"default-src 'none'; sandbox",
+     'x-review-approval-enabled':'false'
+   }});
+ }
+ if(url.pathname==='/materials/item'&&(request.method==='GET'||request.method==='DELETE')){
+   const key=url.searchParams.get('path');
+   if(!validKey(key,uid))return json({error:'Invalid path'},400,h);
+   if(request.method==='DELETE'){await env.TEXTBOOKS.delete(key);return json({ok:true},200,h);}
+   const object=await env.TEXTBOOKS.get(key);
+   if(!object)return json({error:'Not found'},404,h);
+   return new Response(object.body,{headers:{...h,'content-type':'application/pdf','cache-control':'no-store','x-content-type-options':'nosniff','content-disposition':'attachment'}});
+ }
+ return json({error:'Not found'},404,h);
+}};

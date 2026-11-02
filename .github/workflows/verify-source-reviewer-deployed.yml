@@ -1,0 +1,26 @@
+name: Verify deployed staging reviewer boundary
+on:
+  push:
+    branches: [fix/source-phase-b-mixed-scan-ocr]
+    paths:
+      - '.github/workflows/verify-source-reviewer-deployed.yml'
+      - 'scripts/test-source-library-reviewer-live.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test deployed staging gateway unauthenticated security boundary
+        env:
+          SRNA_REVIEWER_GATEWAY_URL: https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: node scripts/test-source-library-reviewer-live.mjs

@@ -1,0 +1,38 @@
+{
+  "name": "srna-source-reviewer-gateway-staging",
+  "main": "src/entry.js",
+  "compatibility_date": "2026-10-31",
+  "vars": {
+    "STAGING_ONLY": "true",
+    "SUPABASE_URL": "https://xqyasyambwdyhsjkftqu.supabase.co"
+  },
+  "containers": [
+    {
+      "class_name": "ReviewerContainer",
+      "image": "../reviewer-service/Dockerfile",
+      "image_build_context": "../../..",
+      "instance_type": "basic",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "REVIEWER_CONTAINER",
+        "class_name": "ReviewerContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": [
+        "ReviewerContainer"
+      ]
+    }
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
+}

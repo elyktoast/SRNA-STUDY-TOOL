@@ -1,0 +1,258 @@
+name: Source Library staging checks
+
+on:
+  pull_request:
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/build.json'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/source-library-staging-ui.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
+      - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-reviewer-browser.mjs'
+      - 'scripts/test-source-library-reviewer-gateway.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
+      - 'scripts/test-source-library-reviewer-live.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  push:
+    branches:
+      - fix/source-phase-b-mixed-scan-ocr
+    paths:
+      - 'workers/source-library-staging/**'
+      - 'equipment/build.json'
+      - 'equipment/assets/source-material-staging-storage.js'
+      - 'equipment/assets/source-library-staging-ui.js'
+      - 'equipment/assets/chapter-review-staging.js'
+      - 'equipment/source-library-chapter-review-staging.html'
+      - 'equipment/assets/studio-page.js'
+      - 'equipment/assets/question-generator-ui.js'
+      - 'scripts/validate-repo.mjs'
+      - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-source-library-reviewer-browser.mjs'
+      - 'scripts/test-source-library-reviewer-gateway.mjs'
+      - 'scripts/test-source-library-staging-live.mjs'
+      - '.github/workflows/source-library-staging.yml'
+  workflow_dispatch:
+    inputs:
+      run_disposable_acceptance:
+        description: 'Run disposable staging publication acceptance (uses staging credentials and temporary objects)'
+        type: boolean
+        default: false
+      run_live_smoke:
+        description: 'Run deployed staging smoke test'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  staging-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax check
+        run: |
+          node --check workers/source-library-staging/src/index.js
+          node --check equipment/assets/source-material-staging-storage.js
+          node --check equipment/assets/source-library-staging-ui.js
+          node --check equipment/assets/chapter-review-staging.js
+          node --check scripts/test-source-library-staging.mjs
+          node --check scripts/test-source-library-reviewer-browser.mjs
+          node --check scripts/test-source-library-reviewer-gateway.mjs
+          node --check workers/source-library-staging/reviewer-gateway/src/index.js
+          node --check workers/source-library-staging/reviewer-gateway/src/container.js
+          node --check workers/source-library-staging/reviewer-gateway/src/entry.js
+          node --check scripts/test-source-library-reviewer-live.mjs
+      - name: Staging Worker tests
+        run: node --test scripts/test-source-library-staging.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs
+      - name: Python staging pipeline tests
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
+          python3 -m pip install --disable-pip-version-check pymupdf
+          python3 -m compileall -q workers/source-library-staging/scripts
+          tesseract --version
+          tesseract --list-langs
+          python3 -c 'import fitz; print(fitz.__doc__)'
+          TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
+      - name: Staging reviewer container build
+        run: docker build -f workers/source-library-staging/reviewer-service/Dockerfile -t srna-reviewer-staging:test .
+      - name: Repository validation
+        run: npm run validate
+      - name: Live Cloudflare staging Worker smoke test (read-only)
+        if: (github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-smoke]'))
+        env:
+          SRNA_STAGING_WORKER_TEST_URL: https://srna-source-library-staging.dalley-kyle.workers.dev
+        run: node scripts/test-source-library-staging-live.mjs
+
+  reviewer-live-boundary:
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_live_smoke == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-smoke]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reviewer staging boundary acceptance (when URL configured)
+        env:
+          SRNA_REVIEWER_GATEWAY_URL: ${{ vars.SRNA_REVIEWER_GATEWAY_URL || 'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/' }}
+        run: |
+          if [ -z "$SRNA_REVIEWER_GATEWAY_URL" ]; then
+            echo "Reviewer gateway URL not configured; live reviewer acceptance is blocked."
+            exit 1
+          fi
+          node scripts/test-source-library-reviewer-live.mjs
+
+  phase3b-disposable-acceptance:
+    # Opt in via manual dispatch or a staging-branch commit marker; staging resources only.
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_disposable_acceptance == true) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[phase3b-live-acceptance]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: source-library-staging
+    concurrency:
+      group: phase3b-disposable-staging-acceptance
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install validation dependencies
+        run: python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
+      - name: Real PostgreSQL concurrency acceptance
+        working-directory: workers/source-library-staging/scripts
+        env:
+          SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          test -n "$SRNA_PUBLICATION_LOCK_TEST_DATABASE_URL" || { echo "Missing staging database secret"; exit 1; }
+          python -m unittest -v tests.test_source_review_publication_lock_postgres_v2
+      - name: Disposable PDF publication and cleanup
+        working-directory: workers/source-library-staging/scripts
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          python - <<'PY'
+          import hashlib, json, os, uuid
+          import boto3, fitz
+          from botocore.exceptions import ClientError
+          from process_r2_textbook import run
+          for name in ("R2_ACCOUNT_ID","R2_ACCESS_KEY_ID","R2_SECRET_ACCESS_KEY","DATABASE_URL"):
+              if not os.environ.get(name):
+                  raise SystemExit("Missing staging secret: "+name)
+          owner = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
+          filename = "phase3b-disposable-" + str(uuid.uuid4()) + ".pdf"
+          key = owner + "/" + filename
+          queue = owner + "/_review_queues/" + filename + ".json"
+          attestation = queue + ".source.json"
+          bucket = "srna-staging-textbooks"
+          client = boto3.client("s3", endpoint_url="https://"+os.environ["R2_ACCOUNT_ID"]+".r2.cloudflarestorage.com", aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"], aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto")
+          doc = fitz.open()
+          page = doc.new_page()
+          page.insert_text((72,72), "Synthetic staging validation passage about anesthesia equipment.")
+          data = doc.tobytes()
+          doc.close()
+          created = []
+          try:
+              try:
+                  client.head_object(Bucket=bucket, Key=key)
+              except ClientError as exc:
+                  if str(exc.response.get("Error",{}).get("Code")) not in ("404","NoSuchKey","NotFound"):
+                      raise
+              else:
+                  raise RuntimeError("Refusing to overwrite existing object")
+              client.put_object(Bucket=bucket, Key=key, Body=data, ContentType="application/pdf")
+              created.append(key)
+              dry = run(owner,key,apply=False,client=client,review_queue_mode="dry-run")
+              assert not dry["review_queue_publication"]["published"]
+              assert dry["r2_sha256"] == hashlib.sha256(data).hexdigest()
+              # Include sidecars in cleanup before publication, even on partial failure.
+              created.extend([queue,attestation])
+              published = run(owner,key,apply=False,client=client,review_queue_mode="apply")
+              assert published["review_queue_publication"]["published"]
+              assert not published["review_queue_publication"]["approval_enabled"]
+              qbytes = client.get_object(Bucket=bucket,Key=queue)["Body"].read()
+              meta = json.loads(client.get_object(Bucket=bucket,Key=attestation)["Body"].read())
+              assert meta["queue_sha256"] == hashlib.sha256(qbytes).hexdigest()
+              assert meta["source_sha256"] == hashlib.sha256(data).hexdigest()
+              assert client.get_object(Bucket=bucket,Key=key)["Body"].read() == data
+              try:
+                  run(owner,key,apply=False,client=client,review_queue_mode="apply")
+              except ValueError as exc:
+                  assert "already published" in str(exc)
+              else:
+                  raise AssertionError("Duplicate publication accepted")
+              # Exercise tampering against disposable staging objects only.
+              # These are storage-level integrity assertions; API HTTP 409 is
+              # separately required and must not be inferred from this test.
+              original_queue = qbytes
+              original_attestation = client.get_object(Bucket=bucket,Key=attestation)["Body"].read()
+              original_head = client.head_object(Bucket=bucket,Key=key)
+              try:
+                  client.put_object(Bucket=bucket,Key=queue,Body=qbytes+b"\\n",ContentType="application/json")
+                  changed = client.get_object(Bucket=bucket,Key=queue)["Body"].read()
+                  assert hashlib.sha256(changed).hexdigest() != meta["queue_sha256"], "Queue tampering not detectable"
+              finally:
+                  client.put_object(Bucket=bucket,Key=queue,Body=original_queue,ContentType="application/json")
+              assert hashlib.sha256(client.get_object(Bucket=bucket,Key=queue)["Body"].read()).hexdigest() == meta["queue_sha256"]
+              try:
+                  client.put_object(Bucket=bucket,Key=attestation,Body=b"{invalid-json",ContentType="application/json")
+                  corrupted = client.get_object(Bucket=bucket,Key=attestation)["Body"].read()
+                  try:
+                      json.loads(corrupted)
+                  except json.JSONDecodeError:
+                      pass
+                  else:
+                      raise AssertionError("Malformed attestation unexpectedly parsed")
+              finally:
+                  client.put_object(Bucket=bucket,Key=attestation,Body=original_attestation,ContentType="application/json")
+              assert json.loads(client.get_object(Bucket=bucket,Key=attestation)["Body"].read()) == meta
+              # Source replacement is simulated with a different disposable
+              # payload, then restored. This is not a deployed API response test.
+              try:
+                  client.put_object(Bucket=bucket,Key=key,Body=data+b"replacement",ContentType="application/pdf")
+                  replacement_head = client.head_object(Bucket=bucket,Key=key)
+                  assert (replacement_head["ContentLength"] != meta["size_bytes"] or
+                          replacement_head["ETag"] != meta["source_etag"]), "Source replacement not detectable"
+              finally:
+                  client.put_object(Bucket=bucket,Key=key,Body=data,ContentType="application/pdf")
+              assert client.get_object(Bucket=bucket,Key=key)["Body"].read() == data
+              assert client.head_object(Bucket=bucket,Key=key)["ContentLength"] == original_head["ContentLength"]
+              print("PASS: dry-run, publication, fingerprints, PDF integrity, duplicate rejection")
+              print("PASS: disposable queue tamper, malformed attestation, and source replacement detection")
+          finally:
+              failures=[]
+              for object_key in reversed(created):
+                  try:
+                      client.delete_object(Bucket=bucket,Key=object_key)
+                  except Exception as exc:
+                      failures.append((object_key,type(exc).__name__))
+              # Confirm every disposable key is actually absent after cleanup.
+              for object_key in created:
+                  try:
+                      client.head_object(Bucket=bucket,Key=object_key)
+                  except ClientError as exc:
+                      if str(exc.response.get("Error",{}).get("Code")) not in ("404","NoSuchKey","NotFound"):
+                          failures.append((object_key,"readback: "+str(exc.response.get("Error",{}).get("Code"))))
+                  else:
+                      failures.append((object_key,"still exists"))
+              if failures:
+                  raise AssertionError("Disposable staging cleanup failed: "+repr(failures))
+              print("PASS: cleanup read-back verified",len(created),"disposable objects absent")
+          PY

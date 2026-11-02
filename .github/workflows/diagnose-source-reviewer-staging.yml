@@ -1,0 +1,28 @@
+name: Diagnose staged reviewer integration
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/source-phase-b-mixed-scan-ocr]
+    paths:
+      - 'scripts/diagnose-source-reviewer-staging.mjs'
+      - '.github/workflows/diagnose-source-reviewer-staging.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/source-phase-b-mixed-scan-ocr
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run staged diagnostic (stop on first failing boundary)
+        env:
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: node scripts/diagnose-source-reviewer-staging.mjs

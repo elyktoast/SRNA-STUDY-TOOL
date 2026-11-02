@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: feature/source-library-r2-staging
+          ref: fix/source-phase-b-mixed-scan-ocr
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:

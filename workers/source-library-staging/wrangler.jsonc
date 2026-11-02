@@ -1,0 +1,16 @@
+{
+  "name": "srna-source-library-staging",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "r2_buckets": [
+    {
+      "binding": "TEXTBOOKS",
+      "bucket_name": "srna-staging-textbooks"
+    }
+  ],
+  "vars": {
+    "ALLOWED_ORIGIN": "https://staging.srnastudytool.com",
+    "STAGING_ONLY": "true"
+  }
+}
