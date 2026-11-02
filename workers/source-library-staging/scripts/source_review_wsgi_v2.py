@@ -127,7 +127,8 @@ def build_app():
         environment=os.environ)
     return lambda environ, start_response: (
         generation(environ, start_response)
-        if environ.get("PATH_INFO") == "/generation/preflight"
+        if (environ.get("PATH_INFO") == "/generation/preflight" or
+            environ.get("PATH_INFO", "").startswith("/generation/drafts"))
         else reviewer_app(environ, start_response))
 
 
