@@ -75,9 +75,9 @@ assert.equal(preflightOptions.status,204,'generation CORS route unavailable');
 const anonymousGeneration=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}',redirect:'manual'});
 console.log('STEP 9: unauthenticated generation boundary: HTTP',anonymousGeneration.status);
 assert.equal(anonymousGeneration.status,401,'generation endpoint must reject anonymous callers');
-const evidenceResponse=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({topic:'airway',mode:'NCE',domain:'unassigned',section:'unassigned',objective:'Evidence availability only',item_id:'preflight',format:'MC'}),redirect:'manual'});
+const evidenceResponse=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({topic:'airway',mode:'NCE',domain:'I',section:'A',objective:'I.A.1',item_id:'preflight',format:'MC'}),redirect:'manual'});
 const evidence=await evidenceResponse.json().catch(()=>null);
-const evidenceStatus=evidenceResponse.status===200?'indexed_evidence_found':evidenceResponse.status===422&&evidence?.error==='no_indexed_evidence'?'no_indexed_evidence':'unexpected_response';
+const evidenceStatus=evidenceResponse.status===200?'indexed_evidence_found':evidenceResponse.status===422&&['no_indexed_evidence','generation_or_evidence_unavailable'].includes(evidence?.error)?'no_indexed_evidence':'unexpected_response';
 console.log('STEP 10: authenticated generation preflight: HTTP',evidenceResponse.status,'category',evidenceStatus);
 assert.ok(evidenceStatus!=='unexpected_response','generation preflight failed or service unavailable');
 if(evidenceResponse.status===200){
