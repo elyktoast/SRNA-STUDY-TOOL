@@ -19,7 +19,7 @@ export default {
   if(origin!==ORIGIN||!paths.has(url.pathname))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
   if(request.method==='OPTIONS'){
-   const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\\s/g,'');
+   const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(request.headers.get('Access-Control-Request-Method')!==(generation?'POST':'GET')||
       !(generation?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
@@ -30,7 +30,7 @@ export default {
    return response;
   }
   if(request.method!==(generation?'POST':'GET'))return respond(405,origin,'{"error":"method_not_allowed"}');
-  if(generation&&(url.search||!/^application\\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
+  if(generation&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')||Number(request.headers.get('Content-Length')||0)>8192))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
