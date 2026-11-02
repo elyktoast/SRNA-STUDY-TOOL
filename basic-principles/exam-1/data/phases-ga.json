@@ -7476,7 +7476,7 @@
       "id": "PHA-299",
       "set": 1,
       "type": "single",
-      "stem": "Immediately after cementing during hip arthroplasty, ETCO2 drops from 36 to 18 with a preserved waveform and BP falls to 72/40. What does this pattern most strongly suggest?",
+      "stem": "During cemented hip arthroplasty, a patient's end-tidal carbon dioxide abruptly falls from 36 to 18 mmHg while the capnography waveform remains present. Simultaneously, arterial blood pressure falls to 72/40 mmHg. Which mechanism best explains these findings?",
       "options": [
         "Circuit disconnection",
         "Sudden fall in pulmonary blood flow, such as embolism",
@@ -7486,16 +7486,11 @@
       "answer": [
         1
       ],
-      "explanation": "An abrupt fall in ETCO2 with a preserved waveform and hypotension right after cementing means less blood is reaching the lungs, most likely from embolism of fat, cement, or air in bone cement implantation syndrome, or from a sudden fall in cardiac output. Disconnection and esophageal intubation lose the waveform, and a hypermetabolic state raises ETCO2.",
+      "explanation": "An abrupt decrease in end-tidal carbon dioxide with a persistent waveform and simultaneous hypotension immediately after cementing suggests reduced pulmonary perfusion and cardiac output, as can occur with bone cement implantation syndrome and embolic material. Circuit disconnection or esophageal intubation would not typically preserve the established waveform, whereas malignant hyperthermia generally increases carbon dioxide production.",
       "citation": "",
       "topic": "Maintenance cases",
       "sourceTitle": "Phases of General Anesthesia",
-      "image": {
-        "kind": "direct",
-        "url": "figures/phases-ga/fig-57.svg",
-        "id": 57,
-        "title": "Figure 57"
-      },
+      "image": null,
       "sourceMeta": {
         "sourcePackage": "Phases_of_GA",
         "originalFigure": 57
