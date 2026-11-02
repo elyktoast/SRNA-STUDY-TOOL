@@ -50,7 +50,8 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
         except urllib.error.HTTPError as exc:
             # Never inspect provider response bodies or log credentials.
             status = exc.code
-            rule = ('PROVIDER_AUTH' if status in (401, 403) else
+            rule = ('PROVIDER_AUTH' if status == 401 else
+                    'PROVIDER_FORBIDDEN' if status == 403 else
                     'PROVIDER_RATE_LIMIT' if status == 429 else
                     'PROVIDER_REQUEST_REJECTED' if status in (400, 404, 413, 422) else
                     'PROVIDER_UPSTREAM' if status >= 500 else 'PROVIDER_HTTP_OTHER')
