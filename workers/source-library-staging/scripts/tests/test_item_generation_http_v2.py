@@ -90,5 +90,58 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertEqual(status, "400 Bad Request")
         execute.assert_not_called()
 
+class DraftBasketHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true"})
+
+    def call(self, path, method="GET", payload=None, token="valid"):
+        raw = json.dumps(payload).encode() if payload is not None else b""
+        env = {"PATH_INFO": path, "REQUEST_METHOD": method,
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer " + token,
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        body = b"".join(self.app(env, lambda status, headers: seen.append(status)))
+        return seen[0], json.loads(body) if body else {}
+
+    @patch("item_generation_http_v2.list_drafts", return_value=[])
+    def test_list_requires_admin(self, mock_list):
+        status, data = self.call("/generation/drafts")
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(data["drafts"], [])
+        self.assertEqual(mock_list.call_args.kwargs["owner_uid"], UID)
+        status, _ = self.call("/generation/drafts", token="invalid")
+        self.assertEqual(status, "403 Forbidden")
+        self.assertEqual(mock_list.call_count, 1)
+
+    @patch("item_generation_http_v2.save", return_value={"status": "pending_review"})
+    def test_save_uses_verified_owner(self, mock_save):
+        status, data = self.call("/generation/drafts", "POST", {"topic": "airway"})
+        self.assertEqual(status, "201 Created")
+        self.assertEqual(mock_save.call_args.args[1]["owner_uid"], UID)
+        self.assertEqual(data["status"], "pending_review")
+        status, _ = self.call("/generation/drafts", "POST", {"owner_uid": UID})
+        self.assertEqual(status, "422 Unprocessable Entity")
+        self.assertEqual(mock_save.call_count, 1)
+
+    @patch("item_generation_http_v2.get_draft", return_value={"published": False})
+    def test_detail_scoped_to_owner(self, mock_get):
+        draft_id = "00000000-0000-4000-8000-000000000002"
+        status, data = self.call("/generation/drafts/" + draft_id)
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(mock_get.call_args.kwargs["owner_uid"], UID)
+        self.assertFalse(data["published"])
+
+    @patch("item_generation_http_v2.review", return_value={"published": False})
+    def test_review_uses_verified_reviewer(self, mock_review):
+        draft_id = "00000000-0000-4000-8000-000000000002"
+        status, _ = self.call("/generation/drafts/" + draft_id + "/review",
+                              "POST", {"status": "rejected", "notes": "Unsupported"})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(mock_review.call_args.kwargs["reviewer_uid"], UID)
+        self.assertEqual(mock_review.call_args.kwargs["owner_uid"], UID)
+
 if __name__ == "__main__":
     unittest.main()
