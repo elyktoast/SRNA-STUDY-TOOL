@@ -26,11 +26,21 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Explicit authenticated model adapter required")
     if not isinstance(item_id, str) or not item_id.strip():
         raise ValueError("New item ID required")
+    if not isinstance(evidence, list) or not evidence or any(
+        not isinstance(p, dict) or not all(p.get(k) for k in ("passage_id", "textbook_id", "excerpt"))
+        for p in evidence
+    ):
+        raise ValueError("Verified indexed evidence references required")
+    passage_ids = [p["passage_id"] for p in evidence]
+    if len(set(passage_ids)) != len(passage_ids):
+        raise ValueError("Duplicate passage IDs in evidence bundle")
     args = dict(mode=mode, domain=domain, section=section,
                 objective=objective, evidence=evidence)
     concept = _response(adapter, build_step("concept_card", **args))
     if any(not concept.get(field) for field in CONCEPT_FIELDS):
         raise ValueError("Concept card incomplete; draft generation blocked")
+    if concept["objective"].strip() != objective.strip():
+        raise ValueError("Concept card objective differs from selected blueprint objective")
     allowed_ids = {p["passage_id"] for p in evidence}
     ids = concept["evidence_ids"]
     if not isinstance(ids, list) or not ids or not all(
