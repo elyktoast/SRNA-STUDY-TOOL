@@ -8,7 +8,7 @@ import re
 from uuid import UUID
 
 from run_grounded_generation_v2 import execute
-from item_draft_storage_v2 import list_drafts, get_draft, review
+from item_draft_storage_v2 import save, list_drafts, get_draft, review
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
@@ -40,18 +40,21 @@ def create_app(*, conn_factory, resolve_admin, environment):
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
         if environ.get("REQUEST_METHOD") == "OPTIONS":
-            if (environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD") != "POST"
-                    or environ.get("HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").lower().replace(" ", "") not in
-                    ("authorization,content-type", "content-type,authorization")):
+            requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
+            allowed = ("GET", "POST") if path == "/generation/drafts" else (
+                ("GET",) if draft_match and not draft_match.group(2) else ("POST",))
+            headers = {x.strip().lower() for x in environ.get(
+                "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
+            if requested not in allowed or not headers <= {"authorization", "content-type"}:
                 return respond("403 Forbidden", {"error": "forbidden_preflight"})
             start_response("204 No Content", [("Access-Control-Allow-Origin", "https://staging.srnastudytool.com"),
-                ("Access-Control-Allow-Methods", "POST"),
+                ("Access-Control-Allow-Methods", ", ".join(allowed)),
                 ("Access-Control-Allow-Headers", "Authorization, Content-Type"),
                 ("Cache-Control", "private, no-store"), ("Vary", "Origin")])
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path != "/generation/preflight":
-            allowed = ("GET",) if path == "/generation/drafts" or (draft_match and not draft_match.group(2)) else ("POST",)
+            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if draft_match and not draft_match.group(2) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
@@ -77,7 +80,15 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 if length < 1 or length > MAX_BODY:
                     raise ValueError("Invalid body size")
                 payload = json.loads(environ["wsgi.input"].read(length))
-                if not isinstance(payload, dict) or set(payload) != {"status", "notes"}:
+                if not isinstance(payload, dict) or "owner_uid" in payload or "reviewer_uid" in payload:
+                    raise ValueError("Client identity is forbidden")
+                if path == "/generation/drafts":
+                    if len(json.dumps(payload)) > MAX_BODY:
+                        raise ValueError("Oversized draft")
+                    with conn_factory() as conn:
+                        result = save(conn, {**payload, "owner_uid": owner})
+                    return respond("201 Created", result)
+                if set(payload) != {"status", "notes"}:
                     raise ValueError("Invalid review body")
                 with conn_factory() as conn:
                     result = review(conn, owner_uid=owner, reviewer_uid=owner,
