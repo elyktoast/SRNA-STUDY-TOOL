@@ -216,12 +216,12 @@ const adminOpen=modal.querySelector('[data-admin-open]');if(adminOpen)adminOpen.
 modal.querySelector('[data-account-close]').onclick=closeAccount;modal.onclick=e=>{if(e.target===modal)closeAccount()};modal.onkeydown=e=>{if(e.key==='Enter'&&e.target===password){e.preventDefault();modal.querySelector('[data-cloud-signin]').click()}else trapModalKey(e,modal,closeAccount)};
 }
 async function openAccount(source){
-await ensurePanelStyles();ensureAccountPanel();toolsReturnFocus=source||document.activeElement;const modal=$('mbu-account-panel');B.classList.add('mbu-modal-open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');modal.querySelector('[data-account-close]').focus();refreshAccount();
-const info=window.MBUSupabase?.status?.(),title=modal.querySelector('#mbu-account-title'),subtitle=modal.querySelector('[data-account-subtitle]');
+await ensurePanelStyles();ensureAccountPanel();toolsReturnFocus=source||document.activeElement;const modal=$('mbu-account-panel'),find=modal.querySelector.bind(modal);B.classList.add('mbu-modal-open');modal.classList.add('open');modal.ariaHidden='false';find('[data-account-close]').focus();refreshAccount();
+const info=window.MBUSupabase?.status?.(),title=find('#mbu-account-title'),subtitle=find('[data-account-subtitle]');
 if(info?.recoveryMode){title.textContent='Reset password';subtitle.textContent='Secure your SRNA Study Tool account.'}
 else if(info?.signedIn){title.textContent='Account';subtitle.textContent='Sync, devices, history, and settings.'}
 else{title.textContent='Sign in';subtitle.textContent='Sync progress and access Adaptive Mode.'}
-await refreshAdminAccess(modal);if(!modal.classList.contains('open'))return;(info?.recoveryMode?modal.querySelector('[data-cloud-new-password]'):info?.signedIn&&info.legalAccepted!==true?modal.querySelector('[data-cloud-reaccept-consent]'):info?.signedIn?modal.querySelector('[data-cloud-sync]'):modal.querySelector('[data-cloud-email]'))?.focus()
+await refreshAdminAccess(modal);if(!modal.matches('.open'))return;(info?.recoveryMode?find('[data-cloud-new-password]'):info?.signedIn&&info.legalAccepted!==true?find('[data-cloud-reaccept-consent]'):info?.signedIn?find('[data-cloud-sync]'):find('[data-cloud-email]'))?.focus()
 }
 function ensureTools(){
 if($('mbu-app-tools'))return;
