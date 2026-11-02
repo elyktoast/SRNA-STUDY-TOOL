@@ -128,8 +128,31 @@ def create_app(runtime):
             return response(start_response, "200 OK", png, "image/png",
                             [("X-Verified-Source-SHA256", page["source_sha256"]),
                              ("X-Page-Image-SHA256", page["image_sha256"])])
-        except ValueError:
-            return response(start_response, "409 Conflict", b'{"error":"source_or_page_verification_failed"}')
+        except ValueError as exc:
+            # Log only a fixed diagnostic category, never the exception text or private R2 keys.
+            import logging
+            message = str(exc)
+            rules = {
+                "Source attestation mismatch": "ATTESTATION_MISMATCH",
+                "Review queue fingerprint mismatch": "QUEUE_FINGERPRINT_MISMATCH",
+                "Review queue source mismatch": "QUEUE_SOURCE_MISMATCH",
+                "Invalid review queue page": "QUEUE_PAGE_INVALID",
+                "Source changed while loading manifest": "SOURCE_CHANGED",
+                "Trusted manifest identity mismatch": "MANIFEST_IDENTITY_MISMATCH",
+                "Page outside verified manifest": "PAGE_OUT_OF_RANGE",
+                "Rendered page integrity mismatch": "PAGE_INTEGRITY_MISMATCH",
+                "Source PDF missing": "SOURCE_MISSING",
+                "Verified attestation missing": "ATTESTATION_MISSING",
+                "Verified review queue missing": "QUEUE_MISSING",
+                "Invalid attestation size": "ATTESTATION_SIZE_INVALID",
+                "Invalid attestation JSON": "ATTESTATION_JSON_INVALID",
+                "Invalid review queue size": "QUEUE_SIZE_INVALID",
+                "Invalid review queue JSON": "QUEUE_JSON_INVALID",
+            }
+            rule = rules.get(message, "SOURCE_VERIFICATION_UNKNOWN")
+            logging.getLogger("reviewer").error("staging_review_manifest_conflict rule=%s", rule)
+            return response(start_response, "409 Conflict",
+                            json.dumps({"error":"source_or_page_verification_failed","rule":rule}).encode())
         except Exception as exc:
             # Report only fixed storage failure codes; never expose R2 paths, keys, or driver text.
             rule = "STORAGE_UNKNOWN"
