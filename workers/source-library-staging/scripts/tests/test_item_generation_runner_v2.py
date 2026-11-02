@@ -35,6 +35,26 @@ class RunnerTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             generate_one(adapter, **ARGS)
         self.assertEqual(calls, ["concept_card"])
+    def test_duplicate_concept_citations_stop_before_draft(self):
+        calls = []
+        def adapter(request):
+            calls.append(request["step"])
+            return dict(objective="III.H.4", mechanism="m", relevance="r",
+                        misconception="x", counterfactual="y", evidence_ids=["p1", "p1"])
+        with self.assertRaisesRegex(ValueError, "unique passage IDs"):
+            generate_one(adapter, **ARGS)
+        self.assertEqual(calls, ["concept_card"])
+
+    def test_invalid_concept_citation_type_stops_before_draft(self):
+        calls = []
+        def adapter(request):
+            calls.append(request["step"])
+            return dict(objective="III.H.4", mechanism="m", relevance="r",
+                        misconception="x", counterfactual="y", evidence_ids="p1")
+        with self.assertRaises(ValueError):
+            generate_one(adapter, **ARGS)
+        self.assertEqual(calls, ["concept_card"])
+
     def test_no_implicit_model_calls(self):
         with self.assertRaises(ValueError):
             generate_one(None, **ARGS)
