@@ -9,11 +9,13 @@ import urllib.request
 from urllib.parse import urlsplit
 
 class TransportError(RuntimeError):
-    pass
+    def __init__(self, rule='PROVIDER_TRANSPORT'):
+        self.rule = rule
+        super().__init__('Provider transport unavailable')
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
-        raise TransportError("Provider redirect prohibited")
+        raise TransportError("PROVIDER_REDIRECT")
 
 
 def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=262144):
@@ -30,22 +32,36 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
     def transport(*, endpoint, headers, body):
         url = urlsplit(endpoint)
         if url.scheme != "https" or url.hostname not in hosts or url.username or url.password or url.fragment or url.port not in (None, 443) or url.query:
-            raise TransportError("Provider endpoint not allowed")
+            raise TransportError("PROVIDER_ENDPOINT")
         if not isinstance(headers, dict) or not isinstance(body, dict):
-            raise TransportError("Invalid request")
+            raise TransportError("PROVIDER_REQUEST")
         encoded = json.dumps(body, ensure_ascii=False).encode("utf-8")
         if len(encoded) > 524288:
-            raise TransportError("Request exceeds 512 KiB")
+            raise TransportError("PROVIDER_REQUEST_SIZE")
         req = urllib.request.Request(endpoint, data=encoded, headers=headers, method="POST")
         try:
             with opener.open(req, timeout=timeout_seconds) as response:
                 if response.geturl() != endpoint:
-                    raise TransportError("Redirected provider response prohibited")
+                    raise TransportError("PROVIDER_REDIRECT")
                 raw = response.read(max_response_bytes + 1)
                 if len(raw) > max_response_bytes:
-                    raise TransportError("Provider response too large")
+                    raise TransportError("PROVIDER_RESPONSE_SIZE")
                 return json.loads(raw.decode("utf-8"))
-        except (urllib.error.URLError, TimeoutError, UnicodeError, ValueError) as exc:
-            # Never include provider error bodies, source text, or credentials.
-            raise TransportError("Provider transport failed or returned invalid JSON") from None
+        except urllib.error.HTTPError as exc:
+            # Never inspect provider response bodies or log credentials.
+            status = exc.code
+            rule = ('PROVIDER_AUTH' if status in (401, 403) else
+                    'PROVIDER_RATE_LIMIT' if status == 429 else
+                    'PROVIDER_REQUEST_REJECTED' if status in (400, 404, 413, 422) else
+                    'PROVIDER_UPSTREAM' if status >= 500 else 'PROVIDER_HTTP_OTHER')
+            raise TransportError(rule) from None
+        except (TimeoutError, __import__('socket').timeout):
+            raise TransportError('PROVIDER_TIMEOUT') from None
+        except urllib.error.URLError as exc:
+            # A socket timeout can be wrapped in URLError.
+            import socket
+            rule = 'PROVIDER_TIMEOUT' if isinstance(exc.reason, (TimeoutError, socket.timeout)) else 'PROVIDER_NETWORK'
+            raise TransportError(rule) from None
+        except (UnicodeError, ValueError):
+            raise TransportError('PROVIDER_INVALID_JSON') from None
     return transport
