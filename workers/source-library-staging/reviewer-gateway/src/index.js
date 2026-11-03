@@ -74,7 +74,7 @@ export default {
   if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!draftRead&&!providerCheck&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
