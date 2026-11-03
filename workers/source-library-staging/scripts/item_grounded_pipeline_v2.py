@@ -14,7 +14,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         page_start=None, page_end=None, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
-                        checkpoint=None, on_checkpoint=None):
+                        checkpoint=None, on_checkpoint=None, evidence_packet=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -24,10 +24,12 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                                       or not reviewer_model_id
                                       or generator_model_id == reviewer_model_id):
         raise ValueError("Independent blind reviewer and distinct model identities required")
-    packet = build_evidence(conn, owner_uid, topic, textbook_id=textbook_id,
-                            limit=limit, section_id=section_id,
-                            include_subsections=include_subsections,
-                            page_start=page_start, page_end=page_end)
+    packet = evidence_packet if evidence_packet is not None else build_evidence(
+        conn, owner_uid, topic, textbook_id=textbook_id, limit=limit,
+        section_id=section_id, include_subsections=include_subsections,
+        page_start=page_start, page_end=page_end)
+    if not isinstance(packet, dict):
+        raise ValueError("Invalid indexed evidence packet")
     if not packet["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found; generation blocked")
     evidence = packet["sources"]
