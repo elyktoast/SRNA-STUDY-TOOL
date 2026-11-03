@@ -92,7 +92,8 @@ def execute(conn, args, environ=None):
                                  evidence_packet=evidence)
     # Generation and screening finished; prevent replay of this checkpoint.
     if checkpoint_enabled:
-        complete(conn, owner_uid=args.owner_uid, request_hash=request_hash,
+        complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                 request_hash=request_hash,
                  evidence_hash=evidence_hash)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
