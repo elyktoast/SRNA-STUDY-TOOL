@@ -94,7 +94,11 @@ assert.equal(anonymousGeneration.status,401,'generation endpoint must reject ano
 const evidenceResponse=await fetch(gateway+'/generation/preflight',{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({topic:'airway',mode:'NCE',domain:'I',section:'A',objective:'I.A.1',item_id:'preflight',format:'MC'}),redirect:'manual'});
 const evidence=await evidenceResponse.json().catch(()=>null);
 const evidenceStatus=evidenceResponse.status===200?'indexed_evidence_found':evidenceResponse.status===422&&['no_indexed_evidence','generation_or_evidence_unavailable'].includes(evidence?.error)?'no_indexed_evidence':'unexpected_response';
-console.log('STEP 10: authenticated generation preflight: HTTP',evidenceResponse.status,'category',evidenceStatus);
+const safeGenerationRules=new Set(['UPSTREAM_CONNECTION','UPSTREAM_HTTP','DEPENDENCY_UNAVAILABLE','RUNTIME_IO','GENERATION_RUNTIME_ERROR','PROVIDER_TRANSPORT','PROVIDER_RESPONSE','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_REQUEST_REJECTED','PROVIDER_UPSTREAM','PROVIDER_HTTP_OTHER','PROVIDER_TIMEOUT','PROVIDER_NETWORK','PROVIDER_INVALID_JSON','PROVIDER_REDIRECT','PROVIDER_ENDPOINT','PROVIDER_REQUEST','PROVIDER_REQUEST_SIZE','PROVIDER_RESPONSE_SIZE','DATABASE_CONNECTION','DATABASE_TIMEOUT','DATABASE_NETWORK','RELAY_AUTH','RELAY_UNAVAILABLE','RELAY_EDGE_403']);
+const safeGenerationError=new Set(['generation_preflight_unavailable','generation_or_evidence_unavailable','reviewer_backend_unavailable','no_indexed_evidence']);
+const diagnosticError=safeGenerationError.has(evidence?.error)?evidence.error:'unclassified';
+const diagnosticRule=safeGenerationRules.has(evidence?.rule)?evidence.rule:'unclassified';
+console.log('STEP 10: authenticated generation preflight: HTTP',evidenceResponse.status,'category',evidenceStatus,'error',diagnosticError,'rule',diagnosticRule);
 assert.ok(evidenceStatus!=='unexpected_response','generation preflight failed or service unavailable');
 if(evidenceResponse.status===200){
  assert.equal(evidence?.dry_run,true);
