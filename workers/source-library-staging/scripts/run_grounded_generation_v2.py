@@ -14,6 +14,7 @@ from build_question_evidence import build_evidence
 from item_ai_https_transport_v2 import make_transport
 from item_ai_provider_v2 import make_adapter
 from item_grounded_pipeline_v2 import generate_from_index
+from item_generation_checkpoint_store_v2 import fingerprint, load, record
 
 
 def execute(conn, args, environ=None):
@@ -55,6 +56,21 @@ def execute(conn, args, environ=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
+    # The resume key binds owner, textbook, request parameters, and indexed
+    # evidence. Any evidence change invalidates the previous checkpoint.
+    request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
+        "mode": args.mode, "domain": args.domain, "section": args.section,
+        "objective": args.objective, "format": args.format, "item_id": args.item_id,
+        "textbook_id": args.textbook_id, "section_id": args.section_id,
+        "include_subsections": args.include_subsections, "page_start": args.page_start,
+        "page_end": args.page_end, "limit": args.limit})
+    evidence_hash = fingerprint(evidence["sources"])
+    checkpoint = load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+        request_hash=request_hash, evidence_hash=evidence_hash)
+    def checkpoint_writer(stage, value):
+        record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+            request_hash=request_hash, evidence_hash=evidence_hash,
+            stage=stage, value=value)
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
@@ -62,7 +78,8 @@ def execute(conn, args, environ=None):
                                  textbook_id=args.textbook_id, limit=args.limit,
                                  section_id=args.section_id,
                                  include_subsections=args.include_subsections,
-                                 page_start=args.page_start, page_end=args.page_end)
+                                 page_start=args.page_start, page_end=args.page_end,
+                                 checkpoint=checkpoint, on_checkpoint=checkpoint_writer)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
