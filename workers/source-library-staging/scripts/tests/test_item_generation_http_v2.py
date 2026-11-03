@@ -31,6 +31,20 @@ class HttpPreflightTests(unittest.TestCase):
         body = b"".join(self.app(env, lambda status, headers: seen.append(status)))
         return seen[0], json.loads(body)
 
+    @patch("item_generation_http_v2.execute", return_value={
+        "dry_run": True, "passage_count": 2, "can_publish": False,
+        "database_writes": False,
+        "resume": {"resumable": True, "next_stage": "rationale",
+                   "expires_in_seconds": 600}})
+    def test_admin_preflight_returns_resume_metadata_without_paid_execution(self, execute):
+        status, data = self.call({**PAYLOAD,
+            "textbook_id": "00000000-0000-4000-8000-000000000002"})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(data["resume"]["next_stage"], "rationale")
+        self.assertTrue(data["resume"]["resumable"])
+        self.assertTrue(data["dry_run"])
+        self.assertFalse(execute.call_args.args[1].execute)
+
     @patch("item_generation_http_v2.execute", return_value={"dry_run": True, "passage_count": 2, "can_publish": False, "database_writes": False})
     def test_admin_preflight_only(self, execute):
         status, data = self.call()
