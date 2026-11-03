@@ -58,6 +58,13 @@ def execute(conn, args, environ=None):
                 conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
                 request_hash=request_hash, evidence_hash=evidence_hash)
         return summary
+    checkpoint_enabled = env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
+    if checkpoint_enabled:
+        recovered = recover_completed(
+            conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+            request_hash=request_hash, evidence_hash=evidence_hash)
+        if recovered is not None:
+            return recovered
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
@@ -71,13 +78,6 @@ def execute(conn, args, environ=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
-    checkpoint_enabled = env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
-    if checkpoint_enabled:
-        recovered = recover_completed(
-            conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-            request_hash=request_hash, evidence_hash=evidence_hash)
-        if recovered is not None:
-            return recovered
     checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
         request_hash=request_hash, evidence_hash=evidence_hash)
         if checkpoint_enabled else None)
