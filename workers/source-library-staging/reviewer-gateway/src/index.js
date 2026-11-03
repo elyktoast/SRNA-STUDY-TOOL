@@ -20,9 +20,9 @@ async function relayGroq(request,env){
  if(bytes.length>524288)return respond(413,null,'{"error":"request_too_large"}');
  const timestamp=request.headers.get('X-Relay-Timestamp')||'';
  const signature=request.headers.get('X-Relay-Signature')||'';
- if(!/^\\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>30||!/^\\b[a-f0-9]{64}\\b$/.test(signature))return respond(403,null,'{"error":"forbidden"}');
+ if(!/^\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>30||!/^\b[a-f0-9]{64}\b$/.test(signature))return respond(403,null,'{"error":"forbidden"}');
  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.STAGING_RECEIPT_SIGNING_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
- const prefix=new TextEncoder().encode('srna-groq-relay-v1\\n'+timestamp+'\\n');
+ const prefix=new TextEncoder().encode('srna-groq-relay-v1\n'+timestamp+'\n');
  const signed=new Uint8Array(prefix.length+bytes.length);signed.set(prefix);signed.set(bytes,prefix.length);
  const expected=new Uint8Array(await crypto.subtle.sign('HMAC',key,signed));
  const received=new Uint8Array(signature.match(/../g).map(x=>parseInt(x,16)));
