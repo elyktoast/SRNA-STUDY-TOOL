@@ -46,7 +46,12 @@ def execute(conn, args, environ=None):
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
         raise ValueError("Provider endpoint must match explicit host allowlist")
-    transport = make_transport(allowed_hosts=[host])
+    relay_secret = env.get('STAGING_RECEIPT_SIGNING_SECRET', '')
+    if not relay_secret:
+        raise ValueError('Staging relay signing secret required')
+    transport = make_transport(allowed_hosts=[host],
+        relay_url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay',
+        relay_secret=relay_secret)
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
