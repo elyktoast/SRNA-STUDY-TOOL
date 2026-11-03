@@ -121,6 +121,29 @@ test('staging basket lists and saves private drafts and forwards authenticated r
  const badReview=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'GET',headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
  assert.equal(badReview.status,405);
 });
+test('draft review rejects upstream publication and does not require PDF source headers',async()=>{
+ const endpoint=draftListUrl+'/'+draftId+'/review';
+ const makeRequest=()=>new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({status:'approved'})});
+ const approved={...draftEnv,REVIEWER_CONTAINER:{getByName:()=>({
+  startAndWaitForPorts:async()=>{},
+  fetch:async()=>Response.json({draft_id:draftId,published:false,status:'approved'})
+ })}};
+ const accepted=await gateway.fetch(makeRequest(),approved);
+ assert.equal(accepted.status,200);
+ assert.equal((await accepted.json()).published,false);
+ const unsafe={...approved,REVIEWER_CONTAINER:{getByName:()=>({
+  startAndWaitForPorts:async()=>{},
+  fetch:async()=>Response.json({draft_id:draftId,published:true,status:'approved'})
+ })}};
+ assert.equal((await gateway.fetch(makeRequest(),unsafe)).status,502);
+});
+test('draft review rejects missing authorization, invalid origin, and oversize payload',async()=>{
+ const endpoint=draftListUrl+'/'+draftId+'/review';
+ const makeRequest=(headers,body='{}')=>new Request(endpoint,{method:'POST',headers:{'Content-Type':'application/json',...headers},body});
+ assert.equal((await gateway.fetch(makeRequest({Origin:origin}),draftEnv)).status,401);
+ assert.equal((await gateway.fetch(makeRequest({Origin:'https://srnastudytool.com',Authorization:'Bearer valid'}),draftEnv)).status,403);
+ assert.equal((await gateway.fetch(makeRequest({Origin:origin,Authorization:'Bearer valid'},'x'.repeat(8193)),draftEnv)).status,413);
+});
 test.after(()=>{globalThis.fetch=oldFetch});
 
 test('checkpoint feature flag reaches the private container only with complete AI configuration',async()=>{
