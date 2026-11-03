@@ -112,7 +112,7 @@ if(evidenceResponse.status===200){
 const providerResponse=await fetch(gateway+'/generation/provider-check',{method:'GET',headers,redirect:'manual'});
 const providerBody=await providerResponse.json().catch(()=>null);
 const providerRule=new Set(['OK','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_OTHER']).has(providerBody?.rule)?providerBody.rule:'UNCLASSIFIED';
-const providerState=providerResponse.status===200?providerRule:providerResponse.status===403?'GENERATION_DISABLED':providerResponse.status===503?'PROVIDER_CHECK_UNAVAILABLE':'UNEXPECTED';
+const providerState=providerResponse.status===200?providerRule:providerResponse.status===403?'GENERATION_DISABLED':providerResponse.status===503?(['RELAY_EDGE_403','RELAY_NETWORK','RELAY_HTTP_400','RELAY_HTTP_401','RELAY_HTTP_403','RELAY_HTTP_404','RELAY_HTTP_502','RELAY_HTTP_503'].includes(providerBody?.rule)?providerBody.rule:'PROVIDER_CHECK_UNAVAILABLE'):'UNEXPECTED';
 console.log('STEP 11: read-only Groq provider check: HTTP',providerResponse.status,'state',providerState);
 assert.ok([200,403,503].includes(providerResponse.status),'unexpected provider-check HTTP status');
 if(providerResponse.status===200){
