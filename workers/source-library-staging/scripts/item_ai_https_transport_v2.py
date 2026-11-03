@@ -35,7 +35,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
         raise ValueError('Relay URL and signing secret must be configured together')
     if relay_url is not None:
         parsed = urlsplit(relay_url)
-        if (parsed.scheme != 'https' or parsed.hostname != 'srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev'
+        if (parsed.scheme != 'https' or parsed.hostname != 'reviewer-relay-staging.srnastudytool.com'
                 or parsed.path != '/internal/groq-relay' or parsed.query or parsed.fragment
                 or parsed.port not in (None, 443) or parsed.username or parsed.password
                 or not isinstance(relay_secret, str) or len(relay_secret) < 32):
