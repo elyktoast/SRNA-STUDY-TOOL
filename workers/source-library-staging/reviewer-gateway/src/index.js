@@ -63,7 +63,8 @@ async function relayGroq(request,env){
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq')return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   let data;try{data=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}')}
-  const content=provider==='gemini'?data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join(''):data?.result?.response;
+  const rawContent=provider==='gemini'?data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join(''):data?.result?.response;
+  const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'?JSON.stringify(rawContent):null;
   if(typeof content!=='string'||content.length>262144)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
  }catch{return respond(503,null,'{"error":"relay_network"}')}
