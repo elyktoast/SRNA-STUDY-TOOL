@@ -24,7 +24,7 @@ if(window.MBU_SOURCE_LIBRARY_STAGING?.generationApiUrl===null||window.MBU_SOURCE
 groqButton.addEventListener('click',async()=>{
  const output=providerPanel.querySelector('#sl-groq-status');groqButton.disabled=true;output.textContent='Checking Groq credentials…';
  try{const result=await storage.checkGroqConnection();const status=result.provider_status;
-  output.textContent=status===200?'Connected: Groq accepted the server key (HTTP 200).':status===401?'Groq rejected the server key (HTTP 401).':status===403?'Groq denied access for the server key (HTTP 403).':status===429?'Groq rate limit (HTTP 429).':'Groq check returned '+String(result.rule||'UNKNOWN')+'.';
+  output.textContent='Container: '+(status||String(result.rule||'unknown'))+'; Cloudflare Worker: '+(result.worker_status||String(result.worker_rule||'not available'))+'. No generation performed.';
  }catch(error){output.textContent='Connection check failed: '+String(error?.message||'Unknown error');}finally{groqButton.disabled=false;}
 });
 const generationPanel=document.createElement('section');
