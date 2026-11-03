@@ -3,7 +3,7 @@
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
 const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check']);
-const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36})?$/;
+const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
  const headers={...common,'Content-Type':'application/json'};
@@ -53,8 +53,8 @@ export default {
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
-  const draftPostAllowed=url.pathname==='/generation/drafts';
-  const draftRead=draftPath.test(url.pathname);
+  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review');
+  const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
     const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
