@@ -123,12 +123,20 @@ const providerResponse=await fetch(gateway+'/generation/provider-check',{method:
 const providerBody=await providerResponse.json().catch(()=>null);
 const providerRule=new Set(['OK','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_OTHER']).has(providerBody?.rule)?providerBody.rule:'UNCLASSIFIED';
 const providerState=providerResponse.status===200?providerRule:providerResponse.status===403?'GENERATION_DISABLED':providerResponse.status===503?(['RELAY_EDGE_403','RELAY_NETWORK','RELAY_HTTP_400','RELAY_HTTP_401','RELAY_HTTP_403','RELAY_HTTP_404','RELAY_HTTP_502','RELAY_HTTP_503'].includes(providerBody?.rule)?providerBody.rule:'PROVIDER_CHECK_UNAVAILABLE'):'UNEXPECTED';
-console.log('STEP 11: read-only Groq provider check: HTTP',providerResponse.status,'state',providerState,'hybrid provider readiness not yet independently verified');
+console.log('STEP 11: read-only provider check: HTTP',providerResponse.status,'state',providerState);
+if(providerBody?.check==='hybrid_provider_readiness'){
+ assert.equal(providerBody.generation_performed,false);
+ assert.equal(providerBody.providers?.length,3);
+ for(const p of providerBody.providers){
+  assert.equal(p.generation_performed,false);
+  console.log('STEP 11 provider:',p.provider,'state',p.state);
+ }
+}
 assert.ok([200,403,503].includes(providerResponse.status),'unexpected provider-check HTTP status');
 if(providerResponse.status===200){
  assert.equal(providerBody?.generation_performed,false,'provider-check must never generate');
- assert.equal(providerBody?.check,'groq_models');
- assert.ok([200,401,403,429,0].includes(providerBody?.provider_status));
+ assert.ok(['groq_models','hybrid_provider_readiness'].includes(providerBody?.check));
+ if(providerBody.check==='groq_models')assert.ok([200,401,403,429,0].includes(providerBody?.provider_status));
 }
 const draftResponse=await fetch(gateway+'/generation/drafts',{method:'GET',headers,redirect:'manual'});
 const draftBody=await draftResponse.json().catch(()=>null);
