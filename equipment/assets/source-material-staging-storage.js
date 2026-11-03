@@ -146,6 +146,17 @@ async function generationRequest(path,request){
  if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';throw Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);}
  return data;
 }
+async function checkGroqConnection(){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw||!cfg.enabled||location.hostname!=='staging.srnastudytool.com')throw Error('Staging generation is disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/provider-check',{method:'GET',headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
+ return data;
+}
 async function generateOne(request){return generationRequest('/generation/one',request);}
 async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
 async function listGeneratedDrafts(){
@@ -158,5 +169,5 @@ async function listGeneratedDrafts(){
  const response=await fetch(u.origin+'/generation/drafts',{headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft list unavailable ('+response.status+').');return data;
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,generateOne,saveGeneratedDraft,listGeneratedDrafts});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts});
 })();
