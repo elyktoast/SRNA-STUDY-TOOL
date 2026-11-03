@@ -75,7 +75,7 @@ def execute(conn, args, environ=None):
     if not relay_secret:
         raise ValueError('Staging relay signing secret required')
     transport = make_transport(allowed_hosts=[host],
-        relay_url='https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay',
+        relay_url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay',
         relay_secret=relay_secret)
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
