@@ -87,6 +87,10 @@ def execute(conn, args, environ=None):
         record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
             request_hash=request_hash, evidence_hash=evidence_hash,
             stage=stage, value=value)
+    # Hybrid routing is explicitly opt-in and never silently falls back to Groq.
+    if env.get("AI_HYBRID_ENABLED") == "true":
+        from item_ai_hybrid_v2 import make_hybrid_adapter
+        adapter = make_hybrid_adapter(env, groq_adapter=adapter)
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
