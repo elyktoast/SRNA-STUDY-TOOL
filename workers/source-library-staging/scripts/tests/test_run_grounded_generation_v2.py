@@ -61,7 +61,7 @@ class GenerationCliTests(unittest.TestCase):
         self.assertEqual(result["save_payload"]["question"]["stem"], "Synthetic test item")
         transport.assert_called_once_with(
             allowed_hosts=["provider.example"],
-            relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
+            relay_url="https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
             relay_secret="a" * 48)
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
