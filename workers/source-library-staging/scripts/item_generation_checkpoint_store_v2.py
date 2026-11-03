@@ -45,6 +45,8 @@ def load(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
     stage, concept, draft = row
     if stage not in ("concept_card", "draft") or not isinstance(concept, dict):
         raise ValueError("Invalid saved checkpoint")
+    if stage == "concept_card" and draft is not None:
+        raise ValueError("Invalid saved concept checkpoint")
     if stage == "draft" and not isinstance(draft, dict):
         raise ValueError("Invalid saved draft checkpoint")
     return {"concept_card": concept, **({"draft": draft} if stage == "draft" else {})}
