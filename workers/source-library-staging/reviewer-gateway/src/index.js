@@ -10,9 +10,40 @@ function respond(status,origin,body=''){
  if(origin===ORIGIN){headers['Access-Control-Allow-Origin']=ORIGIN;headers.Vary='Origin';}
  return new Response(status===204?null:body,{status,headers});
 }
+// Signed server-to-server relay: no browser bearer, no provider key in the container request.
+async function relayGroq(request,env){
+ if(env.STAGING_ONLY!=='true'||env.AI_GENERATION_OPT_IN!=='true'||!env.AI_PROVIDER_API_KEY||!env.STAGING_RECEIPT_SIGNING_SECRET)return respond(503,null,'{"error":"relay_disabled"}');
+ if(request.method!=='POST'||request.headers.get('Content-Type')!=='application/json')return respond(405,null,'{"error":"method_not_allowed"}');
+ const length=Number(request.headers.get('Content-Length')||0);
+ if(length>524288)return respond(413,null,'{"error":"request_too_large"}');
+ const bytes=new Uint8Array(await request.arrayBuffer());
+ if(bytes.length>524288)return respond(413,null,'{"error":"request_too_large"}');
+ const timestamp=request.headers.get('X-Relay-Timestamp')||'';
+ const signature=request.headers.get('X-Relay-Signature')||'';
+ if(!/^\\d{10}$/.test(timestamp)||Math.abs(Date.now()/1000-Number(timestamp))>30||!/^\\b[a-f0-9]{64}\\b$/.test(signature))return respond(403,null,'{"error":"forbidden"}');
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(env.STAGING_RECEIPT_SIGNING_SECRET),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+ const prefix=new TextEncoder().encode('srna-groq-relay-v1\\n'+timestamp+'\\n');
+ const signed=new Uint8Array(prefix.length+bytes.length);signed.set(prefix);signed.set(bytes,prefix.length);
+ const expected=new Uint8Array(await crypto.subtle.sign('HMAC',key,signed));
+ const received=new Uint8Array(signature.match(/../g).map(x=>parseInt(x,16)));
+ let mismatch=0;for(let i=0;i<32;i++)mismatch|=expected[i]^received[i];
+ if(mismatch)return respond(403,null,'{"error":"forbidden"}');
+ let payload;try{payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{return respond(400,null,'{"error":"invalid_json"}')}
+ if(payload?.model!==env.AI_GENERATOR_MODEL||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
+ let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
+ if(!['concept_card','item_draft','rationale'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false)return respond(400,null,'{"error":"invalid_step"}');
+ try{
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
+  let upstream;try{upstream=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'},body:bytes,redirect:'manual',signal:controller.signal})}finally{clearTimeout(timeout)}
+  if(!upstream.ok){const rule=upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';return respond(502,null,JSON.stringify({error:'provider_failed',rule}))}
+  const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
+  return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+ }catch{return respond(503,null,'{"error":"relay_network"}')}
+}
 export default {
  async fetch(request,env){
   const url=new URL(request.url),origin=request.headers.get('Origin');
+  if(url.pathname==='/internal/groq-relay')return relayGroq(request,env);
   if(env.STAGING_ONLY!=='true'||env.SUPABASE_URL!==PROJECT||!env.SUPABASE_ANON_KEY||!env.REVIEWER_CONTAINER){
    console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'required_binding_unavailable'}));
    return respond(503,null,'{"error":"staging_not_configured"}');
