@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from item_generation_checkpoint_store_v2 import fingerprint, record, load
+from item_generation_checkpoint_store_v2 import fingerprint, record, load, status
 from run_grounded_generation_v2 import execute
 
 
@@ -34,6 +34,22 @@ class FingerprintTests(unittest.TestCase):
         self.assertIn("on conflict (owner_uid,request_hash) do update", sql)
         self.assertIn("generation_checkpoints_v2.expires_at <= now()", sql)
         self.assertIn("draft=NULL", sql)
+
+    def test_resume_status_exposes_metadata_only(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("draft", 120)
+        value = status(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+                       textbook_id="22222222-2222-4222-8222-222222222222",
+                       request_hash="a" * 64, evidence_hash="b" * 64)
+        self.assertEqual(value, {"resumable": True, "next_stage": "rationale",
+                                 "expires_in_seconds": 120})
+        self.assertNotIn("draft", value)
+        cursor.fetchone.return_value = None
+        self.assertEqual(status(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+                                textbook_id="22222222-2222-4222-8222-222222222222",
+                                request_hash="a" * 64, evidence_hash="b" * 64),
+                         {"resumable": False, "next_stage": "concept_card"})
 
     def test_invalid_record_fails_before_database_use(self):
         with self.assertRaisesRegex(ValueError, "Invalid checkpoint fingerprint"):
