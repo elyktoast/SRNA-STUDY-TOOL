@@ -12,8 +12,9 @@ import urllib.request
 from urllib.parse import urlsplit
 
 class TransportError(RuntimeError):
-    def __init__(self, rule='PROVIDER_TRANSPORT'):
+    def __init__(self, rule='PROVIDER_TRANSPORT', retry_after_seconds=None):
         self.rule = rule
+        self.retry_after_seconds = retry_after_seconds if type(retry_after_seconds) is int and 0 <= retry_after_seconds <= 3600 else None
         super().__init__('Provider transport unavailable')
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -90,7 +91,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
                     raise TransportError('RELAY_AUTH') from None
                 if diagnostic.get('error') == 'provider_failed':
                     allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM'}
-                    raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM') from None
+                    raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM', diagnostic.get('retry_after_seconds')) from None
                 if diagnostic.get('error') in ('relay_network', 'relay_disabled'):
                     raise TransportError('RELAY_UNAVAILABLE') from None
                 # A response from our Worker always carries X-Review-Approval-Enabled.
