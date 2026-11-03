@@ -14,7 +14,14 @@ RATIONALE_FIELDS = ("core_concept", "why_key_wins", "trap", "distractor_breakdow
 
 
 def _response(adapter, request):
-    result = adapter(request)
+    try:
+        result = adapter(request)
+    except Exception as exc:
+        # Expose only a fixed step identifier to the authenticated HTTP bridge.
+        # Never attach prompts, evidence, model output or credentials.
+        if request.get("step") in ("concept_card", "item_draft", "rationale"):
+            exc.generation_step = request["step"]
+        raise
     if not isinstance(result, dict):
         raise ValueError("Model adapter must return a JSON object")
     return result
