@@ -1,5 +1,8 @@
 """Offline tests for checkpoint fingerprints and staging feature gate."""
 import unittest
+from datetime import datetime, timezone
+from decimal import Decimal
+from uuid import UUID
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from item_generation_checkpoint_store_v2 import fingerprint, record, load
@@ -10,6 +13,27 @@ class FingerprintTests(unittest.TestCase):
     def test_order_independent_mapping_hash(self):
         self.assertEqual(fingerprint({"a": 1, "b": 2}), fingerprint({"b": 2, "a": 1}))
         self.assertNotEqual(fingerprint({"a": 1}), fingerprint({"a": 2}))
+
+    def test_fingerprint_normalizes_postgres_types(self):
+        owner = UUID("11111111-1111-4111-8111-111111111111")
+        timestamp = datetime(2026, 11, 3, 10, 0, tzinfo=timezone.utc)
+        self.assertEqual(
+            fingerprint({"owner": owner, "at": timestamp, "score": Decimal("1.25")}),
+            fingerprint({"score": "1.25", "at": timestamp.isoformat(),
+                         "owner": str(owner)}))
+
+    def test_expired_checkpoint_replacement_requires_expiry(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("checkpoint-id",)
+        record(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+               textbook_id="22222222-2222-4222-8222-222222222222",
+               request_hash="a" * 64, evidence_hash="b" * 64,
+               stage="concept_card", value={"topic": "airway"})
+        sql = cursor.execute.call_args.args[0]
+        self.assertIn("on conflict (owner_uid,request_hash) do update", sql)
+        self.assertIn("generation_checkpoints_v2.expires_at <= now()", sql)
+        self.assertIn("draft=NULL", sql)
 
     def test_invalid_record_fails_before_database_use(self):
         with self.assertRaisesRegex(ValueError, "Invalid checkpoint fingerprint"):
