@@ -77,6 +77,7 @@ def record(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, stage, 
                   stage='concept_card',
                   concept_card=excluded.concept_card,
                   draft=NULL,
+                  completed_result=NULL,
                   status='pending',
                   updated_at=now(),
                   expires_at=now() + interval '24 hours'
@@ -126,20 +127,43 @@ def status(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
             else "rationale", "expires_in_seconds": max(0, int(seconds))}
 
 
-def complete(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
-    """Finalize only a matching, unexpired draft owned by the source owner."""
+def complete(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, result):
+    """Atomically persist the final response before marking generation complete."""
     owner, book = str(UUID(str(owner_uid))), str(UUID(str(textbook_id)))
+    if not isinstance(result, dict) or not result:
+        raise ValueError("Completed result must be a nonempty object")
     with conn.cursor() as cur:
         cur.execute("""
           update source_library_staging.generation_checkpoints_v2 c
-          set status='completed',updated_at=now()
+          set status='completed',completed_result=%s::jsonb,updated_at=now()
           from source_library_staging.textbooks t
           where c.textbook_id=t.id and t.owner_uid=%s::uuid and t.status='ready'
             and c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
             and c.request_hash=%s and c.evidence_hash=%s
             and c.stage='draft' and c.status='pending' and c.expires_at>now()
           returning c.id
-        """, (owner, owner, book, request_hash, evidence_hash))
+        """, (json.dumps(result), owner, owner, book, request_hash, evidence_hash))
         if cur.fetchone() is None:
             raise ValueError("No matching draft checkpoint to complete")
     conn.commit()
+
+
+def recover_completed(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
+    """Recover private final response without repeating paid model calls."""
+    owner, book = str(UUID(str(owner_uid))), str(UUID(str(textbook_id)))
+    with conn.cursor() as cur:
+        cur.execute("""
+          select c.completed_result
+          from source_library_staging.generation_checkpoints_v2 c
+          join source_library_staging.textbooks t on t.id=c.textbook_id
+          where c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
+            and t.owner_uid=%s::uuid and t.status='ready'
+            and c.request_hash=%s and c.evidence_hash=%s
+            and c.status='completed' and c.expires_at>now()
+        """, (owner, book, owner, request_hash, evidence_hash))
+        row = cur.fetchone()
+    if row is None:
+        return None
+    if not isinstance(row[0], dict) or not row[0]:
+        raise ValueError("Invalid completed generation result")
+    return row[0]
