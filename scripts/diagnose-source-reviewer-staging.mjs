@@ -106,3 +106,23 @@ if(evidenceResponse.status===200){
  assert.equal(evidence?.database_writes,false);
  assert.ok(Number.isSafeInteger(evidence?.passage_count)&&evidence.passage_count>0);
 }
+
+ // Provider readiness is a read-only GET to Groq's models endpoint, never generation.
+ // Keep opt-in failures visible without turning an intentionally disabled provider into a deployment failure.
+const providerResponse=await fetch(gateway+'/generation/provider-check',{method:'GET',headers,redirect:'manual'});
+const providerBody=await providerResponse.json().catch(()=>null);
+const providerRule=new Set(['OK','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_OTHER']).has(providerBody?.rule)?providerBody.rule:'UNCLASSIFIED';
+const providerState=providerResponse.status===200?providerRule:providerResponse.status===403?'GENERATION_DISABLED':providerResponse.status===503?'PROVIDER_CHECK_UNAVAILABLE':'UNEXPECTED';
+console.log('STEP 11: read-only Groq provider check: HTTP',providerResponse.status,'state',providerState);
+assert.ok([200,403,503].includes(providerResponse.status),'unexpected provider-check HTTP status');
+if(providerResponse.status===200){
+ assert.equal(providerBody?.generation_performed,false,'provider-check must never generate');
+ assert.equal(providerBody?.check,'groq_models');
+ assert.ok([200,401,403,429,0].includes(providerBody?.provider_status));
+}
+const draftResponse=await fetch(gateway+'/generation/drafts',{method:'GET',headers,redirect:'manual'});
+const draftBody=await draftResponse.json().catch(()=>null);
+console.log('STEP 12: private draft-bank read: HTTP',draftResponse.status,'shape',Array.isArray(draftBody?.drafts)?'draft_list':'unavailable');
+assert.equal(draftResponse.status,200,'private draft-bank read unavailable');
+assert.ok(Array.isArray(draftBody?.drafts),'draft bank must return a private draft list');
+assert.ok(draftBody.drafts.every(d=>d?.published!==true),'draft listing must not contain published items');
