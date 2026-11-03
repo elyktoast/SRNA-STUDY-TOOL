@@ -9,6 +9,11 @@ export class ReviewerContainer extends Container {
    if(!this.env[name])throw new Error('Missing staging secret: '+name);
    result[name]=this.env[name];
   }
+  // Checkpoint access is private to this staging container; never expose it to browser configuration.
+  if (this.env.AI_GENERATION_CHECKPOINTS_ENABLED === 'true') {
+   if (this.env.AI_GENERATION_OPT_IN !== 'true') throw new Error('Checkpointing requires staging AI opt-in');
+   result.AI_GENERATION_CHECKPOINTS_ENABLED = 'true';
+  }
   const aiKeys = ['AI_PROVIDER_ENDPOINT', 'AI_ALLOWED_HOSTS', 'AI_PROVIDER_API_KEY', 'AI_GENERATOR_MODEL'];
   if (this.env.AI_GENERATION_OPT_IN === 'true') {
    for (const key of aiKeys) {
