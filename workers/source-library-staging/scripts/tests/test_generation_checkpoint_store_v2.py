@@ -130,6 +130,27 @@ class FingerprintTests(unittest.TestCase):
             checkpoint_record.assert_called_once()
             checkpoint_complete.assert_called_once()
 
+    def test_preflight_resume_metadata_no_provider_call(self):
+        args = SimpleNamespace(owner_uid="11111111-1111-4111-8111-111111111111",
+            topic="airway", mode="NCE", domain="III", section="H", objective="III.H.4",
+            format="MC", item_id="q1", textbook_id="22222222-2222-4222-8222-222222222222",
+            section_id=None, include_subsections=False, page_start=None,
+            page_end=None, limit=8, execute=False, confirm_paid_calls=False)
+        evidence = {"topic": "airway", "evidence_count": 1,
+                    "can_generate_grounded_questions": True,
+                    "sources": [{"passage_id": "p1", "textbook_id": args.textbook_id}]}
+        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
+             patch("item_generation_checkpoint_store_v2.status",
+                   return_value={"resumable": True, "next_stage": "rationale",
+                                 "expires_in_seconds": 90}) as checkpoint_status, \
+             patch("run_grounded_generation_v2.make_transport") as transport:
+            output = execute(object(), args, {"STAGING_ONLY": "true",
+                "AI_GENERATION_CHECKPOINTS_ENABLED": "true"})
+        self.assertTrue(output["dry_run"])
+        self.assertEqual(output["resume"]["next_stage"], "rationale")
+        checkpoint_status.assert_called_once()
+        transport.assert_not_called()
+
     def test_feature_disabled_does_not_access_checkpoint_storage(self):
         args = SimpleNamespace(owner_uid="owner", topic="airway", mode="NCE",
             domain="I", section="A", objective="I.A.1", format="MC", item_id="q1",
