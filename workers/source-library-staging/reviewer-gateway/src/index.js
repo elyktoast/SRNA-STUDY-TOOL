@@ -164,6 +164,12 @@ export default {
      return respond(503,origin,'{"error":"staging_not_configured"}');
     }
    }
+   if(env.AI_HYBRID_ENABLED==='true'){
+    const keys=['AI_GEMINI_API_KEY','AI_GEMINI_MODEL','AI_CLOUDFLARE_ACCOUNT_ID','AI_CLOUDFLARE_API_TOKEN','AI_CLOUDFLARE_MODEL'];
+    if(env.AI_GENERATION_OPT_IN!=='true'||!keys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
+     return respond(503,origin,'{"error":"staging_not_configured"}');
+    }
+   }
    const envVars={STAGING_ONLY:'true',SUPABASE_URL:PROJECT};
    for(const key of required)envVars[key]=env[key];
    // Model credentials remain server-side. Incomplete configuration disables generation.
@@ -178,6 +184,7 @@ export default {
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
+    if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
    }
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
