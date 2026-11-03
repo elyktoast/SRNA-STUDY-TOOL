@@ -84,14 +84,17 @@ def create_app(*, conn_factory, resolve_admin, environment):
             if (parsed.scheme != "https" or parsed.hostname != "api.groq.com"
                     or parsed.hostname not in allowed or not key or not environment.get("AI_GENERATOR_MODEL")):
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "CONFIGURATION"})
-            # Groq models endpoint: no generation, no model inference charges.
+            # Groq models endpoint: no generation. Never follow credential-bearing redirects.
             url = "https://api.groq.com/openai/v1/models"
             request = urllib.request.Request(url, headers={"Authorization": "Bearer " + key}, method="GET")
+            from item_ai_https_transport_v2 import _NoRedirect, TransportError
             try:
-                with urllib.request.build_opener().open(request, timeout=8) as response:
+                with urllib.request.build_opener(_NoRedirect()).open(request, timeout=8) as response:
                     status = response.status
             except urllib.error.HTTPError as exc:
                 status = exc.code
+            except TransportError:
+                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "REDIRECT"})
             except Exception:
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "NETWORK"})
             rule = "OK" if status == 200 else "PROVIDER_AUTH" if status == 401 else "PROVIDER_FORBIDDEN" if status == 403 else "PROVIDER_RATE_LIMIT" if status == 429 else "PROVIDER_OTHER"
