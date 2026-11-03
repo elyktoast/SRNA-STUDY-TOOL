@@ -109,18 +109,21 @@ def status(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
     owner, book = str(UUID(str(owner_uid))), str(UUID(str(textbook_id)))
     with conn.cursor() as cur:
         cur.execute("""
-          select c.stage, extract(epoch from (c.expires_at-now()))::integer
+          select c.stage, extract(epoch from (c.expires_at-now()))::integer, c.status
           from source_library_staging.generation_checkpoints_v2 c
           join source_library_staging.textbooks t on t.id=c.textbook_id
           where c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
             and t.owner_uid=%s::uuid and t.status='ready'
             and c.request_hash=%s and c.evidence_hash=%s
-            and c.status='pending' and c.expires_at>now()
+            and c.status in ('pending','completed') and c.expires_at>now()
         """, (owner, book, owner, request_hash, evidence_hash))
         row = cur.fetchone()
     if row is None:
         return {"resumable": False, "next_stage": "concept_card"}
-    stage, seconds = row
+    stage, seconds, state = row
+    if state == 'completed':
+        return {"resumable": True, "next_stage": "completed", "completed": True,
+                "expires_in_seconds": max(0, int(seconds))}
     if stage not in ("concept_card", "draft"):
         raise ValueError("Invalid checkpoint stage")
     return {"resumable": True, "next_stage": "item_draft" if stage == "concept_card"
