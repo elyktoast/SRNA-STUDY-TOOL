@@ -86,6 +86,26 @@ class FingerprintTests(unittest.TestCase):
                      request_hash="a" * 64, evidence_hash="b" * 64, result={"item": {"stem": "Saved"}})
         conn.commit.assert_called_once()
 
+    def test_completed_result_recovery_is_owner_and_evidence_scoped(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ({"item": {"stem": "Recovered"}},)
+        result = recover_completed(conn,
+            owner_uid="11111111-1111-4111-8111-111111111111",
+            textbook_id="22222222-2222-4222-8222-222222222222",
+            request_hash="a" * 64, evidence_hash="b" * 64)
+        self.assertEqual(result["item"]["stem"], "Recovered")
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("c.status='completed'", sql)
+        self.assertIn("c.expires_at>now()", sql)
+        self.assertIn("t.owner_uid=%s::uuid", sql)
+        self.assertEqual(params[-2:], ("a" * 64, "b" * 64))
+        cursor.fetchone.return_value = None
+        self.assertIsNone(recover_completed(conn,
+            owner_uid="11111111-1111-4111-8111-111111111111",
+            textbook_id="22222222-2222-4222-8222-222222222222",
+            request_hash="a" * 64, evidence_hash="b" * 64))
+
     def test_invalid_record_fails_before_database_use(self):
         with self.assertRaisesRegex(ValueError, "Invalid checkpoint fingerprint"):
             record(object(), owner_uid="11111111-1111-4111-8111-111111111111",
