@@ -92,7 +92,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
                 if diagnostic.get('error') == 'forbidden':
                     raise TransportError('RELAY_AUTH') from None
                 if diagnostic.get('error') == 'provider_failed':
-                    allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM'}
+                    allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM', 'PROVIDER_REQUEST_REJECTED', 'PROVIDER_MODEL_UNAVAILABLE'}
                     raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM', diagnostic.get('retry_after_seconds'), diagnostic.get('remaining_requests'), diagnostic.get('remaining_tokens')) from None
                 if diagnostic.get('error') in ('relay_network', 'relay_disabled'):
                     raise TransportError('RELAY_UNAVAILABLE') from None
