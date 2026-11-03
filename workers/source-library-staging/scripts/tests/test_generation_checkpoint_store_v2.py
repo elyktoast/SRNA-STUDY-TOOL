@@ -69,11 +69,11 @@ class FingerprintTests(unittest.TestCase):
              patch("run_grounded_generation_v2.record") as checkpoint_record, \
              patch("run_grounded_generation_v2.complete") as checkpoint_complete:
             execute(object(), args, env)
-        checkpoint_load.assert_called_once()
-        self.assertEqual(generate.call_args.kwargs["checkpoint"], saved)
-        generate.call_args.kwargs["on_checkpoint"]("draft", {"stem": "Another draft"})
-        checkpoint_record.assert_called_once()
-        checkpoint_complete.assert_called_once()
+            checkpoint_load.assert_called_once()
+            self.assertEqual(generate.call_args.kwargs["checkpoint"], saved)
+            generate.call_args.kwargs["on_checkpoint"]("draft", {"stem": "Another draft"})
+            checkpoint_record.assert_called_once()
+            checkpoint_complete.assert_called_once()
 
     def test_feature_disabled_does_not_access_checkpoint_storage(self):
         args = SimpleNamespace(owner_uid="owner", topic="airway", mode="NCE",
