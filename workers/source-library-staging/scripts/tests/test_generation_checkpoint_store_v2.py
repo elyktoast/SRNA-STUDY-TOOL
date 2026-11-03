@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from item_generation_checkpoint_store_v2 import fingerprint, record, load, status
+from item_generation_checkpoint_store_v2 import fingerprint, record, load, status, complete
 from run_grounded_generation_v2 import execute
 
 
@@ -64,6 +64,26 @@ class FingerprintTests(unittest.TestCase):
         self.assertIn("c.evidence_hash=%s", sql)
         self.assertIn("c.stage='concept_card'", sql)
         self.assertEqual(params[-2:], ("a" * 64, "b" * 64))
+        conn.commit.assert_called_once()
+
+    def test_complete_requires_matching_ready_source_and_draft(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("checkpoint-id",)
+        complete(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+                 textbook_id="22222222-2222-4222-8222-222222222222",
+                 request_hash="a" * 64, evidence_hash="b" * 64)
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("t.status='ready'", sql)
+        self.assertIn("c.stage='draft'", sql)
+        self.assertIn("c.textbook_id=%s::uuid", sql)
+        self.assertEqual(params[2], "22222222-2222-4222-8222-222222222222")
+        conn.commit.assert_called_once()
+        cursor.fetchone.return_value = None
+        with self.assertRaisesRegex(ValueError, "No matching draft"):
+            complete(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+                     textbook_id="22222222-2222-4222-8222-222222222222",
+                     request_hash="a" * 64, evidence_hash="b" * 64)
         conn.commit.assert_called_once()
 
     def test_invalid_record_fails_before_database_use(self):
