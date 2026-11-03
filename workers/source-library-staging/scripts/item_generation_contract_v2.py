@@ -34,9 +34,14 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
         "item_draft": "Return exactly one FLAT JSON object (no draft/item wrapper). Include format EXACTLY equal to the requested two-letter format (MC, MS, SA, DD, HS), and a nonempty string stem. Use clinical application or analysis when appropriate; do not invent citations or unsupported facts. For MC: options must be an array of exactly four objects with id A, B, C, D, nonempty text and error_pattern; key must be an array containing exactly one correct option ID; select_count must be null. For MS: four to six such sequential options, key an array of exactly two or three correct IDs, select_count equal to that number, and stem must contain (Select 2.) or (Select 3.). For SA: numeric sa.answer, sa.tolerance, sa.unit, sa.rounding, sa.worked_solution, with no choices. For DD: dd.left and dd.right arrays of four each, and dd.pairs one-to-one. For HS: only a genuinely licensed figure with license, correct_region and two near_miss_regions; never invent a license. Include reasoning_level (recall, application or analysis), population (adult, pediatric, obstetric, geriatric, obese, SUD, immune or null), crisis_scenario (boolean), evidence (array of source objects with textbook_id, passage_id and pdf_page drawn only from supplied passages), and fields model, distractor_evidence, numbers_verified_against_page_image (false unless independently verified), enemy_ids, self_check, audit and stats. For unused format-specific fields use null. Never claim human approval or verified page images. No all/none above, true/false, fill-in or select-all-that-apply.",
         "rationale": "Write core_concept, why_key_wins, trap and distractor_breakdown. Verify each distractor is false using evidence; do not invent citations. Preserve draft answer and source IDs. Leave uncertain facts flagged for human review.",
     }
+    # Keep the full evidence in trusted validation; send only fields the model
+    # needs for grounding and source attribution. Do not truncate excerpts.
+    compact_evidence = [{key: passage[key] for key in
+        ("passage_id", "textbook_id", "excerpt", "pdf_page_start", "pdf_page_end")
+        if key in passage} for passage in evidence]
     return {"rules_version": RULES_VERSION, "step": step,
             "mode": mode, "domain": domain, "section": section, "objective": objective,
-            "format": format, "evidence": evidence, "concept_card": concept_card,
+            "format": format, "evidence": compact_evidence, "concept_card": concept_card,
             "draft": draft, "instructions": instructions[step],
             "required_output": ("concept_card" if step == "concept_card"
                                 else "draft" if step == "item_draft" else "rationale"),
