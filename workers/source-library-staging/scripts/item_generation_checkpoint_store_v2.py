@@ -18,7 +18,9 @@ def fingerprint(value):
             return {str(k): canonical(v) for k, v in item.items()}
         if isinstance(item, (list, tuple)):
             return [canonical(v) for v in item]
-        if isinstance(item, (UUID, date, datetime, Decimal)):
+        if isinstance(item, (date, datetime)):
+            return item.isoformat()
+        if isinstance(item, (UUID, Decimal)):
             return str(item)
         return item
     encoded = json.dumps(canonical(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
