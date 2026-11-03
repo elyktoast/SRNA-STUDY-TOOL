@@ -45,6 +45,8 @@ def load(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
     stage, concept, draft = row
     if stage not in ("concept_card", "draft") or not isinstance(concept, dict):
         raise ValueError("Invalid saved checkpoint")
+    if not concept:
+        raise ValueError("Empty saved concept checkpoint")
     if stage == "concept_card" and draft is not None:
         raise ValueError("Invalid saved concept checkpoint")
     if stage == "draft" and not isinstance(draft, dict):
@@ -54,7 +56,7 @@ def load(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
 
 def record(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, stage, value):
     owner, book = str(UUID(str(owner_uid))), str(UUID(str(textbook_id)))
-    if stage not in ("concept_card", "draft") or not isinstance(value, dict):
+    if stage not in ("concept_card", "draft") or not isinstance(value, dict) or not value:
         raise ValueError("Invalid checkpoint stage or value")
     if not all(isinstance(h, str) and len(h) == 64 and all(ch in "0123456789abcdef" for ch in h)
                for h in (request_hash, evidence_hash)):
