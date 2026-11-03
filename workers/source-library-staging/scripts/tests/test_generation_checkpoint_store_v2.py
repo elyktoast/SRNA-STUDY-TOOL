@@ -1,7 +1,7 @@
 """Offline tests for checkpoint fingerprints and staging feature gate."""
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from item_generation_checkpoint_store_v2 import fingerprint, record, load
 from run_grounded_generation_v2 import execute
 
@@ -17,6 +17,30 @@ class FingerprintTests(unittest.TestCase):
                    textbook_id="22222222-2222-4222-8222-222222222222",
                    request_hash="bad", evidence_hash="f" * 64,
                    stage="concept_card", value={"x": 1})
+
+    def test_checkpoint_owner_and_evidence_bound_query(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("draft", {"objective": "III.H.4"}, {"stem": "Test"})
+        owner = "11111111-1111-4111-8111-111111111111"
+        book = "22222222-2222-4222-8222-222222222222"
+        result = load(conn, owner_uid=owner, textbook_id=book,
+                      request_hash="a" * 64, evidence_hash="b" * 64)
+        self.assertEqual(result["draft"]["stem"], "Test")
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("t.owner_uid=%s::uuid", sql)
+        self.assertIn("c.expires_at>now()", sql)
+        self.assertEqual(params, (owner, book, owner, "a" * 64, "b" * 64))
+
+    def test_record_commits_each_valid_stage(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("checkpoint-id",)
+        record(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+               textbook_id="22222222-2222-4222-8222-222222222222",
+               request_hash="a" * 64, evidence_hash="b" * 64,
+               stage="concept_card", value={"objective": "III.H.4"})
+        conn.commit.assert_called_once()
 
     def test_feature_disabled_does_not_access_checkpoint_storage(self):
         args = SimpleNamespace(owner_uid="owner", topic="airway", mode="NCE",
