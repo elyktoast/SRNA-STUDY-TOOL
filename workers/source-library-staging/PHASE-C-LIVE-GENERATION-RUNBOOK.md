@@ -7,10 +7,11 @@
 **HOLD: Do not run another live Generate request yet.** The staging database migration was applied on 2026-11-03 to the isolated `source_library_staging` schema in Supabase project `xqyasyambwdyhsjkftqu`. A read-only query confirmed the table exists, RLS is enabled, anonymous/authenticated SELECT is denied, and the table has zero rows. Deployed backend identity, write access, and end-to-end resume still require verification. Passing CI alone does not prove the deployed service supports resume.
 
 1. **Applied:** `sql/20261103_generation_checkpoints_v2.sql` to `source_library_staging` in project `xqyasyambwdyhsjkftqu`. Do not reapply to production. Confirm project/schema identity before any subsequent write.
-2. **Partially verified:** table exists, RLS enabled, anonymous/authenticated SELECT denied, zero rows. Still verify the private staging backend role can read/write it and that other grants remain denied.
-3. Keep `AI_GENERATION_CHECKPOINTS_ENABLED` unset until stage-write, stage-load, and expiry tests pass on the deployed staging backend. The owner, textbook, request hash, and evidence hash must all match.
-4. The HTTP endpoint should return a safe 429 and bounded Retry-After for provider throttling. No automatic retries. Resume requires the exact same item_id, topic, blueprint, textbook, and filters; a new item_id means a new run.
-5. Confirm deployment SHA and one dry-run preflight. Only then tell the owner **READY TO TEST** and authorize one controlled live attempt.
+2. **Partially verified:** table exists, RLS enabled, anonymous/authenticated SELECT denied, zero rows. Database grants verified: `postgres` can read/write; `anon`, `authenticated`, `authenticator`, and `service_role` cannot. **Still verify the deployed staging backend actually connects with an authorized private DB role** (never expose database credentials to the browser).
+3. Confirm the deployed Python generation service actually mounts `item_generation_http_v2.create_app`, uses the staging database, and runs the latest PR code. The Cloudflare upload Worker is **not** a substitute for this service.
+4. Keep `AI_GENERATION_CHECKPOINTS_ENABLED` unset until stage-write, stage-load, and expiry tests pass on the deployed staging backend. The owner, textbook, request hash, and evidence hash must all match.
+5. The HTTP endpoint should return a safe 429 and bounded Retry-After for provider throttling. No automatic retries. Resume requires the exact same item_id, topic, blueprint, textbook, and filters; a new item_id means a new run.
+6. Confirm deployment SHA and one dry-run preflight. Only then tell the owner **READY TO TEST** and authorize one controlled live attempt.
 
 Gemini provider routing remains a declarative plan, not a deployed inference integration. Intermediate checkpoints are not published questions and are not the admin draft bank.
 
