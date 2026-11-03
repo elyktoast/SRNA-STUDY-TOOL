@@ -101,7 +101,19 @@ def create_app(*, conn_factory, resolve_admin, environment):
                     raise ValueError("Invalid relay diagnostic")
                 return respond("200 OK", data)
             except urllib.error.HTTPError as exc:
-                rule = "RELAY_EDGE_403" if exc.code == 403 and exc.headers.get("X-Review-Approval-Enabled") != "false" else "RELAY_HTTP_" + str(exc.code if exc.code in (400, 401, 403, 404, 405, 413, 429, 500, 502, 503, 504) else 0)
+                edge_denial = exc.code == 403 and exc.headers.get("X-Review-Approval-Enabled") != "false"
+                if edge_denial:
+                    snippet = exc.read(512).lower()
+                    if b"error code: 1020" in snippet or b"error code 1020" in snippet:
+                        rule = "RELAY_EDGE_WAF_1020"
+                    elif b"cloudflare" in snippet or b"cf-error" in snippet or b"challenge-platform" in snippet:
+                        rule = "RELAY_EDGE_CLOUDFLARE"
+                    elif b"access denied" in snippet or b"forbidden" in snippet:
+                        rule = "RELAY_EDGE_ACCESS_DENIED"
+                    else:
+                        rule = "RELAY_EDGE_403"
+                else:
+                    rule = "RELAY_HTTP_" + str(exc.code if exc.code in (400, 401, 403, 404, 405, 413, 429, 500, 502, 503, 504) else 0)
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": rule})
             except Exception:
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "RELAY_NETWORK"})
