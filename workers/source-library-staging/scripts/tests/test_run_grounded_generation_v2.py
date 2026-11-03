@@ -42,7 +42,8 @@ class GenerationCliTests(unittest.TestCase):
         env = {"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true",
                "AI_PROVIDER_ENDPOINT": "https://provider.example/v1/chat/completions",
                "AI_ALLOWED_HOSTS": "provider.example",
-               "AI_PROVIDER_API_KEY": "secret", "AI_GENERATOR_MODEL": "test-model"}
+               "AI_PROVIDER_API_KEY": "secret", "AI_GENERATOR_MODEL": "test-model",
+               "STAGING_RECEIPT_SIGNING_SECRET": "a" * 48}
         generate.return_value = {
             "item_id": "draft-1", "next_state": "needs_editorial_review",
             "source_evidence": {"evidence_count": 1},
@@ -58,7 +59,10 @@ class GenerationCliTests(unittest.TestCase):
         self.assertTrue(result["requires_human_review"])
         self.assertEqual(result["save_payload"]["evidence"][0]["passage_id"], "p1")
         self.assertEqual(result["save_payload"]["question"]["stem"], "Synthetic test item")
-        transport.assert_called_once_with(allowed_hosts=["provider.example"])
+        transport.assert_called_once_with(
+            allowed_hosts=["provider.example"],
+            relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
+            relay_secret="a" * 48)
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
             model="test-model", transport=transport.return_value,
