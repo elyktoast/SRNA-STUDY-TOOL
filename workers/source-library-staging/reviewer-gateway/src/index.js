@@ -45,7 +45,7 @@ async function relayGroq(request,env){
   const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
-  const input=payload.messages[0].content+'\\n'+payload.messages[1].content;
+  const input=payload.messages[0].content+'\n'+payload.messages[1].content;
   const target=provider==='gemini'?'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(env.AI_GEMINI_MODEL)+':generateContent':provider==='cloudflare'?'https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/run/'+env.AI_CLOUDFLARE_MODEL:'https://api.groq.com/openai/v1/chat/completions';
   const providerHeaders=provider==='gemini'?{'x-goog-api-key':env.AI_GEMINI_API_KEY,'Content-Type':'application/json'}:provider==='cloudflare'?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'}:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json'}}):provider==='cloudflare'?JSON.stringify({messages:[{role:'user',content:input}],max_tokens:payload.max_tokens,temperature:0.2}):bytes;
