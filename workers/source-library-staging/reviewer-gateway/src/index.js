@@ -139,6 +139,12 @@ export default {
    for(const key of required)envVars[key]=env[key];
    // Model credentials remain server-side. Incomplete configuration disables generation.
    const aiKeys=['AI_PROVIDER_ENDPOINT','AI_ALLOWED_HOSTS','AI_PROVIDER_API_KEY','AI_GENERATOR_MODEL'];
+   // Never silently disable requested checkpointing because model configuration is incomplete.
+   if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true'&&
+      (env.AI_GENERATION_OPT_IN!=='true'||!aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0))){
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'checkpoint_ai_config_incomplete'}));
+    return respond(503,origin,'{"error":"staging_not_configured"}');
+   }
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
