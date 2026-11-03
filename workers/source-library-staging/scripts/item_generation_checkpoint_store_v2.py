@@ -126,13 +126,20 @@ def status(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
             else "rationale", "expires_in_seconds": max(0, int(seconds))}
 
 
-def complete(conn, *, owner_uid, request_hash, evidence_hash):
-    owner = str(UUID(str(owner_uid)))
+def complete(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
+    """Finalize only a matching, unexpired draft owned by the source owner."""
+    owner, book = str(UUID(str(owner_uid))), str(UUID(str(textbook_id)))
     with conn.cursor() as cur:
         cur.execute("""
-          update source_library_staging.generation_checkpoints_v2
+          update source_library_staging.generation_checkpoints_v2 c
           set status='completed',updated_at=now()
-          where owner_uid=%s::uuid and request_hash=%s and evidence_hash=%s
-            and status='pending' and expires_at>now()
-        """, (owner,request_hash,evidence_hash))
+          from source_library_staging.textbooks t
+          where c.textbook_id=t.id and t.owner_uid=%s::uuid and t.status='ready'
+            and c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
+            and c.request_hash=%s and c.evidence_hash=%s
+            and c.stage='draft' and c.status='pending' and c.expires_at>now()
+          returning c.id
+        """, (owner, owner, book, request_hash, evidence_hash))
+        if cur.fetchone() is None:
+            raise ValueError("No matching draft checkpoint to complete")
     conn.commit()
