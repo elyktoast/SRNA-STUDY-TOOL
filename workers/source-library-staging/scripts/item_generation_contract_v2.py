@@ -30,7 +30,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
     if step == "rationale" and not isinstance(draft, dict):
         raise ValueError("Draft required before rationale")
     instructions = {
-        "concept_card": "Produce a concept card with objective, mechanism, relevance, misconception, counterfactual and evidence_ids. Ground all clinical claims in the supplied passages.",
+        "concept_card": "Return one FLAT JSON object, not a nested concept_card wrapper. Required keys: objective (string EXACTLY matching the input objective code), mechanism (nonempty string), relevance (nonempty string), misconception (nonempty string), counterfactual (nonempty string), evidence_ids (nonempty array of UNIQUE passage_id strings copied verbatim from supplied evidence). Do not use textbook_id, page number, citation label, or invented IDs in evidence_ids. Ground all clinical claims in the supplied passages. Do not add markdown.",
         "item_draft": "Create exactly one original NBCRNA-style item in the requested format. Use clinical application or analysis when appropriate. Do not invent citations or unsupported facts. MC: four options, one correct. MS: four to six options, select exactly two or three. SA: numeric with unit, rounding, tolerance and worked solution. DD: four-to-four one-to-one match. HS: licensed figure and correct plus two adjacent near-miss regions. Do not use all/none above, true/false, fill-in or select-all-that-apply.",
         "rationale": "Write core_concept, why_key_wins, trap and distractor_breakdown. Verify each distractor is false using evidence; do not invent citations. Preserve draft answer and source IDs. Leave uncertain facts flagged for human review.",
     }
