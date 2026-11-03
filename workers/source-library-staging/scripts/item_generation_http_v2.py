@@ -74,31 +74,37 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
             if environment.get("AI_GENERATION_OPT_IN") != "true":
                 return respond("403 Forbidden", {"error": "generation_disabled"})
-            from urllib.parse import urlsplit
-            import urllib.request
+            # Exercise the actual Container -> signed Worker -> Groq path.
+            # This request checks /models only and never invokes generation.
+            import hashlib
+            import hmac
+            import time
             import urllib.error
-            endpoint = environment.get("AI_PROVIDER_ENDPOINT", "")
-            key = environment.get("AI_PROVIDER_API_KEY", "")
-            allowed = environment.get("AI_ALLOWED_HOSTS", "").split(",")
-            parsed = urlsplit(endpoint)
-            if (parsed.scheme != "https" or parsed.hostname != "api.groq.com"
-                    or parsed.hostname not in allowed or not key or not environment.get("AI_GENERATOR_MODEL")):
+            import urllib.request
+            secret = environment.get("STAGING_RECEIPT_SIGNING_SECRET", "")
+            if len(secret) < 32:
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "CONFIGURATION"})
-            # Groq models endpoint: no generation. Never follow credential-bearing redirects.
-            url = "https://api.groq.com/openai/v1/models"
-            request = urllib.request.Request(url, headers={"Authorization": "Bearer " + key}, method="GET")
-            from item_ai_https_transport_v2 import _NoRedirect, TransportError
+            body = b'{"diagnostic":"groq_models"}'
+            stamp = str(int(time.time()))
+            signature = hmac.new(secret.encode(), b'srna-groq-relay-v1\\n' + stamp.encode() + b'\\n' + body, hashlib.sha256).hexdigest()
+            request = urllib.request.Request(
+                "https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
+                data=body, method="POST", headers={
+                    "Content-Type": "application/json",
+                    "X-Relay-Timestamp": stamp, "X-Relay-Signature": signature})
+            from item_ai_https_transport_v2 import _NoRedirect
             try:
-                with urllib.request.build_opener(_NoRedirect()).open(request, timeout=8) as response:
-                    status = response.status
+                with urllib.request.build_opener(_NoRedirect()).open(request, timeout=10) as response:
+                    data = json.loads(response.read(2048))
+                if (data.get("check") != "groq_models_via_signed_relay"
+                        or data.get("generation_performed") is not False):
+                    raise ValueError("Invalid relay diagnostic")
+                return respond("200 OK", data)
             except urllib.error.HTTPError as exc:
-                status = exc.code
-            except TransportError:
-                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "REDIRECT"})
+                rule = "RELAY_EDGE_403" if exc.code == 403 and exc.headers.get("X-Review-Approval-Enabled") != "false" else "RELAY_HTTP_" + str(exc.code if exc.code in (400, 401, 403, 404, 405, 413, 429, 500, 502, 503, 504) else 0)
+                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": rule})
             except Exception:
-                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "NETWORK"})
-            rule = "OK" if status == 200 else "PROVIDER_AUTH" if status == 401 else "PROVIDER_FORBIDDEN" if status == 403 else "PROVIDER_RATE_LIMIT" if status == 429 else "PROVIDER_OTHER"
-            return respond("200 OK", {"check": "groq_models", "provider_status": status if status in (200, 401, 403, 429) else 0, "rule": rule, "generation_performed": False})
+                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "RELAY_NETWORK"})
         if path not in ("/generation/preflight", "/generation/one"):
             try:
                 if method == "GET":
