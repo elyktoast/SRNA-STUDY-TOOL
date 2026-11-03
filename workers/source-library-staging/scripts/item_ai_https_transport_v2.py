@@ -4,6 +4,9 @@ No logging, automatic retries, credential persistence or network activity on
 import. Caller must use an approved endpoint and explicitly invoke the adapter.
 """
 import json
+import hmac
+import hashlib
+import time
 import urllib.error
 import urllib.request
 from urllib.parse import urlsplit
@@ -18,7 +21,8 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         raise TransportError("PROVIDER_REDIRECT")
 
 
-def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=262144):
+def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=262144,
+                   relay_url=None, relay_secret=None):
     hosts = frozenset(allowed_hosts)
     if not hosts or any(not isinstance(h, str) or not h or "/" in h or ":" in h for h in hosts):
         raise ValueError("Explicit provider host allowlist required")
@@ -27,6 +31,15 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
     if type(max_response_bytes) is not int or not 1024 <= max_response_bytes <= 1048576:
         raise ValueError("Response limit must be 1 KiB to 1 MiB")
 
+    if (relay_url is None) != (relay_secret is None):
+        raise ValueError('Relay URL and signing secret must be configured together')
+    if relay_url is not None:
+        parsed = urlsplit(relay_url)
+        if (parsed.scheme != 'https' or parsed.hostname != 'srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev'
+                or parsed.path != '/internal/groq-relay' or parsed.query or parsed.fragment
+                or parsed.port not in (None, 443) or parsed.username or parsed.password
+                or not isinstance(relay_secret, str) or len(relay_secret) < 32):
+            raise ValueError('Invalid staging relay configuration')
     opener = urllib.request.build_opener(_NoRedirect())
 
     def transport(*, endpoint, headers, body):
@@ -38,10 +51,20 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
         encoded = json.dumps(body, ensure_ascii=False).encode("utf-8")
         if len(encoded) > 524288:
             raise TransportError("PROVIDER_REQUEST_SIZE")
-        req = urllib.request.Request(endpoint, data=encoded, headers=headers, method="POST")
+        if relay_url is not None:
+            stamp = str(int(time.time()))
+            signed = b'srna-groq-relay-v1\\n' + stamp.encode() + b'\\n' + encoded
+            signature = hmac.new(relay_secret.encode(), signed, hashlib.sha256).hexdigest()
+            target = relay_url
+            request_headers = {'Content-Type': 'application/json',
+                               'X-Relay-Timestamp': stamp, 'X-Relay-Signature': signature}
+        else:
+            target = endpoint
+            request_headers = headers
+        req = urllib.request.Request(target, data=encoded, headers=request_headers, method="POST")
         try:
             with opener.open(req, timeout=timeout_seconds) as response:
-                if response.geturl() != endpoint:
+                if response.geturl() != target:
                     raise TransportError("PROVIDER_REDIRECT")
                 raw = response.read(max_response_bytes + 1)
                 if len(raw) > max_response_bytes:
