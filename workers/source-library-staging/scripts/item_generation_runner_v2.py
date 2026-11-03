@@ -58,6 +58,8 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Concept card references unknown passages")
     draft = _response(adapter, build_step("item_draft", **args,
                                         format=format, concept_card=concept))
+    if set(draft) == {"draft"} and isinstance(draft["draft"], dict):
+        draft = draft["draft"]
     if draft.get("format") != format or not isinstance(draft.get("stem"), str):
         raise ValueError("Generated draft has wrong format or missing stem")
     rationale = _response(adapter, build_step("rationale", **args, format=format,
