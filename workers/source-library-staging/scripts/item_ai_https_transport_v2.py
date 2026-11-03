@@ -73,6 +73,19 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
         except urllib.error.HTTPError as exc:
             # Never inspect provider response bodies or log credentials.
             status = exc.code
+            if relay_url is not None and status in (403, 502, 503):
+                try:
+                    diagnostic = json.loads(exc.read(2048).decode('utf-8'))
+                except (ValueError, UnicodeError):
+                    diagnostic = {}
+                if diagnostic.get('error') == 'forbidden':
+                    raise TransportError('RELAY_AUTH') from None
+                if diagnostic.get('error') == 'provider_failed':
+                    allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM'}
+                    raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM') from None
+                if diagnostic.get('error') in ('relay_network', 'relay_disabled'):
+                    raise TransportError('RELAY_UNAVAILABLE') from None
+                raise TransportError('RELAY_HTTP') from None
             rule = ('PROVIDER_AUTH' if status == 401 else
                     'PROVIDER_FORBIDDEN' if status == 403 else
                     'PROVIDER_RATE_LIMIT' if status == 429 else
