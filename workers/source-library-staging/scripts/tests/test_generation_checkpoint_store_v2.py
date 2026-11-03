@@ -51,6 +51,21 @@ class FingerprintTests(unittest.TestCase):
                                 request_hash="a" * 64, evidence_hash="b" * 64),
                          {"resumable": False, "next_stage": "concept_card"})
 
+    def test_stage_advance_requires_ready_textbook_and_matching_evidence(self):
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        cursor.fetchone.return_value = ("checkpoint-id",)
+        record(conn, owner_uid="11111111-1111-4111-8111-111111111111",
+               textbook_id="22222222-2222-4222-8222-222222222222",
+               request_hash="a" * 64, evidence_hash="b" * 64,
+               stage="draft", value={"format": "MC", "stem": "Example"})
+        sql, params = cursor.execute.call_args.args
+        self.assertIn("t.status='ready'", sql)
+        self.assertIn("c.evidence_hash=%s", sql)
+        self.assertIn("c.stage='concept_card'", sql)
+        self.assertEqual(params[-2:], ("a" * 64, "b" * 64))
+        conn.commit.assert_called_once()
+
     def test_invalid_record_fails_before_database_use(self):
         with self.assertRaisesRegex(ValueError, "Invalid checkpoint fingerprint"):
             record(object(), owner_uid="11111111-1111-4111-8111-111111111111",
