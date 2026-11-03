@@ -1,14 +1,6 @@
 name: Quality gates
 
 on:
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      # Phase C staging-only changes use focused Source Library checks.
-      # Run full Quality gates manually before merging to main.
-      - 'workers/source-library-staging/**'
   push:
     branches: [main]
   workflow_dispatch:
