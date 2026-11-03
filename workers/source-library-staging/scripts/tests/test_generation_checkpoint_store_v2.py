@@ -61,12 +61,12 @@ class FingerprintTests(unittest.TestCase):
                "AI_ALLOWED_HOSTS": "api.groq.com", "AI_GENERATOR_MODEL": "openai/gpt-oss-120b",
                "STAGING_RECEIPT_SIGNING_SECRET": "x" * 40}
         saved = {"concept_card": {"objective": "III.H.4"}, "draft": {"stem": "Saved draft"}}
-        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \\
-             patch("run_grounded_generation_v2.make_transport", return_value=lambda **k: {}), \\
-             patch("run_grounded_generation_v2.make_adapter", return_value=lambda x: {}), \\
-             patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \\
-             patch("run_grounded_generation_v2.load", return_value=saved) as checkpoint_load, \\
-             patch("run_grounded_generation_v2.record") as checkpoint_record, \\
+        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
+             patch("run_grounded_generation_v2.make_transport", return_value=lambda **k: {}), \
+             patch("run_grounded_generation_v2.make_adapter", return_value=lambda x: {}), \
+             patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \
+             patch("run_grounded_generation_v2.load", return_value=saved) as checkpoint_load, \
+             patch("run_grounded_generation_v2.record") as checkpoint_record, \
              patch("run_grounded_generation_v2.complete") as checkpoint_complete:
             execute(object(), args, env)
         checkpoint_load.assert_called_once()
