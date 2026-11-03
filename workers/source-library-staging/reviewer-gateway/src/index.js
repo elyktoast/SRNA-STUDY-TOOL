@@ -35,7 +35,7 @@ async function relayGroq(request,env){
  try{
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
   let upstream;try{upstream=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'},body:bytes,redirect:'manual',signal:controller.signal})}finally{clearTimeout(timeout)}
-  if(!upstream.ok){const rule=upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';return respond(502,null,JSON.stringify({error:'provider_failed',rule}))}
+  if(!upstream.ok){const rule=upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;return respond(502,null,JSON.stringify({error:'provider_failed',rule,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
  }catch{return respond(503,null,'{"error":"relay_network"}')}
