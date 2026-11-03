@@ -42,6 +42,39 @@ class FingerprintTests(unittest.TestCase):
                stage="concept_card", value={"objective": "III.H.4"})
         conn.commit.assert_called_once()
 
+    def test_feature_enabled_resumes_saved_stages(self):
+        args = SimpleNamespace(owner_uid="11111111-1111-4111-8111-111111111111",
+            topic="airway", mode="NCE", domain="III", section="H", objective="III.H.4",
+            format="MC", item_id="q1", textbook_id="22222222-2222-4222-8222-222222222222",
+            section_id=None, include_subsections=False, page_start=None,
+            page_end=None, limit=8, execute=True, confirm_paid_calls=True)
+        evidence = {"topic": "airway", "evidence_count": 1,
+                    "can_generate_grounded_questions": True,
+                    "sources": [{"passage_id": "p1", "textbook_id": args.textbook_id,
+                                 "excerpt": "Indexed evidence"}]}
+        result = {"item_id": "q1", "item": {"stem": "Question"},
+                  "next_state": "needs_editorial_review", "screening": {},
+                  "source_evidence": {}, "generator_issues": []}
+        env = {"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true",
+               "AI_GENERATION_CHECKPOINTS_ENABLED": "true",
+               "AI_PROVIDER_ENDPOINT": "https://api.groq.com/openai/v1/chat/completions",
+               "AI_ALLOWED_HOSTS": "api.groq.com", "AI_GENERATOR_MODEL": "openai/gpt-oss-120b",
+               "STAGING_RECEIPT_SIGNING_SECRET": "x" * 40}
+        saved = {"concept_card": {"objective": "III.H.4"}, "draft": {"stem": "Saved draft"}}
+        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \\
+             patch("run_grounded_generation_v2.make_transport", return_value=lambda **k: {}), \\
+             patch("run_grounded_generation_v2.make_adapter", return_value=lambda x: {}), \\
+             patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \\
+             patch("run_grounded_generation_v2.load", return_value=saved) as checkpoint_load, \\
+             patch("run_grounded_generation_v2.record") as checkpoint_record, \\
+             patch("run_grounded_generation_v2.complete") as checkpoint_complete:
+            execute(object(), args, env)
+        checkpoint_load.assert_called_once()
+        self.assertEqual(generate.call_args.kwargs["checkpoint"], saved)
+        generate.call_args.kwargs["on_checkpoint"]("draft", {"stem": "Another draft"})
+        checkpoint_record.assert_called_once()
+        checkpoint_complete.assert_called_once()
+
     def test_feature_disabled_does_not_access_checkpoint_storage(self):
         args = SimpleNamespace(owner_uid="owner", topic="airway", mode="NCE",
             domain="I", section="A", objective="I.A.1", format="MC", item_id="q1",
