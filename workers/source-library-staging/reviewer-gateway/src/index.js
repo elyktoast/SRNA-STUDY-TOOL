@@ -73,7 +73,7 @@ async function relayGroq(request,env){
      const data=await listing.json();
      for(const label of labels){
       const match=(data.models||[]).find(m=>m.displayName?.toLowerCase()===label.toLowerCase()&&m.supportedGenerationMethods?.includes('generateContent'));
-      if(match&&/^models\\/gemini-[a-zA-Z0-9.-]+$/.test(match.name)&&!candidates.includes(match.name))candidates.push(match.name);
+      if(match&&typeof match.name==='string'&&match.name.startsWith('models/gemini-')&&/^[a-zA-Z0-9./-]+$/.test(match.name))discovered.set(label,match.name);
      }
      next=data.nextPageToken||'';if(!next)break;
     }
