@@ -43,7 +43,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
             allowed = ("GET", "POST") if path == "/generation/drafts" else (
-                ("GET",) if draft_match and not draft_match.group(2) else ("POST",))
+                ("GET",) if diagnostic or (draft_match and not draft_match.group(2)) else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -55,7 +55,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path not in ("/generation/preflight", "/generation/one"):
-            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if draft_match and not draft_match.group(2) else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if diagnostic or (draft_match and not draft_match.group(2)) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
