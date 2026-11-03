@@ -179,8 +179,25 @@ def create_app(*, conn_factory, resolve_admin, environment):
             with conn_factory() as conn:
                 result = execute(conn, args, environment)
             return respond("200 OK", result)
-        except ValueError:
-            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable"})
+        except ValueError as exc:
+            # Safe fixed categories only. Do not return source passages, model text,
+            # credentials, or arbitrary exception strings to the browser.
+            message = str(exc)
+            if "No indexed textbook evidence" in message or "No indexed textbook evidence found" in message:
+                rule = "NO_INDEXED_EVIDENCE"
+            elif "Invalid or unverified indexed evidence" in message or "Verified indexed evidence" in message:
+                rule = "INVALID_INDEXED_EVIDENCE"
+            elif "Concept card" in message:
+                rule = "CONCEPT_CARD_VALIDATION"
+            elif "Generated draft" in message:
+                rule = "DRAFT_VALIDATION"
+            elif "Rationale incomplete" in message:
+                rule = "RATIONALE_VALIDATION"
+            elif "Provider" in message or "provider" in message or "Relay" in message or "relay" in message:
+                rule = "PROVIDER_CONFIGURATION"
+            else:
+                rule = "GENERATION_VALIDATION"
+            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule})
         except Exception as exc:
             # Never log prompts, indexed passages, credentials or provider response bodies.
             # Fixed categories distinguish infrastructure failures from provider failures.
