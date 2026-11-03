@@ -156,7 +156,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
             from types import SimpleNamespace
             args = SimpleNamespace(**{**{"textbook_id": None, "section_id": None,
                 "include_subsections": False, "page_start": None,
-                "page_end": None, "limit": 8, "format": "MC"}, **data,
+                "page_end": None, "limit": 5, "format": "MC"}, **data,
                 "owner_uid": owner, "execute": live, "confirm_paid_calls": live})
             if (args.mode not in ("NCE", "SEE") or args.format not in ("MC", "MS", "SA", "DD", "HS")
                     or args.domain not in ("I", "II", "III", "IV")
@@ -231,6 +231,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 rule, type(exc).__name__)
             return respond("429 Too Many Requests" if rule == "PROVIDER_RATE_LIMIT" else "503 Service Unavailable",
                            {"error": "generation_preflight_unavailable", "rule": rule,
+                            **({"failed_step": exc.generation_step} if getattr(exc, "generation_step", None) in ("concept_card", "item_draft", "rationale") else {}),
                             **({"retry_after_seconds": exc.retry_after_seconds} if isinstance(exc, TransportError) and exc.retry_after_seconds is not None else {}),
                             **({"remaining_requests": exc.remaining_requests} if isinstance(exc, TransportError) and exc.remaining_requests is not None else {}),
                             **({"remaining_tokens": exc.remaining_tokens} if isinstance(exc, TransportError) and exc.remaining_tokens is not None else {})},
