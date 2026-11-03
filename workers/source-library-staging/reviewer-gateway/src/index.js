@@ -142,6 +142,7 @@ export default {
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
+    if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
    }
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
