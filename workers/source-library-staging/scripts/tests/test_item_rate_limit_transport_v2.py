@@ -10,9 +10,9 @@ from item_ai_https_transport_v2 import make_transport, TransportError
 class RateLimitTransportTests(unittest.TestCase):
     def test_relay_retry_delay_is_bounded(self):
         transport = make_transport(allowed_hosts=["api.groq.com"],
-            relay_url="https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
+            relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
             relay_secret="a" * 40)
-        error = HTTPError("https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
+        error = HTTPError("https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
             502, "Bad Gateway", {}, io.BytesIO(json.dumps({
                 "error": "provider_failed", "rule": "PROVIDER_RATE_LIMIT",
                 "retry_after_seconds": 60}).encode()))
