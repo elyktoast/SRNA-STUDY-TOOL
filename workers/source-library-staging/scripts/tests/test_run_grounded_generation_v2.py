@@ -68,6 +68,8 @@ class GenerationCliTests(unittest.TestCase):
             model="test-model", transport=transport.return_value,
             owner_opt_in=True, staging=True)
         generate.assert_called_once()
+        self.assertIsNone(generate.call_args.kwargs["checkpoint"])
+        self.assertIsNone(generate.call_args.kwargs["on_checkpoint"])
         self.assertEqual(generate.call_args.kwargs["item_id"], "draft-1")
         self.assertEqual(generate.call_args.kwargs["format"], "MC")
 
