@@ -289,6 +289,24 @@ export default {
       return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
     }
    }
+   if(providerCheck&&upstream.status===503&&env.AI_HYBRID_ENABLED==='true'){
+    const error=await upstream.clone().json().catch(()=>null);
+    if(error?.error==='provider_check_unavailable'){
+     const probe=async(name,url,headers)=>{
+      if(!headers)return {provider:name,state:'NOT_CONFIGURED',generation_performed:false};
+      try{const response=await fetch(url,{headers,redirect:'manual',signal:AbortSignal.timeout(8000)});
+       const status=response.status;await response.body?.cancel();
+       return {provider:name,state:status===200?'OK':status===401?'AUTH':status===403?'FORBIDDEN':status===404?'NOT_FOUND':status===429?'RATE_LIMIT':'OTHER',generation_performed:false};
+      }catch{return {provider:name,state:'NETWORK',generation_performed:false}}
+     };
+     const providers=await Promise.all([
+      probe('gemini','https://generativelanguage.googleapis.com/v1beta/models',env.AI_GEMINI_API_KEY?{'x-goog-api-key':env.AI_GEMINI_API_KEY}:null),
+      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
+      probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
+     ]);
+     return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:'UNAVAILABLE'}));
+    }
+   }
    if(providerCheck&&upstream.ok){
     const containerResult=await upstream.clone().json().catch(()=>null);
     if(containerResult?.check!=='groq_models'||!Number.isInteger(containerResult.provider_status))return respond(502,origin,'{"error":"invalid_provider_check"}');
