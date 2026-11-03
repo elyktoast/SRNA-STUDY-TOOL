@@ -35,7 +35,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
 
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review)?", path)
-        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts") and not draft_match:
+        diagnostic = path == "/generation/provider-check"
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
@@ -68,6 +69,33 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if diagnostic:
+            if method != "GET":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            if environment.get("AI_GENERATION_OPT_IN") != "true":
+                return respond("403 Forbidden", {"error": "generation_disabled"})
+            from urllib.parse import urlsplit
+            import urllib.request
+            import urllib.error
+            endpoint = environment.get("AI_PROVIDER_ENDPOINT", "")
+            key = environment.get("AI_PROVIDER_API_KEY", "")
+            allowed = environment.get("AI_ALLOWED_HOSTS", "").split(",")
+            parsed = urlsplit(endpoint)
+            if (parsed.scheme != "https" or parsed.hostname != "api.groq.com"
+                    or parsed.hostname not in allowed or not key or not environment.get("AI_GENERATOR_MODEL")):
+                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "CONFIGURATION"})
+            # Groq models endpoint: no generation, no model inference charges.
+            url = "https://api.groq.com/openai/v1/models"
+            request = urllib.request.Request(url, headers={"Authorization": "Bearer " + key}, method="GET")
+            try:
+                with urllib.request.build_opener().open(request, timeout=8) as response:
+                    status = response.status
+            except urllib.error.HTTPError as exc:
+                status = exc.code
+            except Exception:
+                return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "NETWORK"})
+            rule = "OK" if status == 200 else "PROVIDER_AUTH" if status == 401 else "PROVIDER_FORBIDDEN" if status == 403 else "PROVIDER_RATE_LIMIT" if status == 429 else "PROVIDER_OTHER"
+            return respond("200 OK", {"check": "groq_models", "provider_status": status if status in (200, 401, 403, 429) else 0, "rule": rule, "generation_performed": False})
         if path not in ("/generation/preflight", "/generation/one"):
             try:
                 if method == "GET":
