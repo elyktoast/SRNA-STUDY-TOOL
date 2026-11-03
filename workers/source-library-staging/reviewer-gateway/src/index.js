@@ -194,6 +194,22 @@ export default {
       return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
     }
    }
+   if(providerCheck&&upstream.ok){
+    const containerResult=await upstream.clone().json().catch(()=>null);
+    if(containerResult?.check!=='groq_models'||!Number.isInteger(containerResult.provider_status))return respond(502,origin,'{"error":"invalid_provider_check"}');
+    let workerStatus=0,workerRule='NETWORK';
+    try{
+     const controller=new AbortController();
+     const timeout=setTimeout(()=>controller.abort(),8000);
+     try{
+      const result=await fetch('https://api.groq.com/openai/v1/models',{method:'GET',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY},redirect:'manual',signal:controller.signal});
+      workerStatus=[200,401,403,429].includes(result.status)?result.status:0;
+      workerRule=result.status>=300&&result.status<400?'REDIRECT':result.status===200?'OK':result.status===401?'PROVIDER_AUTH':result.status===403?'PROVIDER_FORBIDDEN':result.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_OTHER';
+      await result.body?.cancel();
+     }finally{clearTimeout(timeout)}
+    }catch{workerRule='NETWORK'}
+    return respond(200,origin,JSON.stringify({...containerResult,worker_status:workerStatus,worker_rule:workerRule}));
+   }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){
    // Container runtime exceptions may contain sensitive details. Only emit fixed categories.
