@@ -74,7 +74,21 @@ const manifest=await manifestResponse.json();
 assert.match(manifest.source_sha256,/^[a-f0-9]{64}$/);
 assert.ok(Number.isInteger(manifest.pdf_page_count)&&manifest.pdf_page_count>0);
 console.log('STEP 5: manifest integrity: passed, page count',manifest.pdf_page_count);
-const pageResponse=await fetch(gateway+'/review/page.png?path='+encodeURIComponent(pdf)+'&page=1',{headers,redirect:'manual'});
+let pageResponse;
+for(let attempt=1;attempt<=3;attempt++){
+ pageResponse=await fetch(gateway+'/review/page.png?path='+encodeURIComponent(pdf)+'&page=1',{headers,redirect:'manual'});
+ if(pageResponse.status!==503||attempt===3)break;
+ const failure=await pageResponse.clone().json().catch(()=>null);
+ const category=['reviewer_unavailable','reviewer_backend_unavailable'].includes(failure?.error)?failure.error:'unclassified';
+ console.log('STEP 6: first-page PNG transient HTTP 503, category',category,'attempt',attempt);
+ if(category!=='reviewer_unavailable')break;
+ await new Promise(resolve=>setTimeout(resolve,5000));
+}
+if(pageResponse.status!==200){
+ const failure=await pageResponse.clone().json().catch(()=>null);
+ const allowed=new Set(['reviewer_unavailable','reviewer_backend_unavailable','trusted_review_unavailable','staging_not_configured','identity_unavailable']);
+ console.log('STEP 6: page retrieval failure category',allowed.has(failure?.error)?failure.error:'unclassified','HTTP',pageResponse.status);
+}
 console.log('STEP 6: first-page PNG: HTTP',pageResponse.status);
 assert.equal(pageResponse.status,200);
 assert.match(pageResponse.headers.get('Content-Type')||'',/^image\/png/i);
