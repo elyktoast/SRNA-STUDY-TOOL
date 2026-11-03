@@ -13,7 +13,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         limit=8, section_id=None, include_subsections=False,
                         page_start=None, page_end=None, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
-                        generator_model_id=None, reviewer_model_id=None):
+                        generator_model_id=None, reviewer_model_id=None,
+                        checkpoint=None, on_checkpoint=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -47,7 +48,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         objective=objective, evidence=evidence, format=format, item_id=item_id,
         known_stems=known_stems, calculation=calculation, embedding=embedding,
         neighbors=neighbors, blind_reviewer=blind_reviewer,
-        generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id)
+        generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
+        checkpoint=checkpoint, on_checkpoint=on_checkpoint)
     return {**result, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
