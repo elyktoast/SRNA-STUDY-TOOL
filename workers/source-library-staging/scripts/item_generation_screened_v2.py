@@ -10,10 +10,12 @@ from item_screening_blind_handoff_v2 import attach as attach_blind
 def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         format="MC", item_id, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
-                        generator_model_id=None, reviewer_model_id=None):
+                        generator_model_id=None, reviewer_model_id=None,
+                        checkpoint=None, on_checkpoint=None):
     generated = generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
-                             evidence=evidence, format=format, item_id=item_id)
+                             evidence=evidence, format=format, item_id=item_id,
+                             checkpoint=checkpoint, on_checkpoint=on_checkpoint)
     if generated["schema_issues"]:
         return {"item_id": item_id, "item": generated["item"],
                 "generator_issues": generated["schema_issues"],
