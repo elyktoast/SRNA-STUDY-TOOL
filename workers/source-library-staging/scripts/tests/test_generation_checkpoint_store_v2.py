@@ -5,7 +5,7 @@ from decimal import Decimal
 from uuid import UUID
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from item_generation_checkpoint_store_v2 import fingerprint, record, load, status, complete
+from item_generation_checkpoint_store_v2 import fingerprint, record, load, status, complete, recover_completed
 from run_grounded_generation_v2 import execute
 
 
@@ -72,18 +72,18 @@ class FingerprintTests(unittest.TestCase):
         cursor.fetchone.return_value = ("checkpoint-id",)
         complete(conn, owner_uid="11111111-1111-4111-8111-111111111111",
                  textbook_id="22222222-2222-4222-8222-222222222222",
-                 request_hash="a" * 64, evidence_hash="b" * 64)
+                 request_hash="a" * 64, evidence_hash="b" * 64, result={"item": {"stem": "Saved"}})
         sql, params = cursor.execute.call_args.args
         self.assertIn("t.status='ready'", sql)
         self.assertIn("c.stage='draft'", sql)
         self.assertIn("c.textbook_id=%s::uuid", sql)
-        self.assertEqual(params[2], "22222222-2222-4222-8222-222222222222")
+        self.assertEqual(params[3], "22222222-2222-4222-8222-222222222222")
         conn.commit.assert_called_once()
         cursor.fetchone.return_value = None
         with self.assertRaisesRegex(ValueError, "No matching draft"):
             complete(conn, owner_uid="11111111-1111-4111-8111-111111111111",
                      textbook_id="22222222-2222-4222-8222-222222222222",
-                     request_hash="a" * 64, evidence_hash="b" * 64)
+                     request_hash="a" * 64, evidence_hash="b" * 64, result={"item": {"stem": "Saved"}})
         conn.commit.assert_called_once()
 
     def test_invalid_record_fails_before_database_use(self):
@@ -142,7 +142,8 @@ class FingerprintTests(unittest.TestCase):
              patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \
              patch("run_grounded_generation_v2.load", return_value=saved) as checkpoint_load, \
              patch("run_grounded_generation_v2.record") as checkpoint_record, \
-             patch("run_grounded_generation_v2.complete") as checkpoint_complete:
+             patch("run_grounded_generation_v2.complete") as checkpoint_complete, \
+             patch("run_grounded_generation_v2.recover_completed", return_value=None):
             execute(object(), args, env)
             checkpoint_load.assert_called_once()
             self.assertEqual(generate.call_args.kwargs["checkpoint"], saved)
