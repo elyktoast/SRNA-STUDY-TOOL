@@ -59,7 +59,33 @@ async function relayGroq(request,env){
   const target=provider==='gemini'?'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(env.AI_GEMINI_MODEL)+':generateContent':provider==='cloudflare'?'https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/run/'+env.AI_CLOUDFLARE_MODEL:'https://api.groq.com/openai/v1/chat/completions';
   const providerHeaders=provider==='gemini'?{'x-goog-api-key':env.AI_GEMINI_API_KEY,'Content-Type':'application/json'}:provider==='cloudflare'?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'}:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:[{role:'user',content:input}],max_tokens:payload.max_tokens,temperature:0.2}):bytes;
-  let upstream;try{upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal})}finally{clearTimeout(timeout)}
+  let upstream;
+  if(provider==='gemini'){
+   // Resolve the API IDs from Google's own model listing; dashboard labels are not API IDs.
+   const labels=['Gemini 3.8 Flash','Gemini 3.6 Flash','Gemini 3.5 Flash Lite'];
+   let candidates=[];
+   try{
+    let next='';
+    for(let page=0;page<5;page++){
+     const listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
+     if(!listing.ok)break;
+     const data=await listing.json();
+     for(const label of labels){
+      const match=(data.models||[]).find(m=>m.displayName?.toLowerCase()===label.toLowerCase()&&m.supportedGenerationMethods?.includes('generateContent'));
+      if(match&&/^models\\/gemini-[a-zA-Z0-9.-]+$/.test(match.name)&&!candidates.includes(match.name))candidates.push(match.name);
+     }
+     next=data.nextPageToken||'';if(!next)break;
+    }
+   }catch{}
+   if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
+   for(const model of candidates){
+    upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
+    if(upstream.ok||![400,404,429,500,502,503,504].includes(upstream.status))break;
+    await upstream.body?.cancel();
+   }
+  }else{
+   upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
+  }
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
    const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
