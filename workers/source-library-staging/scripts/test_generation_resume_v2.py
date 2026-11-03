@@ -17,7 +17,7 @@ class ResumeTests(unittest.TestCase):
         def adapter(req):
             calls.append(req["step"])
             return {"core_concept": "c", "why_key_wins": "w",
-                    "trap": "t", "distractor_breakdown": {}}
+                    "trap": "t", "distractor_breakdown": {"B": "incorrect"}}
         with patch("item_generation_runner_v2.validate_complete_item", return_value=[]), \
              patch("item_generation_runner_v2.reconcile", return_value=[]), \
              patch("item_generation_runner_v2.answer_evidence_check", return_value=[]):
