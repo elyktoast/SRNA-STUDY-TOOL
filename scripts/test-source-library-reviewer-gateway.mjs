@@ -117,3 +117,35 @@ test('staging basket lists and saves private drafts without permitting review wr
  assert.equal(review.status,403);
 });
 test.after(()=>{globalThis.fetch=oldFetch});
+
+test('checkpoint feature flag reaches the private container only with complete AI configuration',async()=>{
+ const endpoint='https://gateway.example/generation/preflight';
+ const flags=[];
+ const baseAI={...generationEnv,AI_GENERATION_OPT_IN:'true',
+  AI_GENERATION_CHECKPOINTS_ENABLED:'true',
+  AI_PROVIDER_ENDPOINT:'https://api.groq.com/openai/v1/chat/completions',
+  AI_ALLOWED_HOSTS:'api.groq.com',AI_PROVIDER_API_KEY:'test-provider-key',
+  AI_GENERATOR_MODEL:'test-model',
+  REVIEWER_CONTAINER:{getByName:()=>({
+   startAndWaitForPorts:async ({startOptions})=>{flags.push(startOptions.envVars);},
+   fetch:async()=>Response.json({dry_run:true,can_publish:false,database_writes:false,passage_count:2})
+  })}};
+ const makeRequest=()=>new Request(endpoint,{method:'POST',
+  headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},
+  body:'{}'});
+ const ok=await gateway.fetch(makeRequest(),baseAI);
+ assert.equal(ok.status,200);
+ assert.equal(flags.length,1);
+ assert.equal(flags[0].AI_GENERATION_CHECKPOINTS_ENABLED,'true');
+ assert.equal(flags[0].AI_GENERATION_OPT_IN,'true');
+ assert.equal(flags[0].AI_PROVIDER_API_KEY,'test-provider-key');
+ const missing={...baseAI,AI_PROVIDER_API_KEY:''};
+ const denied=await gateway.fetch(makeRequest(),missing);
+ assert.equal(denied.status,503);
+ assert.equal(flags.length,1,'must reject before starting private container');
+ const disabled={...baseAI,AI_GENERATION_CHECKPOINTS_ENABLED:'false'};
+ const off=await gateway.fetch(makeRequest(),disabled);
+ assert.equal(off.status,200);
+ assert.equal(flags.length,2);
+ assert.equal(flags[1].AI_GENERATION_CHECKPOINTS_ENABLED,undefined);
+});
