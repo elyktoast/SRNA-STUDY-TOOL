@@ -65,8 +65,10 @@ def execute(conn, args, environ=None):
         "include_subsections": args.include_subsections, "page_start": args.page_start,
         "page_end": args.page_end, "limit": args.limit})
     evidence_hash = fingerprint(evidence["sources"])
-    checkpoint = load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+    checkpoint_enabled = env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
+    checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
         request_hash=request_hash, evidence_hash=evidence_hash)
+        if checkpoint_enabled else None)
     def checkpoint_writer(stage, value):
         record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
             request_hash=request_hash, evidence_hash=evidence_hash,
@@ -79,7 +81,8 @@ def execute(conn, args, environ=None):
                                  section_id=args.section_id,
                                  include_subsections=args.include_subsections,
                                  page_start=args.page_start, page_end=args.page_end,
-                                 checkpoint=checkpoint, on_checkpoint=checkpoint_writer)
+                                 checkpoint=checkpoint,
+                                 on_checkpoint=checkpoint_writer if checkpoint_enabled else None)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
