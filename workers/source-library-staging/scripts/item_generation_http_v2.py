@@ -231,6 +231,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 rule, type(exc).__name__)
             return respond("429 Too Many Requests" if rule == "PROVIDER_RATE_LIMIT" else "503 Service Unavailable",
                            {"error": "generation_preflight_unavailable", "rule": rule,
-                            **({"retry_after_seconds": exc.retry_after_seconds} if isinstance(exc, TransportError) and exc.retry_after_seconds is not None else {})},
+                            **({"retry_after_seconds": exc.retry_after_seconds} if isinstance(exc, TransportError) and exc.retry_after_seconds is not None else {}),
+                            **({"remaining_requests": exc.remaining_requests} if isinstance(exc, TransportError) and exc.remaining_requests is not None else {}),
+                            **({"remaining_tokens": exc.remaining_tokens} if isinstance(exc, TransportError) and exc.remaining_tokens is not None else {})},
                            retry_after=exc.retry_after_seconds if isinstance(exc, TransportError) else None)
     return app
