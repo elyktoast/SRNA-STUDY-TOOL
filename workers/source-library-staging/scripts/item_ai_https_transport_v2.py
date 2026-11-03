@@ -53,7 +53,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
             raise TransportError("PROVIDER_REQUEST_SIZE")
         if relay_url is not None:
             stamp = str(int(time.time()))
-            signed = b'srna-groq-relay-v1\\n' + stamp.encode() + b'\\n' + encoded
+            signed = b'srna-groq-relay-v1\n' + stamp.encode() + b'\n' + encoded
             signature = hmac.new(relay_secret.encode(), signed, hashlib.sha256).hexdigest()
             target = relay_url
             request_headers = {'Content-Type': 'application/json',
