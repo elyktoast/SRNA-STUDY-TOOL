@@ -29,6 +29,13 @@ async function relayGroq(request,env){
  let mismatch=0;for(let i=0;i<32;i++)mismatch|=expected[i]^received[i];
  if(mismatch)return respond(403,null,'{"error":"forbidden"}');
  let payload;try{payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{return respond(400,null,'{"error":"invalid_json"}')}
+ if(payload?.diagnostic==='groq_models'&&Object.keys(payload).length===1){
+  try{
+   const response=await fetch('https://api.groq.com/openai/v1/models',{method:'GET',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY},redirect:'manual',signal:AbortSignal.timeout(8000)});
+   const status=response.status;
+   return respond(200,null,JSON.stringify({check:'groq_models_via_signed_relay',provider_status:[200,401,403,429].includes(status)?status:0,rule:status===200?'OK':status===401?'PROVIDER_AUTH':status===403?'PROVIDER_FORBIDDEN':status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_OTHER',generation_performed:false}));
+  }catch{return respond(503,null,'{"error":"relay_network"}')}
+ }
  if(payload?.model!==env.AI_GENERATOR_MODEL||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false)return respond(400,null,'{"error":"invalid_step"}');
