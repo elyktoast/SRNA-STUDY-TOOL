@@ -1,13 +1,13 @@
 # Phase C: first live staging generation — operator runbook
 
-**Status:** HOLD until staging migration and deployment verification; not evidence of a completed live AI generation. This is a staging-only procedure. Never use production credentials or a production database.
+**Status:** HOLD until deployed staging backend and end-to-end resume verification; not evidence of a completed live AI generation. This is a staging-only procedure. Never use production credentials or a production database.
 
 ## Mandatory checkpoint readiness gate (November 2026)
 
-**HOLD: Do not run another live Generate request yet.** The staging database migration and deployed backend must be verified first. Passing CI alone does not prove the deployed service supports resume.
+**HOLD: Do not run another live Generate request yet.** The staging database migration was applied on 2026-11-03 to the isolated `source_library_staging` schema in Supabase project `xqyasyambwdyhsjkftqu`. A read-only query confirmed the table exists, RLS is enabled, anonymous/authenticated SELECT is denied, and the table has zero rows. Deployed backend identity, write access, and end-to-end resume still require verification. Passing CI alone does not prove the deployed service supports resume.
 
-1. Independently confirm staging database identity. Apply `sql/20261103_generation_checkpoints_v2.sql` **only** to staging with a privileged operator role. Never run this migration against production.
-2. Run the read-only `sql/20261103_generation_checkpoint_verification_v2.sql`. Verify table exists, RLS is enabled, and anonymous/authenticated database roles have no table access. Verify the private staging backend role can read/write it.
+1. **Applied:** `sql/20261103_generation_checkpoints_v2.sql` to `source_library_staging` in project `xqyasyambwdyhsjkftqu`. Do not reapply to production. Confirm project/schema identity before any subsequent write.
+2. **Partially verified:** table exists, RLS enabled, anonymous/authenticated SELECT denied, zero rows. Still verify the private staging backend role can read/write it and that other grants remain denied.
 3. Keep `AI_GENERATION_CHECKPOINTS_ENABLED` unset until stage-write, stage-load, and expiry tests pass on the deployed staging backend. The owner, textbook, request hash, and evidence hash must all match.
 4. The HTTP endpoint should return a safe 429 and bounded Retry-After for provider throttling. No automatic retries. Resume requires the exact same item_id, topic, blueprint, textbook, and filters; a new item_id means a new run.
 5. Confirm deployment SHA and one dry-run preflight. Only then tell the owner **READY TO TEST** and authorize one controlled live attempt.
