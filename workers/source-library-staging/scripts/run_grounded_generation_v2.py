@@ -14,7 +14,7 @@ from build_question_evidence import build_evidence
 from item_ai_https_transport_v2 import make_transport
 from item_ai_provider_v2 import make_adapter
 from item_grounded_pipeline_v2 import generate_from_index
-from item_generation_checkpoint_store_v2 import fingerprint, load, record
+from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete
 
 
 def execute(conn, args, environ=None):
@@ -83,7 +83,7 @@ def execute(conn, args, environ=None):
                                  page_start=args.page_start, page_end=args.page_end,
                                  checkpoint=checkpoint,
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None)
-    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
+    # The AI stages and deterministic screening finished. Keep completed\n    # checkpoints from being resumed; publishing remains a separate review step.\n    if checkpoint_enabled:\n        complete(conn, owner_uid=args.owner_uid, request_hash=request_hash,\n                 evidence_hash=evidence_hash)\n    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
                     "objective": args.objective, "provider": host,
