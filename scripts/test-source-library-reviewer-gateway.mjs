@@ -99,12 +99,13 @@ const draftEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({
  startAndWaitForPorts:async()=>{},
  fetch:async req=>{
   if(req.method==='POST'&&req.url.endsWith('/generation/drafts'))return Response.json({draft_id:draftId,published:false,status:'pending_review'},{status:201});
+  if(req.method==='POST'&&req.url.endsWith('/review'))return Response.json({draft_id:draftId,published:false,status:'approved'});
   assert.equal(req.method,'GET');
   if(req.url.endsWith('/generation/drafts'))return Response.json({drafts:[]});
   return Response.json({draft_id:draftId,published:false,status:'pending_review'});
  }
 })}};
-test('staging basket lists and saves private drafts without permitting review writes',async()=>{
+test('staging basket lists and saves private drafts and forwards authenticated review',async()=>{
  const list=await gateway.fetch(new Request(draftListUrl,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
  assert.equal(list.status,200);assert.deepEqual((await list.json()).drafts,[]);
  const detail=await gateway.fetch(new Request(draftListUrl+'/'+draftId,{headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
@@ -114,7 +115,11 @@ test('staging basket lists and saves private drafts without permitting review wr
  const preflight=await gateway.fetch(new Request(draftListUrl,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'}}),draftEnv);
  assert.equal(preflight.status,204);
  const review=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),draftEnv);
- assert.equal(review.status,403);
+ assert.equal(review.status,200);assert.equal((await review.json()).status,'approved');
+ const reviewPreflight=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'authorization,content-type'}}),draftEnv);
+ assert.equal(reviewPreflight.status,204);
+ const badReview=await gateway.fetch(new Request(draftListUrl+'/'+draftId+'/review',{method:'GET',headers:{Origin:origin,Authorization:'Bearer valid'}}),draftEnv);
+ assert.equal(badReview.status,405);
 });
 test.after(()=>{globalThis.fetch=oldFetch});
 
