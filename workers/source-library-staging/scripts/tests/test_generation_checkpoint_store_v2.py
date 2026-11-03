@@ -215,6 +215,21 @@ class FingerprintTests(unittest.TestCase):
         transport.assert_not_called()
         generate.assert_not_called()
 
+    def test_checkpoint_enabled_requires_explicit_textbook_before_evidence_or_paid_calls(self):
+        args = SimpleNamespace(owner_uid="11111111-1111-4111-8111-111111111111",
+            topic="airway", mode="NCE", domain="III", section="H", objective="III.H.4",
+            format="MC", item_id="q1", textbook_id=None,
+            section_id=None, include_subsections=False, page_start=None,
+            page_end=None, limit=8, execute=True, confirm_paid_calls=True)
+        with patch("run_grounded_generation_v2.build_evidence") as evidence, \
+             patch("run_grounded_generation_v2.make_transport") as transport:
+            with self.assertRaisesRegex(ValueError, "explicit textbook ID"):
+                execute(object(), args, {"STAGING_ONLY": "true",
+                    "AI_GENERATION_OPT_IN": "true",
+                    "AI_GENERATION_CHECKPOINTS_ENABLED": "true"})
+        evidence.assert_not_called()
+        transport.assert_not_called()
+
     def test_feature_disabled_does_not_access_checkpoint_storage(self):
         args = SimpleNamespace(owner_uid="owner", topic="airway", mode="NCE",
             domain="I", section="A", objective="I.A.1", format="MC", item_id="q1",
