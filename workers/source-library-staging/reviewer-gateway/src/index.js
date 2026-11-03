@@ -355,7 +355,8 @@ export default {
   }catch(error){
    // Container runtime exceptions may contain sensitive details. Only emit fixed categories.
    const detail=String(error?.message||'').toLowerCase();
-   const category=/port|listen|connection refused/.test(detail)?'port_unavailable':
+   const category=/no container instance.*provided|no container instance.*available|cannot.*provide.*container instance/.test(detail)?'instance_allocation_unavailable':
+    /port|listen|connection refused/.test(detail)?'port_unavailable':
     /image|pull|registry/.test(detail)?'image_unavailable':
     /limit|quota|capacity|resource/.test(detail)?'capacity':
     /timeout|timed out/.test(detail)?'timeout':
