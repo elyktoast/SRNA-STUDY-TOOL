@@ -16,6 +16,17 @@ PACKET = {"topic": "airway", "can_generate_grounded_questions": True,
 class IndexedPipelineTests(unittest.TestCase):
     @patch("item_grounded_pipeline_v2.generate_and_screen")
     @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_preverified_packet_prevents_second_database_lookup(self, retrieve, screen):
+        screen.return_value = {"next_state": "draft", "screening": {}}
+        result = generate_from_index(object(), "owner-1", "airway", lambda r: {},
+                                     **KW, textbook_id="t1", evidence_packet=PACKET)
+        retrieve.assert_not_called()
+        self.assertEqual(screen.call_args.kwargs["evidence"], [SOURCE])
+        self.assertEqual(result["source_evidence"]["passage_ids"], ["p1"])
+
+
+    @patch("item_grounded_pipeline_v2.generate_and_screen")
+    @patch("item_grounded_pipeline_v2.build_evidence")
     def test_chapter_and_page_filters_forwarded(self, retrieve, screen):
         retrieve.return_value = PACKET
         screen.return_value = {"next_state": "draft", "screening": {}}
