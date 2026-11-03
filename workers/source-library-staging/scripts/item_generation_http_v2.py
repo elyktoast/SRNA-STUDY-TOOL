@@ -86,7 +86,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 return respond("503 Service Unavailable", {"error": "provider_check_unavailable", "rule": "CONFIGURATION"})
             body = b'{"diagnostic":"groq_models"}'
             stamp = str(int(time.time()))
-            signature = hmac.new(secret.encode(), b'srna-groq-relay-v1\\n' + stamp.encode() + b'\\n' + body, hashlib.sha256).hexdigest()
+            signature = hmac.new(secret.encode(), b'srna-groq-relay-v1\n' + stamp.encode() + b'\n' + body, hashlib.sha256).hexdigest()
             request = urllib.request.Request(
                 "https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
                 data=body, method="POST", headers={
