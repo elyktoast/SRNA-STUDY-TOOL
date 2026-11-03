@@ -24,13 +24,13 @@ def create_app(*, conn_factory, resolve_admin, environment):
         raise ValueError("Staging-only service required")
 
     def app(environ, start_response):
-        def respond(status, body):
+        def respond(status, body, retry_after=None):
             data = json.dumps(body).encode()
             start_response(status, [("Access-Control-Allow-Origin", "https://staging.srnastudytool.com"),
                                    ("Vary", "Origin"), ("Content-Type", "application/json"),
                                    ("Cache-Control", "private, no-store"),
                                    ("X-Content-Type-Options", "nosniff"),
-                                   ("Content-Length", str(len(data)))])
+                                   ("Content-Length", str(len(data)))] + ([("Retry-After", str(retry_after))] if type(retry_after) is int and 0 <= retry_after <= 3600 else []))
             return [data]
 
         path = environ.get("PATH_INFO", "")
@@ -223,6 +223,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 "staging_generation_failure endpoint=%s rule=%s exception_type=%s",
                 "one" if path == "/generation/one" else "preflight",
                 rule, type(exc).__name__)
-            return respond("503 Service Unavailable",
-                           {"error": "generation_preflight_unavailable", "rule": rule})
+            return respond("429 Too Many Requests" if rule == "PROVIDER_RATE_LIMIT" else "503 Service Unavailable",
+                           {"error": "generation_preflight_unavailable", "rule": rule,
+                            **({"retry_after_seconds": exc.retry_after_seconds} if isinstance(exc, TransportError) and exc.retry_after_seconds is not None else {})},
+                           retry_after=exc.retry_after_seconds if isinstance(exc, TransportError) else None)
     return app
