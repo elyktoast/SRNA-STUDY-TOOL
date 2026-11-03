@@ -14,7 +14,7 @@ from build_question_evidence import build_evidence
 from item_ai_https_transport_v2 import make_transport
 from item_ai_provider_v2 import make_adapter
 from item_grounded_pipeline_v2 import generate_from_index
-from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete
+from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
 
 
 def execute(conn, args, environ=None):
@@ -72,6 +72,12 @@ def execute(conn, args, environ=None):
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
     checkpoint_enabled = env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
+    if checkpoint_enabled:
+        recovered = recover_completed(
+            conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+            request_hash=request_hash, evidence_hash=evidence_hash)
+        if recovered is not None:
+            return recovered
     checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
         request_hash=request_hash, evidence_hash=evidence_hash)
         if checkpoint_enabled else None)
@@ -90,11 +96,6 @@ def execute(conn, args, environ=None):
                                  checkpoint=checkpoint,
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
                                  evidence_packet=evidence)
-    # Generation and screening finished; prevent replay of this checkpoint.
-    if checkpoint_enabled:
-        complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-                 request_hash=request_hash,
-                 evidence_hash=evidence_hash)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
@@ -105,12 +106,18 @@ def execute(conn, args, environ=None):
                     "evidence": [{"passage_id": p["passage_id"],
                                   "textbook_id": p["textbook_id"]}
                                  for p in evidence["sources"]]}
-    return {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
+    response = {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
             "next_state": result["next_state"],
             "item": result["item"], "requires_human_review": True,
             "source_evidence": result["source_evidence"],
             "generator_issues": result["generator_issues"],
             "screening": result["screening"]}
+    if checkpoint_enabled:
+        complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                 request_hash=request_hash, evidence_hash=evidence_hash,
+                 result=response)
+    return response
+
 
 
 def main():
