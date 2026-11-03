@@ -57,7 +57,9 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
             signature = hmac.new(relay_secret.encode(), signed, hashlib.sha256).hexdigest()
             target = relay_url
             request_headers = {'Content-Type': 'application/json',
-                               'X-Relay-Timestamp': stamp, 'X-Relay-Signature': signature}
+                               'X-Relay-Timestamp': stamp, 'X-Relay-Signature': signature,
+                               'User-Agent': 'SRNA-Study-Tool-Staging-Relay/1.0',
+                               'Accept': 'application/json'}
         else:
             target = endpoint
             request_headers = headers
@@ -91,6 +93,10 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
                     raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM') from None
                 if diagnostic.get('error') in ('relay_network', 'relay_disabled'):
                     raise TransportError('RELAY_UNAVAILABLE') from None
+                # A response from our Worker always carries X-Review-Approval-Enabled.
+                # A 403 without that header was generated before the Worker handler.
+                if status == 403 and exc.headers.get('X-Review-Approval-Enabled') != 'false':
+                    raise TransportError('RELAY_EDGE_403') from None
                 safe_status = status if status in (400, 401, 403, 404, 405, 413, 429, 500, 502, 503, 504) else 0
                 raise TransportError('RELAY_HTTP_' + str(safe_status)) from None
             rule = ('PROVIDER_AUTH' if status == 401 else
