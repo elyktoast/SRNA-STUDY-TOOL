@@ -36,6 +36,16 @@ async function relayGroq(request,env){
    return respond(200,null,JSON.stringify({check:'groq_models_via_signed_relay',provider_status:[200,401,403,429].includes(status)?status:0,rule:status===200?'OK':status===401?'PROVIDER_AUTH':status===403?'PROVIDER_FORBIDDEN':status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_OTHER',generation_performed:false}));
   }catch{return respond(503,null,'{"error":"relay_network"}')}
  }
+ if(payload?.diagnostic==='hybrid_models'&&Object.keys(payload).length===1){
+  if(env.AI_HYBRID_ENABLED!=='true'||!env.AI_GEMINI_API_KEY)return respond(503,null,'{"error":"relay_disabled"}');
+  try{
+   const check=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:AbortSignal.timeout(8000)});
+   if(!check.ok)return respond(200,null,JSON.stringify({check:'gemini_models',provider_status:check.status,generation_performed:false,model_available:false}));
+   const body=await check.json();const models=Array.isArray(body.models)?body.models:[];
+   const selected='models/'+env.AI_GEMINI_MODEL;
+   return respond(200,null,JSON.stringify({check:'gemini_models',provider_status:200,generation_performed:false,model_available:models.some(m=>m.name===selected&&m.supportedGenerationMethods?.includes('generateContent')),available_flash_models:models.filter(m=>m.name?.includes('flash')&&m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name).slice(0,12)}));
+  }catch{return respond(503,null,'{"error":"relay_network"}')}
+ }
  if(payload?.model!==env.AI_GENERATOR_MODEL||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false)return respond(400,null,'{"error":"invalid_step"}');
