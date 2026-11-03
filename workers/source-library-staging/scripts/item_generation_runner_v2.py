@@ -39,6 +39,10 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     args = dict(mode=mode, domain=domain, section=section,
                 objective=objective, evidence=evidence)
     concept = _response(adapter, build_step("concept_card", **args))
+    # Some JSON-mode providers wrap the requested object under its step name.
+    # Unwrap only the exact one-key envelope; never invent missing fields or IDs.
+    if set(concept) == {"concept_card"} and isinstance(concept["concept_card"], dict):
+        concept = concept["concept_card"]
     if any(not isinstance(concept.get(field), str) or not concept[field].strip()
            for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
