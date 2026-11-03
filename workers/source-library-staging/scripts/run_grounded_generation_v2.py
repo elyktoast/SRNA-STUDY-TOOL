@@ -82,7 +82,8 @@ def execute(conn, args, environ=None):
                                  include_subsections=args.include_subsections,
                                  page_start=args.page_start, page_end=args.page_end,
                                  checkpoint=checkpoint,
-                                 on_checkpoint=checkpoint_writer if checkpoint_enabled else None)
+                                 on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
+                                 evidence_packet=evidence)
     # Generation and screening finished; prevent replay of this checkpoint.
     if checkpoint_enabled:
         complete(conn, owner_uid=args.owner_uid, request_hash=request_hash,
