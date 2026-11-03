@@ -43,6 +43,14 @@ jobs:
           # Fail closed when a wrong key type or a key from another project is supplied.
           node -e 'const t=process.env.SUPABASE_ANON_KEY; const p=t.split("."); if(p.length!==3) process.exit(1); let c; try{c=JSON.parse(Buffer.from(p[1],"base64url"))}catch{process.exit(1)} if(c.role!=="anon"||c.ref!=="xqyasyambwdyhsjkftqu")process.exit(1); console.log("Staging legacy anon key project and role validated.")'
           echo "Staging-only deployment prerequisites present."
+      - name: Verify checkpoint recovery and gateway safety before deployment
+        run: |
+          set -euo pipefail
+          PYTHONPATH=workers/source-library-staging/scripts python -m unittest \
+            tests.test_generation_checkpoint_store_v2 \
+            tests.test_item_generation_http_v2 \
+            tests.test_item_generation_runner_v2
+          node --test scripts/test-source-library-reviewer-gateway.mjs
       - name: Install reviewer gateway dependencies
         working-directory: workers/source-library-staging/reviewer-gateway
         run: npm install --no-audit --no-fund
