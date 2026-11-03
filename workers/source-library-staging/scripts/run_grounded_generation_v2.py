@@ -30,6 +30,8 @@ def execute(conn, args, environ=None):
         raise ValueError("Invalid NCE/SEE blueprint classification")
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
+    if args.execute and env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true" and not args.textbook_id:
+        raise ValueError("Checkpointed generation requires an explicit textbook ID")
     evidence = build_evidence(conn, args.owner_uid, args.topic,
                               textbook_id=args.textbook_id, limit=args.limit,
                               section_id=args.section_id,
