@@ -88,7 +88,7 @@ def create_app(*, conn_factory, resolve_admin, environment):
             stamp = str(int(time.time()))
             signature = hmac.new(secret.encode(), b'srna-groq-relay-v1\n' + stamp.encode() + b'\n' + body, hashlib.sha256).hexdigest()
             request = urllib.request.Request(
-                "https://reviewer-relay-staging.srnastudytool.com/internal/groq-relay",
+                "https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
                 data=body, method="POST", headers={
                     "Content-Type": "application/json",
                     "X-Relay-Timestamp": stamp, "X-Relay-Signature": signature})
