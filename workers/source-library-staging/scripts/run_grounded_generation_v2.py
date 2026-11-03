@@ -83,7 +83,11 @@ def execute(conn, args, environ=None):
                                  page_start=args.page_start, page_end=args.page_end,
                                  checkpoint=checkpoint,
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None)
-    # The AI stages and deterministic screening finished. Keep completed\n    # checkpoints from being resumed; publishing remains a separate review step.\n    if checkpoint_enabled:\n        complete(conn, owner_uid=args.owner_uid, request_hash=request_hash,\n                 evidence_hash=evidence_hash)\n    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
+    # Generation and screening finished; prevent replay of this checkpoint.
+    if checkpoint_enabled:
+        complete(conn, owner_uid=args.owner_uid, request_hash=request_hash,
+                 evidence_hash=evidence_hash)
+    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
                     "objective": args.objective, "provider": host,
