@@ -65,7 +65,16 @@ def record(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, stage, 
               select t.owner_uid,t.id,%s,%s,'concept_card',%s::jsonb
               from source_library_staging.textbooks t
               where t.id=%s::uuid and t.owner_uid=%s::uuid and t.status='ready'
-              on conflict (owner_uid,request_hash) do nothing
+              on conflict (owner_uid,request_hash) do update
+              set textbook_id=excluded.textbook_id,
+                  evidence_hash=excluded.evidence_hash,
+                  stage='concept_card',
+                  concept_card=excluded.concept_card,
+                  draft=NULL,
+                  status='pending',
+                  updated_at=now(),
+                  expires_at=now() + interval '24 hours'
+              where generation_checkpoints_v2.expires_at <= now()
               returning id
             """, (request_hash,evidence_hash,json.dumps(value),book,owner))
         else:
@@ -76,6 +85,7 @@ def record(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, stage, 
               where c.textbook_id=t.id and t.owner_uid=%s::uuid
                 and c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
                 and c.request_hash=%s and c.evidence_hash=%s
+                and t.status='ready'
                 and c.stage='concept_card' and c.status='pending'
                 and c.expires_at>now()
               returning c.id
