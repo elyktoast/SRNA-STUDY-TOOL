@@ -46,7 +46,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     concept = checkpoint.get("concept_card") if "concept_card" in checkpoint else _response(adapter, build_step("concept_card", **args))
     # Some JSON-mode providers wrap the requested object under its step name.
     # Unwrap only the exact one-key envelope; never invent missing fields or IDs.
-    if set(concept) == {"concept_card"} and isinstance(concept["concept_card"], dict):
+    if isinstance(concept, dict) and set(concept) == {"concept_card"} and isinstance(concept["concept_card"], dict):
         concept = concept["concept_card"]
     if not isinstance(concept, dict):
         raise ValueError("Concept card incomplete; draft generation blocked")
