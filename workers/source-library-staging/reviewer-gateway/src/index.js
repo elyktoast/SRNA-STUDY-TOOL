@@ -332,7 +332,7 @@ export default {
       probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
       probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
      ]);
-     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
+     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
      const relayRule=relayRules.has(error.rule)?error.rule:'UNCLASSIFIED';
      console.error('staging_reviewer_failure',JSON.stringify({stage:'provider_check',reason:'container_relay_unavailable',rule:relayRule}));
      return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:'UNAVAILABLE',container_relay_rule:relayRule,generation_ready:false}));
