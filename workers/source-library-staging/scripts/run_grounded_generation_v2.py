@@ -41,7 +41,22 @@ def execute(conn, args, environ=None):
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
+    # The resume key binds owner, textbook, request parameters, and indexed
+    # evidence. Any evidence change invalidates the previous checkpoint.
+    request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
+        "mode": args.mode, "domain": args.domain, "section": args.section,
+        "objective": args.objective, "format": args.format, "item_id": args.item_id,
+        "textbook_id": args.textbook_id, "section_id": args.section_id,
+        "include_subsections": args.include_subsections, "page_start": args.page_start,
+        "page_end": args.page_end, "limit": args.limit})
+    evidence_hash = fingerprint(evidence["sources"])
     if not args.execute:
+        if (env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
+                and args.textbook_id):
+            from item_generation_checkpoint_store_v2 import status as resume_status
+            summary["resume"] = resume_status(
+                conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                request_hash=request_hash, evidence_hash=evidence_hash)
         return summary
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
@@ -56,15 +71,6 @@ def execute(conn, args, environ=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
-    # The resume key binds owner, textbook, request parameters, and indexed
-    # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
-        "mode": args.mode, "domain": args.domain, "section": args.section,
-        "objective": args.objective, "format": args.format, "item_id": args.item_id,
-        "textbook_id": args.textbook_id, "section_id": args.section_id,
-        "include_subsections": args.include_subsections, "page_start": args.page_start,
-        "page_end": args.page_end, "limit": args.limit})
-    evidence_hash = fingerprint(evidence["sources"])
     checkpoint_enabled = env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
     checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
         request_hash=request_hash, evidence_hash=evidence_hash)
