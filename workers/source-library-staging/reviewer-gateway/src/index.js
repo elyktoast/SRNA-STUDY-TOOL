@@ -161,6 +161,14 @@ export default {
     method:(generation||generateOne||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
+   if(upstream.status===500 && (generation||generateOne)){
+    // Never log upstream response text: it could contain source excerpts or secrets.
+    const contentType=(upstream.headers.get('Content-Type')||'').toLowerCase();
+    const body=contentType.startsWith('application/json')?await upstream.clone().json().catch(()=>null):null;
+    const allowedErrors=new Set(['generation_preflight_unavailable','generation_or_evidence_unavailable','reviewer_backend_unavailable','internal_server_error']);
+    const allowedRules=new Set(['GENERATION_RUNTIME_ERROR','DEPENDENCY_UNAVAILABLE','UPSTREAM_CONNECTION','RUNTIME_IO','DATABASE_CONNECTION','DATABASE_TIMEOUT']);
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'backend',reason:'upstream_500',route:generation?'preflight':'generate_one',content_type:contentType.startsWith('application/json')?'json':'non_json',error:allowedErrors.has(body?.error)?body.error:'UNCLASSIFIED',rule:allowedRules.has(body?.rule)?body.rule:'UNCLASSIFIED'}));
+   }
    if(upstream.status===503){
     const body=await upstream.clone().json().catch(()=>null);
     const allowed=new Set(['configuration','database','dependency','backend']);
