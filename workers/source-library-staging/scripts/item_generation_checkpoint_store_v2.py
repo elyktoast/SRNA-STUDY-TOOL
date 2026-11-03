@@ -5,11 +5,23 @@ anonymous users or accept owner_uid from client input. Caller owns transaction.
 """
 import hashlib
 import json
+from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
 
 def fingerprint(value):
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    # PostgreSQL adapters may return UUIDs, dates or Decimal page metadata.
+    # Normalize them deterministically rather than failing after opt-in.
+    def canonical(item):
+        if isinstance(item, dict):
+            return {str(k): canonical(v) for k, v in item.items()}
+        if isinstance(item, (list, tuple)):
+            return [canonical(v) for v in item]
+        if isinstance(item, (UUID, date, datetime, Decimal)):
+            return str(item)
+        return item
+    encoded = json.dumps(canonical(value), sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
 
