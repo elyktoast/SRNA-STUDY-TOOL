@@ -63,6 +63,7 @@ async function relayGroq(request,env){
   if(provider==='gemini'){
    // Resolve the API IDs from Google's own model listing; dashboard labels are not API IDs.
    const labels=['Gemini 3.8 Flash','Gemini 3.6 Flash','Gemini 3.5 Flash Lite'];
+   const discovered=new Map();
    let candidates=[];
    try{
     let next='';
@@ -77,6 +78,7 @@ async function relayGroq(request,env){
      next=data.nextPageToken||'';if(!next)break;
     }
    }catch{}
+   candidates=labels.map(label=>discovered.get(label)).filter(Boolean);
    if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    for(const model of candidates){
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
