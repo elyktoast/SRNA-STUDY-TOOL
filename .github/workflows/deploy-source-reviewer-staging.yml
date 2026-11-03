@@ -46,6 +46,7 @@ jobs:
       - name: Verify checkpoint recovery and gateway safety before deployment
         run: |
           set -euo pipefail
+          python -m pip install -r workers/source-library-staging/reviewer-service/requirements.txt
           for name in test_generation_checkpoint_store_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py; do
             PYTHONPATH=workers/source-library-staging/scripts python -m unittest discover \
               -s workers/source-library-staging/scripts/tests -p "$name"
