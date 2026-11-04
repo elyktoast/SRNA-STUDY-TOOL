@@ -114,8 +114,15 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                 "status": "pending", "issues": []}
             screening["screening_complete"] = False
         else:
-            screening = attach_blind(screening, blind)
-            next_state = screening.get("next_state", next_state)
+            try:
+                screening = attach_blind(screening, blind)
+            except (ValueError, TypeError, KeyError):
+                # Invalid reviewer metadata must never be treated as a pass.
+                screening["stages"]["blind_model"] = {
+                    "status": "pending", "issues": []}
+                screening["screening_complete"] = False
+            else:
+                next_state = screening.get("next_state", next_state)
         screening.pop("pending_verifications", None)
         pending = [name for name in ("schema", "deterministic_text", "math",
                                     "evidence", "duplicates", "blind_model")
