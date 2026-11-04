@@ -352,7 +352,7 @@ export default {
       await result.body?.cancel();
      }finally{clearTimeout(timeout)}
     }catch{workerRule='NETWORK'}
-    return respond(200,origin,JSON.stringify({...containerResult,worker_status:workerStatus,worker_rule:workerRule}));
+    return respond(200,origin,JSON.stringify({...containerResult,worker_status:workerStatus,worker_rule:workerRule,container_relay:containerResult.provider_status===200?'OK':'UNAVAILABLE',generation_ready:containerResult.provider_status===200&&workerStatus===200}));
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){
