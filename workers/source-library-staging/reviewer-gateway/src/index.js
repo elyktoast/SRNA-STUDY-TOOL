@@ -50,7 +50,7 @@ async function relayGroq(request,env){
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false)return respond(400,null,'{"error":"invalid_step"}');
  try{
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),30000);
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
