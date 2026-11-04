@@ -24,6 +24,17 @@ class ScreeningTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     screen([1, 0], neighbors)
 
+    def test_malformed_blind_choice_flags_without_exception(self):
+        item = {"item_id": "q", "format": "MC", "key": ["A"]}
+        for response in ({"item_id": "q", "key": [["A"]]},
+                         {"item_id": "q", "key": [None]},
+                         {"item_id": "q", "key": ["A", "A"]},
+                         {"item_id": "q", "key": "A"}):
+            with self.subTest(response=response):
+                issues = compare(item, response)
+                self.assertTrue(issues)
+                self.assertEqual(issues[0]["rule_id"], "R-12.1")
+
     def test_numeric_blind(self):
         item = {"item_id": "q", "format": "SA", "sa": {"answer": 5, "tolerance": 0}}
         self.assertEqual(compare(item, {"item_id": "q", "numeric_answer": 5}), [])
