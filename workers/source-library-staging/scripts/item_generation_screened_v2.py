@@ -17,7 +17,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     generated = generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
-                             checkpoint=checkpoint, on_checkpoint=on_checkpoint)
+                             checkpoint=checkpoint, on_checkpoint=on_checkpoint,
+                             generator_model_id=generator_model_id)
     if generated["schema_issues"]:
         issues = generated["schema_issues"]
         source_failure = any(x["rule_id"] in ("R-2.5", "R-17") for x in issues)
