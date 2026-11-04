@@ -106,6 +106,21 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertIn("duplicates", result["screening"]["pending_verifications"])
         self.assertFalse(result["can_publish"])
 
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_incomplete_semantic_search_never_passes(self, generate, intake):
+        generate.return_value = {"item": {"item_id": "new-1"}, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{"status": "draft",
+            "screening": {"stages": {"duplicates": {"status": "pass"},
+                                      "blind_model": {"status": "pending"}}}}]}
+        def lookup(item):
+            return {"embedding": [1.0, 0.0], "neighbors": [],
+                    "search_complete": False, "index_id": "staging-v1"}
+        result = generate_and_screen(None, **ARGS, semantic_lookup=lookup)
+        self.assertEqual(result["screening"]["stages"]["duplicates"]["status"], "pending")
+        self.assertIn("duplicates", result["screening"]["pending_verifications"])
+        self.assertFalse(result["can_publish"])
+
     @patch("item_generation_screened_v2.generate_one")
     def test_partial_semantic_inputs_rejected_before_paid_generation(self, generate):
         with self.assertRaisesRegex(ValueError, "both candidate embedding and neighbors"):
