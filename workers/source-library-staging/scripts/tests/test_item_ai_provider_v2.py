@@ -66,7 +66,7 @@ class ProviderTests(unittest.TestCase):
                 "format": "MC", "options": [{"id": "A", "text": "One"}]}
         self.assertIsInstance(adapter(base), dict)
         for secret in ("key", "rationale", "evidence", "concept_card",
-                       "distractor_evidence"):
+                       "distractor_evidence", "model", "source_excerpt", "answer"):
             with self.subTest(secret=secret):
                 with self.assertRaises(ValueError):
                     adapter({**base, secret: "must not leak"})
