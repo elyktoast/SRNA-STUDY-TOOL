@@ -107,6 +107,7 @@ class ScreenedGenerationTests(unittest.TestCase):
         result = generate_and_screen(None, **ARGS)
         self.assertIsNotNone(result["screening"])
         self.assertFalse(result["screening"]["can_publish"])
+        self.assertIn("blind_model", result["screening"]["pending_verifications"])
         self.assertEqual(result["next_state"], "needs_source_review")
         self.assertFalse(result["can_publish"])
     @patch("item_generation_screened_v2.generate_one")
