@@ -62,20 +62,31 @@ def check(item):
         count = len(opts) if isinstance(opts, list) else 0
         if (fmt == "MC" and count != 4) or (fmt == "MS" and count not in (4, 5, 6)):
             fail("R-7.1.1" if fmt == "MC" else "R-7.2.2", "Invalid option count")
-        ids = [o.get("id") for o in opts if isinstance(o, dict)] if isinstance(opts, list) else []
-        if ids != list("ABCDEF")[:count] or any(not isinstance(o.get("text"), str) or not o["text"].strip() or "error_pattern" not in o for o in opts if isinstance(o, dict)):
+        ids = [o.get("id") if isinstance(o, dict) else None for o in opts] if isinstance(opts, list) else []
+        if ids != list("ABCDEF")[:count] or any(not isinstance(o, dict) or not isinstance(o.get("text"), str) or not o["text"].strip() or "error_pattern" not in o for o in (opts if isinstance(opts, list) else [])):
             fail("R-15", "Options must be labeled sequentially and have text and error pattern")
-        if not isinstance(key, list) or not key or len(set(key)) != len(key) or any(k not in ids for k in key):
+        if not isinstance(key, list) or not key or any(not isinstance(k, str) for k in key) or len(set(k for k in key if isinstance(k, str))) != len(key) or any(k not in ids for k in key):
             fail("R-5.1", "Invalid keyed choices")
         elif (fmt == "MC" and len(key) != 1) or (fmt == "MS" and len(key) not in (2, 3)):
             fail("R-5.1", "Invalid number of correct choices")
         if fmt == "MS":
             n = item.get("select_count")
-            if n not in (2, 3) or not isinstance(key, list) or len(key) != n or f"(Select {n}.)" not in item.get("stem", ""):
+            if n not in (2, 3) or not isinstance(key, list) or len(key) != n or f"(Select {n}.)" not in (item.get("stem") if isinstance(item.get("stem"), str) else ""):
                 fail("R-7.2.1", "Explicit select count and stem wording required")
         elif item.get("select_count") is not None:
             fail("R-15", "MC select_count must be null")
-        texts = [o.get("text", "").strip().casefold() for o in opts if isinstance(o, dict)]
+        # R-6.3/R-6.9: schema checks; R-6.8 is a review flag in text screening.
+        if isinstance(opts, list) and isinstance(key, list) and len(key) == 1:
+            for option in opts:
+                if not isinstance(option, dict):
+                    continue
+                pattern = option.get("error_pattern")
+                if option.get("id") in key:
+                    if isinstance(pattern, str) and pattern.strip().lower() in ("correct", "incorrect"):
+                        fail("R-6.3", "Key error pattern must not contain a correctness label")
+                elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
+                    fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
+        texts = [(o.get("text") if isinstance(o.get("text"), str) else "").strip().casefold() for o in opts if isinstance(o, dict)]
         if len(set(texts)) != len(texts):
             fail("R-6.5", "Duplicate options")
         if any("all of the above" in t or "none of the above" in t for t in texts):
@@ -88,7 +99,7 @@ def check(item):
             fail("R-7.3", "Numeric entry cannot have choices")
     elif fmt == "DD":
         dd = item.get("dd")
-        if not isinstance(dd, dict) or not all(isinstance(dd.get(k), list) and len(dd[k]) == 4 for k in ("left", "right")) or not isinstance(dd.get("pairs"), dict) or len(dd["pairs"]) != 4 or len(set(dd["pairs"].values())) != 4:
+        if not isinstance(dd, dict) or not all(isinstance(dd.get(k), list) and len(dd[k]) == 4 for k in ("left", "right")) or not isinstance(dd.get("pairs"), dict) or len(dd["pairs"]) != 4 or any(not isinstance(k, str) or not isinstance(v, str) for k, v in dd["pairs"].items()) or len(set(v for v in dd["pairs"].values() if isinstance(v, str))) != 4:
             fail("R-7.4.1", "Four unique one-to-one matches required")
     elif fmt == "HS":
         hs = item.get("hs")

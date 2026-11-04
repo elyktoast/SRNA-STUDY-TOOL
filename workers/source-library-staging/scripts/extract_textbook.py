@@ -41,6 +41,22 @@ def rectangle_union_area(rectangles):
         area += (height + end - start) * (right - left)
     return area
 
+def visual_blank_candidate(pdf_page):
+    """Conservative low-resolution pixel test; never substitutes for review.
+
+    Evaluate visible grayscale pixels, not PDF image metadata or an OCR layer.
+    Uniform light pages with only scan noise are candidates, not verified blanks.
+    """
+    pix = pdf_page.get_pixmap(matrix=fitz.Matrix(0.75, 0.75),
+                             colorspace=fitz.csGRAY, alpha=False)
+    samples = pix.samples
+    if not samples:
+        return False, 0.0
+    # Dark-ink fraction is resilient to slight paper discoloration.
+    dark_fraction = sum(value < 190 for value in samples) / len(samples)
+    return dark_fraction < 0.0005, round(dark_fraction, 6)
+
+
 def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
@@ -57,7 +73,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
     out.mkdir(parents=True,exist_ok=True)
     with pdf.open('rb') as source:
         digest=hashlib.file_digest(source,'sha256').hexdigest()
-    total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[];ocr_review_pages=[]
+    total=0;low_text=[];image_pages=[];ocr_pages=[];ocr_failures=[];ocr_error_types=[];ocr_review_pages=[];blank_candidates=[]
     sections=[];low_text_details=[];review_pages=[];image_inventory=[];image_assets=[];passage_image_links=[]
     with fitz.open(pdf) as doc,(out/'pages.jsonl').open('w',encoding='utf-8') as pages,(out/'passages.jsonl').open('w',encoding='utf-8') as passages:
         page_count=len(doc)
@@ -83,7 +99,14 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                     pass
             clipped_for_ocr = [rect & pdf_page.rect for rect in image_rects_for_ocr]
             image_fraction = rectangle_union_area(clipped_for_ocr) / page_area if page_area else 0.0
-            needs_ocr = len(text) < 30 or (len(text) < 500 and image_fraction >= 0.6)
+            visually_blank, dark_fraction = visual_blank_candidate(pdf_page) if len(text) < 500 else (False, None)
+            if visually_blank:
+                blank_candidates.append(page)
+            # A blank candidate must not become a searchable passage merely
+            # because an OCR layer contains noise. Preserve it in pages.jsonl
+            # for visual review and original-page citation accountability.
+            indexed_text = '' if visually_blank else text
+            needs_ocr = not visually_blank and (len(text) < 30 or (len(text) < 500 and image_fraction >= 0.6))
             if needs_ocr and ocr:
                 try:
                     ocr_page = pdf_page.get_textpage_ocr(language="eng", dpi=200, full=True)
@@ -94,14 +117,18 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                 except Exception as exc:
                     ocr_failures.append(page)
                     ocr_error_types.append(type(exc).__name__)
+            if page in ocr_pages:
+                indexed_text = text
             if needs_ocr and image_fraction >= 0.6 and page not in ocr_pages:
                 ocr_review_pages.append(page)
-            if len(text)<30 or page in ocr_review_pages:
+            if len(text)<30 or page in ocr_review_pages or visually_blank:
                 low_text.append(page)
                 has_images = bool(pdf_page.get_images(full=False))
                 # Conservative triage: an embedded image is not proof of a scan,
                 # and a zero-character page is not necessarily visually blank.
-                if page in ocr_failures:
+                if visually_blank:
+                    review_category = 'visual_blank_candidate_review'
+                elif page in ocr_failures:
                     review_category = 'ocr_error'
                 elif has_images:
                     review_category = 'image_content_review'
@@ -146,6 +173,8 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                                          'has_images':has_images,
                                          'ocr_improved':page in ocr_pages,
                                          'ocr_failed':page in ocr_failures,
+                                         'visual_blank_candidate':visually_blank,
+                                         'dark_pixel_fraction':dark_fraction,
                                          'review_category':review_category,
                                          'image_placement_count':len(image_rects),
                                          'image_coverage_upper_bound':image_coverage_upper_bound,
@@ -183,7 +212,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
                         })
             page_asset_ids = [a['asset_id'] for a in image_assets if a['pdf_page']==page]
             pages.write(json.dumps({'pdf_page':page,'text':text},ensure_ascii=False)+'\n')
-            for part in chunks(text):
+            for part in chunks(indexed_text):
                 if page_asset_ids:
                     # Page-level candidate association, NOT a verified claim
                     # that the passage describes the pictured material.
@@ -205,7 +234,10 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
         'size_bytes':pdf.stat().st_size,'sha256':digest,'pdf_page_count':page_count,
         'passage_count':total,'section_count':len(sections),'section_source':'pdf_bookmarks',
         'low_text_pages':low_text,'ocr_review_pages':ocr_review_pages,'low_text_details':low_text_details,'image_pages':image_pages,'ocr_pages':ocr_pages,'ocr_failed_pages':ocr_failures,
-        'ocr_attempted':bool(ocr),'ocr_error_types':ocr_error_types,'requires_ocr_review':bool(low_text),
+        'ocr_attempted':bool(ocr),'ocr_error_types':ocr_error_types,
+        'visual_blank_candidates':blank_candidates,
+        'visual_blank_candidates_verified':False,'requires_ocr_review':bool(low_text),
+        'blank_candidate_passages_excluded':True,
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest

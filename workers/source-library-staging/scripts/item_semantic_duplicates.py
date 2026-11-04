@@ -19,13 +19,21 @@ def cosine(a, b):
 
 
 def screen(candidate_vector, neighbors, threshold=0.85):
-    if type(threshold) not in (int, float) or not 0 < threshold <= 1:
+    if type(threshold) not in (int, float) or not math.isfinite(threshold) or not 0 < threshold <= 1:
         raise ValueError("Invalid similarity threshold")
     if not isinstance(neighbors, list):
         raise ValueError("Neighbor list required")
+    # Validate the candidate even when the index returns no neighbors.
+    cosine(candidate_vector, candidate_vector)
     matches = []
+    seen = set()
     for neighbor in neighbors:
-        similarity = cosine(candidate_vector, neighbor["embedding"])
+        if not isinstance(neighbor, dict) or not isinstance(neighbor.get("item_id"), str) or not neighbor["item_id"].strip():
+            raise ValueError("Each semantic neighbor needs a stable item ID")
+        if neighbor["item_id"] in seen:
+            raise ValueError("Duplicate semantic neighbor ID")
+        seen.add(neighbor["item_id"])
+        similarity = cosine(candidate_vector, neighbor.get("embedding"))
         if similarity >= threshold:
             matches.append({"item_id": neighbor["item_id"], "similarity": round(similarity, 6)})
     return sorted(matches, key=lambda x: -x["similarity"])

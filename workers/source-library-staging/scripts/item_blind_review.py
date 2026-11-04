@@ -18,11 +18,29 @@ def payload(item):
         data["rounding"] = sa.get("rounding")
     elif fmt == "DD":
         dd = item.get("dd") or {}
-        data["left"] = dd.get("left")
-        data["right"] = dd.get("right")
+        # Matching labels may be plain strings or ID/text objects.
+        # Strip every other field, including keyed pairs and explanations.
+        def blind_labels(entries):
+            if not isinstance(entries, list):
+                raise ValueError("Matching labels required")
+            sanitized = []
+            for entry in entries:
+                if isinstance(entry, str):
+                    sanitized.append(entry)
+                elif isinstance(entry, dict):
+                    sanitized.append({"id": entry["id"], "text": entry["text"]})
+                else:
+                    raise ValueError("Invalid matching label")
+            return sanitized
+        data["left"] = blind_labels(dd.get("left"))
+        data["right"] = blind_labels(dd.get("right"))
     elif fmt == "HS":
         hs = item.get("hs") or {}
-        data["figure"] = hs.get("figure")
+        figure = hs.get("figure")
+        # Never forward nested region answers or provenance to a blind model.
+        if isinstance(figure, dict):
+            figure = {k: figure[k] for k in ("url", "alt", "width", "height") if k in figure}
+        data["figure"] = figure
     return data
 
 

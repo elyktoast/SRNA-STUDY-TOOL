@@ -2,6 +2,9 @@
 
 Passages are trusted backend data supplied by caller, never inferred from citations.
 """
+from item_source_reconciliation_v2 import _format_normalized
+
+
 def check(item, passages):
     issues = []
     if not isinstance(passages, dict):
@@ -22,6 +25,6 @@ def check(item, passages):
             if str(entry.get(field)) != str(source.get(field)):
                 issues.append({"rule_id": "R-2.5", "message": field + " does not match indexed passage"})
         excerpt = entry.get("excerpt")
-        if not isinstance(excerpt, str) or not excerpt.strip() or excerpt not in source.get("text", ""):
+        if not isinstance(excerpt, str) or not excerpt.strip() or _format_normalized(excerpt) not in _format_normalized(source.get("text", "")):
             issues.append({"rule_id": "R-2.5", "message": "Evidence excerpt not found verbatim in passage"})
     return issues
