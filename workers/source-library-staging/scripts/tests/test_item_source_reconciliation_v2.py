@@ -15,6 +15,16 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(reconcile({"evidence": [CITATION]}, SOURCE), [])
     def test_invented_passage_blocked(self):
         self.assertTrue(reconcile({"evidence": [{**CITATION, "passage_id": "fake"}]}, SOURCE))
+    def test_typography_and_spacing_only_are_accepted(self):
+        source = [{**SOURCE[0], "excerpt": "Patient’s airway — thoroughly  suctioned."}]
+        citation = {**CITATION, "excerpt": "Patient's airway - thoroughly suctioned."}
+        self.assertEqual(reconcile({"evidence": [citation]}, source), [])
+
+    def test_paraphrase_remains_blocked(self):
+        source = [{**SOURCE[0], "excerpt": "Patient must be fully awake."}]
+        citation = {**CITATION, "excerpt": "Patient may be mildly sedated."}
+        self.assertTrue(reconcile({"evidence": [citation]}, source))
+
     def test_invented_excerpt_blocked(self):
         self.assertTrue(reconcile({"evidence": [{**CITATION, "excerpt": "not in book"}]}, SOURCE))
     def test_invented_page_blocked(self):
