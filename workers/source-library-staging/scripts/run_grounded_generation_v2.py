@@ -96,9 +96,9 @@ def execute(conn, args, environ=None):
                                  include_subsections=args.include_subsections,
                                  page_start=args.page_start, page_end=args.page_end,
                                  checkpoint=checkpoint,
+                                 generator_model_id=env["AI_GENERATOR_MODEL"],
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
                                  evidence_packet=evidence)
-    result["item"]["model"] = env["AI_GENERATOR_MODEL"]
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
