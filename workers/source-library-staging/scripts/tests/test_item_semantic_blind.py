@@ -35,6 +35,16 @@ class ScreeningTests(unittest.TestCase):
                 self.assertTrue(issues)
                 self.assertEqual(issues[0]["rule_id"], "R-12.1")
 
+    def test_empty_neighbor_validation(self):
+        self.assertEqual(screen([1.0, 0.0], []), [])
+        for vector in ([], [0.0, 0.0], [float("nan"), 0.0], ["bad", 1.0], None):
+            with self.subTest(vector=vector):
+                with self.assertRaises(ValueError):
+                    screen(vector, [])
+        for threshold in (float("nan"), float("inf"), -1):
+            with self.assertRaises(ValueError):
+                screen([1.0, 0.0], [], threshold=threshold)
+
     def test_numeric_blind(self):
         item = {"item_id": "q", "format": "SA", "sa": {"answer": 5, "tolerance": 0}}
         self.assertEqual(compare(item, {"item_id": "q", "numeric_answer": 5}), [])
