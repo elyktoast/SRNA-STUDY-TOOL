@@ -98,6 +98,7 @@ def execute(conn, args, environ=None):
                                  checkpoint=checkpoint,
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
                                  evidence_packet=evidence)
+    result["item"]["model"] = env["AI_GENERATOR_MODEL"]
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
