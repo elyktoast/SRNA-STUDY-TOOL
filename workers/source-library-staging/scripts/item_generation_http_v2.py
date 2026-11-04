@@ -17,7 +17,9 @@ FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
 REQUIRED = {"topic", "mode", "domain", "section", "objective", "item_id"}
 
 
-def create_app(*, conn_factory, resolve_admin, environment):
+def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_factory=None):
+    if semantic_lookup_factory is not None and not callable(semantic_lookup_factory):
+        raise ValueError("Trusted semantic lookup factory required")
     if not callable(conn_factory) or not callable(resolve_admin):
         raise ValueError("Trusted connection and admin identity adapters required")
     if environment.get("STAGING_ONLY") != "true":
@@ -197,7 +199,9 @@ def create_app(*, conn_factory, resolve_admin, environment):
             return respond("400 Bad Request", {"error": "invalid_request"})
         try:
             with conn_factory() as conn:
-                result = execute(conn, args, environment)
+                semantic_lookup = (semantic_lookup_factory(conn, owner, args.textbook_id)
+                                   if live and semantic_lookup_factory is not None else None)
+                result = execute(conn, args, environment, semantic_lookup=semantic_lookup)
             return respond("200 OK", result)
         except ValueError as exc:
             # Safe fixed categories only. Do not return source passages, model text,
