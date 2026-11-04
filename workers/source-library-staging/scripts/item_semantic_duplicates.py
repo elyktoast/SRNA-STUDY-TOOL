@@ -24,8 +24,14 @@ def screen(candidate_vector, neighbors, threshold=0.85):
     if not isinstance(neighbors, list):
         raise ValueError("Neighbor list required")
     matches = []
+    seen = set()
     for neighbor in neighbors:
-        similarity = cosine(candidate_vector, neighbor["embedding"])
+        if not isinstance(neighbor, dict) or not isinstance(neighbor.get("item_id"), str) or not neighbor["item_id"].strip():
+            raise ValueError("Each semantic neighbor needs a stable item ID")
+        if neighbor["item_id"] in seen:
+            raise ValueError("Duplicate semantic neighbor ID")
+        seen.add(neighbor["item_id"])
+        similarity = cosine(candidate_vector, neighbor.get("embedding"))
         if similarity >= threshold:
             matches.append({"item_id": neighbor["item_id"], "similarity": round(similarity, 6)})
     return sorted(matches, key=lambda x: -x["similarity"])
