@@ -15,7 +15,7 @@ def _format_normalized(text):
         "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-",
         "\u2014": "-", "\u00ad": "",
     }))
-    return re.sub(r"\\s+", " ", text).strip()
+    return re.sub(r"\s+", " ", text).strip()
 
 
 def reconcile(item, trusted_passages):
