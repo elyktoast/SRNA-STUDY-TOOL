@@ -57,6 +57,28 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                            else {"figure"})
             if set(request) - allowed:
                 raise ValueError("Blind request includes non-blind fields")
+            if fmt in ("MC", "MS"):
+                options = request.get("options")
+                if (not isinstance(options, list) or not options
+                        or any(not isinstance(o, dict) or set(o) != {"id", "text"}
+                               or not isinstance(o["id"], str) or not o["id"].strip()
+                               or not isinstance(o["text"], str) or not o["text"].strip()
+                               for o in options)):
+                    raise ValueError("Blind choices must contain only IDs and text")
+                if fmt == "MS" and request.get("select_count") not in (2, 3):
+                    raise ValueError("Blind multi-select count required")
+                if fmt == "MC" and request.get("select_count") is not None:
+                    raise ValueError("Unexpected blind selection count")
+            if fmt == "DD":
+                for field in ("left", "right"):
+                    entries = request.get(field)
+                    if (not isinstance(entries, list) or not entries
+                            or any(not isinstance(e, dict) or set(e) != {"id", "text"}
+                                   or not isinstance(e["id"], str) or not isinstance(e["text"], str)
+                                   for e in entries)):
+                        raise ValueError("Blind matching entries must contain only IDs and text")
+            if fmt == "HS" and not isinstance(request.get("figure"), (str, dict)):
+                raise ValueError("Blind hotspot figure required")
         # Step-specific ceilings reduce oversized generations without changing validation.
         step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
