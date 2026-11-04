@@ -159,6 +159,23 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertEqual(result["screening"], attach.return_value)
         self.assertFalse(result["can_publish"])
 
+    @patch("item_generation_screened_v2.blind_review", side_effect=RuntimeError("offline"))
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_blind_outage_keeps_unpublished_draft(self, generate, intake, blind):
+        generate.return_value = {"item": {"item_id": "new-1"}, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{
+            "status": "draft", "screening": {"stages": {
+                "blind_model": {"status": "pending", "issues": []},
+                "human_review": {"status": "pending", "issues": []}}}}]}
+        result = generate_and_screen(None, **ARGS, blind_reviewer=lambda request: {},
+                                     generator_model_id="generator-v1",
+                                     reviewer_model_id="reviewer-v2")
+        self.assertEqual(result["item"]["item_id"], "new-1")
+        self.assertIn("blind_model", result["screening"]["pending_verifications"])
+        self.assertFalse(result["screening"]["screening_complete"])
+        self.assertFalse(result["can_publish"])
+
     @patch("item_generation_screened_v2.intake")
     @patch("item_generation_screened_v2.generate_one")
     def test_clean_generator_routes_to_screening(self, generate, intake):
