@@ -47,6 +47,11 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     result = review["draft_reviews"][0]
     screening = result["screening"]
     next_state = result["status"]
+    pending = [name for name in ("evidence", "duplicates", "blind_model")
+               if screening.get("stages", {}).get(name, {}).get("status") == "pending"]
+    if pending:
+        screening["screening_complete"] = False
+        screening["pending_verifications"] = pending
     if blind_reviewer is not None:
         blind = blind_review(generated["item"], blind_reviewer,
                              generator_model_id=generator_model_id,
