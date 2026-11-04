@@ -62,7 +62,7 @@ def check(item):
         count = len(opts) if isinstance(opts, list) else 0
         if (fmt == "MC" and count != 4) or (fmt == "MS" and count not in (4, 5, 6)):
             fail("R-7.1.1" if fmt == "MC" else "R-7.2.2", "Invalid option count")
-        ids = [o.get("id") for o in opts if isinstance(o, dict)] if isinstance(opts, list) else []
+        ids = [o.get("id") if isinstance(o, dict) else None for o in opts] if isinstance(opts, list) else []
         if ids != list("ABCDEF")[:count] or any(not isinstance(o.get("text"), str) or not o["text"].strip() or "error_pattern" not in o for o in opts if isinstance(o, dict)):
             fail("R-15", "Options must be labeled sequentially and have text and error pattern")
         if not isinstance(key, list) or not key or len(set(key)) != len(key) or any(k not in ids for k in key):
@@ -80,8 +80,8 @@ def check(item):
             keyed = next((o for o in opts if isinstance(o, dict) and o.get("id") == key[0]), None)
             others = [o for o in opts if isinstance(o, dict) and o.get("id") != key[0]]
             if keyed and others:
-                key_len = len(keyed.get("text", "").split())
-                longest_other = max(len(o.get("text", "").split()) for o in others)
+                key_len = len((keyed.get("text") if isinstance(keyed.get("text"), str) else "").split())
+                longest_other = max(len((o.get("text") if isinstance(o.get("text"), str) else "").split()) for o in others)
                 if longest_other and key_len > longest_other * 1.15:
                     fail("R-6.8", "Key is more than 15% longer than the next-longest option")
             for option in opts:
@@ -93,7 +93,7 @@ def check(item):
                         fail("R-6.3", "Key error pattern must not contain a correctness label")
                 elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
                     fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
-        texts = [o.get("text", "").strip().casefold() for o in opts if isinstance(o, dict)]
+        texts = [(o.get("text") if isinstance(o.get("text"), str) else "").strip().casefold() for o in opts if isinstance(o, dict)]
         if len(set(texts)) != len(texts):
             fail("R-6.5", "Duplicate options")
         if any("all of the above" in t or "none of the above" in t for t in texts):
