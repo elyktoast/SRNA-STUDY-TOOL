@@ -26,6 +26,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id)
+    rewrite_attempts = 0
     if rewrite is not None and generated["schema_issues"]:
         def validate_rewrite(candidate):
             problems = validate_complete_item(candidate)
@@ -36,6 +37,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             return problems
         repaired = attempt_once(generated["item"], generated["schema_issues"],
                                 rewrite, validate_rewrite)
+        rewrite_attempts = repaired["rewrite_attempts"]
         generated = {**generated, "item": repaired["item"],
                      "schema_issues": repaired["issues"],
                      "rewrite_attempts": repaired["rewrite_attempts"]}
@@ -54,9 +56,10 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                 "generator_issues": issues,
                 "screening": {"can_publish": False, "screening_complete": False,
                               "next_state": state, "stages": stages,
-                              "rewrite_attempts_allowed": 1}, "next_state": state,
+                              "rewrite_attempts_allowed": 1 - rewrite_attempts,
+                              "rewrite_attempts_used": rewrite_attempts}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
-                "database_writes": False}
+                "database_writes": False, "rewrite_attempts_used": rewrite_attempts}
     indexed = {p["passage_id"]: {
         "passage_id": p["passage_id"], "textbook_id": p["textbook_id"],
         "pdf_page_start": p.get("pdf_page_start"), "text": p["excerpt"]}
@@ -69,6 +72,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     neighbors=neighbors)
     result = review["draft_reviews"][0]
     screening = result["screening"]
+    screening["rewrite_attempts_used"] = rewrite_attempts
+    screening["rewrite_attempts_allowed"] = 1 - rewrite_attempts
     next_state = result["status"]
     pending = [name for name in ("schema", "deterministic_text", "math", "evidence",
                                 "duplicates", "blind_model")
@@ -92,4 +97,5 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     return {"item_id": item_id, "item": generated["item"],
             "generator_issues": [], "screening": screening,
             "next_state": next_state, "requires_human_review": True,
-            "can_publish": False, "database_writes": False}
+            "can_publish": False, "database_writes": False,
+            "rewrite_attempts_used": rewrite_attempts}
