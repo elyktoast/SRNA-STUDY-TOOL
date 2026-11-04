@@ -80,12 +80,20 @@ class ScreenedGenerationTests(unittest.TestCase):
     @patch("item_generation_screened_v2.generate_one")
     def test_generator_issues_block_intake(self, generate):
         generate.return_value = {"item": {"item_id": "new-1"},
-                                 "schema_issues": [{"rule_id": "R-12.4", "message": "bad citation"}]}
+                                 "schema_issues": [{"rule_id": "R-2.5", "message": "bad citation"}]}
         result = generate_and_screen(None, **ARGS)
         self.assertIsNotNone(result["screening"])
         self.assertFalse(result["screening"]["can_publish"])
         self.assertEqual(result["next_state"], "needs_source_review")
         self.assertFalse(result["can_publish"])
+    @patch("item_generation_screened_v2.generate_one")
+    def test_clang_failure_is_editorial_not_source(self, generate):
+        generate.return_value = {"item": {"item_id": "new-1"},
+                                 "schema_issues": [{"rule_id": "R-12.4", "message": "Clang detected"}]}
+        result = generate_and_screen(None, **ARGS)
+        self.assertEqual(result["next_state"], "needs_editorial_review")
+        self.assertEqual(result["screening"]["stages"]["evidence"]["status"], "pending")
+
     @patch("item_generation_screened_v2.generate_one")
     def test_all_five_formats_reject_invalid_generator_output_before_screening(self, generate):
         for format_name in ("MC", "MS", "SA", "DD", "HS"):
