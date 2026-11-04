@@ -73,8 +73,10 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 for field in ("left", "right"):
                     entries = request.get(field)
                     if (not isinstance(entries, list) or not entries
-                            or any(not isinstance(e, dict) or set(e) != {"id", "text"}
-                                   or not isinstance(e["id"], str) or not isinstance(e["text"], str)
+                            or any(not (isinstance(e, str) and e.strip())
+                                   and not (isinstance(e, dict) and set(e) == {"id", "text"}
+                                            and isinstance(e["id"], str) and e["id"].strip()
+                                            and isinstance(e["text"], str) and e["text"].strip())
                                    for e in entries)):
                         raise ValueError("Blind matching entries must contain only IDs and text")
             if fmt == "HS" and not isinstance(request.get("figure"), (str, dict)):
