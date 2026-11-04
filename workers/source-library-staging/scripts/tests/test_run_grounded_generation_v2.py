@@ -20,19 +20,14 @@ class GenerationCliTests(unittest.TestCase):
         fingerprint.return_value = "a" * 64
         base = {"STAGING_ONLY": "true", "AI_GENERATOR_MODEL": "generator-a",
                 "AI_PROVIDER_ENDPOINT": "https://provider.example/v1"}
-        for env in (base, {**base, "AI_GENERATOR_MODEL": "generator-b"},
-                    {**base, "AI_REWRITE_OPT_IN": "true"},
-                    {**base, "AI_BLIND_REVIEW_OPT_IN": "true",
-                     "AI_REVIEWER_MODEL": "reviewer-b"}):
-            # Dry-run remains free; opt-in-only modes must be disabled for it.
-            safe = {**env, "AI_REWRITE_OPT_IN": "false",
-                    "AI_BLIND_REVIEW_OPT_IN": "false"}
-            execute(object(), ARGS, safe)
+        execute(object(), ARGS, base)
+        execute(object(), ARGS, {**base, "AI_GENERATOR_MODEL": "generator-b"})
         first = fingerprint.call_args_list[0].args[0]
         second = fingerprint.call_args_list[2].args[0]
         self.assertNotEqual(first["generator_model"], second["generator_model"])
         self.assertIn("reviewer_model", first)
         self.assertIn("rewrite_enabled", first)
+        self.assertFalse(first["rewrite_enabled"])
 
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     @patch("run_grounded_generation_v2.make_transport")
@@ -80,7 +75,7 @@ class GenerationCliTests(unittest.TestCase):
         self.assertEqual(result["save_payload"]["evidence"][0]["passage_id"], "p1")
         self.assertEqual(result["save_payload"]["question"]["stem"], "Synthetic test item")
         transport.assert_called_once_with(
-            allowed_hosts=["provider.example"],
+            allowed_hosts=["provider.example"], timeout_seconds=60,
             relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
             relay_secret="a" * 48)
         adapter.assert_called_once_with(
