@@ -14,6 +14,26 @@ EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
+    @patch("run_grounded_generation_v2.fingerprint")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_checkpoint_hash_changes_with_model_and_review_configuration(self, evidence, fingerprint):
+        fingerprint.return_value = "a" * 64
+        base = {"STAGING_ONLY": "true", "AI_GENERATOR_MODEL": "generator-a",
+                "AI_PROVIDER_ENDPOINT": "https://provider.example/v1"}
+        for env in (base, {**base, "AI_GENERATOR_MODEL": "generator-b"},
+                    {**base, "AI_REWRITE_OPT_IN": "true"},
+                    {**base, "AI_BLIND_REVIEW_OPT_IN": "true",
+                     "AI_REVIEWER_MODEL": "reviewer-b"}):
+            # Dry-run remains free; opt-in-only modes must be disabled for it.
+            safe = {**env, "AI_REWRITE_OPT_IN": "false",
+                    "AI_BLIND_REVIEW_OPT_IN": "false"}
+            execute(object(), ARGS, safe)
+        first = fingerprint.call_args_list[0].args[0]
+        second = fingerprint.call_args_list[2].args[0]
+        self.assertNotEqual(first["generator_model"], second["generator_model"])
+        self.assertIn("reviewer_model", first)
+        self.assertIn("rewrite_enabled", first)
+
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     @patch("run_grounded_generation_v2.make_transport")
     def test_default_preflight_never_calls_provider(self, transport, evidence):
