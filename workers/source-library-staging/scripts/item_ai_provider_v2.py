@@ -6,7 +6,7 @@ and source excerpts must never be logged. Does not write to any database.
 import json
 from urllib.parse import urlsplit
 
-ALLOWED_STEPS = {"concept_card", "item_draft", "rationale"}
+ALLOWED_STEPS = {"concept_card", "item_draft", "rationale", "rewrite"}
 
 class ProviderError(RuntimeError):
     pass
@@ -34,11 +34,16 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             raise ValueError("Unsupported generation request")
         if request.get("rules_version") != "2.0" or request.get("auto_publish") is not False:
             raise ValueError("Unsafe generation contract")
+        if request["step"] == "rewrite":
+            if request.get("max_rewrites") != 1 or request.get("requires_human_review") is not True:
+                raise ValueError("Unsafe rewrite contract")
+            if not isinstance(request.get("item"), dict) or not isinstance(request.get("issues"), list):
+                raise ValueError("Rewrite requires original item and diagnostics")
         # Step-specific ceilings reduce oversized generations without changing validation.
-        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400}
+        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         body = {"model": model, "messages": [
-            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. Do not claim human verification."},
+            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item, preserve protected metadata and evidence identifiers, and do not claim human verification."},
             {"role": "user", "content": json.dumps(request, ensure_ascii=False)}
         ], "max_tokens": output_budget, "temperature": 0.2}
         # Transport signature deliberately explicit. Caller enforces timeouts,
