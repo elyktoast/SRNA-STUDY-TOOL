@@ -70,6 +70,41 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertFalse(result["screening"]["screening_complete"])
         self.assertFalse(result["can_publish"])
 
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_post_generation_semantic_lookup_passes_vectors(self, generate, intake):
+        item = {"item_id": "new-1", "stem": "Test"}
+        generate.return_value = {"item": item, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{
+            "status": "draft", "screening": {"stages": {
+                "duplicates": {"status": "pass", "issues": []},
+                "blind_model": {"status": "pending", "issues": []}}}}]}
+        seen = []
+        def lookup(candidate):
+            seen.append(candidate)
+            return {"embedding": [1.0, 0.0], "neighbors": [
+                {"item_id": "existing-1", "embedding": [0.9, 0.1]}]}
+        result = generate_and_screen(None, **ARGS, semantic_lookup=lookup)
+        self.assertEqual(seen, [item])
+        self.assertEqual(intake.call_args.kwargs["embeddings"]["new-1"], [1.0, 0.0])
+        self.assertEqual(intake.call_args.kwargs["neighbors"][0]["item_id"], "existing-1")
+        self.assertFalse(result["can_publish"])
+
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_semantic_lookup_failure_remains_pending(self, generate, intake):
+        generate.return_value = {"item": {"item_id": "new-1"}, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{
+            "status": "draft", "screening": {"stages": {
+                "duplicates": {"status": "pass", "issues": []},
+                "blind_model": {"status": "pending", "issues": []}}}}]}
+        def unavailable(item):
+            raise RuntimeError("search unavailable")
+        result = generate_and_screen(None, **ARGS, semantic_lookup=unavailable)
+        self.assertEqual(result["screening"]["stages"]["duplicates"]["status"], "pending")
+        self.assertIn("duplicates", result["screening"]["pending_verifications"])
+        self.assertFalse(result["can_publish"])
+
     @patch("item_generation_screened_v2.generate_one")
     def test_partial_semantic_inputs_rejected_before_paid_generation(self, generate):
         with self.assertRaisesRegex(ValueError, "both candidate embedding and neighbors"):
