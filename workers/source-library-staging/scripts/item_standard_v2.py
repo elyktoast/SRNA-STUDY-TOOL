@@ -106,7 +106,7 @@ def check(item):
             fail("R-7.3", "Numeric entry cannot have choices")
     elif fmt == "DD":
         dd = item.get("dd")
-        if not isinstance(dd, dict) or not all(isinstance(dd.get(k), list) and len(dd[k]) == 4 for k in ("left", "right")) or not isinstance(dd.get("pairs"), dict) or len(dd["pairs"]) != 4 or len(set(dd["pairs"].values())) != 4:
+        if not isinstance(dd, dict) or not all(isinstance(dd.get(k), list) and len(dd[k]) == 4 for k in ("left", "right")) or not isinstance(dd.get("pairs"), dict) or len(dd["pairs"]) != 4 or any(not isinstance(k, str) or not isinstance(v, str) for k, v in dd["pairs"].items()) or len(set(v for v in dd["pairs"].values() if isinstance(v, str))) != 4:
             fail("R-7.4.1", "Four unique one-to-one matches required")
     elif fmt == "HS":
         hs = item.get("hs")
