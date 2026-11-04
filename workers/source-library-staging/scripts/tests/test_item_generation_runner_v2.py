@@ -26,6 +26,21 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result["item"]["status"], "draft")
         self.assertFalse(result["auto_approved"])
         self.assertFalse(result["database_writes"])
+    def test_trusted_model_overrides_untrusted_model_before_validation(self):
+        def adapter(request):
+            if request["step"] == "concept_card":
+                return dict(objective="III.H.4", mechanism="m", relevance="r",
+                            misconception="x", counterfactual="y", evidence_ids=["p1"])
+            if request["step"] == "item_draft":
+                draft = sample()
+                draft["model"] = "forged-model"
+                return draft
+            return dict(core_concept="a", why_key_wins="b", trap="c",
+                        distractor_breakdown={"B": "wrong"})
+        result = generate_one(adapter, **ARGS, generator_model_id="trusted-model")
+        self.assertEqual(result["item"]["model"], "trusted-model")
+        self.assertFalse(result["auto_approved"])
+
     def test_unknown_evidence_stops_before_draft(self):
         calls = []
         def adapter(request):
