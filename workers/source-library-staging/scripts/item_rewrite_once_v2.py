@@ -18,9 +18,16 @@ def attempt_once(original, issues, rewrite, validate):
                  "objective", "format", "model", "status")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
                "max_rewrites": 1, "requires_human_review": True}
-    candidate = rewrite(request)
+    try:
+        candidate = rewrite(request)
+    except Exception:
+        return {"item": deepcopy(original), "issues": deepcopy(issues),
+                "rewrite_attempts": 1, "can_publish": False,
+                "rewrite_failed": True}
     if not isinstance(candidate, dict):
-        raise ValueError("Rewrite must return an item object")
+        return {"item": deepcopy(original), "issues": deepcopy(issues),
+                "rewrite_attempts": 1, "can_publish": False,
+                "rewrite_failed": True}
     if any(candidate.get(field) != original.get(field) for field in immutable):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite attempted to change protected metadata"}],
