@@ -46,7 +46,7 @@ class StandardTests(unittest.TestCase):
         item["options"][0]["error_pattern"] = "Correct"
         item["options"][1]["error_pattern"] = "Incorrect: not advised"
         rules = {issue["rule_id"] for issue in check(item)}
-        self.assertIn("R-6.8", rules)
+        self.assertNotIn("R-6.8", rules)  # Length imbalance is an editorial flag, not a schema failure
         self.assertIn("R-6.3", rules)
 
     def test_malformed_option_text_returns_diagnostics_not_exception(self):
