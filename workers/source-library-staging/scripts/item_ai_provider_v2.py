@@ -45,6 +45,18 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 raise ValueError("Blind review request contains forbidden fields")
             if not isinstance(request.get("item_id"), str) or not isinstance(request.get("stem"), str):
                 raise ValueError("Blind review requires item ID and stem")
+        if request["step"] == "blind_review":
+            fmt = request.get("format")
+            if fmt not in ("MC", "MS", "SA", "DD", "HS"):
+                raise ValueError("Unsupported blind item format")
+            allowed = {"step", "rules_version", "auto_publish", "blind",
+                       "item_id", "format", "stem"}
+            allowed.update({"options", "select_count"} if fmt in ("MC", "MS")
+                           else {"unit", "rounding"} if fmt == "SA"
+                           else {"left", "right"} if fmt == "DD"
+                           else {"figure"})
+            if set(request) - allowed:
+                raise ValueError("Blind request includes non-blind fields")
         # Step-specific ceilings reduce oversized generations without changing validation.
         step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
