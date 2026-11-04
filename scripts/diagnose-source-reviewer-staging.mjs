@@ -149,8 +149,14 @@ if(providerBody?.check==='hybrid_provider_readiness'){
 assert.ok([200,403,503].includes(providerResponse.status),'unexpected provider-check HTTP status');
 if(providerResponse.status===200){
  assert.equal(providerBody?.generation_performed,false,'provider-check must never generate');
- assert.ok(['groq_models','hybrid_provider_readiness'].includes(providerBody?.check));
- if(providerBody.check==='groq_models')assert.ok([200,401,403,429,0].includes(providerBody?.provider_status));
+ assert.ok(['groq_models','groq_models_via_signed_relay','hybrid_provider_readiness'].includes(providerBody?.check));
+ if(['groq_models','groq_models_via_signed_relay'].includes(providerBody.check))assert.ok([200,401,403,429,0].includes(providerBody?.provider_status));
+ if(providerBody.check==='groq_models_via_signed_relay'){
+  assert.ok([200,401,403,429,0].includes(providerBody?.worker_status));
+  assert.ok(['OK','UNAVAILABLE'].includes(providerBody?.container_relay));
+  assert.equal(typeof providerBody?.generation_ready,'boolean');
+  if(providerBody.generation_ready){assert.equal(providerBody.provider_status,200);assert.equal(providerBody.worker_status,200);assert.equal(providerBody.container_relay,'OK');}
+ }
 }
 const draftResponse=await fetch(gateway+'/generation/drafts',{method:'GET',headers,redirect:'manual'});
 const draftBody=await draftResponse.json().catch(()=>null);
