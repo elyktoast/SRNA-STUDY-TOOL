@@ -72,6 +72,33 @@ class GenerationCliTests(unittest.TestCase):
         self.assertIsNone(generate.call_args.kwargs["on_checkpoint"])
         self.assertEqual(generate.call_args.kwargs["item_id"], "draft-1")
         self.assertEqual(generate.call_args.kwargs["format"], "MC")
+        self.assertEqual(generate.call_args.kwargs["generator_model_id"], "test-model")
+        self.assertIsNone(generate.call_args.kwargs["rewrite"])
+
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_explicit_rewrite_opt_in_wires_callable(self, evidence, transport, adapter, generate):
+        args = SimpleNamespace(**{**vars(ARGS), "execute": True,
+                                  "confirm_paid_calls": True})
+        env = {"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true",
+               "AI_REWRITE_OPT_IN": "true",
+               "AI_PROVIDER_ENDPOINT": "https://provider.example/v1/chat/completions",
+               "AI_ALLOWED_HOSTS": "provider.example",
+               "AI_PROVIDER_API_KEY": "secret", "AI_GENERATOR_MODEL": "test-model",
+               "STAGING_RECEIPT_SIGNING_SECRET": "a" * 48}
+        generate.return_value = {
+            "item_id": "draft-1", "next_state": "needs_editorial_review",
+            "source_evidence": {}, "item": {"stem": "Synthetic"},
+            "generator_issues": [], "screening": {"can_publish": False}}
+        execute(object(), args, env)
+        rewrite = generate.call_args.kwargs["rewrite"]
+        self.assertTrue(callable(rewrite))
+        rewrite({"item": {"status": "draft"}, "issues": [],
+                 "max_rewrites": 1, "requires_human_review": True})
+        self.assertEqual(adapter.return_value.call_args.args[0]["step"], "rewrite")
+        self.assertFalse(adapter.return_value.call_args.args[0]["auto_publish"])
 
     @patch("run_grounded_generation_v2.generate_from_index")
     @patch("run_grounded_generation_v2.make_transport")
