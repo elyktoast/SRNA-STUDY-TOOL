@@ -105,6 +105,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         if pending:
             screening["pending_verifications"] = pending
             screening["screening_complete"] = False
+        else:
+            screening.pop("pending_verifications", None)
     return {"item_id": item_id, "item": generated["item"],
             "generator_issues": [], "screening": screening,
             "next_state": next_state, "requires_human_review": True,
