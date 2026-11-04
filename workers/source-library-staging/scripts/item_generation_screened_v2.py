@@ -18,7 +18,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
                         semantic_lookup=None):
-    if blind_reviewer is not None and (not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
+    if blind_reviewer is not None and (not callable(blind_reviewer) or not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
         raise ValueError("Use either trusted semantic lookup or supplied vectors")
