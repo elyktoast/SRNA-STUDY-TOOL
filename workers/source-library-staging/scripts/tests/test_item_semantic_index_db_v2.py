@@ -1,7 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
-from unittest.mock import Mock
+from unittest.mock import Mock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_semantic_index_db_v2 import lookup, MAX_ROWS
 
@@ -9,9 +9,9 @@ OWNER = "00000000-0000-4000-8000-000000000001"
 
 class SemanticIndexTests(unittest.TestCase):
     def connection(self, rows):
-        cur = Mock()
+        cur = MagicMock()
         cur.fetchall.return_value = rows
-        conn = Mock()
+        conn = MagicMock()
         conn.cursor.return_value.__enter__ = Mock(return_value=cur)
         conn.cursor.return_value.__exit__ = Mock(return_value=False)
         return conn, cur
