@@ -191,7 +191,8 @@ class ScreenedGenerationTests(unittest.TestCase):
         blind.assert_called_once_with(item, reviewer, generator_model_id="generator-v1",
                                       reviewer_model_id="reviewer-v2")
         attach.assert_called_once_with(generated_screening, blind.return_value)
-        self.assertEqual(result["screening"], attach.return_value)
+        self.assertEqual(result["screening"]["next_state"], "draft")
+        self.assertFalse(result["screening"]["can_publish"])
         self.assertFalse(result["can_publish"])
 
     @patch("item_generation_screened_v2.blind_review", side_effect=RuntimeError("offline"))
