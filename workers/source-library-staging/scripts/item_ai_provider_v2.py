@@ -6,7 +6,7 @@ and source excerpts must never be logged. Does not write to any database.
 import json
 from urllib.parse import urlsplit
 
-ALLOWED_STEPS = {"concept_card", "item_draft", "rationale", "rewrite"}
+ALLOWED_STEPS = {"concept_card", "item_draft", "rationale", "rewrite", "blind_review"}
 
 class ProviderError(RuntimeError):
     pass
@@ -39,11 +39,17 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 raise ValueError("Unsafe rewrite contract")
             if not isinstance(request.get("item"), dict) or not isinstance(request.get("issues"), list):
                 raise ValueError("Rewrite requires original item and diagnostics")
+        if request["step"] == "blind_review":
+            forbidden = {"key", "rationale", "distractor_evidence", "concept_card", "evidence"}
+            if forbidden.intersection(request) or request.get("blind") is not True:
+                raise ValueError("Blind review request contains forbidden fields")
+            if not isinstance(request.get("item_id"), str) or not isinstance(request.get("stem"), str):
+                raise ValueError("Blind review requires item ID and stem")
         # Step-specific ceilings reduce oversized generations without changing validation.
-        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500}
+        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         body = {"model": model, "messages": [
-            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item, preserve protected metadata and evidence identifiers, and do not claim human verification."},
+            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return item_id and key array for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
             {"role": "user", "content": json.dumps(request, ensure_ascii=False)}
         ], "max_tokens": output_budget, "temperature": 0.2}
         # Transport signature deliberately explicit. Caller enforces timeouts,
