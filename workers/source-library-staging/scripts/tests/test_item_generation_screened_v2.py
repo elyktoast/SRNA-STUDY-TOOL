@@ -71,6 +71,14 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertFalse(result["can_publish"])
 
     @patch("item_generation_screened_v2.generate_one")
+    def test_partial_semantic_inputs_rejected_before_paid_generation(self, generate):
+        with self.assertRaisesRegex(ValueError, "both candidate embedding and neighbors"):
+            generate_and_screen(None, **ARGS, embedding=[0.1, 0.2])
+        with self.assertRaisesRegex(ValueError, "both candidate embedding and neighbors"):
+            generate_and_screen(None, **ARGS, neighbors=[])
+        generate.assert_not_called()
+
+    @patch("item_generation_screened_v2.generate_one")
     def test_reviewer_same_model_rejected_early(self, generate):
         with self.assertRaises(ValueError):
             generate_and_screen(None, **ARGS, blind_reviewer=lambda request: {},
