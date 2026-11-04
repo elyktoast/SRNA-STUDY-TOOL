@@ -30,9 +30,9 @@ def execute(conn, args, environ=None):
         raise ValueError("Invalid NCE/SEE blueprint classification")
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
-    if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.execute and args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
+    if args.execute and env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
         raise ValueError("Blind review requires explicit paid generation opt-in")
-    if env.get("AI_REWRITE_OPT_IN") == "true" and not (args.execute and args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
+    if args.execute and env.get("AI_REWRITE_OPT_IN") == "true" and not (args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
         raise ValueError("Rewrite requires explicit paid generation opt-in")
     if args.execute and env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true" and not args.textbook_id:
         raise ValueError("Checkpointed generation requires an explicit textbook ID")
