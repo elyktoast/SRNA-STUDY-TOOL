@@ -6,12 +6,17 @@ from item_generation_runner_v2 import generate_one
 from item_draft_intake import intake
 from item_independent_blind_v2 import review as blind_review
 from item_screening_blind_handoff_v2 import attach as attach_blind
+from item_rewrite_once_v2 import attempt_once
+from item_generation_contract_v2 import validate_complete_item
+from item_source_reconciliation_v2 import reconcile
+from item_answer_evidence_v2 import check as answer_evidence_check
+from item_special_format_evidence_v2 import check as special_evidence_check
 
 def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         format="MC", item_id, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
-                        checkpoint=None, on_checkpoint=None):
+                        checkpoint=None, on_checkpoint=None, rewrite=None):
     if blind_reviewer is not None and (not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if (embedding is None) != (neighbors is None):
@@ -21,6 +26,19 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id)
+    if rewrite is not None and generated["schema_issues"]:
+        def validate_rewrite(candidate):
+            problems = validate_complete_item(candidate)
+            problems.extend(reconcile(candidate, evidence))
+            problems.extend(answer_evidence_check(candidate, evidence)
+                            if format in ("MC", "MS")
+                            else special_evidence_check(candidate, evidence))
+            return problems
+        repaired = attempt_once(generated["item"], generated["schema_issues"],
+                                rewrite, validate_rewrite)
+        generated = {**generated, "item": repaired["item"],
+                     "schema_issues": repaired["issues"],
+                     "rewrite_attempts": repaired["rewrite_attempts"]}
     if generated["schema_issues"]:
         issues = generated["schema_issues"]
         source_failure = any(x["rule_id"] in ("R-2.5", "R-17") for x in issues)
