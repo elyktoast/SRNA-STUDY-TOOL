@@ -28,7 +28,8 @@ def _response(adapter, request):
 
 
 def generate_one(adapter, *, mode, domain, section, objective, evidence,
-                 format="MC", item_id, checkpoint=None, on_checkpoint=None):
+                 format="MC", item_id, checkpoint=None, on_checkpoint=None,
+                 generator_model_id=None):
     if not callable(adapter):
         raise ValueError("Explicit authenticated model adapter required")
     if not isinstance(item_id, str) or not item_id.strip():
@@ -92,6 +93,10 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
             "objective": objective, "format": format,
             "concept_card": concept, "rationale": rationale,
             "status": "draft"}
+    if generator_model_id is not None:
+        if not isinstance(generator_model_id, str) or not generator_model_id.strip():
+            raise ValueError("Trusted generator model identity must be nonempty")
+        item["model"] = generator_model_id
     issues = validate_complete_item(item)
     citation_issues = reconcile(item, evidence)
     issues.extend(citation_issues)
