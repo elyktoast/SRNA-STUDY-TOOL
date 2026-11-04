@@ -12,13 +12,15 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None):
+    if blind_reviewer is not None and (not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
+        raise ValueError("Independent reviewer requires distinct verified model identities")
     generated = generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint)
     if generated["schema_issues"]:
         issues = generated["schema_issues"]
-        source_failure = any(x["rule_id"] in ("R-2.5", "R-12.4", "R-17") for x in issues)
+        source_failure = any(x["rule_id"] in ("R-2.5", "R-17") for x in issues)
         state = "needs_source_review" if source_failure else "needs_editorial_review"
         pending = ("schema", "deterministic_text", "math", "evidence",
                    "duplicates", "blind_model", "human_review")
