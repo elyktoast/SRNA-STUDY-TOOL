@@ -13,7 +13,9 @@ def compare(item, response):
     if kind in ("MC", "MS"):
         key = item.get("key")
         chosen = response.get("key")
-        if not isinstance(key, list) or not isinstance(chosen, list) or len(chosen) != len(set(chosen)) or set(chosen) != set(key):
+        if (not isinstance(key, list) or not isinstance(chosen, list)
+                or not all(isinstance(x, str) for x in key + chosen)
+                or len(chosen) != len(set(chosen)) or set(chosen) != set(key)):
             return [{"rule_id": "R-12.1", "message": "Blind selection disagrees"}]
     elif kind == "SA":
         sa = item.get("sa") or {}
