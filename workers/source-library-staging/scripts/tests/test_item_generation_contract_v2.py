@@ -20,6 +20,17 @@ class ContractTests(unittest.TestCase):
             build_step("rationale", **BASE, format="MC", concept_card={"objective": "x"})
         rationale = build_step("rationale", **BASE, format="MC", concept_card={"objective": "x"}, draft={"stem": "s"})
         self.assertEqual(rationale["required_output"], "rationale")
+    def test_draft_prompt_requires_source_reconciliation_and_complete_metadata(self):
+        request = build_step("item_draft", **BASE, format="MC",
+                             concept_card={"objective": "III.H.4"})
+        instructions = request["instructions"]
+        for requirement in ("sa, dd, and hs", "self_check", "stats",
+                            "excerpt copied verbatim", "distractor_evidence",
+                            "supports_key", "refutes_distractor",
+                            "human review"):
+            self.assertIn(requirement, instructions)
+        self.assertFalse(request["auto_publish"])
+
     def test_reject_unsupported_format_and_missing_evidence(self):
         with self.assertRaises(ValueError):
             build_step("item_draft", **BASE, format="TF", concept_card={})
