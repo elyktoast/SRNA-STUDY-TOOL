@@ -91,6 +91,8 @@ def create_app(*, conn_factory, resolve_admin, environment):
                 "https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
                 data=body, method="POST", headers={
                     "Content-Type": "application/json",
+                    "User-Agent": "SRNA-Study-Tool-Staging-Relay/1.0",
+                    "Accept": "application/json",
                     "X-Relay-Timestamp": stamp, "X-Relay-Signature": signature})
             from item_ai_https_transport_v2 import _NoRedirect
             try:
