@@ -83,7 +83,8 @@ class ScreenedGenerationTests(unittest.TestCase):
         def lookup(candidate):
             seen.append(candidate)
             return {"embedding": [1.0, 0.0], "neighbors": [
-                {"item_id": "existing-1", "embedding": [0.9, 0.1]}]}
+                {"item_id": "existing-1", "embedding": [0.9, 0.1]}],
+                "search_complete": True, "index_id": "staging-v1"}
         result = generate_and_screen(None, **ARGS, semantic_lookup=lookup)
         self.assertEqual(seen, [item])
         self.assertEqual(intake.call_args.kwargs["embeddings"]["new-1"], [1.0, 0.0])
