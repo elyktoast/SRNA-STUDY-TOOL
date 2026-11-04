@@ -85,6 +85,21 @@ class ScreenedGenerationTests(unittest.TestCase):
                                 generator_model_id="same", reviewer_model_id="same")
         generate.assert_not_called()
 
+    @patch("item_generation_screened_v2.attempt_once")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_optional_rewrite_is_bounded_and_revalidated(self, generate, attempt):
+        original = {"item_id": "new-1", "status": "draft"}
+        generate.return_value = {"item": original,
+                                 "schema_issues": [{"rule_id": "R-2.5", "message": "citation"}]}
+        attempt.return_value = {"item": original,
+                                "issues": [{"rule_id": "R-2.5", "message": "still missing"}],
+                                "rewrite_attempts": 1}
+        result = generate_and_screen(None, **ARGS, rewrite=lambda request: original)
+        attempt.assert_called_once()
+        self.assertTrue(callable(attempt.call_args.args[3]))
+        self.assertEqual(result["next_state"], "needs_source_review")
+        self.assertFalse(result["can_publish"])
+
     @patch("item_generation_screened_v2.generate_one")
     def test_generator_issues_block_intake(self, generate):
         generate.return_value = {"item": {"item_id": "new-1"},
