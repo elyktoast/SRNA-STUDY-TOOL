@@ -17,11 +17,21 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint)
     if generated["schema_issues"]:
+        issues = generated["schema_issues"]
+        source_failure = any(x["rule_id"] in ("R-2.5", "R-12.4", "R-17") for x in issues)
+        state = "needs_source_review" if source_failure else "needs_editorial_review"
+        pending = ("schema", "deterministic_text", "math", "evidence",
+                   "duplicates", "blind_model", "human_review")
+        stages = {name: {"status": "pending", "issues": []} for name in pending}
+        stages["schema"] = {"status": "fail", "issues": issues}
+        if source_failure:
+            stages["evidence"] = {"status": "fail",
+                                  "issues": [x for x in issues if x["rule_id"] in ("R-2.5", "R-12.4", "R-17")]}
         return {"item_id": item_id, "item": generated["item"],
-                "generator_issues": generated["schema_issues"],
-                "screening": None, "next_state": "needs_source_review"
-                if any(x["rule_id"] in ("R-12.4", "R-17") for x in generated["schema_issues"])
-                else "needs_editorial_review",
+                "generator_issues": issues,
+                "screening": {"can_publish": False, "screening_complete": False,
+                              "next_state": state, "stages": stages,
+                              "rewrite_attempts_allowed": 1}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
                 "database_writes": False}
     indexed = {p["passage_id"]: {
