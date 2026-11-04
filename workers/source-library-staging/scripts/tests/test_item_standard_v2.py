@@ -40,6 +40,15 @@ class StandardTests(unittest.TestCase):
         item["options"].extend([dict(id="G", text="G", error_pattern="wrong timing")])
         self.assertTrue(any(e["rule_id"] == "R-7.2.2" for e in check(item)))
 
+    def test_flags_long_key_and_correctness_labels(self):
+        item = sample()
+        item["options"][0]["text"] = "Ensure the patient is awake and all rescue equipment is available immediately"
+        item["options"][0]["error_pattern"] = "Correct"
+        item["options"][1]["error_pattern"] = "Incorrect: not advised"
+        rules = {issue["rule_id"] for issue in check(item)}
+        self.assertIn("R-6.8", rules)
+        self.assertIn("R-6.3", rules)
+
     def test_banned_format_and_missing_evidence(self):
         item = sample()
         item["format"] = "TF"
