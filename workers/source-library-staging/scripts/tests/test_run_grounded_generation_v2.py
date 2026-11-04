@@ -99,6 +99,28 @@ class GenerationCliTests(unittest.TestCase):
         self.assertEqual(generate.call_args.kwargs["format"], "MC")
         self.assertEqual(generate.call_args.kwargs["generator_model_id"], "test-model")
         self.assertIsNone(generate.call_args.kwargs["rewrite"])
+        self.assertIsNone(generate.call_args.kwargs["semantic_lookup"])
+
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_trusted_semantic_lookup_is_forwarded(self, evidence, transport, adapter, generate):
+        args = SimpleNamespace(**{**vars(ARGS), "execute": True,
+                                  "confirm_paid_calls": True})
+        env = {"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true",
+               "AI_PROVIDER_ENDPOINT": "https://provider.example/v1/chat/completions",
+               "AI_ALLOWED_HOSTS": "provider.example",
+               "AI_PROVIDER_API_KEY": "secret", "AI_GENERATOR_MODEL": "test-model",
+               "STAGING_RECEIPT_SIGNING_SECRET": "a" * 48}
+        generate.return_value = {
+            "item_id": "draft-1", "next_state": "needs_editorial_review",
+            "source_evidence": {}, "item": {"stem": "Synthetic"},
+            "generator_issues": [], "screening": {"can_publish": False}}
+        lookup = lambda item: {"embedding": [1.0, 0.0], "neighbors": [],
+                               "search_complete": True, "index_id": "test"}
+        execute(object(), args, env, semantic_lookup=lookup)
+        self.assertIs(generate.call_args.kwargs["semantic_lookup"], lookup)
 
     @patch("run_grounded_generation_v2.generate_from_index")
     @patch("run_grounded_generation_v2.make_adapter")
