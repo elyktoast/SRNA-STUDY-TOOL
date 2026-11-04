@@ -71,6 +71,19 @@ class ProviderTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     adapter({**base, secret: "must not leak"})
 
+    def test_blind_nested_answer_metadata_rejected(self):
+        adapter = make_adapter(**self.config())
+        base = {"step": "blind_review", "rules_version": "2.0",
+                "auto_publish": False, "blind": True, "item_id": "q1",
+                "stem": "Select the best answer", "format": "MC",
+                "options": [{"id": "A", "text": "One"}]}
+        for extra in ({"key": ["A"]}, {"is_correct": True},
+                      {"rationale": "secret"}, {"error_pattern": "secret"}):
+            with self.subTest(extra=extra):
+                with self.assertRaises(ValueError):
+                    adapter({**base, "options": [{**base["options"][0], **extra}]})
+        adapter({**base, "options": [{"id": "A", "text": "One"}]})
+
     def test_rejects_non_json_response(self):
         adapter = make_adapter(**self.config(transport=lambda **kw: {
             "choices": [{"message": {"content": "not json"}}]}))
