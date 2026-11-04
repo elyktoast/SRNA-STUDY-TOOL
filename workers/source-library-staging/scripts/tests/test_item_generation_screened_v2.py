@@ -55,7 +55,8 @@ class ScreenedGenerationTests(unittest.TestCase):
         generate.return_value = {"item": {"item_id": "new-1"},
                                  "schema_issues": [{"rule_id": "R-12.4", "message": "bad citation"}]}
         result = generate_and_screen(None, **ARGS)
-        self.assertIsNone(result["screening"])
+        self.assertIsNotNone(result["screening"])
+        self.assertFalse(result["screening"]["can_publish"])
         self.assertEqual(result["next_state"], "needs_source_review")
         self.assertFalse(result["can_publish"])
     @patch("item_generation_screened_v2.generate_one")
@@ -69,7 +70,8 @@ class ScreenedGenerationTests(unittest.TestCase):
                 result = generate_and_screen(None, **ARGS, format=format_name)
                 self.assertEqual(generate.call_args.kwargs["format"], format_name)
                 self.assertEqual(result["next_state"], "needs_source_review")
-                self.assertIsNone(result["screening"])
+                self.assertIsNotNone(result["screening"])
+                self.assertFalse(result["screening"]["can_publish"])
                 self.assertTrue(result["requires_human_review"])
                 self.assertFalse(result["can_publish"])
                 self.assertFalse(result["database_writes"])
