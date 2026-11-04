@@ -70,8 +70,10 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     if semantic_lookup is not None:
         try:
             pair = semantic_lookup(generated["item"])
-            if not isinstance(pair, dict) or set(pair) != {"embedding", "neighbors"}:
-                raise ValueError("Invalid semantic lookup result")
+            if (not isinstance(pair, dict) or set(pair) != {"embedding", "neighbors", "search_complete", "index_id"}
+                    or pair["search_complete"] is not True
+                    or not isinstance(pair["index_id"], str) or not pair["index_id"].strip()):
+                raise ValueError("Unverified semantic lookup result")
             embedding, neighbors = pair["embedding"], pair["neighbors"]
             if embedding is None or not isinstance(neighbors, list):
                 raise ValueError("Incomplete semantic lookup")
