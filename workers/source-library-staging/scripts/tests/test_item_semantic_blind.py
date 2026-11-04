@@ -13,6 +13,17 @@ class ScreeningTests(unittest.TestCase):
                          [{"item_id": "q2", "similarity": 1.0}])
         with self.assertRaises(ValueError):
             cosine([0, 0], [1, 0])
+    def test_invalid_neighbors_fail_closed(self):
+        for neighbors in ([{"item_id": "same", "embedding": [1, 0]},
+                           {"item_id": "same", "embedding": [0, 1]}],
+                          [{"item_id": "", "embedding": [1, 0]}],
+                          [{"item_id": "x", "embedding": [1]}],
+                          [{"item_id": "x", "embedding": [float("nan"), 0]}],
+                          [None]):
+            with self.subTest(neighbors=repr(neighbors)):
+                with self.assertRaises(ValueError):
+                    screen([1, 0], neighbors)
+
     def test_numeric_blind(self):
         item = {"item_id": "q", "format": "SA", "sa": {"answer": 5, "tolerance": 0}}
         self.assertEqual(compare(item, {"item_id": "q", "numeric_answer": 5}), [])
