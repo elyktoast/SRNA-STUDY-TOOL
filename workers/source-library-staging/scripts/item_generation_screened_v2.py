@@ -16,9 +16,12 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         format="MC", item_id, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
-                        checkpoint=None, on_checkpoint=None, rewrite=None):
+                        checkpoint=None, on_checkpoint=None, rewrite=None,
+                        semantic_lookup=None):
     if blind_reviewer is not None and (not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
         raise ValueError("Independent reviewer requires distinct verified model identities")
+    if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
+        raise ValueError("Use either trusted semantic lookup or supplied vectors")
     if (embedding is None) != (neighbors is None):
         raise ValueError("Semantic screening requires both candidate embedding and neighbors")
     generated = generate_one(adapter, mode=mode, domain=domain,
@@ -63,6 +66,18 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                               "rewrite_attempts_used": rewrite_attempts}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
                 "database_writes": False, "rewrite_attempts_used": rewrite_attempts}
+    semantic_lookup_failed = False
+    if semantic_lookup is not None:
+        try:
+            pair = semantic_lookup(generated["item"])
+            if not isinstance(pair, dict) or set(pair) != {"embedding", "neighbors"}:
+                raise ValueError("Invalid semantic lookup result")
+            embedding, neighbors = pair["embedding"], pair["neighbors"]
+            if embedding is None or not isinstance(neighbors, list):
+                raise ValueError("Incomplete semantic lookup")
+        except Exception:
+            embedding, neighbors = None, None
+            semantic_lookup_failed = True
     indexed = {p["passage_id"]: {
         "passage_id": p["passage_id"], "textbook_id": p["textbook_id"],
         "pdf_page_start": p.get("pdf_page_start"), "text": p["excerpt"]}
@@ -75,6 +90,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     neighbors=neighbors)
     result = review["draft_reviews"][0]
     screening = result["screening"]
+    if semantic_lookup_failed:
+        screening["stages"]["duplicates"] = {"status": "pending", "issues": []}
+        screening["screening_complete"] = False
     screening["rewrite_attempts_used"] = rewrite_attempts
     screening["rewrite_attempts_allowed"] = 1 - rewrite_attempts
     next_state = result["status"]
