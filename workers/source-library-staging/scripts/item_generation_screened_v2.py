@@ -14,6 +14,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         checkpoint=None, on_checkpoint=None):
     if blind_reviewer is not None and (not generator_model_id or not reviewer_model_id or generator_model_id == reviewer_model_id):
         raise ValueError("Independent reviewer requires distinct verified model identities")
+    if (embedding is None) != (neighbors is None):
+        raise ValueError("Semantic screening requires both candidate embedding and neighbors")
     generated = generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
@@ -62,6 +64,13 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              reviewer_model_id=reviewer_model_id)
         screening = attach_blind(screening, blind)
         next_state = screening.get("next_state", next_state)
+        screening.pop("pending_verifications", None)
+        pending = [name for name in ("schema", "deterministic_text", "math",
+                                    "evidence", "duplicates", "blind_model")
+                   if screening.get("stages", {}).get(name, {}).get("status") == "pending"]
+        if pending:
+            screening["pending_verifications"] = pending
+            screening["screening_complete"] = False
     return {"item_id": item_id, "item": generated["item"],
             "generator_issues": [], "screening": screening,
             "next_state": next_state, "requires_human_review": True,
