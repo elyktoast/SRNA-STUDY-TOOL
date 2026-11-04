@@ -125,6 +125,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             screening["screening_complete"] = False
         else:
             screening.pop("pending_verifications", None)
+    if screening.get("stages", {}).get("duplicates", {}).get("status") == "flag" and next_state == "draft":
+        next_state = "needs_editorial_review"
+    screening["next_state"] = next_state
     return {"item_id": item_id, "item": generated["item"],
             "generator_issues": [], "screening": screening,
             "next_state": next_state, "requires_human_review": True,
