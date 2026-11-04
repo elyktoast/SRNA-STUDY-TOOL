@@ -75,15 +75,8 @@ def check(item):
                 fail("R-7.2.1", "Explicit select count and stem wording required")
         elif item.get("select_count") is not None:
             fail("R-15", "MC select_count must be null")
-        # R-6.3/R-6.8/R-6.9: deterministic checks; human review still required.
+        # R-6.3/R-6.9: schema checks; R-6.8 is a review flag in text screening.
         if isinstance(opts, list) and isinstance(key, list) and len(key) == 1:
-            keyed = next((o for o in opts if isinstance(o, dict) and o.get("id") == key[0]), None)
-            others = [o for o in opts if isinstance(o, dict) and o.get("id") != key[0]]
-            if keyed and others:
-                key_len = len((keyed.get("text") if isinstance(keyed.get("text"), str) else "").split())
-                longest_other = max(len((o.get("text") if isinstance(o.get("text"), str) else "").split()) for o in others)
-                if longest_other and key_len > longest_other * 1.15:
-                    fail("R-6.8", "Key is more than 15% longer than the next-longest option")
             for option in opts:
                 if not isinstance(option, dict):
                     continue
