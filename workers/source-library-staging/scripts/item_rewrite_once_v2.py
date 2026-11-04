@@ -30,11 +30,11 @@ def attempt_once(original, issues, rewrite, validate):
                 "rewrite_failed": True}
     if any(candidate.get(field) != original.get(field) for field in immutable):
         return {"item": deepcopy(original), "issues": [
-            {"rule_id": "R-13", "message": "Rewrite attempted to change protected metadata"}],
+            {"rule_id": "R-13", "message": "Rewrite attempted to change protected metadata"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
     if candidate.get("status") != "draft":
         return {"item": deepcopy(original), "issues": [
-            {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}],
+            {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
     checked = validate(deepcopy(candidate))
     if not isinstance(checked, list):
