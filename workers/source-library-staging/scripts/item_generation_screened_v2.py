@@ -49,7 +49,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     result = review["draft_reviews"][0]
     screening = result["screening"]
     next_state = result["status"]
-    pending = [name for name in ("evidence", "duplicates", "blind_model")
+    pending = [name for name in ("schema", "deterministic_text", "math", "evidence",
+                                "duplicates", "blind_model")
                if screening.get("stages", {}).get(name, {}).get("status") == "pending"]
     if pending:
         screening["screening_complete"] = False
