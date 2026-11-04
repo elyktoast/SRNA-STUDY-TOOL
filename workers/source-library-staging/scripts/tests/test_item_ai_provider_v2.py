@@ -84,6 +84,19 @@ class ProviderTests(unittest.TestCase):
                     adapter({**base, "options": [{**base["options"][0], **extra}]})
         adapter({**base, "options": [{"id": "A", "text": "One"}]})
 
+    def test_hotspot_blind_figure_metadata_is_restricted(self):
+        adapter = make_adapter(**self.config())
+        base = {"step": "blind_review", "rules_version": "2.0",
+                "auto_publish": False, "blind": True, "item_id": "q1",
+                "stem": "Choose the correct region", "format": "HS"}
+        adapter({**base, "figure": {"url": "https://example.test/figure.png",
+                                     "alt": "Anatomical diagram"}})
+        for figure in ({"correct_region": "A"}, {"url": "https://example.test",
+                                                   "answer": "A"}, {}, None):
+            with self.subTest(figure=figure):
+                with self.assertRaises(ValueError):
+                    adapter({**base, "figure": figure})
+
     def test_rejects_non_json_response(self):
         adapter = make_adapter(**self.config(transport=lambda **kw: {
             "choices": [{"message": {"content": "not json"}}]}))
