@@ -73,6 +73,51 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertTrue(execute.call_args.args[1].execute)
         self.assertTrue(execute.call_args.args[1].confirm_paid_calls)
 
+    @patch("item_generation_http_v2.execute", return_value={
+        "dry_run": False, "item": {"stem": "Synthetic"}, "can_publish": False,
+        "database_writes": False})
+    def test_live_generation_passes_trusted_semantic_lookup(self, execute):
+        calls = []
+        callback = lambda item: {"embedding": [1.0, 0.0], "neighbors": [],
+                                 "search_complete": True, "index_id": "staging"}
+        def factory(conn, owner, textbook_id):
+            calls.append((owner, textbook_id))
+            return callback
+        app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"},
+            semantic_lookup_factory=factory)
+        textbook = "00000000-0000-4000-8000-000000000002"
+        raw = json.dumps({**PAYLOAD, "textbook_id": textbook}).encode()
+        env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer valid",
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        app(env, lambda status, headers: seen.append(status))
+        self.assertEqual(seen[0], "200 OK")
+        self.assertEqual(calls, [(UID, textbook)])
+        self.assertIs(execute.call_args.kwargs["semantic_lookup"], callback)
+
+    @patch("item_generation_http_v2.execute", return_value={
+        "dry_run": True, "passage_count": 1, "can_publish": False,
+        "database_writes": False})
+    def test_preflight_does_not_create_semantic_lookup(self, execute):
+        def forbidden_factory(*args):
+            raise AssertionError("No semantic index needed for free preflight")
+        app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true"},
+            semantic_lookup_factory=forbidden_factory)
+        raw = json.dumps(PAYLOAD).encode()
+        env = {"PATH_INFO": "/generation/preflight", "REQUEST_METHOD": "POST",
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer valid",
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        app(env, lambda status, headers: seen.append(status))
+        self.assertEqual(seen[0], "200 OK")
+
     @patch("item_generation_http_v2.execute")
     def test_no_model_execution_from_http(self, execute):
         status, _ = self.call({**PAYLOAD, "execute": True})
