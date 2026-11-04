@@ -15,7 +15,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, evidence_packet=None,
-                        rewrite=None):
+                        rewrite=None, semantic_lookup=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -53,7 +53,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         neighbors=neighbors, blind_reviewer=blind_reviewer,
         generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
-        rewrite=rewrite)
+        rewrite=rewrite, semantic_lookup=semantic_lookup)
     return {**result, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
