@@ -23,6 +23,8 @@ def screen(candidate_vector, neighbors, threshold=0.85):
         raise ValueError("Invalid similarity threshold")
     if not isinstance(neighbors, list):
         raise ValueError("Neighbor list required")
+    # Validate the candidate even when the index returns no neighbors.
+    cosine(candidate_vector, candidate_vector)
     matches = []
     seen = set()
     for neighbor in neighbors:
