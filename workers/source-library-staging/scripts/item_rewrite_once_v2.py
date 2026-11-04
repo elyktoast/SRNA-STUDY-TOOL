@@ -44,8 +44,15 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
-    checked = validate(deepcopy(candidate))
+    try:
+        checked = validate(deepcopy(candidate))
+    except Exception:
+        return {"item": deepcopy(original), "issues": deepcopy(issues),
+                "rewrite_attempts": 1, "can_publish": False,
+                "rewrite_failed": True}
     if not isinstance(checked, list):
-        raise ValueError("Validator must return diagnostic list")
+        return {"item": deepcopy(original), "issues": deepcopy(issues),
+                "rewrite_attempts": 1, "can_publish": False,
+                "rewrite_failed": True}
     return {"item": deepcopy(candidate), "issues": checked,
             "rewrite_attempts": 1, "can_publish": False}
