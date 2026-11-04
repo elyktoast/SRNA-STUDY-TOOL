@@ -58,6 +58,19 @@ class ProviderTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     adapter({**base, **change})
 
+    def test_blind_review_never_accepts_answer_or_evidence(self):
+        adapter = make_adapter(**self.config())
+        base = {"step": "blind_review", "rules_version": "2.0",
+                "auto_publish": False, "blind": True,
+                "item_id": "q1", "stem": "What is the best choice?",
+                "format": "MC", "options": [{"id": "A", "text": "One"}]}
+        self.assertIsInstance(adapter(base), dict)
+        for secret in ("key", "rationale", "evidence", "concept_card",
+                       "distractor_evidence"):
+            with self.subTest(secret=secret):
+                with self.assertRaises(ValueError):
+                    adapter({**base, secret: "must not leak"})
+
     def test_rejects_non_json_response(self):
         adapter = make_adapter(**self.config(transport=lambda **kw: {
             "choices": [{"message": {"content": "not json"}}]}))
