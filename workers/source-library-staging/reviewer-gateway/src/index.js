@@ -222,6 +222,13 @@ export default {
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
+    if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
+    if(env.AI_BLIND_REVIEW_OPT_IN==='true'){
+     if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
+      return respond(503,origin,'{"error":"staging_not_configured"}');
+     envVars.AI_BLIND_REVIEW_OPT_IN='true';
+     envVars.AI_REVIEWER_MODEL=env.AI_REVIEWER_MODEL;
+    }
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
     if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
    }
