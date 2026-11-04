@@ -28,7 +28,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         stages["schema"] = {"status": "fail", "issues": issues}
         if source_failure:
             stages["evidence"] = {"status": "fail",
-                                  "issues": [x for x in issues if x["rule_id"] in ("R-2.5", "R-12.4", "R-17")]}
+                                  "issues": [x for x in issues if x["rule_id"] in ("R-2.5", "R-17")]}
         return {"item_id": item_id, "item": generated["item"],
                 "generator_issues": issues,
                 "screening": {"can_publish": False, "screening_complete": False,
