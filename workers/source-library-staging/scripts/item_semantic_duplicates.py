@@ -19,7 +19,7 @@ def cosine(a, b):
 
 
 def screen(candidate_vector, neighbors, threshold=0.85):
-    if type(threshold) not in (int, float) or not 0 < threshold <= 1:
+    if type(threshold) not in (int, float) or not math.isfinite(threshold) or not 0 < threshold <= 1:
         raise ValueError("Invalid similarity threshold")
     if not isinstance(neighbors, list):
         raise ValueError("Neighbor list required")
