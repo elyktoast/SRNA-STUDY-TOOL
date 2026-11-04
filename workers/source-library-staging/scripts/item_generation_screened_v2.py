@@ -52,10 +52,13 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         if source_failure:
             stages["evidence"] = {"status": "fail",
                                   "issues": [x for x in issues if x["rule_id"] in ("R-2.5", "R-17")]}
+        remaining = [name for name, stage in stages.items()
+                     if stage["status"] == "pending" and name != "human_review"]
         return {"item_id": item_id, "item": generated["item"],
                 "generator_issues": issues,
                 "screening": {"can_publish": False, "screening_complete": False,
                               "next_state": state, "stages": stages,
+                              "pending_verifications": remaining,
                               "rewrite_attempts_allowed": 1 - rewrite_attempts,
                               "rewrite_attempts_used": rewrite_attempts}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
