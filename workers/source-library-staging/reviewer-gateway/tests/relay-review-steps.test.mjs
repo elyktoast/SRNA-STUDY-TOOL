@@ -22,7 +22,7 @@ function request(step, model, options={}) {
   });
   const stamp = String(Math.floor(Date.now()/1000));
   const signature = createHmac('sha256',secret)
-    .update('srna-groq-relay-v1\\n'+stamp+'\\n'+body).digest('hex');
+    .update('srna-groq-relay-v1\n'+stamp+'\n'+body).digest('hex');
   return new Request(endpoint,{method:'POST',headers:{
     'Content-Type':'application/json','X-Relay-Timestamp':stamp,
     'X-Relay-Signature':signature},body});
