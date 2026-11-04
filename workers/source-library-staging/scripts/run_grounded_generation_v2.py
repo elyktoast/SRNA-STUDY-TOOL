@@ -54,7 +54,12 @@ def execute(conn, args, environ=None):
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         "textbook_id": args.textbook_id, "section_id": args.section_id,
         "include_subsections": args.include_subsections, "page_start": args.page_start,
-        "page_end": args.page_end, "limit": args.limit})
+        "page_end": args.page_end, "limit": args.limit,
+        "generator_model": env.get("AI_GENERATOR_MODEL", ""),
+        "provider_endpoint": env.get("AI_PROVIDER_ENDPOINT", ""),
+        "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
+        "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
+        "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
     if not args.execute:
         if (env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true"
