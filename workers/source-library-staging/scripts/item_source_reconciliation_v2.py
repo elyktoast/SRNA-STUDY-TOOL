@@ -3,6 +3,21 @@
 Never treats an AI citation or model's verification claim as authoritative.
 PDF page locations are not verified printed-page references.
 """
+import re
+import unicodedata
+
+
+def _format_normalized(text):
+    """Normalize presentation-only Unicode/spacing, never clinical wording."""
+    text = unicodedata.normalize("NFKC", text)
+    text = text.translate(str.maketrans({
+        "\u2018": "'", "\u2019": "'", "\u201c": '"', "\u201d": '"',
+        "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-",
+        "\u2014": "-", "\u00ad": "",
+    }))
+    return re.sub(r"\\s+", " ", text).strip()
+
+
 def reconcile(item, trusted_passages):
     if not isinstance(item, dict) or not isinstance(trusted_passages, list):
         raise ValueError("Item and trusted passages required")
@@ -31,7 +46,7 @@ def reconcile(item, trusted_passages):
         if citation.get("textbook_id") != source["textbook_id"]:
             issues.append({"rule_id": "R-12.4", "message": "Textbook mismatch at index " + str(index)})
         excerpt = citation.get("excerpt")
-        if not isinstance(excerpt, str) or not excerpt.strip() or excerpt not in source["excerpt"]:
+        if not isinstance(excerpt, str) or not excerpt.strip() or _format_normalized(excerpt) not in _format_normalized(source["excerpt"]):
             issues.append({"rule_id": "R-12.4", "message": "Excerpt mismatch at index " + str(index)})
         actual_page = source.get("pdf_page_start")
         if actual_page is not None and citation.get("pdf_page") != actual_page:
