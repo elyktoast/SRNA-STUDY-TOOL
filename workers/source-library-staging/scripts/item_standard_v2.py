@@ -63,15 +63,15 @@ def check(item):
         if (fmt == "MC" and count != 4) or (fmt == "MS" and count not in (4, 5, 6)):
             fail("R-7.1.1" if fmt == "MC" else "R-7.2.2", "Invalid option count")
         ids = [o.get("id") if isinstance(o, dict) else None for o in opts] if isinstance(opts, list) else []
-        if ids != list("ABCDEF")[:count] or any(not isinstance(o.get("text"), str) or not o["text"].strip() or "error_pattern" not in o for o in opts if isinstance(o, dict)):
+        if ids != list("ABCDEF")[:count] or any(not isinstance(o, dict) or not isinstance(o.get("text"), str) or not o["text"].strip() or "error_pattern" not in o for o in (opts if isinstance(opts, list) else [])):
             fail("R-15", "Options must be labeled sequentially and have text and error pattern")
-        if not isinstance(key, list) or not key or len(set(key)) != len(key) or any(k not in ids for k in key):
+        if not isinstance(key, list) or not key or any(not isinstance(k, str) for k in key) or len(set(k for k in key if isinstance(k, str))) != len(key) or any(k not in ids for k in key):
             fail("R-5.1", "Invalid keyed choices")
         elif (fmt == "MC" and len(key) != 1) or (fmt == "MS" and len(key) not in (2, 3)):
             fail("R-5.1", "Invalid number of correct choices")
         if fmt == "MS":
             n = item.get("select_count")
-            if n not in (2, 3) or not isinstance(key, list) or len(key) != n or f"(Select {n}.)" not in item.get("stem", ""):
+            if n not in (2, 3) or not isinstance(key, list) or len(key) != n or f"(Select {n}.)" not in (item.get("stem") if isinstance(item.get("stem"), str) else ""):
                 fail("R-7.2.1", "Explicit select count and stem wording required")
         elif item.get("select_count") is not None:
             fail("R-15", "MC select_count must be null")
