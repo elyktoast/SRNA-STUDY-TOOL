@@ -77,6 +77,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             embedding, neighbors = pair["embedding"], pair["neighbors"]
             if embedding is None or not isinstance(neighbors, list):
                 raise ValueError("Incomplete semantic lookup")
+            from item_semantic_duplicates import screen as verify_semantic_vectors
+            verify_semantic_vectors(embedding, neighbors)
         except Exception:
             embedding, neighbors = None, None
             semantic_lookup_failed = True
