@@ -22,7 +22,11 @@ def payload(item):
         data["right"] = dd.get("right")
     elif fmt == "HS":
         hs = item.get("hs") or {}
-        data["figure"] = hs.get("figure")
+        figure = hs.get("figure")
+        # Never forward nested region answers or provenance to a blind model.
+        if isinstance(figure, dict):
+            figure = {k: figure[k] for k in ("url", "alt", "width", "height") if k in figure}
+        data["figure"] = figure
     return data
 
 
