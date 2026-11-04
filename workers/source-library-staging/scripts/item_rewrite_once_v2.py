@@ -32,6 +32,10 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite attempted to change protected metadata"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
+    if candidate.get("concept_card", {}).get("evidence_ids") != original.get("concept_card", {}).get("evidence_ids") if isinstance(candidate.get("concept_card"), dict) and isinstance(original.get("concept_card"), dict) else False:
+        return {"item": deepcopy(original), "issues": deepcopy(issues) + [
+            {"rule_id": "R-2.5", "message": "Rewrite changed concept evidence references"}],
+            "rewrite_attempts": 1, "can_publish": False}
     if candidate.get("status") != "draft":
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}] + deepcopy(issues),
