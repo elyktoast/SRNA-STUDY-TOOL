@@ -340,7 +340,7 @@ export default {
    }
    if(providerCheck&&upstream.ok){
     const containerResult=await upstream.clone().json().catch(()=>null);
-    if(containerResult?.check!=='groq_models'||!Number.isInteger(containerResult.provider_status))return respond(502,origin,'{"error":"invalid_provider_check"}');
+    if(containerResult?.check!=='groq_models_via_signed_relay'||!Number.isInteger(containerResult.provider_status))return respond(502,origin,'{"error":"invalid_provider_check"}');
     let workerStatus=0,workerRule='NETWORK';
     try{
      const controller=new AbortController();
