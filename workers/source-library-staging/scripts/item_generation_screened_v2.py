@@ -84,7 +84,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             semantic_lookup_failed = True
     indexed = {p["passage_id"]: {
         "passage_id": p["passage_id"], "textbook_id": p["textbook_id"],
-        "pdf_page_start": p.get("pdf_page_start"), "text": p["excerpt"]}
+        "pdf_page": p.get("pdf_page_start"), "text": p["excerpt"]}
         for p in evidence}
     review = intake({"questions": [generated["item"]]},
                     passages=indexed, known_stems=known_stems,
