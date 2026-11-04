@@ -30,6 +30,8 @@ def execute(conn, args, environ=None):
         raise ValueError("Invalid NCE/SEE blueprint classification")
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
+    if env.get("AI_REWRITE_OPT_IN") == "true" and not (args.execute and args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
+        raise ValueError("Rewrite requires explicit paid generation opt-in")
     if args.execute and env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true" and not args.textbook_id:
         raise ValueError("Checkpointed generation requires an explicit textbook ID")
     evidence = build_evidence(conn, args.owner_uid, args.topic,
@@ -87,6 +89,12 @@ def execute(conn, args, environ=None):
         record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
             request_hash=request_hash, evidence_hash=evidence_hash,
             stage=stage, value=value)
+    # A rewrite is an additional paid provider call. It is disabled by default
+    # and requires a separate explicit staging opt-in.
+    rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
+    def rewrite(request):
+        return adapter({**request, "step": "rewrite",
+                        "rules_version": "2.0", "auto_publish": False})
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
@@ -98,7 +106,8 @@ def execute(conn, args, environ=None):
                                  checkpoint=checkpoint,
                                  generator_model_id=env["AI_GENERATOR_MODEL"],
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
-                                 evidence_packet=evidence)
+                                 evidence_packet=evidence,
+                                 rewrite=rewrite if rewrite_enabled else None)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
