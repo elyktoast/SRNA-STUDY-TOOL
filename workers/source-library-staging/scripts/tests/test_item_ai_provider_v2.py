@@ -45,6 +45,19 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(result["objective"], "III.H.4")
         self.assertIn("Private source", seen[0]["body"]["messages"][1]["content"])
         self.assertEqual(seen[0]["headers"]["Authorization"], "Bearer test-secret")
+    def test_rewrite_requires_single_attempt_and_draft(self):
+        adapter = make_adapter(**self.config())
+        base = {"step": "rewrite", "rules_version": "2.0",
+                "auto_publish": False, "max_rewrites": 1,
+                "requires_human_review": True,
+                "item": {"status": "draft"}, "issues": [{"rule_id": "R-15"}]}
+        self.assertIsInstance(adapter(base), dict)
+        for change in ({"max_rewrites": 2}, {"requires_human_review": False},
+                       {"issues": "not a list"}, {"item": None}):
+            with self.subTest(change=change):
+                with self.assertRaises(ValueError):
+                    adapter({**base, **change})
+
     def test_rejects_non_json_response(self):
         adapter = make_adapter(**self.config(transport=lambda **kw: {
             "choices": [{"message": {"content": "not json"}}]}))
