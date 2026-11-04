@@ -61,7 +61,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=2621
             target = relay_url
             request_headers = {'Content-Type': 'application/json',
                                'X-Relay-Timestamp': stamp, 'X-Relay-Signature': signature,
-                               'User-Agent': 'SRNA-Study-Tool-Staging-Relay/1.0',
+                               'User-Agent': 'Mozilla/5.0 (compatible; SRNAStudyToolStagingRelay/1.0; +https://srnastudytool.com)',
                                'Accept': 'application/json'}
         else:
             target = endpoint
