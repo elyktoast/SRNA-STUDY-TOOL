@@ -30,6 +30,8 @@ def execute(conn, args, environ=None):
         raise ValueError("Invalid NCE/SEE blueprint classification")
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
+    if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.execute and args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
+        raise ValueError("Blind review requires explicit paid generation opt-in")
     if env.get("AI_REWRITE_OPT_IN") == "true" and not (args.execute and args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
         raise ValueError("Rewrite requires explicit paid generation opt-in")
     if args.execute and env.get("AI_GENERATION_CHECKPOINTS_ENABLED") == "true" and not args.textbook_id:
@@ -82,6 +84,21 @@ def execute(conn, args, environ=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
+    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true"
+    reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
+    if reviewer_enabled:
+        if not reviewer_model_id or reviewer_model_id == env.get("AI_GENERATOR_MODEL", "").strip():
+            raise ValueError("Blind review requires a distinct configured model")
+        reviewer_adapter = make_adapter(
+            endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+            model=reviewer_model_id, transport=transport,
+            owner_opt_in=True, staging=True)
+        def blind_reviewer(payload):
+            return reviewer_adapter({**payload, "step": "blind_review",
+                                     "blind": True, "rules_version": "2.0",
+                                     "auto_publish": False})
+    else:
+        blind_reviewer = None
     checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
         request_hash=request_hash, evidence_hash=evidence_hash)
         if checkpoint_enabled else None)
@@ -107,7 +124,9 @@ def execute(conn, args, environ=None):
                                  generator_model_id=env["AI_GENERATOR_MODEL"],
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
                                  evidence_packet=evidence,
-                                 rewrite=rewrite if rewrite_enabled else None)
+                                 rewrite=rewrite if rewrite_enabled else None,
+                                 blind_reviewer=blind_reviewer,
+                                 reviewer_model_id=reviewer_model_id if reviewer_enabled else None)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
