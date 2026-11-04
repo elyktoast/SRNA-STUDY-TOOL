@@ -17,8 +17,10 @@ from item_grounded_pipeline_v2 import generate_from_index
 from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
 
 
-def execute(conn, args, environ=None):
+def execute(conn, args, environ=None, *, semantic_lookup=None):
     env = os.environ if environ is None else environ
+    if semantic_lookup is not None and not callable(semantic_lookup):
+        raise ValueError("Trusted semantic lookup callback required")
     if env.get("STAGING_ONLY") != "true":
         raise ValueError("Staging-only execution required")
     if (args.mode not in ("NCE", "SEE") or args.domain not in ("I", "II", "III", "IV")
@@ -131,7 +133,8 @@ def execute(conn, args, environ=None):
                                  evidence_packet=evidence,
                                  rewrite=rewrite if rewrite_enabled else None,
                                  blind_reviewer=blind_reviewer,
-                                 reviewer_model_id=reviewer_model_id if reviewer_enabled else None)
+                                 reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
+                                 semantic_lookup=semantic_lookup)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
