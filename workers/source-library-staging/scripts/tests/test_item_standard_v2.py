@@ -49,6 +49,20 @@ class StandardTests(unittest.TestCase):
         self.assertIn("R-6.8", rules)
         self.assertIn("R-6.3", rules)
 
+    def test_malformed_option_text_returns_diagnostics_not_exception(self):
+        for bad in (None, 17, [], {"unexpected": True}):
+            with self.subTest(bad=repr(bad)):
+                item = sample()
+                item["options"][0]["text"] = bad
+                rules = {issue["rule_id"] for issue in check(item)}
+                self.assertIn("R-15", rules)
+
+    def test_non_object_option_returns_diagnostics_not_exception(self):
+        item = sample()
+        item["options"][1] = None
+        rules = {issue["rule_id"] for issue in check(item)}
+        self.assertIn("R-15", rules)
+
     def test_banned_format_and_missing_evidence(self):
         item = sample()
         item["format"] = "TF"
