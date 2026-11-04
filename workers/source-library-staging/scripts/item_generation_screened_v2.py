@@ -85,11 +85,19 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         screening["screening_complete"] = False
         screening["pending_verifications"] = pending
     if blind_reviewer is not None:
-        blind = blind_review(generated["item"], blind_reviewer,
-                             generator_model_id=generator_model_id,
-                             reviewer_model_id=reviewer_model_id)
-        screening = attach_blind(screening, blind)
-        next_state = screening.get("next_state", next_state)
+        try:
+            blind = blind_review(generated["item"], blind_reviewer,
+                                 generator_model_id=generator_model_id,
+                                 reviewer_model_id=reviewer_model_id)
+        except Exception:
+            # A provider outage must not discard the generated draft or
+            # incorrectly mark independent verification as complete.
+            screening["stages"]["blind_model"] = {
+                "status": "pending", "issues": []}
+            screening["screening_complete"] = False
+        else:
+            screening = attach_blind(screening, blind)
+            next_state = screening.get("next_state", next_state)
         screening.pop("pending_verifications", None)
         pending = [name for name in ("schema", "deterministic_text", "math",
                                     "evidence", "duplicates", "blind_model")
