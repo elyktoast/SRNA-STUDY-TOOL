@@ -75,6 +75,24 @@ def check(item):
                 fail("R-7.2.1", "Explicit select count and stem wording required")
         elif item.get("select_count") is not None:
             fail("R-15", "MC select_count must be null")
+        # R-6.3/R-6.8/R-6.9: deterministic checks; human review still required.
+        if isinstance(opts, list) and isinstance(key, list) and len(key) == 1:
+            keyed = next((o for o in opts if isinstance(o, dict) and o.get("id") == key[0]), None)
+            others = [o for o in opts if isinstance(o, dict) and o.get("id") != key[0]]
+            if keyed and others:
+                key_len = len(keyed.get("text", "").split())
+                longest_other = max(len(o.get("text", "").split()) for o in others)
+                if longest_other and key_len > longest_other * 1.15:
+                    fail("R-6.8", "Key is more than 15% longer than the next-longest option")
+            for option in opts:
+                if not isinstance(option, dict):
+                    continue
+                pattern = option.get("error_pattern")
+                if option.get("id") in key:
+                    if isinstance(pattern, str) and pattern.strip().lower() in ("correct", "incorrect"):
+                        fail("R-6.3", "Key error pattern must not contain a correctness label")
+                elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
+                    fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
         texts = [o.get("text", "").strip().casefold() for o in opts if isinstance(o, dict)]
         if len(set(texts)) != len(texts):
             fail("R-6.5", "Duplicate options")
