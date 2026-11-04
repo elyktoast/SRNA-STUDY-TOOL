@@ -39,6 +39,16 @@ class GenerationCliTests(unittest.TestCase):
 
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     @patch("run_grounded_generation_v2.make_transport")
+    def test_preflight_allows_review_flags_without_paid_calls(self, transport, evidence):
+        env = {"STAGING_ONLY": "true", "AI_BLIND_REVIEW_OPT_IN": "true",
+               "AI_REWRITE_OPT_IN": "true"}
+        result = execute(object(), ARGS, env)
+        self.assertTrue(result["dry_run"])
+        self.assertFalse(result["database_writes"])
+        transport.assert_not_called()
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    @patch("run_grounded_generation_v2.make_transport")
     def test_paid_calls_require_two_opt_ins(self, transport, evidence):
         args = SimpleNamespace(**{**vars(ARGS), "execute": True})
         with self.assertRaisesRegex(ValueError, "explicit opt-in"):
