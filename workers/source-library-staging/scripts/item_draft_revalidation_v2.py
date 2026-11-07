@@ -56,6 +56,16 @@ def revalidate(conn, *, owner_uid, draft_id):
                       else check_special(normalized, passages))
     else:
         issues.append({"rule_id":"R-2.5","message":"No indexed passages available"})
+    options = normalized.get("options") if isinstance(normalized.get("options"), list) else []
+    mapping = normalized.get("distractor_evidence")
+    mapping = mapping if isinstance(mapping, dict) else {}
+    keys = normalized.get("key") if isinstance(normalized.get("key"), list) else []
+    evidence_worksheet = [
+        {"option_id":o["id"], "option_text":o.get("text"),
+         "expected_verdict":"supports_key" if o["id"] in keys else "refutes_distractor",
+         "current_evidence":mapping.get(o["id"]), "human_verification_required":True}
+        for o in options if isinstance(o, dict) and isinstance(o.get("id"), str)
+    ]
     return {"draft_id":draft_id,"status":draft["status"],"published":False,
             "validation":"read_only_current_index","can_publish":False,
             "clinical_review_required":True,"issues":issues,
