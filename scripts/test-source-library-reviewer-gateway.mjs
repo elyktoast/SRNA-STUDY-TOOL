@@ -201,6 +201,8 @@ test('revision routes permit authenticated GET and guarded POST only',async()=>{
   'Access-Control-Request-Headers':'Authorization, Content-Type'}});
  assert.equal(options.status,204);
  assert.match(options.headers.get('Access-Control-Allow-Methods'),/POST/);
+ const posted=await gateway.fetch(new Request(path,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({expected_parent_sha256:'a'.repeat(64),citation_excerpts:{},option_evidence:{},reviewer_notes:'Verified'})}),env);
+ assert.equal(posted.status,200);
  assert.equal((await request(path,{method:'DELETE'})).status,405);
  assert.equal((await request(path+'?unsafe=true')).status,400);
  assert.equal((await request(path,{method:'POST',headers:{'Content-Type':'text/plain'}})).status,400);
