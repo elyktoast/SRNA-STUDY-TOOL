@@ -38,6 +38,29 @@ class Tests(unittest.TestCase):
         self.assertEqual(result["original_question_sha256"],digest({"stem":"Original"}))
         self.assertFalse(result["published"])
 
+    @patch("item_draft_revision_storage_v2.get_draft")
+    def test_stale_parent_prevents_write(self,fetch):
+        fetch.return_value={"question":{"stem":"Original"},"evidence":[],
+                            "textbook_id":"2a589498-aaa4-410f-b51a-00d3ab99eafd",
+                            "published":False,"status":"pending_review"}
+        class Cursor:
+            def __init__(self,conn): self.conn=conn
+            def execute(self,sql,params):
+                self.conn.statements.append(sql)
+            def fetchone(self):
+                self.conn.reads+=1
+                return (DRAFT,) if self.conn.reads==1 else None
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+        class Conn:
+            def __init__(self):self.reads=0;self.statements=[]
+            def cursor(self):return Cursor(self)
+        conn=Conn()
+        with self.assertRaisesRegex(ValueError,"Stale revision"):
+            save_revision(conn,owner_uid=OWNER,draft_id=DRAFT,
+                expected_parent_sha256="a"*64,reviewer_notes="Checked source")
+        self.assertFalse(any("insert into" in sql.lower() for sql in conn.statements))
+
     def test_rejects_untrusted_identity(self):
         with self.assertRaises(ValueError):
             save_revision(None,owner_uid="not-an-id",draft_id=DRAFT,
