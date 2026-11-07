@@ -17,6 +17,42 @@ class Connection:
     def __exit__(self, *args):
         return False
 
+class DraftRevalidationHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.app=create_app(conn_factory=Connection,
+                            resolve_admin=lambda token: UID if token=="valid" else None,
+                            environment={"STAGING_ONLY":"true"})
+
+    def call(self, path, method="GET", token="valid", origin="https://staging.srnastudytool.com"):
+        env={"PATH_INFO":path,"REQUEST_METHOD":method,"HTTP_ORIGIN":origin,
+             "HTTP_AUTHORIZATION":"Bearer "+token}
+        seen=[]
+        body=b"".join(self.app(env,lambda status,headers:seen.append(status)))
+        return seen[0],json.loads(body)
+
+    @patch("item_generation_http_v2.revalidate",return_value={
+        "draft_id":"abc90a93-41f8-4d7c-8e27-94a609135572",
+        "can_publish":False,"generation_performed":False,"database_writes":False})
+    def test_authenticated_get_is_read_only(self, validator):
+        path="/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revalidate"
+        status,data=self.call(path)
+        self.assertEqual(status,"200 OK")
+        self.assertFalse(data["can_publish"])
+        validator.assert_called_once()
+        self.assertEqual(validator.call_args.kwargs["owner_uid"],UID)
+
+    @patch("item_generation_http_v2.revalidate")
+    def test_non_admin_and_wrong_origin_denied(self,validator):
+        path="/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revalidate"
+        self.assertEqual(self.call(path,token="invalid")[0],"403 Forbidden")
+        self.assertEqual(self.call(path,origin="https://srnastudytool.com")[0],"403 Forbidden")
+        self.assertEqual(self.call(path,method="POST")[0],"405 Method Not Allowed")
+        validator.assert_not_called()
+
+    def test_invalid_draft_id_rejected(self):
+        status,_=self.call("/generation/drafts/not-a-uuid/revalidate")
+        self.assertEqual(status,"404 Not Found")
+
 class HttpPreflightTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app(conn_factory=Connection, resolve_admin=lambda token: UID if token == "valid" else None,
