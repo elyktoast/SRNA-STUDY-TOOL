@@ -194,14 +194,16 @@ test('saved draft revalidation route is allowed as read-only GET only',async()=>
 test('revision routes permit authenticated GET and guarded POST only',async()=>{
  const id='abc90a93-41f8-4d7c-8e27-94a609135572';
  const path='https://gateway.example/generation/drafts/'+id+'/revisions';
- const get=await request(path);
+ const draftEnv={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({draft_id:id,published:false,revisions:[],current_question:{stem:'Test'}})})}};
+ const draftRequest=(method,body)=>gateway.fetch(new Request(path,{method,headers:{Origin:origin,Authorization:'Bearer valid',...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})}),draftEnv);
+ const get=await draftRequest('GET');
  assert.equal(get.status,200);
  const options=await request(path,{method:'OPTIONS',headers:{
   'Access-Control-Request-Method':'POST',
   'Access-Control-Request-Headers':'Authorization, Content-Type'}});
  assert.equal(options.status,204);
  assert.match(options.headers.get('Access-Control-Allow-Methods'),/POST/);
- const posted=await gateway.fetch(new Request(path,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({expected_parent_sha256:'a'.repeat(64),citation_excerpts:{},option_evidence:{},reviewer_notes:'Verified'})}),env);
+ const posted=await draftRequest('POST',{expected_parent_sha256:'a'.repeat(64),citation_excerpts:{},option_evidence:{},reviewer_notes:'Verified'});
  assert.equal(posted.status,200);
  assert.equal((await request(path,{method:'DELETE'})).status,405);
  assert.equal((await request(path+'?unsafe=true')).status,400);
