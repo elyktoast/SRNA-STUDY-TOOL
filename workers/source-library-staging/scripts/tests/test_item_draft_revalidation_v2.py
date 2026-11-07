@@ -55,6 +55,20 @@ class RevalidationTests(unittest.TestCase):
         self.assertEqual(conn.cur.params[1:],(BOOK,OWNER))
 
     @patch("item_draft_revalidation_v2.get_draft")
+    def test_option_worksheet_is_read_only_and_does_not_invent_evidence(self,get_draft):
+        value=draft(question={"format":"MC","options":[{"id":"A","text":"Awake"},{"id":"B","text":"Deep"}],
+             "key":["A"],"evidence":[{"passage_id":PASSAGE,"textbook_id":BOOK,"pdf_page":197}]})
+        get_draft.return_value=value
+        result=revalidate(Conn([(PASSAGE,BOOK,197,"Patient wide awake.")]),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertEqual([x["expected_verdict"] for x in result["option_evidence_worksheet"]],
+                         ["supports_key","refutes_distractor"])
+        self.assertTrue(all(x["current_evidence"] is None for x in result["option_evidence_worksheet"]))
+        self.assertTrue(all(x["human_verification_required"] for x in result["option_evidence_worksheet"]))
+        self.assertEqual(result["legacy_defaults_applied_in_memory"],["sa","dd","hs","audit","self_check","stats"])
+        self.assertNotIn("audit",value["question"])
+        self.assertFalse(result["saved_question_modified"])
+
+    @patch("item_draft_revalidation_v2.get_draft")
     def test_missing_index_passage_blocks(self,get_draft):
         get_draft.return_value=draft()
         result=revalidate(Conn([]),owner_uid=OWNER,draft_id=DRAFT)
