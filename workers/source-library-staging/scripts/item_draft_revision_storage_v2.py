@@ -15,7 +15,7 @@ def digest(item):
 
 
 def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
-                  trusted_passages, citation_excerpts=None, option_evidence=None,
+                  citation_excerpts=None, option_evidence=None,
                   reviewer_notes):
     owner, draft_id = (str(UUID(str(x))) for x in (owner_uid,draft_id))
     if not isinstance(expected_parent_sha256,str) or len(expected_parent_sha256)!=64 or any(c not in "0123456789abcdef" for c in expected_parent_sha256):
@@ -40,6 +40,25 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
     parent_question = previous[1] if previous else parent["question"]
     if digest(parent_question)!=expected_parent_sha256:
         raise ValueError("Stale revision: parent digest changed")
+    refs = parent.get("evidence")
+    citations = parent_question.get("evidence")
+    if not isinstance(refs,list) or not isinstance(citations,list):
+        raise ValueError("Saved citations required")
+    ids = {x.get("passage_id") for x in refs+citations if isinstance(x,dict)}
+    if not ids or len(ids)>50 or any(not isinstance(x,str) for x in ids):
+        raise ValueError("Invalid indexed passage references")
+    with conn.cursor() as cur:
+        cur.execute("""select p.id::text,p.textbook_id::text,p.page_start,left(p.content,1200)
+          from source_library_staging.passages p
+          join source_library_staging.textbooks t on t.id=p.textbook_id
+          where p.id::text = any(%s::text[]) and t.id=%s::uuid
+            and t.owner_uid=%s::uuid and t.status='ready'""",
+          (sorted(ids),parent["textbook_id"],owner))
+        rows=cur.fetchall()
+    trusted_passages=[{"passage_id":r[0],"textbook_id":r[1],
+                      "pdf_page_start":r[2],"excerpt":r[3]} for r in rows]
+    if len(trusted_passages)!=len(ids):
+        raise ValueError("Indexed passage missing from owned textbook")
     proposal=propose_revision({**parent,"question":parent_question},trusted_passages,
         citation_excerpts=citation_excerpts,option_evidence=option_evidence)
     if proposal["issues"]:
