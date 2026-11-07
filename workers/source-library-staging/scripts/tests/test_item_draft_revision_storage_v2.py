@@ -34,8 +34,29 @@ class Tests(unittest.TestCase):
             def cursor(self): return Cursor()
         result=list_revisions(Conn(),owner_uid=OWNER,draft_id=DRAFT)
         self.assertEqual(result["revisions"],[])
+        self.assertEqual(result["current_question"],{"stem":"Original"})
         self.assertEqual(result["current_question_sha256"],digest({"stem":"Original"}))
         self.assertEqual(result["original_question_sha256"],digest({"stem":"Original"}))
+        self.assertFalse(result["published"])
+
+    @patch("item_draft_revision_storage_v2.get_draft",return_value={"question":{"stem":"Original"}})
+    def test_history_returns_latest_revision_without_replacing_original(self,fetch):
+        from datetime import datetime,timezone
+        revised={"stem":"Revised"}
+        row=(2,"revision-2",digest({"stem":"Previous"}),digest(revised),
+             "Verified against source",datetime(2026,11,7,tzinfo=timezone.utc),revised)
+        class Cursor:
+            def execute(self,sql,params):pass
+            def fetchall(self):return [row]
+            def __enter__(self):return self
+            def __exit__(self,*args):return False
+        class Conn:
+            def cursor(self):return Cursor()
+        result=list_revisions(Conn(),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertEqual(result["current_question"],revised)
+        self.assertEqual(result["current_question_sha256"],digest(revised))
+        self.assertEqual(result["original_question_sha256"],digest({"stem":"Original"}))
+        self.assertEqual(result["revisions"][0]["revision_number"],2)
         self.assertFalse(result["published"])
 
     @patch("item_draft_revision_storage_v2.get_draft")
