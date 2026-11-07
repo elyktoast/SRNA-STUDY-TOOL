@@ -29,7 +29,7 @@ groqButton.addEventListener('click',async()=>{
 });
 const generationPanel=document.createElement('section');
 generationPanel.setAttribute('aria-label','Single-question generation review');
-generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></section>';
+generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button><label>Draft ID <input id="sl-open-draft-id" size="38" placeholder="Saved draft UUID"></label><button type="button" id="sl-open-draft-id-button">Open draft by ID</button></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></section>';
 evidencePanel.after(generationPanel);
 let generatedForReview=null;
 const genEl=id=>generationPanel.querySelector('#'+id);
@@ -54,6 +54,20 @@ genEl('sl-save-generated').onclick=async()=>{
  try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
  catch(error){genEl('sl-gen-status').textContent=error.message||'Draft save failed.';btn.disabled=false;}
 };
+async function openSavedDraft(draftId,button){
+ const detail=genEl('sl-draft-detail'),status=genEl('sl-draft-status'),json=genEl('sl-draft-json');
+ detail.hidden=false;json.textContent='';status.textContent='Loading private draft…';button.disabled=true;
+ try{
+  const data=await storage.getGeneratedDraft(draftId);
+  if(data.published!==false)throw Error('Draft publication status is not verified.');
+  status.textContent='Unpublished · '+(data.status||'unknown')+' · '+data.draft_id;
+  json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+ }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
+ finally{button.disabled=false;}
+}
+genEl('sl-open-draft-id').value='abc90a93-41f8-4d7c-8e27-94a609135572';
+genEl('sl-open-draft-id-button').onclick=()=>openSavedDraft(genEl('sl-open-draft-id').value.trim(),genEl('sl-open-draft-id-button'));
 genEl('sl-list-generated').onclick=async()=>{
  const btn=genEl('sl-list-generated');btn.disabled=true;
  const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
@@ -70,18 +84,7 @@ genEl('sl-list-generated').onclick=async()=>{
    info.append(heading,meta);
    const actions=document.createElement('div');actions.className='sl-actions';
    const open=document.createElement('button');open.type='button';open.textContent='Open draft';
-   open.addEventListener('click',async()=>{
-    const detail=genEl('sl-draft-detail'),status=genEl('sl-draft-status'),json=genEl('sl-draft-json');
-    detail.hidden=false;json.textContent='';status.textContent='Loading private draft…';open.disabled=true;
-    try{
-     const data=await storage.getGeneratedDraft(draft.draft_id);
-     if(data.published!==false)throw Error('Draft publication status is not verified.');
-     status.textContent='Unpublished · '+(data.status||'unknown')+' · '+data.draft_id;
-     json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
-     detail.scrollIntoView({behavior:'smooth',block:'nearest'});
-    }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
-    finally{open.disabled=false;}
-   });actions.append(open);row.append(info,actions);out.append(row);
+   open.addEventListener('click',()=>openSavedDraft(draft.draft_id,open));actions.append(open);row.append(info,actions);out.append(row);
   }
  }catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}
  finally{btn.disabled=false;}
