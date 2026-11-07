@@ -12,15 +12,18 @@ from item_special_format_evidence_v2 import check as check_special
 
 def revalidate(conn, *, owner_uid, draft_id):
     draft = get_draft(conn, owner_uid=owner_uid, draft_id=draft_id)
-    if draft["published"] is not False:
-        raise ValueError("Published question cannot be revalidated here")
+    if draft["published"] is not False or draft["status"] not in ("pending_review", "needs_revision"):
+        raise ValueError("Only unpublished drafts awaiting review can be revalidated")
     item = draft["question"]
     if not isinstance(item, dict):
         raise ValueError("Invalid saved question")
     # Restrict retrieval to cited and saved evidence IDs, same owned textbook.
     refs = draft["evidence"]
+    citations = item.get("evidence", [])
+    if not isinstance(refs, list) or not isinstance(citations, list):
+        raise ValueError("Invalid saved evidence references")
     ids = {e.get("passage_id") for e in refs if isinstance(e, dict)}
-    ids.update(e.get("passage_id") for e in item.get("evidence", []) if isinstance(e, dict))
+    ids.update(e.get("passage_id") for e in citations if isinstance(e, dict))
     if not ids or len(ids) > 50 or any(not isinstance(x, str) for x in ids):
         raise ValueError("Invalid saved evidence references")
     with conn.cursor() as cur:
@@ -36,10 +39,13 @@ def revalidate(conn, *, owner_uid, draft_id):
                  "pdf_page_start":r[2],"excerpt":r[3]} for r in rows]
     found = {p["passage_id"] for p in passages}
     issues = validate_complete_item(item)
+    if not citations:
+        issues.append({"rule_id":"R-2.5","message":"Saved question has no citations"})
     for pid in sorted(ids-found):
         issues.append({"rule_id":"R-2.5","message":"Saved passage is missing from current index: "+pid})
-    if passages:
+    if passages and citations:
         issues.extend(reconcile(item, passages))
+    if passages:
         issues.extend(check_answers(item, passages) if item.get("format") in ("MC","MS")
                       else check_special(item, passages))
     else:
