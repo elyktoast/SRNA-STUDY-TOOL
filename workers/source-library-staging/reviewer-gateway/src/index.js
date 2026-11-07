@@ -120,7 +120,7 @@ export default {
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
-  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review');
+  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
     const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
