@@ -29,7 +29,7 @@ groqButton.addEventListener('click',async()=>{
 });
 const generationPanel=document.createElement('section');
 generationPanel.setAttribute('aria-label','Single-question generation review');
-generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button></div><pre id="sl-saved-results" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:25vh;overflow:auto" hidden></pre>';
+generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></section>';
 evidencePanel.after(generationPanel);
 let generatedForReview=null;
 const genEl=id=>generationPanel.querySelector('#'+id);
@@ -56,8 +56,35 @@ genEl('sl-save-generated').onclick=async()=>{
 };
 genEl('sl-list-generated').onclick=async()=>{
  const btn=genEl('sl-list-generated');btn.disabled=true;
- try{const result=await storage.listGeneratedDrafts();genEl('sl-saved-results').textContent=JSON.stringify(result.drafts||[],null,2);genEl('sl-saved-results').hidden=false;}
- catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.'}finally{btn.disabled=false}
+ const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
+ genEl('sl-draft-detail').hidden=true;
+ try{
+  const result=await storage.listGeneratedDrafts();const drafts=result.drafts||[];
+  if(!Array.isArray(drafts))throw Error('Unexpected draft list.');
+  if(!drafts.length){out.textContent='No saved drafts yet.';return;}
+  for(const draft of drafts){
+   const row=document.createElement('div');row.className='sl-item';
+   const info=document.createElement('div');info.className='sl-name';
+   const heading=document.createElement('strong');heading.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
+   const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
+   info.append(heading,meta);
+   const actions=document.createElement('div');actions.className='sl-actions';
+   const open=document.createElement('button');open.type='button';open.textContent='Open draft';
+   open.addEventListener('click',async()=>{
+    const detail=genEl('sl-draft-detail'),status=genEl('sl-draft-status'),json=genEl('sl-draft-json');
+    detail.hidden=false;json.textContent='';status.textContent='Loading private draft…';open.disabled=true;
+    try{
+     const data=await storage.getGeneratedDraft(draft.draft_id);
+     if(data.published!==false)throw Error('Draft publication status is not verified.');
+     status.textContent='Unpublished · '+(data.status||'unknown')+' · '+data.draft_id;
+     json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+     detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+    }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
+    finally{open.disabled=false;}
+   });actions.append(open);row.append(info,actions);out.append(row);
+  }
+ }catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}
+ finally{btn.disabled=false;}
 };
 let busy=false, previewUrl=null, currentPageInput=null, currentFrame=null;
 function clearPreview(){currentPageInput=null;currentFrame=null;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}const frame=dialog.querySelector('#sl-preview-frame');if(frame)frame.remove();const controls=dialog.querySelector('#sl-preview-controls');if(controls)controls.remove();const flagged=dialog.querySelector('#sl-flagged-pages');if(flagged)flagged.remove();}
