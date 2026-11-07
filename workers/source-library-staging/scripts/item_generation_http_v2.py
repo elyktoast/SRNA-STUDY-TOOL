@@ -9,6 +9,7 @@ from uuid import UUID
 
 from run_grounded_generation_v2 import execute
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
+from item_draft_revalidation_v2 import revalidate
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
@@ -36,7 +37,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [data]
 
         path = environ.get("PATH_INFO", "")
-        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review)?", path)
+        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate)?", path)
         diagnostic = path == "/generation/provider-check"
         if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
@@ -45,7 +46,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
             allowed = ("GET", "POST") if path == "/generation/drafts" else (
-                ("GET",) if diagnostic or (draft_match and not draft_match.group(2)) else ("POST",))
+                ("GET",) if diagnostic or (draft_match and draft_match.group(2) != "/review") else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -127,6 +128,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     with conn_factory() as conn:
                         result = (list_drafts(conn, owner_uid=owner)
                                   if path == "/generation/drafts" else
+                                  revalidate(conn, owner_uid=owner, draft_id=draft_match.group(1))
+                                  if draft_match.group(2) == "/revalidate" else
                                   get_draft(conn, owner_uid=owner, draft_id=draft_match.group(1)))
                     return respond("200 OK", {"drafts": result} if path == "/generation/drafts" else result)
                 length = int(environ.get("CONTENT_LENGTH", "0"))
