@@ -29,7 +29,7 @@ groqButton.addEventListener('click',async()=>{
 });
 const generationPanel=document.createElement('section');
 generationPanel.setAttribute('aria-label','Single-question generation review');
-generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button><label>Draft ID <input id="sl-open-draft-id" size="38" placeholder="Saved draft UUID"></label><button type="button" id="sl-open-draft-id-button">Open draft by ID</button></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><button type="button" id="sl-draft-revalidate">Revalidate against indexed textbook (no AI)</button><button type="button" id="sl-draft-history">View revision history</button><pre id="sl-draft-history-output" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:25vh;overflow:auto" hidden></pre><pre id="sl-draft-validation" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto" hidden></pre><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></section>';
+generationPanel.innerHTML='<h3>Generate one question · Staging</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Textbook UUID <input id="sl-gen-book" placeholder="Indexed textbook ID" size="38"></label><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label><button type="button" id="sl-generate-one">Generate 1 question</button></div><p id="sl-gen-status" role="status" aria-live="polite"></p><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button><label>Draft ID <input id="sl-open-draft-id" size="38" placeholder="Saved draft UUID"></label><button type="button" id="sl-open-draft-id-button">Open draft by ID</button></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><button type="button" id="sl-draft-revalidate">Revalidate against indexed textbook (no AI)</button><button type="button" id="sl-draft-history">View revision history</button><pre id="sl-draft-history-output" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:25vh;overflow:auto" hidden></pre><details id="sl-revision-editor"><summary>Prepare manually verified revision (unpublished)</summary><p>Review original textbook pages before entering corrections. Every answer option needs evidence. Saving never approves or publishes the question.</p><label>Verified citation excerpts (JSON object, citation index to exact quote)<textarea id="sl-revision-excerpts" rows="4" style="width:100%">{}</textarea></label><label>Option evidence (JSON object, each option ID with verdict, passage_ids, explanation)<textarea id="sl-revision-options" rows="8" style="width:100%">{}</textarea></label><label>Reviewer notes<textarea id="sl-revision-notes" rows="3" style="width:100%" placeholder="Describe the source pages checked and clinical reasoning"></textarea></label><button type="button" id="sl-save-revision">Save verified revision (unpublished)</button><p id="sl-revision-status" role="status" aria-live="polite"></p></details><pre id="sl-draft-validation" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto" hidden></pre><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></section>';
 evidencePanel.after(generationPanel);
 let generatedForReview=null;
 const genEl=id=>generationPanel.querySelector('#'+id);
@@ -63,12 +63,39 @@ async function openSavedDraft(draftId,button){
   status.textContent='Unpublished · '+(data.status||'unknown')+' · '+data.draft_id;
   genEl('sl-draft-revalidate').dataset.draftId=data.draft_id;
   genEl('sl-draft-history').dataset.draftId=data.draft_id;
+  genEl('sl-save-revision').dataset.draftId=data.draft_id;
+  genEl('sl-revision-status').textContent='';
   genEl('sl-draft-history-output').hidden=true;
   json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
   detail.scrollIntoView({behavior:'smooth',block:'nearest'});
  }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
  finally{button.disabled=false;}
 }
+genEl('sl-save-revision').onclick=async()=>{
+ const btn=genEl('sl-save-revision'),draftId=btn.dataset.draftId;
+ const status=genEl('sl-revision-status');
+ if(!draftId)return;
+ btn.disabled=true;status.textContent='Checking latest revision fingerprint…';
+ try{
+  const history=await storage.listDraftRevisions(draftId);
+  if(history.published!==false||!/^[a-f0-9]{64}$/.test(history.current_question_sha256||''))
+   throw Error('Current draft fingerprint unavailable.');
+  const citation_excerpts=JSON.parse(genEl('sl-revision-excerpts').value);
+  const option_evidence=JSON.parse(genEl('sl-revision-options').value);
+  const reviewer_notes=genEl('sl-revision-notes').value.trim();
+  if(!citation_excerpts||Array.isArray(citation_excerpts)||typeof citation_excerpts!=='object'||
+     !option_evidence||Array.isArray(option_evidence)||typeof option_evidence!=='object'||
+     !reviewer_notes)throw Error('Provide valid JSON objects and reviewer notes.');
+  if(!confirm('Save this manually source-verified revision to the private staging history? The original question stays unchanged. This does not approve or publish.'))return;
+  const saved=await storage.saveDraftRevision(draftId,{
+   expected_parent_sha256:history.current_question_sha256,citation_excerpts,option_evidence,reviewer_notes
+  });
+  if(saved.published!==false||saved.can_publish!==false)throw Error('Unexpected revision publication state.');
+  status.textContent='Unpublished revision '+saved.revision_number+' saved. Clinical review still required.';
+  genEl('sl-draft-history').click();
+ }catch(error){status.textContent='Revision not saved: '+(error.message||'Unknown error');}
+ finally{btn.disabled=false;}
+};
 genEl('sl-draft-history').onclick=async()=>{
  const btn=genEl('sl-draft-history'),out=genEl('sl-draft-history-output');
  const draftId=btn.dataset.draftId;if(!draftId)return;
