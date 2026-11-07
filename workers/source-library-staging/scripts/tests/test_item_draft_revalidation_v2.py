@@ -69,6 +69,29 @@ class RevalidationTests(unittest.TestCase):
         self.assertFalse(result["saved_question_modified"])
 
     @patch("item_draft_revalidation_v2.get_draft")
+    def test_missing_quote_gets_review_candidate_not_database_write(self,get_draft):
+        value=draft()
+        get_draft.return_value=value
+        result=revalidate(Conn([(PASSAGE,BOOK,197,"Awake extubation recommended.")]),owner_uid=OWNER,draft_id=DRAFT)
+        candidate=result["citation_repair_candidates"][0]
+        self.assertEqual(candidate["reason"],"missing_excerpt")
+        self.assertEqual(candidate["suggested_excerpt"],"Awake extubation recommended.")
+        self.assertFalse(candidate["automatically_applied"])
+        self.assertNotIn("excerpt",value["question"]["evidence"][0])
+        self.assertFalse(result["database_writes"])
+
+    @patch("item_draft_revalidation_v2.get_draft")
+    def test_mismatched_quote_never_auto_replaced(self,get_draft):
+        value=draft()
+        value["question"]["evidence"][0]["excerpt"]="Deep extubation always safe."
+        get_draft.return_value=value
+        result=revalidate(Conn([(PASSAGE,BOOK,197,"Awake extubation recommended.")]),owner_uid=OWNER,draft_id=DRAFT)
+        candidate=result["citation_repair_candidates"][0]
+        self.assertEqual(candidate["reason"],"mismatched_excerpt")
+        self.assertIsNone(candidate["suggested_excerpt"])
+        self.assertEqual(value["question"]["evidence"][0]["excerpt"],"Deep extubation always safe.")
+
+    @patch("item_draft_revalidation_v2.get_draft")
     def test_missing_index_passage_blocks(self,get_draft):
         get_draft.return_value=draft()
         result=revalidate(Conn([]),owner_uid=OWNER,draft_id=DRAFT)
