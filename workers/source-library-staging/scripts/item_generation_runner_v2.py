@@ -27,6 +27,23 @@ def _response(adapter, request):
     return result
 
 
+
+def _complete_nonclinical_schema_fields(draft):
+    """Fill only absent/empty administrative placeholders; never synthesize clinical evidence.
+
+    Empty audit/self_check/stats mean NOT EVALUATED, not passed. Source quotes,
+    keyed answer evidence and clinical judgments remain mandatory validations.
+    """
+    item = dict(draft)
+    for field in ("sa", "dd", "hs"):
+        if field not in item and item.get("format") not in (field.upper(),):
+            item[field] = None
+    for field, empty in (("audit", []), ("self_check", {}), ("stats", {})):
+        if item.get(field) is None:
+            item[field] = empty.copy()
+    return item
+
+
 def generate_one(adapter, *, mode, domain, section, objective, evidence,
                  format="MC", item_id, checkpoint=None, on_checkpoint=None,
                  generator_model_id=None):
@@ -88,7 +105,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     # The model must not be allowed to overwrite identifiers, source, or approval.
-    item = {**draft, "item_id": item_id, "rules_version": "2.0",
+    item = {**_complete_nonclinical_schema_fields(draft), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,
             "objective": objective, "format": format,
             "concept_card": concept, "rationale": rationale,
