@@ -189,5 +189,27 @@ async function revalidateGeneratedDraft(draftId){
  const response=await fetch(u.origin+'/generation/drafts/'+draftId+'/revalidate',{method:'GET',headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
  const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft validation unavailable ('+response.status+').');return data;
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft});
+async function draftRevisionRequest(draftId,method,payload){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const options={method,headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'};
+ if(method==='POST'){options.headers['Content-Type']='application/json';options.body=JSON.stringify(payload);}
+ const response=await fetch(u.origin+'/generation/drafts/'+draftId+'/revisions',options);
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error(data.error||'Draft revisions unavailable ('+response.status+').');
+ return data;
+}
+async function listDraftRevisions(draftId){return draftRevisionRequest(draftId,'GET');}
+async function saveDraftRevision(draftId,payload){
+ if(!payload||typeof payload!=='object'||typeof payload.expected_parent_sha256!=='string'||
+    !/^[a-f0-9]{64}$/.test(payload.expected_parent_sha256)||typeof payload.reviewer_notes!=='string'||
+    !payload.reviewer_notes.trim()||!payload.citation_excerpts||!payload.option_evidence)
+  throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
+ return draftRevisionRequest(draftId,'POST',payload);
+}
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
 })();
