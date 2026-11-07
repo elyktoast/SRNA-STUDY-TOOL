@@ -190,3 +190,19 @@ test('saved draft revalidation route is allowed as read-only GET only',async()=>
  const opt=await request(url,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}});
  assert.equal(opt.status,204);
 });
+
+test('revision routes permit authenticated GET and guarded POST only',async()=>{
+ const id='abc90a93-41f8-4d7c-8e27-94a609135572';
+ const path='https://gateway.example/generation/drafts/'+id+'/revisions';
+ const get=await request(path);
+ assert.equal(get.status,200);
+ const options=await request(path,{method:'OPTIONS',headers:{
+  'Access-Control-Request-Method':'POST',
+  'Access-Control-Request-Headers':'Authorization, Content-Type'}});
+ assert.equal(options.status,204);
+ assert.match(options.headers.get('Access-Control-Allow-Methods'),/POST/);
+ assert.equal((await request(path,{method:'DELETE'})).status,405);
+ assert.equal((await request(path+'?unsafe=true')).status,400);
+ assert.equal((await request(path,{method:'POST',headers:{'Content-Type':'text/plain'}})).status,400);
+ assert.equal((await request(path,{method:'POST',headers:{Origin:'https://srnastudytool.com','Content-Type':'application/json'}})).status,403);
+});
