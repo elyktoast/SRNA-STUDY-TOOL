@@ -200,7 +200,14 @@ async function draftRevisionRequest(draftId,method,payload){
  if(method==='POST'){options.headers['Content-Type']='application/json';options.body=JSON.stringify(payload);}
  const response=await fetch(u.origin+'/generation/drafts/'+draftId+'/revisions',options);
  const data=await response.json().catch(()=>({}));
- if(!response.ok)throw Error(data.error||'Draft revisions unavailable ('+response.status+').');
+ if(!response.ok){
+  const issues=Array.isArray(data.issues)?data.issues.slice(0,25).map(x=>{
+   const rule=typeof x?.rule_id==='string'?x.rule_id:'validation';
+   const message=typeof x?.message==='string'?x.message:'Correction required';
+   return rule+': '+message;
+  }).join('\\n'):'';
+  throw Error((data.error||'Draft revisions unavailable ('+response.status+').')+(issues?'\\n'+issues:''));
+ }
  return data;
 }
 async function listDraftRevisions(draftId){return draftRevisionRequest(draftId,'GET');}
