@@ -9,6 +9,7 @@ from item_source_reconciliation_v2 import reconcile
 from item_answer_evidence_v2 import check as check_answers
 from item_special_format_evidence_v2 import check as check_special
 from item_generation_runner_v2 import _complete_nonclinical_schema_fields
+from item_source_reconciliation_v2 import _format_normalized
 
 
 def revalidate(conn, *, owner_uid, draft_id):
@@ -56,6 +57,28 @@ def revalidate(conn, *, owner_uid, draft_id):
                       else check_special(normalized, passages))
     else:
         issues.append({"rule_id":"R-2.5","message":"No indexed passages available"})
+    # Supply a reviewable citation repair candidate only for an absent quote.
+    # A nonempty mismatched quotation is NOT silently replaced: it could
+    # indicate a materially different source or clinical assertion.
+    source_by_id = {p["passage_id"]:p for p in passages}
+    citation_repair_candidates = []
+    for index, citation in enumerate(citations):
+        if not isinstance(citation, dict):
+            continue
+        source = source_by_id.get(citation.get("passage_id"))
+        if source is None or citation.get("textbook_id") != source["textbook_id"]:
+            continue
+        quote = citation.get("excerpt")
+        absent = not isinstance(quote, str) or not quote.strip()
+        mismatch = absent or _format_normalized(quote) not in _format_normalized(source["excerpt"])
+        if mismatch:
+            citation_repair_candidates.append({
+                "citation_index":index, "passage_id":source["passage_id"],
+                "reason":"missing_excerpt" if absent else "mismatched_excerpt",
+                "suggested_excerpt":source["excerpt"] if absent else None,
+                "indexed_excerpt_preview":source["excerpt"][:500],
+                "requires_human_source_verification":True,
+                "automatically_applied":False})
     options = normalized.get("options") if isinstance(normalized.get("options"), list) else []
     mapping = normalized.get("distractor_evidence")
     mapping = mapping if isinstance(mapping, dict) else {}
@@ -75,4 +98,6 @@ def revalidate(conn, *, owner_uid, draft_id):
             "source_excerpt_review": [{"passage_id":p["passage_id"],"pdf_page":p["pdf_page_start"],
                 "indexed_excerpt_preview":p["excerpt"][:500]} for p in passages],
             "saved_question_modified":False,
-            "option_evidence_worksheet":evidence_worksheet}
+            "option_evidence_worksheet":evidence_worksheet,
+            "citation_repair_candidates":citation_repair_candidates,
+            "normalized_question_preview":normalized}
