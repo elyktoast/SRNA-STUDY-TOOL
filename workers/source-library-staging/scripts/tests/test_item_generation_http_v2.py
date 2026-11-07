@@ -90,6 +90,17 @@ class DraftRevisionHttpTests(unittest.TestCase):
         self.assertNotIn("trusted_passages",saver.call_args.kwargs)
 
     @patch("item_generation_http_v2.save_revision")
+    def test_validation_failure_returns_rule_ids_without_saving(self,saver):
+        from item_draft_revision_storage_v2 import RevisionValidationError
+        saver.side_effect=RevisionValidationError([{"rule_id":"R-12.4","message":"Missing option evidence"}])
+        payload={"expected_parent_sha256":"a"*64,"citation_excerpts":{},
+                 "option_evidence":{},"reviewer_notes":"Verified source"}
+        status,data=self.call("POST",payload)
+        self.assertEqual(status,"422 Unprocessable Entity")
+        self.assertEqual(data["error"],"revision_validation_failed")
+        self.assertEqual(data["issues"][0]["rule_id"],"R-12.4")
+
+    @patch("item_generation_http_v2.save_revision")
     def test_rejects_client_identity_and_invalid_citation_index(self,saver):
         payload={"expected_parent_sha256":"a"*64,"citation_excerpts":{"bad":"Quote"},
                  "option_evidence":{},"reviewer_notes":"Checked"}
