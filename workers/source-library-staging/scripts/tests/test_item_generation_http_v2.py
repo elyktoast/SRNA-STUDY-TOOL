@@ -53,6 +53,61 @@ class DraftRevalidationHttpTests(unittest.TestCase):
         status,_=self.call("/generation/drafts/not-a-uuid/revalidate")
         self.assertEqual(status,"404 Not Found")
 
+class DraftRevisionHttpTests(unittest.TestCase):
+    PATH="/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revisions"
+    def setUp(self):
+        self.app=create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token=="valid" else None,
+            environment={"STAGING_ONLY":"true"})
+
+    def call(self,method="GET",payload=None,token="valid",
+             origin="https://staging.srnastudytool.com"):
+        raw=json.dumps(payload).encode() if payload is not None else b""
+        env={"PATH_INFO":self.PATH,"REQUEST_METHOD":method,
+             "HTTP_ORIGIN":origin,"HTTP_AUTHORIZATION":"Bearer "+token,
+             "CONTENT_LENGTH":str(len(raw)),"wsgi.input":io.BytesIO(raw)}
+        seen=[]
+        body=b"".join(self.app(env,lambda status,headers:seen.append(status)))
+        return seen[0],json.loads(body)
+
+    @patch("item_generation_http_v2.list_revisions",return_value=[])
+    def test_history_read_scoped_to_authenticated_owner(self,history):
+        status,data=self.call()
+        self.assertEqual(status,"200 OK")
+        self.assertEqual(data,[])
+        self.assertEqual(history.call_args.kwargs["owner_uid"],UID)
+
+    @patch("item_generation_http_v2.save_revision",return_value={
+        "revision_number":1,"published":False,"can_publish":False})
+    def test_save_uses_authenticated_owner_not_client_identity(self,saver):
+        payload={"expected_parent_sha256":"a"*64,"citation_excerpts":{"0":"Verified quote"},
+                 "option_evidence":{},"reviewer_notes":"Checked source"}
+        status,data=self.call("POST",payload)
+        self.assertEqual(status,"201 Created")
+        self.assertFalse(data["published"])
+        self.assertEqual(saver.call_args.kwargs["owner_uid"],UID)
+        self.assertEqual(saver.call_args.kwargs["citation_excerpts"],{0:"Verified quote"})
+        self.assertNotIn("trusted_passages",saver.call_args.kwargs)
+
+    @patch("item_generation_http_v2.save_revision")
+    def test_rejects_client_identity_and_invalid_citation_index(self,saver):
+        payload={"expected_parent_sha256":"a"*64,"citation_excerpts":{"bad":"Quote"},
+                 "option_evidence":{},"reviewer_notes":"Checked"}
+        self.assertEqual(self.call("POST",payload)[0],"422 Unprocessable Entity")
+        payload["citation_excerpts"]={"0":"Quote"}
+        payload["owner_uid"]=UID
+        self.assertEqual(self.call("POST",payload)[0],"422 Unprocessable Entity")
+        saver.assert_not_called()
+
+    @patch("item_generation_http_v2.save_revision")
+    def test_rejects_unauthorized_requests_and_methods(self,saver):
+        payload={"expected_parent_sha256":"a"*64,"citation_excerpts":{},
+                 "option_evidence":{},"reviewer_notes":"Checked"}
+        self.assertEqual(self.call("POST",payload,token="invalid")[0],"403 Forbidden")
+        self.assertEqual(self.call("POST",payload,origin="https://srnastudytool.com")[0],"403 Forbidden")
+        self.assertEqual(self.call("PUT",payload)[0],"405 Method Not Allowed")
+        saver.assert_not_called()
+
 class HttpPreflightTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app(conn_factory=Connection, resolve_admin=lambda token: UID if token == "valid" else None,
