@@ -38,6 +38,8 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
           (draft_id,owner))
         previous=cur.fetchone()
     parent_question = previous[1] if previous else parent["question"]
+    if not isinstance(parent_question,dict):
+        raise ValueError("Invalid saved revision question")
     if digest(parent_question)!=expected_parent_sha256:
         raise ValueError("Stale revision: parent digest changed")
     refs = parent.get("evidence")
@@ -85,12 +87,15 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
 
 def list_revisions(conn, *, owner_uid, draft_id):
     owner,draft_id=(str(UUID(str(x))) for x in (owner_uid,draft_id))
-    get_draft(conn,owner_uid=owner,draft_id=draft_id)
+    original=get_draft(conn,owner_uid=owner,draft_id=draft_id)
     with conn.cursor() as cur:
         cur.execute("""select revision_number,id::text,parent_question_sha256,revised_question_sha256,
           reviewer_notes,created_at from source_library_staging.generated_draft_revisions_v2
           where owner_uid=%s::uuid and draft_id=%s::uuid
           order by revision_number desc limit 100""",(owner,draft_id))
         rows=cur.fetchall()
-    return [{"revision_number":r[0],"revision_id":r[1],"parent_sha256":r[2],
-             "question_sha256":r[3],"notes":r[4],"created_at":r[5].isoformat()} for r in rows]
+    return {"draft_id":draft_id,"original_question_sha256":digest(original["question"]),
+            "current_question_sha256":rows[0][3] if rows else digest(original["question"]),
+            "published":False,"revisions":[{"revision_number":r[0],"revision_id":r[1],
+             "parent_sha256":r[2],"question_sha256":r[3],
+             "notes":r[4],"created_at":r[5].isoformat()} for r in rows]}
