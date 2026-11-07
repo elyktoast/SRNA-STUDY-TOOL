@@ -151,7 +151,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     if set(payload) != {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}:
                         raise ValueError("Invalid revision body")
                     raw_excerpts = payload["citation_excerpts"]
-                    if not isinstance(raw_excerpts,dict) or any(not str(k).isdigit() for k in raw_excerpts):
+                    if not isinstance(raw_excerpts,dict) or any(not isinstance(k,str) or not k.isascii() or not k.isdecimal() or (k != "0" and k.startswith("0")) for k in raw_excerpts):
                         raise ValueError("Invalid citation indices")
                     excerpts = {int(k):v for k,v in raw_excerpts.items()}
                     with conn_factory() as conn:
