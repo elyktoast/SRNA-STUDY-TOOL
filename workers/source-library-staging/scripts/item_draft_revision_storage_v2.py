@@ -10,6 +10,12 @@ from item_draft_storage_v2 import get_draft
 from item_draft_revision_v2 import propose_revision
 
 
+class RevisionValidationError(ValueError):
+    def __init__(self, issues):
+        self.issues = issues
+        super().__init__("Revision still fails source/schema validation")
+
+
 def digest(item):
     return hashlib.sha256(json.dumps(item,sort_keys=True,separators=(",",":"),ensure_ascii=False).encode()).hexdigest()
 
@@ -64,7 +70,7 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
     proposal=propose_revision({**parent,"question":parent_question},trusted_passages,
         citation_excerpts=citation_excerpts,option_evidence=option_evidence)
     if proposal["issues"]:
-        raise ValueError("Revision still fails source/schema validation")
+        raise RevisionValidationError(proposal["issues"])
     revised=proposal["question"]
     if digest(revised)==expected_parent_sha256:
         raise ValueError("Revision contains no changes")
