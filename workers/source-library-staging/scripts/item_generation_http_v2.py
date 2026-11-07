@@ -58,7 +58,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path not in ("/generation/preflight", "/generation/one"):
-            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if diagnostic or (draft_match and not draft_match.group(2)) else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if diagnostic or (draft_match and draft_match.group(2) != "/review") else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
