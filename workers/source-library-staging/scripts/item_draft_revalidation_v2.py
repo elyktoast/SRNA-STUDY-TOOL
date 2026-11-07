@@ -8,6 +8,7 @@ from item_generation_contract_v2 import validate_complete_item
 from item_source_reconciliation_v2 import reconcile
 from item_answer_evidence_v2 import check as check_answers
 from item_special_format_evidence_v2 import check as check_special
+from item_generation_runner_v2 import _complete_nonclinical_schema_fields
 
 
 def revalidate(conn, *, owner_uid, draft_id):
@@ -38,20 +39,29 @@ def revalidate(conn, *, owner_uid, draft_id):
     passages = [{"passage_id":r[0],"textbook_id":r[1],
                  "pdf_page_start":r[2],"excerpt":r[3]} for r in rows]
     found = {p["passage_id"] for p in passages}
-    issues = validate_complete_item(item)
+    # Apply only safe, deterministic legacy schema defaults in memory. Never
+    # mutate the stored draft or invent clinical/source assertions.
+    normalized = _complete_nonclinical_schema_fields(item)
+    normalized_fields = [k for k in ("sa", "dd", "hs", "audit", "self_check", "stats")
+                         if k not in item and k in normalized]
+    issues = validate_complete_item(normalized)
     if not citations:
         issues.append({"rule_id":"R-2.5","message":"Saved question has no citations"})
     for pid in sorted(ids-found):
         issues.append({"rule_id":"R-2.5","message":"Saved passage is missing from current index: "+pid})
     if passages and citations:
-        issues.extend(reconcile(item, passages))
+        issues.extend(reconcile(normalized, passages))
     if passages:
-        issues.extend(check_answers(item, passages) if item.get("format") in ("MC","MS")
-                      else check_special(item, passages))
+        issues.extend(check_answers(normalized, passages) if normalized.get("format") in ("MC","MS")
+                      else check_special(normalized, passages))
     else:
         issues.append({"rule_id":"R-2.5","message":"No indexed passages available"})
     return {"draft_id":draft_id,"status":draft["status"],"published":False,
             "validation":"read_only_current_index","can_publish":False,
             "clinical_review_required":True,"issues":issues,
             "indexed_passages_found":len(passages),"indexed_passages_requested":len(ids),
-            "generation_performed":False,"database_writes":False}
+            "generation_performed":False,"database_writes":False,
+            "legacy_defaults_applied_in_memory":normalized_fields,
+            "source_excerpt_review": [{"passage_id":p["passage_id"],"pdf_page":p["pdf_page_start"],
+                "indexed_excerpt_preview":p["excerpt"][:500]} for p in passages],
+            "saved_question_modified":False}
