@@ -156,3 +156,32 @@ test('staging evidence check defaults to pinned accepted gateway and permits exp
   else {await ctx.window.MBUSourceMaterialStagingStorage.generationPreflight({topic:'airway'});assert.equal(captured[0],endpoint)}
  }
 });
+
+
+test('saved draft detail uses authenticated staging GET without publishing',async()=>{
+ const draft='abc90a93-41f8-4d7c-8e27-94a609135572';
+ const {api,calls}=setup({handler:()=>new Response(JSON.stringify({draft_id:draft,status:'pending_review',published:false,question:{stem:'Test'}}),{status:200,headers:{'Content-Type':'application/json'}})});
+ const data=await api.getGeneratedDraft(draft);
+ assert.equal(data.published,false);
+ assert.equal(data.status,'pending_review');
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].url,'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/drafts/'+draft);
+ assert.equal(calls[0].options.headers.Authorization,'Bearer staging-jwt');
+ assert.equal(calls[0].options.credentials,'omit');
+ assert.equal(calls[0].options.cache,'no-store');
+ assert.equal(calls[0].options.redirect,'error');
+ assert.equal(calls[0].options.method,undefined);
+});
+test('saved draft detail rejects invalid IDs and non-staging origin before fetch',async()=>{
+ const draft='abc90a93-41f8-4d7c-8e27-94a609135572';
+ const {api,calls}=setup({handler:()=>{throw Error('unexpected network request')}});
+ await assert.rejects(api.getGeneratedDraft('../drafts'),/Invalid draft ID/);
+ assert.equal(calls.length,0);
+ const outside=setup({hostname:'srnastudytool.com',handler:()=>{throw Error('unexpected network request')}});
+ await assert.rejects(outside.api.getGeneratedDraft(draft),/Staging only/);
+ assert.equal(outside.calls.length,0);
+});
+test('saved draft detail surfaces backend failures',async()=>{
+ const {api}=setup({handler:()=>new Response(JSON.stringify({error:'Draft not found'}),{status:404,headers:{'Content-Type':'application/json'}})});
+ await assert.rejects(api.getGeneratedDraft('abc90a93-41f8-4d7c-8e27-94a609135572'),/Draft not found/);
+});
