@@ -10,7 +10,7 @@ from uuid import UUID
 from run_grounded_generation_v2 import execute
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_draft_revalidation_v2 import revalidate
-from item_draft_revision_storage_v2 import save_revision, list_revisions
+from item_draft_revision_storage_v2 import save_revision, list_revisions, RevisionValidationError
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
@@ -167,6 +167,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                                     draft_id=draft_match.group(1),
                                     status=payload["status"], notes=payload["notes"])
                 return respond("200 OK", result)
+            except RevisionValidationError as exc:
+                return respond("422 Unprocessable Entity", {"error": "revision_validation_failed", "issues": exc.issues})
             except (ValueError, TypeError, KeyError):
                 return respond("422 Unprocessable Entity", {"error": "invalid_or_unavailable_draft"})
             except Exception:
