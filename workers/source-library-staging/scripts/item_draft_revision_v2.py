@@ -30,8 +30,15 @@ def propose_revision(draft, trusted_passages, *, citation_excerpts=None,
     citations = item.get("evidence")
     if not isinstance(citations, list):
         raise ValueError("Question citations required")
-    for index, excerpt in citation_excerpts.items():
-        if type(index) is not int or index < 0 or index >= len(citations) or not isinstance(excerpt, str) or not excerpt.strip():
+    for raw_index, excerpt in citation_excerpts.items():
+        # JSON object keys are strings; accept canonical decimal indices only.
+        if type(raw_index) is int:
+            index = raw_index
+        elif isinstance(raw_index, str) and raw_index.isascii() and raw_index.isdecimal() and (raw_index == "0" or not raw_index.startswith("0")):
+            index = int(raw_index)
+        else:
+            raise ValueError("Invalid citation correction")
+        if index < 0 or index >= len(citations) or not isinstance(excerpt, str) or not excerpt.strip():
             raise ValueError("Invalid citation correction")
         citation = citations[index]
         if not isinstance(citation, dict):
