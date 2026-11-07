@@ -3,7 +3,8 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from item_draft_revision_storage_v2 import digest,save_revision
+from item_draft_revision_storage_v2 import digest,save_revision,list_revisions
+from unittest.mock import patch
 
 OWNER="c003287a-10ce-4cc9-926e-ef7c3a162a26"
 DRAFT="abc90a93-41f8-4d7c-8e27-94a609135572"
@@ -20,6 +21,23 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Reviewer notes required"):
             save_revision(None,owner_uid=OWNER,draft_id=DRAFT,
                 expected_parent_sha256="a"*64,reviewer_notes=" ")
+    @patch("item_draft_revision_storage_v2.get_draft",return_value={"question":{"stem":"Original"}})
+    def test_empty_history_exposes_original_as_head(self,fetch):
+        class Cursor:
+            def execute(self,sql,params):
+                self.sql=sql
+                self.params=params
+            def fetchall(self): return []
+            def __enter__(self): return self
+            def __exit__(self,*args): pass
+        class Conn:
+            def cursor(self): return Cursor()
+        result=list_revisions(Conn(),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertEqual(result["revisions"],[])
+        self.assertEqual(result["current_question_sha256"],digest({"stem":"Original"}))
+        self.assertEqual(result["original_question_sha256"],digest({"stem":"Original"}))
+        self.assertFalse(result["published"])
+
     def test_rejects_untrusted_identity(self):
         with self.assertRaises(ValueError):
             save_revision(None,owner_uid="not-an-id",draft_id=DRAFT,
