@@ -177,3 +177,16 @@ test('checkpoint feature flag reaches the private container only with complete A
  assert.equal(flags.length,2);
  assert.equal(flags[1].AI_GENERATION_CHECKPOINTS_ENABLED,undefined);
 });
+
+test('saved draft revalidation route is allowed as read-only GET only',async()=>{
+ const url='https://gateway.example/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revalidate';
+ const before=calls.container;
+ const result=await request(url);
+ assert.notEqual(result.status,403,'gateway must recognize revalidation route');
+ assert.notEqual(result.status,405,'gateway must allow GET revalidation');
+ assert.ok(calls.container>before,'request should reach reviewer container');
+ const post=await request(url,{method:'POST',headers:{'Content-Type':'application/json'}});
+ assert.equal(post.status,405);
+ const opt=await request(url,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}});
+ assert.equal(opt.status,204);
+});
