@@ -25,6 +25,15 @@ class RevisionTests(unittest.TestCase):
         self.assertFalse(result["saved"])
         self.assertFalse(result["can_publish"])
         self.assertFalse(result["database_writes"])
+    def test_accepts_json_string_citation_index(self):
+        draft,passages=fixture()
+        result=propose_revision(draft,passages,citation_excerpts={"0":"Awake extubation is recommended."})
+        self.assertEqual(result["question"]["evidence"][0]["excerpt"],passages[0]["excerpt"])
+    def test_rejects_noncanonical_citation_index(self):
+        draft,passages=fixture()
+        for index in ("00","-1","1.0","０", "1e0"):
+            with self.subTest(index=index),self.assertRaisesRegex(ValueError,"Invalid citation correction"):
+                propose_revision(draft,passages,citation_excerpts={index:"Awake extubation is recommended."})
     def test_refuses_invented_quote(self):
         draft,passages=fixture()
         with self.assertRaisesRegex(ValueError,"must match indexed"):
