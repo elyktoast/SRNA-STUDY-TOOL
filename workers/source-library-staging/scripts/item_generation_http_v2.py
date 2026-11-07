@@ -10,6 +10,7 @@ from uuid import UUID
 from run_grounded_generation_v2 import execute
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_draft_revalidation_v2 import revalidate
+from item_draft_revision_storage_v2 import save_revision, list_revisions
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
@@ -37,7 +38,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [data]
 
         path = environ.get("PATH_INFO", "")
-        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate)?", path)
+        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
         diagnostic = path == "/generation/provider-check"
         if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
@@ -45,8 +46,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return respond("403 Forbidden", {"error": "forbidden_origin"})
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
-            allowed = ("GET", "POST") if path == "/generation/drafts" else (
-                ("GET",) if diagnostic or (draft_match and draft_match.group(2) != "/review") else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (
+                ("GET",) if diagnostic or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -58,7 +59,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path not in ("/generation/preflight", "/generation/one"):
-            allowed = ("GET", "POST") if path == "/generation/drafts" else (("GET",) if diagnostic or (draft_match and draft_match.group(2) != "/review") else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (("GET",) if diagnostic or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
@@ -128,6 +129,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     with conn_factory() as conn:
                         result = (list_drafts(conn, owner_uid=owner)
                                   if path == "/generation/drafts" else
+                                  list_revisions(conn, owner_uid=owner, draft_id=draft_match.group(1))
+                                  if draft_match.group(2) == "/revisions" else
                                   revalidate(conn, owner_uid=owner, draft_id=draft_match.group(1))
                                   if draft_match.group(2) == "/revalidate" else
                                   get_draft(conn, owner_uid=owner, draft_id=draft_match.group(1)))
@@ -144,6 +147,19 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     with conn_factory() as conn:
                         result = save(conn, {**payload, "owner_uid": owner})
                     return respond("201 Created", result)
+                if draft_match and draft_match.group(2) == "/revisions":
+                    if set(payload) != {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}:
+                        raise ValueError("Invalid revision body")
+                    raw_excerpts = payload["citation_excerpts"]
+                    if not isinstance(raw_excerpts,dict) or any(not str(k).isdigit() for k in raw_excerpts):
+                        raise ValueError("Invalid citation indices")
+                    excerpts = {int(k):v for k,v in raw_excerpts.items()}
+                    with conn_factory() as conn:
+                        result = save_revision(conn,owner_uid=owner,draft_id=draft_match.group(1),
+                            expected_parent_sha256=payload["expected_parent_sha256"],
+                            citation_excerpts=excerpts,option_evidence=payload["option_evidence"],
+                            reviewer_notes=payload["reviewer_notes"])
+                    return respond("201 Created",result)
                 if set(payload) != {"status", "notes"}:
                     raise ValueError("Invalid review body")
                 with conn_factory() as conn:
