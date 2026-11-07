@@ -64,4 +64,5 @@ def revalidate(conn, *, owner_uid, draft_id):
             "legacy_defaults_applied_in_memory":normalized_fields,
             "source_excerpt_review": [{"passage_id":p["passage_id"],"pdf_page":p["pdf_page_start"],
                 "indexed_excerpt_preview":p["excerpt"][:500]} for p in passages],
-            "saved_question_modified":False}
+            "saved_question_modified":False,
+            "option_evidence_worksheet":evidence_worksheet}
