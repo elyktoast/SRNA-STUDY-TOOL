@@ -15,14 +15,14 @@ class Tests(unittest.TestCase):
     def test_rejects_bad_parent_digest_before_database_access(self):
         with self.assertRaisesRegex(ValueError,"Expected parent digest"):
             save_revision(None,owner_uid=OWNER,draft_id=DRAFT,
-                expected_parent_sha256="bad",trusted_passages=[],reviewer_notes="Checked")
+                expected_parent_sha256="bad",reviewer_notes="Checked")
     def test_rejects_blank_review_notes_before_database_access(self):
         with self.assertRaisesRegex(ValueError,"Reviewer notes required"):
             save_revision(None,owner_uid=OWNER,draft_id=DRAFT,
-                expected_parent_sha256="a"*64,trusted_passages=[],reviewer_notes=" ")
+                expected_parent_sha256="a"*64,reviewer_notes=" ")
     def test_rejects_untrusted_identity(self):
         with self.assertRaises(ValueError):
             save_revision(None,owner_uid="not-an-id",draft_id=DRAFT,
-                expected_parent_sha256="a"*64,trusted_passages=[],reviewer_notes="Checked")
+                expected_parent_sha256="a"*64,reviewer_notes="Checked")
 
 if __name__=="__main__":unittest.main()
