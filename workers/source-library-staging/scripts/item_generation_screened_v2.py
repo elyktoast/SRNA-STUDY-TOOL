@@ -30,6 +30,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id)
     rewrite_attempts = 0
+    rewrite_original_issues = list(generated["schema_issues"])
     if rewrite is not None and generated["schema_issues"]:
         def validate_rewrite(candidate):
             problems = validate_complete_item(candidate)
@@ -69,7 +70,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                               "next_state": state, "stages": stages,
                               "pending_verifications": remaining,
                               "rewrite_attempts_allowed": 1 - rewrite_attempts,
-                              "rewrite_attempts_used": rewrite_attempts}, "next_state": state,
+                              "rewrite_attempts_used": rewrite_attempts,
+                              "rewrite_original_issues": rewrite_original_issues if rewrite_attempts else [],
+                              "rewrite_revised_issues": issues if rewrite_attempts else []}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
                 "database_writes": False, "rewrite_attempts_used": rewrite_attempts}
     semantic_lookup_failed = False
@@ -120,6 +123,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         }
         screening["screening_complete"] = False
     screening["rewrite_attempts_used"] = rewrite_attempts
+    screening["rewrite_original_issues"] = rewrite_original_issues if rewrite_attempts else []
+    screening["rewrite_revised_issues"] = generated["schema_issues"] if rewrite_attempts else []
     screening["rewrite_attempts_allowed"] = 1 - rewrite_attempts
     next_state = result["status"]
     pending = [name for name in ("schema", "deterministic_text", "math", "evidence",
