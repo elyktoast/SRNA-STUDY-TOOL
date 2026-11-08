@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_generation_runner_v2 import generate_one
+from item_generation_runner_v2 import generate_one, _repair_ellipsized_citations
 from test_item_standard_v2 import sample
 
 EVIDENCE = [{"passage_id": "p1", "textbook_id": "t1", "excerpt": "Source"}]
@@ -107,6 +107,30 @@ class RunnerTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "JSON object"):
                     generate_one(adapter, **ARGS)
                 self.assertEqual(calls, ["concept_card"])
+
+    def test_repairs_only_unique_ordered_verbatim_ellipsis(self):
+        passage = "Jaw wiring requires extreme caution before extubating. The airway must be thoroughly suctioned, the throat pack removed, the patient wide awake, and equipment on hand to quickly cut the wires."
+        sources = [{"passage_id": "p1", "textbook_id": "t1", "excerpt": passage}]
+        draft = {"evidence": [{"passage_id": "p1", "textbook_id": "t1",
+                               "excerpt": "Jaw wiring requires extreme caution before extubating. ... equipment on hand to quickly cut the wires."}]}
+        result = _repair_ellipsized_citations(draft, sources)
+        self.assertEqual(result["evidence"][0]["excerpt"], passage)
+        self.assertIn("...", draft["evidence"][0]["excerpt"])
+        from item_source_reconciliation_v2 import reconcile
+        self.assertEqual(reconcile(result, sources), [])
+
+    def test_refuses_unverified_ambiguous_or_wrong_source_quotes(self):
+        passage = "First fragment is repeated. First fragment is repeated. Last fragment is unique."
+        sources = [{"passage_id": "p1", "textbook_id": "t1", "excerpt": passage}]
+        for quote, textbook in [
+            ("First fragment is repeated. ... Last fragment is unique.", "t1"),
+            ("Invented fragment here ... Last fragment is unique.", "t1"),
+            ("Last fragment is unique. ... First fragment is repeated.", "t1"),
+            ("First fragment is repeated. ... Last fragment is unique.", "wrong"),
+        ]:
+            with self.subTest(quote=quote, textbook=textbook):
+                draft = {"evidence": [{"passage_id": "p1", "textbook_id": textbook, "excerpt": quote}]}
+                self.assertEqual(_repair_ellipsized_citations(draft, sources), draft)
 
     def test_no_implicit_model_calls(self):
         with self.assertRaises(ValueError):

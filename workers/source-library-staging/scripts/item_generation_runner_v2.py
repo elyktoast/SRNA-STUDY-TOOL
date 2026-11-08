@@ -44,6 +44,40 @@ def _complete_nonclinical_schema_fields(draft):
     return item
 
 
+def _repair_ellipsized_citations(draft, trusted_passages):
+    """Replace only provably ordered, unique ellipsis spans with verbatim source text.
+
+    Never repair a fabricated or ambiguous quote, change its source identity,
+    or weaken reconciliation. The final citation must still pass reconcile().
+    """
+    import copy
+    item = copy.deepcopy(draft)
+    sources = {p["passage_id"]: p for p in trusted_passages}
+    for citation in item.get("evidence", []):
+        if not isinstance(citation, dict):
+            continue
+        quote = citation.get("excerpt")
+        source = sources.get(citation.get("passage_id"))
+        if not (isinstance(quote, str) and isinstance(source, dict)
+                and citation.get("textbook_id") == source.get("textbook_id")
+                and "..." in quote):
+            continue
+        parts = [part.strip() for part in quote.split("...")]
+        if len(parts) != 2 or any(len(part) < 12 for part in parts):
+            continue
+        original = source["excerpt"]
+        # Ambiguous fragments or reordered text are not safe to repair.
+        if original.count(parts[0]) != 1 or original.count(parts[1]) != 1:
+            continue
+        start = original.index(parts[0])
+        end_start = original.index(parts[1])
+        end = end_start + len(parts[1])
+        if end_start < start + len(parts[0]) or end - start > 1200:
+            continue
+        citation["excerpt"] = original[start:end]
+    return item
+
+
 def generate_one(adapter, *, mode, domain, section, objective, evidence,
                  format="MC", item_id, checkpoint=None, on_checkpoint=None,
                  generator_model_id=None):
@@ -105,7 +139,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     # The model must not be allowed to overwrite identifiers, source, or approval.
-    item = {**_complete_nonclinical_schema_fields(draft), "item_id": item_id, "rules_version": "2.0",
+    item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(draft, evidence)), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,
             "objective": objective, "format": format,
             "concept_card": concept, "rationale": rationale,
