@@ -56,6 +56,22 @@ class BlindReviewTests(unittest.TestCase):
             with self.subTest(wrong=wrong):
                 self.assertTrue(compare(item, {"item_id": "d", "pairs": wrong}))
 
+    def test_hs_blind_region_scoring_and_key_isolation(self):
+        item = {"item_id": "h", "format": "HS", "stem": "Identify region",
+                "hs": {"figure": {"url": "https://example.org/figure.png",
+                                   "alt": "Anatomy", "width": 800, "height": 600},
+                       "correct_region": "region-b",
+                       "near_miss_regions": ["region-a", "region-c"],
+                       "license": "test-only"}}
+        sanitized = payload(item)
+        self.assertNotIn("correct_region", str(sanitized))
+        self.assertNotIn("near_miss_regions", str(sanitized))
+        self.assertNotIn("license", str(sanitized))
+        self.assertEqual(compare(item, {"item_id": "h", "region": "region-b"}), [])
+        for wrong in ("region-a", "region-c", "", None, ["region-b"], {"id": "region-b"}):
+            with self.subTest(wrong=wrong):
+                self.assertTrue(compare(item, {"item_id": "h", "region": wrong}))
+
     def test_non_mc_not_falsely_passed(self):
         item = {"item_id": "n", "format": "SA", "stem": "Calculate"}
         self.assertTrue(compare(item, {"item_id": "n", "answer": 5}))
