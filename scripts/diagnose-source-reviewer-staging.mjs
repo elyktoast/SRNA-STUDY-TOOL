@@ -141,6 +141,8 @@ console.log('STEP 11: read-only provider check: HTTP',providerResponse.status,'s
 if(providerBody?.check==='hybrid_provider_readiness'){
  assert.equal(providerBody.generation_performed,false);
  assert.equal(providerBody.providers?.length,3);
+ assert.equal(typeof providerBody.metadata_ready,'boolean','metadata readiness must be explicit');
+ assert.equal(providerBody.generation_ready,false,'metadata probes cannot certify inference readiness');
  const providerNames=new Set();
  for(const p of providerBody.providers){
   assert.equal(p.generation_performed,false);
