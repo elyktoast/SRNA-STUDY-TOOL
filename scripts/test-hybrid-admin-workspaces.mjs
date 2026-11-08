@@ -92,3 +92,12 @@ test('PDF review exposes loading, busy, and error feedback beside its button',()
  assert.ok(ui.includes("actions.append(preview,previewState,more)"));
  assert.ok(ui.includes("Another source action is running."));
 });
+
+test('PDF retrieval validates bytes, times out and reader is brought into view',()=>{
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ assert.ok(storage.includes("String.fromCharCode(...header)!=='%PDF-'"));
+ assert.ok(storage.includes('controller.abort(),120000'));
+ assert.ok(storage.includes('clearTimeout(timeout)'));
+ assert.ok(ui.includes("reader.scrollIntoView({behavior:'smooth',block:'nearest'})"));
+ assert.ok(ui.includes("reader.prepend(notice)"));
+});
