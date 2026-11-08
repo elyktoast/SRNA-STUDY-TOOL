@@ -270,16 +270,14 @@ function ensureAICommandCenter(){
  center.innerHTML='<nav class="sl-ai-view-nav" aria-label="AI workspace views"><button type="button" data-sl-ai-view="command" aria-pressed="true">Command Center</button><button type="button" data-sl-ai-view="editor" aria-pressed="false">Clinical Question Editor</button></nav><section class="sl-ai-workflow" aria-label="AI generation"><div class="sl-ai-panel-title"><span>01 · CREATE</span><h3>Generate a question</h3><p>Choose a verified textbook, check evidence, and generate one unpublished draft.</p></div><div id="sl-ai-create-content"></div></section><section class="sl-ai-drafts" aria-label="Draft review"><div class="sl-ai-panel-title"><span>02 · REVIEW</span><h3>Drafts & clinical review</h3><p>Open saved drafts, inspect answers, and save validated revisions.</p></div><div id="sl-ai-drafts-content"></div></section><aside class="sl-ai-operations" aria-label="AI diagnostics"><div class="sl-ai-panel-title"><span>03 · SYSTEM</span><h3>Provider diagnostics</h3><p>Connection checks do not generate questions.</p></div><div id="sl-ai-operations-content"></div></aside>';
  const create=center.querySelector('#sl-ai-create-content'),drafts=center.querySelector('#sl-ai-drafts-content'),ops=center.querySelector('#sl-ai-operations-content');
  const editor=document.createElement('section');editor.id='sl-clinical-editor';editor.className='sl-clinical-editor';editor.hidden=true;editor.innerHTML='<div class="sl-clinical-head"><div><span>CLINICAL REVIEW · UNPUBLISHED</span><h3>Question Editor</h3><p>Review the question, correct its wording, verify source evidence, and save a versioned draft.</p></div><button type="button" id="sl-editor-back">Back to drafts</button></div><div id="sl-clinical-editor-body"></div>';
- const setAIView=view=>{const editing=view==='editor';center.classList.toggle('sl-ai-editing',editing);editor.hidden=!editing;for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}center.scrollIntoView({block:'start',behavior:'instant'});};
+ const setAIView=view=>{const editing=view==='editor';if(editing&&(!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);editor.hidden=!editing;for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}center.scrollIntoView({block:'start',behavior:'instant'});};
  center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('command');
  create.append(evidencePanel);
  const draftControls=generationPanel.querySelector('#sl-save-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
- const draftHistory=generationPanel.querySelector('#sl-draft-history')?.closest('details');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
  if(draftControls)drafts.append(draftControls);
  if(draftDetail)editor.querySelector('#sl-clinical-editor-body').append(draftDetail);
- if(draftHistory)drafts.append(draftHistory);
  if(revisionEditor&&revisionEditor.parentElement!==draftDetail)editor.querySelector('#sl-clinical-editor-body').append(revisionEditor);
  create.append(generationPanel);
  ops.append(providerPanel);
@@ -314,7 +312,7 @@ function mountInAdmin(host,section){
  const body=dialog.querySelector('.sl-body');
  let heading=body.querySelector('.sl-workspace-heading');
  if(!heading){heading=document.createElement('header');heading.className='sl-workspace-heading';body.prepend(heading);}
- if(isAI)ensureAICommandCenter();
+ if(isAI){ensureAICommandCenter();dialog.querySelector('[data-sl-ai-view="command"]')?.click();}
  if(!isAI){ensureResearchLayout();const research=dialog.querySelector('#sl-research-layout');if(research&&dashboard.parentElement!==research.querySelector('#sl-research-library-content'))research.querySelector('#sl-research-library-content').prepend(dashboard);}
  heading.innerHTML=isAI?'<span>AI WORKSPACE · STAGING</span><h2>AI Question Studio</h2><p>Generate, review, and refine unpublished anesthesia questions.</p>':'<span>RESEARCH WORKSPACE · STAGING</span><h2>Sources</h2><p>Manage textbook PDFs, verify indexed evidence, and review original pages.</p>';
  openLibrary(section);
