@@ -272,7 +272,7 @@ function ensureAICommandCenter(){
  create.append(evidencePanel);
  const draftControls=generationPanel.querySelector('#sl-save-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
- const draftHistory=generationPanel.querySelector('#sl-draft-history');
+ const draftHistory=generationPanel.querySelector('#sl-draft-history')?.closest('details');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
  if(draftControls)drafts.append(draftControls);
  if(draftDetail)drafts.append(draftDetail);
@@ -306,7 +306,7 @@ function mountInAdmin(host,section){
  const isAI=section==='generation';
  dialog.classList.toggle('sl-workspace-ai',isAI);
  dialog.classList.toggle('sl-workspace-sources',!isAI);
- if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');body.append(evidencePanel,providerPanel,generationPanel);center.remove();}
+ if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');const drafts=center.querySelector('#sl-ai-drafts-content');for(const child of [...drafts.children])generationPanel.append(child);body.append(evidencePanel,providerPanel,generationPanel);center.remove();}
  if(isAI&&dialog.querySelector('#sl-research-layout')){const research=dialog.querySelector('#sl-research-layout');const body=dialog.querySelector('.sl-body');body.append(dashboard,librarySearch,list,evidencePanel);research.remove();}
  const body=dialog.querySelector('.sl-body');
  let heading=body.querySelector('.sl-workspace-heading');
