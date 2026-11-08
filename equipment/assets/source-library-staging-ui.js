@@ -272,7 +272,7 @@ function ensureResearchLayout(){
  research.innerHTML='<section class="sl-research-library" aria-label="Textbook library"><div class="sl-research-panel-head"><h3>Textbook library</h3><p>Select a PDF to inspect its original pages.</p></div><div id="sl-research-library-content"></div></section><section class="sl-research-reader" aria-label="Original PDF reader"><div class="sl-research-panel-head"><h3>Document reader</h3><p>Original PDF · read-only · physical page numbers</p></div><div id="sl-research-preview"><div class="sl-research-empty">Choose <strong>Review PDF</strong> beside a textbook to open it here.</div></div></section><aside class="sl-research-tools" aria-label="Source tools"><div class="sl-research-panel-head"><h3>Research tools</h3><p>Verify evidence before using it in a question.</p></div><div id="sl-research-tools-content"></div></aside>';
  const library=research.querySelector('#sl-research-library-content');
  const tools=research.querySelector('#sl-research-tools-content');
- library.append(librarySearch,list);
+ library.append(dashboard,librarySearch,list);
  tools.append(evidencePanel);
  body.append(research);
  return research;
@@ -288,11 +288,11 @@ function mountInAdmin(host,section){
  const isAI=section==='generation';
  dialog.classList.toggle('sl-workspace-ai',isAI);
  dialog.classList.toggle('sl-workspace-sources',!isAI);
- if(isAI&&dialog.querySelector('#sl-research-layout')){const research=dialog.querySelector('#sl-research-layout');const body=dialog.querySelector('.sl-body');body.append(librarySearch,list,evidencePanel);research.remove();}
+ if(isAI&&dialog.querySelector('#sl-research-layout')){const research=dialog.querySelector('#sl-research-layout');const body=dialog.querySelector('.sl-body');body.append(dashboard,librarySearch,list,evidencePanel);research.remove();}
  const body=dialog.querySelector('.sl-body');
  let heading=body.querySelector('.sl-workspace-heading');
  if(!heading){heading=document.createElement('header');heading.className='sl-workspace-heading';body.prepend(heading);}
- if(!isAI)ensureResearchLayout();
+ if(!isAI){ensureResearchLayout();const research=dialog.querySelector('#sl-research-layout');if(research&&dashboard.parentElement!==research.querySelector('#sl-research-library-content'))research.querySelector('#sl-research-library-content').prepend(dashboard);}
  heading.innerHTML=isAI?'<span>AI WORKSPACE · STAGING</span><h2>AI Question Studio</h2><p>Generate, review, and refine unpublished anesthesia questions.</p>':'<span>RESEARCH WORKSPACE · STAGING</span><h2>Sources</h2><p>Manage textbook PDFs, verify indexed evidence, and review original pages.</p>';
  openLibrary(section);
  return true;
