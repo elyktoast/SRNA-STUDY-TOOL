@@ -188,7 +188,7 @@ test('generator labels retain canonical five formats and evidence count follows 
  for(const [code,label] of [['MC','Single best answer'],['MS','Select all that apply'],['SA','Short answer'],['DD','Drag and drop'],['HS','Hotspot']]){
   assert.ok(ui.includes('<option value="'+code+'">'+label+'</option>'),code);
  }
- assert.ok(ui.includes('result.source_evidence?.passage_ids.length'));
+ assert.ok(ui.includes('result.source_evidence.passage_ids.length'));
  assert.ok(ui.includes('not verified printed-page citations'));
  assert.ok(ui.includes("genEl('sl-save-generated').disabled=!result.save_payload"));
 });
