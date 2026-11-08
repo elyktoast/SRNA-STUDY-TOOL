@@ -83,7 +83,24 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 return respond("503 Service Unavailable", {"ready": False, "error": "index_readiness_unavailable"})
             try:
                 result = readiness_factory(owner)
-                if not isinstance(result, dict) or type(result.get("ready")) is not bool:
+                keys = {"ready", "inventory_digest", "expected_count", "indexed_count",
+                        "missing_count", "unexpected_count", "stale_count"}
+                if (not isinstance(result, dict) or set(result) != keys
+                        or type(result["ready"]) is not bool
+                        or not isinstance(result["inventory_digest"], str)
+                        or re.fullmatch(r"[a-f0-9]{64}", result["inventory_digest"]) is None
+                        or any(type(result[k]) is not int or result[k] < 0
+                               for k in keys - {"ready", "inventory_digest"})
+                        or result["expected_count"] > 10000
+                        or result["indexed_count"] > 10000
+                        or result["missing_count"] + result["stale_count"]
+                           > result["expected_count"]
+                        or result["unexpected_count"] > result["indexed_count"]
+                        or result["ready"] != (
+                            result["missing_count"] == 0
+                            and result["unexpected_count"] == 0
+                            and result["stale_count"] == 0
+                            and result["expected_count"] == result["indexed_count"])):
                     raise ValueError("Invalid readiness result")
                 return respond("200 OK", result)
             except Exception:
