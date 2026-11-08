@@ -209,6 +209,8 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
             raise ValueError("Checkpoint payload mismatch")
         existing = row[0].get("saved_draft")
         if existing is not None:
+            if not isinstance(existing, dict) or not existing.get("draft_id"):
+                raise ValueError("Invalid saved draft association")
             draft_id = str(UUID(str(existing["draft_id"])))
             # Confirm the existing draft still belongs to this owner and book.
             cur.execute("""
@@ -223,15 +225,16 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
         saved = saver(conn, {**save_payload, "owner_uid": owner})
         if not isinstance(saved, dict) or not saved.get("draft_id"):
             raise ValueError("Draft save did not return an identifier")
+        saved_id = str(UUID(str(saved["draft_id"])))
         cur.execute("""
           update source_library_staging.generation_checkpoints_v2
           set completed_result=jsonb_set(completed_result, '{saved_draft}',
               %s::jsonb, true),updated_at=now()
           where owner_uid=%s::uuid and textbook_id=%s::uuid
             and request_hash=%s and evidence_hash=%s and status='completed'
-        """, (json.dumps({"draft_id": saved["draft_id"]}), owner, book,
+        """, (json.dumps({"draft_id": saved_id}), owner, book,
               request_hash, evidence_hash))
         if cur.rowcount != 1:
             raise ValueError("Checkpoint draft association failed")
     conn.commit()
-    return saved
+    return {**saved, "draft_id": saved_id}
