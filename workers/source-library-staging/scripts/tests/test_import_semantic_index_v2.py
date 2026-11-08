@@ -104,6 +104,7 @@ class OfflineImportTests(unittest.TestCase):
         conn.cursor.return_value.__enter__ = Mock(return_value=cur)
         conn.cursor.return_value.__exit__ = Mock(return_value=False)
         cur.fetchall.return_value = [("a", HASH, [1.0, 0.0]), ("b", HASH, [0.0, 1.0])]
+        cur.rowcount = 1
         result = apply(conn, owner_uid=OWNER, model="test-model", rows=rows, inventory=inventory)
         self.assertTrue(result["ready"])
         queries = [call.args[0] for call in cur.execute.call_args_list]
