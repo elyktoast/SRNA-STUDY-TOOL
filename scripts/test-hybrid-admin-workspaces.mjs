@@ -127,3 +127,13 @@ test('admin batch one uses single header and shared Sources/AI subpage navigatio
 test('reader navigation and Sources/AI subpage memory are accessible',()=>{
  for(const token of ['← Previous','Next →','Open original in new tab',"e.key==='Enter'","previous.disabled=page===1","lastSourcesView=view","lastAIView=view","select(lastSourcesView)","setAIView(lastAIView)"])assert.ok(ui.includes(token),token);
 });
+
+test('AI creation retains Save Unpublished alongside generated preview and explains evidence outcomes',()=>{
+ assert.ok(ui.includes("if(save)generationPanel.append(save)"));
+ assert.ok(ui.includes("drafts.append(draftControls)"));
+ assert.ok(ui.includes("if(savedResults)drafts.append(savedResults)"));
+ assert.ok(ui.includes("viewDrafts.addEventListener('click',()=>setAIView('drafts'))"));
+ assert.ok(ui.includes('sl-evidence-next-step'));
+ assert.ok(ui.includes('No indexed passages found. Refine the topic'));
+ assert.ok(ui.includes('Evidence found for '+"'"+'+topic'));
+});
