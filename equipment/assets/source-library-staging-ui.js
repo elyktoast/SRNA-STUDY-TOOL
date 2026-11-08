@@ -1,6 +1,7 @@
 (()=>{'use strict';
 if(location.hostname!=='staging.srnastudytool.com'||!window.MBU_SOURCE_LIBRARY_STAGING?.enabled)return;
 if(window.MBUStagingSourceWorkbench?.mount)return;
+if(!document.body){window.addEventListener('DOMContentLoaded',()=>{if(!window.MBUStagingSourceWorkbench?.mount){const script=document.createElement('script');script.src=document.currentScript?.src||'';if(script.src)document.body.append(script);}}, {once:true});return;}
 const storage=window.MBUSourceMaterialStagingStorage;
 if(!storage){console.error('Staging Source Library storage adapter unavailable');return;}
 const style=document.createElement('style');
@@ -300,10 +301,10 @@ function ensureAICommandCenter(){
  const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||view!==name;for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
  center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('drafts');
  create.append(evidencePanel);
- const draftControls=generationPanel.querySelector('#sl-save-generated')?.closest('.sl-row');
+ const draftControls=generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
- if(draftControls){const save=draftControls.querySelector('#sl-save-generated');if(save)generationPanel.append(save);drafts.append(draftControls);const viewDrafts=draftControls.querySelector('#sl-list-generated');if(viewDrafts)viewDrafts.addEventListener('click',()=>setAIView('drafts'));}
+ if(draftControls){const save=generationPanel.querySelector('#sl-save-generated')||draftControls.querySelector('#sl-save-generated');if(save&&save.parentElement!==generationPanel)generationPanel.append(save);drafts.append(draftControls);const viewDrafts=draftControls.querySelector('#sl-list-generated');if(viewDrafts)viewDrafts.addEventListener('click',()=>setAIView('drafts'));}
  const savedResults=generationPanel.querySelector('#sl-saved-results');if(savedResults)drafts.append(savedResults);
  if(draftDetail)editor.querySelector('#sl-clinical-editor-body').append(draftDetail);
  if(revisionEditor&&revisionEditor.parentElement!==draftDetail)editor.querySelector('#sl-clinical-editor-body').append(revisionEditor);
@@ -332,8 +333,8 @@ function ensureResearchLayout(){
  return research;
 }
 function mountInAdmin(host,section){
- if(!host || !host.isConnected)return false;
- if(dialog.open)dialog.close();
+ if(!host || !host.isConnected || !['library','generation'].includes(section))return false;
+ if(dialog.open && !dialog.dataset.embedded)dialog.close();
  if(dialog.parentElement!==host)host.append(dialog);
  dialog.dataset.embedded='true';
  dialog.setAttribute('open','');
@@ -342,7 +343,7 @@ function mountInAdmin(host,section){
  const isAI=section==='generation';
  dialog.classList.toggle('sl-workspace-ai',isAI);
  dialog.classList.toggle('sl-workspace-sources',!isAI);
- if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');const drafts=center.querySelector('#sl-ai-drafts-content');for(const child of [...drafts.children])generationPanel.append(child);const detail=center.querySelector('#sl-draft-detail');if(detail)generationPanel.append(detail);body.append(evidencePanel,providerPanel,generationPanel);center.remove();}
+ if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');const drafts=center.querySelector('#sl-ai-drafts-content');if(drafts)for(const child of [...drafts.children])generationPanel.append(child);const detail=center.querySelector('#sl-draft-detail');if(detail)generationPanel.append(detail);body.append(evidencePanel,providerPanel,generationPanel);center.remove();}
  if(isAI&&dialog.querySelector('#sl-research-layout')){const research=dialog.querySelector('#sl-research-layout');const body=dialog.querySelector('.sl-body');body.append(dashboard,librarySearch,list,evidencePanel);research.remove();}
  const body=dialog.querySelector('.sl-body');
  let heading=body.querySelector('.sl-workspace-heading');
