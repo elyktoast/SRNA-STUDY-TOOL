@@ -154,6 +154,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
                                  evidence_packet=evidence,
                                  rewrite=rewrite if rewrite_enabled else None,
+                                 review_repair=rewrite if rewrite_enabled else None,
                                  blind_reviewer=blind_reviewer,
                                  reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
                                  semantic_lookup=semantic_lookup)
