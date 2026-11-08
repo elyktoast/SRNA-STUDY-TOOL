@@ -32,7 +32,9 @@ test('AI navigation scrolls only the contained admin workspace',()=>{
 });
 
 test('PDF preview replaces center reader placeholder and reports viewer failures',()=>{
+ assert.ok(ui.includes("const target=dialog.querySelector('#sl-research-preview')"));
  assert.ok(ui.includes('if(target)target.replaceChildren()'));
+ assert.ok(ui.includes('PDF reader panel is unavailable'));
  assert.ok(ui.includes("frame.addEventListener('error'"));
  assert.ok(ui.includes('Opening textbook in the document reader'));
 });
