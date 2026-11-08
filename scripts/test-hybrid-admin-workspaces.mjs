@@ -36,7 +36,7 @@ test('PDF preview replaces center reader placeholder and reports viewer failures
  assert.ok(ui.includes('if(target)target.replaceChildren()'));
  assert.ok(ui.includes('PDF reader panel is unavailable'));
  assert.ok(ui.includes("frame.addEventListener('error'"));
- assert.ok(ui.includes('Opening textbook in the document reader'));
+ assert.ok(ui.includes("previewState.textContent='Loading PDF…'"));
 });
 test('provider diagnostic does not imply all providers were checked',()=>{
  assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
