@@ -24,3 +24,9 @@ test('clinical editor remains hidden until unpublished draft and revision verifi
  assert.ok(ui.includes("currentDraftQuestion=revision.current_question;detail.hidden=false"),'only verified revision reveals editor');
  assert.ok(ui.includes("catch(error){currentDraftQuestion=null;detail.hidden=true"),'failed draft load must hide editor');
 });
+
+test('AI navigation scrolls only the contained admin workspace',()=>{
+ assert.ok(ui.includes("dialog.closest('.admin-main')"),'scroll should target admin workspace');
+ assert.ok(!ui.includes("center.scrollIntoView("),'AI navigation must not scroll the page');
+ assert.ok(!ui.includes("detail.scrollIntoView("),'draft opening must not scroll the page');
+});
