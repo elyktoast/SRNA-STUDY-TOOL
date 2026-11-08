@@ -72,13 +72,14 @@ genEl('sl-generate-one').onclick=async()=>{
   if(result.dry_run!==false||result.can_publish!==false||result.database_writes!==false||result.requires_human_review!==true||!result.item)throw Error('Unsafe or incomplete generated question.');
   generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);
   const preview=genEl('sl-generated-preview');
-  const evidenceCount=Array.isArray(result.source_evidence)?result.source_evidence.length:
-    (Array.isArray(result.source_evidence?.sources)?result.source_evidence.sources.length:null);
+  const evidenceCount=Array.isArray(result.source_evidence?.passage_ids)?result.source_evidence.passage_ids.length:
+    (Array.isArray(result.source_evidence)?result.source_evidence.length:
+    (Array.isArray(result.source_evidence?.sources)?result.source_evidence.sources.length:null));
   const issues=Array.isArray(result.generator_issues)?result.generator_issues:[];
   const reviewNote=document.createElement('p');reviewNote.className='sl-muted';
   reviewNote.textContent=(evidenceCount===null?'Source evidence: inspect technical details.':evidenceCount+' source evidence entries returned.')+
     (issues.length?' '+issues.length+' generator issue(s) require review.':'')+
-    ' Verify each citation against the indexed textbook before approval.';
+    ' Indexed PDF page locations are not verified printed-page citations. Check the source before approval.';
   preview.append(reviewNote);preview.hidden=false;genEl('sl-gen-technical').hidden=false;genEl('sl-gen-result').textContent=JSON.stringify({question:result.item,screening:result.screening,source_evidence:result.source_evidence,issues:result.generator_issues},null,2);
   genEl('sl-gen-result').hidden=false;genEl('sl-gen-status').textContent='Generated for review. Not saved or published.';
   genEl('sl-save-generated').disabled=!result.save_payload;
