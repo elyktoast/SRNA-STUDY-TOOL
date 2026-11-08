@@ -52,6 +52,20 @@ class ScreenedGenerationTests(unittest.TestCase):
 
     @patch("item_generation_screened_v2.intake")
     @patch("item_generation_screened_v2.generate_one")
+    def test_no_semantic_index_never_counts_as_duplicate_pass(self, generate, intake):
+        generate.return_value = {"item": {"item_id": "new-1"}, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{"status": "draft", "screening": {
+            "stages": {"duplicates": {"status": "pass", "issues": []},
+                       "blind_model": {"status": "pending", "issues": []}},
+            "screening_complete": True}}]}
+        result = generate_and_screen(None, **ARGS)
+        self.assertEqual(result["screening"]["stages"]["duplicates"]["status"], "pending")
+        self.assertIn("duplicates", result["screening"]["pending_verifications"])
+        self.assertFalse(result["screening"]["screening_complete"])
+        self.assertFalse(result["can_publish"])
+
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
     def test_pending_verifications_are_explicit(self, generate, intake):
         generate.return_value = {"item": {"item_id": "new-1"}, "schema_issues": []}
         intake.return_value = {"draft_reviews": [{
