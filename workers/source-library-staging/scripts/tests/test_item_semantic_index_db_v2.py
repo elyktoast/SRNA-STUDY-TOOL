@@ -91,7 +91,7 @@ class SemanticIndexTests(unittest.TestCase):
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
         with self.assertRaisesRegex(ValueError, "exhaustive"):
-            callback({"stem": "Clinical stem"})
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
 if __name__ == "__main__":
     unittest.main()
