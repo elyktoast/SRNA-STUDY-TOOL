@@ -46,7 +46,7 @@ test('provider diagnostic does not imply all providers were checked',()=>{
 
 test('guided topic picker preserves custom topics and blueprint safety',()=>{
  assert.ok(ui.includes('id="sl-topic-preset"'));
- assert.ok(ui.includes("if(event.target.value)evidencePanel.querySelector('#sl-topic').value=event.target.value"));
+ assert.ok(ui.includes("topicInput.dispatchEvent(new Event('input'"));
  assert.ok(ui.includes("const topic=el('sl-topic').value.trim()"));
  assert.ok(ui.includes("const request={topic,textbook_id,mode:el('sl-mode').value"));
  assert.ok(ui.includes('No indexed textbook ID available in library metadata'));
