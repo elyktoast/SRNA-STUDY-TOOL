@@ -50,7 +50,10 @@ def compare(item, response):
     if item.get("format") in ("MC", "MS"):
         chosen = response.get("key")
         expected = item.get("key")
-        if not isinstance(chosen, list) or not isinstance(expected, list) or set(chosen) != set(expected):
+        if (not isinstance(chosen, list) or not isinstance(expected, list)
+                or not all(isinstance(v, str) for v in chosen + expected)
+                or len(chosen) != len(set(chosen))
+                or set(chosen) != set(expected)):
             return [{"rule_id": "R-12.1", "message": "Blind solve disagrees with keyed response"}]
         return []
     return [{"rule_id": "R-12.1", "message": "Format-specific blind scoring not yet implemented"}]

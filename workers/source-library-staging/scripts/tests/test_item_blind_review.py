@@ -16,6 +16,16 @@ class BlindReviewTests(unittest.TestCase):
         self.assertNotIn("error_pattern", result["options"][0])
         self.assertEqual(compare(item, {"item_id": "x", "key": ["A"]}), [])
         self.assertTrue(compare(item, {"item_id": "x", "key": ["B"]}))
+    def test_malformed_blind_answers_fail_closed(self):
+        item = {"item_id": "x", "format": "MS", "stem": "Select",
+                "key": ["A", "B"]}
+        for response_key in (None, "A", [["A"], "B"], [{"id": "A"}],
+                             ["A", "A", "B"], ["A"], ["B", "C"]):
+            with self.subTest(response_key=response_key):
+                issues = compare(item, {"item_id": "x", "key": response_key})
+                self.assertTrue(issues)
+                self.assertEqual(issues[0]["rule_id"], "R-12.1")
+
     def test_non_mc_not_falsely_passed(self):
         item = {"item_id": "n", "format": "SA", "stem": "Calculate"}
         self.assertTrue(compare(item, {"item_id": "n", "answer": 5}))
