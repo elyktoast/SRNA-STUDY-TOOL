@@ -4,6 +4,16 @@ name: Deploy private staging reviewer
 # Avoid container rebuilds for every staging Python source/test commit.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'workers/source-library-staging/reviewer-gateway/**'
+      - 'workers/source-library-staging/reviewer-service/**'
+      - 'workers/source-library-staging/scripts/**'
+      - 'scripts/diagnose-source-reviewer-staging.mjs'
+      - 'scripts/test-source-library-reviewer-gateway.mjs'
+      - '.github/workflows/deploy-source-reviewer-staging.yml'
 permissions:
   contents: read
 concurrency:
