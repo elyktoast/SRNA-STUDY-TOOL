@@ -136,9 +136,10 @@ def process_backlog(client, owner_uid, limit=10, apply=False,
             # Do not include connection strings, secret-bearing exception text, or file contents.
             results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
     return {"mode": "apply" if apply else "dry-run", "results": results,
-            "succeeded": sum(bool(x["ok"]) and not x.get("skipped") for x in results),
+            "succeeded": sum(bool(x["ok"]) and not x.get("skipped") and not x.get("needs_review") for x in results),
             "failed": sum(not x["ok"] for x in results),
-            "skipped": skipped}
+            "skipped": skipped,
+            "needs_review": sum(bool(x.get("needs_review")) for x in results)}
 
 
 def main():
