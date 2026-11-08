@@ -3,6 +3,7 @@
 No provider calls, mutations, or approval/publishing side effects.
 """
 import json
+import hashlib
 import re
 from pathlib import Path
 from uuid import UUID
@@ -33,6 +34,16 @@ def load_inventory(path):
                 or item_id in inventory):
             raise ValueError("Invalid or duplicate canonical item")
         inventory[item_id] = stem_hash
+    canonical = sorted(
+        ({"item_id": item_id, "stem_hash": stem_hash}
+         for item_id, stem_hash in inventory.items()),
+        key=lambda entry: entry["item_id"],
+    )
+    calculated = hashlib.sha256(
+        json.dumps(canonical, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    ).hexdigest()
+    if calculated != digest:
+        raise ValueError("Canonical inventory digest mismatch")
     return inventory, digest
 
 
