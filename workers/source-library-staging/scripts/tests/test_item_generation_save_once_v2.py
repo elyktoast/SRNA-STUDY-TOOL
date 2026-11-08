@@ -92,7 +92,7 @@ class SaveOnceTests(unittest.TestCase):
         self.assertEqual(conn.commits, 0)
 
     def test_failed_checkpoint_link_does_not_commit(self):
-        conn = Connection({"item_id": "test"}, update_count=0)
+        conn = Connection({"save_payload": {"textbook_id": BOOK}}, update_count=0)
         with self.assertRaisesRegex(ValueError, "association failed"):
             save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
                       checkpoint_key=KEY,
