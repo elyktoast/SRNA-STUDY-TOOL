@@ -39,15 +39,15 @@ concurrency:
   cancel-in-progress: false
 jobs:
   index:
-    if: github.ref == 'refs/heads/fix/source-phase-b-mixed-scan-ocr'
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: source-library-staging
     steps:
-      - name: Check out staging branch only
+      - name: Check out exact dispatched main revision
         uses: actions/checkout@v4
         with:
-          ref: fix/source-phase-b-mixed-scan-ocr
+          ref: ${{ github.sha }}
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
