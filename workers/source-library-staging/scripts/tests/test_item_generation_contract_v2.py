@@ -31,6 +31,21 @@ class ContractTests(unittest.TestCase):
             self.assertIn(requirement, instructions)
         self.assertFalse(request["auto_publish"])
 
+    def test_first_pass_evidence_prompt_guards_against_prior_revision_failures(self):
+        request = build_step("item_draft", **BASE, format="MC",
+                             concept_card={"objective": "III.H.4"})
+        instructions = request["instructions"]
+        for requirement in (
+            "character-for-character", "line breaks and hyphenation",
+            "exact substring", "do not guess a pdf_page",
+            "same item_draft response", "keys exactly match the option IDs",
+            "affirmative support or contradiction", "negatively worded NOT/EXCEPT",
+        ):
+            with self.subTest(requirement=requirement):
+                self.assertIn(requirement, instructions)
+        self.assertFalse(request["auto_publish"])
+        self.assertTrue(request["human_review_required"])
+
     def test_reject_unsupported_format_and_missing_evidence(self):
         with self.assertRaises(ValueError):
             build_step("item_draft", **BASE, format="TF", concept_card={})

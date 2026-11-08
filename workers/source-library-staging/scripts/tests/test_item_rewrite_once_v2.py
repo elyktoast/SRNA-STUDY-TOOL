@@ -34,6 +34,26 @@ class RewriteTests(unittest.TestCase):
         self.assertEqual(result["issues"], [])
         self.assertFalse(result["can_publish"])
 
+    def test_rewrite_request_targets_reported_evidence_defects(self):
+        original = draft()
+        issues = [{"rule_id": "R-2.5", "message": "Excerpt mismatch"},
+                  {"rule_id": "R-12.4", "message": "Missing option evidence"}]
+        captured = []
+        def rewrite(request):
+            captured.append(request)
+            return request["item"]
+        result = attempt_once(original, issues, rewrite, lambda item: issues)
+        self.assertEqual(len(captured), 1)
+        self.assertEqual(captured[0]["issues"], issues)
+        guidance = captured[0]["repair_instructions"]
+        for phrase in ("Fix only", "R-2.5", "R-12.4", "verbatim",
+                       "source silence", "unpublished", "clinical review"):
+            self.assertIn(phrase, guidance)
+        self.assertEqual(captured[0]["max_rewrites"], 1)
+        self.assertEqual(result["rewrite_attempts"], 1)
+        self.assertFalse(result["can_publish"])
+        self.assertEqual(original, draft())
+
     def test_rejects_model_metadata_and_approval_changes(self):
         for field, value in (("model", "forged"), ("item_id", "forged"),
                              ("status", "approved"), ("objective", "I.A.1")):
