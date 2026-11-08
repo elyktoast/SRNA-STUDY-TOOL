@@ -42,15 +42,16 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
         readiness = path == "/generation/index-readiness"
+        checkpoint_readiness = path == "/generation/checkpoint-readiness"
         diagnostic = path == "/generation/provider-check"
-        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness") and not draft_match:
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
             allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (
-                ("GET",) if diagnostic or readiness or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
+                ("GET",) if diagnostic or readiness or checkpoint_readiness or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -62,7 +63,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path not in ("/generation/preflight", "/generation/one"):
-            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (("GET",) if diagnostic or readiness or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (("GET",) if diagnostic or readiness or checkpoint_readiness or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
@@ -76,6 +77,30 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if checkpoint_readiness:
+            if method != "GET":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            try:
+                # Only the authenticated admin reaches this query. No writes or provider calls.
+                with conn_factory() as conn:
+                    with conn.cursor() as cur:
+                        cur.execute("""
+                          select current_database() = 'postgres',
+                            to_regclass('source_library_staging.generation_checkpoints_v2') is not null,
+                            has_table_privilege(current_user,
+                              'source_library_staging.generation_checkpoints_v2', 'SELECT'),
+                            has_table_privilege(current_user,
+                              'source_library_staging.generation_checkpoints_v2', 'INSERT')
+                        """)
+                        row = cur.fetchone()
+                ready = bool(row and len(row) == 4 and all(v is True for v in row))
+                return respond("200 OK" if ready else "503 Service Unavailable",
+                               {"ready": ready, "check": "checkpoint_database_readiness",
+                                "generation_performed": False, "database_writes": False})
+            except Exception:
+                return respond("503 Service Unavailable",
+                               {"ready": False, "check": "checkpoint_database_readiness",
+                                "generation_performed": False, "database_writes": False})
         if readiness:
             if method != "GET":
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
