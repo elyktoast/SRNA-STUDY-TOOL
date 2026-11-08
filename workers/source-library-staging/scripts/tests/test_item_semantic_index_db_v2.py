@@ -1,7 +1,6 @@
 import sys
 import unittest
 from pathlib import Path
-import re
 from unittest.mock import Mock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_semantic_index_db_v2 import lookup, MAX_ROWS, PAGE_SIZE
@@ -76,6 +75,35 @@ class SemanticIndexTests(unittest.TestCase):
                           expected_stem_hashes=self.hashes({"prior-1", "draft-1"}))
         with self.assertRaisesRegex(ValueError, "Stale"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
+
+    def test_invalid_hash_inventory_rejected(self):
+        for invalid in (
+            {"prior-1": "bad"},
+            {"prior-1": "A" * 64},
+            {"prior-1": "a" * 64, "extra": "a" * 64},
+            {},
+        ):
+            with self.subTest(invalid=invalid):
+                with self.assertRaisesRegex(ValueError, "stem hashes"):
+                    lookup(Mock(), owner_uid=OWNER, embedding_model="test-v1",
+                           embed=lambda stem: [1.0, 0.0], index_ready=True,
+                           expected_item_ids={"prior-1"},
+                           expected_stem_hashes=invalid)
+
+    def test_matching_hashes_across_multiple_pages(self):
+        ids = ["prior-" + str(i).zfill(4) for i in range(PAGE_SIZE + 2)]
+        conn, cur = self.connection([])
+        cur.fetchall.side_effect = [
+            [(item_id, [1.0, 0.0], "a" * 64) for item_id in ids[:PAGE_SIZE]],
+            [(item_id, [1.0, 0.0], "a" * 64) for item_id in ids[PAGE_SIZE:]],
+        ]
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids=set(ids) | {"draft-1"},
+                          expected_stem_hashes=self.hashes(set(ids) | {"draft-1"}))
+        result = callback({"stem": "Clinical stem", "item_id": "draft-1"})
+        self.assertTrue(result["search_complete"])
+        self.assertEqual(len(result["neighbors"]), len(ids))
 
     def test_missing_canonical_inventory_rejected(self):
         with self.assertRaisesRegex(ValueError, "canonical item inventory"):
