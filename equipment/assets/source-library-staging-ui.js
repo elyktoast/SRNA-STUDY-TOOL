@@ -33,7 +33,7 @@ groqButton.addEventListener('click',async()=>{
   const result=await storage.checkGroqConnection();
   if(result.check==='hybrid_provider_readiness'&&Array.isArray(result.providers)){
    const statuses=result.providers.map(p=>String(p.provider||'Unknown')+': '+String(p.state||'UNKNOWN').replaceAll('_',' ').toLowerCase()).join(' · ');
-   output.textContent=statuses+'. Reviewer container relay: '+(result.container_relay==='OK'?'available':'unavailable')+'. '+(result.generation_ready===true?'Connection checks passed; generation not tested.':'Generation readiness not verified.')+' No question generated.';
+   output.textContent=statuses+'. Reviewer container relay: '+(result.container_relay==='OK'?'available':'unavailable')+'. '+(result.metadata_ready===true?'All three provider metadata checks passed; generation not tested.':'One or more provider metadata checks need attention. Generation readiness not verified.')+' No question generated.';
   }else{
    const status=result.provider_status;
    output.textContent='Groq container route: '+(String(status)==='200'?'connected':(status||result.rule||'unknown'))+'. Gateway route: '+(String(result.worker_status)==='200'?'connected':(result.worker_status||result.worker_rule||'unknown'))+'. Gemini and Cloudflare AI were not checked. No question generated.';
