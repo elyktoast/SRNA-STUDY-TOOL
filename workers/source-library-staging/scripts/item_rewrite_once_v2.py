@@ -26,7 +26,7 @@ def attempt_once(original, issues, rewrite, validate):
                    "trusted evidence; never invent a citation. For R-12.4, give "
                    "every option an evidence-grounded verdict, valid passage IDs, "
                    "and an explanation; source silence cannot refute a distractor. "
-                   "If the supplied evidence is insufficient, do not fabricate "
+                    "If an option is ambiguous, potentially also correct, or its explanation lacks affirmative source support, repair the STEM conditions or replace the INCORRECT option with a distinct clinically plausible, demonstrably false alternative; never change the protected correct answer or its text. Supply a separate evidence-grounded explanation for EVERY option, including the correct one, and update distractor_evidence and rationale consistently. Do not infer that an answer is false just because a passage does not mention it. If the supplied evidence is insufficient, do not fabricate "
                    "a repair. Return the complete revised item as a JSON object. "
                    "The result remains unpublished and requires clinical review."
                )}
