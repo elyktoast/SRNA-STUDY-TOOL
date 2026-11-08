@@ -49,6 +49,30 @@ class SemanticIndexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "coverage"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
+    def test_missing_candidate_id_rejected(self):
+        conn, _ = self.connection([])
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids={"prior-1"})
+        with self.assertRaisesRegex(ValueError, "candidate item ID"):
+            callback({"stem": "Clinical stem"})
+
+    def test_wrong_candidate_dimensions_rejected(self):
+        conn, _ = self.connection([])
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0], index_ready=True,
+                          expected_item_ids={"draft-1"})
+        with self.assertRaisesRegex(ValueError, "dimensions"):
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
+
+    def test_invalid_indexed_embedding_rejected(self):
+        conn, _ = self.connection([("prior-1", None)])
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids={"prior-1", "draft-1"})
+        with self.assertRaisesRegex(ValueError, "indexed embedding"):
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
+
     def test_unverified_index_rejected(self):
         with self.assertRaises(ValueError):
             lookup(Mock(), owner_uid=OWNER, embedding_model="test-v1",
@@ -59,7 +83,7 @@ class SemanticIndexTests(unittest.TestCase):
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [0.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
         with self.assertRaises(ValueError):
-            callback({"stem": "Clinical stem"})
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
     def test_incomplete_result_rejected(self):
         conn, _ = self.connection([("prior-" + str(i), [1.0, 0.0])
@@ -67,7 +91,7 @@ class SemanticIndexTests(unittest.TestCase):
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
         with self.assertRaisesRegex(ValueError, "exhaustive"):
-            callback({"stem": "Clinical stem"})
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
 if __name__ == "__main__":
     unittest.main()

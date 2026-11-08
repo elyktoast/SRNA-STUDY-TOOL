@@ -23,24 +23,31 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
     def semantic_lookup(item):
         if not isinstance(item, dict) or not isinstance(item.get("stem"), str) or not item["stem"].strip():
             raise ValueError("Question stem required")
+        candidate_id = item.get("item_id")
+        if not isinstance(candidate_id, str) or not candidate_id.strip():
+            raise ValueError("Stable candidate item ID required")
         vector = embed(item["stem"])
         cosine(vector, vector)
+        if len(vector) < 2 or len(vector) > 4096:
+            raise ValueError("Invalid candidate embedding dimensions")
         with conn.cursor() as cur:
             cur.execute(
                 """select item_id, embedding from source_library_staging.question_semantic_index_v2
                    where owner_uid=%s and embedding_model=%s and item_id<>%s
                    order by item_id limit %s""",
-                (owner, embedding_model, item.get("item_id", ""), MAX_ROWS + 1))
+                (owner, embedding_model, candidate_id, MAX_ROWS + 1))
             rows = cur.fetchall()
         if len(rows) > MAX_ROWS:
             raise ValueError("Semantic index exceeds exhaustive search cap")
         returned_ids = [item_id for item_id, _ in rows]
-        required_ids = expected_item_ids - {item.get("item_id")}
+        required_ids = expected_item_ids - {candidate_id}
         if (len(returned_ids) != len(set(returned_ids))
                 or set(returned_ids) != required_ids):
             raise ValueError("Semantic index coverage does not match canonical item inventory")
         neighbors = []
         for item_id, embedding in rows:
+            if not isinstance(embedding, (list, tuple)):
+                raise ValueError("Invalid indexed embedding")
             neighbor = list(embedding)
             cosine(vector, neighbor)
             neighbors.append({"item_id": item_id, "embedding": neighbor})
