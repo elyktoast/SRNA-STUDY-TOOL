@@ -49,6 +49,27 @@ class GenerationCliTests(unittest.TestCase):
 
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     @patch("run_grounded_generation_v2.make_transport")
+    def test_preflight_reports_review_readiness_without_provider_calls(self, transport, evidence):
+        env = {"STAGING_ONLY": "true", "AI_GENERATOR_MODEL": "model-a",
+               "AI_REVIEWER_MODEL": "model-b", "AI_BLIND_REVIEW_OPT_IN": "true",
+               "AI_REWRITE_OPT_IN": "true"}
+        readiness = execute(object(), ARGS, env)["review_readiness"]
+        self.assertEqual(readiness["blind_review"], "configured")
+        self.assertEqual(readiness["rewrite"], "configured")
+        self.assertFalse(readiness["independent_review_completed"])
+        transport.assert_not_called()
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    @patch("run_grounded_generation_v2.make_transport")
+    def test_preflight_explains_missing_reviewer_separation(self, transport, evidence):
+        env = {"STAGING_ONLY": "true", "AI_GENERATOR_MODEL": "same-model",
+               "AI_REVIEWER_MODEL": "same-model", "AI_BLIND_REVIEW_OPT_IN": "true"}
+        readiness = execute(object(), ARGS, env)["review_readiness"]
+        self.assertEqual(readiness["blind_review"], "reviewer_must_differ")
+        transport.assert_not_called()
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    @patch("run_grounded_generation_v2.make_transport")
     def test_paid_calls_require_two_opt_ins(self, transport, evidence):
         args = SimpleNamespace(**{**vars(ARGS), "execute": True})
         with self.assertRaisesRegex(ValueError, "explicit opt-in"):

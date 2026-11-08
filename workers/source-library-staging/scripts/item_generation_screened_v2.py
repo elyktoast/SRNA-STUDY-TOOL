@@ -30,6 +30,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id)
     rewrite_attempts = 0
+    rewrite_original_issues = list(generated["schema_issues"])
     if rewrite is not None and generated["schema_issues"]:
         def validate_rewrite(candidate):
             problems = validate_complete_item(candidate)
@@ -52,6 +53,12 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                    "duplicates", "blind_model", "human_review")
         stages = {name: {"status": "pending", "issues": []} for name in pending}
         stages["schema"] = {"status": "fail", "issues": issues}
+        for name in ("deterministic_text", "math", "duplicates", "blind_model"):
+            stages[name]["blocked_by"] = "schema"
+            stages[name]["reason"] = "Generation validation failed; downstream screening not run"
+        if not source_failure:
+            stages["evidence"]["blocked_by"] = "schema"
+            stages["evidence"]["reason"] = "Generation validation failed; downstream screening not run"
         if source_failure:
             stages["evidence"] = {"status": "fail",
                                   "issues": [x for x in issues if x["rule_id"] in ("R-2.5", "R-17")]}
@@ -63,10 +70,13 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                               "next_state": state, "stages": stages,
                               "pending_verifications": remaining,
                               "rewrite_attempts_allowed": 1 - rewrite_attempts,
-                              "rewrite_attempts_used": rewrite_attempts}, "next_state": state,
+                              "rewrite_attempts_used": rewrite_attempts,
+                              "rewrite_original_issues": rewrite_original_issues if rewrite_attempts else [],
+                              "rewrite_revised_issues": issues if rewrite_attempts else []}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
                 "database_writes": False, "rewrite_attempts_used": rewrite_attempts}
     semantic_lookup_failed = False
+    semantic_lookup_reason = None
     if semantic_lookup is not None:
         try:
             pair = semantic_lookup(generated["item"])
@@ -79,9 +89,20 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                 raise ValueError("Incomplete semantic lookup")
             from item_semantic_duplicates import screen as verify_semantic_vectors
             verify_semantic_vectors(embedding, neighbors)
-        except Exception:
+        except Exception as exc:
             embedding, neighbors = None, None
             semantic_lookup_failed = True
+            semantic_lookup_reason = (
+                str(exc) if isinstance(exc, ValueError) and str(exc) in (
+                    "Semantic index not verified",
+                    "Complete canonical item inventory required",
+                    "Complete canonical stem hashes required",
+                    "Semantic index coverage does not match canonical item inventory",
+                    "Stale semantic index stem hash",
+                    "Unverified semantic lookup result",
+                    "Incomplete semantic lookup",
+                ) else "Semantic index lookup failed or returned unverified coverage"
+            )
     indexed = {p["passage_id"]: {
         "passage_id": p["passage_id"], "textbook_id": p["textbook_id"],
         "pdf_page": p.get("pdf_page_start"), "text": p["excerpt"]}
@@ -96,9 +117,14 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     screening = result["screening"]
     if semantic_lookup_failed or (semantic_lookup is None and embedding is None):
         # A stem-only or absent-index check is not an exhaustive semantic search.
-        screening["stages"]["duplicates"] = {"status": "pending", "issues": []}
+        screening["stages"]["duplicates"] = {
+            "status": "pending", "issues": [],
+            "reason": semantic_lookup_reason or "Semantic index not supplied; exact-stem check is insufficient"
+        }
         screening["screening_complete"] = False
     screening["rewrite_attempts_used"] = rewrite_attempts
+    screening["rewrite_original_issues"] = rewrite_original_issues if rewrite_attempts else []
+    screening["rewrite_revised_issues"] = generated["schema_issues"] if rewrite_attempts else []
     screening["rewrite_attempts_allowed"] = 1 - rewrite_attempts
     next_state = result["status"]
     pending = [name for name in ("schema", "deterministic_text", "math", "evidence",
