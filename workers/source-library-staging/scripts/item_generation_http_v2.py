@@ -19,7 +19,9 @@ FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
 REQUIRED = {"topic", "mode", "domain", "section", "objective", "item_id"}
 
 
-def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_factory=None):
+def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_factory=None, readiness_factory=None):
+    if readiness_factory is not None and not callable(readiness_factory):
+        raise ValueError("Trusted readiness factory required")
     if semantic_lookup_factory is not None and not callable(semantic_lookup_factory):
         raise ValueError("Trusted semantic lookup factory required")
     if not callable(conn_factory) or not callable(resolve_admin):
@@ -39,15 +41,16 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
 
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
+        readiness = path == "/generation/index-readiness"
         diagnostic = path == "/generation/provider-check"
-        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check") and not draft_match:
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
             allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (
-                ("GET",) if diagnostic or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
+                ("GET",) if diagnostic or readiness or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -73,6 +76,18 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if readiness:
+            if method != "GET":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            if readiness_factory is None:
+                return respond("503 Service Unavailable", {"ready": False, "error": "index_readiness_unavailable"})
+            try:
+                result = readiness_factory(owner)
+                if not isinstance(result, dict) or type(result.get("ready")) is not bool:
+                    raise ValueError("Invalid readiness result")
+                return respond("200 OK", result)
+            except Exception:
+                return respond("503 Service Unavailable", {"ready": False, "error": "index_readiness_unavailable"})
         if diagnostic:
             if method != "GET":
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
