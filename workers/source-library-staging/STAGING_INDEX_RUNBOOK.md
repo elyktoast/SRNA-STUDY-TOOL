@@ -1,3 +1,13 @@
+## Current main-branch indexing workflow (November 2026)
+
+After this change merges, use GitHub Actions → **Source Library staging indexing (manual)** → **Run workflow** → branch **main**. The workflow checks out the exact dispatched main revision, and remains manual, staging-only, and dry-run by default. The GitHub environment `source-library-staging` must permit main and contain the staging R2/database secrets; otherwise the job will be blocked. Do not grant production credentials.
+
+For a newly uploaded PDF, use its exact owner-scoped `r2_key` from the Sources storage metadata (or leave it empty to scan pending PDFs), `limit=1`, `ocr=true`, `apply=false`. Review page counts, OCR failures, extracted passages and source fingerprint. Then run the same file with `apply=true` only after confirming staging schema migrations 001–003 and database permissions. Verify its ready status and source-backed search before generating questions. Do not use `force_reindex` for legacy books without verified source provenance.
+
+**Automatic upload-triggered indexing remains unimplemented.** The older instructions below describe historical feature-branch setup and should not be used as current branch selection guidance.
+
+---
+
 # Staging textbook indexing — operator runbook
 
 This workflow is **manual only**. The attempted scheduled trigger was removed because GitHub schedules run from the default branch, not this unmerged feature branch. Do not run against production, merge the staging branch, or enable scheduled indexing until the first import is reviewed.
