@@ -281,6 +281,13 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 semantic_lookup = (semantic_lookup_factory(conn, owner, args.textbook_id)
                                    if live and semantic_lookup_factory is not None else None)
                 result = execute(conn, args, environment, semantic_lookup=semantic_lookup)
+                if live:
+                    # Persist the same generated item in the private, owner-scoped
+                    # staging draft bank. This never publishes or approves it.
+                    saved = save(conn, {**result["save_payload"], "owner_uid": owner})
+                    result = {**result, "draft_id": saved["draft_id"],
+                              "draft_status": saved["status"], "published": False,
+                              "requires_human_review": True}
             return respond("200 OK", result)
         except ValueError as exc:
             # Safe fixed categories only. Do not return source passages, model text,

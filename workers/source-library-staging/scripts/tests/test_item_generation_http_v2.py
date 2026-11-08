@@ -119,6 +119,49 @@ class DraftRevisionHttpTests(unittest.TestCase):
         self.assertEqual(self.call("PUT",payload)[0],"405 Method Not Allowed")
         saver.assert_not_called()
 
+class LiveDraftPersistenceTests(unittest.TestCase):
+    def request(self, *, token="valid"):
+        app = create_app(conn_factory=Connection,
+            resolve_admin=lambda bearer: UID if bearer == "valid" else None,
+            environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"})
+        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
+        env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer " + token,
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        statuses = []
+        body = b"".join(app(env, lambda status, headers: statuses.append(status)))
+        return statuses[0], json.loads(body)
+
+    @patch("item_generation_http_v2.save", return_value={
+        "draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
+    @patch("item_generation_http_v2.execute", return_value={
+        "item": {"stem": "Synthetic"}, "save_payload": {"textbook_id": "00000000-0000-4000-8000-000000000002"},
+        "can_publish": False, "database_writes": False})
+    def test_live_result_saved_for_authenticated_owner_without_publication(self, execute, saver):
+        status, data = self.request()
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(data["draft_status"], "pending_review")
+        self.assertFalse(data["published"])
+        self.assertTrue(data["requires_human_review"])
+        self.assertEqual(data["draft_id"], "00000000-0000-4000-8000-000000000003")
+        self.assertEqual(saver.call_args.args[1]["owner_uid"], UID)
+
+    @patch("item_generation_http_v2.save", side_effect=ValueError("not ready"))
+    @patch("item_generation_http_v2.execute", return_value={
+        "item": {"stem": "Synthetic"}, "save_payload": {"textbook_id": "00000000-0000-4000-8000-000000000002"}})
+    def test_save_failure_never_reports_success(self, execute, saver):
+        status, data = self.request()
+        self.assertEqual(status, "422 Unprocessable Entity")
+        self.assertNotIn("draft_id", data)
+
+    @patch("item_generation_http_v2.save")
+    @patch("item_generation_http_v2.execute")
+    def test_unauthorized_cannot_generate_or_save(self, execute, saver):
+        self.assertEqual(self.request(token="invalid")[0], "403 Forbidden")
+        execute.assert_not_called()
+        saver.assert_not_called()
+
 class HttpPreflightTests(unittest.TestCase):
     def setUp(self):
         self.app = create_app(conn_factory=Connection, resolve_admin=lambda token: UID if token == "valid" else None,
@@ -155,8 +198,9 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertFalse(execute.call_args.args[1].execute)
         self.assertEqual(execute.call_args.args[1].owner_uid, UID)
 
-    @patch("item_generation_http_v2.execute", return_value={"dry_run": False, "item": {"stem": "Sample"}, "can_publish": False, "database_writes": False})
-    def test_single_question_requires_server_opt_in(self, execute):
+    @patch("item_generation_http_v2.execute", return_value={"dry_run": False, "item": {"stem": "Sample"}, "can_publish": False, "database_writes": False, "save_payload": {}})
+    @patch("item_generation_http_v2.save", return_value={"draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
+    def test_single_question_requires_server_opt_in(self, saver, execute):
         raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
         env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
                "HTTP_ORIGIN": "https://staging.srnastudytool.com",
@@ -177,8 +221,9 @@ class HttpPreflightTests(unittest.TestCase):
 
     @patch("item_generation_http_v2.execute", return_value={
         "dry_run": False, "item": {"stem": "Synthetic"}, "can_publish": False,
-        "database_writes": False})
-    def test_live_generation_passes_trusted_semantic_lookup(self, execute):
+        "database_writes": False, "save_payload": {}})
+    @patch("item_generation_http_v2.save", return_value={"draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
+    def test_live_generation_passes_trusted_semantic_lookup(self, saver, execute):
         calls = []
         callback = lambda item: {"embedding": [1.0, 0.0], "neighbors": [],
                                  "search_complete": True, "index_id": "staging"}
