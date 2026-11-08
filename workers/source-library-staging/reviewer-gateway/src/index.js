@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -119,6 +119,7 @@ export default {
   const generation=url.pathname==='/generation/preflight';
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
+  const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
@@ -135,13 +136,13 @@ export default {
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
-  if((generation||draftRead||providerCheck)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
+  if((generation||draftRead||providerCheck||checkpointCheck)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
   if((generation||generateOne||draftWrite)&&Number(request.headers.get('Content-Length')||0)>8192)return respond(413,origin,'{"error":"request_too_large"}');
   if((generation||generateOne||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';

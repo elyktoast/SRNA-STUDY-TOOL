@@ -169,3 +169,16 @@ test('Sources and AI initialization and remount safety',()=>{
  assert.ok(admin.includes('Source workspace script timed out.'),'timeout missing scripts');
  assert.ok(admin.includes('Workspace JavaScript error: '),'show runtime failures');
 });
+
+
+test('checkpoint readiness is a private read-only staging diagnostic, not generation',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ const http=readFileSync(new URL('../workers/source-library-staging/scripts/item_generation_http_v2.py',import.meta.url),'utf8');
+ const wsgi=readFileSync(new URL('../workers/source-library-staging/scripts/source_review_wsgi_v2.py',import.meta.url),'utf8');
+ assert.ok(gateway.includes("'/generation/checkpoint-readiness'"));
+ assert.ok(gateway.includes('checkpointCheck'));
+ assert.ok(http.includes('if checkpoint_readiness:'));
+ assert.ok(http.includes('generation_performed": False'));
+ assert.ok(http.includes('database_writes": False'));
+ assert.ok(wsgi.includes('"/generation/checkpoint-readiness"'));
+});
