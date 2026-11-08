@@ -122,6 +122,28 @@ class SaveOnceTests(unittest.TestCase):
                       checkpoint_key=KEY, saver=lambda *_: None)
         self.assertEqual(conn.queries, [])
 
+    def test_malformed_saved_draft_link_is_rejected(self):
+        conn = Connection({"save_payload": {"textbook_id": BOOK},
+                           "saved_draft": {"draft_id": "not-a-uuid"}})
+        with self.assertRaises(ValueError):
+            save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
+                      checkpoint_key=KEY, saver=lambda *_: self.fail("Must not insert"))
+        self.assertEqual(conn.commits, 0)
+
+    def test_saver_missing_draft_id_never_commits(self):
+        conn = Connection({"save_payload": {"textbook_id": BOOK}})
+        with self.assertRaisesRegex(ValueError, "identifier"):
+            save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
+                      checkpoint_key=KEY, saver=lambda *_: {"status": "pending_review"})
+        self.assertEqual(conn.commits, 0)
+
+    def test_saver_invalid_draft_uuid_never_commits(self):
+        conn = Connection({"save_payload": {"textbook_id": BOOK}})
+        with self.assertRaises(ValueError):
+            save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
+                      checkpoint_key=KEY, saver=lambda *_: {"draft_id": "invalid"})
+        self.assertEqual(conn.commits, 0)
+
     def test_invalid_fingerprint_rejected(self):
         conn = Connection({"item_id": "test"})
         with self.assertRaisesRegex(ValueError, "fingerprint"):
