@@ -186,6 +186,8 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
            any(c not in "0123456789abcdef" for c in h)
            for h in (request_hash, evidence_hash)):
         raise ValueError("Invalid checkpoint fingerprint")
+    if str(UUID(str(save_payload["textbook_id"]))) != book:
+        raise ValueError("Checkpoint textbook mismatch")
     with conn.cursor() as cur:
         cur.execute("""
           select c.completed_result
@@ -214,6 +216,8 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
                 raise ValueError("Previously saved draft unavailable")
             return {"draft_id": draft_id, "status": found[0]}
         saved = saver(conn, {**save_payload, "owner_uid": owner})
+        if not isinstance(saved, dict) or not saved.get("draft_id"):
+            raise ValueError("Draft save did not return an identifier")
         cur.execute("""
           update source_library_staging.generation_checkpoints_v2
           set completed_result=jsonb_set(completed_result, '{saved_draft}',
@@ -222,5 +226,7 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
             and request_hash=%s and evidence_hash=%s and status='completed'
         """, (json.dumps({"draft_id": saved["draft_id"]}), owner, book,
               request_hash, evidence_hash))
+        if cur.rowcount != 1:
+            raise ValueError("Checkpoint draft association failed")
     conn.commit()
     return saved
