@@ -11,7 +11,6 @@ import os
 import sys
 from pathlib import Path
 
-from import_semantic_index_v2 import prepare
 
 MODEL = "gemini-embedding-001"
 MAX_ITEMS = 10000
@@ -68,13 +67,11 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
     progress = load_progress(progress_path, source["entries"])
     # Validate all recovered vectors and their dimensions before any new calls.
     if progress:
-        sample = {"schema_version": 1, "inventory_digest": source["inventory_digest"],
-                  "embedding_model": MODEL, "entries": list(progress.values())}
         # Partial bundles cannot use the full-inventory importer; validate each
         # vector using the same bounded cosine rules as the live index.
         from item_semantic_duplicates import cosine
         dimension = None
-        for record in sample["entries"]:
+        for record in progress.values():
             vector = record["embedding"]
             if not isinstance(vector, list) or not 2 <= len(vector) <= 4096:
                 raise ValueError("Invalid recovered vector")
