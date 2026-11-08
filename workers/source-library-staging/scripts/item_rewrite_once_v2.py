@@ -17,7 +17,19 @@ def attempt_once(original, issues, rewrite, validate):
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
                  "objective", "format", "model", "status")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
-               "max_rewrites": 1, "requires_human_review": True}
+               "max_rewrites": 1, "requires_human_review": True,
+               "repair_instructions": (
+                   "Fix only the reported rule-ID issues. Preserve the question's "
+                   "clinical meaning, answer key, protected metadata, concept "
+                   "evidence IDs, and all unaffected fields. For R-2.5, use only "
+                   "exact verbatim excerpts and matching source IDs/pages from "
+                   "trusted evidence; never invent a citation. For R-12.4, give "
+                   "every option an evidence-grounded verdict, valid passage IDs, "
+                   "and an explanation; source silence cannot refute a distractor. "
+                   "If the supplied evidence is insufficient, do not fabricate "
+                   "a repair. Return the complete revised item as a JSON object. "
+                   "The result remains unpublished and requires clinical review."
+               )}
     try:
         candidate = rewrite(request)
     except Exception:
