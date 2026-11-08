@@ -58,3 +58,18 @@ test('exports deterministic canonical IDs and stem hashes without changing the d
   assert.ok(exported.entries.every(entry => /^[a-f0-9]{64}$/.test(entry.stem_hash)));
   assert.equal(audit(root, manifest, {includeEntries: true}).digest, exported.digest);
 });
+
+test('private stem export preserves inventory digest and stable ID alignment', t => {
+  const root = fixture([source('one', 2)], [question('2'), question('1')]);
+  t.after(() => fs.rmSync(root, {recursive: true, force: true}));
+  const manifest = ['course/banks.json'];
+  const baseline = audit(root, manifest, {includeEntries: true});
+  const privateExport = audit(root, manifest, {includeEntries: true, includeStems: true});
+  assert.equal(baseline.stems, undefined);
+  assert.equal(privateExport.digest, baseline.digest);
+  assert.deepEqual(privateExport.entries, baseline.entries);
+  assert.deepEqual(privateExport.stems.map(x => x.item_id),
+    privateExport.entries.map(x => x.item_id));
+  assert.deepEqual(privateExport.stems.map(x => x.stem),
+    ['Clinical question 1', 'Clinical question 2']);
+});
