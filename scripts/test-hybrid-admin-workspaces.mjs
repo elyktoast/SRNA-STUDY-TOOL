@@ -101,3 +101,12 @@ test('PDF retrieval validates bytes, times out and reader is brought into view',
  assert.ok(ui.includes("reader.scrollIntoView({behavior:'smooth',block:'nearest'})"));
  assert.ok(ui.includes("reader.prepend(notice)"));
 });
+
+test('Sources uses dedicated library reader and research tabs and PDF page navigation remounts iframe',()=>{
+ assert.ok(ui.includes('id="sl-source-subnav"'));
+ assert.ok(ui.includes("research.showSourceView=select"));
+ assert.ok(ui.includes("showSourceView?.('reader')"));
+ assert.ok(ui.includes("frame.replaceWith(next)"));
+ assert.ok(ui.includes("currentFrame.replaceWith(next)"));
+ assert.ok(ui.includes('[data-source-panel][hidden]'));
+});
