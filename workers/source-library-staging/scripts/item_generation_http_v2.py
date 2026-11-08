@@ -285,6 +285,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if live:
                     # Persist the same generated item in the private, owner-scoped
                     # staging draft bank. This never publishes or approves it.
+                    result = dict(result)
                     key = result.pop("_checkpoint_key", None)
                     if key is not None:
                         saved = save_once(conn, owner_uid=owner, save_payload=result["save_payload"],
