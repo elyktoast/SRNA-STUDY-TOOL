@@ -6,7 +6,7 @@ from item_answer_evidence_v2 import check
 
 SOURCE = [{"passage_id": "p1", "excerpt": "A trusted indexed passage"}]
 def item():
-    return {"format": "MC", "options": [{"id": x} for x in "ABCD"], "key": ["A"],
+    return {"format": "MC", "evidence": [{"passage_id": "p1"}], "options": [{"id": x} for x in "ABCD"], "key": ["A"],
             "distractor_evidence": {x: {
                 "verdict": "supports_key" if x == "A" else "refutes_distractor",
                 "passage_ids": ["p1"], "explanation": "Requires faculty verification"
@@ -15,6 +15,11 @@ def item():
 class EvidenceTests(unittest.TestCase):
     def test_all_options_have_traceability(self):
         self.assertEqual(check(item(), SOURCE), [])
+    def test_uncited_option_evidence_rejected(self):
+        x = item()
+        x["evidence"] = []
+        self.assertTrue(any("absent from item citations" in issue["message"] for issue in check(x, SOURCE)))
+
     def test_missing_distractor_rejected(self):
         x = item()
         del x["distractor_evidence"]["D"]
