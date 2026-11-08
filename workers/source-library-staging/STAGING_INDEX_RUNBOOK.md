@@ -1,3 +1,15 @@
+## Miller's Anesthesia two-volume PDF: import hold (November 2026)
+
+The owner-scoped object ending `16461ae5-b6ed-4263-823e-6708cac43951.pdf` is reported by the uploader as `Miller_s_Anesthesia__Gropper_.pdf`, containing both volumes of the same edition. A dry run reported **13,364 physical PDF pages**, **17,897 passages**, **57 OCR-improved pages**, **zero OCR failures**, and **12 low-text pages**: 6, 70, 71, 2367, 2376, 3262, 4737, 6080, 7238, 7945, 8202, and 9528. These numbers are extraction results, not proof of citation accuracy or volume boundaries. Verify the surprising page count against the actual PDF before import.
+
+**Do not set `apply=true` for this object yet.** `process_textbook.process()` rejects unresolved low-text pages before opening the database; `import_extraction.import_passages()` independently requires authenticated admin identity and source-bound protected DB approvals. The manual GitHub Actions workflow does not supply an authenticated reviewer identity, so adding approval rows alone does not make that workflow able to import flagged material. Do not bypass either gate or mark the pages reviewed based on metadata alone.
+
+Next steps: (1) inspect original page images for the 12 flagged pages, with the source digest and R2 key attached; (2) verify actual PDF page count, volume transition, bookmarks, and physical-vs-printed page offsets; (3) implement a trusted server-side admin review and indexing path that loads the protected approvals and passes a verified reviewer identity into the import boundary; (4) validate staging-only retrieval and citations from both volumes. Existing `page_review_approvals_v2` and `reviewer_roles_v2` tables have forced RLS; ordinary browser users have no direct table access. Preserve that restriction.
+
+The staging workflow now includes `original_filename` and `extraction_quality` in its results (PR #131), so use those fields to confirm which file and which pages are blocked. Do not treat a passing dry run as approval to index.
+
+---
+
 ## Current main-branch indexing workflow (November 2026)
 
 After this change merges, use GitHub Actions → **Source Library staging indexing (manual)** → **Run workflow** → branch **main**. The workflow checks out the exact dispatched main revision, and remains manual, staging-only, and dry-run by default. The GitHub environment `source-library-staging` must permit main and contain the staging R2/database secrets; otherwise the job will be blocked. Do not grant production credentials.
