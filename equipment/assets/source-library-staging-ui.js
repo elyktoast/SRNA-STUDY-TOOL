@@ -1,5 +1,6 @@
 (()=>{'use strict';
 if(location.hostname!=='staging.srnastudytool.com'||!window.MBU_SOURCE_LIBRARY_STAGING?.enabled)return;
+if(window.MBUStagingSourceWorkbench?.mount)return;
 const storage=window.MBUSourceMaterialStagingStorage;
 if(!storage){console.error('Staging Source Library storage adapter unavailable');return;}
 const style=document.createElement('style');
