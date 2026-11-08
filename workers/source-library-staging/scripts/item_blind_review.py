@@ -85,4 +85,13 @@ def compare(item, response):
                 or selected != pairs):
             return [{"rule_id": "R-12.1", "message": "Blind matching solve disagrees with four keyed pairs"}]
         return []
+    if item.get("format") == "HS":
+        hs = item.get("hs")
+        correct = hs.get("correct_region") if isinstance(hs, dict) else None
+        selected = response.get("region")
+        if (not isinstance(correct, str) or not correct.strip()
+                or not isinstance(selected, str) or not selected.strip()
+                or selected != correct):
+            return [{"rule_id": "R-12.1", "message": "Blind hotspot solve disagrees with keyed region"}]
+        return []
     return [{"rule_id": "R-12.1", "message": "Format-specific blind scoring not yet implemented"}]
