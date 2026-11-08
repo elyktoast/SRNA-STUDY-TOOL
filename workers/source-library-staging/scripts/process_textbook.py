@@ -46,7 +46,16 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         for section in sections
         if re.search(r"\bvol(?:ume)?\.?\s*(?:1|2|i|ii)\b", section["heading"], re.I)
     ][:20]
+    detail_by_page = {item["pdf_page"]: item for item in validated.get("low_text_details", [])}
+    review_required_pages = [
+        {"pdf_page": page,
+         "reason": detail_by_page.get(page, {}).get("review_category", "ocr_or_low_text_review"),
+         "ocr_failed": page in validated.get("ocr_failed_pages", []),
+         "visual_blank_candidate": detail_by_page.get(page, {}).get("visual_blank_candidate", False)}
+        for page in quality["unresolved_pdf_pages"]
+    ]
     result = {
+        "review_required_pages": review_required_pages,
         "section_count": len(sections),
         "volume_bookmark_candidates": volume_bookmarks,
         "extraction_quality": quality,
