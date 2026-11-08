@@ -38,13 +38,13 @@ class ReadinessTests(unittest.TestCase):
 
     def test_complete_index_ready(self):
         result = check(inventory_path=self.path, env=ENV,
-                       connect=self.connect([("a", HASH)]))
+                       connect=self.connect([("a", HASH, [1.0, 0.0])]))
         self.assertTrue(result["ready"])
         self.assertEqual(result["expected_count"], 1)
         self.assertNotIn("missing_ids", result)
 
     def test_missing_and_stale_not_ready(self):
-        for rows in ([], [("a", "b" * 64)]):
+        for rows in ([], [("a", "b" * 64, [1.0, 0.0])]):
             with self.subTest(rows=rows):
                 result = check(inventory_path=self.path, env=ENV,
                                connect=self.connect(rows))
