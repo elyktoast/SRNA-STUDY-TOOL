@@ -200,6 +200,7 @@ jobs:
             "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
             "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
       - name: Run separately authorized resumable batch of at most 25
+        id: resumable_generation
         if: inputs.mode == 'resumable-25'
         shell: bash
         env:
@@ -215,7 +216,7 @@ jobs:
             "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
             "$RUNNER_TEMP/srna-semantic/vectors.json" --max-new 25
       - name: Preserve validated progress after success or provider failure
-        if: always() && inputs.mode == 'resumable-25'
+        if: always() && inputs.mode == 'resumable-25' && steps.resumable_generation.outcome != 'skipped'
         shell: bash
         env:
           STAGING_ONLY: 'true'
