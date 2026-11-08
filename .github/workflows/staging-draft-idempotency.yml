@@ -1,0 +1,21 @@
+name: Staging draft idempotency tests
+on:
+  push:
+    branches:
+      - fix/staging-generation-draft-idempotency
+  workflow_dispatch:
+jobs:
+  targeted-tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: workers/source-library-staging/scripts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile changed modules
+        run: python -m py_compile item_generation_checkpoint_store_v2.py item_generation_http_v2.py run_grounded_generation_v2.py tests/test_item_generation_save_once_v2.py tests/test_item_generation_http_v2.py
+      - name: Run targeted tests
+        run: python -m unittest discover -s tests -p 'test_item_generation_*v2.py' -v
