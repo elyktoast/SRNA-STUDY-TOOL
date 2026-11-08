@@ -85,3 +85,10 @@ test('gateway checks all three providers using metadata-only GET endpoints',()=>
  assert.ok(gateway.includes("method:'GET',headers,redirect:'manual'"));
  assert.ok(gateway.includes("generation_ready:false"));
 });
+
+test('PDF review exposes loading, busy, and error feedback beside its button',()=>{
+ assert.ok(ui.includes("previewState.textContent='Loading PDF…'"));
+ assert.ok(ui.includes("previewState.textContent='PDF failed: '+detail"));
+ assert.ok(ui.includes("actions.append(preview,previewState,more)"));
+ assert.ok(ui.includes("Another source action is running."));
+});
