@@ -80,7 +80,7 @@ async function openSavedDraft(draftId,button){
   genEl('sl-revision-status').textContent='';genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();
   genEl('sl-draft-history-output').hidden=true;
   genEl('sl-current-revision').hidden=true;
-  renderReadableQuestion(genEl('sl-readable-question'),data.question);json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+  renderReadableQuestion(genEl('sl-readable-question'),data.question);genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=data.question||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
   detail.scrollIntoView({behavior:'smooth',block:'nearest'});
  }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
  finally{button.disabled=false;}
@@ -89,12 +89,12 @@ function addEvidenceRow(kind,initial={}){
  const citation=kind==='citation',container=genEl(citation?'sl-citation-rows':'sl-option-rows');
  const row=document.createElement('div');row.className='sl-evidence-row';
  const field=(label,value='',tag='input')=>{const wrap=document.createElement('label');wrap.textContent=label;const node=document.createElement(tag);if(tag==='input')node.type='text';node.value=String(value??'');wrap.append(node);row.append(wrap);return node;};
- const id=field(citation?'Citation index':'Option ID',initial.id||'');
+ const id=field(citation?'Citation index':'Option ID',initial.id??'');
  if(citation){field('Exact textbook excerpt',initial.quote||'','textarea');}
  else{
   const wrap=document.createElement('label');wrap.textContent='Evidence verdict';const verdict=document.createElement('select');
-  for(const v of ['supported','contradicted','insufficient']){const option=document.createElement('option');option.value=v;option.textContent=v;verdict.append(option);}
-  verdict.value=initial.verdict||'supported';wrap.append(verdict);row.append(wrap);
+  for(const v of ['supports_key','refutes_distractor']){const option=document.createElement('option');option.value=v;option.textContent=v;verdict.append(option);}
+  verdict.value=initial.verdict||'supports_key';wrap.append(verdict);row.append(wrap);
   field('Passage IDs (comma-separated)',(initial.passage_ids||[]).join(', '));
   field('Clinical explanation',initial.explanation||'','textarea');
  }
@@ -122,8 +122,8 @@ genEl('sl-save-revision').onclick=async()=>{
   const history=await storage.listDraftRevisions(draftId);
   if(history.published!==false||!/^[a-f0-9]{64}$/.test(history.current_question_sha256||''))
    throw Error('Current draft fingerprint unavailable.');
-  const citation_excerpts=collectEvidence('citation');
-  const option_evidence=collectEvidence('option');
+  const citation_excerpts=genEl('sl-citation-rows').children.length?collectEvidence('citation'):{};
+  const option_evidence=genEl('sl-option-rows').children.length?collectEvidence('option'):{};
   const reviewer_notes=genEl('sl-revision-notes').value.trim();
   if(!citation_excerpts||Array.isArray(citation_excerpts)||typeof citation_excerpts!=='object'||
      !option_evidence||Array.isArray(option_evidence)||typeof option_evidence!=='object'||
