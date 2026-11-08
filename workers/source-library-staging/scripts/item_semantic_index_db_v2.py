@@ -35,7 +35,7 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
                 """select item_id, embedding from source_library_staging.question_semantic_index_v2
                    where owner_uid=%s and embedding_model=%s and item_id<>%s
                    order by item_id limit %s""",
-                (owner, embedding_model, item.get("item_id", ""), MAX_ROWS + 1))
+                (owner, embedding_model, candidate_id, MAX_ROWS + 1))
             rows = cur.fetchall()
         if len(rows) > MAX_ROWS:
             raise ValueError("Semantic index exceeds exhaustive search cap")
