@@ -1,6 +1,7 @@
 import sys
 import unittest
 from pathlib import Path
+import re
 from unittest.mock import Mock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_semantic_index_db_v2 import lookup, MAX_ROWS, PAGE_SIZE
@@ -8,9 +9,12 @@ from item_semantic_index_db_v2 import lookup, MAX_ROWS, PAGE_SIZE
 OWNER = "00000000-0000-4000-8000-000000000001"
 
 class SemanticIndexTests(unittest.TestCase):
+    def hashes(self, ids):
+        return {item_id: "a" * 64 for item_id in ids}
+
     def connection(self, rows):
         cur = MagicMock()
-        cur.fetchall.return_value = rows
+        cur.fetchall.return_value = [(item_id, vector, 'a' * 64) for item_id, vector in rows]
         conn = MagicMock()
         conn.cursor.return_value.__enter__ = Mock(return_value=cur)
         conn.cursor.return_value.__exit__ = Mock(return_value=False)
@@ -19,7 +23,7 @@ class SemanticIndexTests(unittest.TestCase):
     def test_owner_model_scoped_complete_search(self):
         conn, cur = self.connection([("prior-1", [1.0, 0.0])])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
-                          embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1", "draft-1"})
+                          embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1", "draft-1"}, expected_stem_hashes=self.hashes({"prior-1", "draft-1"}))
         result = callback({"stem": "Clinical stem", "item_id": "draft-1"})
         self.assertTrue(result["search_complete"])
         self.assertEqual(result["neighbors"][0]["item_id"], "prior-1")
@@ -32,12 +36,12 @@ class SemanticIndexTests(unittest.TestCase):
         ids = ["prior-" + str(i).zfill(5) for i in range(7000)]
         conn, cur = self.connection([])
         cur.fetchall.side_effect = [
-            [(item_id, [1.0, 0.0]) for item_id in ids[i:i + PAGE_SIZE]]
+            [(item_id, [1.0, 0.0], 'a' * 64) for item_id in ids[i:i + PAGE_SIZE]]
             for i in range(0, len(ids), PAGE_SIZE)
         ] + [[]]
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids=set(ids) | {"draft-1"})
+                          expected_item_ids=set(ids) | {"draft-1"}, expected_stem_hashes=self.hashes(set(ids) | {"draft-1"}))
         result = callback({"stem": "Clinical stem", "item_id": "draft-1"})
         self.assertTrue(result["search_complete"])
         self.assertEqual(len(result["neighbors"]), 7000)
@@ -48,13 +52,29 @@ class SemanticIndexTests(unittest.TestCase):
         ids = ["prior-" + str(i).zfill(5) for i in range(PAGE_SIZE)]
         conn, cur = self.connection([])
         cur.fetchall.side_effect = [
-            [(item_id, [1.0, 0.0]) for item_id in ids],
+            [(item_id, [1.0, 0.0], 'a' * 64) for item_id in ids],
             []
         ]
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids=set(ids) | {"missing", "draft-1"})
+                          expected_item_ids=set(ids) | {"missing", "draft-1"}, expected_stem_hashes=self.hashes(set(ids) | {"missing", "draft-1"}))
         with self.assertRaisesRegex(ValueError, "coverage"):
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
+
+    def test_missing_stem_hash_inventory_rejected(self):
+        with self.assertRaisesRegex(ValueError, "stem hashes"):
+            lookup(Mock(), owner_uid=OWNER, embedding_model="test-v1",
+                   embed=lambda stem: [1.0, 0.0], index_ready=True,
+                   expected_item_ids={"prior-1"})
+
+    def test_stale_index_hash_rejected(self):
+        conn, cur = self.connection([("prior-1", [1.0, 0.0])])
+        cur.fetchall.return_value = [("prior-1", [1.0, 0.0], "b" * 64)]
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids={"prior-1", "draft-1"},
+                          expected_stem_hashes=self.hashes({"prior-1", "draft-1"}))
+        with self.assertRaisesRegex(ValueError, "Stale"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
     def test_missing_canonical_inventory_rejected(self):
@@ -66,7 +86,7 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([("prior-1", [1.0, 0.0])])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids={"prior-1", "prior-2", "draft-1"})
+                          expected_item_ids={"prior-1", "prior-2", "draft-1"}, expected_stem_hashes=self.hashes({"prior-1", "prior-2", "draft-1"}))
         with self.assertRaisesRegex(ValueError, "coverage"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
@@ -74,7 +94,7 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([("untracked", [1.0, 0.0])])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids={"prior-1", "draft-1"})
+                          expected_item_ids={"prior-1", "draft-1"}, expected_stem_hashes=self.hashes({"prior-1", "draft-1"}))
         with self.assertRaisesRegex(ValueError, "coverage"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
@@ -82,7 +102,7 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids={"prior-1"})
+                          expected_item_ids={"prior-1"}, expected_stem_hashes=self.hashes({"prior-1"}))
         with self.assertRaisesRegex(ValueError, "candidate item ID"):
             callback({"stem": "Clinical stem"})
 
@@ -90,7 +110,7 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0], index_ready=True,
-                          expected_item_ids={"draft-1"})
+                          expected_item_ids={"draft-1"}, expected_stem_hashes=self.hashes({"draft-1"}))
         with self.assertRaisesRegex(ValueError, "dimensions"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
@@ -98,19 +118,19 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([("prior-1", None)])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True,
-                          expected_item_ids={"prior-1", "draft-1"})
+                          expected_item_ids={"prior-1", "draft-1"}, expected_stem_hashes=self.hashes({"prior-1", "draft-1"}))
         with self.assertRaisesRegex(ValueError, "indexed embedding"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
     def test_unverified_index_rejected(self):
         with self.assertRaises(ValueError):
             lookup(Mock(), owner_uid=OWNER, embedding_model="test-v1",
-                   embed=lambda stem: [1.0, 0.0], index_ready=False, expected_item_ids={"prior-1"})
+                   embed=lambda stem: [1.0, 0.0], index_ready=False, expected_item_ids={"prior-1"}, expected_stem_hashes=self.hashes({"prior-1"}))
 
     def test_invalid_embedding_rejected_even_with_empty_index(self):
         conn, _ = self.connection([])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
-                          embed=lambda stem: [0.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
+                          embed=lambda stem: [0.0, 0.0], index_ready=True, expected_item_ids={"prior-1"}, expected_stem_hashes=self.hashes({"prior-1"}))
         with self.assertRaises(ValueError):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
@@ -118,7 +138,7 @@ class SemanticIndexTests(unittest.TestCase):
         conn, _ = self.connection([("prior-" + str(i), [1.0, 0.0])
                                    for i in range(MAX_ROWS + 1)])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
-                          embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
+                          embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"}, expected_stem_hashes=self.hashes({"prior-1"}))
         with self.assertRaisesRegex(ValueError, "page size"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
