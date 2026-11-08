@@ -41,3 +41,20 @@ test('rejects missing stems and missing bank files', t => {
   fs.rmSync(path.join(root, 'course/data.json'));
   assert.equal(audit(root, ['course/banks.json']).ok, false);
 });
+
+test('exports deterministic canonical IDs and stem hashes without changing the default audit', t => {
+  const root = fixture([source('one', 2)], [question('2'), question('1')]);
+  t.after(() => fs.rmSync(root, {recursive: true, force: true}));
+  const manifest = ['course/banks.json'];
+  const normal = audit(root, manifest);
+  const exported = audit(root, manifest, {includeEntries: true});
+  assert.equal(normal.entries, undefined);
+  assert.equal(exported.ok, true);
+  assert.equal(exported.unique, 2);
+  assert.equal(exported.digest, normal.digest);
+  assert.equal(exported.entries.length, 2);
+  assert.deepEqual(exported.entries.map(entry => entry.item_id),
+    ['course/banks.json#one#1', 'course/banks.json#one#2']);
+  assert.ok(exported.entries.every(entry => /^[a-f0-9]{64}$/.test(entry.stem_hash)));
+  assert.equal(audit(root, manifest, {includeEntries: true}).digest, exported.digest);
+});
