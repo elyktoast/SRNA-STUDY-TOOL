@@ -129,11 +129,26 @@ def build_app():
         return check(inventory_path=inventory_path, env=os.environ,
                      connect=psycopg.connect)
 
+    def semantic_lookup_factory(db_conn, owner, textbook_id):
+        # No paid embedding request at factory construction; only the eventual
+        # schema-valid candidate triggers an explicitly opted-in provider call.
+        if (os.environ.get("AI_GENERATION_OPT_IN") != "true"
+                or os.environ.get("AI_SEMANTIC_EMBEDDING_OPT_IN") != "true"):
+            return None
+        from item_semantic_live_bridge_v2 import make_gemini_embed, build_semantic_lookup
+        embed = make_gemini_embed(
+            api_key=os.environ.get("AI_SEMANTIC_GEMINI_API_KEY", ""),
+            model=os.environ.get("SEMANTIC_INDEX_EMBEDDING_MODEL"),
+            enabled=True)
+        return build_semantic_lookup(
+            db_conn, owner_uid=owner, env=os.environ, embed=embed)
+
     generation = generation_app(
         conn_factory=lambda: psycopg.connect(os.environ["STAGING_DATABASE_URL"],
             connect_timeout=8, sslmode="require"),
         resolve_admin=lambda token: runtime._reviewer(token).uid,
-        environment=os.environ, readiness_factory=index_readiness)
+        environment=os.environ, readiness_factory=index_readiness,
+        semantic_lookup_factory=semantic_lookup_factory)
     return lambda environ, start_response: (
         generation(environ, start_response)
         if (environ.get("PATH_INFO") in ("/generation/preflight", "/generation/one", "/generation/provider-check", "/generation/index-readiness") or
