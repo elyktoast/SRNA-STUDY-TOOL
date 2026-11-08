@@ -16,6 +16,20 @@ class BlindReviewTests(unittest.TestCase):
         self.assertNotIn("error_pattern", result["options"][0])
         self.assertEqual(compare(item, {"item_id": "x", "key": ["A"]}), [])
         self.assertTrue(compare(item, {"item_id": "x", "key": ["B"]}))
+    def test_sa_blind_numeric_scoring_and_units(self):
+        item = {"item_id": "n", "format": "SA", "stem": "Calculate",
+                "sa": {"answer": 5.0, "tolerance": 0.1, "unit": "mg",
+                       "rounding": "nearest tenth", "worked_solution": "private"}}
+        self.assertEqual(payload(item)["unit"], "mg")
+        self.assertNotIn("answer", payload(item))
+        self.assertNotIn("worked_solution", str(payload(item)))
+        self.assertEqual(compare(item, {"item_id": "n", "answer": 5.05, "unit": "MG"}), [])
+        for answer, unit in ((5.2, "mg"), (5, "mL"), (True, "mg"),
+                             (float("nan"), "mg"), (float("inf"), "mg"),
+                             (5, None), ("5", "mg")):
+            with self.subTest(answer=answer, unit=unit):
+                self.assertTrue(compare(item, {"item_id": "n", "answer": answer, "unit": unit}))
+
     def test_non_mc_not_falsely_passed(self):
         item = {"item_id": "n", "format": "SA", "stem": "Calculate"}
         self.assertTrue(compare(item, {"item_id": "n", "answer": 5}))
