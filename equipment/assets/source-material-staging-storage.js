@@ -32,7 +32,24 @@ async function list(){const response=await call('/materials');const data=await r
 async function file(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();return new File([blob],name||'source-material.pdf',{type:'application/pdf'});}
 async function download(path,name){const response=await call('/materials/item?path='+key(path));const blob=await response.blob();const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name||'source-material.pdf';a.click()}finally{setTimeout(()=>URL.revokeObjectURL(url),1000)}}
 async function reviewQueue(path){const response=await call('/materials/review-queue?path='+key(path));return response.json();}
-async function reviewPdf(path){const response=await call('/materials/review-pdf?path='+key(path));const blob=await response.blob();if(blob.type!=='application/pdf')throw Error('Review endpoint did not return a PDF.');return blob;}
+async function reviewPdf(path){
+ const controller=new AbortController();
+ const timeout=setTimeout(()=>controller.abort(),120000);
+ let response;
+ try{
+  response=await call('/materials/review-pdf?path='+key(path),{signal:controller.signal,cache:'no-store'});
+  const type=(response.headers.get('content-type')||'').split(';')[0].trim().toLowerCase();
+  if(type!=='application/pdf'&&type!=='application/octet-stream')throw Error('PDF endpoint returned '+(type||'an unknown content type')+'.');
+  const blob=await response.blob();
+  if(blob.size<5)throw Error('The downloaded PDF is empty or incomplete.');
+  const header=new Uint8Array(await blob.slice(0,5).arrayBuffer());
+  if(String.fromCharCode(...header)!=='%PDF-')throw Error('The server returned data without a PDF header.');
+  return blob.type==='application/pdf'?blob:new Blob([blob],{type:'application/pdf'});
+ }catch(error){
+  if(error?.name==='AbortError')throw Error('PDF download exceeded two minutes. Try the secure page reviewer for large textbooks.');
+  throw error;
+ }finally{clearTimeout(timeout);}
+}
 function reviewerSettings(){
  const base=String(config.reviewerApiUrl||'');let url;
  try{url=new URL(base)}catch{}

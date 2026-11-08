@@ -36,7 +36,7 @@ test('PDF preview replaces center reader placeholder and reports viewer failures
  assert.ok(ui.includes('if(target)target.replaceChildren()'));
  assert.ok(ui.includes('PDF reader panel is unavailable'));
  assert.ok(ui.includes("frame.addEventListener('error'"));
- assert.ok(ui.includes('Opening textbook in the document reader'));
+ assert.ok(ui.includes("previewState.textContent='Loading PDF…'"));
 });
 test('provider diagnostic does not imply all providers were checked',()=>{
  assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
@@ -84,4 +84,20 @@ test('gateway checks all three providers using metadata-only GET endpoints',()=>
  assert.ok(gateway.includes("probe('cloudflare'"));
  assert.ok(gateway.includes("method:'GET',headers,redirect:'manual'"));
  assert.ok(gateway.includes("generation_ready:false"));
+});
+
+test('PDF review exposes loading, busy, and error feedback beside its button',()=>{
+ assert.ok(ui.includes("previewState.textContent='Loading PDF…'"));
+ assert.ok(ui.includes("previewState.textContent='PDF failed: '+detail"));
+ assert.ok(ui.includes("actions.append(preview,previewState,more)"));
+ assert.ok(ui.includes("Another source action is running."));
+});
+
+test('PDF retrieval validates bytes, times out and reader is brought into view',()=>{
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ assert.ok(storage.includes("String.fromCharCode(...header)!=='%PDF-'"));
+ assert.ok(storage.includes('controller.abort(),120000'));
+ assert.ok(storage.includes('clearTimeout(timeout)'));
+ assert.ok(ui.includes("reader.scrollIntoView({behavior:'smooth',block:'nearest'})"));
+ assert.ok(ui.includes("reader.prepend(notice)"));
 });
