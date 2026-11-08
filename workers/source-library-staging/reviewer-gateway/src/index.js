@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
