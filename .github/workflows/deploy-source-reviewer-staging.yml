@@ -84,9 +84,19 @@ jobs:
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
         run: |
           set -euo pipefail
-          for key in STAGING_DATABASE_URL STAGING_R2_ACCOUNT_ID STAGING_R2_ACCESS_KEY_ID STAGING_R2_SECRET_ACCESS_KEY SUPABASE_ANON_KEY STAGING_RECEIPT_SIGNING_SECRET; do
-            printf '%s' "${!key}" | npx wrangler secret put "$key" --config wrangler.json >/dev/null
-          done
+          # A separate 'secret put' deploys a new Worker version each time.
+          # One bulk upload avoids six consecutive container rollouts during smoke tests.
+          umask 077
+          secrets_file="$(mktemp)"
+          trap 'rm -f "$secrets_file"' EXIT
+          node - "$secrets_file" <<'NODE'
+          const fs = require('node:fs');
+          const keys = ['STAGING_DATABASE_URL','STAGING_R2_ACCOUNT_ID','STAGING_R2_ACCESS_KEY_ID','STAGING_R2_SECRET_ACCESS_KEY','SUPABASE_ANON_KEY','STAGING_RECEIPT_SIGNING_SECRET'];
+          const values = Object.fromEntries(keys.map(key => [key, process.env[key]]));
+          if (Object.values(values).some(value => !value)) process.exit(1);
+          fs.writeFileSync(process.argv[2], JSON.stringify(values), {mode:0o600});
+          NODE
+          npx wrangler secret bulk "$secrets_file" --config wrangler.json >/dev/null
       - name: Verify authenticated staging reviewer after deployment
         env:
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
