@@ -55,7 +55,7 @@ class ReconcileTests(unittest.TestCase):
     def test_full_nine_thousand_item_inventory(self):
         ids = [str(i).zfill(5) for i in range(9000)]
         pages = [
-            [(item_id, HASH) for item_id in ids[i:i + 1000]]
+            [(item_id, HASH, [1.0, 0.0]) for item_id in ids[i:i + 1000]]
             for i in range(0, len(ids), 1000)
         ] + [[]]
         conn, cur = connection(pages)
