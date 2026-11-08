@@ -39,6 +39,32 @@ class GenerationCliTests(unittest.TestCase):
 
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     @patch("run_grounded_generation_v2.make_transport")
+    def test_preflight_reports_config_only_and_no_draft_write(self, transport, evidence):
+        env = {"STAGING_ONLY": "true", "AI_GENERATOR_MODEL": "model-a",
+               "AI_PROVIDER_ENDPOINT": "https://provider.example/v1",
+               "AI_ALLOWED_HOSTS": "provider.example",
+               "AI_PROVIDER_API_KEY": "configured",
+               "STAGING_RECEIPT_SIGNING_SECRET": "configured"}
+        readiness = execute(object(), ARGS, env)["execution_readiness"]
+        self.assertTrue(readiness["indexed_evidence_found"])
+        self.assertTrue(readiness["provider_endpoint_allowlisted"])
+        self.assertTrue(readiness["generator_model_configured"])
+        self.assertTrue(readiness["provider_api_key_configured"])
+        self.assertTrue(readiness["relay_secret_configured"])
+        self.assertFalse(readiness["provider_connectivity_checked"])
+        self.assertEqual(readiness["draft_persistence"], "not_performed_by_cli")
+        transport.assert_not_called()
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_preflight_discloses_missing_provider_configuration(self, evidence):
+        readiness = execute(object(), ARGS, {"STAGING_ONLY": "true"})["execution_readiness"]
+        self.assertFalse(readiness["provider_endpoint_allowlisted"])
+        self.assertFalse(readiness["generator_model_configured"])
+        self.assertFalse(readiness["provider_api_key_configured"])
+        self.assertFalse(readiness["relay_secret_configured"])
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    @patch("run_grounded_generation_v2.make_transport")
     def test_preflight_allows_review_flags_without_paid_calls(self, transport, evidence):
         env = {"STAGING_ONLY": "true", "AI_BLIND_REVIEW_OPT_IN": "true",
                "AI_REWRITE_OPT_IN": "true"}
