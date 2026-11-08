@@ -144,6 +144,32 @@ jobs:
       - name: Install resumable transport dependencies
         if: inputs.mode == 'resumable-25'
         run: python -m pip install 'cryptography>=43,<47' 'boto3>=1.35,<2'
+      - name: Refuse existing output snapshot before paid requests
+        if: inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          SAVE_SNAPSHOT: ${{ inputs.save_snapshot }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os,sys,boto3
+          from botocore.exceptions import ClientError
+          sys.path.insert(0,'workers/source-library-staging/scripts')
+          from semantic_checkpoint_r2_v2 import snapshot_key,BUCKET
+          c=boto3.client('s3',endpoint_url='https://'+os.environ['STAGING_R2_ACCOUNT_ID']+'.r2.cloudflarestorage.com',
+              aws_access_key_id=os.environ['STAGING_R2_ACCESS_KEY_ID'],
+              aws_secret_access_key=os.environ['STAGING_R2_SECRET_ACCESS_KEY'],region_name='auto')
+          try:
+              c.head_object(Bucket=BUCKET,Key=snapshot_key(os.environ['SAVE_SNAPSHOT']))
+          except ClientError as exc:
+              if exc.response.get('Error',{}).get('Code') not in ('404','NoSuchKey','NotFound'):
+                  raise
+          else:
+              raise RuntimeError('Output snapshot already exists; choose a unique ID before making paid requests')
+          PY
       - name: Restore previous snapshot when supplied
         if: inputs.mode == 'resumable-25' && inputs.checkpoint_snapshot != ''
         shell: bash
