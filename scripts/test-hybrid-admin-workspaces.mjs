@@ -139,5 +139,5 @@ test('AI creation retains Save Unpublished alongside generated preview and expla
 });
 
 test('paid generation is gated on current successful indexed evidence preflight',()=>{
- for(const token of ['let checkedEvidence=null','checkedEvidence={topic,mode:',"checkedEvidence.topic!==topic", "checkedEvidence.mode!==el('sl-mode').value", "checkedEvidence.format!==el('sl-format').value",'Run Check indexed evidence','checkedEvidence=null;output.textContent=error.message',"topicInput.dispatchEvent(new Event('input'"]){assert.ok(ui.includes(token),token);}
+ for(const token of ['let checkedEvidence=null','checkedEvidence={topic,mode:',"checkedEvidence.topic!==topic", "checkedEvidence.mode!==el('sl-mode').value", "checkedEvidence.format!==el('sl-format').value", "checkedEvidence.textbook_id!==textbook_id", "storage.generationPreflight({topic,textbook_id",'Run Check indexed evidence','checkedEvidence=null;output.textContent=error.message',"topicInput.dispatchEvent(new Event('input'"]){assert.ok(ui.includes(token),token);}
 });
