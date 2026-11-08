@@ -53,6 +53,26 @@ class BackfillTests(unittest.TestCase):
                      embed=lambda stem: calls.append(stem) or [1, 0])
         self.assertEqual(calls, [])
 
+    def test_checkpoint_binds_inventory_and_model_before_provider_calls(self):
+        backfill(self.source, self.progress, self.output,
+                 embed=lambda stem: [1, 0], max_new=1)
+        lines = self.progress.read_text().splitlines()
+        header = json.loads(lines[0])
+        self.assertEqual(header["embedding_model"], "gemini-embedding-001")
+        self.assertEqual(header["inventory_digest"],
+                         json.loads(self.source.read_text())["inventory_digest"])
+        for field, value in (("embedding_model", "other-model"),
+                             ("inventory_digest", "0" * 64)):
+            with self.subTest(field=field):
+                bad = {**header, field: value}
+                self.progress.write_text(json.dumps(bad) + "\n" + "\n".join(lines[1:]) + "\n")
+                calls = []
+                with self.assertRaises(ValueError):
+                    backfill(self.source, self.progress, self.output,
+                             embed=lambda stem: calls.append(stem) or [1, 0])
+                self.assertEqual(calls, [])
+        self.progress.write_text("\n".join(lines) + "\n")
+
     def test_invalid_source_hash_rejected(self):
         obj = json.loads(self.source.read_text())
         obj["stems"][0]["stem"] = "Modified"

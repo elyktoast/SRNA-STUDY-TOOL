@@ -43,12 +43,22 @@ def load_source(path):
     return source, stems
 
 
-def load_progress(path, entries):
+def load_progress(path, entries, *, digest=None, model=MODEL):
     expected = {e["item_id"]: e["stem_hash"] for e in entries}
     found = {}
     if not Path(path).exists():
         return found
-    for line in Path(path).read_text(encoding="utf-8").splitlines():
+    lines = Path(path).read_text(encoding="utf-8").splitlines()
+    if not lines:
+        raise ValueError("Empty checkpoint file")
+    header = json.loads(lines[0])
+    if (not isinstance(header, dict)
+            or header.get("schema_version") != 1
+            or header.get("embedding_model") != model
+            or (digest is not None and header.get("inventory_digest") != digest)
+            or set(header) != {"schema_version", "embedding_model", "inventory_digest"}):
+        raise ValueError("Checkpoint model or inventory mismatch")
+    for line in lines[1:]:
         record = json.loads(line)
         if (not isinstance(record, dict)
                 or set(record) != {"item_id", "stem_hash", "embedding"}
@@ -64,7 +74,7 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
     if not callable(embed) or type(max_new) is not int or not 0 <= max_new <= MAX_ITEMS:
         raise ValueError("Invalid backfill configuration")
     source, stems = load_source(source_path)
-    progress = load_progress(progress_path, source["entries"])
+    progress = load_progress(progress_path, source["entries"], digest=source["inventory_digest"])
     # Validate all recovered vectors and their dimensions before any new calls.
     if progress:
         # Partial bundles cannot use the full-inventory importer; validate each
@@ -93,6 +103,14 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
         descriptor = os.open(progress_path, flags, 0o600)
         try:
             with os.fdopen(descriptor, "a", encoding="utf-8") as stream:
+                if stream.tell() == 0:
+                    stream.write(json.dumps({
+                        "schema_version": 1,
+                        "embedding_model": MODEL,
+                        "inventory_digest": source["inventory_digest"]
+                    }, separators=(",", ":")) + "\n")
+                    stream.flush()
+                    os.fsync(stream.fileno())
                 for entry in source["entries"]:
                     if entry["item_id"] in progress or added >= max_new:
                         continue
