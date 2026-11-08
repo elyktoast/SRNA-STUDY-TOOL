@@ -3,6 +3,13 @@
 This is the first write-capable index-population path. It **does not generate embeddings**, invoke paid providers, publish questions, or modify production. Obtain embeddings from a separately approved trusted provider and prepare a local bundle; do not commit embeddings, source stems, database URLs, or credentials to Git.
 
 1. Export canonical inventory with `node scripts/audit-canonical-semantic-inventory.mjs --export /secure/inventory.json`.
+For a separate, explicit private export of question stems used to compute the
+embeddings, run `node scripts/audit-canonical-semantic-inventory.mjs --export-stems /secure/private-stems.json`.
+This creates a new local file (mode 0600, no overwrite) containing canonical IDs,
+hashes and stems; it is **not** an embedding bundle and must not be committed,
+uploaded to public storage, or exposed in logs. The normal `--export` output
+remains unchanged. Embedding provider usage requires separate explicit approval.
+
 2. Prepare `/secure/vectors.json` with exactly this schema:
 
 ```json

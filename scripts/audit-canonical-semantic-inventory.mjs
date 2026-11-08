@@ -13,7 +13,7 @@ export const MANIFESTS = [
 ];
 
 export function audit(root, manifests = MANIFESTS, options = {}) {
-  const errors = [], entries = [], seen = new Set(), sourceFiles = new Map();
+  const errors = [], entries = [], stems = [], seen = new Set(), sourceFiles = new Map();
   let declared = 0;
   for (const manifestPath of manifests) {
     const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestPath), 'utf8'));
@@ -66,29 +66,37 @@ export function audit(root, manifests = MANIFESTS, options = {}) {
         }
         seen.add(itemId);
         entries.push({item_id: itemId, stem_hash: crypto.createHash('sha256').update(q.stem.trim()).digest('hex')});
+        if (options.includeStems === true) stems.push({item_id: itemId, stem: q.stem.trim()});
       }
     }
   }
   entries.sort((a, b) => a.item_id.localeCompare(b.item_id, 'en'));
   const digest = crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex');
+  stems.sort((a, b) => a.item_id.localeCompare(b.item_id, 'en'));
   return {ok: errors.length === 0, declared, unique: entries.length,
     sources: sourceFiles.size, digest, errors,
-    ...(options.includeEntries === true ? {entries} : {})};
+    ...(options.includeEntries === true ? {entries} : {}),
+    ...(options.includeStems === true ? {stems} : {})};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
   const args = process.argv.slice(2);
-  if (args.length !== 0 && (args.length !== 2 || args[0] !== '--export' || !args[1])) {
-    console.error('Usage: node scripts/audit-canonical-semantic-inventory.mjs [--export OUTPUT.json]');
+  if (args.length !== 0 && (args.length !== 2 || !['--export', '--export-stems'].includes(args[0]) || !args[1])) {
+    console.error('Usage: node scripts/audit-canonical-semantic-inventory.mjs [--export OUTPUT.json | --export-stems PRIVATE_OUTPUT.json]');
     process.exitCode = 2;
   } else {
-    const result = audit(process.cwd(), MANIFESTS, {includeEntries: args.length === 2});
+    const result = audit(process.cwd(), MANIFESTS, {includeEntries: args.length === 2,
+      includeStems: args[0] === '--export-stems'});
     if (!result.ok) {
       console.error(JSON.stringify({...result, entries: undefined}, null, 2));
       process.exitCode = 1;
     } else if (args.length === 2) {
       // Export is a local artifact only; never upload embeddings or alter banks.
-      fs.writeFileSync(args[1], JSON.stringify({
+      fs.writeFileSync(args[1], JSON.stringify(args[0] === '--export-stems' ? {
+        schema_version: 1, inventory_digest: result.digest,
+        item_count: result.unique, entries: result.entries,
+        stems: result.stems
+      } : {
         schema_version: 1, inventory_digest: result.digest,
         item_count: result.unique, entries: result.entries
       }) + '\n', {flag: 'wx', mode: 0o600});
