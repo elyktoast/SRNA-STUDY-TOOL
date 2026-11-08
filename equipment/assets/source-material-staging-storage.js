@@ -150,6 +150,17 @@ async function remove(path){await call('/materials/item?path='+key(path),{method
 async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
+async function listIndexedTextbooks(){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw||!cfg.enabled||location.hostname!=='staging.srnastudytool.com')throw Error('Staging textbook catalog unavailable.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/textbooks',{method:'GET',headers:{Authorization:'Bearer '+token()}});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok||!Array.isArray(data.textbooks))throw Error(data.error||'Indexed textbook catalog unavailable.');
+ return data.textbooks;
+}
 async function generationPreflight(request){const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;if(!raw||!cfg.enabled)throw Error('Generation preflight is disabled on staging.');const u=new URL(raw);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');if(location.hostname!=='staging.srnastudytool.com')throw Error('Staging only.');const response=await fetch(u.origin+'/generation/preflight',{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Generation evidence preflight failed ('+response.status+').');return data;}
 async function generationRequest(path,request){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
@@ -235,5 +246,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
 })();
