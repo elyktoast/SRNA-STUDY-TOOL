@@ -137,3 +137,7 @@ test('AI creation retains Save Unpublished alongside generated preview and expla
  assert.ok(ui.includes('No indexed passages found. Refine the topic'));
  assert.ok(ui.includes('Evidence found for '+"'"+'+topic'));
 });
+
+test('paid generation is gated on current successful indexed evidence preflight',()=>{
+ for(const token of ['let checkedEvidence=null','checkedEvidence={topic,mode:',"checkedEvidence.topic!==topic", "checkedEvidence.mode!==el('sl-mode').value", "checkedEvidence.format!==el('sl-format').value",'Run Check indexed evidence','checkedEvidence=null;output.textContent=error.message',"topicInput.dispatchEvent(new Event('input'"]){assert.ok(ui.includes(token),token);}
+});
