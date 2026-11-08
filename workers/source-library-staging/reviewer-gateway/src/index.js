@@ -349,7 +349,7 @@ export default {
     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
     const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';
     const relayOK=upstream.ok&&containerResult.provider_status===200;
-    return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:relayOK?'OK':'UNAVAILABLE',container_relay_rule:relayOK?'OK':upstream.ok?'PROVIDER_'+containerResult.provider_status:relayRule,generation_ready:false}));
+    return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:relayOK?'OK':'UNAVAILABLE',container_relay_rule:relayOK?'OK':upstream.ok?'PROVIDER_'+containerResult.provider_status:relayRule,metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK'),generation_ready:false}));
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){

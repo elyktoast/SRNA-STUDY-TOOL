@@ -73,6 +73,8 @@ test('hybrid provider diagnostic reports per-provider states without claiming ge
  assert.ok(ui.includes("Array.isArray(result.providers)"));
  assert.ok(ui.includes("Reviewer container relay: "));
  assert.ok(ui.includes("Generation readiness not verified."));
+ assert.ok(ui.includes("result.metadata_ready===true"));
+ assert.ok(ui.includes("All three provider metadata checks passed; generation not tested."));
  assert.ok(ui.includes("Gemini and Cloudflare AI were not checked"));
 });
 
@@ -84,6 +86,7 @@ test('gateway checks all three providers using metadata-only GET endpoints',()=>
  assert.ok(gateway.includes("probe('cloudflare'"));
  assert.ok(gateway.includes("method:'GET',headers,redirect:'manual'"));
  assert.ok(gateway.includes("generation_ready:false"));
+ assert.ok(gateway.includes("metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK')"));
 });
 
 test('PDF review exposes loading, busy, and error feedback beside its button',()=>{
