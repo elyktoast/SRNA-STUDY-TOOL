@@ -108,7 +108,7 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
                         "schema_version": 1,
                         "embedding_model": MODEL,
                         "inventory_digest": source["inventory_digest"]
-                    }, separators=(",", ":")) + "\\n")
+                    }, separators=(",", ":")) + "\n")
                     stream.flush()
                     os.fsync(stream.fileno())
                 for entry in source["entries"]:
