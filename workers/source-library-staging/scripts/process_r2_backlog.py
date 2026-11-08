@@ -11,6 +11,7 @@ import os
 import re
 from pathlib import PurePosixPath
 from process_r2_textbook import BUCKET, run
+from process_textbook import ReviewRequiredError
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
@@ -129,6 +130,8 @@ def process_backlog(client, owner_uid, limit=10, apply=False,
                 "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
                 "citation_verified": result.get("citation_verified", False),
             }})
+        except ReviewRequiredError:
+            results.append({"key": key, "ok": True, "indexed": False, "needs_review": True})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
             results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
@@ -210,6 +213,10 @@ def main():
                                                    "ocr_failed_pages": result.get("ocr_failed_pages", []),
                                                    "citation_verified": False}}],
                            "succeeded": 1, "failed": 0, "skipped": 0}
+            except ReviewRequiredError:
+                summary = {"mode": "apply" if args.apply else "dry-run",
+                           "results": [{"key": key, "ok": True, "indexed": False, "needs_review": True}],
+                           "succeeded": 0, "failed": 0, "skipped": 0, "needs_review": 1}
             except Exception as exc:
                 summary = {"mode": "apply" if args.apply else "dry-run",
                            "results": [{"key": key, "ok": False,
@@ -221,7 +228,7 @@ def main():
     print(json.dumps(summary, indent=2))
     if summary["failed"]:
         raise SystemExit(1)
-    if args.apply and not summary["succeeded"] and not summary["skipped"]:
+    if args.apply and not summary["succeeded"] and not summary["skipped"] and not any(x.get("needs_review") for x in summary["results"]):
         raise SystemExit("No staging textbooks were indexed")
 
 
