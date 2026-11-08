@@ -91,7 +91,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
       fs.writeFileSync(args[1], JSON.stringify({
         schema_version: 1, inventory_digest: result.digest,
         item_count: result.unique, entries: result.entries
-      }) + '\\n', {flag: 'wx', mode: 0o600});
+      }) + '\n', {flag: 'wx', mode: 0o600});
       console.log(JSON.stringify({ok: true, unique: result.unique, digest: result.digest, exported: args[1]}));
     } else {
       console.log(JSON.stringify(result, null, 2));
