@@ -7,3 +7,15 @@
 .admin-workspace:has([data-admin-view-host][data-view="source-library"]) .admin-main>[data-admin-view-host],.admin-workspace:has([data-admin-view-host][data-view="ai-generation"]) .admin-main>[data-admin-view-host]{max-width:none;padding:22px 26px 36px}
 .admin-workspace:has([data-admin-view-host][data-view="source-library"]) .admin-main,.admin-workspace:has([data-admin-view-host][data-view="ai-generation"]) .admin-main{overscroll-behavior:contain}
 @media(max-width:850px){.admin-workspace:has([data-admin-view-host][data-view="source-library"]) .admin-main>[data-admin-view-host],.admin-workspace:has([data-admin-view-host][data-view="ai-generation"]) .admin-main>[data-admin-view-host]{padding:14px}}
+
+/* Dedicated full-screen operator workspace for staging Sources and AI. */
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace{padding:0!important}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-admin-dashboard__card{width:100vw;max-width:none;height:100dvh;max-height:100dvh;border-radius:0;margin:0}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-admin-dashboard__card>.mbu-app-tools__head{padding:10px 24px;min-height:66px;align-items:center}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-app-tools__head h2{font-size:19px;margin:0}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-app-tools__head .mbu-section-kicker,#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-modal-subtitle{display:none}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-workspace{grid-template-columns:190px minmax(0,1fr)}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-main>[data-admin-view-host]{max-width:none;padding:16px 24px 32px}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-main{overscroll-behavior:contain}
+#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-app-tools__status{display:none}
+@media(max-width:750px){#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-workspace{grid-template-columns:1fr}#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-nav{display:none}#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-main>[data-admin-view-host]{padding:12px}}
