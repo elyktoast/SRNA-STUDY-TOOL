@@ -10,6 +10,7 @@ import os
 import sys
 from pathlib import Path
 from uuid import UUID
+from urllib.parse import urlsplit, unquote
 from item_semantic_inventory_reconcile_v2 import load_inventory, reconcile
 
 MAX_ITEMS = 10000
@@ -54,6 +55,24 @@ def prepare(inventory_path, vectors_path, *, model):
         raise ValueError("Incomplete embedding inventory")
     rows.sort(key=lambda row: row[0])
     return rows, inventory, digest, dimension
+
+
+def validate_staging_db_url(url):
+    """Reject production or lookalike DB targets before any connection."""
+    try:
+        parsed = urlsplit(url)
+        host, username = parsed.hostname, unquote(parsed.username or "")
+    except (ValueError, TypeError):
+        raise ValueError("Invalid staging database target") from None
+    direct = host == "db.xqyasyambwdyhsjkftqu.supabase.co"
+    pooler = bool(host and host.endswith(".pooler.supabase.com"))
+    if (parsed.scheme not in ("postgres", "postgresql")
+            or not (direct or pooler)
+            or username != ("postgres" if direct else "postgres.xqyasyambwdyhsjkftqu")
+            or parsed.path != "/postgres" or parsed.fragment
+            or not parsed.password):
+        raise ValueError("Invalid staging database target")
+    return True
 
 
 def apply(conn, *, owner_uid, model, rows, inventory):
@@ -102,6 +121,7 @@ def main(argv=None, env=None, connect=None):
                 raise ValueError("Index import not authorized")
             if not owner or not env.get("STAGING_DATABASE_URL"):
                 raise ValueError("Missing staging database configuration")
+            validate_staging_db_url(env["STAGING_DATABASE_URL"])
             if connect is None:
                 import psycopg
                 connect = psycopg.connect
