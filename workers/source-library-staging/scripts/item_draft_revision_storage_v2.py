@@ -21,7 +21,7 @@ def digest(item):
 
 
 def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
-                  citation_excerpts=None, option_evidence=None,
+                  citation_excerpts=None, option_evidence=None, question_edits=None,
                   reviewer_notes):
     owner, draft_id = (str(UUID(str(x))) for x in (owner_uid,draft_id))
     if not isinstance(expected_parent_sha256,str) or len(expected_parent_sha256)!=64 or any(c not in "0123456789abcdef" for c in expected_parent_sha256):
@@ -68,7 +68,7 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
     if len(trusted_passages)!=len(ids):
         raise ValueError("Indexed passage missing from owned textbook")
     proposal=propose_revision({**parent,"question":parent_question},trusted_passages,
-        citation_excerpts=citation_excerpts,option_evidence=option_evidence)
+        citation_excerpts=citation_excerpts,option_evidence=option_evidence,question_edits=question_edits)
     if proposal["issues"]:
         raise RevisionValidationError(proposal["issues"])
     revised=proposal["question"]
