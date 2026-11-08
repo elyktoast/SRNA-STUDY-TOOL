@@ -19,6 +19,11 @@ def check(item, trusted_passages):
     if len(ids) != len(options) or len(set(ids)) != len(ids) or not keys or any(k not in ids for k in keys):
         return [{"rule_id": "R-12.4", "message": "Invalid option identifiers or key"}]
     issues = []
+    # Option evidence must be visible in the item's own cited source packet,
+    # not merely somewhere in the broader retrieval context.
+    citations = item.get("evidence")
+    cited_ids = {citation.get("passage_id") for citation in citations
+                 if isinstance(citation, dict) and citation.get("passage_id")} if isinstance(citations, list) else set()
     if set(mapping) != set(ids):
         issues.append({"rule_id": "R-12.4", "message": "Every keyed and incorrect option needs evidence"})
     for option_id in ids:
@@ -32,6 +37,9 @@ def check(item, trusted_passages):
         explanation = entry.get("explanation")
         if not isinstance(refs, list) or not refs or any(pid not in indexed for pid in refs):
             issues.append({"rule_id": "R-12.4", "message": "Unresolved option evidence for " + str(option_id)})
+        if isinstance(refs, list) and any(pid not in cited_ids for pid in refs):
+            issues.append({"rule_id": "R-12.4", "message":
+                           "Option " + str(option_id) + " references evidence absent from item citations"})
         if not isinstance(explanation, str) or not explanation.strip():
             issues.append({"rule_id": "R-12.4", "message": "Missing option justification for " + str(option_id)})
         elif option_id not in keys and any(phrase in explanation.casefold() for phrase in (
