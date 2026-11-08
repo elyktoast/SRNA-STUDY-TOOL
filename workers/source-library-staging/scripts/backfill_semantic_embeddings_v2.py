@@ -155,8 +155,23 @@ def main(argv=None, env=None):
     parser.add_argument("progress_jsonl")
     parser.add_argument("output_bundle")
     parser.add_argument("--max-new", type=int, default=25)
+    parser.add_argument("--preflight", action="store_true", help="Read-only local validation; no API key or provider requests")
     args = parser.parse_args(argv)
     try:
+        if args.preflight:
+            if env.get("STAGING_ONLY") != "true":
+                raise ValueError("Staging-only operation")
+            source, _ = load_source(args.private_source)
+            progress = load_progress(args.progress_jsonl, source["entries"], digest=source["inventory_digest"])
+            # Reuse the same recovered-vector checks, but make no new requests.
+            result = backfill(args.private_source, args.progress_jsonl, args.output_bundle,
+                              embed=lambda stem: (_ for _ in ()).throw(AssertionError("No provider calls in preflight")),
+                              max_new=0) if not Path(args.output_bundle).exists() else {
+                                  "complete": len(progress) == len(source["entries"]),
+                                  "indexed": len(progress), "expected": len(source["entries"]),
+                                  "new_calls": 0, "output_created": False}
+            print(json.dumps({"ok": True, "preflight": True, **result}))
+            return 0
         if (env.get("STAGING_ONLY") != "true"
                 or env.get("AI_SEMANTIC_EMBEDDING_OPT_IN") != "true"
                 or env.get("SEMANTIC_INDEX_EMBEDDING_MODEL") != MODEL):
