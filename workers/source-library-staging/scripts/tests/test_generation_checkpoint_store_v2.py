@@ -217,7 +217,10 @@ class FingerprintTests(unittest.TestCase):
             output = execute(object(), args, {"STAGING_ONLY": "true",
                 "AI_GENERATION_OPT_IN": "true",
                 "AI_GENERATION_CHECKPOINTS_ENABLED": "true"})
-        self.assertEqual(output, stored)
+        self.assertEqual({k: v for k, v in output.items() if k != "_checkpoint_key"}, stored)
+        self.assertEqual(output["_checkpoint_key"]["textbook_id"], args.textbook_id)
+        self.assertEqual(len(output["_checkpoint_key"]["request_hash"]), 64)
+        self.assertEqual(len(output["_checkpoint_key"]["evidence_hash"]), 64)
         recover.assert_called_once()
         transport.assert_not_called()
         generate.assert_not_called()
