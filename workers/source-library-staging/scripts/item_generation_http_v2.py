@@ -180,7 +180,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                         result = save(conn, {**payload, "owner_uid": owner})
                     return respond("201 Created", result)
                 if draft_match and draft_match.group(2) == "/revisions":
-                    if set(payload) != {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}:
+                    if set(payload) not in ({"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}, {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes", "question_edits"}):
                         raise ValueError("Invalid revision body")
                     raw_excerpts = payload["citation_excerpts"]
                     if not isinstance(raw_excerpts,dict) or any(not isinstance(k,str) or not k.isascii() or not k.isdecimal() or (k != "0" and k.startswith("0")) for k in raw_excerpts):
@@ -190,6 +190,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                         result = save_revision(conn,owner_uid=owner,draft_id=draft_match.group(1),
                             expected_parent_sha256=payload["expected_parent_sha256"],
                             citation_excerpts=excerpts,option_evidence=payload["option_evidence"],
+                            question_edits=payload.get("question_edits"),
                             reviewer_notes=payload["reviewer_notes"])
                     return respond("201 Created",result)
                 if set(payload) != {"status", "notes"}:

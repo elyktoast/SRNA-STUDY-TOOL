@@ -54,4 +54,25 @@ class RevisionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,"Only unpublished"):
             propose_revision(draft,passages)
 
+    def test_rejects_answer_key_and_unrecognized_edits(self):
+        draft,passages=fixture()
+        for edits in ({"key":["B"]},{"rationale":"unsupported"},{"options":{"C":"new"}}):
+            with self.subTest(edits=edits),self.assertRaises(ValueError):
+                propose_revision(draft,passages,question_edits=edits)
+    def test_rejects_empty_stem_and_option_text(self):
+        draft,passages=fixture()
+        draft["question"]["stem"]="Which approach?"
+        for edits in ({"stem":"  "},{"options":{"A":""}}):
+            with self.subTest(edits=edits),self.assertRaises(ValueError):
+                propose_revision(draft,passages,question_edits=edits)
+    def test_text_edits_do_not_mutate_original(self):
+        draft,passages=fixture()
+        draft["question"]["stem"]="Original question"
+        proposal=propose_revision(draft,passages,question_edits={"stem":"Revised question","options":{"A":"Fully awake"}})
+        self.assertEqual(proposal["question"]["stem"],"Revised question")
+        self.assertEqual(proposal["question"]["options"][0]["text"],"Fully awake")
+        self.assertEqual(draft["question"]["stem"],"Original question")
+        self.assertEqual(draft["question"]["options"][0]["text"],"Awake")
+        self.assertFalse(proposal["can_publish"])
+
 if __name__=="__main__": unittest.main()

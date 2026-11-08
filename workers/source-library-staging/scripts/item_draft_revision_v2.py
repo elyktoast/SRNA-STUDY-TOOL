@@ -12,7 +12,7 @@ from item_generation_contract_v2 import validate_complete_item
 
 
 def propose_revision(draft, trusted_passages, *, citation_excerpts=None,
-                     option_evidence=None):
+                     option_evidence=None, question_edits=None):
     if not isinstance(draft, dict) or draft.get("published") is not False or draft.get("status") not in ("pending_review", "needs_revision"):
         raise ValueError("Only unpublished review drafts may be revised")
     if not isinstance(draft.get("question"), dict):
@@ -20,6 +20,34 @@ def propose_revision(draft, trusted_passages, *, citation_excerpts=None,
     if not isinstance(trusted_passages, list) or not trusted_passages:
         raise ValueError("Indexed passages required")
     item = _complete_nonclinical_schema_fields(deepcopy(draft["question"]))
+    # Allow only text changes; answer-key changes require a separate, explicitly
+    # evidence-verified workflow. Original drafts remain immutable.
+    if question_edits is not None:
+        if not isinstance(question_edits, dict) or not question_edits or set(question_edits) - {"stem", "options"}:
+            raise ValueError("Unsupported question edits")
+        if "stem" in question_edits:
+            stem = question_edits["stem"]
+            if not isinstance(stem, str) or not stem.strip() or len(stem) > 5000:
+                raise ValueError("Invalid edited stem")
+            if "stem" not in item or not isinstance(item["stem"], str):
+                raise ValueError("Stem field unavailable")
+            item["stem"] = stem.strip()
+        if "options" in question_edits:
+            changes = question_edits["options"]
+            existing = item.get("options")
+            if not isinstance(existing, list) or not existing or not isinstance(changes, dict) or not changes:
+                raise ValueError("Invalid answer edits")
+            ids = {o.get("id") for o in existing if isinstance(o, dict) and isinstance(o.get("id"), str)}
+            if len(ids) != len(existing) or set(changes) - ids:
+                raise ValueError("Answer IDs cannot be changed")
+            for option in existing:
+                if option["id"] in changes:
+                    value = changes[option["id"]]
+                    if not isinstance(value, str) or not value.strip() or len(value) > 2000:
+                        raise ValueError("Invalid answer text")
+                    if not isinstance(option.get("text"), str):
+                        raise ValueError("Answer text unavailable")
+                    option["text"] = value.strip()
     indexed = {p["passage_id"]:p for p in trusted_passages}
     if len(indexed) != len(trusted_passages):
         raise ValueError("Duplicate indexed passage")
