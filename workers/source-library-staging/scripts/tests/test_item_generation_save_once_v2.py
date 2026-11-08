@@ -76,14 +76,14 @@ class SaveOnceTests(unittest.TestCase):
         self.assertEqual(conn.queries[0][1][:3], (OWNER, BOOK, OWNER))
 
     def test_missing_existing_draft_fails_closed(self):
-        conn = Connection({"saved_draft": {"draft_id": DRAFT}}, draft_status=None)
+        conn = Connection({"save_payload": {"textbook_id": BOOK}, "saved_draft": {"draft_id": DRAFT}}, draft_status=None)
         with self.assertRaisesRegex(ValueError, "Previously saved draft unavailable"):
             save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
                       checkpoint_key=KEY, saver=lambda *_: None)
         self.assertEqual(conn.commits, 0)
 
     def test_failed_insert_does_not_commit(self):
-        conn = Connection({"item_id": "test"})
+        conn = Connection({"save_payload": {"textbook_id": BOOK}})
         def failure(*args):
             raise RuntimeError("DB insert failure")
         with self.assertRaises(RuntimeError):
