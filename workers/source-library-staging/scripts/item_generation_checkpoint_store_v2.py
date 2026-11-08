@@ -170,3 +170,71 @@ def recover_completed(conn, *, owner_uid, textbook_id, request_hash, evidence_ha
     if not isinstance(row[0], dict) or not row[0]:
         raise ValueError("Invalid completed generation result")
     return row[0]
+
+
+def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
+    """Serialize persistence per completed checkpoint and return its existing draft.
+
+    The draft INSERT and checkpoint update commit together. The row lock
+    prevents concurrent HTTP retries from creating duplicate drafts.
+    """
+    owner = str(UUID(str(owner_uid)))
+    book = str(UUID(str(checkpoint_key["textbook_id"])))
+    request_hash = checkpoint_key["request_hash"]
+    evidence_hash = checkpoint_key["evidence_hash"]
+    if any(not isinstance(h, str) or len(h) != 64 or
+           any(c not in "0123456789abcdef" for c in h)
+           for h in (request_hash, evidence_hash)):
+        raise ValueError("Invalid checkpoint fingerprint")
+    if str(UUID(str(save_payload["textbook_id"]))) != book:
+        raise ValueError("Checkpoint textbook mismatch")
+    if "owner_uid" in save_payload and str(UUID(str(save_payload["owner_uid"]))) != owner:
+        raise ValueError("Checkpoint owner mismatch")
+    with conn.cursor() as cur:
+        cur.execute("""
+          select c.completed_result
+          from source_library_staging.generation_checkpoints_v2 c
+          join source_library_staging.textbooks t on t.id=c.textbook_id
+          where c.owner_uid=%s::uuid and c.textbook_id=%s::uuid
+            and t.owner_uid=%s::uuid and t.status='ready'
+            and c.request_hash=%s and c.evidence_hash=%s
+            and c.status='completed' and c.expires_at>now()
+          for update of c
+        """, (owner, book, owner, request_hash, evidence_hash))
+        row = cur.fetchone()
+        if not row or not isinstance(row[0], dict) or not row[0]:
+            raise ValueError("Completed checkpoint unavailable")
+        stored_payload = row[0].get("save_payload")
+        if not isinstance(stored_payload, dict) or fingerprint(stored_payload) != fingerprint(save_payload):
+            raise ValueError("Checkpoint payload mismatch")
+        existing = row[0].get("saved_draft")
+        if existing is not None:
+            if not isinstance(existing, dict) or not existing.get("draft_id"):
+                raise ValueError("Invalid saved draft association")
+            draft_id = str(UUID(str(existing["draft_id"])))
+            # Confirm the existing draft still belongs to this owner and book.
+            cur.execute("""
+              select d.status from source_library_staging.generated_question_drafts_v2 d
+              where d.id=%s::uuid and d.owner_uid=%s::uuid
+                and d.textbook_id=%s::uuid
+            """, (draft_id, owner, book))
+            found = cur.fetchone()
+            if not found:
+                raise ValueError("Previously saved draft unavailable")
+            return {"draft_id": draft_id, "status": found[0]}
+        saved = saver(conn, {**save_payload, "owner_uid": owner})
+        if not isinstance(saved, dict) or not saved.get("draft_id"):
+            raise ValueError("Draft save did not return an identifier")
+        saved_id = str(UUID(str(saved["draft_id"])))
+        cur.execute("""
+          update source_library_staging.generation_checkpoints_v2
+          set completed_result=jsonb_set(completed_result, '{saved_draft}',
+              %s::jsonb, true),updated_at=now()
+          where owner_uid=%s::uuid and textbook_id=%s::uuid
+            and request_hash=%s and evidence_hash=%s and status='completed'
+        """, (json.dumps({"draft_id": saved_id}), owner, book,
+              request_hash, evidence_hash))
+        if cur.rowcount != 1:
+            raise ValueError("Checkpoint draft association failed")
+    conn.commit()
+    return {**saved, "draft_id": saved_id}

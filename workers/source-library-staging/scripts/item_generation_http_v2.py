@@ -9,6 +9,7 @@ from uuid import UUID
 
 from run_grounded_generation_v2 import execute
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
+from item_generation_checkpoint_store_v2 import save_once
 from item_draft_revalidation_v2 import revalidate
 from item_draft_revision_storage_v2 import save_revision, list_revisions, RevisionValidationError
 
@@ -284,7 +285,13 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if live:
                     # Persist the same generated item in the private, owner-scoped
                     # staging draft bank. This never publishes or approves it.
-                    saved = save(conn, {**result["save_payload"], "owner_uid": owner})
+                    result = dict(result)
+                    key = result.pop("_checkpoint_key", None)
+                    if key is not None:
+                        saved = save_once(conn, owner_uid=owner, save_payload=result["save_payload"],
+                                          checkpoint_key=key, saver=save)
+                    else:
+                        saved = save(conn, {**result["save_payload"], "owner_uid": owner})
                     result = {**result, "draft_id": saved["draft_id"],
                               "draft_status": saved["status"], "published": False,
                               "requires_human_review": True}

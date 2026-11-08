@@ -147,6 +147,44 @@ class LiveDraftPersistenceTests(unittest.TestCase):
         self.assertEqual(data["draft_id"], "00000000-0000-4000-8000-000000000003")
         self.assertEqual(saver.call_args.args[1]["owner_uid"], UID)
 
+    @patch("item_generation_http_v2.save_once", return_value={
+        "draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
+    @patch("item_generation_http_v2.save")
+    @patch("item_generation_http_v2.execute", return_value={
+        "item": {"stem": "Synthetic"},
+        "save_payload": {"textbook_id": "00000000-0000-4000-8000-000000000002"},
+        "_checkpoint_key": {"textbook_id": "00000000-0000-4000-8000-000000000002",
+                            "request_hash": "a" * 64, "evidence_hash": "b" * 64}})
+    def test_checkpointed_retries_use_idempotent_save(self, execute, saver, save_once):
+        first_status, first = self.request()
+        second_status, second = self.request()
+        self.assertEqual((first_status, second_status), ("200 OK", "200 OK"))
+        self.assertEqual(first["draft_id"], second["draft_id"])
+        self.assertNotIn("_checkpoint_key", first)
+        self.assertFalse(first["published"])
+        self.assertEqual(save_once.call_count, 2)
+        saver.assert_not_called()
+
+    @patch("item_generation_http_v2.save_once", side_effect=ValueError("Checkpoint draft association failed"))
+    @patch("item_generation_http_v2.execute", return_value={
+        "item": {"stem": "Synthetic"},
+        "save_payload": {"textbook_id": "00000000-0000-4000-8000-000000000002"},
+        "_checkpoint_key": {"textbook_id": "00000000-0000-4000-8000-000000000002",
+                            "request_hash": "a" * 64, "evidence_hash": "b" * 64}})
+    def test_checkpoint_link_failure_never_reports_saved_draft(self, execute, saver):
+        status, data = self.request()
+        self.assertEqual(status, "422 Unprocessable Entity")
+        self.assertNotIn("draft_id", data)
+        saver.assert_called_once()
+
+    @patch("item_generation_http_v2.save_once")
+    @patch("item_generation_http_v2.execute")
+    def test_unauthorized_checkpoint_recovery_never_saves(self, execute, saver):
+        status, data = self.request(token="invalid")
+        self.assertEqual(status, "403 Forbidden")
+        execute.assert_not_called()
+        saver.assert_not_called()
+
     @patch("item_generation_http_v2.save", side_effect=ValueError("not ready"))
     @patch("item_generation_http_v2.execute", return_value={
         "item": {"stem": "Synthetic"}, "save_payload": {"textbook_id": "00000000-0000-4000-8000-000000000002"}})

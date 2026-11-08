@@ -113,7 +113,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
             request_hash=request_hash, evidence_hash=evidence_hash)
         if recovered is not None:
-            return recovered
+            return {**recovered, "_checkpoint_key": {"textbook_id": args.textbook_id,
+                "request_hash": request_hash, "evidence_hash": evidence_hash}}
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
@@ -192,6 +193,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
                  request_hash=request_hash, evidence_hash=evidence_hash,
                  result=response)
+    if checkpoint_enabled:
+        response["_checkpoint_key"] = {"textbook_id": args.textbook_id,
+            "request_hash": request_hash, "evidence_hash": evidence_hash}
     return response
 
 
