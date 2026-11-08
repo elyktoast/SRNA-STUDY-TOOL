@@ -17,6 +17,7 @@ from extract_textbook import extract
 from import_extraction import import_passages, validate
 from source_extraction_quality_v2 import assess
 from source_page_review_v2 import load_reviewed_pages
+from import_extraction import read_jsonl
 
 
 def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False, review_images=False, reviewed_pages=(), page_review_file=None):
@@ -38,7 +39,15 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         raise ValueError("Local page review JSON is not authenticated; import requires trusted server-side approval")
     verified_pages = load_reviewed_pages(page_review_file, validated) if page_review_file else ()
     quality = assess(validated, reviewed_pages=verified_pages if apply else tuple(set(verified_pages) | set(reviewed_pages)))
+    sections = list(read_jsonl(out / "sections.jsonl")) if (out / "sections.jsonl").exists() else []
+    volume_bookmarks = [
+        {"pdf_page": section["start_page"], "heading": section["heading"][:120]}
+        for section in sections
+        if __import__("re").search(r"\\bvol(?:ume)?\\.?\\s*(?:1|2|i|ii)\\b", section["heading"], __import__("re").I)
+    ][:20]
     result = {
+        "section_count": len(sections),
+        "volume_bookmark_candidates": volume_bookmarks,
         "extraction_quality": quality,
         "pdf_pages": validated["pdf_page_count"],
         "passages": validated["passage_count"],
