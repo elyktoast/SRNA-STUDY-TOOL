@@ -298,10 +298,10 @@ function ensureAICommandCenter(){
  const draftControls=generationPanel.querySelector('#sl-save-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
- if(draftControls){const save=draftControls.querySelector('#sl-save-generated');if(save)create.append(save);drafts.append(draftControls);const viewDrafts=draftControls.querySelector('#sl-list-generated');if(viewDrafts)viewDrafts.addEventListener('click',()=>setAIView('drafts'));}
+ if(draftControls){const save=draftControls.querySelector('#sl-save-generated');if(save)generationPanel.append(save);drafts.append(draftControls);const viewDrafts=draftControls.querySelector('#sl-list-generated');if(viewDrafts)viewDrafts.addEventListener('click',()=>setAIView('drafts'));}
  if(draftDetail)editor.querySelector('#sl-clinical-editor-body').append(draftDetail);
  if(revisionEditor&&revisionEditor.parentElement!==draftDetail)editor.querySelector('#sl-clinical-editor-body').append(revisionEditor);
- create.append(generationPanel);if(create.querySelector('#sl-save-generated'))generationPanel.append(create.querySelector('#sl-save-generated'));
+ create.append(generationPanel);
  ops.append(providerPanel);
  center.append(editor);body.append(center);setAIView(lastAIView);return center;
 }
