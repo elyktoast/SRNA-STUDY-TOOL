@@ -52,6 +52,19 @@ class ReconcileTests(unittest.TestCase):
         self.assertTrue(result["ready"])
         self.assertEqual(cur.execute.call_count, 2)
 
+    def test_full_nine_thousand_item_inventory(self):
+        ids = [str(i).zfill(5) for i in range(9000)]
+        pages = [
+            [(item_id, HASH) for item_id in ids[i:i + 1000]]
+            for i in range(0, len(ids), 1000)
+        ] + [[]]
+        conn, cur = connection(pages)
+        result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
+                           inventory={item_id: HASH for item_id in ids})
+        self.assertTrue(result["ready"])
+        self.assertEqual(result["indexed_count"], 9000)
+        self.assertEqual(cur.execute.call_count, 10)
+
     def test_duplicate_or_disordered_page_rejected(self):
         conn, _ = connection([[("b", HASH), ("a", HASH)]])
         with self.assertRaisesRegex(ValueError, "pagination"):
