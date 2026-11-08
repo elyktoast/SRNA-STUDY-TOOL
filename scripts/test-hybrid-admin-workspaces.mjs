@@ -30,3 +30,14 @@ test('AI navigation scrolls only the contained admin workspace',()=>{
  assert.ok(!ui.includes("center.scrollIntoView("),'AI navigation must not scroll the page');
  assert.ok(!ui.includes("detail.scrollIntoView("),'draft opening must not scroll the page');
 });
+
+test('PDF preview replaces center reader placeholder and reports viewer failures',()=>{
+ assert.ok(ui.includes('if(target)target.replaceChildren()'));
+ assert.ok(ui.includes("frame.addEventListener('error'"));
+ assert.ok(ui.includes('Opening textbook in the document reader'));
+});
+test('provider diagnostic does not imply all providers were checked',()=>{
+ assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
+ assert.ok(ui.includes('Check Groq route'));
+ assert.ok(ui.includes('sl-blueprint-advanced'));
+});
