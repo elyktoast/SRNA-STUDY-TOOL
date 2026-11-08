@@ -44,6 +44,31 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite attempted to change protected metadata"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
+    # A rule-specific rewrite must not silently alter the answer.
+    if candidate.get("key") != original.get("key"):
+        return {"item": deepcopy(original), "issues": [
+            {"rule_id": "R-5.1", "message": "Rewrite changed answer key"}] + deepcopy(issues),
+            "rewrite_attempts": 1, "can_publish": False}
+    if original.get("format") in ("MC", "MS"):
+        def keyed_texts(item):
+            options = item.get("options")
+            if not isinstance(options, list):
+                return None
+            lookup = {o.get("id"): o.get("text") for o in options if isinstance(o, dict)}
+            return [lookup.get(k) for k in original.get("key", [])]
+        if keyed_texts(candidate) != keyed_texts(original):
+            return {"item": deepcopy(original), "issues": [
+                {"rule_id": "R-5.1", "message": "Rewrite changed keyed option text"}] + deepcopy(issues),
+                "rewrite_attempts": 1, "can_publish": False}
+    for fmt, field, answer_field in (
+            ("SA", "sa", "answer"), ("DD", "dd", "pairs"),
+            ("HS", "hs", "correct_region")):
+        if original.get("format") == fmt:
+            before, after = original.get(field), candidate.get(field)
+            if not isinstance(before, dict) or not isinstance(after, dict) or before.get(answer_field) != after.get(answer_field):
+                return {"item": deepcopy(original), "issues": [
+                    {"rule_id": "R-5.1", "message": "Rewrite changed protected answer"}] + deepcopy(issues),
+                    "rewrite_attempts": 1, "can_publish": False}
     prior = original.get("concept_card")
     revised = candidate.get("concept_card")
     if isinstance(prior, dict) and (
