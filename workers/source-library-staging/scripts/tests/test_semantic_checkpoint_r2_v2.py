@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import Mock
 try:
     from cryptography.fernet import Fernet
-    from semantic_checkpoint_r2_v2 import transfer, BUCKET, KEY
+    from semantic_checkpoint_r2_v2 import transfer, BUCKET, KEY, snapshot_key
 except ImportError:
     raise unittest.SkipTest('Optional cryptography dependency not installed')
 
@@ -63,6 +63,27 @@ class TestEncryptedCheckpoint(unittest.TestCase):
         with self.assertRaises(ValueError):
             transfer("save", self.path, env=self.env, client=self.client)
         self.assertEqual(self.client.objects[(BUCKET, KEY)], first)
+
+    def test_versioned_snapshots_preserve_previous_batches(self):
+        self.path.write_bytes(b"batch-one")
+        transfer("save", self.path, env=self.env, client=self.client, snapshot="run-100")
+        self.path.write_bytes(b"batch-two")
+        transfer("save", self.path, env=self.env, client=self.client, snapshot="run-101")
+        self.assertNotEqual(
+            self.client.objects[(BUCKET, snapshot_key("run-100"))],
+            self.client.objects[(BUCKET, snapshot_key("run-101"))])
+        self.path.unlink()
+        transfer("restore", self.path, env=self.env, client=self.client, snapshot="run-100")
+        self.assertEqual(self.path.read_bytes(), b"batch-one")
+        self.path.unlink()
+        transfer("restore", self.path, env=self.env, client=self.client, snapshot="run-101")
+        self.assertEqual(self.path.read_bytes(), b"batch-two")
+
+    def test_invalid_snapshot_ids_fail_before_storage(self):
+        for snapshot in ("../escape", "", "a/b", "x" * 81):
+            with self.subTest(snapshot=snapshot):
+                with self.assertRaises(ValueError):
+                    transfer("restore", self.path, env=self.env, client=self.client, snapshot=snapshot)
 
     def test_missing_checkpoint_does_not_create_file(self):
         self.assertEqual(transfer("restore", self.path, env=self.env, client=self.client),
