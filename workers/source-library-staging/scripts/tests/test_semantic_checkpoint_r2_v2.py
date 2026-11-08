@@ -45,7 +45,9 @@ class TestEncryptedCheckpoint(unittest.TestCase):
                     "SEMANTIC_CHECKPOINT_ENCRYPTION_KEY": Fernet.generate_key().decode()}
 
     def test_round_trip_encrypted_and_exclusive(self):
-        original = b'{"schema_version":1}\n{"item_id":"one"}\n'
+        original = b'{"schema_version":1}
+{"item_id":"one"}
+'
         self.path.write_bytes(original)
         self.assertEqual(transfer("save", self.path, env=self.env, client=self.client), {"saved": True})
         self.assertNotIn(original, self.client.objects[(BUCKET, KEY)])
