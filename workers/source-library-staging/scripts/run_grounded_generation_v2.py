@@ -49,6 +49,28 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
+    # Safe, no-cost review readiness: never imply that a configured provider
+    # or a requested flag is an independently completed review.
+    generator_id = env.get("AI_GENERATOR_MODEL", "").strip()
+    reviewer_id = env.get("AI_REVIEWER_MODEL", "").strip()
+    blind_requested = env.get("AI_BLIND_REVIEW_OPT_IN") == "true"
+    rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
+    summary["review_readiness"] = {
+        "rewrite": "configured" if rewrite_requested and generator_id else
+                   "missing_generator_model" if rewrite_requested else "disabled",
+        "blind_review": (
+            "configured" if blind_requested and reviewer_id and generator_id
+            and reviewer_id != generator_id else
+            "missing_reviewer_model" if blind_requested and not reviewer_id else
+            "missing_generator_model" if blind_requested and not generator_id else
+            "reviewer_must_differ" if blind_requested else "disabled"),
+        "independent_review_completed": False,
+        "clinical_review_required": True,
+    }
+    if args.execute and blind_requested and summary["review_readiness"]["blind_review"] != "configured":
+        raise ValueError("Blind review requires distinct configured generator and reviewer models")
+    if args.execute and rewrite_requested and not generator_id:
+        raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
     request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
