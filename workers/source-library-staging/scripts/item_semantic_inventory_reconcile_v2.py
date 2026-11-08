@@ -34,11 +34,10 @@ def load_inventory(path):
                 or item_id in inventory):
             raise ValueError("Invalid or duplicate canonical item")
         inventory[item_id] = stem_hash
-    canonical = sorted(
-        ({"item_id": item_id, "stem_hash": stem_hash}
-         for item_id, stem_hash in inventory.items()),
-        key=lambda entry: entry["item_id"],
-    )
+    # Preserve exporter order: JavaScript localeCompare and Python Unicode sorting
+    # can differ, so re-sorting here could reject an otherwise valid export.
+    canonical = [{"item_id": entry["item_id"], "stem_hash": entry["stem_hash"]}
+                 for entry in entries]
     calculated = hashlib.sha256(
         json.dumps(canonical, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
     ).hexdigest()
