@@ -69,7 +69,7 @@ genEl('sl-save-generated').onclick=async()=>{
 };
 async function openSavedDraft(draftId,button){
  const detail=genEl('sl-draft-detail'),status=genEl('sl-draft-status'),json=genEl('sl-draft-json');
- detail.hidden=false;json.textContent='';genEl('sl-draft-validation').hidden=true;status.textContent='Loading private draft…';button.disabled=true;
+ detail.hidden=false;currentDraftQuestion=null;json.textContent='';genEl('sl-draft-validation').hidden=true;status.textContent='Loading private draft…';button.disabled=true;
  try{
   const data=await storage.getGeneratedDraft(draftId);
   if(data.published!==false)throw Error('Draft publication status is not verified.');
@@ -80,7 +80,7 @@ async function openSavedDraft(draftId,button){
   genEl('sl-revision-status').textContent='';genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();
   genEl('sl-draft-history-output').hidden=true;
   genEl('sl-current-revision').hidden=true;
-  currentDraftQuestion=data.question;renderReadableQuestion(genEl('sl-readable-question'),data.question);populateQuestionEditor(data.question);genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=data.question||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:data.question,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+  const revision=await storage.listDraftRevisions(draftId);if(revision.published!==false||!revision.current_question||!/^[a-f0-9]{64}$/.test(revision.current_question_sha256||''))throw Error('Latest unpublished revision could not be verified.');currentDraftQuestion=revision.current_question;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);populateQuestionEditor(currentDraftQuestion);genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=currentDraftQuestion||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:currentDraftQuestion,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
   detail.scrollIntoView({behavior:'smooth',block:'nearest'});
  }catch(error){status.textContent='Cannot open draft: '+(error.message||'Unknown error');}
  finally{button.disabled=false;}
@@ -161,7 +161,8 @@ genEl('sl-save-revision').onclick=async()=>{
   });
   if(saved.published!==false||saved.can_publish!==false)throw Error('Unexpected revision publication state.');
   status.textContent='Unpublished revision '+saved.revision_number+' saved. Clinical review still required.';
-  const updated=await storage.listDraftRevisions(draftId);if(updated.published!==false)throw Error('Unverified draft state.');currentDraftQuestion=updated.current_question;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);populateQuestionEditor(currentDraftQuestion);genEl('sl-draft-history').click();
+  try{const updated=await storage.listDraftRevisions(draftId);if(updated.published!==false)throw Error('Unverified draft state.');currentDraftQuestion=updated.current_question;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);populateQuestionEditor(currentDraftQuestion);genEl('sl-draft-history').click();}
+  catch(refreshError){status.textContent='Revision '+saved.revision_number+' saved unpublished, but refresh failed: '+(refreshError.message||'Unknown error')+'. Reopen this draft to refresh.';}
  }catch(error){status.textContent='Revision not saved: '+(error.message||'Unknown error');}
  finally{btn.disabled=false;}
 };
