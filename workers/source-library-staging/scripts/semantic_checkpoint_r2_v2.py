@@ -5,15 +5,23 @@ ephemeral runner storage, and never written to Actions artifacts or logs.
 """
 import argparse
 import os
+import re
 import sys
 from pathlib import Path
 
 BUCKET = "srna-staging-textbooks"
-KEY = "private-semantic-checkpoints/canonical-gemini-embedding-001.jsonl.fernet"
+PREFIX = "private-semantic-checkpoints/canonical-gemini-embedding-001"
+KEY = PREFIX + ".jsonl.fernet"
+
+
+def snapshot_key(snapshot):
+    if not isinstance(snapshot, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,79}", snapshot):
+        raise ValueError("Invalid snapshot identifier")
+    return f"{PREFIX}/snapshots/{snapshot}.jsonl.fernet"
 MAX_BYTES = 100_000_000
 
 
-def transfer(mode, checkpoint, *, env=None, client=None):
+def transfer(mode, checkpoint, *, env=None, client=None, snapshot=None):
     env = os.environ if env is None else env
     if env.get("STAGING_ONLY") != "true" or env.get("SEMANTIC_CHECKPOINT_R2_OPT_IN") != "true":
         raise ValueError("Explicit staging checkpoint opt-in required")
@@ -34,12 +42,13 @@ def transfer(mode, checkpoint, *, env=None, client=None):
         client = boto3.client("s3", endpoint_url=f"https://{account}.r2.cloudflarestorage.com",
                               aws_access_key_id=access, aws_secret_access_key=key,
                               region_name="auto")
+    object_key = snapshot_key(snapshot) if snapshot is not None else KEY
     path = Path(checkpoint)
     if mode == "restore":
         if path.exists():
             raise ValueError("Refusing to overwrite local checkpoint")
         try:
-            response = client.get_object(Bucket=BUCKET, Key=KEY)
+            response = client.get_object(Bucket=BUCKET, Key=object_key)
         except client.exceptions.ClientError as exc:
             if exc.response.get("Error", {}).get("Code") in ("NoSuchKey", "404", "NotFound"):
                 return {"restored": False}
@@ -68,13 +77,13 @@ def transfer(mode, checkpoint, *, env=None, client=None):
     ciphertext = cipher.encrypt(plaintext)
     # Refuse to overwrite a prior checkpoint; concurrent saves must fail closed.
     try:
-        client.head_object(Bucket=BUCKET, Key=KEY)
+        client.head_object(Bucket=BUCKET, Key=object_key)
     except client.exceptions.ClientError as exc:
         if exc.response.get("Error", {}).get("Code") not in ("NoSuchKey", "404", "NotFound"):
             raise
     else:
         raise ValueError("Remote checkpoint already exists; overwrite is not authorized")
-    client.put_object(Bucket=BUCKET, Key=KEY, Body=ciphertext,
+    client.put_object(Bucket=BUCKET, Key=object_key, Body=ciphertext,
                       ContentType="application/octet-stream",
                       Metadata={"format": "fernet-jsonl-v1"})
     return {"saved": True}
@@ -84,9 +93,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("mode", choices=("restore", "save"))
     parser.add_argument("checkpoint")
+    parser.add_argument("--snapshot", help="Explicit immutable snapshot ID; required for versioned batches")
     args = parser.parse_args(argv)
     try:
-        result = transfer(args.mode, args.checkpoint)
+        result = transfer(args.mode, args.checkpoint, snapshot=args.snapshot)
         print({"ok": True, **result})
         return 0
     except Exception:
