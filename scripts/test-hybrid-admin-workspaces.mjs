@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {test} from 'node:test';
+const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+const admin=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
+test('PDF filtering uses storage key, never display name from sidecar metadata',()=>{
+ const m=ui.match(/const items=stored\.filter\(item=>\{([\s\S]*?)\}\);updateTextbookChoices\(items\)/);
+ assert.ok(m,'expected explicit PDF filter');
+ const filter=new Function('item',m[1]);
+ const rows=[{key:'books/a.pdf',name:'a.pdf'},{key:'books/a.pdf.source.json',name:'a.pdf'},{key:'books/a.pdf.review.json',name:'a.pdf'},{path:'books/B.PDF',name:'B'}];
+ assert.deepEqual(rows.filter(filter).map(x=>x.key||x.path),['books/a.pdf','books/B.PDF']);
+});
+test('Sources and AI remain separate with clinical editor safety controls',()=>{
+ for(const token of ['ensureResearchLayout()','ensureAICommandCenter()','sl-clinical-editor','sl-workspace-sources','sl-workspace-ai','sl-save-revision','sl-draft-revalidate','sl-editor-back'])assert.ok(ui.includes(token),token);
+ assert.ok(ui.includes("if(!isAI&&dialog.querySelector('#sl-ai-command-center'))"));
+ assert.ok(ui.includes("if(isAI&&dialog.querySelector('#sl-research-layout'))"));
+ assert.ok(ui.includes("if(editing&&(!center.querySelector('#sl-draft-detail')"));
+ assert.ok(ui.includes("const genEl=id=>dialog.querySelector('#'+id)"));
+ assert.ok(admin.includes('host.replaceChildren()'));
+});
