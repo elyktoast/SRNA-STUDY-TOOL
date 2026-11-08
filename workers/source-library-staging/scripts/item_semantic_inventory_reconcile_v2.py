@@ -81,6 +81,11 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 if (not isinstance(embedding, (list, tuple))
                         or not 2 <= len(embedding) <= 4096):
                     raise ValueError("Invalid indexed embedding")
+                # Bound magnitude before cosine: finite float components can
+                # still overflow during squaring and yield a false similarity.
+                if any(type(v) not in (int, float) or not math.isfinite(v)
+                       or abs(v) > 1e100 for v in embedding):
+                    raise ValueError("Invalid indexed embedding")
                 # Reject zero, NaN, infinity and nonnumeric vectors using the
                 # same numerical validation as the semantic similarity scorer.
                 try:
