@@ -141,3 +141,13 @@ test('AI creation retains Save Unpublished alongside generated preview and expla
 test('paid generation is gated on current successful indexed evidence preflight',()=>{
  for(const token of ['let checkedEvidence=null','checkedEvidence={topic,mode:',"checkedEvidence.topic!==topic", "checkedEvidence.mode!==el('sl-mode').value", "checkedEvidence.format!==el('sl-format').value", "checkedEvidence.textbook_id!==textbook_id", "storage.generationPreflight({topic,textbook_id", "checkedEvidence.domain!==genEl('sl-gen-domain').value", "checkedEvidence.objective!==genEl('sl-gen-objective').value",'Run Check indexed evidence','checkedEvidence=null;output.textContent=error.message',"topicInput.dispatchEvent(new Event('input'"]){assert.ok(ui.includes(token),token);}
 });
+
+test('missing staging workspace retries loading without blank screen or stale navigation',()=>{
+ assert.ok(admin.includes('Loading '+"'+section+'"+' workspace…'));
+ assert.ok(admin.includes("source-library-staging-ui.js"));
+ assert.ok(admin.includes("source-material-staging-storage.js"));
+ assert.ok(admin.includes('host.dataset.view!==requestedView'));
+ assert.ok(admin.includes('Source workspace script timed out.'));
+ assert.ok(admin.includes('data-admin-workspace-error'));
+ assert.ok(ui.includes('if(window.MBUStagingSourceWorkbench?.mount)return;'));
+});
