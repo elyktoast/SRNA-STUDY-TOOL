@@ -1,0 +1,112 @@
+name: Phase C Gemini embedding pilot
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Preflight makes zero requests; pilot authorizes at most 25 Gemini embeddings"
+        required: true
+        type: choice
+        default: preflight
+        options:
+          - preflight
+          - pilot-25
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phase-c-gemini-embedding-pilot
+  cancel-in-progress: false
+
+jobs:
+  embedding-pilot:
+    name: Private canonical inventory preflight and bounded Gemini pilot
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 12
+    steps:
+      - name: Check out main without persisted credentials
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Export private canonical stems into ephemeral runner storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$RUNNER_TEMP/srna-semantic"
+          node scripts/audit-canonical-semantic-inventory.mjs --export-stems "$RUNNER_TEMP/srna-semantic/private-stems.json"
+      - name: Credential-free preflight (no provider requests)
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
+      - name: Confirm pilot credential exists without printing it
+        if: inputs.mode == 'pilot-25'
+        shell: bash
+        env:
+          AI_SEMANTIC_GEMINI_API_KEY: ${{ secrets.AI_SEMANTIC_GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$AI_SEMANTIC_GEMINI_API_KEY" ]; then
+            echo "::error::Missing AI_SEMANTIC_GEMINI_API_KEY in source-library-staging environment secrets"
+            exit 1
+          fi
+      - name: Run up to 25 Gemini embeddings (no database writes)
+        if: inputs.mode == 'pilot-25'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+          AI_SEMANTIC_EMBEDDING_OPT_IN: 'true'
+          SEMANTIC_INDEX_EMBEDDING_MODEL: gemini-embedding-001
+          AI_SEMANTIC_GEMINI_API_KEY: ${{ secrets.AI_SEMANTIC_GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --max-new 25
+      - name: Verify checkpoint count and integrity without exposing question stems
+        if: inputs.mode == 'pilot-25'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
+          python - <<'PY'
+          import os,sys
+          from pathlib import Path
+          from backfill_semantic_embeddings_v2 import load_source,load_progress
+          root=Path(os.environ['RUNNER_TEMP'])/'srna-semantic'
+          source,_=load_source(root/'private-stems.json')
+          progress=load_progress(root/'progress.jsonl',source['entries'],digest=source['inventory_digest'])
+          if len(progress)!=25:raise RuntimeError('Expected exactly 25 valid checkpoint entries')
+          print('Pilot verified: 25 canonical embeddings, no database writes')
+          PY
+      - name: Delete private source and checkpoint from runner
+        if: always()
+        shell: bash
+        run: |
+          rm -rf -- "$RUNNER_TEMP/srna-semantic"
