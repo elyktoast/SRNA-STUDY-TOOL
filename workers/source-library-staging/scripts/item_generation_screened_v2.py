@@ -17,18 +17,19 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
-                        semantic_lookup=None):
+                        semantic_lookup=None, review_repair=None, _verified_candidate=None):
     if blind_reviewer is not None and (not callable(blind_reviewer) or not isinstance(generator_model_id, str) or not isinstance(reviewer_model_id, str) or not generator_model_id.strip() or not reviewer_model_id.strip() or generator_model_id.strip() == reviewer_model_id.strip()):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
         raise ValueError("Use either trusted semantic lookup or supplied vectors")
     if (embedding is None) != (neighbors is None):
         raise ValueError("Semantic screening requires both candidate embedding and neighbors")
-    generated = generate_one(adapter, mode=mode, domain=domain,
+    generated = ({"item": _verified_candidate, "schema_issues": []}
+                 if _verified_candidate is not None else generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
-                             generator_model_id=generator_model_id)
+                             generator_model_id=generator_model_id))
     rewrite_attempts = 0
     rewrite_original_issues = list(generated["schema_issues"])
     if rewrite is not None and generated["schema_issues"]:
@@ -166,6 +167,52 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     if screening.get("stages", {}).get("duplicates", {}).get("status") == "flag" and next_state == "draft":
         next_state = "needs_editorial_review"
     screening["next_state"] = next_state
+    # A failed independent or deterministic screening may trigger one bounded
+    # repair. Never retry on missing verification (pending) or provider outages.
+    # Re-run the COMPLETE screening after repair; old passes cannot be inherited.
+    if review_repair is not None and _verified_candidate is None and not rewrite_attempts:
+        failed = []
+        for stage_name, stage in screening.get("stages", {}).items():
+            if stage_name == "human_review" or not isinstance(stage, dict):
+                continue
+            if stage.get("status") in ("fail", "flag"):
+                for issue in stage.get("issues", []):
+                    if isinstance(issue, dict) and issue.get("rule_id"):
+                        failed.append(issue)
+        if failed:
+            def verify(candidate):
+                problems = validate_complete_item(candidate)
+                problems.extend(reconcile(candidate, evidence))
+                problems.extend(answer_evidence_check(candidate, evidence)
+                                if format in ("MC", "MS")
+                                else special_evidence_check(candidate, evidence))
+                return problems
+            repaired = attempt_once(generated["item"], failed, review_repair, verify)
+            if not repaired["issues"] and repaired["rewrite_attempts"] == 1:
+                rerun = generate_and_screen(
+                    adapter, mode=mode, domain=domain, section=section,
+                    objective=objective, evidence=evidence, format=format,
+                    item_id=item_id, known_stems=known_stems,
+                    calculation=calculation, embedding=embedding,
+                    neighbors=neighbors, blind_reviewer=blind_reviewer,
+                    generator_model_id=generator_model_id,
+                    reviewer_model_id=reviewer_model_id,
+                    semantic_lookup=semantic_lookup,
+                    _verified_candidate=repaired["item"])
+                rerun["rewrite_attempts_used"] = 1
+                rerun["screening"]["rewrite_attempts_used"] = 1
+                rerun["screening"]["rewrite_attempts_allowed"] = 0
+                rerun["screening"]["rewrite_original_issues"] = failed
+                return rerun
+            screening["rewrite_attempts_used"] = 1
+            screening["rewrite_attempts_allowed"] = 0
+            screening["rewrite_original_issues"] = failed
+            screening["rewrite_revised_issues"] = repaired["issues"]
+            return {"item_id": item_id, "item": generated["item"],
+                    "generator_issues": failed, "screening": screening,
+                    "next_state": "needs_editorial_review",
+                    "requires_human_review": True, "can_publish": False,
+                    "database_writes": False, "rewrite_attempts_used": 1}
     return {"item_id": item_id, "item": generated["item"],
             "generator_issues": [], "screening": screening,
             "next_state": next_state, "requires_human_review": True,
