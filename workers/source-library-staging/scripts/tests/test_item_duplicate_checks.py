@@ -9,7 +9,7 @@ class DuplicateChecksTests(unittest.TestCase):
         self.assertEqual(stem_fingerprint("Which  drug?"), stem_fingerprint("WHICH drug?!"))
     def test_duplicate_detected(self):
         issues = detect({"stem": "Which drug?"}, ["Which drug?!"])
-        self.assertEqual(issues[0]["rule_id"], "R-11")
+        self.assertEqual(issues[0]["rule_id"], "R-12.9")
     def test_distinct_stems(self):
         self.assertEqual(detect({"stem": "Which drug?"}, ["Which airway?"]), [])
     def test_empty_rejected(self):

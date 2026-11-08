@@ -1,11 +1,16 @@
 name: Diagnose staged reviewer integration
 on:
   workflow_dispatch:
-  push:
-    branches: [fix/source-phase-b-mixed-scan-ocr]
-    paths:
-      - 'scripts/diagnose-source-reviewer-staging.mjs'
-      - '.github/workflows/diagnose-source-reviewer-staging.yml'
+    inputs:
+      check:
+        description: 'Choose integration, read-only recovery, or staging queue publication'
+        required: true
+        type: choice
+        default: integration
+        options:
+          - integration
+          - review-queue-recovery
+          - publish-review-queue
 permissions:
   contents: read
 jobs:
@@ -15,14 +20,72 @@ jobs:
     environment: source-library-staging
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: fix/source-phase-b-mixed-scan-ocr
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Run staged diagnostic (stop on first failing boundary)
+        if: inputs.check == 'integration'
         env:
-          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
         run: node scripts/diagnose-source-reviewer-staging.mjs
+      - uses: actions/setup-python@v5
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
+        with:
+          python-version: '3.11'
+      - run: python -m pip install 'boto3>=1.35,<2' 'PyMuPDF>=1.24,<2' 'psycopg[binary]>=3.2,<4'
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
+      - name: Verify original PDF and derive queue without uploading
+        if: inputs.check == 'review-queue-recovery' || inputs.check == 'publish-review-queue'
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          RECOVERY_MODE: ${{ inputs.check }}
+        run: |
+          python - <<'PY'
+          import os,sys,tempfile,json,hashlib
+          from pathlib import Path
+          import boto3
+          sys.path.insert(0,str(Path('workers/source-library-staging/scripts').resolve()))
+          from extract_textbook import extract
+          from source_review_queue_publish_v2 import prepare_queue_artifacts
+          key=os.environ['PDF_KEY']
+          owner,sep,name=key.partition('/')
+          if not sep or '/' in name or not name.endswith('.pdf'):raise ValueError('Invalid owner-scoped PDF key')
+          client=boto3.client('s3',endpoint_url='https://'+os.environ['R2_ACCOUNT_ID']+'.r2.cloudflarestorage.com',aws_access_key_id=os.environ['R2_ACCESS_KEY_ID'],aws_secret_access_key=os.environ['R2_SECRET_ACCESS_KEY'],region_name='auto')
+          bucket='srna-staging-textbooks'
+          head=client.head_object(Bucket=bucket,Key=key)
+          if not 5<=head['ContentLength']<=300*1024*1024:raise ValueError('Invalid PDF size')
+          with tempfile.TemporaryDirectory() as tmp:
+              pdf=Path(tmp)/name
+              body=client.get_object(Bucket=bucket,Key=key)['Body']
+              try:
+                  with pdf.open('wb') as out:
+                      for chunk in body.iter_chunks(chunk_size=1024*1024):
+                          if chunk:out.write(chunk)
+              finally:body.close()
+              if pdf.stat().st_size!=head['ContentLength'] or client.head_object(Bucket=bucket,Key=key)['ETag']!=head['ETag']:raise ValueError('Source changed or truncated')
+              extraction=Path(tmp)/'extraction'
+              manifest=extract(pdf,extraction,owner,key,ocr=False,review_images=False)
+              artifacts=prepare_queue_artifacts(pdf,extraction)
+              if artifacts['pdf_sha256']!=manifest['sha256']:raise ValueError('Fingerprint mismatch')
+              queue_key=artifacts['queue_r2_key']
+              for candidate in (queue_key,queue_key+'.source.json'):
+                  try:client.head_object(Bucket=bucket,Key=candidate)
+                  except client.exceptions.ClientError as e:
+                      if e.response.get('Error',{}).get('Code') not in ('404','NoSuchKey','NotFound'):raise
+                      print('Missing:',candidate.split('/')[-1])
+                  else:print('Already exists:',candidate.split('/')[-1])
+              if os.environ.get('RECOVERY_MODE') == 'publish-review-queue':
+                  from source_review_r2_publish_v2 import publish_verified_queue
+                  from source_review_publication_lock_v2 import exclusive_publication_lock
+                  with exclusive_publication_lock(os.environ['DATABASE_URL'], bucket, key) as lock:
+                      result=publish_verified_queue(client,bucket,key,extraction,apply=True,publication_lock=lock)
+                  print('Published staging queue:',json.dumps(result))
+              print('Verified extraction:',json.dumps({'sha256':manifest['sha256'],'pages':manifest['pdf_page_count'],'review_pages':len(manifest['low_text_pages']),'queue_sha256':hashlib.sha256(artifacts['queue_json'].encode()).hexdigest(),'publish_requested':os.environ.get('RECOVERY_MODE') == 'publish-review-queue'}))
+          PY

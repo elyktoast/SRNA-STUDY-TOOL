@@ -1,0 +1,70 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createHmac} from 'node:crypto';
+import gateway from '../src/index.js';
+
+const secret = 'staging-test-secret-0123456789-0123456789';
+const env = {
+  STAGING_ONLY: 'true', AI_GENERATION_OPT_IN: 'true',
+  AI_PROVIDER_API_KEY: 'test-key', STAGING_RECEIPT_SIGNING_SECRET: secret,
+  AI_GENERATOR_MODEL: 'generator-model', AI_REVIEWER_MODEL: 'reviewer-model',
+  AI_BLIND_REVIEW_OPT_IN: 'true', AI_REWRITE_OPT_IN: 'true',
+};
+const endpoint = 'https://example.workers.dev/internal/groq-relay';
+function request(step, model, options={}) {
+  const body = JSON.stringify({
+    model, max_tokens: 1024, temperature: 0.2,
+    messages: [{role:'system',content:'Return JSON'},
+      {role:'user',content:JSON.stringify({
+        step, rules_version:'2.0', auto_publish:false,
+        ...(step==='blind_review'?{blind:true}:{}),
+      })}],
+  });
+  const stamp = String(Math.floor(Date.now()/1000));
+  const signature = createHmac('sha256',secret)
+    .update('srna-groq-relay-v1\n'+stamp+'\n'+body).digest('hex');
+  return new Request(endpoint,{method:'POST',headers:{
+    'Content-Type':'application/json','X-Relay-Timestamp':stamp,
+    'X-Relay-Signature':signature},body});
+}
+test('relay rejects swapped model identities before contacting provider', async () => {
+  const original = globalThis.fetch;
+  let calls=0;
+  globalThis.fetch = async () => {calls++;throw Error('unexpected upstream');};
+  try {
+    for (const [step,model] of [['blind_review','generator-model'],
+      ['item_draft','reviewer-model'],['rewrite','reviewer-model']]) {
+      const response=await gateway.fetch(request(step,model),env);
+      assert.equal(response.status,400,step);
+    }
+    assert.equal(calls,0);
+  } finally {globalThis.fetch=original;}
+});
+test('relay accepts opted-in rewrite and independent review',async()=>{
+  const original=globalThis.fetch;
+  const calls=[];
+  globalThis.fetch=async (url,options)=>{
+    calls.push({url:String(url),options});
+    return new Response(JSON.stringify({choices:[{message:{content:'{}'}}]}),
+      {status:200,headers:{'Content-Type':'application/json'}});
+  };
+  try {
+    for(const [step,model] of [['rewrite','generator-model'],
+      ['blind_review','reviewer-model']]) {
+      const response=await gateway.fetch(request(step,model),env);
+      assert.equal(response.status,200,step);
+    }
+    assert.equal(calls.length,2);
+  } finally {globalThis.fetch=original;}
+});
+test('disabled optional review steps cannot contact provider',async()=>{
+  const original=globalThis.fetch;
+  let calls=0;globalThis.fetch=async()=>{calls++;throw Error('unexpected');};
+  try {
+    assert.equal((await gateway.fetch(request('rewrite','generator-model'),
+      {...env,AI_REWRITE_OPT_IN:'false'})).status,400);
+    assert.equal((await gateway.fetch(request('blind_review','reviewer-model'),
+      {...env,AI_BLIND_REVIEW_OPT_IN:'false'})).status,400);
+    assert.equal(calls,0);
+  } finally {globalThis.fetch=original;}
+});

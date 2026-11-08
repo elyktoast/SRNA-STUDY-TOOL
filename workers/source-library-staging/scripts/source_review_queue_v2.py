@@ -9,7 +9,7 @@ import re
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 CATEGORIES = frozenset({
     "ocr_error", "image_content_review", "short_text_review",
-    "blank_candidate_review",
+    "blank_candidate_review", "visual_blank_candidate_review",
 })
 
 def build_review_queue(manifest):

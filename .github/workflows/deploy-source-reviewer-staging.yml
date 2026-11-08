@@ -1,6 +1,6 @@
 name: Deploy private staging reviewer
 # Redeploy staging after database password reset; read updated staging GitHub secrets.
-# Deployment is manual while its short-lived admin smoke token needs renewal.
+# Deployment is manual; authenticated smoke checks use fresh credentials when configured.
 # Avoid container rebuilds for every staging Python source/test commit.
 on:
   workflow_dispatch:
@@ -43,6 +43,15 @@ jobs:
           # Fail closed when a wrong key type or a key from another project is supplied.
           node -e 'const t=process.env.SUPABASE_ANON_KEY; const p=t.split("."); if(p.length!==3) process.exit(1); let c; try{c=JSON.parse(Buffer.from(p[1],"base64url"))}catch{process.exit(1)} if(c.role!=="anon"||c.ref!=="xqyasyambwdyhsjkftqu")process.exit(1); console.log("Staging legacy anon key project and role validated.")'
           echo "Staging-only deployment prerequisites present."
+      - name: Verify checkpoint recovery and gateway safety before deployment
+        run: |
+          set -euo pipefail
+          python -m pip install -r workers/source-library-staging/reviewer-service/requirements.txt
+          for name in test_generation_checkpoint_store_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py; do
+            PYTHONPATH=workers/source-library-staging/scripts python -m unittest discover \
+              -s workers/source-library-staging/scripts/tests -p "$name"
+          done
+          node --test scripts/test-source-library-reviewer-gateway.mjs
       - name: Install reviewer gateway dependencies
         working-directory: workers/source-library-staging/reviewer-gateway
         run: npm install --no-audit --no-fund
@@ -70,6 +79,8 @@ jobs:
           done
       - name: Verify authenticated staging reviewer after deployment
         env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}

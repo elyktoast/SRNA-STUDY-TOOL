@@ -27,6 +27,12 @@ class TransportTests(unittest.TestCase):
         with self.assertRaises(TransportError):
             self.call("https://evil.example/v1/chat")
         opener.open.assert_not_called()
+    def test_rejects_query_string_before_network(self):
+        opener = self.setup_transport(FakeResponse(b"{}"))
+        with self.assertRaises(TransportError):
+            self.call("https://api.example.test/v1/chat?token=secret")
+        opener.open.assert_not_called()
+
     def test_parses_bounded_json(self):
         self.setup_transport(FakeResponse(b'{"choices":[]}'))
         self.assertEqual(self.call(), {"choices": []})
@@ -39,6 +45,34 @@ class TransportTests(unittest.TestCase):
     def test_redirect_handler_blocks_before_following(self):
         with self.assertRaises(TransportError):
             _NoRedirect().redirect_request(None, None, 302, "Found", {}, "https://evil.example/")
+    def test_provider_http_errors_are_classified_without_body(self):
+        from urllib.error import HTTPError
+        from io import BytesIO
+        for status, rule in [(400, "PROVIDER_REQUEST_REJECTED"),
+                             (401, "PROVIDER_AUTH"), (403, "PROVIDER_FORBIDDEN"),
+                             (429, "PROVIDER_RATE_LIMIT"), (500, "PROVIDER_UPSTREAM")]:
+            with self.subTest(status=status):
+                opener = self.setup_transport(FakeResponse(b"{}"))
+                opener.open.side_effect = HTTPError("https://api.example.test/v1/chat", status, "private", {}, BytesIO(b"secret response"))
+                with self.assertRaises(TransportError) as ctx: self.call()
+                self.assertEqual(ctx.exception.rule, rule)
+                self.assertNotIn("secret", str(ctx.exception))
+
+    def test_network_timeout_and_json_errors(self):
+        from urllib.error import URLError
+        import socket
+        for failure, rule in [(URLError("unreachable"), "PROVIDER_NETWORK"),
+                              (URLError(socket.timeout()), "PROVIDER_TIMEOUT"),
+                              (TimeoutError(), "PROVIDER_TIMEOUT")]:
+            with self.subTest(rule=rule):
+                opener = self.setup_transport(FakeResponse(b"{}"))
+                opener.open.side_effect = failure
+                with self.assertRaises(TransportError) as ctx: self.call()
+                self.assertEqual(ctx.exception.rule, rule)
+        self.setup_transport(FakeResponse(b"not json"))
+        with self.assertRaises(TransportError) as ctx: self.call()
+        self.assertEqual(ctx.exception.rule, "PROVIDER_INVALID_JSON")
+
     def test_requires_allowlist(self):
         with self.assertRaises(ValueError): make_transport(allowed_hosts=[])
 

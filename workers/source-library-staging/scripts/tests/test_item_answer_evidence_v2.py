@@ -27,6 +27,13 @@ class EvidenceTests(unittest.TestCase):
         x = item()
         x["distractor_evidence"]["B"]["verdict"] = "supports_key"
         self.assertTrue(check(x, SOURCE))
+    def test_source_silence_does_not_refute_distractor(self):
+        x = item()
+        x["distractor_evidence"]["B"]["explanation"] = (
+            "The passage does not mention the use of muscle relaxants.")
+        issues = check(x, SOURCE)
+        self.assertTrue(any(issue["rule_id"] == "R-2.4" for issue in issues))
+
     def test_other_formats_fail_closed(self):
         self.assertTrue(check({"format": "SA"}, SOURCE))
 

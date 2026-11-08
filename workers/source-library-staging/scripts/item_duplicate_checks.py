@@ -13,5 +13,5 @@ def stem_fingerprint(stem):
 def detect(item, known_stems=()):
     candidate = stem_fingerprint(item["stem"])
     if any(stem_fingerprint(stem) == candidate for stem in known_stems):
-        return [{"rule_id": "R-11", "message": "Duplicate normalized stem"}]
+        return [{"rule_id": "R-12.9", "message": "Duplicate normalized stem"}]
     return []

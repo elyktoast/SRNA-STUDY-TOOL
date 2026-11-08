@@ -43,7 +43,8 @@ def screen(item, *, known_stems=(), source_texts=(), passages=None,
         result["next_state"] = "needs_source_review"
     elif any(stages[name]["status"] in ("fail", "flag")
              for name in ("deterministic_text", "math", "duplicates", "blind_model")):
-        result["next_state"] = "needs_clinical_review" if stages["blind_model"]["status"] == "fail" else "needs_editorial_review"
+        result["next_state"] = ("needs_clinical_review" if stages["blind_model"]["status"] == "fail"
+                                else "needs_editorial_review")
     result["screening_complete"] = all(
         stages[name]["status"] == "pass"
         for name in ("schema", "deterministic_text", "math", "evidence",

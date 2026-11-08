@@ -68,3 +68,21 @@ disable the gateway route. Existing staging review queue functionality remains
 separate; approvals are still disabled.
 
 **Status:** This checklist documents prerequisites, not completed deployment.
+
+## Phase C indexed-evidence preflight (not paid generation)
+
+The private Python WSGI service now mounts `POST /generation/preflight`.
+The staging reviewer gateway allows this route with the existing Supabase
+identity check and the Python service independently checks protected admin role.
+It accepts JSON topic, NCE/SEE mode, question format and optional textbook/page
+filters. The endpoint forces `execute=false`, never calls an AI provider, and
+returns only passage count and metadata (not textbook excerpts).
+
+The staging browser uses `MBU_SOURCE_LIBRARY_STAGING.generationApiUrl`, which
+must be the explicitly verified HTTPS reviewer gateway origin. This is separate
+from the R2 upload API. **Do not configure this URL until a manual staging
+reviewer gateway deployment and authenticated acceptance are successful.**
+Test authorized preflight, unauthorized user, wrong origin, malformed JSON,
+oversized POST, absent indexed evidence, and no paid-model calls. Never use a
+production admin session or production database for acceptance. The Python
+service is not reachable from the browser without the gateway deployment.

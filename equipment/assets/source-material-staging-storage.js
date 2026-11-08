@@ -133,5 +133,90 @@ async function remove(path){await call('/materials/item?path='+key(path),{method
 async function saveReviewDraft(path,draft){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(draft)});return response.json();}
 async function loadReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path));return response.json();}
 async function deleteReviewDraft(path){const response=await call('/chapter-reviews/draft?path='+key(path),{method:'DELETE'});return response.json();}
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft});
+async function generationPreflight(request){const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;if(!raw||!cfg.enabled)throw Error('Generation preflight is disabled on staging.');const u=new URL(raw);if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');if(location.hostname!=='staging.srnastudytool.com')throw Error('Staging only.');const response=await fetch(u.origin+'/generation/preflight',{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Generation evidence preflight failed ('+response.status+').');return data;}
+async function generationRequest(path,request){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw)throw Error('Staging generation backend disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';throw Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);}
+ return data;
+}
+async function checkGroqConnection(){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw||!cfg.enabled||location.hostname!=='staging.srnastudytool.com')throw Error('Staging generation is disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/provider-check',{method:'GET',headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
+ return data;
+}
+async function generateOne(request){return generationRequest('/generation/one',request);}
+async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
+async function listGeneratedDrafts(){
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ if(!raw)throw Error('Staging generation backend disabled.');
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/drafts',{headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft list unavailable ('+response.status+').');return data;
+}
+async function getGeneratedDraft(draftId){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/drafts/'+draftId,{headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft unavailable ('+response.status+').');return data;
+}
+async function revalidateGeneratedDraft(draftId){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const response=await fetch(u.origin+'/generation/drafts/'+draftId+'/revalidate',{method:'GET',headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'});
+ const data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.error||'Draft validation unavailable ('+response.status+').');return data;
+}
+async function draftRevisionRequest(draftId,method,payload){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
+ if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
+ const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
+ const u=new URL(raw);
+ if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
+ const options={method,headers:{Authorization:'Bearer '+token()},credentials:'omit',cache:'no-store',redirect:'error'};
+ if(method==='POST'){options.headers['Content-Type']='application/json';options.body=JSON.stringify(payload);}
+ const response=await fetch(u.origin+'/generation/drafts/'+draftId+'/revisions',options);
+ const data=await response.json().catch(()=>({}));
+ if(!response.ok){
+  const issues=Array.isArray(data.issues)?data.issues.slice(0,25).map(x=>{
+   const rule=typeof x?.rule_id==='string'?x.rule_id:'validation';
+   const message=typeof x?.message==='string'?x.message:'Correction required';
+   return rule+': '+message;
+  }).join('\\n'):'';
+  throw Error((data.error||'Draft revisions unavailable ('+response.status+').')+(issues?'\\n'+issues:''));
+ }
+ return data;
+}
+async function listDraftRevisions(draftId){return draftRevisionRequest(draftId,'GET');}
+async function saveDraftRevision(draftId,payload){
+ if(!payload||typeof payload!=='object'||typeof payload.expected_parent_sha256!=='string'||
+    !/^[a-f0-9]{64}$/.test(payload.expected_parent_sha256)||typeof payload.reviewer_notes!=='string'||
+    !payload.reviewer_notes.trim()||!payload.citation_excerpts||!payload.option_evidence)
+  throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
+ return draftRevisionRequest(draftId,'POST',payload);
+}
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
 })();

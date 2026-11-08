@@ -34,4 +34,9 @@ def check(item, trusted_passages):
             issues.append({"rule_id": "R-12.4", "message": "Unresolved option evidence for " + str(option_id)})
         if not isinstance(explanation, str) or not explanation.strip():
             issues.append({"rule_id": "R-12.4", "message": "Missing option justification for " + str(option_id)})
+        elif option_id not in keys and any(phrase in explanation.casefold() for phrase in (
+                "does not mention", "not mentioned", "doesn't mention",
+                "no mention of", "absence of evidence", "not discussed in the passage")):
+            issues.append({"rule_id": "R-2.4", "message":
+                           "Option " + str(option_id) + " relies on source silence rather than demonstrated falsehood"})
     return issues
