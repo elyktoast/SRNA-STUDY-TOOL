@@ -46,7 +46,7 @@ test('provider diagnostic does not imply all providers were checked',()=>{
 
 test('guided topic picker preserves custom topics and blueprint safety',()=>{
  assert.ok(ui.includes('id="sl-topic-preset"'));
- assert.ok(ui.includes("if(event.target.value)evidencePanel.querySelector('#sl-topic').value=event.target.value"));
+ assert.ok(ui.includes("topicInput.dispatchEvent(new Event('input'"));
  assert.ok(ui.includes("const topic=el('sl-topic').value.trim()"));
  assert.ok(ui.includes("const request={topic,textbook_id,mode:el('sl-mode').value"));
  assert.ok(ui.includes('No indexed textbook ID available in library metadata'));
@@ -136,4 +136,8 @@ test('AI creation retains Save Unpublished alongside generated preview and expla
  assert.ok(ui.includes('sl-evidence-next-step'));
  assert.ok(ui.includes('No indexed passages found. Refine the topic'));
  assert.ok(ui.includes('Evidence found for '+"'"+'+topic'));
+});
+
+test('paid generation is gated on current successful indexed evidence preflight',()=>{
+ for(const token of ['let checkedEvidence=null','checkedEvidence={topic,mode:',"checkedEvidence.topic!==topic", "checkedEvidence.mode!==el('sl-mode').value", "checkedEvidence.format!==el('sl-format').value", "checkedEvidence.textbook_id!==textbook_id", "storage.generationPreflight({topic,textbook_id", "checkedEvidence.domain!==genEl('sl-gen-domain').value", "checkedEvidence.objective!==genEl('sl-gen-objective').value",'Run Check indexed evidence','checkedEvidence=null;output.textContent=error.message',"topicInput.dispatchEvent(new Event('input'"]){assert.ok(ui.includes(token),token);}
 });
