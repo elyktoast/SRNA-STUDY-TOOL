@@ -24,7 +24,7 @@ def connection(pages):
 
 class ReconcileTests(unittest.TestCase):
     def test_complete_index(self):
-        conn, cur = connection([[("a", HASH), ("b", HASH)]])
+        conn, cur = connection([[("a", HASH, [1.0, 0.0]), ("b", HASH, [1.0, 0.0])]])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
                            inventory={"a": HASH, "b": HASH})
         self.assertTrue(result["ready"])
@@ -33,7 +33,7 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual(cur.execute.call_args.args[1], (OWNER, "test", "", 1000))
 
     def test_missing_extra_and_stale_fail_closed(self):
-        conn, _ = connection([[("a", "b" * 64), ("extra", HASH)]])
+        conn, _ = connection([[("a", "b" * 64, [1.0, 0.0]), ("extra", HASH, [1.0, 0.0])]])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
                            inventory={"a": HASH, "missing": HASH})
         self.assertFalse(result["ready"])
@@ -44,8 +44,8 @@ class ReconcileTests(unittest.TestCase):
     def test_paginated_index(self):
         ids = [str(i).zfill(5) for i in range(1001)]
         conn, cur = connection([
-            [(item_id, HASH) for item_id in ids[:1000]],
-            [(ids[-1], HASH)],
+            [(item_id, HASH, [1.0, 0.0]) for item_id in ids[:1000]],
+            [(ids[-1], HASH, [1.0, 0.0])],
         ])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
                            inventory={item_id: HASH for item_id in ids})
@@ -66,8 +66,24 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual(cur.execute.call_count, 10)
 
     def test_duplicate_or_disordered_page_rejected(self):
-        conn, _ = connection([[("b", HASH), ("a", HASH)]])
+        conn, _ = connection([[("b", HASH, [1.0, 0.0]), ("a", HASH, [1.0, 0.0])]])
         with self.assertRaisesRegex(ValueError, "pagination"):
+            reconcile(conn, owner_uid=OWNER, embedding_model="test",
+                      inventory={"a": HASH, "b": HASH})
+
+    def test_invalid_or_inconsistent_embeddings_fail_closed(self):
+        invalid = (None, [], [0.0, 0.0], [float("nan"), 1.0],
+                   [float("inf"), 1.0], ["bad", 1.0], [1.0],
+                   [1.0] * 4097)
+        for vector in invalid:
+            with self.subTest(vector=str(vector)[:50]):
+                conn, _ = connection([[("a", HASH, vector)]])
+                with self.assertRaisesRegex(ValueError, "embedding"):
+                    reconcile(conn, owner_uid=OWNER, embedding_model="test",
+                              inventory={"a": HASH})
+        conn, _ = connection([[("a", HASH, [1.0, 0.0]),
+                               ("b", HASH, [1.0, 0.0, 0.0])]])
+        with self.assertRaisesRegex(ValueError, "dimensions"):
             reconcile(conn, owner_uid=OWNER, embedding_model="test",
                       inventory={"a": HASH, "b": HASH})
 
