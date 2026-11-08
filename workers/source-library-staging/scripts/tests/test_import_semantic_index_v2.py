@@ -7,7 +7,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, Mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from import_semantic_index_v2 import prepare, apply, main
+from import_semantic_index_v2 import prepare, apply, main, validate_staging_db_url
 
 OWNER = "00000000-0000-4000-8000-000000000001"
 HASH = "a" * 64
@@ -85,6 +85,17 @@ class OfflineImportTests(unittest.TestCase):
         conn.assert_not_called()
         self.assertEqual(main([str(self.inventory), str(self.vectors), "--apply"], env, conn), 2)
         conn.assert_not_called()
+
+    def test_staging_database_host_guard(self):
+        valid = ("postgresql://postgres:secret@db.xqyasyambwdyhsjkftqu.supabase.co/postgres",
+                 "postgresql://postgres.xqyasyambwdyhsjkftqu:secret@aws-0-us-east-1.pooler.supabase.com/postgres")
+        for url in valid:
+            self.assertTrue(validate_staging_db_url(url))
+        for url in ("postgresql://postgres:secret@db.other.supabase.co/postgres",
+                    "postgresql://postgres:secret@localhost/postgres",
+                    "postgresql://postgres.other:secret@aws-0-us-east-1.pooler.supabase.com/postgres"):
+            with self.assertRaises(ValueError):
+                validate_staging_db_url(url)
 
     def test_apply_uses_scoped_upsert_and_verifies_before_commit(self):
         rows, inventory, _, _ = prepare(self.inventory, self.vectors, model="test-model")
