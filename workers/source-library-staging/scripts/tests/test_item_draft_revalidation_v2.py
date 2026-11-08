@@ -92,6 +92,26 @@ class RevalidationTests(unittest.TestCase):
         self.assertEqual(value["question"]["evidence"][0]["excerpt"],"Deep extubation always safe.")
 
     @patch("item_draft_revalidation_v2.get_draft")
+    def test_citation_beyond_1200_characters_matches_full_indexed_passage(self,get_draft):
+        quote="A distinct source-supported citation appears after the initial excerpt."
+        value=draft()
+        value["question"]["evidence"][0]["excerpt"]=quote
+        get_draft.return_value=value
+        conn=Conn([(PASSAGE,BOOK,197,"x"*1300+" "+quote)])
+        result=revalidate(conn,owner_uid=OWNER,draft_id=DRAFT)
+        self.assertNotIn("left(p.content,1200)",conn.cur.sql)
+        self.assertFalse(any(x["message"]=="Excerpt mismatch at index 0" for x in result["issues"]))
+        self.assertEqual(result["citation_repair_candidates"],[])
+        self.assertFalse(result["can_publish"])
+
+    @patch("item_draft_revalidation_v2.get_draft")
+    def test_oversized_passage_fails_closed_instead_of_truncating(self,get_draft):
+        get_draft.return_value=draft()
+        conn=Conn([(PASSAGE,BOOK,197,"x"*200001)])
+        with self.assertRaisesRegex(ValueError,"safe citation verification limit"):
+            revalidate(conn,owner_uid=OWNER,draft_id=DRAFT)
+
+    @patch("item_draft_revalidation_v2.get_draft")
     def test_missing_index_passage_blocks(self,get_draft):
         get_draft.return_value=draft()
         result=revalidate(Conn([]),owner_uid=OWNER,draft_id=DRAFT)
