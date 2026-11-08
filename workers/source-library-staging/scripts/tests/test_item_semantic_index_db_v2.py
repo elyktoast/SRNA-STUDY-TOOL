@@ -3,7 +3,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, MagicMock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_semantic_index_db_v2 import lookup, MAX_ROWS
+from item_semantic_index_db_v2 import lookup, MAX_ROWS, PAGE_SIZE
 
 OWNER = "00000000-0000-4000-8000-000000000001"
 
@@ -26,7 +26,36 @@ class SemanticIndexTests(unittest.TestCase):
         query, params = cur.execute.call_args.args
         self.assertIn("owner_uid=%s", query)
         self.assertIn("embedding_model=%s", query)
-        self.assertEqual(params, (OWNER, "test-v1", "draft-1", MAX_ROWS + 1))
+        self.assertEqual(params, (OWNER, "test-v1", "draft-1", "", PAGE_SIZE))
+
+    def test_multi_page_full_bank_search(self):
+        ids = ["prior-" + str(i).zfill(5) for i in range(7000)]
+        conn, cur = self.connection([])
+        cur.fetchall.side_effect = [
+            [(item_id, [1.0, 0.0]) for item_id in ids[i:i + PAGE_SIZE]]
+            for i in range(0, len(ids), PAGE_SIZE)
+        ] + [[]]
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids=set(ids) | {"draft-1"})
+        result = callback({"stem": "Clinical stem", "item_id": "draft-1"})
+        self.assertTrue(result["search_complete"])
+        self.assertEqual(len(result["neighbors"]), 7000)
+        self.assertEqual(cur.execute.call_count, 8)
+        self.assertEqual(cur.execute.call_args.args[1][3], ids[-1])
+
+    def test_multi_page_missing_item_fails_closed(self):
+        ids = ["prior-" + str(i).zfill(5) for i in range(PAGE_SIZE)]
+        conn, cur = self.connection([])
+        cur.fetchall.side_effect = [
+            [(item_id, [1.0, 0.0]) for item_id in ids],
+            []
+        ]
+        callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
+                          embed=lambda stem: [1.0, 0.0], index_ready=True,
+                          expected_item_ids=set(ids) | {"missing", "draft-1"})
+        with self.assertRaisesRegex(ValueError, "coverage"):
+            callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
     def test_missing_canonical_inventory_rejected(self):
         with self.assertRaisesRegex(ValueError, "canonical item inventory"):
@@ -90,7 +119,7 @@ class SemanticIndexTests(unittest.TestCase):
                                    for i in range(MAX_ROWS + 1)])
         callback = lookup(conn, owner_uid=OWNER, embedding_model="test-v1",
                           embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"})
-        with self.assertRaisesRegex(ValueError, "exhaustive"):
+        with self.assertRaisesRegex(ValueError, "page size"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
 if __name__ == "__main__":
