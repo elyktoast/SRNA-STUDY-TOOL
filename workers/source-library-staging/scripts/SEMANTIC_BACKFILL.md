@@ -8,13 +8,13 @@ This script prepares the complete embedding bundle required by the offline stagi
    `AI_SEMANTIC_EMBEDDING_OPT_IN=true`,
    `SEMANTIC_INDEX_EMBEDDING_MODEL=gemini-embedding-001`, and
    `AI_SEMANTIC_GEMINI_API_KEY` in secret environment storage.
-3. Run from `workers/source-library-staging/scripts`:
+3. First run the **read-only preflight** (requires only `STAGING_ONLY=true`; no Gemini key or paid calls):\n   `python backfill_semantic_embeddings_v2.py /secure/private-stems.json /secure/progress.jsonl /secure/vectors.json --preflight`\n   This validates the private source, any existing checkpoint, and vector dimensions without writing files.\n4. Run from `workers/source-library-staging/scripts`:
    `python backfill_semantic_embeddings_v2.py /secure/private-stems.json /secure/progress.jsonl /secure/vectors.json --max-new 25`
-4. Repeat the command to resume, using a suitable call budget. Each successful
+5. Repeat the command to resume, using a suitable call budget. Each successful
    embedding is appended and synced to disk; provider errors stop the batch and
    completed vectors remain available for retry. The final bundle is written
    **only after every canonical question has a vector**.
-5. Export the standard inventory using `--export /secure/inventory.json`,
+6. Export the standard inventory using `--export /secure/inventory.json`,
    then run the existing dry-run importer and separately approve `--apply`.
 
 The checkpoint and final bundle contain proprietary question metadata and
