@@ -131,6 +131,7 @@ test('reader navigation and Sources/AI subpage memory are accessible',()=>{
 test('AI creation retains Save Unpublished alongside generated preview and explains evidence outcomes',()=>{
  assert.ok(ui.includes("if(save)generationPanel.append(save)"));
  assert.ok(ui.includes("drafts.append(draftControls)"));
+ assert.ok(ui.includes("if(savedResults)drafts.append(savedResults)"));
  assert.ok(ui.includes("viewDrafts.addEventListener('click',()=>setAIView('drafts'))"));
  assert.ok(ui.includes('sl-evidence-next-step'));
  assert.ok(ui.includes('No indexed passages found. Refine the topic'));
