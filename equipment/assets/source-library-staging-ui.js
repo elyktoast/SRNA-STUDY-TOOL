@@ -299,6 +299,7 @@ function ensureAICommandCenter(){
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
  if(draftControls){const save=draftControls.querySelector('#sl-save-generated');if(save)generationPanel.append(save);drafts.append(draftControls);const viewDrafts=draftControls.querySelector('#sl-list-generated');if(viewDrafts)viewDrafts.addEventListener('click',()=>setAIView('drafts'));}
+ const savedResults=generationPanel.querySelector('#sl-saved-results');if(savedResults)drafts.append(savedResults);
  if(draftDetail)editor.querySelector('#sl-clinical-editor-body').append(draftDetail);
  if(revisionEditor&&revisionEditor.parentElement!==draftDetail)editor.querySelector('#sl-clinical-editor-body').append(revisionEditor);
  create.append(generationPanel);
