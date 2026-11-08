@@ -210,3 +210,8 @@ test('research workspace initializes genEl before any selector setup uses it',()
  assert.ok(firstUse>declaration,'genEl must be initialized before first use');
  assert.equal(ui.indexOf("const genEl=id=>dialog.querySelector('#'+id)",declaration+1),-1,'genEl should have a single declaration');
 });
+
+test('generation selector listener binds on its panel before insertion',()=>{
+ assert.ok(ui.includes("generationPanel.querySelector('#sl-gen-book-select').addEventListener('change'"));
+ assert.ok(!ui.includes("genEl('sl-gen-book-select').addEventListener('change'"));
+});
