@@ -33,7 +33,7 @@ class ScreenedGenerationTests(unittest.TestCase):
                 }
                 return draft
             return dict(core_concept="a", why_key_wins="b", trap="c",
-                        distractor_breakdown={"B": "wrong"})
+                        distractor_breakdown={"A": "correct", "B": "wrong", "C": "wrong", "D": "wrong"})
         intake.return_value = {"draft_reviews": [{"status": "draft",
                                                   "screening": {"stages": {"human_review": {"status": "pending"}}}}]}
         result = generate_and_screen(adapter, **ARGS)

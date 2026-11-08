@@ -86,6 +86,15 @@ def check(item):
                         fail("R-6.3", "Key error pattern must not contain a correctness label")
                 elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
                     fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
+        # Every answer choice must have a substantive, individually addressable
+        # rationale; a generic overall explanation is not sufficient.
+        if isinstance(rationale, dict) and isinstance(rationale.get("distractor_breakdown"), dict):
+            breakdown = rationale["distractor_breakdown"]
+            if set(breakdown) != set(ids) or any(
+                not isinstance(breakdown.get(option_id), str)
+                or not breakdown[option_id].strip() for option_id in ids
+            ):
+                fail("R-9", "Rationale must explain each option by its ID")
         texts = [(o.get("text") if isinstance(o.get("text"), str) else "").strip().casefold() for o in opts if isinstance(o, dict)]
         if len(set(texts)) != len(texts):
             fail("R-6.5", "Duplicate options")

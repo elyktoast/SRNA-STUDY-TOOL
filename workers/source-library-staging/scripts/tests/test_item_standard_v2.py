@@ -16,7 +16,7 @@ def sample():
         options=[dict(id=k, text=v, error_pattern=None if k == "A" else "wrong timing")
                  for k,v in zip("ABCD", ("Option alpha", "Option beta", "Option gamma", "Option delta"))],
         sa=None, dd=None, hs=None, key=["A"],
-        rationale=dict(core_concept="c", why_key_wins="w", trap="t", distractor_breakdown={"B":"b"}),
+        rationale=dict(core_concept="c", why_key_wins="w", trap="t", distractor_breakdown={"A":"a","B":"b","C":"c","D":"d"}),
         evidence=[dict(textbook_id="t1", passage_id="p1", pdf_page=1)],
         distractor_evidence={"B":"p1"}, numbers_verified_against_page_image=False,
         enemy_ids=[], self_check=dict(rules_checked=[], failed_then_fixed=[], blind_solve="pending"),
@@ -36,6 +36,7 @@ class StandardTests(unittest.TestCase):
         item.update(format="MS", options=item["options"] + [
             dict(id=k, text=k, error_pattern="wrong timing") for k in "EF"],
             key=["A", "B"], select_count=2, stem="Which are correct? (Select 2.)")
+        item["rationale"]["distractor_breakdown"].update({"E":"e","F":"f"})
         self.assertEqual(check(item), [])
         item["options"].extend([dict(id="G", text="G", error_pattern="wrong timing")])
         self.assertTrue(any(e["rule_id"] == "R-7.2.2" for e in check(item)))
