@@ -129,7 +129,7 @@ test('reader navigation and Sources/AI subpage memory are accessible',()=>{
 });
 
 test('AI creation retains Save Unpublished alongside generated preview and explains evidence outcomes',()=>{
- assert.ok(ui.includes("if(save)generationPanel.append(save)"));
+ assert.ok(ui.includes("if(save&&save.parentElement!==generationPanel)generationPanel.append(save)"));
  assert.ok(ui.includes("drafts.append(draftControls)"));
  assert.ok(ui.includes("if(savedResults)drafts.append(savedResults)"));
  assert.ok(ui.includes("viewDrafts.addEventListener('click',()=>setAIView('drafts'))"));
@@ -150,4 +150,19 @@ test('missing staging workspace retries loading without blank screen or stale na
  assert.ok(admin.includes('Source workspace script timed out.'));
  assert.ok(admin.includes('data-admin-workspace-error'));
  assert.ok(ui.includes('if(window.MBUStagingSourceWorkbench?.mount)return;'));
+});
+
+test('Sources and AI initialization and remount safety',()=>{
+ const generationDeclaration=ui.indexOf('const generationPanel=document.createElement');
+ const generationListeners=ui.indexOf("for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective'])");
+ assert.ok(generationDeclaration>=0&&generationListeners>generationDeclaration,'generationPanel must exist before listeners are attached');
+ assert.ok(ui.includes("generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row')"),'drafts row must remain locatable after Save button moves');
+ assert.ok(ui.includes("if(drafts)for(const child of [...drafts.children])"),'safe draft teardown');
+ assert.ok(ui.includes("!['library','generation'].includes(section)"),'reject unsupported mount views');
+ assert.ok(ui.includes("if(dialog.open && !dialog.dataset.embedded)dialog.close()"),'avoid closing embedded dialog');
+ assert.ok(ui.includes('if(window.MBUStagingSourceWorkbench?.mount)return;'),'prevent duplicate initialization');
+ assert.ok(ui.includes("if(!document.body)"),'defer initialization until body exists');
+ assert.ok(admin.includes('host.dataset.view!==requestedView'),'ignore late navigation responses');
+ assert.ok(admin.includes('Source workspace script timed out.'),'timeout missing scripts');
+ assert.ok(admin.includes('Workspace JavaScript error: '),'show runtime failures');
 });
