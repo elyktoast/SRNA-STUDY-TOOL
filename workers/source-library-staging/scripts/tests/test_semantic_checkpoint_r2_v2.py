@@ -3,8 +3,11 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock
-from cryptography.fernet import Fernet
-from semantic_checkpoint_r2_v2 import transfer, BUCKET, KEY
+try:
+    from cryptography.fernet import Fernet
+    from semantic_checkpoint_r2_v2 import transfer, BUCKET, KEY
+except ImportError:
+    raise unittest.SkipTest('Optional cryptography dependency not installed')
 
 
 class ClientError(Exception):
