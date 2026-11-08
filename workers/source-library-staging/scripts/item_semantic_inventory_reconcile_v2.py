@@ -4,6 +4,7 @@ No provider calls, mutations, or approval/publishing side effects.
 """
 import json
 import hashlib
+import math
 import re
 from pathlib import Path
 from uuid import UUID
@@ -83,7 +84,9 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 # Reject zero, NaN, infinity and nonnumeric vectors using the
                 # same numerical validation as the semantic similarity scorer.
                 try:
-                    cosine(embedding, embedding)
+                    similarity = cosine(embedding, embedding)
+                    if not math.isfinite(similarity) or abs(similarity - 1.0) > 1e-9:
+                        raise ValueError("Invalid indexed embedding")
                 except (TypeError, ValueError, OverflowError, ZeroDivisionError):
                     raise ValueError("Invalid indexed embedding") from None
                 if dimensions is None:
