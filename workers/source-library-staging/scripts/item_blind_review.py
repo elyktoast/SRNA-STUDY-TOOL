@@ -3,6 +3,8 @@
 The blind reviewer must be a separate model/service; this module only
 constructs a sanitized payload and compares its response.
 """
+import math
+
 def payload(item):
     fmt = item.get("format")
     data = {"item_id": item.get("item_id"), "format": fmt,
@@ -52,5 +54,19 @@ def compare(item, response):
         expected = item.get("key")
         if not isinstance(chosen, list) or not isinstance(expected, list) or set(chosen) != set(expected):
             return [{"rule_id": "R-12.1", "message": "Blind solve disagrees with keyed response"}]
+        return []
+    if item.get("format") == "SA":
+        sa = item.get("sa")
+        answer = response.get("answer")
+        if (not isinstance(sa, dict) or type(answer) not in (int, float)
+                or not math.isfinite(answer) or type(sa.get("answer")) not in (int, float)
+                or not math.isfinite(sa["answer"])
+                or type(sa.get("tolerance")) not in (int, float)
+                or not math.isfinite(sa["tolerance"]) or sa["tolerance"] < 0
+                or not isinstance(sa.get("unit"), str) or not sa["unit"].strip()
+                or not isinstance(response.get("unit"), str)
+                or response["unit"].strip().casefold() != sa["unit"].strip().casefold()
+                or abs(answer - sa["answer"]) > sa["tolerance"]):
+            return [{"rule_id": "R-12.1", "message": "Blind numeric solve disagrees with keyed answer, tolerance or units"}]
         return []
     return [{"rule_id": "R-12.1", "message": "Format-specific blind scoring not yet implemented"}]
