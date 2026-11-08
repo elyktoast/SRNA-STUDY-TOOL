@@ -324,42 +324,32 @@ export default {
       return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
     }
    }
-   if(providerCheck&&upstream.status===503&&env.AI_HYBRID_ENABLED==='true'){
-    const error=await upstream.clone().json().catch(()=>null);
-    if(error?.error==='provider_check_unavailable'){
-     const probe=async(name,url,headers)=>{
-      if(!headers)return {provider:name,state:'NOT_CONFIGURED',generation_performed:false};
-      try{const response=await fetch(url,{headers,redirect:'manual',signal:AbortSignal.timeout(8000)});
-       const status=response.status;await response.body?.cancel();
-       return {provider:name,state:status===200?'OK':status===401?'AUTH':status===403?'FORBIDDEN':status===404?'NOT_FOUND':status===429?'RATE_LIMIT':'OTHER',generation_performed:false};
-      }catch{return {provider:name,state:'NETWORK',generation_performed:false}}
-     };
-     const providers=await Promise.all([
-      probe('gemini','https://generativelanguage.googleapis.com/v1beta/models',env.AI_GEMINI_API_KEY?{'x-goog-api-key':env.AI_GEMINI_API_KEY}:null),
-      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
-      probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
-     ]);
-     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
-     const relayRule=relayRules.has(error.rule)?error.rule:'UNCLASSIFIED';
-     console.error('staging_reviewer_failure',JSON.stringify({stage:'provider_check',reason:'container_relay_unavailable',rule:relayRule}));
-     return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:'UNAVAILABLE',container_relay_rule:relayRule,generation_ready:false}));
-    }
-   }
-   if(providerCheck&&upstream.ok){
-    const containerResult=await upstream.clone().json().catch(()=>null);
-    if(containerResult?.check!=='groq_models_via_signed_relay'||!Number.isInteger(containerResult.provider_status))return respond(502,origin,'{"error":"invalid_provider_check"}');
-    let workerStatus=0,workerRule='NETWORK';
-    try{
-     const controller=new AbortController();
-     const timeout=setTimeout(()=>controller.abort(),8000);
+   if(providerCheck){
+    // The private reviewer performs its normal authorization check first. Only then
+    // probe provider metadata endpoints; never call an inference/generation endpoint.
+    const containerResult=upstream.ok?await upstream.clone().json().catch(()=>null):null;
+    const unavailable=upstream.status===503?await upstream.clone().json().catch(()=>null):null;
+    if(upstream.ok&&(containerResult?.check!=='groq_models_via_signed_relay'||!Number.isInteger(containerResult.provider_status)))
+     return respond(502,origin,'{"error":"invalid_provider_check"}');
+    if(!upstream.ok&&!(upstream.status===503&&unavailable?.error==='provider_check_unavailable'))
+     return new Response(upstream.body,{status:upstream.status,headers});
+    const probe=async(name,endpoint,headers)=>{
+     if(!headers)return {provider:name,state:'NOT_CONFIGURED',generation_performed:false};
      try{
-      const result=await fetch('https://api.groq.com/openai/v1/models',{method:'GET',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY},redirect:'manual',signal:controller.signal});
-      workerStatus=[200,401,403,429].includes(result.status)?result.status:0;
-      workerRule=result.status>=300&&result.status<400?'REDIRECT':result.status===200?'OK':result.status===401?'PROVIDER_AUTH':result.status===403?'PROVIDER_FORBIDDEN':result.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_OTHER';
-      await result.body?.cancel();
-     }finally{clearTimeout(timeout)}
-    }catch{workerRule='NETWORK'}
-    return respond(200,origin,JSON.stringify({...containerResult,worker_status:workerStatus,worker_rule:workerRule,container_relay:containerResult.provider_status===200?'OK':'UNAVAILABLE',generation_ready:containerResult.provider_status===200&&workerStatus===200}));
+      const response=await fetch(endpoint,{method:'GET',headers,redirect:'manual',signal:AbortSignal.timeout(8000)});
+      const status=response.status;await response.body?.cancel();
+      return {provider:name,state:status===200?'OK':status===401?'AUTH':status===403?'FORBIDDEN':status===404?'NOT_FOUND':status===429?'RATE_LIMIT':status>=300&&status<400?'REDIRECT':'OTHER',generation_performed:false};
+     }catch{return {provider:name,state:'NETWORK',generation_performed:false}}
+    };
+    const providers=await Promise.all([
+     probe('gemini','https://generativelanguage.googleapis.com/v1beta/models',env.AI_HYBRID_ENABLED==='true'&&env.AI_GEMINI_API_KEY?{'x-goog-api-key':env.AI_GEMINI_API_KEY}:null),
+     probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
+     probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_HYBRID_ENABLED==='true'&&env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
+    ]);
+    const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
+    const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';
+    const relayOK=upstream.ok&&containerResult.provider_status===200;
+    return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:relayOK?'OK':'UNAVAILABLE',container_relay_rule:relayOK?'OK':upstream.ok?'PROVIDER_'+containerResult.provider_status:relayRule,generation_ready:false}));
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){
