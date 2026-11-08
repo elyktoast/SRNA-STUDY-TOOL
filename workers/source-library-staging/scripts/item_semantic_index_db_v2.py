@@ -6,7 +6,8 @@ a partial or absent index is never reported as a completed search.
 from uuid import UUID
 from item_semantic_duplicates import cosine
 
-MAX_ROWS = 5000
+MAX_ROWS = 10000
+PAGE_SIZE = 1000
 
 def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None):
     if index_ready is not True:
@@ -30,15 +31,33 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
         cosine(vector, vector)
         if len(vector) < 2 or len(vector) > 4096:
             raise ValueError("Invalid candidate embedding dimensions")
+        # Keyset pagination avoids truncating full-bank inventories and keeps
+        # each database fetch bounded. Never report completion on a short,
+        # inconsistent or oversized result.
+        rows = []
+        last_id = ""
         with conn.cursor() as cur:
-            cur.execute(
-                """select item_id, embedding from source_library_staging.question_semantic_index_v2
-                   where owner_uid=%s and embedding_model=%s and item_id<>%s
-                   order by item_id limit %s""",
-                (owner, embedding_model, candidate_id, MAX_ROWS + 1))
-            rows = cur.fetchall()
-        if len(rows) > MAX_ROWS:
-            raise ValueError("Semantic index exceeds exhaustive search cap")
+            while True:
+                cur.execute(
+                    """select item_id, embedding from source_library_staging.question_semantic_index_v2
+                       where owner_uid=%s and embedding_model=%s and item_id<>%s
+                         and item_id>%s
+                       order by item_id limit %s""",
+                    (owner, embedding_model, candidate_id, last_id, PAGE_SIZE))
+                page = cur.fetchall()
+                if len(page) > PAGE_SIZE:
+                    raise ValueError("Semantic index exceeds page size")
+                if page and (any(not isinstance(row[0], str) or row[0] <= last_id
+                                 for row in page)
+                             or any(page[i][0] >= page[i + 1][0]
+                                    for i in range(len(page) - 1))):
+                    raise ValueError("Semantic index pagination order invalid")
+                rows.extend(page)
+                if len(rows) > MAX_ROWS:
+                    raise ValueError("Semantic index exceeds exhaustive search cap")
+                if len(page) < PAGE_SIZE:
+                    break
+                last_id = page[-1][0]
         returned_ids = [item_id for item_id, _ in rows]
         required_ids = expected_item_ids - {candidate_id}
         if (len(returned_ids) != len(set(returned_ids))
