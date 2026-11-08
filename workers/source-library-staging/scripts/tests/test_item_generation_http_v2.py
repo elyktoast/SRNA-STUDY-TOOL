@@ -221,7 +221,7 @@ class HttpPreflightTests(unittest.TestCase):
 
     @patch("item_generation_http_v2.execute", return_value={
         "dry_run": False, "item": {"stem": "Synthetic"}, "can_publish": False,
-        "database_writes": False})
+        "database_writes": False, "save_payload": {}})
     @patch("item_generation_http_v2.save", return_value={"draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
     def test_live_generation_passes_trusted_semantic_lookup(self, saver, execute):
         calls = []
