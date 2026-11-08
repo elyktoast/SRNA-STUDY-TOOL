@@ -12,8 +12,14 @@ on:
           - preflight
           - pilot-25
           - checkpoint-preflight
+          - resumable-25
       checkpoint_snapshot:
-        description: 'Immutable snapshot ID to restore for checkpoint-preflight; no provider calls'
+        description: 'Existing immutable snapshot to restore; blank for first resumable batch'
+        required: false
+        type: string
+        default: ''
+      save_snapshot:
+        description: 'Unique immutable snapshot ID for resumable-25 output'
         required: false
         type: string
         default: ''
@@ -110,6 +116,122 @@ jobs:
             "$RUNNER_TEMP/srna-semantic/private-stems.json" \
             "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
             "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
+      - name: Validate resumable batch configuration before paid calls
+        if: inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          SAVE_SNAPSHOT: ${{ inputs.save_snapshot }}
+          RESTORE_SNAPSHOT: ${{ inputs.checkpoint_snapshot }}
+          SEMANTIC_CHECKPOINT_ENCRYPTION_KEY: ${{ secrets.SEMANTIC_CHECKPOINT_ENCRYPTION_KEY }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+          AI_SEMANTIC_GEMINI_API_KEY: ${{ secrets.AI_SEMANTIC_GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SAVE_SNAPSHOT" ] || [ "$SAVE_SNAPSHOT" = "$RESTORE_SNAPSHOT" ] || [ -z "$SEMANTIC_CHECKPOINT_ENCRYPTION_KEY" ] || [ -z "$STAGING_R2_ACCOUNT_ID" ] || [ -z "$STAGING_R2_ACCESS_KEY_ID" ] || [ -z "$STAGING_R2_SECRET_ACCESS_KEY" ] || [ -z "$AI_SEMANTIC_GEMINI_API_KEY" ]; then
+            echo "::error::Unique output snapshot and all staging R2, encryption, Gemini secrets are required"
+            exit 1
+          fi
+          python - <<'PY'
+          import os,sys
+          sys.path.insert(0,'workers/source-library-staging/scripts')
+          from semantic_checkpoint_r2_v2 import snapshot_key
+          snapshot_key(os.environ['SAVE_SNAPSHOT'])
+          if os.environ['RESTORE_SNAPSHOT']:
+              snapshot_key(os.environ['RESTORE_SNAPSHOT'])
+          PY
+      - name: Install resumable transport dependencies
+        if: inputs.mode == 'resumable-25'
+        run: python -m pip install 'cryptography>=43,<47' 'boto3>=1.35,<2'
+      - name: Refuse existing output snapshot before paid requests
+        if: inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          SAVE_SNAPSHOT: ${{ inputs.save_snapshot }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import os,sys,boto3
+          from botocore.exceptions import ClientError
+          sys.path.insert(0,'workers/source-library-staging/scripts')
+          from semantic_checkpoint_r2_v2 import snapshot_key,BUCKET
+          c=boto3.client('s3',endpoint_url='https://'+os.environ['STAGING_R2_ACCOUNT_ID']+'.r2.cloudflarestorage.com',
+              aws_access_key_id=os.environ['STAGING_R2_ACCESS_KEY_ID'],
+              aws_secret_access_key=os.environ['STAGING_R2_SECRET_ACCESS_KEY'],region_name='auto')
+          try:
+              c.head_object(Bucket=BUCKET,Key=snapshot_key(os.environ['SAVE_SNAPSHOT']))
+          except ClientError as exc:
+              if exc.response.get('Error',{}).get('Code') not in ('404','NoSuchKey','NotFound'):
+                  raise
+          else:
+              raise RuntimeError('Output snapshot already exists; choose a unique ID before making paid requests')
+          PY
+      - name: Restore previous snapshot when supplied
+        if: inputs.mode == 'resumable-25' && inputs.checkpoint_snapshot != ''
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+          SEMANTIC_CHECKPOINT_R2_OPT_IN: 'true'
+          RESTORE_SNAPSHOT: ${{ inputs.checkpoint_snapshot }}
+          SEMANTIC_CHECKPOINT_ENCRYPTION_KEY: ${{ secrets.SEMANTIC_CHECKPOINT_ENCRYPTION_KEY }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python semantic_checkpoint_r2_v2.py restore \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" --snapshot "$RESTORE_SNAPSHOT"
+          test -s "$RUNNER_TEMP/srna-semantic/progress.jsonl" || { echo "::error::Required previous snapshot missing"; exit 1; }
+      - name: Validate restored progress before any provider requests
+        if: inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
+      - name: Run separately authorized resumable batch of at most 25
+        if: inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+          AI_SEMANTIC_EMBEDDING_OPT_IN: 'true'
+          SEMANTIC_INDEX_EMBEDDING_MODEL: gemini-embedding-001
+          AI_SEMANTIC_GEMINI_API_KEY: ${{ secrets.AI_SEMANTIC_GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --max-new 25
+      - name: Preserve validated progress after success or provider failure
+        if: always() && inputs.mode == 'resumable-25'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+          SEMANTIC_CHECKPOINT_R2_OPT_IN: 'true'
+          SAVE_SNAPSHOT: ${{ inputs.save_snapshot }}
+          SEMANTIC_CHECKPOINT_ENCRYPTION_KEY: ${{ secrets.SEMANTIC_CHECKPOINT_ENCRYPTION_KEY }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python finalize_semantic_checkpoint_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --snapshot "$SAVE_SNAPSHOT"
       - name: Confirm pilot credential exists without printing it
         if: inputs.mode == 'pilot-25'
         shell: bash
