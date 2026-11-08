@@ -202,3 +202,11 @@ test('research textbook selector uses authenticated indexed catalog rather than 
  assert.ok(adapter.includes("'/generation/textbooks'"));
  assert.ok(gateway.includes("'/generation/textbooks'"));
 });
+
+test('research workspace initializes genEl before any selector setup uses it',()=>{
+ const declaration=ui.indexOf("const genEl=id=>dialog.querySelector('#'+id)");
+ const firstUse=ui.indexOf("genEl(");
+ assert.ok(declaration>=0,'genEl declaration must exist');
+ assert.ok(firstUse>declaration,'genEl must be initialized before first use');
+ assert.equal(ui.indexOf("const genEl=id=>dialog.querySelector('#'+id)",declaration+1),-1,'genEl should have a single declaration');
+});

@@ -17,6 +17,7 @@ document.body.append(launch,dialog);
 const el=id=>dialog.querySelector('#'+id), status=el('sl-status'), list=el('sl-list'), file=el('sl-file');
 const dashboard=document.createElement('section');dashboard.className='sl-dashboard';dashboard.setAttribute('aria-label','Source Library overview');dashboard.innerHTML='<div class="sl-stat"><span>Uploaded textbooks</span><strong id="sl-count">—</strong></div><div class="sl-stat"><span>Storage</span><strong id="sl-bytes">—</strong></div><div class="sl-stat"><span>Review status</span><strong style="font-size:16px">Read-only staging</strong></div>';list.before(dashboard);const libraryHeading=document.createElement('h3');libraryHeading.className='sl-section-heading';libraryHeading.textContent='My textbooks';list.before(libraryHeading);
 const librarySearch=document.createElement('input');librarySearch.id='sl-library-search';librarySearch.type='search';librarySearch.placeholder='Filter textbooks by title…';librarySearch.setAttribute('aria-label','Filter uploaded textbooks');librarySearch.style.cssText='width:min(380px,100%);padding:10px 12px;border:1px solid #cbd5e1;border-radius:9px;margin:8px 0 14px';list.before(librarySearch);librarySearch.addEventListener('input',()=>{const q=librarySearch.value.trim().toLocaleLowerCase();for(const row of list.querySelectorAll('.sl-item'))row.hidden=!row.querySelector('.sl-name')?.textContent.toLocaleLowerCase().includes(q)});
+const genEl=id=>dialog.querySelector('#'+id);
 let checkedEvidence=null;
 const researchBookControl=document.createElement('label');
 researchBookControl.className='sl-research-book-control';
@@ -74,7 +75,7 @@ function renderReadableQuestion(host,question){
  add('p','Unpublished · Clinical review required').className='sl-muted';
 }
 let generatedForReview=null,currentDraftQuestion=null;
-const genEl=id=>dialog.querySelector('#'+id);
+
 genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
  if(!topic||!textbook_id){genEl('sl-gen-status').textContent='Choose a question subject or enter a specific topic, then select an indexed textbook. Advanced textbook ID entry is available if needed.';return;}if(!checkedEvidence||checkedEvidence.topic!==topic||checkedEvidence.mode!==el('sl-mode').value||checkedEvidence.format!==el('sl-format').value||checkedEvidence.textbook_id!==textbook_id||checkedEvidence.domain!==genEl('sl-gen-domain').value||checkedEvidence.section!==genEl('sl-gen-section').value.trim().toUpperCase()||checkedEvidence.objective!==genEl('sl-gen-objective').value.trim()){genEl('sl-gen-status').textContent='Run Check indexed evidence for the current topic and exam format before making a paid AI generation call.';return;}
