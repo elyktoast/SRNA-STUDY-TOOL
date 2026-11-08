@@ -123,3 +123,7 @@ test('admin batch one uses single header and shared Sources/AI subpage navigatio
  assert.ok(ui.includes("setAIView('drafts')"));
  assert.ok(css.includes('.mbu-admin-brand'));
 });
+
+test('reader navigation and Sources/AI subpage memory are accessible',()=>{
+ for(const token of ['← Previous','Next →','Open original in new tab',"e.key==='Enter'","previous.disabled=page===1","lastSourcesView=view","lastAIView=view","select(lastSourcesView)","setAIView(lastAIView)"])assert.ok(ui.includes(token),token);
+});
