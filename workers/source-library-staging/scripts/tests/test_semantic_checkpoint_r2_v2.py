@@ -27,6 +27,10 @@ class FakeR2:
         body = Mock()
         body.read.side_effect = lambda n: self.objects[(Bucket, Key)][:n]
         return {"Body": body}
+    def head_object(self, *, Bucket, Key):
+        if (Bucket, Key) not in self.objects:
+            raise ClientError("404")
+        return {"ContentLength": len(self.objects[(Bucket, Key)])}
     def put_object(self, *, Bucket, Key, Body, **kwargs):
         self.objects[(Bucket, Key)] = Body
 
@@ -50,6 +54,15 @@ class TestEncryptedCheckpoint(unittest.TestCase):
         self.assertEqual(self.path.read_bytes(), original)
         with self.assertRaises(ValueError):
             transfer("restore", self.path, env=self.env, client=self.client)
+
+    def test_remote_checkpoint_cannot_be_overwritten(self):
+        self.path.write_bytes(b"first")
+        transfer("save", self.path, env=self.env, client=self.client)
+        first = self.client.objects[(BUCKET, KEY)]
+        self.path.write_bytes(b"second")
+        with self.assertRaises(ValueError):
+            transfer("save", self.path, env=self.env, client=self.client)
+        self.assertEqual(self.client.objects[(BUCKET, KEY)], first)
 
     def test_missing_checkpoint_does_not_create_file(self):
         self.assertEqual(transfer("restore", self.path, env=self.env, client=self.client),
