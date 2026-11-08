@@ -66,7 +66,7 @@ def transfer(mode, checkpoint, *, env=None, client=None):
     if not plaintext:
         raise ValueError("Empty checkpoint")
     ciphertext = cipher.encrypt(plaintext)
-    client.put_object(Bucket=BUCKET, Key=KEY, Body=ciphertext,
+    # Refuse to overwrite a prior checkpoint; concurrent saves must fail closed.\n    try:\n        client.head_object(Bucket=BUCKET, Key=KEY)\n    except client.exceptions.ClientError as exc:\n        if exc.response.get("Error", {}).get("Code") not in ("NoSuchKey", "404", "NotFound"):\n            raise\n    else:\n        raise ValueError("Remote checkpoint already exists; overwrite is not authorized")\n    client.put_object(Bucket=BUCKET, Key=KEY, Body=ciphertext,
                       ContentType="application/octet-stream",
                       Metadata={"format": "fernet-jsonl-v1"})
     return {"saved": True}
