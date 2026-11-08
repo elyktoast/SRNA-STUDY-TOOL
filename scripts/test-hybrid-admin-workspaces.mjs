@@ -49,3 +49,19 @@ test('guided topic picker preserves custom topics and blueprint safety',()=>{
  assert.ok(ui.includes("const request={topic,textbook_id,mode:el('sl-mode').value"));
  assert.ok(ui.includes('No indexed textbook ID available in library metadata'));
 });
+
+test('indexed textbook picker is stable, deduplicated and never treats a PDF filename as an ID',()=>{
+ assert.ok(ui.includes("const indexed=items.flatMap(item=>{"));
+ assert.ok(ui.includes("if(typeof id!=='string'||!uuid.test(id))return []"));
+ assert.ok(ui.includes("a.title.localeCompare(b.title"));
+ assert.ok(ui.includes("if(seen.has(id))continue"));
+ assert.ok(ui.includes("if([...select.options].some(o=>o.value===previous))select.value=previous"));
+});
+test('staging AI diagnostics are explicitly non-generating and scoped to Groq',()=>{
+ const adapter=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const check=adapter.slice(adapter.indexOf('async function checkGroqConnection()'),adapter.indexOf('async function generateOne('));
+ assert.ok(check.includes("'/generation/provider-check'"));
+ assert.ok(!check.includes("'/generation/one'"));
+ assert.ok(!check.includes("'/generation/drafts'"));
+ assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
+});
