@@ -26,6 +26,22 @@ class BlindReviewTests(unittest.TestCase):
                 self.assertTrue(issues)
                 self.assertEqual(issues[0]["rule_id"], "R-12.1")
 
+    def test_dd_blind_matching_scoring(self):
+        pairs = {"L1": "R2", "L2": "R4", "L3": "R1", "L4": "R3"}
+        item = {"item_id": "d", "format": "DD", "stem": "Match",
+                "dd": {"left": [{"id": k, "text": k} for k in pairs],
+                       "right": [{"id": "R" + str(i), "text": str(i)} for i in range(1, 5)],
+                       "pairs": pairs},
+                "rationale": {"why_key_wins": "secret"}}
+        self.assertNotIn("pairs", payload(item))
+        self.assertNotIn("rationale", payload(item))
+        self.assertEqual(compare(item, {"item_id": "d", "pairs": dict(pairs)}), [])
+        for wrong in ({}, {"L1": "R2"}, {"L1": "R2", "L2": "R2", "L3": "R1", "L4": "R3"},
+                      {"L1": "R4", "L2": "R2", "L3": "R1", "L4": "R3"},
+                      ["R2", "R4", "R1", "R3"], None):
+            with self.subTest(wrong=wrong):
+                self.assertTrue(compare(item, {"item_id": "d", "pairs": wrong}))
+
     def test_non_mc_not_falsely_passed(self):
         item = {"item_id": "n", "format": "SA", "stem": "Calculate"}
         self.assertTrue(compare(item, {"item_id": "n", "answer": 5}))
