@@ -70,7 +70,7 @@ def load_progress(path, entries, *, digest=None, model=MODEL):
     return found
 
 
-def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
+def backfill(source_path, progress_path, output_path, *, embed, max_new=25, preflight=False):
     if not callable(embed) or type(max_new) is not int or not 0 <= max_new <= MAX_ITEMS:
         raise ValueError("Invalid backfill configuration")
     source, stems = load_source(source_path)
@@ -94,7 +94,7 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
                 raise ValueError("Mixed recovered dimensions")
     else:
         dimension = None
-    if Path(output_path).exists():
+    if Path(output_path).exists() and not preflight:
         raise ValueError("Output already exists")
     added = 0
     if max_new:
@@ -133,7 +133,7 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
         except BaseException:
             raise
     complete = len(progress) == len(source["entries"])
-    if complete:
+    if complete and not preflight:
         bundle = {"schema_version": 1, "inventory_digest": source["inventory_digest"],
                   "embedding_model": MODEL,
                   "entries": [progress[e["item_id"]] for e in source["entries"]]}
@@ -145,7 +145,7 @@ def backfill(source_path, progress_path, output_path, *, embed, max_new=25):
         # A separate canonical inventory file is still required at import time.
     return {"complete": complete, "indexed": len(progress),
             "expected": len(source["entries"]), "new_calls": added,
-            "output_created": complete}
+            "output_created": complete and not preflight}
 
 
 def main(argv=None, env=None):
@@ -155,8 +155,19 @@ def main(argv=None, env=None):
     parser.add_argument("progress_jsonl")
     parser.add_argument("output_bundle")
     parser.add_argument("--max-new", type=int, default=25)
+    parser.add_argument("--preflight", action="store_true", help="Read-only local validation; no API key or provider requests")
     args = parser.parse_args(argv)
     try:
+        if args.preflight:
+            if env.get("STAGING_ONLY") != "true":
+                raise ValueError("Staging-only operation")
+            source, _ = load_source(args.private_source)
+            progress = load_progress(args.progress_jsonl, source["entries"], digest=source["inventory_digest"])
+            result = backfill(args.private_source, args.progress_jsonl, args.output_bundle,
+                              embed=lambda stem: (_ for _ in ()).throw(AssertionError("No provider calls in preflight")),
+                              max_new=0, preflight=True)
+            print(json.dumps({"ok": True, "preflight": True, **result}))
+            return 0
         if (env.get("STAGING_ONLY") != "true"
                 or env.get("AI_SEMANTIC_EMBEDDING_OPT_IN") != "true"
                 or env.get("SEMANTIC_INDEX_EMBEDDING_MODEL") != MODEL):

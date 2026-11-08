@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from backfill_semantic_embeddings_v2 import backfill, load_source, load_progress
+from backfill_semantic_embeddings_v2 import backfill, load_source, load_progress, main
 
 
 class BackfillTests(unittest.TestCase):
@@ -28,6 +28,27 @@ class BackfillTests(unittest.TestCase):
         self.source.write_text(json.dumps({"schema_version": 1, "inventory_digest": digest,
                                            "item_count": 3, "entries": self.entries,
                                            "stems": stems}))
+
+    def test_preflight_without_credentials_or_provider_calls(self):
+        args = [str(self.source), str(self.progress), str(self.output), "--preflight"]
+        self.assertEqual(main(args, env={"STAGING_ONLY": "true"}), 0)
+        self.assertFalse(self.progress.exists())
+        self.assertFalse(self.output.exists())
+        backfill(self.source, self.progress, self.output,
+                 embed=lambda stem: [1, 0], max_new=1)
+        self.assertEqual(main(args, env={"STAGING_ONLY": "true"}), 0)
+        self.assertFalse(self.output.exists())
+
+    def test_preflight_complete_checkpoint_does_not_export(self):
+        backfill(self.source, self.progress, self.output,
+                 embed=lambda stem: [1, 0], max_new=2)
+        backfill(self.source, self.progress, self.output,
+                 embed=lambda stem: [1, 0], max_new=1)
+        self.output.unlink()
+        self.assertEqual(main([str(self.source), str(self.progress),
+                               str(self.output), "--preflight"],
+                              env={"STAGING_ONLY": "true"}), 0)
+        self.assertFalse(self.output.exists())
 
     def test_resume_and_complete_without_repeating_calls(self):
         calls = []
