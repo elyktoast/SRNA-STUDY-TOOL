@@ -24,7 +24,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Use either trusted semantic lookup or supplied vectors")
     if (embedding is None) != (neighbors is None):
         raise ValueError("Semantic screening requires both candidate embedding and neighbors")
-    generated = ({"item": _verified_candidate, "schema_issues": []}\n                 if _verified_candidate is not None else generate_one(adapter, mode=mode, domain=domain,
+    generated = ({"item": _verified_candidate, "schema_issues": []}
+                 if _verified_candidate is not None else generate_one(adapter, mode=mode, domain=domain,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
