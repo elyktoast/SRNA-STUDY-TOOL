@@ -251,10 +251,16 @@ function updateTextbookChoices(items){
  const select=genEl('sl-gen-book-select'),previous=select.value;
  select.replaceChildren(new Option('Choose a textbook',''));
  const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
- for(const item of items){
+ const indexed=items.flatMap(item=>{
   const id=item.textbook_id||item.textbookId||item.indexed_textbook_id||item.indexedTextbookId;
-  if(typeof id!=='string'||!uuid.test(id))continue;
-  const title=item.name||item.title||item.path?.split('/').pop()||'Indexed textbook';
+  if(typeof id!=='string'||!uuid.test(id))return [];
+  const title=String(item.name||item.title||item.path?.split('/').pop()||'Indexed textbook').trim();
+  return [{id,title}];
+ }).sort((a,b)=>a.title.localeCompare(b.title,undefined,{sensitivity:'base'}));
+ const seen=new Set();
+ for(const {id,title} of indexed){
+  if(seen.has(id))continue;
+  seen.add(id);
   select.add(new Option(title,id));
  }
  if([...select.options].some(o=>o.value===previous))select.value=previous;
