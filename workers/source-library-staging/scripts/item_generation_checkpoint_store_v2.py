@@ -188,6 +188,8 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
         raise ValueError("Invalid checkpoint fingerprint")
     if str(UUID(str(save_payload["textbook_id"]))) != book:
         raise ValueError("Checkpoint textbook mismatch")
+    if "owner_uid" in save_payload and str(UUID(str(save_payload["owner_uid"]))) != owner:
+        raise ValueError("Checkpoint owner mismatch")
     with conn.cursor() as cur:
         cur.execute("""
           select c.completed_result
@@ -200,8 +202,11 @@ def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
           for update of c
         """, (owner, book, owner, request_hash, evidence_hash))
         row = cur.fetchone()
-        if not row or not isinstance(row[0], dict):
+        if not row or not isinstance(row[0], dict) or not row[0]:
             raise ValueError("Completed checkpoint unavailable")
+        stored_payload = row[0].get("save_payload")
+        if not isinstance(stored_payload, dict) or fingerprint(stored_payload) != fingerprint(save_payload):
+            raise ValueError("Checkpoint payload mismatch")
         existing = row[0].get("saved_draft")
         if existing is not None:
             draft_id = str(UUID(str(existing["draft_id"])))
