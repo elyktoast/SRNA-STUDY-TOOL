@@ -73,3 +73,13 @@ test('hybrid provider diagnostic reports per-provider states without claiming ge
  assert.ok(ui.includes("Generation readiness not verified."));
  assert.ok(ui.includes("Gemini and Cloudflare AI were not checked"));
 });
+
+test('gateway checks all three providers using metadata-only GET endpoints',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.ok(gateway.includes("check:'hybrid_provider_readiness'"));
+ assert.ok(gateway.includes("probe('gemini'"));
+ assert.ok(gateway.includes("probe('groq'"));
+ assert.ok(gateway.includes("probe('cloudflare'"));
+ assert.ok(gateway.includes("method:'GET',headers,redirect:'manual'"));
+ assert.ok(gateway.includes("generation_ready:false"));
+});
