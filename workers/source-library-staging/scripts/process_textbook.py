@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 
 from extract_textbook import extract
@@ -43,7 +44,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
     volume_bookmarks = [
         {"pdf_page": section["start_page"], "heading": section["heading"][:120]}
         for section in sections
-        if __import__("re").search(r"\\bvol(?:ume)?\\.?\\s*(?:1|2|i|ii)\\b", section["heading"], __import__("re").I)
+        if re.search(r"\bvol(?:ume)?\.?\s*(?:1|2|i|ii)\b", section["heading"], re.I)
     ][:20]
     result = {
         "section_count": len(sections),
