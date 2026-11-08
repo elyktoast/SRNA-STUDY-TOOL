@@ -4,7 +4,7 @@ import {test} from 'node:test';
 const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
 test('PDF filtering uses storage key, never display name from sidecar metadata',()=>{
- const m=ui.match(/const items=stored\.filter\(item=>\{([\s\S]*?)\}\);updateTextbookChoices\(items\)/);
+ const m=ui.match(/const items=stored\.filter\(item=>\{([\s\S]*?)\}\);try\{const indexed=await storage\.listIndexedTextbooks\(\)/);
  assert.ok(m,'expected explicit PDF filter');
  const filter=new Function('item',m[1]);
  const rows=[{key:'books/a.pdf',name:'a.pdf'},{key:'books/a.pdf.source.json',name:'a.pdf'},{key:'books/a.pdf.review.json',name:'a.pdf'},{path:'books/B.PDF',name:'B'}];
@@ -49,7 +49,7 @@ test('guided topic picker preserves custom topics and blueprint safety',()=>{
  assert.ok(ui.includes("topicInput.dispatchEvent(new Event('input'"));
  assert.ok(ui.includes("const topic=el('sl-topic').value.trim()"));
  assert.ok(ui.includes("const request={topic,textbook_id,mode:el('sl-mode').value"));
- assert.ok(ui.includes('No indexed textbook ID available in library metadata'));
+ assert.ok(ui.includes('No ready indexed textbooks available'));
 });
 
 test('indexed textbook picker is stable, deduplicated and never treats a PDF filename as an ID',()=>{
@@ -191,4 +191,14 @@ test('generator labels retain canonical five formats and evidence count follows 
  assert.ok(ui.includes('result.source_evidence.passage_ids.length'));
  assert.ok(ui.includes('not verified printed-page citations'));
  assert.ok(ui.includes("genEl('sl-save-generated').disabled=!result.save_payload"));
+});
+
+test('research textbook selector uses authenticated indexed catalog rather than PDF metadata',()=>{
+ const adapter=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.ok(ui.includes('await storage.listIndexedTextbooks()'));
+ assert.ok(ui.includes("researchBookSelect.id='sl-research-book-select'"));
+ assert.ok(ui.includes("generationSelect.value=researchBookSelect.value"));
+ assert.ok(adapter.includes("'/generation/textbooks'"));
+ assert.ok(gateway.includes("'/generation/textbooks'"));
 });
