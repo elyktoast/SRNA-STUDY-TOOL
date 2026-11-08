@@ -67,6 +67,20 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         "independent_review_completed": False,
         "clinical_review_required": True,
     }
+    # Configuration is not a network health check; preflight must never imply
+    # a provider was contacted or a draft was stored.
+    endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
+    provider_host = urlsplit(endpoint).hostname
+    allowed_hosts = set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(",")))
+    summary["execution_readiness"] = {
+        "indexed_evidence_found": True,
+        "provider_endpoint_allowlisted": bool(provider_host and provider_host in allowed_hosts),
+        "generator_model_configured": bool(generator_id),
+        "provider_api_key_configured": bool(env.get("AI_PROVIDER_API_KEY")),
+        "relay_secret_configured": bool(env.get("STAGING_RECEIPT_SIGNING_SECRET")),
+        "provider_connectivity_checked": False,
+        "draft_persistence": "not_performed_by_cli",
+    }
     if args.execute and blind_requested and summary["review_readiness"]["blind_review"] != "configured":
         raise ValueError("Blind review requires distinct configured generator and reviewer models")
     if args.execute and rewrite_requested and not generator_id:
