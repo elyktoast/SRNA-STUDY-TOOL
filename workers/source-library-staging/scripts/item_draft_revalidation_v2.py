@@ -11,6 +11,8 @@ from item_special_format_evidence_v2 import check as check_special
 from item_generation_runner_v2 import _complete_nonclinical_schema_fields
 from item_source_reconciliation_v2 import _format_normalized
 
+MAX_VERIFICATION_PASSAGE_CHARS = 200_000
+
 
 def revalidate(conn, *, owner_uid, draft_id):
     draft = get_draft(conn, owner_uid=owner_uid, draft_id=draft_id)
@@ -30,13 +32,17 @@ def revalidate(conn, *, owner_uid, draft_id):
         raise ValueError("Invalid saved evidence references")
     with conn.cursor() as cur:
         cur.execute("""
-          select p.id::text,p.textbook_id::text,p.page_start,left(p.content,1200)
+          select p.id::text,p.textbook_id::text,p.page_start,p.content
           from source_library_staging.passages p
           join source_library_staging.textbooks t on t.id=p.textbook_id
           where p.id::text = any(%s::text[]) and t.id=%s::uuid
             and t.owner_uid=%s::uuid and t.status='ready'
         """, (sorted(ids), draft["textbook_id"], owner_uid))
         rows = cur.fetchall()
+    # Never treat a truncated passage as proof that a valid quotation is absent.
+    # Fail closed on unusually large indexed passages rather than silently clipping them.
+    if any(not isinstance(r[3], str) or len(r[3]) > MAX_VERIFICATION_PASSAGE_CHARS for r in rows):
+        raise ValueError("Indexed passage exceeds safe citation verification limit")
     passages = [{"passage_id":r[0],"textbook_id":r[1],
                  "pdf_page_start":r[2],"excerpt":r[3]} for r in rows]
     found = {p["passage_id"] for p in passages}
