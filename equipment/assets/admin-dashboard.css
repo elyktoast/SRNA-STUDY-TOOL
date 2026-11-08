@@ -32,3 +32,16 @@
 .mbu-admin-dashboard .admin-main>[data-admin-view-host]{max-width:none!important;margin:0!important;padding:20px 28px 50px!important}
 .mbu-admin-dashboard .admin-mobile-nav{display:none!important}
 @media(max-width:700px){.mbu-admin-dashboard .admin-nav{padding:8px 12px!important}.mbu-admin-dashboard .admin-nav-title{display:none}.mbu-admin-dashboard .admin-main>[data-admin-view-host]{padding:14px!important}}
+
+/* Unified full-screen header and section workspaces */
+.mbu-admin-dashboard .mbu-admin-dashboard__card>.mbu-app-tools__head{display:flex!important;align-items:center!important;gap:14px!important;padding:10px 18px!important;min-height:58px;box-sizing:border-box}
+.mbu-admin-dashboard .mbu-app-tools__head>div:first-child{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.mbu-admin-dashboard .mbu-admin-brand{font-size:1rem!important;line-height:1.1!important;white-space:nowrap;margin:0!important;color:#193553}
+.mbu-admin-dashboard .mbu-admin-environment{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;background:#fef3c7;color:#854d0e;padding:5px 7px;border-radius:6px}
+.mbu-admin-dashboard .mbu-app-tools__head>.admin-nav{flex:1 1 auto!important;min-width:0!important;overflow-x:auto!important;border:0!important;background:transparent!important;padding:0!important;gap:2px!important}
+.mbu-admin-dashboard .mbu-app-tools__head>.admin-nav button{font-size:.8rem!important;padding:9px 10px!important}
+.mbu-admin-dashboard .mbu-app-tools__head>[data-admin-dashboard-close]{flex:0 0 auto;margin:0!important}
+.mbu-admin-dashboard .admin-workspace{height:100%!important;min-height:0}
+.mbu-admin-dashboard .admin-main{width:100%!important;min-height:0}
+.mbu-admin-dashboard .admin-main>[data-admin-view-host]{padding:12px 20px 28px!important}
+@media(max-width:850px){.mbu-admin-dashboard .mbu-admin-dashboard__card>.mbu-app-tools__head{gap:8px!important;padding:8px!important}.mbu-admin-dashboard .mbu-admin-brand{font-size:.8rem!important}.mbu-admin-dashboard .mbu-admin-environment{display:none}.mbu-admin-dashboard .mbu-app-tools__head>.admin-nav button{padding:8px!important;font-size:.75rem!important}}
