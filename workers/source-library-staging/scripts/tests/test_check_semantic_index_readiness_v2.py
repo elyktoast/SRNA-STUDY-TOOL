@@ -59,7 +59,7 @@ class ReadinessTests(unittest.TestCase):
 
     def test_exit_codes_fail_closed(self):
         self.assertEqual(main([str(self.path)], ENV, self.connect([])), 1)
-        self.assertEqual(main([str(self.path)], ENV, self.connect([("a", HASH)])), 0)
+        self.assertEqual(main([str(self.path)], ENV, self.connect([("a", HASH, [1.0, 0.0])])), 0)
         self.assertEqual(main([str(self.path)], {}, self.connect([])), 2)
 
 
