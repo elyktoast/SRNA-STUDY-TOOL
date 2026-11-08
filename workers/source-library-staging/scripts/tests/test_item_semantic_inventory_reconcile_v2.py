@@ -73,7 +73,7 @@ class ReconcileTests(unittest.TestCase):
 
     def test_invalid_or_inconsistent_embeddings_fail_closed(self):
         invalid = (None, [], [0.0, 0.0], [float("nan"), 1.0],
-                   [float("inf"), 1.0], ["bad", 1.0], [1.0],
+                   [float("inf"), 1.0], [1e308, 1e308], ["bad", 1.0], [1.0],
                    [1.0] * 4097)
         for vector in invalid:
             with self.subTest(vector=str(vector)[:50]):
