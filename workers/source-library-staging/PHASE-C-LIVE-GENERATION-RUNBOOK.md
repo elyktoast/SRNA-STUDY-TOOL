@@ -13,7 +13,14 @@
 5. The HTTP endpoint should return a safe 429 and bounded Retry-After for provider throttling. No automatic retries. Resume requires the exact same item_id, topic, blueprint, textbook, and filters; a new item_id means a new run.
 6. Confirm deployment SHA and one dry-run preflight. Only then tell the owner **READY TO TEST** and authorize one controlled live attempt.
 
-Gemini provider routing remains a declarative plan, not a deployed inference integration. Intermediate checkpoints are not published questions and are not the admin draft bank.
+The staging gateway now has metadata-only checks for Gemini, Groq and Cloudflare AI. `metadata_ready` indicates all three metadata probes and the Groq relay are reachable; `generation_ready` deliberately remains false until a controlled inference test succeeds. A successful HTTP 200 from `/generation/provider-check` does not imply the individual providers returned `OK`. Intermediate checkpoints are not published questions and are not the admin draft bank.
+
+## Verified staging evidence — November 8, 2026
+
+- Cloudflare deployment after PR #124: Worker upload at 21:26:33 UTC and one bulk-secret version at 21:26:50 UTC.
+- Post-deployment observability showed HTTP 200 for authenticated PDF manifest/page rendering, generation preflight, provider diagnostic endpoint, and private draft listing; unauthorized calls returned HTTP 401.
+- Read-only staging Supabase inspection confirmed `source_library_staging.generation_checkpoints_v2` exists with RLS enabled, zero rows, no authenticated SELECT permission, and private postgres INSERT permission.
+- **Not yet verified:** provider-by-provider metadata results, checkpoint stage-write/recovery against the deployed backend, or one successful paid generation saved as an unpublished draft. Keep the live-generation HOLD and checkpoint feature gate unchanged until those tests pass.
 
 ## Preconditions
 
