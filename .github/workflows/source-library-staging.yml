@@ -13,6 +13,7 @@ on:
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-hybrid-admin-workspaces.mjs'
       - 'scripts/test-source-library-reviewer-browser.mjs'
       - 'scripts/test-source-library-reviewer-gateway.mjs'
       - 'scripts/test-source-library-staging-live.mjs'
@@ -32,6 +33,7 @@ on:
       - 'equipment/assets/question-generator-ui.js'
       - 'scripts/validate-repo.mjs'
       - 'scripts/test-source-library-staging.mjs'
+      - 'scripts/test-hybrid-admin-workspaces.mjs'
       - 'scripts/test-source-library-reviewer-browser.mjs'
       - 'scripts/test-source-library-reviewer-gateway.mjs'
       - 'scripts/test-source-library-staging-live.mjs'
@@ -68,6 +70,7 @@ jobs:
           node --check equipment/assets/source-library-staging-ui.js
           node --check equipment/assets/chapter-review-staging.js
           node --check scripts/test-source-library-staging.mjs
+          node --check scripts/test-hybrid-admin-workspaces.mjs
           node --check scripts/test-source-library-reviewer-browser.mjs
           node --check scripts/test-source-library-reviewer-gateway.mjs
           node --check workers/source-library-staging/reviewer-gateway/src/index.js
@@ -75,7 +78,7 @@ jobs:
           node --check workers/source-library-staging/reviewer-gateway/src/entry.js
           node --check scripts/test-source-library-reviewer-live.mjs
       - name: Staging Worker tests
-        run: node --test scripts/test-source-library-staging.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs
+        run: node --test scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs
       - name: Python staging pipeline tests
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
