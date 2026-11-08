@@ -1,7 +1,7 @@
 (()=>{'use strict';
 if(location.hostname!=='staging.srnastudytool.com'||!window.MBU_SOURCE_LIBRARY_STAGING?.enabled)return;
 if(window.MBUStagingSourceWorkbench?.mount)return;
-if(!document.body){window.addEventListener('DOMContentLoaded',()=>{if(!window.MBUStagingSourceWorkbench?.mount){const script=document.createElement('script');script.src=document.currentScript?.src||'';if(script.src)document.body.append(script);}}, {once:true});return;}
+if(!document.body){const sourceScriptUrl=document.currentScript?.src;window.addEventListener('DOMContentLoaded',()=>{if(sourceScriptUrl&&!window.MBUStagingSourceWorkbench?.mount){const script=document.createElement('script');script.src=sourceScriptUrl;document.body.append(script);}}, {once:true});return;}
 const storage=window.MBUSourceMaterialStagingStorage;
 if(!storage){console.error('Staging Source Library storage adapter unavailable');return;}
 const style=document.createElement('style');
