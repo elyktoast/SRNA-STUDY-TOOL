@@ -101,7 +101,8 @@ def run(owner_uid, key, apply=False, client=None, ocr=False, review_queue_mode='
                          expected_sha256=expected["sha256"], ocr=ocr)
         if result["passages"] < 1:
             raise ValueError("No searchable passages")
-        result.update({"r2_key": key, "r2_sha256": expected["sha256"]})
+        result.update({"r2_key": key, "r2_sha256": expected["sha256"],
+                       "original_filename": expected.get("original_name") or source.name})
         if review_queue_mode == 'apply':
             with exclusive_publication_lock(os.environ.get("DATABASE_URL"), BUCKET, key) as lock:
                 result["review_queue_publication"] = publish_verified_queue(
