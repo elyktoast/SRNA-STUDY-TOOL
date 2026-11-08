@@ -45,7 +45,7 @@ function renderReadableQuestion(host,question){
  add('p','Unpublished · Clinical review required').className='sl-muted';
 }
 let generatedForReview=null,currentDraftQuestion=null;
-const genEl=id=>generationPanel.querySelector('#'+id);
+const genEl=id=>dialog.querySelector('#'+id);
 genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
  if(!topic||!textbook_id){genEl('sl-gen-status').textContent='Enter a topic and choose an indexed textbook, or supply its UUID.';return;}
