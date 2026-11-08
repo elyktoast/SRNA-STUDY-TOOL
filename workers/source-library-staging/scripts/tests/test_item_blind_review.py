@@ -40,6 +40,38 @@ class BlindReviewTests(unittest.TestCase):
             with self.subTest(answer=answer, unit=unit):
                 self.assertTrue(compare(item, {"item_id": "n", "answer": answer, "unit": unit}))
 
+    def test_dd_blind_matching_scoring(self):
+        pairs = {"L1": "R2", "L2": "R4", "L3": "R1", "L4": "R3"}
+        item = {"item_id": "d", "format": "DD", "stem": "Match",
+                "dd": {"left": [{"id": k, "text": k} for k in pairs],
+                       "right": [{"id": "R" + str(i), "text": str(i)} for i in range(1, 5)],
+                       "pairs": pairs},
+                "rationale": {"why_key_wins": "secret"}}
+        self.assertNotIn("pairs", payload(item))
+        self.assertNotIn("rationale", payload(item))
+        self.assertEqual(compare(item, {"item_id": "d", "pairs": dict(pairs)}), [])
+        for wrong in ({}, {"L1": "R2"}, {"L1": "R2", "L2": "R2", "L3": "R1", "L4": "R3"},
+                      {"L1": "R4", "L2": "R2", "L3": "R1", "L4": "R3"},
+                      ["R2", "R4", "R1", "R3"], None):
+            with self.subTest(wrong=wrong):
+                self.assertTrue(compare(item, {"item_id": "d", "pairs": wrong}))
+
+    def test_hs_blind_region_scoring_and_key_isolation(self):
+        item = {"item_id": "h", "format": "HS", "stem": "Identify region",
+                "hs": {"figure": {"url": "https://example.org/figure.png",
+                                   "alt": "Anatomy", "width": 800, "height": 600},
+                       "correct_region": "region-b",
+                       "near_miss_regions": ["region-a", "region-c"],
+                       "license": "test-only"}}
+        sanitized = payload(item)
+        self.assertNotIn("correct_region", str(sanitized))
+        self.assertNotIn("near_miss_regions", str(sanitized))
+        self.assertNotIn("license", str(sanitized))
+        self.assertEqual(compare(item, {"item_id": "h", "region": "region-b"}), [])
+        for wrong in ("region-a", "region-c", "", None, ["region-b"], {"id": "region-b"}):
+            with self.subTest(wrong=wrong):
+                self.assertTrue(compare(item, {"item_id": "h", "region": wrong}))
+
     def test_non_mc_not_falsely_passed(self):
         item = {"item_id": "n", "format": "SA", "stem": "Calculate"}
         self.assertTrue(compare(item, {"item_id": "n", "answer": 5}))

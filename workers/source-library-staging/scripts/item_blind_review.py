@@ -72,4 +72,26 @@ def compare(item, response):
                 or abs(answer - sa["answer"]) > sa["tolerance"]):
             return [{"rule_id": "R-12.1", "message": "Blind numeric solve disagrees with keyed answer, tolerance or units"}]
         return []
+    if item.get("format") == "DD":
+        dd = item.get("dd")
+        pairs = dd.get("pairs") if isinstance(dd, dict) else None
+        selected = response.get("pairs")
+        if (not isinstance(pairs, dict) or not isinstance(selected, dict)
+                or len(pairs) != 4 or len(selected) != 4
+                or not all(isinstance(k, str) and isinstance(v, str)
+                           for k, v in list(pairs.items()) + list(selected.items()))
+                or len(set(pairs.values())) != 4
+                or len(set(selected.values())) != 4
+                or selected != pairs):
+            return [{"rule_id": "R-12.1", "message": "Blind matching solve disagrees with four keyed pairs"}]
+        return []
+    if item.get("format") == "HS":
+        hs = item.get("hs")
+        correct = hs.get("correct_region") if isinstance(hs, dict) else None
+        selected = response.get("region")
+        if (not isinstance(correct, str) or not correct.strip()
+                or not isinstance(selected, str) or not selected.strip()
+                or selected != correct):
+            return [{"rule_id": "R-12.1", "message": "Blind hotspot solve disagrees with keyed region"}]
+        return []
     return [{"rule_id": "R-12.1", "message": "Format-specific blind scoring not yet implemented"}]
