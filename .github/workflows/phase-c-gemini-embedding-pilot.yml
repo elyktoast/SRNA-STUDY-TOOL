@@ -11,6 +11,12 @@ on:
         options:
           - preflight
           - pilot-25
+          - checkpoint-preflight
+      checkpoint_snapshot:
+        description: 'Immutable snapshot ID to restore for checkpoint-preflight; no provider calls'
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -47,6 +53,53 @@ jobs:
           mkdir -p "$RUNNER_TEMP/srna-semantic"
           node scripts/audit-canonical-semantic-inventory.mjs --export-stems "$RUNNER_TEMP/srna-semantic/private-stems.json"
       - name: Credential-free preflight (no provider requests)
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python backfill_semantic_embeddings_v2.py \
+            "$RUNNER_TEMP/srna-semantic/private-stems.json" \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" \
+            "$RUNNER_TEMP/srna-semantic/vectors.json" --preflight
+      - name: Validate checkpoint-preflight configuration
+        if: inputs.mode == 'checkpoint-preflight'
+        shell: bash
+        env:
+          SNAPSHOT: ${{ inputs.checkpoint_snapshot }}
+          SEMANTIC_CHECKPOINT_ENCRYPTION_KEY: ${{ secrets.SEMANTIC_CHECKPOINT_ENCRYPTION_KEY }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$SNAPSHOT" ] || [ -z "$SEMANTIC_CHECKPOINT_ENCRYPTION_KEY" ] || [ -z "$STAGING_R2_ACCOUNT_ID" ] || [ -z "$STAGING_R2_ACCESS_KEY_ID" ] || [ -z "$STAGING_R2_SECRET_ACCESS_KEY" ]; then
+            echo "::error::Checkpoint snapshot and staging-only R2 encryption credentials are required"
+            exit 1
+          fi
+      - name: Install checkpoint transport dependencies
+        if: inputs.mode == 'checkpoint-preflight'
+        run: python -m pip install 'cryptography>=43,<47' 'boto3>=1.35,<2'
+      - name: Restore encrypted checkpoint from staging R2
+        if: inputs.mode == 'checkpoint-preflight'
+        shell: bash
+        env:
+          STAGING_ONLY: 'true'
+          SEMANTIC_CHECKPOINT_R2_OPT_IN: 'true'
+          SNAPSHOT: ${{ inputs.checkpoint_snapshot }}
+          SEMANTIC_CHECKPOINT_ENCRYPTION_KEY: ${{ secrets.SEMANTIC_CHECKPOINT_ENCRYPTION_KEY }}
+          STAGING_R2_ACCOUNT_ID: ${{ secrets.STAGING_R2_ACCOUNT_ID }}
+          STAGING_R2_ACCESS_KEY_ID: ${{ secrets.STAGING_R2_ACCESS_KEY_ID }}
+          STAGING_R2_SECRET_ACCESS_KEY: ${{ secrets.STAGING_R2_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          cd workers/source-library-staging/scripts
+          python semantic_checkpoint_r2_v2.py restore \
+            "$RUNNER_TEMP/srna-semantic/progress.jsonl" --snapshot "$SNAPSHOT"
+          test -s "$RUNNER_TEMP/srna-semantic/progress.jsonl" || { echo "::error::Checkpoint snapshot not found"; exit 1; }
+      - name: Validate restored canonical checkpoint without provider calls
+        if: inputs.mode == 'checkpoint-preflight'
         shell: bash
         env:
           STAGING_ONLY: 'true'
