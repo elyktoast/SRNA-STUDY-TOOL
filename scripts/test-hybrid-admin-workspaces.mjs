@@ -110,3 +110,16 @@ test('Sources uses dedicated library reader and research tabs and PDF page navig
  assert.ok(ui.includes("currentFrame.replaceWith(next)"));
  assert.ok(ui.includes('[data-source-panel][hidden]'));
 });
+
+test('admin batch one uses single header and shared Sources/AI subpage navigation',()=>{
+ const shell=readFileSync(new URL('../equipment/assets/admin-dashboard.js',import.meta.url),'utf8');
+ const css=readFileSync(new URL('../equipment/assets/admin-dashboard.css',import.meta.url),'utf8');
+ assert.ok(shell.includes("header.insertBefore(nav,m.querySelector('[data-admin-dashboard-close]'))"));
+ assert.ok(!shell.includes('<h2 id="mbu-admin-dashboard-title">Admin Dashboard</h2>'));
+ assert.ok(!admin.includes('<div class="admin-nav-title">Workspace</div>'));
+ assert.ok(admin.includes("const nav=modal||host.closest('.admin-workspace')"));
+ for(const view of ['create','drafts','providers'])assert.ok(ui.includes('data-sl-ai-view="'+view+'"'));
+ assert.ok(ui.includes('center.dataset.activeView=view'));
+ assert.ok(ui.includes("setAIView('drafts')"));
+ assert.ok(css.includes('.mbu-admin-brand'));
+});
