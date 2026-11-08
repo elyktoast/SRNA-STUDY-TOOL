@@ -30,7 +30,7 @@ class StagingIntegrationTests(unittest.TestCase):
                        relevance="relevance", misconception="misconception",
                        counterfactual="counterfactual", evidence_ids=["p1"])
         rationale = dict(core_concept="concept", why_key_wins="key",
-                         trap="trap", distractor_breakdown={"B": "wrong"})
+                         trap="trap", distractor_breakdown={"A": "correct", "B": "wrong", "C": "wrong", "D": "wrong"})
         outputs = [concept, draft, rationale]
         calls = []
         def transport(**kwargs):
