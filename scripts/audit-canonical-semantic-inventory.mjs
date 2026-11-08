@@ -12,7 +12,7 @@ export const MANIFESTS = [
   'pharm/clinical-pharm/banks.json',
 ];
 
-export function audit(root, manifests = MANIFESTS) {
+export function audit(root, manifests = MANIFESTS, options = {}) {
   const errors = [], entries = [], seen = new Set(), sourceFiles = new Map();
   let declared = 0;
   for (const manifestPath of manifests) {
@@ -72,11 +72,29 @@ export function audit(root, manifests = MANIFESTS) {
   entries.sort((a, b) => a.item_id.localeCompare(b.item_id, 'en'));
   const digest = crypto.createHash('sha256').update(JSON.stringify(entries)).digest('hex');
   return {ok: errors.length === 0, declared, unique: entries.length,
-    sources: sourceFiles.size, digest, errors};
+    sources: sourceFiles.size, digest, errors,
+    ...(options.includeEntries === true ? {entries} : {})};
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
-  const result = audit(process.cwd());
-  console.log(JSON.stringify(result, null, 2));
-  if (!result.ok) process.exitCode = 1;
+  const args = process.argv.slice(2);
+  if (args.length !== 0 && (args.length !== 2 || args[0] !== '--export' || !args[1])) {
+    console.error('Usage: node scripts/audit-canonical-semantic-inventory.mjs [--export OUTPUT.json]');
+    process.exitCode = 2;
+  } else {
+    const result = audit(process.cwd(), MANIFESTS, {includeEntries: args.length === 2});
+    if (!result.ok) {
+      console.error(JSON.stringify({...result, entries: undefined}, null, 2));
+      process.exitCode = 1;
+    } else if (args.length === 2) {
+      // Export is a local artifact only; never upload embeddings or alter banks.
+      fs.writeFileSync(args[1], JSON.stringify({
+        schema_version: 1, inventory_digest: result.digest,
+        item_count: result.unique, entries: result.entries
+      }) + '\n', {flag: 'wx', mode: 0o600});
+      console.log(JSON.stringify({ok: true, unique: result.unique, digest: result.digest, exported: args[1]}));
+    } else {
+      console.log(JSON.stringify(result, null, 2));
+    }
+  }
 }
