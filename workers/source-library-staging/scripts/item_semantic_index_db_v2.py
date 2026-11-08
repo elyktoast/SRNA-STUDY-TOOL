@@ -8,9 +8,14 @@ from item_semantic_duplicates import cosine
 
 MAX_ROWS = 5000
 
-def lookup(conn, *, owner_uid, embedding_model, embed, index_ready):
+def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None):
     if index_ready is not True:
         raise ValueError("Semantic index not verified")
+    if (not isinstance(expected_item_ids, (set, frozenset)) or not expected_item_ids
+            or not all(isinstance(x, str) and x.strip() for x in expected_item_ids)
+            or len(expected_item_ids) > MAX_ROWS):
+        raise ValueError("Complete canonical item inventory required")
+    expected_item_ids = frozenset(expected_item_ids)
     owner = str(UUID(owner_uid))
     if not isinstance(embedding_model, str) or not embedding_model.strip() or not callable(embed):
         raise ValueError("Trusted embedding configuration required")
@@ -29,6 +34,11 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready):
             rows = cur.fetchall()
         if len(rows) > MAX_ROWS:
             raise ValueError("Semantic index exceeds exhaustive search cap")
+        returned_ids = [item_id for item_id, _ in rows]
+        required_ids = expected_item_ids - {item.get("item_id")}
+        if (len(returned_ids) != len(set(returned_ids))
+                or set(returned_ids) != required_ids):
+            raise ValueError("Semantic index coverage does not match canonical item inventory")
         neighbors = []
         for item_id, embedding in rows:
             neighbor = list(embedding)
