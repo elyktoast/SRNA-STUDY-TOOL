@@ -120,6 +120,7 @@ class GenerationCliTests(unittest.TestCase):
         self.assertEqual(generate.call_args.kwargs["format"], "MC")
         self.assertEqual(generate.call_args.kwargs["generator_model_id"], "test-model")
         self.assertIsNone(generate.call_args.kwargs["rewrite"])
+        self.assertIsNone(generate.call_args.kwargs["review_repair"])
         self.assertIsNone(generate.call_args.kwargs["semantic_lookup"])
 
     @patch("run_grounded_generation_v2.generate_from_index")
@@ -163,6 +164,7 @@ class GenerationCliTests(unittest.TestCase):
         execute(object(), args, env)
         rewrite = generate.call_args.kwargs["rewrite"]
         self.assertTrue(callable(rewrite))
+        self.assertIs(generate.call_args.kwargs["review_repair"], rewrite)
         rewrite({"item": {"status": "draft"}, "issues": [],
                  "max_rewrites": 1, "requires_human_review": True})
         self.assertEqual(adapter.return_value.call_args.args[0]["step"], "rewrite")

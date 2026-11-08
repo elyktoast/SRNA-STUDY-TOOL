@@ -15,7 +15,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, evidence_packet=None,
-                        rewrite=None, semantic_lookup=None):
+                        rewrite=None, semantic_lookup=None, review_repair=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -25,6 +25,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                                       or not reviewer_model_id
                                       or generator_model_id == reviewer_model_id):
         raise ValueError("Independent blind reviewer and distinct model identities required")
+    if review_repair is not None and not callable(review_repair):
+        raise ValueError("Explicit authenticated review repair adapter required")
     packet = evidence_packet if evidence_packet is not None else build_evidence(
         conn, owner_uid, topic, textbook_id=textbook_id, limit=limit,
         section_id=section_id, include_subsections=include_subsections,
@@ -53,7 +55,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         neighbors=neighbors, blind_reviewer=blind_reviewer,
         generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
-        rewrite=rewrite, semantic_lookup=semantic_lookup)
+        rewrite=rewrite, semantic_lookup=semantic_lookup,
+        review_repair=review_repair)
     return {**result, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],

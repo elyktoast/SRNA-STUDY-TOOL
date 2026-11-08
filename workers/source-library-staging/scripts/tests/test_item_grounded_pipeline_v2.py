@@ -141,6 +141,24 @@ class IndexedPipelineTests(unittest.TestCase):
                                         lambda request: steps.append(request), **KW)
                 self.assertEqual(steps, [])
 
+    @patch("item_grounded_pipeline_v2.generate_and_screen")
+    @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_review_repair_adapter_forwarded(self, retrieve, screen):
+        retrieve.return_value = PACKET
+        screen.return_value = {"next_state": "draft"}
+        def repair(request):
+            return request["item"]
+        generate_from_index(object(), "owner-1", "airway", lambda r: {},
+                            **KW, review_repair=repair)
+        self.assertIs(screen.call_args.kwargs["review_repair"], repair)
+
+    @patch("item_grounded_pipeline_v2.build_evidence")
+    def test_invalid_review_repair_blocks_retrieval(self, retrieve):
+        with self.assertRaisesRegex(ValueError, "repair adapter"):
+            generate_from_index(object(), "owner-1", "airway", lambda r: {},
+                                **KW, review_repair="not callable")
+        retrieve.assert_not_called()
+
     @patch("item_grounded_pipeline_v2.build_evidence")
     def test_missing_adapter_blocks_retrieval(self, retrieve):
         with self.assertRaisesRegex(ValueError, "generator adapter"):
