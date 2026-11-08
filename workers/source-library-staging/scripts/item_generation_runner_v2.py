@@ -50,7 +50,6 @@ def _repair_ellipsized_citations(draft, trusted_passages):
     Never repair a fabricated or ambiguous quote, change its source identity,
     or weaken reconciliation. The final citation must still pass reconcile().
     """
-    import re
     import copy
     item = copy.deepcopy(draft)
     sources = {p["passage_id"]: p for p in trusted_passages}
