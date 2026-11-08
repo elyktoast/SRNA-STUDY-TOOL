@@ -19,3 +19,16 @@
 #mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-main{overscroll-behavior:contain}
 #mbu-admin-dashboard.mbu-admin-fullscreen-workspace .mbu-app-tools__status{display:none}
 @media(max-width:750px){#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-workspace{grid-template-columns:1fr}#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-nav{display:none}#mbu-admin-dashboard.mbu-admin-fullscreen-workspace .admin-main>[data-admin-view-host]{padding:12px}}
+
+/* Full-screen operator workspace: shared horizontal navigation for all sections. */
+.mbu-admin-dashboard{padding:0!important}
+.mbu-admin-dashboard .mbu-admin-dashboard__card{width:100vw!important;max-width:none!important;height:100dvh!important;max-height:100dvh!important;border-radius:0!important;margin:0!important}
+.mbu-admin-dashboard .mbu-admin-dashboard__card>.mbu-app-tools__head{padding:14px 26px!important}
+.mbu-admin-dashboard .admin-workspace{display:flex!important;flex-direction:column!important;height:100%!important;min-height:0}
+.mbu-admin-dashboard .admin-nav{flex:0 0 auto!important;display:flex!important;flex-direction:row!important;align-items:center;gap:6px!important;padding:10px 24px!important;border-right:0!important;border-bottom:1px solid #dbe3ee!important;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+.mbu-admin-dashboard .admin-nav-title{padding:0 12px 0 0!important}
+.mbu-admin-dashboard .admin-nav button{flex:0 0 auto!important;white-space:nowrap!important;padding:10px 14px!important}
+.mbu-admin-dashboard .admin-main{flex:1;min-height:0!important;overflow:auto!important}
+.mbu-admin-dashboard .admin-main>[data-admin-view-host]{max-width:none!important;margin:0!important;padding:20px 28px 50px!important}
+.mbu-admin-dashboard .admin-mobile-nav{display:none!important}
+@media(max-width:700px){.mbu-admin-dashboard .admin-nav{padding:8px 12px!important}.mbu-admin-dashboard .admin-nav-title{display:none}.mbu-admin-dashboard .admin-main>[data-admin-view-host]{padding:14px!important}}
