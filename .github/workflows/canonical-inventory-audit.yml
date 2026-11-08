@@ -1,0 +1,33 @@
+name: Canonical inventory audit
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/audit-canonical-semantic-inventory.mjs'
+      - 'scripts/test-audit-canonical-semantic-inventory.mjs'
+      - 'package.json'
+      - 'basic-principles/exam-1/banks.json'
+      - 'basic-principles/exam-1/data/**'
+      - 'equipment/exam-1/banks.json'
+      - 'equipment/exam-1/data/**'
+      - 'equipment/exam-2/banks.json'
+      - 'equipment/exam-2/questions*.json'
+      - 'pharm/clinical-pharm/banks.json'
+      - 'pharm/clinical-pharm/data/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm run test:inventory
