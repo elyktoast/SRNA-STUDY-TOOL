@@ -28,7 +28,7 @@ class ReadinessHttpTests(unittest.TestCase):
     def test_ready_read_only_and_owner_scoped(self):
         owners = []
         app = self.make_app(lambda owner: (owners.append(owner) or {
-            "ready": True, "expected_count": 9000, "indexed_count": 9000,
+            "ready": True, "inventory_digest": "a" * 64, "expected_count": 9000, "indexed_count": 9000,
             "missing_count": 0, "unexpected_count": 0, "stale_count": 0}))
         status, data = call(app)
         self.assertEqual(status, "200 OK")
@@ -46,6 +46,21 @@ class ReadinessHttpTests(unittest.TestCase):
         status, data = call(self.make_app(broken))
         self.assertEqual(status, "503 Service Unavailable")
         self.assertNotIn("credential", json.dumps(data))
+
+    def test_sensitive_or_inconsistent_result_rejected(self):
+        for result in (
+            {"ready": True, "inventory_digest": "a" * 64,
+             "expected_count": 1, "indexed_count": 0,
+             "missing_count": 1, "unexpected_count": 0, "stale_count": 0},
+            {"ready": True, "inventory_digest": "a" * 64,
+             "expected_count": 1, "indexed_count": 1,
+             "missing_count": 0, "unexpected_count": 0, "stale_count": 0,
+             "question_ids": ["private"]},
+        ):
+            with self.subTest(result=result):
+                status, data = call(self.make_app(lambda _: result))
+                self.assertEqual(status, "503 Service Unavailable")
+                self.assertNotIn("question_ids", data)
 
     def test_invalid_response_fails_closed(self):
         status, data = call(self.make_app(lambda _: {"ready": "yes"}))
