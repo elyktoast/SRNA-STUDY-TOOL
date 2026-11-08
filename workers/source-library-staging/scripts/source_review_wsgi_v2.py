@@ -120,14 +120,23 @@ def build_app():
         signing_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
     reviewer_app = create_app(runtime)
     from item_generation_http_v2 import create_app as generation_app
+    def index_readiness(owner):
+        from check_semantic_index_readiness_v2 import check
+        inventory_path = os.environ.get("SEMANTIC_INDEX_INVENTORY_PATH")
+        configured_owner = os.environ.get("SEMANTIC_INDEX_OWNER_UID")
+        if not inventory_path or owner != configured_owner:
+            raise ValueError("Index readiness not configured for authenticated owner")
+        return check(inventory_path=inventory_path, env=os.environ,
+                     connect=psycopg.connect)
+
     generation = generation_app(
         conn_factory=lambda: psycopg.connect(os.environ["STAGING_DATABASE_URL"],
             connect_timeout=8, sslmode="require"),
         resolve_admin=lambda token: runtime._reviewer(token).uid,
-        environment=os.environ)
+        environment=os.environ, readiness_factory=index_readiness)
     return lambda environ, start_response: (
         generation(environ, start_response)
-        if (environ.get("PATH_INFO") in ("/generation/preflight", "/generation/one", "/generation/provider-check") or
+        if (environ.get("PATH_INFO") in ("/generation/preflight", "/generation/one", "/generation/provider-check", "/generation/index-readiness") or
             environ.get("PATH_INFO", "").startswith("/generation/drafts"))
         else reviewer_app(environ, start_response))
 
