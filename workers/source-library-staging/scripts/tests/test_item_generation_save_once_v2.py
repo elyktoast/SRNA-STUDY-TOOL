@@ -45,7 +45,7 @@ class Connection:
 
 class SaveOnceTests(unittest.TestCase):
     def test_new_draft_is_linked_and_committed_once(self):
-        conn = Connection({"item_id": "test"})
+        conn = Connection({"save_payload": {"textbook_id": BOOK}})
         calls = []
         def saver(db, payload):
             calls.append(payload)
@@ -60,7 +60,7 @@ class SaveOnceTests(unittest.TestCase):
         self.assertIn("saved_draft", conn.queries[-1][0])
 
     def test_recovery_returns_existing_without_inserting(self):
-        conn = Connection({"saved_draft": {"draft_id": DRAFT}}, draft_status="needs_revision")
+        conn = Connection({"save_payload": {"textbook_id": BOOK}, "saved_draft": {"draft_id": DRAFT}}, draft_status="needs_revision")
         def forbidden(*args):
             raise AssertionError("Duplicate save")
         result = save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK},
@@ -105,6 +105,21 @@ class SaveOnceTests(unittest.TestCase):
             save_once(conn, owner_uid=OWNER,
                       save_payload={"textbook_id": DRAFT}, checkpoint_key=KEY,
                       saver=lambda *_: None)
+        self.assertEqual(conn.queries, [])
+
+    def test_checkpoint_payload_mismatch_fails_before_insert(self):
+        conn = Connection({"save_payload": {"textbook_id": BOOK, "topic": "airway"}})
+        with self.assertRaisesRegex(ValueError, "payload mismatch"):
+            save_once(conn, owner_uid=OWNER, save_payload={"textbook_id": BOOK, "topic": "cardiac"},
+                      checkpoint_key=KEY, saver=lambda *_: self.fail("Must not insert"))
+        self.assertEqual(conn.commits, 0)
+
+    def test_conflicting_owner_rejected_before_sql(self):
+        conn = Connection({"save_payload": {"textbook_id": BOOK}})
+        with self.assertRaisesRegex(ValueError, "owner mismatch"):
+            save_once(conn, owner_uid=OWNER,
+                      save_payload={"textbook_id": BOOK, "owner_uid": DRAFT},
+                      checkpoint_key=KEY, saver=lambda *_: None)
         self.assertEqual(conn.queries, [])
 
     def test_invalid_fingerprint_rejected(self):
