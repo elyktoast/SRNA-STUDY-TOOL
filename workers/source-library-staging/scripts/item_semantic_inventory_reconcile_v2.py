@@ -7,6 +7,7 @@ import hashlib
 import re
 from pathlib import Path
 from uuid import UUID
+from item_semantic_duplicates import cosine
 
 HASH = re.compile(r"^[a-f0-9]{64}$")
 PAGE_SIZE = 1000
@@ -57,11 +58,12 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
            for key, value in inventory.items()):
         raise ValueError("Invalid canonical inventory")
     observed = {}
+    dimensions = None
     last_id = ""
     with conn.cursor() as cur:
         while True:
             cur.execute(
-                """select item_id, stem_hash from source_library_staging.question_semantic_index_v2
+                """select item_id, stem_hash, embedding from source_library_staging.question_semantic_index_v2
                    where owner_uid=%s and embedding_model=%s and item_id>%s
                    order by item_id limit %s""",
                 (owner, embedding_model, last_id, PAGE_SIZE))
@@ -72,9 +74,22 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 for i, row in enumerate(page)
             ):
                 raise ValueError("Invalid semantic index pagination")
-            for item_id, stem_hash in page:
+            for item_id, stem_hash, embedding in page:
                 if item_id in observed:
                     raise ValueError("Duplicate semantic index item")
+                if (not isinstance(embedding, (list, tuple))
+                        or not 2 <= len(embedding) <= 4096):
+                    raise ValueError("Invalid indexed embedding")
+                # Reject zero, NaN, infinity and nonnumeric vectors using the
+                # same numerical validation as the semantic similarity scorer.
+                try:
+                    cosine(embedding, embedding)
+                except (TypeError, ValueError, OverflowError, ZeroDivisionError):
+                    raise ValueError("Invalid indexed embedding") from None
+                if dimensions is None:
+                    dimensions = len(embedding)
+                elif len(embedding) != dimensions:
+                    raise ValueError("Inconsistent indexed embedding dimensions")
                 observed[item_id] = stem_hash
             if len(observed) > MAX_ITEMS:
                 raise ValueError("Semantic index exceeds inventory cap")
