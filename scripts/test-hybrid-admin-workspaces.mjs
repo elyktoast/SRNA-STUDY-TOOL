@@ -38,7 +38,7 @@ test('PDF preview replaces center reader placeholder and reports viewer failures
 });
 test('provider diagnostic does not imply all providers were checked',()=>{
  assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
- assert.ok(ui.includes('Check Groq route'));
+ assert.ok(ui.includes('Check AI connections'));
  assert.ok(ui.includes('sl-blueprint-advanced'));
 });
 
@@ -64,4 +64,12 @@ test('staging AI diagnostics are explicitly non-generating and scoped to Groq',(
  assert.ok(!check.includes("'/generation/one'"));
  assert.ok(!check.includes("'/generation/drafts'"));
  assert.ok(ui.includes('Gemini and Cloudflare AI were not checked'));
+});
+
+test('hybrid provider diagnostic reports per-provider states without claiming generation success',()=>{
+ assert.ok(ui.includes("result.check==='hybrid_provider_readiness'"));
+ assert.ok(ui.includes("Array.isArray(result.providers)"));
+ assert.ok(ui.includes("Reviewer container relay: "));
+ assert.ok(ui.includes("Generation readiness not verified."));
+ assert.ok(ui.includes("Gemini and Cloudflare AI were not checked"));
 });
