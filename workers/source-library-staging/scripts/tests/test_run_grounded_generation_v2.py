@@ -159,12 +159,12 @@ class GenerationCliTests(unittest.TestCase):
              "AI_ALLOWED_HOSTS":"provider.example","AI_PROVIDER_API_KEY":"secret","AI_GENERATOR_MODEL":"generator",
              "AI_REVIEWER_MODEL":"reviewer","AI_OPTION_REVIEW_OPT_IN":"true","STAGING_RECEIPT_SIGNING_SECRET":"a"*48}
         generate.return_value={"item_id":"q1","next_state":"draft","source_evidence":{},"item":{},"generator_issues":[],"screening":{"independent_option_adjudication":{"status":"reviewed"}}}
-        adapter.return_value.return_value={"judgments":[{"option_id":"A"}]}
+        adapter.return_value.return_value={"judgments":[{"option_id":"A","source_conflict_found":False}]}
         result=execute(object(),args,env)
         callback=generate.call_args.kwargs["option_reviewer"]
         self.assertEqual(generate.call_args.kwargs["option_reviewer_model_id"],"reviewer")
         self.assertIsNone(generate.call_args.kwargs["blind_reviewer"])
-        self.assertEqual(callback({"stem":"Which?"}),[{"option_id":"A"}])
+        self.assertEqual(callback({"stem":"Which?"}),[{"option_id":"A","source_conflict_found":False,"contradiction_found":False}])
         request=adapter.return_value.call_args.args[0]
         self.assertEqual(request["step"],"option_review"); self.assertTrue(request["blind"])
         self.assertEqual(result["save_payload"]["screening"]["independent_option_adjudication"]["status"],"reviewed")

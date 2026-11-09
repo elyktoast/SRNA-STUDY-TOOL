@@ -11,7 +11,7 @@ class LiveOptionEvidenceTests(unittest.TestCase):
         self.item = {'format':'MC','stem':'Which is a trigger?', 'options':[{'id':'A','text':'Volatile agent'},{'id':'B','text':'Local anesthetic'}], 'key':['A']}
         self.sources = [{'passage_id':'p1','excerpt':'Volatile agents are triggering. Local anesthetics are nontriggering.'}]
         self.audit = {'all_options_searched':True,'all_options_have_matches':True,'option_audits':[{'option_id':i,'retrieved_passage_ids':['p1'],'search_status':'matches_found','search_query':'clinical query'} for i in ('A','B')]}
-        self.judgments = [{'option_id':i,'passage_ids':['p1'],'verdict':v,'explanation':'The cited classification establishes this choice.', 'quote':q,'contradiction_found':False} for i,v,q in [('A','supports_key','Volatile agents are triggering.'),('B','refutes_distractor','Local anesthetics are nontriggering.')]]
+        self.judgments = [{'option_id':i,'passage_ids':['p1'],'verdict':v,'explanation':'The cited classification establishes this choice.', 'quotes':[q],'contradiction_found':False} for i,v,q in [('A','supports_key','Volatile agents are triggering.'),('B','refutes_distractor','Local anesthetics are nontriggering.')]]
     def review(self, judgments=None, audit=None):
         captured=[]
         def reviewer(request):
@@ -32,13 +32,24 @@ class LiveOptionEvidenceTests(unittest.TestCase):
         self.assertFalse(result['can_publish']); self.assertFalse(report['clinical_truth_verified'])
         self.assertEqual(result['screening']['independent_option_adjudication']['judgments'],self.judgments)
     def test_fabricated_quote_or_wrong_citation_never_clears_gate(self):
-        for field,value in [('quote','Fabricated source quotation'),('passage_ids',['unknown']),('contradiction_found',True),('verdict','supports_key')]:
+        for field,value in [('quotes',['Fabricated source quotation']),('passage_ids',['unknown']),('contradiction_found',True),('verdict','supports_key')]:
             with self.subTest(field=field):
                 judgments=copy.deepcopy(self.judgments); judgments[1][field]=value
                 report,_=self.review(judgments)
                 self.assertEqual(report['status'],'pending')
                 result=attach({'screening':{'stages':{}}},self.audit,report)
                 self.assertEqual(result['screening']['stages']['independent_option_evidence']['status'],'pending')
+    def test_separate_table_fragments_are_checked_without_synthesizing_a_quote(self):
+        self.sources[0]['excerpt']='Triggering (Unsafe) Agents. Unrelated column text. Volatile agents. Nontriggering (Safe) Agents. More column text. Local anesthetics.'
+        judgments=copy.deepcopy(self.judgments)
+        judgments[0]['quotes']=['Triggering (Unsafe) Agents','Volatile agents']
+        judgments[1]['quotes']=['Nontriggering (Safe) Agents','Local anesthetics']
+        report,_=self.review(judgments)
+        self.assertEqual(report['status'],'reviewed')
+        judgments[0]['quotes']=['Triggering (Unsafe) Agents Volatile agents']
+        report,_=self.review(judgments)
+        self.assertEqual(report['status'],'pending')
+
     def test_source_silence_is_not_refutation(self):
         judgments=copy.deepcopy(self.judgments); judgments[1]['explanation']='The source does not mention this option.'
         report,_=self.review(judgments); self.assertEqual(report['status'],'pending')

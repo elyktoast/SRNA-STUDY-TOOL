@@ -320,3 +320,30 @@ is relaxed. Cloudflare remains the hosting/gateway/container platform; Cloudflar
 AI authoring is explicitly disabled. Metadata diagnostics report the disabled
 provider without making a request to it, and only enabled providers gate metadata
 readiness. Gemini remains disabled.
+
+### Full Groq-mode run and independent review protocol clarification
+
+The Groq-only deployment passed authenticated smoke. Its fresh generation and
+independent source review completed in about 23 seconds, saving unpublished draft
+bb4d1576-3ca2-4c7d-b539-56520e861957 at 09:09 AM Eastern. Schema, math, evidence
+and answer-blind checks passed. The acceptance did not pass: answer length was
+flagged, and independent source adjudication remained pending. This draft is not
+accepted as ready for use.
+
+The live reviewer correctly refuted the false choices, but interpreted the old
+contradiction_found field as contradiction between evidence and a false option.
+The evaluator intended source conflict, so the response contract now names it
+source_conflict_found and explicitly distinguishes expected refutation from
+unresolved conflicting evidence. The existing evaluator is adapted internally;
+conflicting sources still block completion. The reviewer also assembled table
+headings and separated entries into non-verbatim quotations, which were correctly
+rejected. It now returns separate short quotes, each independently required to
+occur verbatim in a cited indexed excerpt. No synthetic table quotation is
+accepted.
+
+The one rewrite had been spent on initial citation issues before answer-length
+screening ran. Inexpensive wording checks now join the initial rewrite's issue
+list, and its corrected output is checked for those issues too. This preserves
+the one-attempt cap, protected key/text, and the existing wording threshold.
+Negative tests cover synthesized quotes and the single-rewrite issue union.
+No cross-book search or bulk generation was enabled by these corrections.

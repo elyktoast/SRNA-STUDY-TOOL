@@ -51,16 +51,18 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
                     ("does not mention", "not mentioned", "no mention", "not discussed", "does not endorse")):
                     report["issues"].append({"rule_id": "R-12.4", "option_id": judgment.get("option_id"),
                                              "message": "Independent review relies on source silence"})
-                quote = judgment.get("quote")
+                quotes = judgment.get("quotes")
                 refs = judgment.get("passage_ids", [])
-                if (not isinstance(quote, str) or not 6 <= len(quote) <= 600
-                        or not any(pid in indexed and quote in indexed[pid]["excerpt"] for pid in refs)):
+                if (not isinstance(quotes, list) or not 1 <= len(quotes) <= 8
+                        or any(not isinstance(quote, str) or not 6 <= len(quote) <= 300
+                               or not any(pid in indexed and quote in indexed[pid]["excerpt"] for pid in refs)
+                               for quote in quotes)):
                     report["issues"].append({"rule_id": "R-12.4", "option_id": judgment.get("option_id"),
                                              "message": "Independent reviewer quote is not verbatim indexed evidence"})
             if report["issues"]:
                 report["status"] = "pending"
         report["judgments"] = [{k: j[k] for k in
-            ("option_id", "verdict", "passage_ids", "quote", "explanation", "contradiction_found") if k in j}
+            ("option_id", "verdict", "passage_ids", "quotes", "explanation", "source_conflict_found", "contradiction_found") if k in j}
             for j in response]
     except Exception:
         return {"status": "pending", "issues": [{"rule_id": "R-12.4",

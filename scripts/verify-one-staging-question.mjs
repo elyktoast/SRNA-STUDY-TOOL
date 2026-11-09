@@ -37,6 +37,7 @@ for(const [id,reason] of [
  ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
  ['273d8969-5957-4aec-9c4d-7c46548de822','Option evidence remained unsupported after the single rewrite; quality validation failed.'],
  ['217c7f66-65ff-4c4a-849a-09598f6c26c1','The single rewrite still relied on source silence to reject distractors; quality validation failed.'],
+ ['bb4d1576-3ca2-4c7d-b539-56520e861957','The generated draft retained an answer-length cue and did not complete exact-quote source adjudication.'],
  ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
  ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
 ]){
