@@ -15,6 +15,9 @@ class HandoffTests(unittest.TestCase):
     def test_reviewer_response_is_validated_but_never_published(self):
         def reviewer(request):
             self.assertEqual(request["task"], "independent_option_adjudication")
+            self.assertNotIn("key", request)
+            self.assertNotIn("expected_verdict", str(request["retrieval"]))
+            self.assertNotIn("supports_key", str(request["retrieval"]))
             return [
                 {"option_id": "A", "passage_ids": ["p1"], "verdict": "supports_key",
                  "explanation": "Evidence", "contradiction_found": False},
