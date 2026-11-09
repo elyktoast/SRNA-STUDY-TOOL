@@ -24,6 +24,24 @@ class OptionRetrievalAuditTests(unittest.TestCase):
         self.assertFalse(result["can_publish"])
         self.assertTrue(all(not r["contradiction_checked"] for r in result["option_audits"]))
 
+    def test_missing_evidence_is_not_a_verified_refutation(self):
+        item = {"format": "MC", "stem": "Which effect?", "options":
+                [{"id": "A", "text": "Alpha"}, {"id": "B", "text": "Beta"}],
+                "key": ["A"]}
+        with patch("item_option_retrieval_audit_v2.search", return_value=[]):
+            result = audit(object(), "owner", item, textbook_id="book")
+        self.assertTrue(result["all_options_searched"])
+        self.assertFalse(result["all_options_have_matches"])
+        self.assertFalse(result["clinical_verification_complete"])
+
+    def test_search_error_is_not_silently_counted_as_success(self):
+        item = {"format": "MC", "stem": "Which effect?", "options":
+                [{"id": "A", "text": "Alpha"}], "key": ["A"]}
+        with patch("item_option_retrieval_audit_v2.search", side_effect=RuntimeError("offline")):
+            result = audit(object(), "owner", item, textbook_id="book")
+        self.assertFalse(result["all_options_searched"])
+        self.assertEqual(result["option_audits"][0]["search_status"], "failed")
+
     def test_rejects_incomplete_option(self):
         with self.assertRaises(ValueError):
             audit(None, "owner", {"format": "MC", "stem": "Question",

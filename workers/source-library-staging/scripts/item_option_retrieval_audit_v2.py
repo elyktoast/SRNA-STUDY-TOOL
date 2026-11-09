@@ -21,6 +21,8 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
     if len(ids) != len(options) or len(set(ids)) != len(ids) or not keys or any(k not in ids for k in keys):
         raise ValueError("Valid option identifiers and key required")
     results = []
+    search_failed = False
+    missing_evidence = False
     for option in options:
         option_id = option["id"]
         # Do not treat source silence as evidence that a distractor is false.
@@ -28,7 +30,16 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
         if not isinstance(label, str) or not label.strip():
             raise ValueError("Every option needs text")
         query = label[:180].strip()
-        rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
+        try:
+            rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
+        except Exception:
+            rows = []
+            search_failed = True
+            search_status = "failed"
+        else:
+            search_status = "matches_found" if rows else "no_matches"
+            if not rows:
+                missing_evidence = True
         results.append({
             "option_id": option_id,
             "question_context": stem[:180],
@@ -36,12 +47,14 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
             "expected_verdict": "supports_key" if option_id in keys else "refutes_distractor",
             "retrieved_passage_ids": [row["passage_id"] for row in rows],
             "retrieved_count": len(rows),
+            "search_status": search_status,
             "independent_verification": "pending",
             "contradiction_checked": False,
         })
     return {
         "option_audits": results,
-        "all_options_searched": True,
+        "all_options_searched": not search_failed,
+        "all_options_have_matches": not search_failed and not missing_evidence,
         "clinical_verification_complete": False,
         "can_publish": False,
         "requires_human_review": True,
