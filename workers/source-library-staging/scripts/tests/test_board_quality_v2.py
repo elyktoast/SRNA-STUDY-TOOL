@@ -94,7 +94,7 @@ class BoardQualityTests(unittest.TestCase):
         def transport(**kwargs):
             body=kwargs["body"]
             self.assertIn("json",json.dumps(body["messages"]).lower())
-            self.assertEqual(body["max_tokens"],700)
+            self.assertEqual(body["max_tokens"],1000)
             calls.append(body)
             return {"choices":[{"message":{"content":json.dumps({"checks":{k:"pass" for k in CRITERIA},"findings":[]})}}]}
         adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="independent",owner_opt_in=True,transport=transport)

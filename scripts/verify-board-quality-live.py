@@ -25,7 +25,7 @@ with psycopg.connect(os.environ["STAGING_DATABASE_URL"], options="-c default_tra
 transport = make_transport(allowed_hosts=["api.groq.com"],
     relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
     relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
-model = json.loads(Path("workers/source-library-staging/reviewer-gateway/wrangler.json").read_text())["vars"]["AI_REVIEWER_MODEL"]
+model = json.loads(Path("workers/source-library-staging/reviewer-gateway/wrangler.json").read_text())["vars"]["AI_EDITORIAL_REVIEWER_MODEL"]
 adapter = make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions", api_key="relay-authenticated",
     model=model, transport=transport, owner_opt_in=True, staging=True)
 report = editorial(question, lambda payload: _call_with_bounded_rate_wait(adapter, payload))

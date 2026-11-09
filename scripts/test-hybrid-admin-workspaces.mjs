@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
+import {runInNewContext} from 'node:vm';
 const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
 test('PDF filtering uses storage key, never display name from sidecar metadata',()=>{
@@ -228,12 +229,29 @@ test('evidence screening uses 20 passages and generation defaults to 8',()=>{
  assert.match(ui,/up to 20 per evidence check/);
 });
 
-test('question generation requires an explicit outlined objective instead of a hidden airway default',()=>{
+test('explicit objective selection sets matching tags and invalidates previous evidence',async()=>{
  assert.ok(!ui.includes('value="III.H.4"'));
- assert.ok(ui.includes('id="sl-objective-select"'));
- assert.ok(ui.includes('Choose a learning objective before checking indexed evidence.'));
  const data=JSON.parse(readFileSync(new URL('../equipment/assets/nbcrna-objectives-v2.json',import.meta.url),'utf8'));
  assert.equal(data.objectives.find(o=>o.objective==='III.H.4').label,'Airway management · Difficult airway management');
- assert.equal(data.objectives.find(o=>o.objective==='IV.B.4').label,'Anesthesia for special populations · Obesity');
  assert.equal(new Set(data.objectives.map(o=>o.objective)).size,data.objectives.length);
+ const nodes=new Map();
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',listeners:{},choices:[],addEventListener(event,fn){this.listeners[event]=fn;},append(choice){this.choices.push(choice);}});return nodes.get(id);};
+ const context={generationPanel:{querySelector:selector=>node(selector.slice(1))},
+  evidencePanel:{querySelector:selector=>node(selector.slice(1))},genEl:node,
+  checkedEvidence:{topic:'previous'},document:{createElement:()=>({})},
+  fetch:async()=>({ok:true,json:async()=>data})};
+ const start=ui.indexOf("const objectiveSelect=generationPanel.querySelector('#sl-objective-select');");
+ const end=ui.indexOf("generationPanel.querySelector('#sl-gen-book-select').addEventListener",start);
+ assert.ok(start>=0&&end>start);
+ runInNewContext(ui.slice(start,end),context);
+ await new Promise(resolve=>setImmediate(resolve));
+ const select=node('sl-objective-select');
+ assert.equal(select.choices.length,data.objectives.length);
+ assert.equal(node('sl-gen-objective').value,'');
+ select.value='IV.B.4';select.listeners.change();
+ assert.equal(node('sl-gen-domain').value,'IV');assert.equal(node('sl-gen-section').value,'B');
+ assert.equal(node('sl-gen-objective').value,'IV.B.4');assert.equal(context.checkedEvidence,null);
+ context.checkedEvidence={topic:'previous'};select.value='invalid';select.listeners.change();
+ assert.equal(node('sl-gen-objective').value,'');assert.equal(node('sl-gen-domain').value,'');
+ assert.equal(context.checkedEvidence,null);
 });

@@ -10,6 +10,7 @@
     "AI_REWRITE_OPT_IN": "true",
     "AI_BLIND_REVIEW_OPT_IN": "true",
     "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b",
+    "AI_EDITORIAL_REVIEWER_MODEL": "openai/gpt-oss-20b",
     "AI_OPTION_REVIEW_OPT_IN": "true",
     "AI_EXPLANATION_REVIEW_OPT_IN": "true"
   },
