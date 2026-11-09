@@ -1,7 +1,7 @@
 name: Deploy private staging reviewer
 # Redeploy staging after database password reset; read updated staging GitHub secrets.
-# Deployment is manual; authenticated smoke checks use fresh credentials when configured.
-# Avoid container rebuilds for every staging Python source/test commit.
+# Automatic on main for reviewer changes; authenticated smoke checks use fresh credentials when configured.
+# Single automatic deployment owner. The gateway-only workflow remains manual for emergencies.
 on:
   workflow_dispatch:
   push:
