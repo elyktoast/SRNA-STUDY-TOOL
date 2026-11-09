@@ -594,3 +594,40 @@ clinical premises; a misconception is a false belief the source must refute.
 This prevents evaluating an intentionally false misconception as though the
 author were asserting it as a clinical fact. These roles are server-assigned,
 not accepted from the generated question as grading authority.
+
+
+### Passed source controls; quota-isolated single acceptance
+
+Run 42683110405 passed all three live source controls using GPT-OSS 20B: the
+unsupported original was flagged for both required fields, the corrected revision
+passed all 15 explanatory fields, and supported teaching framing passed.
+Its new draft b708c1b5-399c-41ab-b0d1-444fbedbcab8 passed schema, wording, math,
+evidence, blind-answer and independent option-source review but stayed unpublished
+with explanatory review pending due to a provider rate limit. It is not reported
+as a completed cycle. The three immediately preceding regression calls consumed
+the same review-model minute quota. A standalone acceptance now reuses the settled
+deployment without rebuilding or repeating those calls immediately beforehand.
+
+Telemetry also showed request estimates increasing between a rejected call and
+its retry (2,775 to 3,005 tokens), leaving a small deficit after the prior margin.
+The existing one-retry wait adds three seconds of estimate margin, still capped
+at 60 seconds, without retrying a second failure or an ambiguous timeout.
+
+
+### Preserve the proven option reviewer; isolate explanation reasoning
+
+The isolated run 42684463260 saved draft 08649eac-2874-4265-8119-5d0ffa2fe5cd
+unpublished. All 15 explanatory fields passed, but the alternate model incorrectly
+judged nitrous oxide as triggering in the separate option audit. The trusted
+comparison rejected that report; no question was accepted or published.
+
+The shared blind/option reviewer is therefore restored to Qwen, preserving its
+previous settings. Only the new explanatory audit requests low reasoning; the
+[provider API reference](https://console.groq.com/docs/api-reference) documents Qwen's otherwise non-reasoning default, which does not serve
+the same task as a semantic explanatory entailment check. The explicit assertion
+roles and exclusive-wording evidence guard remain unchanged. Regression tests
+confirm that blind and option settings are unchanged by this mode.
+
+Read-only explanation regressions can now be explicitly triggered separately
+from a paid question-generation acceptance. This allows verification of the
+reviewer without immediately consuming the same minute quota before generation.

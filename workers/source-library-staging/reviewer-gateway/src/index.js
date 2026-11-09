@@ -81,7 +81,7 @@ async function relayGroq(request,env){
   const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
   const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
   const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...(groqOss?{reasoning_effort:'low'}:{})}):bytes;
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...((groqOss||(groqQwen&&step.step==='explanation_review'))?{reasoning_effort:'low'}:{})}):bytes;
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
