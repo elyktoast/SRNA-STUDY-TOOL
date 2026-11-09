@@ -93,6 +93,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "rewrite":
             body["messages"][0]["content"] += " Return the FLAT revised item only, with all original item fields at the top level. Do not echo the request envelope, protected_metadata, issues, trusted_evidence, repair_instructions, step or max_rewrites. Keep status exactly draft and copy every original protected field and the keyed option text exactly."
             body["messages"][0]["content"] += " REQUIRED TOP-LEVEL OUTPUT KEYS (include EVERY key, even unchanged): " + json.dumps(list(request["item"])) + ". COPY THESE PROTECTED VALUES AS TOP-LEVEL ITEM FIELDS: " + json.dumps(request.get("protected_metadata", {})) + ". Copy unchanged concept_card, audit, stats, self_check, enemy_ids and verification flags from the original. For evidence return only textbook_id, passage_id and pdf_page references; omit excerpt so the trusted server can attach exact indexed text."
+        if request["step"] == "blind_review":
+            body["messages"][0]["content"] += " For MC, test EACH choice against the literal stem and return ALL defensible correct option IDs, even when more than one is defensible. An array with multiple IDs intentionally flags an ambiguous single-answer question. Do not assume a primary-versus-secondary ranking that the stem does not establish. A fact that also correctly explains the scenario must not be dismissed as merely partial truth to force a unique key."
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.
         response = transport(endpoint=endpoint,

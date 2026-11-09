@@ -30,5 +30,11 @@ class BlindReviewTests(unittest.TestCase):
                         generator_model_id="a", reviewer_model_id="b")
         self.assertEqual(result["status"], "flag")
 
+    def test_two_defensible_answers_flag_single_answer_item(self):
+        result=review(ITEM,lambda x:{"item_id":"new-1","key":["B","C"]},
+                      generator_model_id="a",reviewer_model_id="b")
+        self.assertEqual(result["status"],"flag")
+        self.assertFalse(result["can_publish"])
+
 if __name__ == "__main__":
     unittest.main()
