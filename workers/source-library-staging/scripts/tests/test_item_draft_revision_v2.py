@@ -17,6 +17,23 @@ def fixture():
     return draft,passages
 
 class RevisionTests(unittest.TestCase):
+    def test_concept_relevance_revision_preserves_original_identity_and_evidence(self):
+        draft,passages=fixture()
+        draft["question"]["concept_card"]={"relevance":"Unsupported policy", "evidence_ids":[PASSAGE]}
+        result=propose_revision(draft,passages,question_edits={"concept_card":{"relevance":"Source-grounded clinical importance"}})
+        self.assertEqual(result["question"]["concept_card"]["relevance"],"Source-grounded clinical importance")
+        self.assertEqual(draft["question"]["concept_card"]["relevance"],"Unsupported policy")
+        self.assertEqual(result["question"]["concept_card"]["evidence_ids"],[PASSAGE])
+        self.assertEqual(result["question"]["key"],draft["question"]["key"])
+        self.assertFalse(result["can_publish"])
+        self.assertTrue(result["requires_clinical_review"])
+
+    def test_concept_revision_cannot_change_evidence_or_other_fields(self):
+        draft,passages=fixture(); draft["question"]["concept_card"]={"relevance":"Original","evidence_ids":[PASSAGE]}
+        for edit in ({"evidence_ids":["forged"]},{"relevance":"New","mechanism":"New"},{"relevance":""},{"relevance":"x"*2001}):
+            with self.subTest(edit=edit),self.assertRaises(ValueError):
+                propose_revision(draft,passages,question_edits={"concept_card":edit})
+
     def test_quote_correction_does_not_mutate_saved_question(self):
         draft,passages=fixture()
         result=propose_revision(draft,passages,citation_excerpts={0:"Awake extubation is recommended."})

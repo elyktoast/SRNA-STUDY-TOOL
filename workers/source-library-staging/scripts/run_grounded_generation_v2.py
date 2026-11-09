@@ -54,6 +54,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     generator_id = env.get("AI_GENERATOR_MODEL", "").strip()
     reviewer_id = env.get("AI_REVIEWER_MODEL", "").strip()
     blind_requested = env.get("AI_BLIND_REVIEW_OPT_IN") == "true"
+    option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     summary["review_readiness"] = {
         "rewrite": "configured" if rewrite_requested and generator_id else
@@ -64,6 +65,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             "missing_reviewer_model" if blind_requested and not reviewer_id else
             "missing_generator_model" if blind_requested and not generator_id else
             "reviewer_must_differ" if blind_requested else "disabled"),
+        "independent_option_review": "configured" if option_requested and generator_id and reviewer_id and generator_id != reviewer_id else "unavailable" if option_requested else "disabled",
         "independent_review_completed": False,
         "clinical_review_required": True,
     }
@@ -128,7 +130,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
-    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true"
+    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested
     reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
     if reviewer_enabled:
         if not reviewer_model_id or reviewer_model_id == env.get("AI_GENERATOR_MODEL", "").strip():
@@ -150,6 +152,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
             request_hash=request_hash, evidence_hash=evidence_hash,
             stage=stage, value=value)
+    def option_reviewer(payload):
+        response = reviewer_adapter({**payload, "step": "option_review", "blind": True,
+                                     "rules_version": "2.0", "auto_publish": False})
+        if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
+            raise ValueError("Independent option reviewer returned invalid judgments")
+        return response["judgments"]
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
@@ -195,9 +203,11 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  evidence_packet=evidence,
                                  rewrite=rewrite if rewrite_enabled else None,
                                  review_repair=rewrite if rewrite_enabled else None,
-                                 blind_reviewer=blind_reviewer,
+                                 blind_reviewer=blind_reviewer if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None,
                                  reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
-                                 semantic_lookup=semantic_lookup)
+                                 semantic_lookup=semantic_lookup,
+                                 option_reviewer=option_reviewer if option_requested else None,
+                                 option_reviewer_model_id=reviewer_model_id if option_requested else None)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,

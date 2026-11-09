@@ -23,8 +23,15 @@ def propose_revision(draft, trusted_passages, *, citation_excerpts=None,
     # Allow only text changes; answer-key changes require a separate, explicitly
     # evidence-verified workflow. Original drafts remain immutable.
     if question_edits is not None:
-        if not isinstance(question_edits, dict) or not question_edits or set(question_edits) - {"stem", "options"}:
+        if not isinstance(question_edits, dict) or not question_edits or set(question_edits) - {"stem", "options", "concept_card"}:
             raise ValueError("Unsupported question edits")
+        if "concept_card" in question_edits:
+            edits = question_edits["concept_card"]
+            if (not isinstance(edits, dict) or set(edits) != {"relevance"}
+                    or not isinstance(edits["relevance"], str) or not edits["relevance"].strip()
+                    or len(edits["relevance"]) > 2000 or not isinstance(item.get("concept_card"), dict)):
+                raise ValueError("Only a bounded concept relevance text correction is allowed")
+            item["concept_card"]["relevance"] = edits["relevance"].strip()
         if "stem" in question_edits:
             stem = question_edits["stem"]
             if not isinstance(stem, str) or not stem.strip() or len(stem) > 5000:

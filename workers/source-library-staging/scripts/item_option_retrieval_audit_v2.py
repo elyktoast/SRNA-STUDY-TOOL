@@ -5,7 +5,7 @@ Retrieval is not proof of clinical correctness. No model calls or publication.
 from search_passages import search
 
 
-def audit(conn, owner_uid, item, *, textbook_id, limit=5):
+def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
     if not isinstance(item, dict) or item.get("format") not in ("MC", "MS"):
         raise ValueError("MC/MS item required")
     if not isinstance(textbook_id, str) or not textbook_id:
@@ -20,6 +20,8 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
     ids = [option.get("id") for option in options if isinstance(option, dict)]
     if len(ids) != len(options) or len(set(ids)) != len(ids) or not keys or any(k not in ids for k in keys):
         raise ValueError("Valid option identifiers and key required")
+    if context_query is not None and (not isinstance(context_query, str) or not context_query.strip() or len(context_query) > 500):
+        raise ValueError("Invalid independent retrieval context")
     results = []
     search_failed = False
     missing_evidence = False
@@ -30,6 +32,10 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
         if not isinstance(label, str) or not label.strip():
             raise ValueError("Every option needs text")
         query = label[:180].strip()
+        if context_query:
+            # Retrieve both the option's classification and the selected clinical
+            # topic; neither answer key nor generator citations seed this search.
+            query += " OR " + context_query.strip()
         try:
             rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
         except Exception:
