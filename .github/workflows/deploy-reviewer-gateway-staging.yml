@@ -1,14 +1,8 @@
 name: Deploy staging reviewer gateway
 
+# Manual emergency fallback only. Normal main deployments use deploy-source-reviewer-staging.yml.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/deploy-reviewer-gateway-staging.yml'
-      - 'workers/source-library-staging/reviewer-gateway/**'
-      - 'workers/source-library-staging/reviewer-service/**'
-      - 'workers/source-library-staging/scripts/**'
 
 permissions:
   contents: read
