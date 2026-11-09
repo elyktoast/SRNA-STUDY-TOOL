@@ -1,7 +1,7 @@
 name: Isolated staging draft JSON probe
 on:
   push:
-    branches: [fix/staging-groq-json-recovery, fix/staging-rationale-json-recovery]
+    branches: [fix/staging-groq-json-recovery, fix/staging-rationale-json-recovery, fix/staging-citation-recovery]
     paths:
       - 'workers/source-library-staging/scripts/probe_staging_draft_json_v2.py'
 permissions:
@@ -22,5 +22,6 @@ jobs:
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
           CONFIRM_STAGING_DRAFT_PROBE: 'true'
-          PROBE_RATIONALE: ${{ github.ref_name == 'fix/staging-rationale-json-recovery' }}
+          PROBE_RATIONALE: ${{ github.ref_name != 'fix/staging-groq-json-recovery' }}
+          PROBE_SCREENING: ${{ github.ref_name == 'fix/staging-citation-recovery' }}
         run: python workers/source-library-staging/scripts/probe_staging_draft_json_v2.py

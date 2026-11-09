@@ -44,6 +44,30 @@ def _complete_nonclinical_schema_fields(draft):
     return item
 
 
+def _hydrate_indexed_citations(draft, trusted_passages):
+    """Materialize missing quotations only from exactly bound indexed references.
+
+    Never replace a supplied quote, repair a wrong source/page, or treat a
+    reference as proof of clinical support. All existing validators still run.
+    """
+    import copy
+    item = copy.deepcopy(draft)
+    sources = {p["passage_id"]: p for p in trusted_passages}
+    citations = item.get("evidence")
+    if not isinstance(citations, list):
+        return item
+    for citation in citations:
+        if not isinstance(citation, dict) or "excerpt" in citation:
+            continue
+        source = sources.get(citation.get("passage_id"))
+        if (source is not None
+                and citation.get("textbook_id") == source.get("textbook_id")
+                and type(citation.get("pdf_page")) is int
+                and citation["pdf_page"] == source.get("pdf_page_start")):
+            citation["excerpt"] = source["excerpt"]
+    return item
+
+
 def _repair_ellipsized_citations(draft, trusted_passages):
     """Replace only provably ordered, unique ellipsis spans with verbatim source text.
 
@@ -139,7 +163,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     # The model must not be allowed to overwrite identifiers, source, or approval.
-    item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(draft, evidence)), "item_id": item_id, "rules_version": "2.0",
+    item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(_hydrate_indexed_citations(draft, evidence), evidence)), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,
             "objective": objective, "format": format,
             "concept_card": concept, "rationale": rationale,

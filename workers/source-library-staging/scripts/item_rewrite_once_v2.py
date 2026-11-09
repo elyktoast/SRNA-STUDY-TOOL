@@ -17,9 +17,10 @@ def attempt_once(original, issues, rewrite, validate):
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
                  "objective", "format", "model", "status")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
+               "protected_metadata": {field: deepcopy(original.get(field)) for field in immutable},
                "max_rewrites": 1, "requires_human_review": True,
                "repair_instructions": (
-                   "Fix only the reported rule-ID issues. Preserve the question's "
+                   "Fix only the reported rule-ID issues. Copy every protected_metadata field EXACTLY, including null values, and preserve the question's "
                    "clinical meaning, answer key, protected metadata, concept "
                    "evidence IDs, and all unaffected fields. For R-2.5, use only "
                    "exact verbatim excerpts and matching source IDs/pages from "

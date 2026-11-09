@@ -57,3 +57,24 @@ if os.environ.get('PROBE_RATIONALE')=='true':
     valid=isinstance(rationale,dict) and all(isinstance(rationale.get(k),str) and rationale[k].strip() for k in ('core_concept','why_key_wins','trap')) and isinstance(rationale.get('distractor_breakdown'),dict) and set(rationale['distractor_breakdown'])=={'A','B','C','D'}
     print(json.dumps({'probe':'rationale','elapsed_ms':round((time.monotonic()-started)*1000),'required_shape_valid':valid,'all_options_explained':valid}),flush=True)
     if not valid: raise SystemExit('Isolated rationale contract failed')
+if os.environ.get('PROBE_SCREENING')=='true':
+    from types import SimpleNamespace
+    from unittest.mock import patch
+    from item_ai_provider_v2 import make_adapter as real_make_adapter
+    from run_grounded_generation_v2 import execute
+    # Reuse the already tested responses; do not pay to regenerate earlier
+    # stages while isolating screening/rewrite/blind review. No draft is saved.
+    cached={'concept_card':concept,'item_draft':parsed,'rationale':rationale}
+    def factory(**kwargs):
+        real=real_make_adapter(**kwargs)
+        if kwargs['model']=='openai/gpt-oss-120b':
+            return lambda request: cached[request['step']] if request['step'] in cached else real(request)
+        return real
+    args=SimpleNamespace(topic='Preoxygenation',mode='NCE',domain='III',section='H',objective='III.H.4',format='MC',item_id='a0680579-3281-44b4-9476-11d530e12ef3',textbook_id='6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d',limit=8,section_id=None,include_subsections=False,page_start=None,page_end=None,owner_uid='c003287a-10ce-4cc9-926e-ef7c3a162a26',execute=True,confirm_paid_calls=True)
+    environment={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_PROVIDER_ENDPOINT':'https://api.groq.com/openai/v1/chat/completions','AI_ALLOWED_HOSTS':'api.groq.com','AI_PROVIDER_API_KEY':'signed-relay-only','AI_GENERATOR_MODEL':'openai/gpt-oss-120b','AI_REWRITE_OPT_IN':'true','AI_BLIND_REVIEW_OPT_IN':'true','AI_REVIEWER_MODEL':'qwen/qwen3.8-27b','STAGING_RECEIPT_SIGNING_SECRET':os.environ['STAGING_RECEIPT_SIGNING_SECRET']}
+    with psycopg.connect(os.environ['STAGING_DATABASE_URL'],sslmode='require',connect_timeout=8) as conn,patch('run_grounded_generation_v2.make_adapter',side_effect=factory):
+        result=execute(conn,args,environment)
+    stages={name:value['status'] for name,value in result['screening']['stages'].items()}
+    print(json.dumps({'probe':'screening','stages':stages,'generator_issue_rules':[i['rule_id'] for i in result['generator_issues']],'rewrite_attempts':result['screening']['rewrite_attempts_used'],'can_publish':result['can_publish'],'saved':False}),flush=True)
+    if any(stages.get(name)!='pass' for name in ('schema','evidence','deterministic_text','blind_model')):
+        raise SystemExit('Isolated quality screening did not pass; full acceptance remains blocked')

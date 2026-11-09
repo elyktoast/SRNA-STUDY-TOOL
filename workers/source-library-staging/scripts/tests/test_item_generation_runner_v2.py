@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_generation_runner_v2 import generate_one, _repair_ellipsized_citations
+from item_generation_runner_v2 import generate_one, _repair_ellipsized_citations, _hydrate_indexed_citations
 from test_item_standard_v2 import sample
 
 EVIDENCE = [{"passage_id": "p1", "textbook_id": "t1", "excerpt": "Source"}]
@@ -135,6 +135,28 @@ class RunnerTests(unittest.TestCase):
     def test_no_implicit_model_calls(self):
         with self.assertRaises(ValueError):
             generate_one(None, **ARGS)
+
+    def test_missing_quote_materializes_only_from_bound_indexed_source(self):
+        source = {"passage_id": "p1", "textbook_id": "t1", "pdf_page_start": 7,
+                  "excerpt": "Exact hyphen-\nated indexed text with a ﬁ ligature."}
+        draft = {"evidence": [{"passage_id": "p1", "textbook_id": "t1", "pdf_page": 7}]}
+        hydrated = _hydrate_indexed_citations(draft, [source])
+        self.assertEqual(hydrated["evidence"][0]["excerpt"], source["excerpt"])
+        self.assertNotIn("excerpt", draft["evidence"][0])
+
+    def test_hydration_never_overwrites_fabricated_quotes_or_wrong_references(self):
+        source = {"passage_id": "p1", "textbook_id": "t1", "pdf_page_start": 7, "excerpt": "Trusted source"}
+        for citation in [
+            {"passage_id": "p1", "textbook_id": "wrong", "pdf_page": 7},
+            {"passage_id": "unknown", "textbook_id": "t1", "pdf_page": 7},
+            {"passage_id": "p1", "textbook_id": "t1", "pdf_page": 8},
+            {"passage_id": "p1", "textbook_id": "t1", "pdf_page": 7, "excerpt": "Invented quotation"},
+            {"passage_id": "p1", "textbook_id": "t1", "pdf_page": 7, "excerpt": ""},
+            "", "invalid citation",
+        ]:
+            with self.subTest(citation=citation):
+                draft = {"evidence": [citation]}
+                self.assertEqual(_hydrate_indexed_citations(draft, [source]), draft)
 
 if __name__ == "__main__":
     unittest.main()

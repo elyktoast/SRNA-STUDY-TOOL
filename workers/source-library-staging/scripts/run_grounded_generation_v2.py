@@ -154,8 +154,16 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
     def rewrite(request):
-        return adapter({**request, "step": "rewrite",
-                        "rules_version": "2.0", "auto_publish": False})
+        from item_generation_runner_v2 import _hydrate_indexed_citations
+        references = {c.get("passage_id") for c in request.get("item", {}).get("evidence", [])
+                      if isinstance(c, dict)}
+        for entry in request.get("item", {}).get("distractor_evidence", {}).values():
+            if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
+                references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
+        trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
+        candidate = adapter({**request, "trusted_evidence": trusted, "step": "rewrite",
+                             "rules_version": "2.0", "auto_publish": False})
+        return _hydrate_indexed_citations(candidate, evidence["sources"])
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,

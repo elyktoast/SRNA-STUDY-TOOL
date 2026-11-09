@@ -25,7 +25,7 @@ class ContractTests(unittest.TestCase):
                              concept_card={"objective": "III.H.4"})
         instructions = request["instructions"]
         for requirement in ("sa, dd, and hs", "self_check", "stats",
-                            "excerpt copied verbatim", "distractor_evidence",
+                            "trusted server attaches the exact indexed text", "distractor_evidence",
                             "supports_key", "refutes_distractor",
                             "human review"):
             self.assertIn(requirement, instructions)
@@ -36,8 +36,8 @@ class ContractTests(unittest.TestCase):
                              concept_card={"objective": "III.H.4"})
         instructions = request["instructions"]
         for requirement in (
-            "character-for-character", "line breaks and hyphenation",
-            "exact substring", "do not guess a pdf_page",
+            "Omit excerpt", "verifying all three source identifiers",
+            "OBJECTS ONLY", "do not guess a pdf_page",
             "same item_draft response", "keys exactly match the option IDs",
             "affirmative support or contradiction", "negatively worded NOT/EXCEPT",
         ):
