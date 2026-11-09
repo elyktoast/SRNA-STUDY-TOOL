@@ -1,4 +1,4 @@
-"""Two isolated signed drafting probes; no rationale, screening, save or publish."""
+"""Isolated signed drafting probes; no rationale, screening, save or publish."""
 import json
 import os
 import time
@@ -20,13 +20,16 @@ concept={'objective':'III.H.4','mechanism':'Preoxygenation increases pulmonary o
 step=build_step('item_draft',mode='NCE',domain='III',section='H',objective='III.H.4',evidence=evidence,format='MC',concept_card=concept)
 transport=make_transport(allowed_hosts=['api.groq.com'],timeout_seconds=60,relay_url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay',relay_secret=os.environ['STAGING_RECEIPT_SIGNING_SECRET'])
 system='Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return item_id and key array for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification.'
-for label,settings in [('baseline',{'max_tokens':2600}),('bounded_json',{'max_tokens':4096,'reasoning_effort':'low','response_format':{'type':'json_object'}})]:
+probes=[('bounded_json',{'max_tokens':2600,'reasoning_effort':'low','response_format':{'type':'json_object'}})]
+if os.environ.get('PROBE_BASELINE')=='true':
+    probes.insert(0,('baseline',{'max_tokens':2600}))
+for label,settings in probes:
     body={'model':'openai/gpt-oss-120b','messages':[{'role':'system','content':system},{'role':'user','content':json.dumps(step,ensure_ascii=False)}],'temperature':0.2,**settings}
     started=time.monotonic()
     try:
         response=transport(endpoint='https://api.groq.com/openai/v1/chat/completions',headers={},body=body)
     except TransportError as error:
-        print(json.dumps({'probe':label,'rule':error.rule}),flush=True)
+        print(json.dumps({'probe':label,'rule':error.rule,'retry_after_seconds':error.retry_after_seconds,'remaining_tokens':error.remaining_tokens}),flush=True)
         raise SystemExit('Signed draft probe transport failed') from None
     choice=response.get('choices',[{}])[0]
     try:
