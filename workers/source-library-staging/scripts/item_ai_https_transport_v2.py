@@ -24,7 +24,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
         raise TransportError("PROVIDER_REDIRECT")
 
 
-def make_transport(*, allowed_hosts, timeout_seconds=25, max_response_bytes=262144,
+def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=262144,
                    relay_url=None, relay_secret=None):
     hosts = frozenset(allowed_hosts)
     if not hosts or any(not isinstance(h, str) or not h or "/" in h or ":" in h for h in hosts):
