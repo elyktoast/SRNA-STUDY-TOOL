@@ -98,7 +98,8 @@ async function relayGroq(request,env){
    // Route to catalog-verified model IDs only. Preserve high-quality concept reasoning.
    const configured='models/'+env.AI_GEMINI_MODEL;
    const priority=['gemini-3.8-flash','gemini-3.6-flash','gemini-3-flash','gemini-3.1-flash-lite','gemini-2.5-flash','gemini-2.5-flash-lite'];
-   const candidates=[...new Set([...priority.map(id=>'models/'+id),configured])].filter(id=>available.has(id));
+   const otherFlash=[...available].filter(id=>id.includes('flash')&&!id.includes('image')&&!id.includes('tts')&&!id.includes('embedding')).sort();
+   const candidates=[...new Set([...priority.map(id=>'models/'+id),configured,...otherFlash])].filter(id=>available.has(id));
    if(!listingSucceeded||!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    // A 429 is a rejected request. One alternate model attempt is permitted;
    // never retry the same model or retry 5xx/timeout ambiguously.
