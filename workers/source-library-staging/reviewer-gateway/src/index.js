@@ -65,7 +65,10 @@ async function relayGroq(request,env){
   // Keep the original roles and reserve the bounded budget for the step result.
   // Deterministic evidence checks and independent review still run downstream.
   const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):bytes;
+  const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
+  const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...(groqOss?{reasoning_effort:'low'}:{})}):bytes;
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
@@ -101,7 +104,16 @@ async function relayGroq(request,env){
    }:{};
    return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
-  if(provider==='groq')return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  if(provider==='groq'){
+   let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}
+   const choice=parsed?.choices?.[0];
+   const reason=choice?.finish_reason&&choice.finish_reason!=='stop'?'provider_incomplete':choice?.message?.refusal?'provider_refusal':typeof choice?.message?.content!=='string'||!choice.message.content.trim()?'provider_empty_content':null;
+   if(reason){
+    console.error('staging_relay_output_failure',JSON.stringify({provider,step:step.step,model:activeModel,provider_status:providerStatus,reason}));
+    return respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+   }
+   return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
+  }
   let data;try{data=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}')}
   // Cloudflare Qwen 3.8 uses the OpenAI-compatible result.choices format.
   // Older Workers AI models use result.response. Do not forward reasoning or
