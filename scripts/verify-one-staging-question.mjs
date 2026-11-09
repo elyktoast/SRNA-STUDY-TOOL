@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['97a2f6e0-e2e9-40a5-bb63-e29827aeff5e','Final source QA found named drug examples absent from the cited class-only passage; requires indexed support for their class membership.'],
  ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
  ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
  ['273d8969-5957-4aec-9c4d-7c46548de822','Option evidence remained unsupported after the single rewrite; quality validation failed.'],

@@ -643,3 +643,21 @@ guard provide the new review contract. Fictional-variable logic examples clarify
 that a correctly refuted misconception and direct teaching application are valid,
 while an unsupported receptor mechanism is not. Actual fields still require
 complete source-span coverage; the negative/positive controls are unchanged.
+
+
+### Successful automated cycle; final citation specificity check
+
+The restored Qwen settings passed all three source controls in run 42687508165.
+Standalone acceptance run 42684463260, attempt 2, saved draft
+97a2f6e0-e2e9-40a5-bb63-e29827aeff5e with all automated answer, option and
+explanation checks passing, zero issues and no automatic rewrite. It remains
+unpublished and unapproved. Final editorial inspection nevertheless found two
+named drug examples attributed to a passage listing only their classes. That
+is not treated as complete source support merely because the drug-class links
+are familiar clinical knowledge.
+
+Authoring and explanation review now explicitly require indexed support for a
+named drug's class membership; class-only evidence cannot supply a missing link
+from model memory. A fourth read-only negative control requires the reviewer to
+reject those unlisted named examples. The original three controls remain.
+No textbook indexing or clinical approval was modified.
