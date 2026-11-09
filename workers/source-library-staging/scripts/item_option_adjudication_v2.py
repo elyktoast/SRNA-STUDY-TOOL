@@ -18,7 +18,8 @@ def evaluate(item, retrieval, judgments):
     if not isinstance(retrieval, dict) or not isinstance(retrieval.get("option_audits"), list):
         raise ValueError("Independent retrieval required")
     audits = {a.get("option_id"): a for a in retrieval["option_audits"] if isinstance(a, dict)}
-    if set(audits) != set(ids) or len(audits) != len(ids):
+    if (set(audits) != set(ids) or len(audits) != len(ids)
+            or len(retrieval["option_audits"]) != len(ids)):
         raise ValueError("Complete independent option retrieval required")
     if not isinstance(judgments, list):
         raise ValueError("Reviewer judgments required")
