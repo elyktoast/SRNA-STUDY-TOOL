@@ -74,7 +74,7 @@ async function relayGroq(request,env){
      listingSucceeded=true;
      const data=await listing.json();
      for(const model of data.models||[]){
-      if(typeof model.name==='string'&&/^models\\/gemini-[a-zA-Z0-9.-]+$/.test(model.name)&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
+      if(typeof model.name==='string'&&model.name.startsWith('models/gemini-')&&/^[a-zA-Z0-9.-]+$/.test(model.name.slice('models/'.length))&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
      }
      next=data.nextPageToken||'';if(!next)break;
     }
