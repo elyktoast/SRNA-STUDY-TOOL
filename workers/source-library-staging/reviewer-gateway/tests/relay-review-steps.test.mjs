@@ -259,3 +259,17 @@ test('independent option review requires explicit flag and distinct reviewer ide
   assert.equal(calls,1);
  }finally{globalThis.fetch=original;}
 });
+
+test('Groq-only authoring mode keeps all three calls on the existing JSON route',async()=>{
+ const original=globalThis.fetch; const steps=[];
+ globalThis.fetch=async(url,options)=>{
+  assert.ok(String(url).includes('api.groq.com'));
+  const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
+  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,'low');
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{
+  for(const step of ['concept_card','item_draft','rationale'])assert.equal((await gateway.fetch(request(step,'openai/gpt-oss-120b'),{...cloudflareEnv,AI_HYBRID_ENABLED:'false',AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);
+  assert.deepEqual(steps,['concept_card','item_draft','rationale']);
+ }finally{globalThis.fetch=original;}
+});

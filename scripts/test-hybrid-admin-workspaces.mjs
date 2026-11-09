@@ -86,7 +86,7 @@ test('gateway checks active providers using metadata-only GET endpoints and excl
  assert.ok(gateway.includes("probe('cloudflare'"));
  assert.ok(gateway.includes("method:'GET',headers,redirect:'manual'"));
  assert.ok(gateway.includes("generation_ready:false"));
- assert.ok(gateway.includes("metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK')"));
+ assert.ok(gateway.includes("metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK'||provider.state==='DISABLED')"));
 });
 
 test('PDF review exposes loading, busy, and error feedback beside its button',()=>{
