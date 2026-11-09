@@ -113,3 +113,56 @@ test('Cloudflare model 404 does not retry or call Gemini',async()=>{
   assert.equal(urls.length,1);
  }finally{globalThis.fetch=original;}
 });
+
+const qwenEnv={...env,AI_HYBRID_ENABLED:'true',
+ AI_CLOUDFLARE_ACCOUNT_ID:'test-account',AI_CLOUDFLARE_API_TOKEN:'test-token',
+ AI_CLOUDFLARE_MODEL:'@cf/qwen/qwen3.8-27b'};
+async function qwenMock(result,status=200){
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>new Response(JSON.stringify(result),{status});
+ try{return await gateway.fetch(request('concept_card','generator-model'),qwenEnv)}
+ finally{globalThis.fetch=original}
+}
+test('Qwen 3.8 choices message content is returned to pipeline',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{role:'assistant',content:'{"topic":"airway"}'},finish_reason:'stop'}]}});
+ assert.equal(response.status,200);
+ assert.equal((await response.json()).choices[0].message.content,'{"topic":"airway"}');
+});
+test('legacy Workers AI response format still supported',async()=>{
+ const response=await qwenMock({success:true,result:{response:'{"topic":"legacy"}'}});
+ assert.equal(response.status,200);
+});
+test('Qwen refusal is rejected',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{content:'no',refusal:'blocked'},finish_reason:'stop'}]}});
+ assert.equal((await response.json()).reason,'provider_refusal');
+});
+test('Qwen token-truncated generation is rejected',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{content:'partial'},finish_reason:'length'}]}});
+ assert.equal((await response.json()).reason,'provider_incomplete');
+});
+test('Qwen empty output is rejected',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{content:'   '},finish_reason:'stop'}]}});
+ assert.equal((await response.json()).reason,'provider_empty_content');
+});
+test('Qwen provider envelope failure is rejected',async()=>{
+ const response=await qwenMock({success:false,result:{choices:[{message:{content:'bad'},finish_reason:'stop'}]}});
+ assert.equal((await response.json()).reason,'provider_envelope_failed');
+});
+test('Qwen oversized content is rejected',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{content:'a'.repeat(262145)},finish_reason:'stop'}]}});
+ assert.equal(response.status,502);
+});
+test('Qwen malformed JSON response is rejected',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>new Response('not json',{status:200});
+ try{const response=await gateway.fetch(request('concept_card','generator-model'),qwenEnv);assert.equal(response.status,502)}
+ finally{globalThis.fetch=original}
+});
+test('Qwen 503 includes sanitized provider HTTP status',async()=>{
+ const response=await qwenMock({errors:[]},503);
+ const body=await response.json();assert.equal(body.provider_status,503);assert.equal(body.rule,'PROVIDER_UPSTREAM');
+});
+test('Qwen successful content does not leak reasoning metadata',async()=>{
+ const response=await qwenMock({success:true,result:{choices:[{message:{content:'final',reasoning:'private chain'},finish_reason:'stop'}]}});
+ const body=await response.json();assert.equal(body.choices[0].message.content,'final');assert.ok(!JSON.stringify(body).includes('private chain'));
+});
