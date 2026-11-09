@@ -21,7 +21,8 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
     if len(ids) != len(options) or len(set(ids)) != len(ids) or not keys or any(k not in ids for k in keys):
         raise ValueError("Valid option identifiers and key required")
     results = []
-    incomplete = False
+    search_failed = False
+    missing_evidence = False
     for option in options:
         option_id = option["id"]
         # Do not treat source silence as evidence that a distractor is false.
@@ -33,12 +34,12 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
             rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
         except Exception:
             rows = []
-            incomplete = True
+            search_failed = True
             search_status = "failed"
         else:
             search_status = "matches_found" if rows else "no_matches"
             if not rows:
-                incomplete = True
+                missing_evidence = True
         results.append({
             "option_id": option_id,
             "question_context": stem[:180],
@@ -52,7 +53,8 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
         })
     return {
         "option_audits": results,
-        "all_options_searched": not incomplete,
+        "all_options_searched": not search_failed,
+        "all_options_have_matches": not search_failed and not missing_evidence,
         "clinical_verification_complete": False,
         "can_publish": False,
         "requires_human_review": True,
