@@ -83,12 +83,15 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         from item_option_adjudication_handoff_v2 import run as review_options
         from search_passages import search
         passages = {}
-        for entry in option_audit.get("option_audits", []):
-            if entry.get("search_status") != "matches_found":
-                continue
-            for passage in search(conn, entry["search_query"], owner_uid,
-                                  limit=5, textbook_id=textbook_id):
-                passages[passage["passage_id"]] = passage
+        try:
+            for entry in option_audit.get("option_audits", []):
+                if entry.get("search_status") != "matches_found":
+                    continue
+                for passage in search(conn, entry["search_query"], owner_uid,
+                                      limit=5, textbook_id=textbook_id):
+                    passages[passage["passage_id"]] = passage
+        except Exception:
+            passages = {}
         option_adjudication = review_options(
             result["item"], option_audit, option_reviewer,
             source_passages=list(passages.values()),
