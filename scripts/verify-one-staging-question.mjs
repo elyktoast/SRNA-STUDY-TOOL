@@ -30,6 +30,18 @@ async function call(path,body){
  }
  return data;
 }
+// Keep earlier recovery failures visibly flagged; this is an automated defect
+// report under the authenticated owner account, never human clinical approval.
+for(const [id,reason] of [
+ ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
+ ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
+]){
+ const previous=await call('/generation/drafts/'+id);
+ if(['pending_review','needs_revision'].includes(previous.status)){
+  const flagged=await call('/generation/drafts/'+id+'/review',{status:'needs_revision',notes:'Automated recovery QA: '+reason+' Kept unpublished; no human clinical approval performed.'});
+  assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
+ }
+}
 const request={topic:'FRC and O2 consumption in obese patients',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
@@ -52,6 +64,8 @@ assert.equal(saved.status,'pending_review');
 const stages=Object.fromEntries(Object.entries(generated.screening?.stages||{}).map(([name,s])=>[name,s.status]));
 console.log(JSON.stringify({draft_id:generated.draft_id,status:saved.status,published:false,stages,generator_issue_rules:(generated.generator_issues||[]).map(i=>i.rule_id),rewrite_attempts:generated.screening?.rewrite_attempts_used}));
 assert.equal(stages.schema,'pass','Generated schema did not pass');
+assert.equal(stages.deterministic_text,'pass','Deterministic wording screening did not pass');
+assert.equal(stages.evidence,'pass','Evidence validation did not pass');
 assert.equal(stages.blind_model,'pass','Independent blind review did not pass');
 assert.equal((generated.generator_issues||[]).length,0,'Unresolved generator issues');
 console.log('One authenticated textbook-grounded question persisted as an unpublished draft');

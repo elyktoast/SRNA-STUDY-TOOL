@@ -133,4 +133,22 @@ The test reused already-produced model responses to isolate screening and did
 not save or publish a question. Duplicate screening, independent clinical option
 adjudication and human review remain explicitly pending, not implicitly passed.
 
-Full authenticated generation and draft persistence still require final verification.
+## Clinical ambiguity found despite automated passes
+
+The next authenticated live run saved a pending-review question and passed the
+automated gates, but source comparison found a second true answer. The source
+states that both decreased FRC and increased oxygen consumption contribute; the
+generated rationale invented a primary/secondary ranking to dismiss one of them.
+That result is not accepted as a successful high-quality recovery question.
+
+The next batch rejects unsupported source-ranking arguments and instructs blind
+MC review to return every defensible answer, even when more than one is correct.
+Existing scoring flags that disagreement. The drafting contract directs questions
+about combined mechanisms to use parallel combinations rather than invent a
+ranking. Earlier failed recovery drafts are marked needs_revision by automated
+defect reports, with no human clinical approval or publication.
+
+The isolated revised quality probe passed all required automated gates. Semantic
+duplicate coverage, independent clinical option adjudication and human review
+still remain pending and cannot be implied by these passes. Final authenticated
+generation, source comparison and draft persistence remain to be verified.
