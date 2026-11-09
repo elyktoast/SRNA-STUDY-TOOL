@@ -42,5 +42,10 @@ class EvidenceTests(unittest.TestCase):
     def test_other_formats_fail_closed(self):
         self.assertTrue(check({"format": "SA"}, SOURCE))
 
+    def test_not_endorsed_is_source_silence_not_a_contradiction(self):
+        x=item()
+        x["distractor_evidence"]["B"]["explanation"]="The passage does not endorse the proposed duration."
+        self.assertTrue(any(issue["rule_id"]=="R-2.4" for issue in check(x,SOURCE)))
+
 if __name__ == "__main__":
     unittest.main()

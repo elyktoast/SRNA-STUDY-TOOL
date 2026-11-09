@@ -11,9 +11,11 @@ STEPS = ("concept_card", "item_draft", "rationale")
 
 
 def build_step(step, *, mode, domain, section, objective, evidence, format=None,
-               concept_card=None, draft=None):
+               concept_card=None, draft=None, topic=None):
     if step not in STEPS:
         raise ValueError("Unknown generation step")
+    if topic is not None and (not isinstance(topic, str) or not topic.strip() or len(topic) > 500):
+        raise ValueError("Invalid selected topic")
     if mode not in ("NCE", "SEE") or domain not in ("I", "II", "III", "IV"):
         raise ValueError("Invalid exam mode/domain")
     if not isinstance(section, str) or not section.strip() or not isinstance(objective, str) or not objective.strip():
@@ -40,9 +42,10 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
         ("passage_id", "textbook_id", "excerpt", "pdf_page_start", "pdf_page_end")
         if key in passage} for passage in evidence]
     return {"rules_version": RULES_VERSION, "step": step,
+            **({"topic": topic} if topic is not None else {}),
             "mode": mode, "domain": domain, "section": section, "objective": objective,
             "format": format, "evidence": compact_evidence, "concept_card": concept_card,
-            "draft": draft, "instructions": instructions[step],
+            "draft": draft, "instructions": ("Focus on the selected topic, using only the supplied evidence for clinical claims. " if topic is not None else "") + instructions[step],
             "required_output": ("concept_card" if step == "concept_card"
                                 else "draft" if step == "item_draft" else "rationale"),
             "human_review_required": True, "auto_publish": False}

@@ -75,5 +75,12 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(validate_complete_item(sample()), [])
         self.assertTrue(validate_complete_item({"rules_version": "1.0"}))
 
+    def test_selected_topic_is_explicit_model_scope_without_changing_evidence(self):
+        request=build_step("concept_card",**BASE,topic="obese FRC consumption")
+        self.assertEqual(request["topic"],"obese FRC consumption")
+        self.assertIn("Focus on the selected topic",request["instructions"])
+        self.assertEqual(request["evidence"],EVIDENCE)
+        self.assertFalse(request["auto_publish"])
+
 if __name__ == "__main__":
     unittest.main()

@@ -17,7 +17,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
-                        semantic_lookup=None, review_repair=None, _verified_candidate=None):
+                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None):
     if blind_reviewer is not None and (not callable(blind_reviewer) or not isinstance(generator_model_id, str) or not isinstance(reviewer_model_id, str) or not generator_model_id.strip() or not reviewer_model_id.strip() or generator_model_id.strip() == reviewer_model_id.strip()):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
@@ -29,7 +29,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              section=section, objective=objective,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
-                             generator_model_id=generator_model_id))
+                             generator_model_id=generator_model_id, topic=topic))
     rewrite_attempts = 0
     rewrite_original_issues = list(generated["schema_issues"])
     if rewrite is not None and generated["schema_issues"]:
@@ -198,7 +198,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     generator_model_id=generator_model_id,
                     reviewer_model_id=reviewer_model_id,
                     semantic_lookup=semantic_lookup,
-                    _verified_candidate=repaired["item"])
+                    _verified_candidate=repaired["item"], topic=topic)
                 rerun["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_allowed"] = 0

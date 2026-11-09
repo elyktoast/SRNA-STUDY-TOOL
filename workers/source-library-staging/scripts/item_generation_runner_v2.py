@@ -119,7 +119,7 @@ def _repair_ellipsized_citations(draft, trusted_passages):
 
 def generate_one(adapter, *, mode, domain, section, objective, evidence,
                  format="MC", item_id, checkpoint=None, on_checkpoint=None,
-                 generator_model_id=None):
+                 generator_model_id=None, topic=None):
     if not callable(adapter):
         raise ValueError("Explicit authenticated model adapter required")
     if not isinstance(item_id, str) or not item_id.strip():
@@ -135,7 +135,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if len(set(passage_ids)) != len(passage_ids):
         raise ValueError("Duplicate passage IDs in evidence bundle")
     args = dict(mode=mode, domain=domain, section=section,
-                objective=objective, evidence=evidence)
+                objective=objective, evidence=evidence, topic=topic)
     if checkpoint is not None and (not isinstance(checkpoint, dict) or set(checkpoint) - {"concept_card", "draft"} or ("draft" in checkpoint and "concept_card" not in checkpoint)):
         raise ValueError("Invalid resume checkpoint")
     if on_checkpoint is not None and not callable(on_checkpoint):
