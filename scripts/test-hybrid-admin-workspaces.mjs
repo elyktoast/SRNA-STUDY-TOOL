@@ -190,7 +190,7 @@ test('generator labels retain canonical five formats and evidence count follows 
  }
  assert.ok(ui.includes('result.source_evidence.passage_ids.length'));
  assert.ok(ui.includes('not verified printed-page citations'));
- assert.ok(ui.includes("genEl('sl-save-generated').disabled=!result.save_payload"));
+ assert.ok(ui.includes("genEl('sl-save-generated').disabled=!!result.draft_id||!result.save_payload"));
 });
 
 test('research textbook selector uses authenticated indexed catalog rather than PDF metadata',()=>{

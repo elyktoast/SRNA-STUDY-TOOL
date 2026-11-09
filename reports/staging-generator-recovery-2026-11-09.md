@@ -99,4 +99,38 @@ choice explanations in 9,923 ms. The drafting input for that probe completed in
 2,872 ms with 1,091 tokens. No rationale timeout was extended and no evidence or
 validation requirement was removed.
 
-Full live acceptance still requires verification after this contract clarification.
+## Citation and guarded rewrite recovery
+
+The next live run completed generation and saved a pending_review draft, but
+quality validation correctly rejected fabricated/reformatted quotations and
+empty citation entries. The attempted correction was also rejected because the
+provider returned a rewrite envelope rather than top-level canonical fields.
+This draft remains flagged and unpublished; it is not a successful quality result.
+
+The final quality batch:
+
+- Materializes quotations and omitted option-reference citations only from known
+  indexed passage identities and physical page bindings. Unknown references,
+  wrong supplied identities/pages and supplied false quotations still fail.
+- Supplies trusted cited-source text to the existing single rewrite, without
+  duplicating the same text in its original-item prompt.
+- Requires all canonical item fields and exact protected metadata. Recognized
+  rewrite envelopes are unwrapped only with validated protocol/request fields;
+  candidate metadata and answer protections remain unchanged afterward.
+- Allows one bounded wait only for an explicit provider 429 with Retry-After
+  between 1 and 60 seconds; ambiguous failures are never retried.
+- Passes the selected topic through all generation stages. Previously the topic
+  selected retrieval but was omitted from model requests.
+- Uses the existing physical page filter for a controlled obesity/FRC/oxygen
+  consumption acceptance question, supported by one coherent indexed paragraph.
+- Reports an already-saved generated draft truthfully in the UI and disables
+  the extra Save action, avoiding a duplicate draft.
+
+An isolated signed-relay quality probe passed schema, deterministic_text, math,
+evidence and blind_model on 2026-11-09 at 04:19:55 UTC, with zero generator issues
+and zero rewrite attempts. Drafting took 2,432 ms and rationale took 6,957 ms.
+The test reused already-produced model responses to isolate screening and did
+not save or publish a question. Duplicate screening, independent clinical option
+adjudication and human review remain explicitly pending, not implicitly passed.
+
+Full authenticated generation and draft persistence still require final verification.

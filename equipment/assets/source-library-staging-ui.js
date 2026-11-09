@@ -97,12 +97,12 @@ genEl('sl-generate-one').onclick=async()=>{
     (issues.length?' '+issues.length+' generator issue(s) require review.':'')+
     ' Indexed PDF page locations are not verified printed-page citations. Check the source before approval.';
   preview.append(reviewNote);preview.hidden=false;genEl('sl-gen-technical').hidden=false;genEl('sl-gen-result').textContent=JSON.stringify({question:result.item,screening:result.screening,source_evidence:result.source_evidence,issues:result.generator_issues},null,2);
-  genEl('sl-gen-result').hidden=false;genEl('sl-gen-status').textContent='Generated for review. Not saved or published.';
-  genEl('sl-save-generated').disabled=!result.save_payload;
+  genEl('sl-gen-result').hidden=false;genEl('sl-gen-status').textContent=result.draft_id?'Unpublished draft saved: '+result.draft_id:'Generated for review. Not saved or published.';
+  genEl('sl-save-generated').disabled=!!result.draft_id||!result.save_payload;
  }catch(error){genEl('sl-gen-status').textContent=error.message||'Generation failed.'}finally{btn.disabled=false}
 };
 genEl('sl-save-generated').onclick=async()=>{
- if(!generatedForReview?.result?.save_payload)return;
+ if(generatedForReview?.result?.draft_id||!generatedForReview?.result?.save_payload)return;
  const btn=genEl('sl-save-generated');btn.disabled=true;
  try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
  catch(error){genEl('sl-gen-status').textContent=error.message||'Draft save failed.';btn.disabled=false;}
