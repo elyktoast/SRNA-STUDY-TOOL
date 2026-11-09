@@ -23,7 +23,8 @@ revision and revalidated through the existing source/schema guards.
 - Persistence: `pending_review`, unpublished, `can_publish=false`;
   `reviewed_by` and `reviewed_at` remain null. Exactly one new draft was created
   during the final acceptance interval; the correction created no new question.
-- Latest staging CI: 832 Python tests passed with one skip; 109 Node tests passed.
+- Latest staging CI: 832 Python tests ran, with one skipped and no failures;
+  109 Node tests passed.
   Container build, repository validation, performance/architecture budgets and
   all four browser-regression shards passed.
 - [Latest reviewer deployment](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42645152291)
