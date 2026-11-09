@@ -44,8 +44,11 @@ teaching["concept_card"].update({
     "relevance":"Recognizing triggering versus nontriggering drug categories helps clinicians select a nontriggering option for a susceptible patient.",
     "misconception":"A potential misconception is that an agent labeled nontriggering belongs in the triggering category.",
     "counterfactual":"Replacing a drug labeled triggering with a listed nontriggering option avoids exposure to that triggering drug."})
+unlisted_examples = copy.deepcopy(corrected)
+unlisted_examples["rationale"]["core_concept"] = "The supplied excerpt explicitly lists fentanyl as a safe opioid and lidocaine as a safe local anesthetic."
 for name, item, expected in (("unsupported_original", original, "flag"), ("corrected_revision", corrected, "pass"),
-                             ("supported_teaching_framing", teaching, "pass")):
+                             ("supported_teaching_framing", teaching, "pass"),
+                             ("unlisted_named_examples", unlisted_examples, "flag")):
     report = review(item, sources, lambda payload:_call_with_bounded_rate_wait(adapter, payload))
     fields = [i.get("field") for i in report["issues"]]
     print(json.dumps({"case":name,"reviewer_model":reviewer_model,"status":report["status"],"flagged_fields":fields,
@@ -56,4 +59,6 @@ for name, item, expected in (("unsupported_original", original, "flag"), ("corre
         raise SystemExit("Explanatory source regression did not meet its expected status")
     if name == "unsupported_original" and not {"concept_card.mechanism", "rationale.core_concept"}.issubset(fields):
         raise SystemExit("Known unsupported mechanism and exhaustive claim were not both flagged")
+    if name == "unlisted_named_examples" and "rationale.core_concept" not in fields:
+        raise SystemExit("Unlisted named drug examples were not flagged")
 print("Independent explanatory review rejected unsupported claims and accepted the source-faithful revision")

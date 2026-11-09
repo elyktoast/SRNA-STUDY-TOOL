@@ -247,7 +247,7 @@ class GenerationCliTests(unittest.TestCase):
         adapter.return_value.side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2),{"evidence":[]}]
         with patch('time.sleep') as sleep:
             rewrite(request)
-        sleep.assert_called_once_with(3)
+        sleep.assert_called_once_with(5)
         self.assertEqual(adapter.return_value.call_count,2)
         sent=adapter.return_value.call_args.args[0]
         self.assertNotIn('excerpt',sent['item']['evidence'][0])
