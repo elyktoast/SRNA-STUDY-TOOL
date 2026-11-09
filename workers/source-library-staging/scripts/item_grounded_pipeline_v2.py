@@ -57,7 +57,19 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
         rewrite=rewrite, semantic_lookup=semantic_lookup,
         review_repair=review_repair)
-    return {**result, "source_evidence": {
+    # Independent retrieval is diagnostic only: finding a passage is not proof
+    # that it supports the key or refutes an alternative.
+    option_audit = None
+    if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
+        try:
+            from item_option_retrieval_audit_v2 import audit
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id)
+        except (ValueError, KeyError, TypeError, RuntimeError):
+            option_audit = {"all_options_searched": False,
+                            "clinical_verification_complete": False,
+                            "can_publish": False,
+                            "error": "option_retrieval_unavailable"}
+    return {**result, "independent_option_retrieval": option_audit, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
         "pdf_page_locations_only": True,
