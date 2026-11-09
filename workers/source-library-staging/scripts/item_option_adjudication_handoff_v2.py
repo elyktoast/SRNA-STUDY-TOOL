@@ -35,7 +35,8 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
         {"option_id": a["option_id"],
          "retrieved_passage_ids": a["retrieved_passage_ids"]}
         for a in retrieval["option_audits"]]}
-    request = {"stem": item.get("stem"), "options": item.get("options"),
+    request = {"stem": item.get("stem"), "options": [{"id": o["id"], "text": o["text"]}
+                           for o in item.get("options", [])],
                "retrieval": blind_retrieval,
                "source_passages": [indexed[pid] for pid in sorted(referenced)],
                "task": "independent_option_adjudication"}
