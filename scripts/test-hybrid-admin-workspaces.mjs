@@ -217,6 +217,7 @@ test('generation selector listener binds on its panel before insertion',()=>{
 });
 
 test('indexed catalog failures expose safe HTTP status and reason',()=>{
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
  assert.match(storage,/Indexed textbook catalog request failed \(HTTP /);
  assert.match(ui,/Indexed textbook catalog error:/);
 });
