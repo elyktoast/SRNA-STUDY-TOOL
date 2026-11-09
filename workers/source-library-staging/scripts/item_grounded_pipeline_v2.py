@@ -69,6 +69,9 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                             "clinical_verification_complete": False,
                             "can_publish": False,
                             "error": "option_retrieval_unavailable"}
+    if format in ("MC", "MS"):
+        from item_option_audit_screening_v2 import attach
+        result = attach(result, option_audit)
     return {**result, "independent_option_retrieval": option_audit, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
