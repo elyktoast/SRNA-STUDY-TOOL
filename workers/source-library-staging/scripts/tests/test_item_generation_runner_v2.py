@@ -158,5 +158,13 @@ class RunnerTests(unittest.TestCase):
                 draft = {"evidence": [citation]}
                 self.assertEqual(_hydrate_indexed_citations(draft, [source]), draft)
 
+    def test_known_option_references_receive_citations_but_unknown_references_do_not(self):
+        source = {"passage_id":"p1","textbook_id":"t1","pdf_page_start":7,"excerpt":"Trusted source"}
+        draft = {"evidence":[],"distractor_evidence":{"A":{"passage_ids":["p1","unknown"]}}}
+        result = _hydrate_indexed_citations(draft,[source])
+        self.assertEqual(result["evidence"],[{"passage_id":"p1","textbook_id":"t1","pdf_page":7,"excerpt":"Trusted source"}])
+        self.assertIn("unknown",result["distractor_evidence"]["A"]["passage_ids"])
+        self.assertEqual(draft["evidence"],[])
+
 if __name__ == "__main__":
     unittest.main()

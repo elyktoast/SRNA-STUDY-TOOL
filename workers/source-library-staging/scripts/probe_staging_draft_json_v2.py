@@ -70,7 +70,11 @@ if os.environ.get('PROBE_SCREENING')=='true':
         if kwargs['model']=='openai/gpt-oss-120b':
             def generator(request):
                 if request['step'] in cached: return cached[request['step']]
-                candidate=real(request)
+                try:
+                    candidate=real(request)
+                except TransportError as error:
+                    print(json.dumps({'probe':'rewrite_transport','rule':error.rule,'retry_after_seconds':error.retry_after_seconds,'remaining_tokens':error.remaining_tokens}),flush=True)
+                    raise
                 if request['step']=='rewrite':
                     protected=request.get('protected_metadata',{})
                     import re

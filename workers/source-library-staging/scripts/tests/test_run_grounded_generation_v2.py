@@ -195,6 +195,27 @@ class GenerationCliTests(unittest.TestCase):
                  "max_rewrites": 1, "requires_human_review": True})
         self.assertEqual(adapter.return_value.call_args.args[0]["step"], "rewrite")
         self.assertFalse(adapter.return_value.call_args.args[0]["auto_publish"])
+        from item_ai_https_transport_v2 import TransportError
+        request={"item":{"status":"draft","evidence":[{"passage_id":"p1","excerpt":"Original quote"}]},
+                 "issues":[],"max_rewrites":1,"requires_human_review":True}
+        adapter.return_value.reset_mock()
+        adapter.return_value.side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2),{"evidence":[]}]
+        with patch('time.sleep') as sleep:
+            rewrite(request)
+        sleep.assert_called_once_with(2)
+        self.assertEqual(adapter.return_value.call_count,2)
+        sent=adapter.return_value.call_args.args[0]
+        self.assertNotIn('excerpt',sent['item']['evidence'][0])
+        self.assertEqual(sent['trusted_evidence'][0]['passage_id'],'p1')
+        self.assertEqual(request['item']['evidence'][0]['excerpt'],'Original quote')
+        for error in (TransportError('PROVIDER_TIMEOUT'),TransportError('PROVIDER_RATE_LIMIT'),
+                      TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=61)):
+            adapter.return_value.reset_mock()
+            adapter.return_value.side_effect=error
+            with patch('time.sleep') as sleep, self.assertRaises(TransportError):
+                rewrite(request)
+            sleep.assert_not_called()
+            self.assertEqual(adapter.return_value.call_count,1)
 
     @patch("run_grounded_generation_v2.generate_from_index")
     @patch("run_grounded_generation_v2.make_transport")

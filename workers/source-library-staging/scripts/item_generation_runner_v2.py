@@ -65,6 +65,21 @@ def _hydrate_indexed_citations(draft, trusted_passages):
                 and type(citation.get("pdf_page")) is int
                 and citation["pdf_page"] == source.get("pdf_page_start")):
             citation["excerpt"] = source["excerpt"]
+    # Option evidence already names its source IDs. Materialize any omitted
+    # citations from those trusted references; unknown IDs remain unresolved.
+    cited = {c.get("passage_id") for c in citations if isinstance(c, dict)}
+    mapping = item.get("distractor_evidence")
+    if isinstance(mapping, dict):
+        for entry in mapping.values():
+            refs = entry.get("passage_ids") if isinstance(entry, dict) else None
+            if not isinstance(refs, list):
+                continue
+            for pid in refs:
+                source = sources.get(pid) if isinstance(pid, str) else None
+                if source and pid not in cited and type(source.get("pdf_page_start")) is int:
+                    citations.append({"passage_id": pid, "textbook_id": source["textbook_id"],
+                                      "pdf_page": source["pdf_page_start"], "excerpt": source["excerpt"]})
+                    cited.add(pid)
     return item
 
 
