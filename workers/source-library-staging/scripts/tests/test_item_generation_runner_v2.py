@@ -2,7 +2,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_generation_runner_v2 import generate_one, _repair_ellipsized_citations, _hydrate_indexed_citations
+from item_generation_runner_v2 import generate_one, _repair_ellipsized_citations, _hydrate_indexed_citations, _complete_nonclinical_schema_fields
 from test_item_standard_v2 import sample
 
 EVIDENCE = [{"passage_id": "p1", "textbook_id": "t1", "excerpt": "Source"}]
@@ -131,6 +131,24 @@ class RunnerTests(unittest.TestCase):
             with self.subTest(quote=quote, textbook=textbook):
                 draft = {"evidence": [{"passage_id": "p1", "textbook_id": textbook, "excerpt": quote}]}
                 self.assertEqual(_repair_ellipsized_citations(draft, sources), draft)
+
+    def test_text_only_generation_never_claims_page_image_verification(self):
+        for draft in ({}, {"numbers_verified_against_page_image": True},
+                      {"numbers_verified_against_page_image": None}):
+            with self.subTest(draft=draft):
+                result = _complete_nonclinical_schema_fields(draft)
+                self.assertIs(result["numbers_verified_against_page_image"], False)
+                self.assertNotEqual(draft, result)
+
+    def test_citation_cannot_claim_page_image_verification(self):
+        source = {"passage_id": "p1", "textbook_id": "t1",
+                  "pdf_page_start": 7, "excerpt": "Exact indexed text"}
+        draft = {"evidence": [{"passage_id": "p1", "textbook_id": "t1",
+                              "pdf_page": 7, "numbers_verified_against_page_image": True}]}
+        result = _hydrate_indexed_citations(draft, [source])
+        self.assertNotIn("numbers_verified_against_page_image", result["evidence"][0])
+        self.assertEqual(result["evidence"][0]["excerpt"], source["excerpt"])
+        self.assertTrue(draft["evidence"][0]["numbers_verified_against_page_image"])
 
     def test_no_implicit_model_calls(self):
         with self.assertRaises(ValueError):
