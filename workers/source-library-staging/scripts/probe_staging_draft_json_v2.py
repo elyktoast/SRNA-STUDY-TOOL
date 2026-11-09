@@ -68,7 +68,14 @@ if os.environ.get('PROBE_SCREENING')=='true':
     def factory(**kwargs):
         real=real_make_adapter(**kwargs)
         if kwargs['model']=='openai/gpt-oss-120b':
-            return lambda request: cached[request['step']] if request['step'] in cached else real(request)
+            def generator(request):
+                if request['step'] in cached: return cached[request['step']]
+                candidate=real(request)
+                if request['step']=='rewrite':
+                    protected=request.get('protected_metadata',{})
+                    print(json.dumps({'probe':'rewrite_shape','recognized_keys':[k for k in candidate if k in ('item','draft','revised_item','question','item_id','rules_version','model','status')],'changed_protected_fields':[k for k,v in protected.items() if candidate.get(k)!=v]}),flush=True)
+                return candidate
+            return generator
         return real
     args=SimpleNamespace(topic='Preoxygenation',mode='NCE',domain='III',section='H',objective='III.H.4',format='MC',item_id='a0680579-3281-44b4-9476-11d530e12ef3',textbook_id='6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d',limit=8,section_id=None,include_subsections=False,page_start=None,page_end=None,owner_uid='c003287a-10ce-4cc9-926e-ef7c3a162a26',execute=True,confirm_paid_calls=True)
     environment={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_PROVIDER_ENDPOINT':'https://api.groq.com/openai/v1/chat/completions','AI_ALLOWED_HOSTS':'api.groq.com','AI_PROVIDER_API_KEY':'signed-relay-only','AI_GENERATOR_MODEL':'openai/gpt-oss-120b','AI_REWRITE_OPT_IN':'true','AI_BLIND_REVIEW_OPT_IN':'true','AI_REVIEWER_MODEL':'qwen/qwen3.8-27b','STAGING_RECEIPT_SIGNING_SECRET':os.environ['STAGING_RECEIPT_SIGNING_SECRET']}
