@@ -44,7 +44,7 @@ for(const [id,reason] of [
   assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
  }
 }
-const request={topic:'Which paired changes in functional residual capacity (FRC) AND oxygen consumption explain rapid desaturation after induction in obese patients? Ask for the directions of BOTH physiological changes, using parallel paired alternatives.',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'increased O2 consumption and decreased FRC',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
