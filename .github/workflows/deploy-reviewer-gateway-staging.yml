@@ -1,0 +1,46 @@
+name: Deploy staging reviewer gateway
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/deploy-reviewer-gateway-staging.yml'
+      - 'workers/source-library-staging/reviewer-gateway/**'
+      - 'workers/source-library-staging/reviewer-service/**'
+      - 'workers/source-library-staging/scripts/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-reviewer-gateway-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: source-library-staging
+    defaults:
+      run:
+        working-directory: workers/source-library-staging/reviewer-gateway
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check Cloudflare deployment credentials
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          test -n "$CF_TOKEN" || { echo "::error::Missing CLOUDFLARE_API_TOKEN secret"; exit 1; }
+          test -n "$CF_ACCOUNT" || { echo "::error::Missing CLOUDFLARE_ACCOUNT_ID secret"; exit 1; }
+      - name: Install Wrangler and container dependencies
+        run: npm install --no-audit --no-fund
+      - name: Deploy staging gateway and reviewer container
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler.json
