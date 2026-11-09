@@ -30,9 +30,37 @@ class RevisionTests(unittest.TestCase):
 
     def test_concept_revision_cannot_change_evidence_or_other_fields(self):
         draft,passages=fixture(); draft["question"]["concept_card"]={"relevance":"Original","evidence_ids":[PASSAGE]}
-        for edit in ({"evidence_ids":["forged"]},{"relevance":"New","mechanism":"New"},{"relevance":""},{"relevance":"x"*2001}):
+        for edit in ({"evidence_ids":["forged"]},{"relevance":"New","objective":"forged"},{"relevance":""},{"relevance":"x"*2001}):
             with self.subTest(edit=edit),self.assertRaises(ValueError):
                 propose_revision(draft,passages,question_edits={"concept_card":edit})
+
+    def test_source_explanation_corrections_are_append_only_and_cannot_change_identity(self):
+        from copy import deepcopy
+        draft, passages = fixture()
+        draft["question"]["concept_card"] = {"mechanism":"Unsupported receptor mechanism",
+            "relevance":"Original relevance", "counterfactual":"Overbroad claim",
+            "misconception":"Original misconception", "evidence_ids":[PASSAGE], "objective":"III.H.4"}
+        draft["question"]["rationale"] = {"core_concept":"Overbroad only claim",
+            "why_key_wins":"Original answer explanation", "trap":"Original trap"}
+        original = deepcopy(draft)
+        proposal = propose_revision(draft, passages, question_edits={
+            "concept_card":{"mechanism":"The indexed source recommends awake extubation.",
+                            "counterfactual":"The alternative does not match the cited recommendation."},
+            "rationale":{"core_concept":"The source supports awake extubation."}})
+        self.assertEqual(draft, original)
+        revised = proposal["question"]
+        for field in ("key", "options", "evidence"):
+            self.assertEqual(revised[field], original["question"][field])
+        self.assertEqual(revised["concept_card"]["evidence_ids"], [PASSAGE])
+        self.assertEqual(revised["concept_card"]["objective"], "III.H.4")
+        self.assertEqual(revised["rationale"]["core_concept"], "The source supports awake extubation.")
+        self.assertFalse(proposal["can_publish"])
+        self.assertTrue(proposal["requires_clinical_review"])
+        for edits in ({"rationale":{"key":["B"]}}, {"rationale":{"core_concept":""}},
+                      {"concept_card":{"mechanism":True}}, {"rationale":{"trap":"x"*2001}},
+                      {"concept_card":{"evidence_ids":["forged"]}}):
+            with self.subTest(edits=edits), self.assertRaises(ValueError):
+                propose_revision(draft, passages, question_edits=edits)
 
     def test_quote_correction_does_not_mutate_saved_question(self):
         draft,passages=fixture()

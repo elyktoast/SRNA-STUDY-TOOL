@@ -424,3 +424,22 @@ runs. No expected answer or generator rationale enters source review. The source
 review completion ceiling is 1,000 and explanations are concise. Tests cover
 wrong-verdict preservation, exact raw ligature restoration, citation boundaries,
 immutable inputs and bounded output. Live acceptance remains to be run.
+
+
+### Full live generation and final editorial source check
+
+Deployment/acceptance run 42643815422 passed. It generated exactly one draft,
+167026ce-7c1c-489f-8c4b-28255ac78ef8, with schema, deterministic wording, math,
+evidence, blind-answer and independent option-source checks passing; there were
+zero generator issues and no rewrite was needed. The result remained unpublished,
+pending human review and semantic duplicate verification.
+
+Manual review of the saved question found source-only limitations beyond those
+automated checks: the concept card supplied receptor physiology absent from its
+classification excerpt, and the rationale generalized the listed depolarizing
+agent to an overly broad exclusive class claim. The stem, choices, key and
+independent source judgments are supported. This is not yet reported as a fully
+finished question. The existing append-only revision proposal now permits bounded
+corrections to existing concept explanation and rationale text. Citation IDs,
+blueprint identity, answers and verification/publication flags remain protected;
+all existing source/schema validation and human-review requirements still apply.
