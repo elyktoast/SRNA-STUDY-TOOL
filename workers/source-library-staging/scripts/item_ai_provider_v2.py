@@ -110,7 +110,11 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         # Some JSON-mode providers return the complete rewrite in an exact
         # single-key envelope. Unwrap transport structure only; protected
         # metadata, answer and citation checks still run on the candidate.
-        if request["step"] == "rewrite" and set(parsed) == {"item"} and isinstance(parsed["item"], dict):
-            parsed = parsed["item"]
+        if request["step"] == "rewrite" and isinstance(parsed.get("item"), dict):
+            protocol = {"step": "rewrite", "rules_version": "2.0", "auto_publish": False,
+                        "max_rewrites": 1, "requires_human_review": True, "can_publish": False}
+            extras = set(parsed) - {"item"}
+            if extras <= set(protocol) and all(type(parsed[k]) is type(protocol[k]) and parsed[k] == protocol[k] for k in extras):
+                parsed = parsed["item"]
         return parsed
     return adapter

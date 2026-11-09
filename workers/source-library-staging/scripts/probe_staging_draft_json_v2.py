@@ -1,4 +1,4 @@
-"""Isolated signed drafting and guarded-rewrite probes; no rationale, screening, save or publish."""
+"""Isolated signed drafting, protocol-envelope and guarded-rewrite probes; no rationale, screening, save or publish."""
 import json
 import os
 import time
