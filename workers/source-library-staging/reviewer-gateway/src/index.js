@@ -59,7 +59,7 @@ async function relayGroq(request,env){
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale','rewrite','blind_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&(env.AI_BLIND_REVIEW_OPT_IN!=='true'||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(step.step!=='blind_review'&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
- let activeProvider='unknown';
+ let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
@@ -81,7 +81,7 @@ async function relayGroq(request,env){
    const models=[primary];
    if(valid(alternate)&&alternate!==primary)models.push(alternate);
    for(let index=0;index<models.length;index++){
-    const model=models[index];
+    const model=models[index];activeModel=model;
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',
      {method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
     // Only definite 404 (model unavailable) and 429 (rate limit) may fall back.
@@ -93,6 +93,7 @@ async function relayGroq(request,env){
    upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
   }
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
+  providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
    const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
@@ -110,8 +111,8 @@ async function relayGroq(request,env){
   const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'?JSON.stringify(rawContent):null;
   if(typeof content!=='string'||content.length>262144)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
- }catch(error){console.error('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,elapsed_ms:Math.min(60000,Date.now()-started),outcome:'exception'}));return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
- finally{clearTimeout(timeout)}
+ }catch(error){return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
+ finally{clearTimeout(timeout);console.log('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,model:activeModel,provider_status:providerStatus,elapsed_ms:Math.min(60000,Date.now()-started)}))}
 }
 export default {
  async fetch(request,env){
