@@ -290,7 +290,7 @@ export default {
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&generation){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
