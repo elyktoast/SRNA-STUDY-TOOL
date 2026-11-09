@@ -10,10 +10,15 @@ REQUEST = {"step": "concept_card", "rules_version": "2.0",
 
 class ProviderTests(unittest.TestCase):
     def config(self, **overrides):
+        def synthetic_transport(**kw):
+            request = json.loads(kw["body"]["messages"][1]["content"])
+            response = ({"key": ["A"]} if request.get("format") in ("MC", "MS") else
+                        {"region": "top"} if request.get("format") == "HS" else
+                        {"objective": "III.H.4"}) if request.get("step") == "blind_review" else {"objective": "III.H.4"}
+            return {"choices": [{"message": {"content": json.dumps(response)}}]}
         params = dict(endpoint="https://provider.example/v1/chat/completions",
                       api_key="test-secret", model="test-model",
-                      transport=lambda **kw: {"choices": [{"message": {
-                          "content": json.dumps({"objective": "III.H.4"})}}]},
+                      transport=synthetic_transport,
                       owner_opt_in=True, staging=True)
         params.update(overrides)
         return params

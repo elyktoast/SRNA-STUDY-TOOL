@@ -379,3 +379,22 @@ The user has deferred larger batches and cross-textbook sourcing. The current
 stop condition is one nice, source-supported unpublished question completing the
 automated generation/verification/repair/recheck cycle. Full semantic duplicate
 coverage and human approval remain outside that stop condition and stay pending.
+
+### Server-owned blind-review correlation
+
+The settled-image run generated draft 56636be0-5655-43f4-b7a8-543d59323521 with
+schema, wording, math and evidence passes. Its factual drug-classification stem
+and choices were source-supported, with recall/crisis labels consistent with the
+item. Blind review reported a missing/mismatched echoed item ID, which is a
+protocol problem rather than an answer disagreement. It is not reported as a
+completed cycle.
+
+The authenticated adapter now keeps the internal question ID out of the model
+prompt and binds the single awaited response to the trusted request on the
+server. The independent answer field is never supplied by the generator or
+corrected by this binding. Missing/invalid answer structures and explicit wrong
+model-supplied IDs are rejected; a valid but incorrect choice still fails the
+unchanged answer comparator. Protocol failures remain pending rather than
+spending an editorial rewrite on a question whose content is not the problem.
+Regression tests cover wrong-answer preservation, explicit ID mismatch, answer
+shape/type checks, lack of ID/key leakage, and all five response formats.
