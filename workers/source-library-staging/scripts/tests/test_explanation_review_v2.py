@@ -16,6 +16,13 @@ class ExplanationReviewTests(unittest.TestCase):
         self.response = {"supported_groups":[{"field_ids":self.ids,
                          "quote_refs":[{"passage_id":"p1","span_id":"q1"}]}],"unsupported":[]}
 
+    def test_assertion_and_false_belief_polarities_are_explicit(self):
+        fields={f["label"]:f for f in fields_for(self.item)}
+        self.assertEqual(fields["concept_card.mechanism"]["assessment"],"clinical_fact")
+        self.assertEqual(fields["concept_card.misconception"]["assessment"],"misconception_to_refute")
+        self.assertEqual(fields["concept_card.relevance"]["assessment"],"teaching_application")
+        self.assertEqual(fields["rationale.distractor_breakdown.A"]["assessment"],"clinical_fact")
+
     def test_complete_field_coverage_restores_exact_cited_source_without_approval(self):
         calls = []
         def reviewer(payload):
@@ -39,6 +46,20 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertEqual(result["status"], "flag")
         self.assertEqual(result["issues"][0]["field"], "concept_card.mechanism")
         self.assertEqual(result["issues"][0]["rule_id"], "R-2.4")
+
+    def test_model_cannot_approve_an_exclusive_clinical_claim_from_a_plain_list(self):
+        self.item["rationale"]["core_concept"]="Volatile anesthetics are the only triggering agents."
+        report=review(self.item,self.sources,lambda p:self.response)
+        self.assertEqual(report["status"],"flag")
+        self.assertIn("rationale.core_concept",[i["field"] for i in report["issues"]])
+        self.assertNotIn("rationale.core_concept",report["source_support"][0]["fields"])
+
+    def test_explicit_exclusive_source_support_can_pass_and_teaching_only_is_not_global(self):
+        self.item["rationale"]["core_concept"]="Volatile anesthetics are the only triggering agents."
+        self.item["concept_card"]["counterfactual"]="If only the nontriggering choice replaces the trigger, that exposure is removed."
+        self.sources[0]["excerpt"]="Classification.\nOnly volatile anesthetics are triggering agents."
+        report=review(self.item,self.sources,lambda p:self.response)
+        self.assertEqual(report["status"],"pass")
 
     def test_missing_repeated_unknown_or_uncited_support_never_passes(self):
         for change in ("missing", "duplicate", "unknown_field", "unknown_span", "uncited"):

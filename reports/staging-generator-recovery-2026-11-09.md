@@ -570,3 +570,27 @@ flagging a word-boundary cue. This avoids padding named agents merely because
 one chemical name has a space. Tests preserve flags for genuinely longer short
 choices and long explanatory answers. Clinical source and answer requirements
 are unchanged.
+
+
+### Explicit evidence for exclusive clinical wording
+
+The GPT-OSS 20B regression (run 42681278196) flagged the unsupported receptor
+mechanism but accepted the original broad exclusive drug-class claim. The live
+gate stopped before another question was generated. The negative regression is
+not relaxed: both unsupported fields must still be caught.
+
+A conservative local evidence check now rejects exclusive clinical wording in
+mechanism/core explanations when the selected supporting quotation does not
+explicitly express exclusivity. Conditional teaching counterfactuals are not
+treated as global clinical exclusivity. This supplements the independent model's
+semantic judgment; it never claims that a keyword alone proves a clinical fact.
+Tests cover a model attempting to approve an exclusive rule from a plain list,
+explicit source support, and the distinction from conditional teaching language.
+
+
+The reviewer input also now identifies assertion polarity explicitly:
+clinical facts need positive support; teaching applications need supported
+clinical premises; a misconception is a false belief the source must refute.
+This prevents evaluating an intentionally false misconception as though the
+author were asserting it as a clinical fact. These roles are server-assigned,
+not accepted from the generated question as grading authority.
