@@ -111,7 +111,7 @@ test('Qwen JSON steps preserve roles and disable budget-consuming thinking',asyn
   return Response.json({success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
  };
  try{
-  for(const step of ['concept_card','rationale'])assert.equal((await gateway.fetch(request(step,'generator-model'),cloudflareEnv)).status,200);
+  for(const step of ['concept_card'])assert.equal((await gateway.fetch(request(step,'generator-model'),cloudflareEnv)).status,200);
   for(const {body} of calls){
    assert.equal(body.messages[0].role,'system');
    assert.equal(body.messages[1].role,'user');
@@ -120,6 +120,20 @@ test('Qwen JSON steps preserve roles and disable budget-consuming thinking',asyn
    assert.equal(body.max_tokens,1024);
   }
  }finally{globalThis.fetch=original;}
+});
+test('rationale uses bounded Groq JSON rather than the slow Cloudflare route',async()=>{
+ const original=globalThis.fetch; let calls=0;
+ globalThis.fetch=async(url,options)=>{
+  calls++; assert.ok(String(url).includes('api.groq.com'));
+  const body=JSON.parse(options.body);
+  assert.equal(JSON.parse(body.messages[1].content).step,'rationale');
+  assert.equal(body.reasoning_effort,'low');
+  assert.deepEqual(body.response_format,{type:'json_object'});
+  assert.equal(body.chat_template_kwargs,undefined);
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b'),{...cloudflareEnv,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);assert.equal(calls,1);}
+ finally{globalThis.fetch=original;}
 });
 test('Groq drafting retains original request without Qwen-specific settings',async()=>{
  const original=globalThis.fetch;

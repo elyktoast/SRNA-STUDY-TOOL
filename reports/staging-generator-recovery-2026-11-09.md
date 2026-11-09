@@ -281,3 +281,26 @@ requirement; semantic duplicate status stays pending.
 
 Verification of the new deployed reviewer step and versioned saved-draft
 correction is pending. The prior verified result above remains historical.
+
+### Follow-up live result and rationale routing
+
+PR #179 passed CI: 817 Python tests (one skipped) and 105 Node tests. The
+new staging image passed rollout, authenticated integrity and preflight checks.
+At 08:51 AM Eastern on November 9 the acceptance successfully appended revision
+ca4487c0-146a-4278-b643-7f403420ef49 for draft
+e9ee3c59-0924-402c-9501-63464d53ffdb. Its corrected relevance, unchanged key and
+unchanged evidence were read back; the original generated question is retained.
+No clinical approval or publication was performed.
+
+The subsequent fresh generation timed out at the Cloudflare rationale step
+before reaching independent option review (PROVIDER_TIMEOUT). Therefore the new
+live option reviewer is not yet verified by that run. A routing correction sends
+rationale writing to the existing Groq JSON/low-effort path, while Cloudflare
+retains concept-card generation and the distinct Qwen reviewer retains both
+review tasks. The 50-second deadline and rationale output limit are unchanged.
+The changed-route regression passes; final live verification is still required.
+
+The live API remains single-question and single-selected-textbook. It does not
+currently implement cross-textbook corroboration or queued 25-question batches.
+Only controlled recall MC generation has been verified; consistent application/
+analysis quality and multiple formats have not been established by a mixed pilot.
