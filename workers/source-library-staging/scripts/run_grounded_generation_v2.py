@@ -74,7 +74,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
-    quality_requested = blind_requested and explanation_requested
+    quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
     summary["review_readiness"] = {
         "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
