@@ -45,16 +45,8 @@ async function relayGroq(request,env){
    return respond(200,null,JSON.stringify({check:'groq_models_via_signed_relay',provider_status:[200,401,403,429].includes(status)?status:0,rule:status===200?'OK':status===401?'PROVIDER_AUTH':status===403?'PROVIDER_FORBIDDEN':status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_OTHER',generation_performed:false}));
   }catch{return respond(503,null,'{"error":"relay_network"}')}
  }
- if(payload?.diagnostic==='hybrid_models'&&Object.keys(payload).length===1){
-  if(env.AI_HYBRID_ENABLED!=='true'||!env.AI_GEMINI_API_KEY)return respond(503,null,'{"error":"relay_disabled"}');
-  try{
-   const check=await fetch('https://generativelanguage.googleapis.com/v1beta/models',{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:AbortSignal.timeout(8000)});
-   if(!check.ok)return respond(200,null,JSON.stringify({check:'gemini_models',provider_status:check.status,generation_performed:false,model_available:false}));
-   const body=await check.json();const models=Array.isArray(body.models)?body.models:[];
-   const selected='models/'+env.AI_GEMINI_MODEL;
-   return respond(200,null,JSON.stringify({check:'gemini_models',provider_status:200,generation_performed:false,model_available:models.some(m=>m.name===selected&&m.supportedGenerationMethods?.includes('generateContent')),available_flash_models:models.filter(m=>m.name?.includes('flash')&&m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name).slice(0,12)}));
-  }catch{return respond(503,null,'{"error":"relay_network"}')}
- }
+ // Gemini remains disabled, including signed metadata diagnostics.
+ if(payload?.diagnostic==='hybrid_models')return respond(503,null,'{"error":"relay_disabled"}');
  if(!([env.AI_GENERATOR_MODEL, ...(env.AI_BLIND_REVIEW_OPT_IN==='true'?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale','rewrite','blind_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&(env.AI_BLIND_REVIEW_OPT_IN!=='true'||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(step.step!=='blind_review'&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
@@ -69,7 +61,11 @@ async function relayGroq(request,env){
   const input=payload.messages[0].content+'\n'+payload.messages[1].content;
   const target=provider==='gemini'?'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(env.AI_GEMINI_MODEL)+':generateContent':provider==='cloudflare'?'https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/run/'+env.AI_CLOUDFLARE_MODEL:'https://api.groq.com/openai/v1/chat/completions';
   const providerHeaders=provider==='gemini'?{'x-goog-api-key':env.AI_GEMINI_API_KEY,'Content-Type':'application/json'}:provider==='cloudflare'?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'}:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'};
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:[{role:'user',content:input}],max_tokens:payload.max_tokens,temperature:0.2}):bytes;
+  // Qwen's default thinking consumes the same completion budget as the JSON.
+  // Keep the original roles and reserve the bounded budget for the step result.
+  // Deterministic evidence checks and independent review still run downstream.
+  const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):bytes;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
@@ -117,7 +113,10 @@ async function relayGroq(request,env){
    ?data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')
    :choice?choice.message?.content:cloudflareResult?.response;
   const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'&&!Array.isArray(rawContent)?JSON.stringify(rawContent):null;
-  const failure=(reason)=>respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+  const failure=(reason)=>{
+   console.error('staging_relay_output_failure',JSON.stringify({provider,step:step.step,model:activeModel,provider_status:providerStatus,reason}));
+   return respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+  };
   if(provider==='cloudflare'&&data?.success===false)return failure('provider_envelope_failed');
   if(provider==='cloudflare'&&choice?.message?.refusal)return failure('provider_refusal');
   if(provider==='cloudflare'&&finish&&finish!=='stop')return failure('provider_incomplete');
@@ -364,7 +363,6 @@ export default {
      }catch{return {provider:name,state:'NETWORK',generation_performed:false}}
     };
     const providers=await Promise.all([
-     probe('gemini','https://generativelanguage.googleapis.com/v1beta/models',env.AI_HYBRID_ENABLED==='true'&&env.AI_GEMINI_API_KEY?{'x-goog-api-key':env.AI_GEMINI_API_KEY}:null),
      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
      probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_HYBRID_ENABLED==='true'&&env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
     ]);

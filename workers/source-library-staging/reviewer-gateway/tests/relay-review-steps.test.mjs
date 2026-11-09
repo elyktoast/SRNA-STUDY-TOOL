@@ -104,6 +104,35 @@ test('concept card works without Gemini credentials',async()=>{
  try{assert.equal((await gateway.fetch(request('concept_card','generator-model'),cloudflareEnv)).status,200)}
  finally{globalThis.fetch=original;}
 });
+test('Qwen JSON steps preserve roles and disable budget-consuming thinking',async()=>{
+ const original=globalThis.fetch,calls=[];
+ globalThis.fetch=async(url,options)=>{
+  calls.push({url:String(url),body:JSON.parse(options.body)});
+  return Response.json({success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
+ };
+ try{
+  for(const step of ['concept_card','rationale'])assert.equal((await gateway.fetch(request(step,'generator-model'),cloudflareEnv)).status,200);
+  for(const {body} of calls){
+   assert.equal(body.messages[0].role,'system');
+   assert.equal(body.messages[1].role,'user');
+   assert.deepEqual(body.chat_template_kwargs,{enable_thinking:false});
+   assert.deepEqual(body.response_format,{type:'json_object'});
+   assert.equal(body.max_tokens,1024);
+  }
+ }finally{globalThis.fetch=original;}
+});
+test('Groq drafting retains original request without Qwen-specific settings',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  assert.ok(String(url).includes('api.groq.com'));
+  const body=JSON.parse(new TextDecoder().decode(options.body));
+  assert.equal(body.chat_template_kwargs,undefined);
+  assert.equal(body.response_format,undefined);
+  return Response.json({choices:[{message:{content:'{}'}}]});
+ };
+ try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
+ finally{globalThis.fetch=original;}
+});
 test('Cloudflare model 404 does not retry or call Gemini',async()=>{
  const original=globalThis.fetch,urls=[];
  globalThis.fetch=async(url)=>{urls.push(String(url));return new Response('{}',{status:404});};
