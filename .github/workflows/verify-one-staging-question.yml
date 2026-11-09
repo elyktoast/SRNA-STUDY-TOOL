@@ -8,7 +8,7 @@ on:
         required: true
         default: false
   push:
-    branches: [fix/staging-final-acceptance]
+    branches: [fix/staging-final-acceptance, fix/staging-single-acceptance-183]
     paths:
       - 'scripts/verify-one-staging-question.mjs'
       - '.github/workflows/verify-one-staging-question.yml'
