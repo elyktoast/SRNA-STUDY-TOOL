@@ -94,6 +94,9 @@ class ExplanationRepairTests(unittest.TestCase):
         intake.return_value = {"draft_reviews":[{"status":"draft","screening":{"stages":{}}}]}
         issue = {"rule_id":"R-2.4","field":"concept_card.mechanism","message":"Unsupported physiology"}
         base = {"can_publish":False,"clinical_truth_verified":False,"human_review_required":True}
+        blind_issue={"rule_id":"R-12.4","message":"Two defensible answers"}
+        intake.side_effect=[{"draft_reviews":[{"status":"draft","screening":{"stages":{"blind_model":{"status":"flag","issues":[blind_issue]}}}}]},
+                            {"draft_reviews":[{"status":"draft","screening":{"stages":{}}}]}]
         calls = []
         def explanation(item):
             calls.append(item)
@@ -101,10 +104,10 @@ class ExplanationRepairTests(unittest.TestCase):
                     "issues":[] if item.get("fixed") else [issue]}
         result = generate_and_screen(lambda r:{}, mode="NCE",domain="III",section="H",objective="III.H.4",
             item_id="new-1", evidence=[{"passage_id":"p1","textbook_id":"t1","excerpt":"Source","pdf_page_start":1}],
-            rewrite=lambda r:{}, explanation_review=explanation)
+            review_repair=lambda r:{}, explanation_review=explanation)
         self.assertEqual(len(calls), 2)
         repair.assert_called_once()
-        self.assertEqual(repair.call_args.args[1], [issue])
+        self.assertEqual(repair.call_args.args[1], [blind_issue,issue])
         self.assertEqual(result["screening"]["stages"]["explanation_evidence"]["status"], "pass")
         self.assertEqual(result["screening"]["rewrite_attempts_used"], 1)
         self.assertEqual(result["screening"]["rewrite_attempts_allowed"], 0)
@@ -119,20 +122,22 @@ class ExplanationRepairTests(unittest.TestCase):
         def unavailable(item): raise TimeoutError()
         result = generate_and_screen(lambda r:{},mode="NCE",domain="III",section="H",objective="III.H.4",
             item_id="new-1", evidence=[{"passage_id":"p1","textbook_id":"t1","excerpt":"Source","pdf_page_start":1}],
-            rewrite=lambda r:{}, explanation_review=unavailable)
+            review_repair=lambda r:{}, explanation_review=unavailable)
         repair.assert_not_called()
         self.assertIn("explanation_evidence",result["screening"]["pending_verifications"])
         self.assertFalse(result["can_publish"])
 
+    @patch("item_generation_screened_v2.intake")
     @patch("item_generation_screened_v2.attempt_once")
     @patch("item_generation_screened_v2.generate_one")
-    def test_second_unsupported_result_stays_flagged_after_one_attempt(self, generate, repair):
+    def test_second_unsupported_result_stays_flagged_after_one_attempt(self, generate, repair, intake):
+        intake.return_value={"draft_reviews":[{"status":"draft","screening":{"stages":{}}}]}
         generate.return_value={"item":{"item_id":"new-1"},"schema_issues":[]}
         repair.return_value={"item":{"item_id":"new-1"},"issues":[],"rewrite_attempts":1}
         issue={"rule_id":"R-2.4","message":"Unsupported claim"}
         result=generate_and_screen(lambda r:{},mode="NCE",domain="III",section="H",objective="III.H.4",
             item_id="new-1",evidence=[{"passage_id":"p1","textbook_id":"t1","excerpt":"Source","pdf_page_start":1}],
-            rewrite=lambda r:{},explanation_review=lambda i:{"status":"flag","issues":[issue],"can_publish":False,
+            review_repair=lambda r:{},explanation_review=lambda i:{"status":"flag","issues":[issue],"can_publish":False,
                 "clinical_truth_verified":False,"human_review_required":True})
         repair.assert_called_once()
         self.assertEqual(result["screening"]["stages"]["explanation_evidence"]["status"],"flag")

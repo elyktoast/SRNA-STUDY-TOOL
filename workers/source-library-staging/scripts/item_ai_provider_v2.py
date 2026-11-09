@@ -189,7 +189,10 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "A classification table supports named drug/class classification, NOT receptor physiology, calcium-release mechanisms, treatment requirements, or exhaustive ONLY claims. "
                 "A listed specific drug does not establish a rule for its entire pharmacologic class. Universal counterfactuals exceeding the source are unsupported. "
                 "For a misconception field, evaluate whether the proposition is correctly identified as a misconception; do not mistake a deliberately false misconception for an asserted fact. "
-                "Educational framing and direct narrow inferences from an explicit classification are acceptable; their clinical premises still require source support. "
+                "Relevance, misconception, trap and counterfactual are teaching constructs: the source need not survey learner beliefs, call something important, or discuss question ambiguity/human review. Do NOT flag those framing statements merely because they are not explicit textbook sentences. "
+                "Validate their clinical premises instead. A source classifying X as a trigger inherently supports a conditional risk from exposure to X in a susceptible patient. A classifying source supports replacing an unsafe choice with a safe one without requiring a literal counterfactual sentence. "
+                "Flag an explanation that defends an alternative which also satisfies the stem; this is a clinical answer contradiction, not a missing textbook discussion of test design. "
+                "For interleaved multi-column tables, count only explicitly grouped category entries as listed members; nearby prose from a different column is not automatically part of a list. "
                 "No claim of clinical approval or publication is permitted.")
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.

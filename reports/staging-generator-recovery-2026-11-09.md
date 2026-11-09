@@ -523,3 +523,28 @@ negative/positive regressions remain required before reporting this as verified.
 The planned live regression reads the existing unsupported original and corrected
 revision without changing either; a subsequent single-question acceptance must
 pass the new explanatory stage and stay unpublished.
+
+
+### Live explanation regression and combined-repair sequencing
+
+The first live verification (run 42677051172) passed both source-review
+regressions: the immutable original's unsupported physiology/exhaustive claim
+were flagged and all 15 explanatory fields in the corrected revision passed.
+The fresh draft 7bbe5981-ca10-4da8-a734-5dbbbda8d0d1 stayed unpublished and did
+not pass acceptance: it contained two safe answers in a single-answer item.
+The source reviewer also flagged pedagogical framing too literally.
+
+Explanatory review now runs after deterministic and blind-answer screening, so
+all definite failures enter the same single repair rather than consuming that
+budget before answer ambiguity can be identified. All checks run again after
+a successful repair. Teaching constructs are assessed by their clinical premises,
+without demanding textbook statements about learner beliefs or test design.
+Multi-column category membership must be explicit, rather than inferred from
+neighboring treatment prose. The original negative and positive regression gates
+remain mandatory.
+
+Sanitized live telemetry also showed the initial repair blocked by token limits.
+After the provider's indicated wait, its second request was only 20 tokens short
+(3,675 remaining versus 3,695 requested). The existing one-retry helper now adds
+one second of margin while keeping the maximum wait at 60 seconds and the same
+two-attempt bound. Timeouts and missing/oversized delay hints still are not retried.
