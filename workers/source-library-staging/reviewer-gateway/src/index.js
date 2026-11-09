@@ -62,23 +62,26 @@ async function relayGroq(request,env){
   let upstream;
   if(provider==='gemini'){
    // Resolve the API IDs from Google's own model listing; dashboard labels are not API IDs.
-   const labels=['Gemini 3.8 Flash','Gemini 3.6 Flash','Gemini 3.5 Flash Lite'];
-   const discovered=new Map();
-   let candidates=[];
+   // API IDs from Google's model catalog, not human-readable display names.
+   const preferred=['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
+   const available=new Set();
+   let listingSucceeded=false;
    try{
     let next='';
     for(let page=0;page<5;page++){
      const listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
      if(!listing.ok)break;
+     listingSucceeded=true;
      const data=await listing.json();
-     for(const label of labels){
-      const match=(data.models||[]).find(m=>m.displayName?.toLowerCase()===label.toLowerCase()&&m.supportedGenerationMethods?.includes('generateContent'));
-      if(match&&typeof match.name==='string'&&match.name.startsWith('models/gemini-')&&/^[a-zA-Z0-9./-]+$/.test(match.name))discovered.set(label,match.name);
+     for(const model of data.models||[]){
+      if(typeof model.name==='string'&&model.name.startsWith('models/gemini-')&&/^[a-zA-Z0-9.-]+$/.test(model.name.slice('models/'.length))&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
      }
      next=data.nextPageToken||'';if(!next)break;
     }
    }catch{}
-   candidates=labels.map(label=>discovered.get(label)).filter(Boolean);
+   const configured='models/'+env.AI_GEMINI_MODEL;
+   const order=[...new Set([...preferred.map(id=>'models/'+id),configured])];
+   const candidates=listingSucceeded?order.filter(id=>available.has(id)):[configured];
    if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    for(const model of candidates){
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
