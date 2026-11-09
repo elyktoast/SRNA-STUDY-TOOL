@@ -22,7 +22,7 @@ export class ReviewerContainer extends Container {
    }
    result.AI_GENERATION_OPT_IN = 'true';
    if (this.env.AI_HYBRID_ENABLED === 'true') {
-    const hybridKeys = ['AI_GEMINI_API_KEY', 'AI_GEMINI_MODEL', 'AI_CLOUDFLARE_ACCOUNT_ID', 'AI_CLOUDFLARE_API_TOKEN', 'AI_CLOUDFLARE_MODEL'];
+    const hybridKeys = ['AI_CLOUDFLARE_ACCOUNT_ID', 'AI_CLOUDFLARE_API_TOKEN', 'AI_CLOUDFLARE_MODEL'];
     for (const key of hybridKeys) {
      if (!this.env[key]) throw new Error('Missing hybrid AI configuration: ' + key);
     }
