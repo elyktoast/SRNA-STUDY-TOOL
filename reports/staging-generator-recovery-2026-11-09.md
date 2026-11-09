@@ -1,5 +1,56 @@
 # Staging generator recovery
 
+## Current verified result — 2026-11-09 15:34 UTC
+
+The requested single-question milestone is complete. One authenticated,
+textbook-indexed staging generation passed schema, wording, math, indexed-evidence,
+independent blind-answer and independent option-source checks, and persisted
+unpublished. A final source-only editorial correction was saved as an immutable
+revision and revalidated through the existing source/schema guards.
+
+- Draft: `167026ce-7c1c-489f-8c4b-28255ac78ef8`.
+- Current revision: `e9ce4d51-8d6d-434e-85db-15b4726f06a4`, revision 1.
+- Source: indexed Nagelhout/Elisha textbook, physical PDF page 984.
+  Printed-page and page-image verification are not claimed.
+- Generation: [successful deployment and end-to-end acceptance](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42643815422).
+  Zero generator issues; zero automatic rewrites needed in this run.
+- Correction: [successful saved-revision verification](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42645233911).
+  Original question immutable; answer, choices, blueprint identity and citations
+  unchanged. Revision source/schema validation returned no issues.
+- Database verification: the question's citation matches the owned indexed
+  passage, book and physical page; all five independent reviewer quotations
+  match actual indexed source text.
+- Persistence: `pending_review`, unpublished, `can_publish=false`;
+  `reviewed_by` and `reviewed_at` remain null. Exactly one new draft was created
+  during the final acceptance interval; the correction created no new question.
+- Latest staging CI: 832 Python tests passed with one skip; 109 Node tests passed.
+  Container build, repository validation, performance/architecture budgets and
+  all four browser-regression shards passed.
+- [Latest reviewer deployment](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42645152291)
+  passed settled-container and authenticated smoke checks.
+- Gemini remains disabled. Generator and distinct independent reviewer remain
+  configured; textbook indexing was not modified by the final fixes.
+
+This is a sound recall-level MC item after an explicit editorial correction,
+not proof of uniformly autonomous question quality. Automated option review did
+not catch unsupported background physiology and an overbroad explanatory claim;
+those were removed from the saved current revision. Future questions still need
+review. Semantic duplicate verification and human clinical review remain pending,
+and publication stays blocked. Larger batches and cross-textbook sourcing are
+deferred at the user's request. No additional paid generation is scheduled.
+
+The original upstream failure was incomplete JSON after thinking consumed the
+completion budget. Further live failures exposed provider routing timeouts,
+rollout races, model-echoed correlation IDs, a source-review budget above the
+reported limit, and synthesized quotations. The deployed fixes preserve quality
+gates, use server-owned correlation, fit the demonstrated review budget, and
+restore exact indexed quote spans selected independently by the reviewer.
+
+## Historical investigation record
+
+The dated intermediate failures below describe their state at the time and are
+superseded by the verified result above.
+
 ## Verified failure
 
 The deployed gateway version `594c6650-0bff-4667-b64e-b48dbd5b8573`
