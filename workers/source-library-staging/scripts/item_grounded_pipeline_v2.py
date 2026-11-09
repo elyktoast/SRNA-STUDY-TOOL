@@ -71,7 +71,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic)
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=2)
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,
@@ -89,9 +89,9 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
             for entry in option_audit.get("option_audits", []):
                 if entry.get("search_status") != "matches_found":
                     continue
-                for passage in search(conn, entry["search_query"], owner_uid,
-                                      limit=5, textbook_id=textbook_id):
-                    passages[passage["passage_id"]] = passage
+                for query in entry.get("search_queries") or [entry["search_query"]]:
+                    for passage in search(conn, query, owner_uid, limit=5, textbook_id=textbook_id):
+                        passages[passage["passage_id"]] = passage
         except Exception:
             passages = {}
         option_adjudication = review_options(

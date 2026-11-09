@@ -22,34 +22,44 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
         raise ValueError("Valid option identifiers and key required")
     if context_query is not None and (not isinstance(context_query, str) or not context_query.strip() or len(context_query) > 500):
         raise ValueError("Invalid independent retrieval context")
+    if context_query and limit < 2:
+        raise ValueError("Context-aware retrieval requires at least two candidates")
+    context_rows = []
+    context_failed = False
+    if context_query:
+        try:
+            context_rows = search(conn, context_query.strip(), owner_uid, limit=1, textbook_id=textbook_id)
+        except Exception:
+            context_failed = True
     results = []
-    search_failed = False
+    search_failed = context_failed
     missing_evidence = False
     for option in options:
         option_id = option["id"]
-        # Do not treat source silence as evidence that a distractor is false.
         label = option.get("text")
         if not isinstance(label, str) or not label.strip():
             raise ValueError("Every option needs text")
         query = label[:180].strip()
-        if context_query:
-            # Retrieve both the option's classification and the selected clinical
-            # topic; neither answer key nor generator citations seed this search.
-            query += " OR " + context_query.strip()
+        queries = [query] + ([context_query.strip()] if context_query else [])
         try:
-            rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
+            option_rows = search(conn, query, owner_uid, limit=limit - 1 if context_query else limit, textbook_id=textbook_id)
         except Exception:
-            rows = []
+            option_rows = []
             search_failed = True
-            search_status = "failed"
+            option_failed = True
         else:
-            search_status = "matches_found" if rows else "no_matches"
-            if not rows:
-                missing_evidence = True
+            option_failed = False
+        # A topic table and an option's classification can be on different pages.
+        # Retrieve both independently rather than sending many OR-ranked matches.
+        rows = list({row["passage_id"]: row for row in option_rows + context_rows}.values())
+        search_status = "failed" if option_failed or context_failed else "matches_found" if rows else "no_matches"
+        if not rows:
+            missing_evidence = True
         results.append({
             "option_id": option_id,
             "question_context": stem[:180],
             "search_query": query,
+            "search_queries": queries,
             "expected_verdict": "supports_key" if option_id in keys else "refutes_distractor",
             "retrieved_passage_ids": [row["passage_id"] for row in rows],
             "retrieved_count": len(rows),

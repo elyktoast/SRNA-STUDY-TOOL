@@ -64,8 +64,11 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
         report["judgments"] = [{k: j[k] for k in
             ("option_id", "verdict", "passage_ids", "quotes", "explanation", "source_conflict_found", "contradiction_found") if k in j}
             for j in response]
-    except Exception:
-        return {"status": "pending", "issues": [{"rule_id": "R-12.4",
+    except Exception as exc:
+        rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
+        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_RESPONSE", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN", "PROVIDER_NETWORK", "REVIEW_RESPONSE_INVALID"}
+        rule = rule if rule in allowed else "REVIEW_RESPONSE_INVALID"
+        return {"status": "pending", "provider_rule": rule, "issues": [{"rule_id": "R-12.4",
                 "message": "Independent option adjudication unavailable or invalid"}],
                 "clinical_truth_verified": False, "can_publish": False}
     return {**report, "generator_model_id": generator_model_id,
