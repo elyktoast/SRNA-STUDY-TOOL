@@ -75,8 +75,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
     quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
+    editorial_model = env.get("AI_EDITORIAL_REVIEWER_MODEL", "").strip()
     summary["review_readiness"] = {
-        "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id else "disabled",
+        "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id and editorial_model and editorial_model != generator_id else "unavailable" if quality_requested else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
                    "missing_generator_model" if rewrite_requested else "disabled",
         "blind_review": (
@@ -108,6 +109,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Blind review requires distinct configured generator and reviewer models")
     if args.execute and explanation_requested and summary["review_readiness"]["explanation_review"] != "configured":
         raise ValueError("Explanatory review requires distinct configured models")
+    if args.execute and quality_requested and summary["review_readiness"]["board_quality_review"] != "configured":
+        raise ValueError("Editorial review requires a distinct configured model")
     if args.execute and rewrite_requested and not generator_id:
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
@@ -124,6 +127,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
         "explanation_review_enabled": explanation_requested,
         "board_quality_contract": "2026-11-09-v1" if quality_requested else None,
+        "editorial_reviewer_model": editorial_model if quality_requested else None,
         "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
@@ -195,9 +199,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
     def quality_review(item):
         from item_board_quality_v2 import editorial, options_only
-        call = lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload)
-        reports = {"editorial_quality": editorial(item, call), "options_only": options_only(item, call)}
-        return {name: {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
+        editorial_adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+            model=editorial_model, transport=transport, owner_opt_in=True, staging=True)
+        reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload)),
+                   "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))}
+        return {name: {**report, "generator_model_id": generator_id,
+                      "reviewer_model_id": editorial_model if name == "editorial_quality" else reviewer_model_id}
                 for name, report in reports.items()}
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.

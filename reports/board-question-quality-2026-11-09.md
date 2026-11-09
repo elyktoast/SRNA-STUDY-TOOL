@@ -72,3 +72,25 @@ an explicit JSON-output instruction; the request is corrected and covered by
 a provider-contract test. Sanitized pending-review diagnostics are added.
 Choice-specific editorial/cue checks are scoped to MC/MS, preserving existing
 numeric, matching and hotspot validation. A fresh live control remains required.
+
+
+## Preserve source reviewers; verify a reasoning-capable editorial reviewer
+
+CI run 42700698499 passed all 860 Python tests (one skipped), 113 Node tests
+and repository validation. The corrected JSON request ran live in deployment
+42700696568, but Qwen caught only the ineffective counterfactual and a context
+issue; it missed blueprint fit and the faulty trap. That negative control failed
+and no fresh generation was started. A separate read-only attempt to enable
+Qwen low reasoning with hidden output was rejected by the provider
+(42701621310); no unsupported request setting is retained.
+
+Editorial-only screening now uses the already supported Groq GPT-OSS 20B model,
+distinct from GPT-OSS 120B generation. Qwen remains unchanged for blind answers,
+source evidence and options-only trials. Signed relay checks bind each step to
+its authorized model; an editorial model cannot answer a blind/source-review
+request. Live verification is still required.
+
+The options-only binomial calculation is a conservative screening reference
+under an independent chance-guess assumption. Repeated model responses may be
+correlated; it is not a validated psychometric p-value or a numeric item-quality
+score. Flags require review; a pass does not establish that the item has no cue.

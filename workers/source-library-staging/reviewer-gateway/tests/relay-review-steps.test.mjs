@@ -318,19 +318,21 @@ test('Qwen explanation audit preserves the established JSON request settings',as
  }finally{globalThis.fetch=original;}
 });
 
-test('editorial and options-only checks require authorized distinct reviewers',async()=>{
+test('editorial and options-only checks require their own authorized distinct reviewers',async()=>{
  const original=globalThis.fetch;let calls=0;
  globalThis.fetch=async()=>{calls++;return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
  try{
-  const configured={...env,AI_EXPLANATION_REVIEW_OPT_IN:'true'};
-  for(const step of ['editorial_review','options_only_review']){
+  const configured={...env,AI_EXPLANATION_REVIEW_OPT_IN:'true',AI_EDITORIAL_REVIEWER_MODEL:'editorial-model'};
+  for(const [step,model] of [['editorial_review','editorial-model'],['options_only_review','reviewer-model']]){
    assert.equal((await gateway.fetch(request(step,'generator-model'),configured)).status,400);
-   assert.equal((await gateway.fetch(request(step,'reviewer-model',{independent:false}),configured)).status,400);
+   assert.equal((await gateway.fetch(request(step,model,{independent:false}),configured)).status,400);
   }
-  assert.equal((await gateway.fetch(request('editorial_review','reviewer-model'),env)).status,400);
+  assert.equal((await gateway.fetch(request('editorial_review','reviewer-model'),configured)).status,400);
+  assert.equal((await gateway.fetch(request('blind_review','editorial-model'),configured)).status,400);
+  assert.equal((await gateway.fetch(request('editorial_review','editorial-model'),env)).status,400);
   assert.equal((await gateway.fetch(request('options_only_review','reviewer-model'),{...configured,AI_BLIND_REVIEW_OPT_IN:'false'})).status,400);
   assert.equal(calls,0);
-  for(const step of ['editorial_review','options_only_review'])assert.equal((await gateway.fetch(request(step,'reviewer-model'),configured)).status,200);
+  for(const [step,model] of [['editorial_review','editorial-model'],['options_only_review','reviewer-model']])assert.equal((await gateway.fetch(request(step,model),configured)).status,200);
   assert.equal(calls,2);
  }finally{globalThis.fetch=original;}
 });

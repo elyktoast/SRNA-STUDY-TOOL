@@ -164,7 +164,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 if not isinstance(figure, (str, dict)) or (isinstance(figure, dict) and (not figure or set(figure) - {"url", "alt", "width", "height"})):
                     raise ValueError("Blind hotspot figure contains unsupported fields")
         # Step-specific ceilings reduce oversized generations without changing validation.
-        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000, "option_review": 1000, "explanation_review": 1000, "editorial_review": 700, "options_only_review": 256}
+        step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000, "option_review": 1000, "explanation_review": 1000, "editorial_review": 1000, "options_only_review": 256}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         body = {"model": model, "messages": [
             {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return the key array field for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
