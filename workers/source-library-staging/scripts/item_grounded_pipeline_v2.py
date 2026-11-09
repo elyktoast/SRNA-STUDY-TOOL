@@ -71,7 +71,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id)
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic)
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,
@@ -79,7 +79,9 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                             "error": "option_retrieval_unavailable"}
     option_adjudication = None
     if (option_reviewer is not None and format in ("MC", "MS")
-            and isinstance(result.get("item"), dict) and isinstance(option_audit, dict)):
+            and isinstance(result.get("item"), dict) and isinstance(option_audit, dict)
+            and not result.get("generator_issues")
+            and result.get("screening", {}).get("stages", {}).get("schema", {}).get("status") == "pass"):
         from item_option_adjudication_handoff_v2 import run as review_options
         from search_passages import search
         passages = {}
@@ -96,10 +98,10 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
             result["item"], option_audit, option_reviewer,
             source_passages=list(passages.values()),
             generator_model_id=generator_model_id,
-            reviewer_model_id=option_reviewer_model_id)
+            reviewer_model_id=option_reviewer_model_id, require_quotes=True)
     if format in ("MC", "MS"):
         from item_option_audit_screening_v2 import attach
-        result = attach(result, option_audit)
+        result = attach(result, option_audit, option_adjudication)
     return {**result, "independent_option_retrieval": option_audit,
             "independent_option_adjudication": option_adjudication, "source_evidence": {
         "topic": packet["topic"],

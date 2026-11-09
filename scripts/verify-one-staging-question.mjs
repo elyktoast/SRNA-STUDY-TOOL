@@ -46,12 +46,30 @@ for(const [id,reason] of [
   assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
  }
 }
+// Append a source-faithful correction; keep the original generated question immutable.
+const recoveredDraft='e9ee3c59-0924-402c-9501-63464d53ffdb';
+const revisionState=await call('/generation/drafts/'+recoveredDraft+'/revisions');
+const relevance='Selecting nontriggering anesthetic agents is important for patients susceptible to malignant hyperthermia. The supplied table classifies volatile inhalation anesthetics and succinylcholine as triggering, and local anesthetics, opioids and nitrous oxide as nontriggering.';
+if(revisionState.current_question?.concept_card?.relevance!==relevance){
+ const revised=await call('/generation/drafts/'+recoveredDraft+'/revisions',{
+  expected_parent_sha256:revisionState.current_question_sha256,citation_excerpts:{},option_evidence:{},
+  question_edits:{concept_card:{relevance}},
+  reviewer_notes:'Automated source-grounded editorial correction removes an unsupported inventory prohibition. Original retained; human clinical and blueprint review still required. No publication or clinical approval.'
+ });
+ assert.equal(revised.published,false);assert.equal(revised.can_publish,false);assert.equal(revised.clinical_review_required,true);
+ const verified=await call('/generation/drafts/'+recoveredDraft+'/revisions');
+ assert.equal(verified.current_question.concept_card.relevance,relevance);
+ assert.deepEqual(verified.current_question.key,revisionState.current_question.key);
+ assert.deepEqual(verified.current_question.evidence,revisionState.current_question.evidence);
+ console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
+}
 const request={topic:'malignant hyperthermia triggering nontriggering agents',page_start:984,page_end:984,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
 assert.equal(preflight.review_readiness?.blind_review,'configured');
 assert.equal(preflight.review_readiness?.rewrite,'configured');
+assert.equal(preflight.review_readiness?.independent_option_review,'configured');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
@@ -71,5 +89,8 @@ assert.equal(stages.schema,'pass','Generated schema did not pass');
 assert.equal(stages.deterministic_text,'pass','Deterministic wording screening did not pass');
 assert.equal(stages.evidence,'pass','Evidence validation did not pass');
 assert.equal(stages.blind_model,'pass','Independent blind review did not pass');
+assert.equal(stages.independent_option_evidence,'pass','Independent source-grounded option review did not complete');
+assert.equal(generated.screening?.independent_option_adjudication?.clinical_truth_verified,false);
+assert.equal(generated.screening?.independent_option_adjudication?.human_review_required,true);
 assert.equal((generated.generator_issues||[]).length,0,'Unresolved generator issues');
 console.log('One authenticated textbook-grounded question persisted as an unpublished draft');

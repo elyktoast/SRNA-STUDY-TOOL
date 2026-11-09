@@ -153,6 +153,27 @@ class GenerationCliTests(unittest.TestCase):
     @patch("run_grounded_generation_v2.make_adapter")
     @patch("run_grounded_generation_v2.make_transport")
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_option_reviewer_uses_distinct_model_and_persists_pipeline_report(self, evidence, transport, adapter, generate):
+        args=SimpleNamespace(**{**vars(ARGS),"execute":True,"confirm_paid_calls":True})
+        env={"STAGING_ONLY":"true","AI_GENERATION_OPT_IN":"true","AI_PROVIDER_ENDPOINT":"https://provider.example/v1/chat/completions",
+             "AI_ALLOWED_HOSTS":"provider.example","AI_PROVIDER_API_KEY":"secret","AI_GENERATOR_MODEL":"generator",
+             "AI_REVIEWER_MODEL":"reviewer","AI_OPTION_REVIEW_OPT_IN":"true","STAGING_RECEIPT_SIGNING_SECRET":"a"*48}
+        generate.return_value={"item_id":"q1","next_state":"draft","source_evidence":{},"item":{},"generator_issues":[],"screening":{"independent_option_adjudication":{"status":"reviewed"}}}
+        adapter.return_value.return_value={"judgments":[{"option_id":"A"}]}
+        result=execute(object(),args,env)
+        callback=generate.call_args.kwargs["option_reviewer"]
+        self.assertEqual(generate.call_args.kwargs["option_reviewer_model_id"],"reviewer")
+        self.assertIsNone(generate.call_args.kwargs["blind_reviewer"])
+        self.assertEqual(callback({"stem":"Which?"}),[{"option_id":"A"}])
+        request=adapter.return_value.call_args.args[0]
+        self.assertEqual(request["step"],"option_review"); self.assertTrue(request["blind"])
+        self.assertEqual(result["save_payload"]["screening"]["independent_option_adjudication"]["status"],"reviewed")
+        self.assertFalse(result["can_publish"])
+
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     def test_trusted_semantic_lookup_is_forwarded(self, evidence, transport, adapter, generate):
         args = SimpleNamespace(**{**vars(ARGS), "execute": True,
                                   "confirm_paid_calls": True})

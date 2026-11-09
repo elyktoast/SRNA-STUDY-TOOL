@@ -247,3 +247,37 @@ textbook/index data, validation gates and independent review functionality were
 preserved. No question was published. The final report and already-tested
 acceptance fixture update do not redeploy the functional Worker or run another
 paid generation.
+
+## Follow-up: independent source review and versioned concept correction
+
+The independent option-review modules existed but were not passed from the live
+CLI into the indexed pipeline, and their report was not attached to screening.
+The follow-up connects that existing handoff through a separate staging opt-in,
+a distinct reviewer-model relay step, and persisted screening results. The
+reviewer receives no answer key, generator rationale, expected verdicts or error
+patterns. Each option must cite independently retrieved passages and supply a
+verbatim quote; unsupported quotes, contradiction, source silence, missing
+retrieval and invalid provider output keep the stage pending. Human clinical
+review and publication remain blocked even when model adjudication completes.
+
+Per-option retrieval now searches the option text OR the selected topic within
+the same authenticated owner's textbook. This can retrieve both a drug's class
+and the clinical classification table; neither the answer key nor generator
+citations seed that independent search. Existing textbook content and indexing
+are unchanged.
+
+The immutable draft-revision path permits only a bounded concept-card relevance
+text correction. It cannot change concept evidence IDs, the answer key, identity,
+review status or publication state. The live acceptance checks will append and
+verify the known relevance correction without modifying the original draft, then
+verify a fresh source-reviewed unpublished generation.
+
+The canonical inventory audit currently reports 9,000 unique questions across 21
+sources, digest 44e9be2173cac71a71f51e3cfe48b3712d3ad301e8d076f01796a3aee50497a5.
+The staging question_semantic_index_v2 table is absent; its existing embedding
+bridge only accepts Gemini. No Gemini calls, schema changes or partial-index
+clearance were enabled. A complete non-Gemini index remains a separate unfinished
+requirement; semantic duplicate status stays pending.
+
+Verification of the new deployed reviewer step and versioned saved-draft
+correction is pending. The prior verified result above remains historical.

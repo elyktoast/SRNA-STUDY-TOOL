@@ -17,7 +17,7 @@ function request(step, model, options={}) {
     messages: [{role:'system',content:'Return JSON'},
       {role:'user',content:JSON.stringify({
         step, rules_version:'2.0', auto_publish:false,
-        ...(step==='blind_review'?{blind:true}:{}),
+        ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
       })}],
   });
   const stamp = String(Math.floor(Date.now()/1000));
@@ -232,4 +232,16 @@ test('Qwen 503 includes sanitized provider HTTP status',async()=>{
 test('Qwen successful content does not leak reasoning metadata',async()=>{
  const response=await qwenMock({success:true,result:{choices:[{message:{content:'final',reasoning:'private chain'},finish_reason:'stop'}]}});
  const body=await response.json();assert.equal(body.choices[0].message.content,'final');assert.ok(!JSON.stringify(body).includes('private chain'));
+});
+
+test('independent option review requires explicit flag and distinct reviewer identity',async()=>{
+ const original=globalThis.fetch; let calls=0;
+ globalThis.fetch=async()=>{calls++;return new Response(JSON.stringify({choices:[{message:{content:'{}'}}]}),{status:200});};
+ try{
+  assert.equal((await gateway.fetch(request('option_review','reviewer-model'),env)).status,400);
+  assert.equal((await gateway.fetch(request('option_review','generator-model'),{...env,AI_OPTION_REVIEW_OPT_IN:'true'})).status,400);
+  assert.equal(calls,0);
+  assert.equal((await gateway.fetch(request('option_review','reviewer-model'),{...env,AI_OPTION_REVIEW_OPT_IN:'true'})).status,200);
+  assert.equal(calls,1);
+ }finally{globalThis.fetch=original;}
 });

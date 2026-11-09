@@ -47,9 +47,9 @@ async function relayGroq(request,env){
  }
  // Gemini remains disabled, including signed metadata diagnostics.
  if(payload?.diagnostic==='hybrid_models')return respond(503,null,'{"error":"relay_disabled"}');
- if(!([env.AI_GENERATOR_MODEL, ...(env.AI_BLIND_REVIEW_OPT_IN==='true'?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
+ if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
- if(!['concept_card','item_draft','rationale','rewrite','blind_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&(env.AI_BLIND_REVIEW_OPT_IN!=='true'||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(step.step!=='blind_review'&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(['blind_review','option_review'].includes(step.step)&&(payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(!['blind_review','option_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
@@ -256,10 +256,11 @@ export default {
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
     if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
-    if(env.AI_BLIND_REVIEW_OPT_IN==='true'){
+    if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'){
      if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
       return respond(503,origin,'{"error":"staging_not_configured"}');
-     envVars.AI_BLIND_REVIEW_OPT_IN='true';
+     if(env.AI_BLIND_REVIEW_OPT_IN==='true')envVars.AI_BLIND_REVIEW_OPT_IN='true';
+     if(env.AI_OPTION_REVIEW_OPT_IN==='true')envVars.AI_OPTION_REVIEW_OPT_IN='true';
      envVars.AI_REVIEWER_MODEL=env.AI_REVIEWER_MODEL;
     }
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
