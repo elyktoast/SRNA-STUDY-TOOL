@@ -34,6 +34,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             raise ValueError("Unsupported generation request")
         if request.get("rules_version") != "2.0" or request.get("auto_publish") is not False:
             raise ValueError("Unsafe generation contract")
+        if request["step"] in ("item_draft", "rewrite"):
+            body["messages"][0]["content"] += " Every MC/MS option object MUST include id, text, and a nonempty error_pattern. For a paired physiological mechanism, ALL choices must use the SAME TWO source-supported variables; vary their direction (increased/decreased or unchanged) instead of introducing unrelated causes absent from the source. Each incorrect pair must explicitly contradict a direction established by the evidence. When repairing unsupported distractors, REPLACE the incorrect choice with a source-refuted alternative and update both rationale and distractor_evidence; do not merely label its verdict unsupported. Preserve the protected key and keyed text. Never treat source silence as disproof."
         if request["step"] == "rewrite":
             if request.get("max_rewrites") != 1 or request.get("requires_human_review") is not True:
                 raise ValueError("Unsafe rewrite contract")
