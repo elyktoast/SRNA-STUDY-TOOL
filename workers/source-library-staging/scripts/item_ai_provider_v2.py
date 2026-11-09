@@ -92,6 +92,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         ], "max_tokens": output_budget, "temperature": 0.2}
         if request["step"] == "rewrite":
             body["messages"][0]["content"] += " Return the FLAT revised item only, with all original item fields at the top level. Do not echo the request envelope, protected_metadata, issues, trusted_evidence, repair_instructions, step or max_rewrites. Keep status exactly draft and copy every original protected field and the keyed option text exactly."
+            body["messages"][0]["content"] += " REQUIRED TOP-LEVEL OUTPUT KEYS (include EVERY key, even unchanged): " + json.dumps(list(request["item"])) + ". COPY THESE PROTECTED VALUES AS TOP-LEVEL ITEM FIELDS: " + json.dumps(request.get("protected_metadata", {})) + ". Copy unchanged concept_card, audit, stats, self_check, enemy_ids and verification flags from the original. For evidence return only textbook_id, passage_id and pdf_page references; omit excerpt so the trusted server can attach exact indexed text."
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.
         response = transport(endpoint=endpoint,
@@ -117,7 +118,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                         "max_rewrites": 1, "requires_human_review": True, "can_publish": False}
             # An echoed request scaffold carries no authority. Accept it only
             # when every such field exactly matches the trusted request.
-            for field in ("protected_metadata", "issues", "trusted_evidence", "repair_instructions"):
+            for field in ("protected_metadata", "required_output_keys", "issues", "trusted_evidence", "repair_instructions"):
                 if field in request:
                     protocol[field] = request[field]
             extras = set(parsed) - {"item"}

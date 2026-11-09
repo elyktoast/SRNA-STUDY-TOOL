@@ -18,6 +18,7 @@ def attempt_once(original, issues, rewrite, validate):
                  "objective", "format", "model", "status")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
                "protected_metadata": {field: deepcopy(original.get(field)) for field in immutable},
+               "required_output_keys": list(original),
                "max_rewrites": 1, "requires_human_review": True,
                "repair_instructions": (
                    "Fix only the reported rule-ID issues. Copy every protected_metadata field EXACTLY, including null values, and preserve the question's "

@@ -1,4 +1,4 @@
-"""Isolated signed drafting, protocol-envelope and guarded-rewrite probes; no rationale, screening, save or publish."""
+"""Explicit isolated stage probes; screening never saves or publishes a question."""
 import json
 import os
 import time
