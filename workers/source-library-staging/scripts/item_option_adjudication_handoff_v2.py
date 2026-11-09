@@ -29,8 +29,17 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
                 "clinical_truth_verified": False, "can_publish": False}
     # Pass a restricted request: the reviewer must return source-grounded
     # judgments, and the caller must provide authenticated source access.
-    request = {"stem": item.get("stem"), "options": item.get("options"),
-               "retrieval": retrieval, "source_passages": [indexed[pid] for pid in sorted(referenced)], "task": "independent_option_adjudication"}
+    # Do not disclose the keyed answer or expected verdict to the independent
+    # reviewer. The trusted evaluator compares its blind judgment afterward.
+    blind_retrieval = {"option_audits": [
+        {"option_id": a["option_id"],
+         "retrieved_passage_ids": a["retrieved_passage_ids"]}
+        for a in retrieval["option_audits"]]}
+    request = {"stem": item.get("stem"), "options": [{"id": o["id"], "text": o["text"]}
+                           for o in item.get("options", [])],
+               "retrieval": blind_retrieval,
+               "source_passages": [indexed[pid] for pid in sorted(referenced)],
+               "task": "independent_option_adjudication"}
     try:
         response = reviewer(request)
         report = evaluate(item, retrieval, response)

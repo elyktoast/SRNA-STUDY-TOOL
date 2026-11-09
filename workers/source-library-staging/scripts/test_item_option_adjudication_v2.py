@@ -27,6 +27,11 @@ class AdjudicationTests(unittest.TestCase):
         self.assertEqual(result["status"], "pending")
         self.assertGreaterEqual(len(result["issues"]), 2)
 
+    def test_duplicate_option_retrieval_rejected(self):
+        self.retrieval["option_audits"].append(dict(self.retrieval["option_audits"][0]))
+        with self.assertRaises(ValueError):
+            evaluate(self.item, self.retrieval, self.judgments)
+
     def test_missing_option_judgment_rejected(self):
         with self.assertRaises(ValueError):
             evaluate(self.item, self.retrieval, self.judgments[:1])
