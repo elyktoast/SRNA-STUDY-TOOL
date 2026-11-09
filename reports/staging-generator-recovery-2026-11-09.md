@@ -150,5 +150,100 @@ defect reports, with no human clinical approval or publication.
 
 The isolated revised quality probe passed all required automated gates. Semantic
 duplicate coverage, independent clinical option adjudication and human review
-still remain pending and cannot be implied by these passes. Final authenticated
-generation, source comparison and draft persistence remain to be verified.
+still remain pending and cannot be implied by these passes. At this point,
+final authenticated generation, source comparison and persistence were still
+unverified; the final result is recorded below.
+
+## Final deployment and verification-state correction
+
+The recovery deployment at a28bfac was blocked before AI calls when an idle
+container left Cloudflare's rollout progressing for more than four minutes.
+PR #176 adds the existing authenticated read-only diagnostic as a warmup, while
+retaining the mandatory rollout gate and final authenticated smoke. The following
+rollout settled successfully and source/PDF/page integrity, indexed preflight,
+private drafts, anonymous-access rejection and signed relay checks passed.
+
+The next generation correctly failed schema because a model placed a numeric
+verification flag inside a citation and omitted the required item-level flag.
+PR #177 makes the text-only stage own the false page-image verification state,
+removes unsupported citation-level assertions, and protects the state during
+rewrites. Three negative regressions passed. No page image or clinical value is
+claimed verified by this operation. A later draft was also correctly rejected
+when its rewrite dropped required option error-pattern tags. These failed drafts
+remain unpublished and are marked needs_revision by automated QA, never approved.
+
+The final functional source commit is 8cb7ac8ed0654b32e1741958cb46c948b5f09884.
+Its staging Worker version is 71945cc1-00d0-4259-8834-df7b1b2ea261 at 100% traffic.
+The regression run completed 806 Python tests (one skipped) and all 104 Node tests.
+Main architecture, content integrity, budgets, all four browser regression groups,
+and the verified-site deployment passed:
+https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42565627461
+
+PR #178 adds a separately confirmed acceptance workflow against the settled
+existing deployment, avoiding a rebuild for each verification. Ordinary main
+pushes never generate questions through that workflow. A verbose acceptance topic
+returned NO_INDEXED_EVIDENCE before paid calls; using the actual indexed terms
+preserved retrieval/index behavior and allowed the focused obesity test to proceed. Its unsupported distractors were
+correctly rejected after the single allowed rewrite; no quality gate was bypassed.
+The final acceptance therefore uses a source table that explicitly supplies both
+triggering and nontriggering categories, instead of a paragraph that cannot
+adjudicate unrelated mechanisms. PR #178 also strengthens the existing draft/
+rewrite instructions for source-refuted parallel mechanisms and required option
+fields. It does not guarantee all generated questions will pass.
+
+## Verified end-to-end result — 2026-11-09 05:16 UTC
+
+**One authenticated indexed generation completed and was saved unpublished.**
+This verifies the pipeline and a controlled recall item; it is not clinical
+approval or a guarantee of arbitrary-topic question quality.
+
+- Acceptance run: https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42566146423
+- Draft ID: `e9ee3c59-0924-402c-9501-63464d53ffdb`.
+- Database status: `pending_review`; API `published=false`,
+  screening `can_publish=false`; reviewed_by and reviewed_at remain null.
+- Book: `Nagelhout__Elisha_.pdf`, textbook
+  `6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d`, still ready, 1,660 physical PDF pages.
+- Source: physical PDF page 984, Box 36.9, passage
+  `ac27bdb7-a2ae-4482-ba62-82b3ece25e16`.
+- Topic: malignant hyperthermia triggering/nontriggering agents.
+- Generator: Groq `openai/gpt-oss-120b`; independent blind reviewer:
+  Groq `qwen/qwen3.8-27b`. Concept/rationale use Cloudflare Qwen.
+- One automatic rewrite corrected error-pattern descriptions under R-6.3.
+  No generator issues remained after the rewrite.
+- Exactly one new draft exists for the acceptance-run time window.
+- Textbook identity, physical page binding and verbatim excerpt equality were
+  independently confirmed against the existing indexed passage.
+- The question key (desflurane) and the local-anesthetic, nitrous-oxide and opioid
+  distractor categories agree with the source table. The item is recall-level.
+
+| Check | Verified status |
+| --- | --- |
+| Schema | pass |
+| Deterministic wording | pass |
+| Math | pass |
+| Evidence validation | pass |
+| Distinct-model blind review | pass |
+| Semantic duplicates | pending — semantic index not supplied |
+| Independent option evidence adjudication | pending — retrieved passages still need clinical adjudication |
+| Human clinical/blueprint review | pending |
+| Publication | blocked |
+
+The concept-card relevance includes a broader statement about triggering agents
+being stocked in an operating room that the cited table does not establish.
+An automated QA note explicitly records this for correction/review; it is not
+human approval. The generated question and screening output were not edited to
+make the acceptance pass. Page-image/numeric verification remains false.
+
+All six earlier defective recovery drafts remain unpublished with needs_revision:
+`eec2209c-419d-40ea-b830-6586d2b06125`,
+`d87e0523-a4bd-40a9-8f61-cdaabd6ad297`,
+`038defcb-295a-43a9-bdb4-5bb6a310b183`,
+`11d8fe2a-af0c-4986-ab17-f1524eb2fe1a`,
+`273d8969-5957-4aec-9c4d-7c46548de822`, and
+`217c7f66-65ff-4c4a-849a-09598f6c26c1`.
+
+Gemini remains excluded from active routing and readiness checks. Existing
+textbook/index data, validation gates and independent review functionality were
+preserved. No question was published. The final report and already-tested
+acceptance fixture update do not redeploy the functional Worker or run another
+paid generation.
