@@ -25,3 +25,4 @@ jobs:
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
         run: PYTHONPATH=workers/source-library-staging/scripts python scripts/verify-explanation-review-live.py --confirm-paid-review
+# Pace source controls for the demonstrated minute quota.

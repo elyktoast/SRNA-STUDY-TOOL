@@ -7,6 +7,7 @@ from pathlib import Path
 import argparse
 import json
 import os
+import time
 import psycopg
 from item_ai_https_transport_v2 import make_transport
 from item_ai_provider_v2 import make_adapter
@@ -46,9 +47,15 @@ teaching["concept_card"].update({
     "counterfactual":"Replacing a drug labeled triggering with a listed nontriggering option avoids exposure to that triggering drug."})
 unlisted_examples = copy.deepcopy(corrected)
 unlisted_examples["rationale"]["core_concept"] = "The supplied excerpt explicitly lists fentanyl as a safe opioid and lidocaine as a safe local anesthetic."
+previous_started = None
 for name, item, expected in (("unsupported_original", original, "flag"), ("corrected_revision", corrected, "pass"),
                              ("supported_teaching_framing", teaching, "pass"),
                              ("unlisted_named_examples", unlisted_examples, "flag")):
+    # Explicit regression calls share a small provider minute quota. Pace the
+    # harness instead of weakening the production one-retry limit.
+    if previous_started is not None:
+        time.sleep(max(0, 65 - (time.monotonic() - previous_started)))
+    previous_started = time.monotonic()
     report = review(item, sources, lambda payload:_call_with_bounded_rate_wait(adapter, payload))
     fields = [i.get("field") for i in report["issues"]]
     print(json.dumps({"case":name,"reviewer_model":reviewer_model,"status":report["status"],"flagged_fields":fields,
