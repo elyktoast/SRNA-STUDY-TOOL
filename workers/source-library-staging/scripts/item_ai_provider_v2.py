@@ -107,5 +107,10 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             raise ProviderError("Provider did not return a valid JSON object") from None
         if not isinstance(parsed, dict):
             raise ProviderError("Provider output must be a JSON object")
+        # Some JSON-mode providers return the complete rewrite in an exact
+        # single-key envelope. Unwrap transport structure only; protected
+        # metadata, answer and citation checks still run on the candidate.
+        if request["step"] == "rewrite" and set(parsed) == {"item"} and isinstance(parsed["item"], dict):
+            parsed = parsed["item"]
         return parsed
     return adapter
