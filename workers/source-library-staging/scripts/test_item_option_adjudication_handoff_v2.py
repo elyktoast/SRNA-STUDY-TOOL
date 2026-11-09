@@ -6,6 +6,8 @@ class HandoffTests(unittest.TestCase):
     def setUp(self):
         self.item = {"format": "MC", "stem": "Which?", "options": [
             {"id": "A", "text": "One"}, {"id": "B", "text": "Two"}], "key": ["A"]}
+        self.passages = [{"passage_id": "p1", "excerpt": "Source one"},
+                         {"passage_id": "p2", "excerpt": "Source two"}]
         self.retrieval = {"all_options_searched": True, "option_audits": [
             {"option_id": "A", "retrieved_passage_ids": ["p1"]},
             {"option_id": "B", "retrieved_passage_ids": ["p2"]}]}
@@ -18,7 +20,7 @@ class HandoffTests(unittest.TestCase):
                  "explanation": "Evidence", "contradiction_found": False},
                 {"option_id": "B", "passage_ids": ["p2"], "verdict": "refutes_distractor",
                  "explanation": "Evidence", "contradiction_found": False}]
-        report = run(self.item, self.retrieval, reviewer,
+        report = run(self.item, self.retrieval, reviewer, source_passages=self.passages,
                      generator_model_id="generator", reviewer_model_id="reviewer")
         self.assertEqual(report["status"], "reviewed")
         self.assertFalse(report["clinical_truth_verified"])
@@ -27,13 +29,13 @@ class HandoffTests(unittest.TestCase):
     def test_provider_error_is_pending(self):
         def broken(request):
             raise RuntimeError("outage")
-        report = run(self.item, self.retrieval, broken,
+        report = run(self.item, self.retrieval, broken, source_passages=self.passages,
                      generator_model_id="generator", reviewer_model_id="reviewer")
         self.assertEqual(report["status"], "pending")
 
     def test_same_model_is_rejected(self):
         with self.assertRaises(ValueError):
-            run(self.item, self.retrieval, lambda request: [],
+            run(self.item, self.retrieval, lambda request: [], source_passages=self.passages,
                 generator_model_id="same", reviewer_model_id="same")
 
 
