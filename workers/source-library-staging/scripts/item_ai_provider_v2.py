@@ -11,6 +11,29 @@ ALLOWED_STEPS = {"concept_card", "item_draft", "rationale", "rewrite", "blind_re
 class ProviderError(RuntimeError):
     pass
 
+def _bind_blind_response(request, response):
+    """Bind one awaited provider response to its trusted request, never its key."""
+    import math
+    field = {"MC": "key", "MS": "key", "SA": "numeric_answer", "DD": "pairs", "HS": "region"}.get(request.get("format"))
+    if not isinstance(response, dict) or field not in response:
+        raise ValueError("Blind answer response unavailable")
+    if "item_id" in response and response["item_id"] != request["item_id"]:
+        raise ValueError("Mismatched model-supplied blind identity")
+    answer = response[field]
+    if field == "key":
+        ids = {o["id"] for o in request["options"]}
+        if (not isinstance(answer, list) or any(not isinstance(k, str) or k not in ids for k in answer)
+                or len(answer) != len(set(answer))):
+            raise ValueError("Invalid blind answer choices")
+    elif field == "numeric_answer" and (type(answer) not in (int, float) or not math.isfinite(answer)):
+        raise ValueError("Invalid blind numeric result")
+    elif field == "pairs" and not isinstance(answer, dict):
+        raise ValueError("Invalid blind matching result")
+    elif field == "region" and (not isinstance(answer, str) or not answer.strip()):
+        raise ValueError("Invalid blind region")
+    return {"item_id": request["item_id"], field: answer}
+
+
 def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                  staging=True, max_output_tokens=4096):
     if owner_opt_in is not True or staging is not True:
@@ -105,7 +128,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         step_caps = {"concept_card": 1200, "item_draft": 2600, "rationale": 1400, "rewrite": 3500, "blind_review": 1000, "option_review": 1800}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         body = {"model": model, "messages": [
-            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return item_id and key array for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
+            {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return the key array field for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
             {"role": "user", "content": json.dumps(request, ensure_ascii=False)}
         ], "max_tokens": output_budget, "temperature": 0.2}
         if request["step"] in ("concept_card", "rationale"):
@@ -117,6 +140,12 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "rewrite":
             body["messages"][0]["content"] += " Return the FLAT revised item only, with all original item fields at the top level. Do not echo the request envelope, protected_metadata, issues, trusted_evidence, repair_instructions, step or max_rewrites. Keep status exactly draft and copy every original protected field and the keyed option text exactly."
             body["messages"][0]["content"] += " REQUIRED TOP-LEVEL OUTPUT KEYS (include EVERY key, even unchanged): " + json.dumps(list(request["item"])) + ". COPY THESE PROTECTED VALUES AS TOP-LEVEL ITEM FIELDS: " + json.dumps(request.get("protected_metadata", {})) + ". Copy unchanged concept_card, audit, stats, self_check, enemy_ids and verification flags from the original. For evidence return only textbook_id, passage_id and pdf_page references; omit excerpt so the trusted server can attach exact indexed text."
+        if request["step"] == "blind_review":
+            # Correlation belongs to the awaited server request, not an LLM UUID
+            # echo. No expected answer, rationale, or identity reaches the model.
+            body["messages"][1]["content"] = json.dumps({k: v for k, v in request.items() if k != "item_id"}, ensure_ascii=False)
+            answer_field = {"MC": "key", "MS": "key", "SA": "numeric_answer", "DD": "pairs", "HS": "region"}[request["format"]]
+            body["messages"][0]["content"] += " Return a FLAT JSON object with exactly the field " + answer_field + ". Do not echo item_id, identity, metadata, or rationale."
         if request["step"] == "blind_review":
             body["messages"][0]["content"] += " For MC, test EACH choice against the literal stem and return ALL defensible correct option IDs, even when more than one is defensible. An array with multiple IDs intentionally flags an ambiguous single-answer question. Do not assume a primary-versus-secondary ranking that the stem does not establish. A fact that also correctly explains the scenario must not be dismissed as merely partial truth to force a unique key."
         if request["step"] == "option_review":
@@ -161,5 +190,5 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             extras = set(parsed) - {"item"}
             if extras <= set(protocol) and all(type(parsed[k]) is type(protocol[k]) and parsed[k] == protocol[k] for k in extras):
                 parsed = parsed["item"]
-        return parsed
+        return _bind_blind_response(request, parsed) if request["step"] == "blind_review" else parsed
     return adapter
