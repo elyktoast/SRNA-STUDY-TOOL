@@ -398,3 +398,29 @@ unchanged answer comparator. Protocol failures remain pending rather than
 spending an editorial rewrite on a question whose content is not the problem.
 Regression tests cover wrong-answer preservation, explicit ID mismatch, answer
 shape/type checks, lack of ID/key leakage, and all five response formats.
+
+
+### Source-review request budget and exact quote restoration
+
+PR185 passed staging CI and deployed successfully in run 42642259011, including
+settled-container and authenticated smoke verification. Its bounded diagnostic
+records quota categories and numeric counters without provider messages or book
+text. Fractional Retry-After values round up for the existing single retry.
+
+Isolated source review (run 42642486597) used five indexed passages and 9,221
+request characters, without creating or changing drafts. The provider rejected
+it with tokens-per-minute limit 1,000 and requested 1,520, despite headers showing
+8,000 remaining tokens. Reducing only the completion ceiling from 1,800 to 1,000
+allowed the same packet through (run 42642658292). The resulting review correctly
+remained pending because a quotation was not verbatim.
+
+A second diagnostic (run 42642973054) confirmed that the invalid quotations were
+neither exact, Unicode-compatible, nor merely whitespace variants. Validation
+was therefore not relaxed. The adapter now asks the independent model to select
+short source-span IDs, then copies the exact, contiguous indexed substrings on
+the trusted server. Unknown, cross-option or uncited references are rejected;
+independent verdicts remain unchanged and the existing exact-quote check still
+runs. No expected answer or generator rationale enters source review. The source
+review completion ceiling is 1,000 and explanations are concise. Tests cover
+wrong-verdict preservation, exact raw ligature restoration, citation boundaries,
+immutable inputs and bounded output. Live acceptance remains to be run.
