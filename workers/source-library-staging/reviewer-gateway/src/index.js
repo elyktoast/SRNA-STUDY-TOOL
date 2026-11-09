@@ -95,18 +95,18 @@ async function relayGroq(request,env){
     next=typeof data.nextPageToken==='string'?data.nextPageToken:'';
     if(!next)break;
    }
+   // Route to catalog-verified model IDs only. Preserve high-quality concept reasoning.
    const configured='models/'+env.AI_GEMINI_MODEL;
-   const flash=[...available].filter(id=>id.includes('flash')&&!id.includes('embedding')&&!id.includes('image')&&!id.includes('tts'));
-   // Prefer stable general-purpose Flash IDs over preview and lite variants.
-   const score=id=>(id.includes('preview')?10:0)+(id.includes('lite')?5:0);
-   flash.sort((a,b)=>score(a)-score(b)||b.localeCompare(a,undefined,{numeric:true}));
-   const candidates=[...new Set([...(available.has(configured)?[configured]:[]),...flash])];
+   const priority=['gemini-3.8-flash','gemini-3.6-flash','gemini-3-flash','gemini-3.1-flash-lite','gemini-2.5-flash','gemini-2.5-flash-lite'];
+   const candidates=[...new Set([...priority.map(id=>'models/'+id),configured])].filter(id=>available.has(id));
    if(!listingSucceeded||!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
-   for(const model of candidates){
+   // A 429 is a rejected request. One alternate model attempt is permitted;
+   // never retry the same model or retry 5xx/timeout ambiguously.
+   for(let index=0;index<Math.min(2,candidates.length);index++){
+    const model=candidates[index];
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
-    // Do not retry throttled or rejected requests; no automatic paid duplicate generation.
-    if(upstream.ok||![404].includes(upstream.status))break;
-    await upstream.body?.cancel();
+    if(upstream.status!==429)break;
+    if(index+1<Math.min(2,candidates.length))await upstream.body?.cancel();
    }
   }else{
    upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
