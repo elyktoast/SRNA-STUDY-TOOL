@@ -221,3 +221,8 @@ test('indexed catalog failures expose safe HTTP status and reason',()=>{
  assert.match(storage,/Indexed textbook catalog request failed \(HTTP /);
  assert.match(ui,/Indexed textbook catalog error:/);
 });
+
+test('evidence preflight labels its capped retrieval count instead of claiming total available passages',()=>{
+ assert.match(ui,/indexed passages retrieved \(up to 5 per evidence check; not the total number in the textbook\)/);
+ assert.doesNotMatch(ui,/indexed passages available\. No AI generation performed/);
+});
