@@ -83,4 +83,20 @@ rewrite requests, requests JSON for the distinct Groq Qwen reviewer, and rejects
 truncated Groq output before it becomes an ambiguous Python parsing failure.
 The diagnostic probes do not run rationale, screening, persistence or publication.
 
-Full live acceptance still requires verification after the drafting fix.
+## Rationale deadline
+
+After the Groq fix, live concept-card generation and drafting succeeded again;
+drafting completed in 2,987 ms. Rationale generation exceeded the Python relay's
+50-second deadline and returned PROVIDER_TIMEOUT with failed_step=rationale.
+No draft was saved.
+
+The rationale contract now specifies the exact flat object shape and concise
+one- or two-sentence explanations for each field/choice. It prohibits repeating
+the draft and source excerpts in the response, while retaining mechanism,
+stem-context, affirmative-evidence, ambiguity and no-invented-citation requirements.
+An isolated signed-relay rationale probe passed all four fields and all four
+choice explanations in 9,923 ms. The drafting input for that probe completed in
+2,872 ms with 1,091 tokens. No rationale timeout was extended and no evidence or
+validation requirement was removed.
+
+Full live acceptance still requires verification after this contract clarification.
