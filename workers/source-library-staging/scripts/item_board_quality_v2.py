@@ -55,9 +55,32 @@ def obsolete_issues(item):
         for text in strings(values)) else []
 
 
+def teaching_specificity_issues(item):
+    """Necessary writing conditions, not proof of clinical or causal validity."""
+    issues = []
+    counterfactual = item.get("concept_card", {}).get("counterfactual", "")
+    if not isinstance(counterfactual, str) or not re.search(
+            r"\b(?:if|were|instead|versus|replac\w*|chang\w*)\b|\brather than\b", counterfactual, re.I):
+        issues.append({"rule_id":"R-5.3", "field":"concept_card.counterfactual",
+                       "message":"Counterfactual must explicitly state a changed condition, not restate the original answer"})
+    if item.get("format") in ("MC", "MS"):
+        trap = item.get("rationale", {}).get("trap", "")
+        trap = trap if isinstance(trap, str) else ""
+        wrong = [o for o in item.get("options", []) if isinstance(o, dict) and o.get("id") not in item.get("key", [])]
+        labels = set(re.findall(r"\b(?:option|choice)\s+([A-F])\b", trap, re.I))
+        names = " ".join(trap.casefold().split())
+        if not any(o.get("id", "").upper() in {label.upper() for label in labels}
+                   or (isinstance(o.get("text"), str) and len(o["text"].strip()) >= 3
+                       and " ".join(o["text"].casefold().split()) in names) for o in wrong):
+            issues.append({"rule_id":"R-9", "field":"rationale.trap",
+                           "message":"Trap must identify a specific incorrect choice by option ID or full choice text"})
+    return issues
+
+
 def editorial(item, reviewer):
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "human_review_required": True, "clinical_truth_verified": False}
+    local = teaching_specificity_issues(item)
     try:
         target = classification(item["domain"], item["section"], item["objective"])
         options = [{"id": o["id"], "text": o["text"]} for o in item.get("options", [])]
@@ -83,13 +106,20 @@ def editorial(item, reviewer):
             raise ValueError("Editorial finding coverage mismatch")
         issues = [{"rule_id": CRITERIA[k][0], "field": CRITERIA[k][1], "message": v}
                   for k, v in findings.items()]
-        return {**pending, "status": "flag" if issues else "pass", "issues": issues,
-                "checks": response["checks"]}
+        model_rules = sorted({i["rule_id"] for i in issues})
+        checks = dict(response["checks"])
+        for issue in local:
+            checks["counterfactual" if issue["rule_id"] == "R-5.3" else "trap"] = "flag"
+        return {**pending, "status": "flag" if issues or local else "pass", "issues": issues + local,
+                "checks": checks, "model_flagged_rules": model_rules,
+                "deterministic_rules": sorted({i["rule_id"] for i in local}), "model_status":"completed"}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_REQUEST_REJECTED", "PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}
         messages = {"Incomplete independent editorial review", "Invalid editorial finding", "Editorial finding coverage mismatch"}
-        return {**pending, "provider_rule": rule if rule in allowed else "REVIEW_RESPONSE_INVALID",
+        return {**pending, "status":"flag" if local else "pending", "issues":local, "model_status":"pending",
+                "deterministic_rules": sorted({i["rule_id"] for i in local}),
+                "provider_rule": rule if rule in allowed else "REVIEW_RESPONSE_INVALID",
                 "review_error": str(exc) if type(exc) is ValueError and str(exc) in messages else None}
 
 
@@ -153,8 +183,12 @@ def stamp_checks(item, screening):
     for name, rules in stage_rules.items():
         stage = screening.get("stages", {}).get(name, {})
         state = stage.get("status", "pending")
-        for rule in rules:
-            statuses.setdefault(rule, []).append(state)
+        if name == "editorial_quality":
+            for criterion, (rule, _) in CRITERIA.items():
+                statuses.setdefault(rule, []).append(stage.get("checks", {}).get(criterion, "pending"))
+        else:
+            for rule in rules:
+                statuses.setdefault(rule, []).append(state)
         for issue in stage.get("issues", []):
             if isinstance(issue, dict) and issue.get("rule_id"):
                 statuses.setdefault(issue["rule_id"], []).append("flag")

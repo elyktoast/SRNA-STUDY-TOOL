@@ -94,3 +94,19 @@ The options-only binomial calculation is a conservative screening reference
 under an independent chance-guess assumption. Repeated model responses may be
 correlated; it is not a validated psychometric p-value or a numeric item-quality
 score. Flags require review; a pass does not establish that the item has no cue.
+
+
+## Combine explicit writing guards with independent semantic judgment
+
+The editorial-only 20B live control in 42702177333 caught the wrong blueprint
+label, but missed the restatement and nonspecific trap. The gate remained failed;
+no new question was generated. Add necessary deterministic writing conditions:
+the counterfactual must explicitly express a changed condition, and the trap
+must identify a specific incorrect choice by ID or full choice text. These
+conditions are not proof of a valid counterfactual or causal learner-error logic;
+the independent semantic checks remain mandatory. Diagnostic reports distinguish
+model findings from deterministic findings. Tests ensure a model's blanket pass
+cannot override missing specificity and that a well-formed but incoherent trap
+still fails independent screening. Per-rule self-checks retain individual
+editorial criterion results instead of treating every criterion as failed when
+only one was flagged.

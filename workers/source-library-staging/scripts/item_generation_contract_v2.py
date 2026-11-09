@@ -48,7 +48,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
         "Use the supplied blueprint labels, not just a syntactically valid code. A wrong topic/objective match must be flagged. "
         "R-3.3/R-5.3: counterfactual must name a variable actually used in the stem, state its changed value or condition, and say how the correct response changes. A restated fact, swapped answer option or unrelated hypothetical is insufficient. "
         "For application or analysis, make a clinical finding change a decision or interpretation; avoid decorative patient details. Do not add age, sex, numerical vitals, doses or thresholds that the task does not need. This text-only generation cannot certify a dose or threshold against its original page image. "
-        "R-9: the trap must name the most plausible distractor and the specific mistaken reasoning that would make a learner select it under this stem. Check that this reasoning actually leads to that wrong selection. "
+        "R-9: start the trap with the specific incorrect option ID (for example, Option C), then name the most plausible distractor and the specific mistaken reasoning that would make a learner select it under this stem. Check that this reasoning actually leads to that wrong selection. "
         "Explain the clinical principle directly and concisely, rather than repeatedly saying 'the passage says' or 'in this stem context'. "
         "Set keyed options' error_pattern to null. Tag each distractor with the specific learner error, not merely its drug class or whether it is correct. "
         "Do not claim a self-check passed; the server records observed screening results."

@@ -32,8 +32,9 @@ report = editorial(question, lambda payload: _call_with_bounded_rate_wait(adapte
 rules = {i["rule_id"] for i in report["issues"]}
 obsolete = obsolete_issues(question)
 print(json.dumps({"case":"previously_missed_board_defects", "status":report["status"],
-    "flagged_rules":sorted(rules), "obsolete_rejected":any(i["rule_id"] == "R-8.4" for i in obsolete),
+    "flagged_rules":sorted(rules), "model_flagged_rules":report.get("model_flagged_rules"),
+    "deterministic_rules":report.get("deterministic_rules"), "obsolete_rejected":any(i["rule_id"] == "R-8.4" for i in obsolete),
     "provider_rule":report.get("provider_rule"), "review_error":report.get("review_error"),
     "reviewer_model":model, "database_writes":False, "published":False}))
 if report["status"] != "flag" or not {"R-1.3", "R-5.3", "R-9"}.issubset(rules) or not obsolete:
-    raise SystemExit("Independent board quality regression did not catch all known defects")
+    raise SystemExit("Board quality regression did not catch all known defects")
