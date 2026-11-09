@@ -44,4 +44,24 @@ PR #169 separately rebaselines two asset budgets; it does not repair generation.
   15 checkpoint-store Python tests passed.
 - Repository validation and performance budgets passed.
 
-Live deployment and complete generation must be verified separately.
+## First live acceptance and rollout failure
+
+PR #170 deployed Worker version bcccb569-8bee-4254-9e94-df80d77059aa.
+Authenticated source integrity, evidence preflight, private draft-bank reads and
+the signed container relay passed. The live concept card completed in 9,795 ms
+and Groq drafting in 5,619 ms, both HTTP 200.
+
+At 03:22:46 UTC the container was terminated during the next stage. Cloudflare
+logged `Runtime signalled the container to exit due to a new version rollout`.
+Its application configuration changed at 03:22:37, after deployment commands and
+smoke checks had already returned. No draft was saved by that interrupted run.
+
+The deployment now waits before authenticated warmup: at least 90 seconds since
+the gate began, at least 60 seconds since the last application configuration
+update, no active rollout/errors, and no old running image or transitional
+instance state. The bounded gate blocks paid acceptance if these conditions do
+not settle. Four offline regressions cover the early-ready window, old image,
+active rollout and invalid metadata. This is a settling criterion, not a claim
+that Wrangler itself waits for container replacement.
+
+Full live acceptance still requires verification after this deployment fix.

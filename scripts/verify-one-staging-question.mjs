@@ -20,7 +20,8 @@ assert.equal((await identity.json()).id,owner,'Acceptance run must use the textb
 const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer '+token,'Content-Type':'application/json'};
 async function call(path,body){
  const r=await fetch(gateway+path,{method:body?'POST':'GET',headers,redirect:'error',...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(240000)});
- const data=await r.json();
+ const data=await r.json().catch(()=>null);
+ if(!data)throw Error('Staging acceptance received a non-JSON response: HTTP '+r.status);
  if(!r.ok){
   // Only fixed machine-readable categories; never log provider output or evidence.
   const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(v)?v:'UNCLASSIFIED';
