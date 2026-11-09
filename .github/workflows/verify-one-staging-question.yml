@@ -1,0 +1,42 @@
+name: Explicit staging one-question acceptance
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_paid_generation:
+        description: Generate and save one unpublished staging question
+        type: boolean
+        required: true
+        default: false
+  push:
+    branches: [fix/staging-final-acceptance]
+    paths:
+      - 'scripts/verify-one-staging-question.mjs'
+      - '.github/workflows/verify-one-staging-question.yml'
+permissions:
+  contents: read
+concurrency:
+  group: source-reviewer-staging-deployment
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: (github.event_name == 'workflow_dispatch' && inputs.confirm_paid_generation) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]'))
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require settled existing staging deployment without rebuilding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/wait-staging-reviewer-rollout.mjs
+      - name: Verify exactly one indexed question and unpublished persistence
+        env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation

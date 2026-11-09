@@ -33,7 +33,8 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
- ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only model omitted the required item-level numeric verification state and asserted a page-image check inside a citation.'],
+ ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
+ ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
  ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
  ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
 ]){
@@ -43,7 +44,7 @@ for(const [id,reason] of [
   assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
  }
 }
-const request={topic:'FRC and O2 consumption in obese patients',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'Which paired changes in functional residual capacity (FRC) AND oxygen consumption explain rapid desaturation after induction in obese patients? Ask for the directions of BOTH physiological changes, using parallel paired alternatives.',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
