@@ -81,7 +81,9 @@ class ExplanationReviewTests(unittest.TestCase):
         calls=[]
         def transport(**kwargs):
             calls.append(kwargs)
-            return {"choices":[{"message":{"content":json.dumps(self.response)}}]}
+            response = copy.deepcopy(self.response)
+            response["supported_groups"][0]["quote_refs"][0]["passage_id"] = "s0"
+            return {"choices":[{"message":{"content":json.dumps(response)}}]}
         adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="reviewer",
                              transport=transport,owner_opt_in=True)
         packet,_=prepare({"source_passages":self.sources})
@@ -91,9 +93,30 @@ class ExplanationReviewTests(unittest.TestCase):
             with self.subTest(extra=extra),self.assertRaises(ValueError):
                 adapter({**request,**extra})
         self.assertEqual(calls,[])
-        adapter(request)
+        result = adapter(request)
+        self.assertEqual(result["supported_groups"][0]["quote_refs"][0]["passage_id"], "p1")
+        sent = json.loads(calls[0]["body"]["messages"][1]["content"])
+        self.assertEqual(sent["source_passages"][0]["passage_id"], "s0")
+        self.assertTrue(all(f["passage_ids"] == ["s0"] for f in sent["fields"]))
+        self.assertEqual(request["source_passages"][0]["passage_id"], "p1")
         self.assertEqual(calls[0]["body"]["max_tokens"],1000)
         self.assertNotIn("key",json.loads(calls[0]["body"]["messages"][1]["content"]))
+
+    def test_foreign_or_original_passage_ids_cannot_bypass_request_aliases(self):
+        import json
+        from item_ai_provider_v2 import make_adapter
+        from item_source_quote_spans_v2 import prepare
+        packet, _ = prepare({"source_passages": self.sources})
+        request = {"step":"explanation_review", "rules_version":"2.0", "auto_publish":False,
+                   "independent":True, "fields":[{**f,"passage_ids":["p1"]} for f in fields_for(self.item)],
+                   "source_passages":packet["source_passages"]}
+        for foreign in ("s1", "p1"):
+            response = copy.deepcopy(self.response)
+            response["supported_groups"][0]["quote_refs"][0]["passage_id"] = foreign
+            adapter = make_adapter(endpoint="https://provider.example/v1", api_key="test", model="reviewer",
+                transport=lambda **kw:{"choices":[{"message":{"content":json.dumps(response)}}]}, owner_opt_in=True)
+            with self.subTest(foreign=foreign), self.assertRaises(ValueError):
+                adapter(request)
 
     def test_provider_outage_preserves_pending_without_clinical_approval(self):
         def broken(payload): raise TimeoutError("private provider text")

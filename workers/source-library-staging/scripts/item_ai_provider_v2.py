@@ -197,6 +197,20 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Flag an explanation that defends an alternative which also satisfies the stem; this is a clinical answer contradiction, not a missing textbook discussion of test design. "
                 "For interleaved multi-column tables, count only explicitly grouped category entries as listed members; nearby prose from a different column is not automatically part of a list. "
                 "No claim of clinical approval or publication is permitted.")
+        if request["step"] == "explanation_review":
+            # Long UUIDs repeated for every field spend the small output quota.
+            # Aliases carry no grading authority; only this request can resolve them.
+            import copy
+            compact = copy.deepcopy(request)
+            source_aliases = {"s" + str(i): p["passage_id"]
+                              for i, p in enumerate(compact["source_passages"])}
+            to_alias = {pid: alias for alias, pid in source_aliases.items()}
+            for passage in compact["source_passages"]:
+                passage["passage_id"] = to_alias[passage["passage_id"]]
+            for field in compact["fields"]:
+                field["passage_ids"] = [to_alias[pid] for pid in field["passage_ids"]]
+            body["messages"][1]["content"] = json.dumps(compact, ensure_ascii=False)
+            body["messages"][0]["content"] += " Return compact JSON. Use the supplied short passage IDs exactly; keep unsupported reasons under 12 words."
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.
         response = transport(endpoint=endpoint,
@@ -231,5 +245,18 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "option_review":
             from item_source_quote_spans_v2 import hydrate
             parsed = hydrate(parsed, request, quote_lookup)
+        if request["step"] == "explanation_review":
+            groups = parsed.get("supported_groups")
+            if isinstance(groups, list):
+                for group in groups:
+                    if not isinstance(group, dict) or not isinstance(group.get("quote_refs"), list):
+                        continue  # Complete response validation remains downstream.
+                    for ref in group["quote_refs"]:
+                        if not isinstance(ref, dict) or not isinstance(ref.get("passage_id"), str):
+                            raise ValueError("Invalid explanatory source alias")
+                        alias = ref["passage_id"]
+                        if alias not in source_aliases:
+                            raise ValueError("Unknown explanatory source alias")
+                        ref["passage_id"] = source_aliases[alias]
         return _bind_blind_response(request, parsed) if request["step"] == "blind_review" else parsed
     return adapter

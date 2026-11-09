@@ -661,3 +661,21 @@ named drug's class membership; class-only evidence cannot supply a missing link
 from model memory. A fourth read-only negative control requires the reviewer to
 reject those unlisted named examples. The original three controls remain.
 No textbook indexing or clinical approval was modified.
+
+
+### Bound explanatory review overhead and control-call pacing
+
+The next read-only controls stopped safely on incomplete provider output
+(run 42689262437). A read-only retry on the same deployment rejected the original
+unsupported claims and accepted the corrected revision, then reached the review
+model's minute quota (42690053714). The explicit regression harness now spaces
+calls 65 seconds apart; production one-retry bounds are unchanged. A subsequent
+first-call incomplete report (42690471217) showed that pacing alone does not
+resolve the response-size variability.
+
+The explanatory adapter now sends request-local short passage aliases and
+restores real passage IDs before complete source-span validation. Unknown or
+foreign aliases fail closed. Exact indexed quotation restoration, field coverage,
+independent judgments, model separation and the 1,000-token ceiling are unchanged.
+Focused tests verify immutable input, restored IDs and rejection of attempted
+alias bypass. No answer choice or clinical verdict is supplied by alias mapping.
