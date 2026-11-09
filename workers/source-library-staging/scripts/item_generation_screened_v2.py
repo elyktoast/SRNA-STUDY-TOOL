@@ -17,7 +17,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
-                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None, explanation_review=None):
+                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None, explanation_review=None, quality_review=None):
     if blind_reviewer is not None and (not callable(blind_reviewer) or not isinstance(generator_model_id, str) or not isinstance(reviewer_model_id, str) or not generator_model_id.strip() or not reviewer_model_id.strip() or generator_model_id.strip() == reviewer_model_id.strip()):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
@@ -199,6 +199,33 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             next_state = "needs_source_review"
         if explanation_report["status"] == "pending":
             screening.setdefault("pending_verifications", []).append("explanation_evidence")
+    quality_issues = []
+    if quality_review is not None:
+        names = ("editorial_quality", "options_only")
+        try:
+            reports = quality_review(generated["item"])
+            if not isinstance(reports, dict) or set(reports) != set(names):
+                raise ValueError("Incomplete board quality review")
+            for name, report in reports.items():
+                if (not isinstance(report, dict) or report.get("status") not in ("pass", "flag", "pending", "not_applicable")
+                        or not isinstance(report.get("issues"), list) or report.get("can_publish") is not False
+                        or report.get("human_review_required") is not True
+                        or report.get("clinical_truth_verified") is not False
+                        or (report["status"] == "flag") != bool(report["issues"])
+                        or (report["status"] == "not_applicable" and (name != "options_only" or format in ("MC", "MS")))):
+                    raise ValueError("Untrusted board quality report")
+        except Exception:
+            reports = {name: {"status":"pending", "issues":[], "can_publish":False,
+                "human_review_required":True, "clinical_truth_verified":False} for name in names}
+        for name, report in reports.items():
+            screening["stages"][name] = report
+            if report["status"] in ("pending", "flag"):
+                screening["screening_complete"] = False
+                if next_state != "needs_source_review":
+                    next_state = "needs_editorial_review"
+            if report["status"] == "pending":
+                screening.setdefault("pending_verifications", []).append(name)
+            quality_issues.extend(report["issues"])
     screening["next_state"] = next_state
     # A failed independent or deterministic screening may trigger one bounded
     # repair. Never retry on missing verification (pending) or provider outages.
@@ -231,7 +258,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     generator_model_id=generator_model_id,
                     reviewer_model_id=reviewer_model_id,
                     semantic_lookup=semantic_lookup,
-                    _verified_candidate=repaired["item"], topic=topic, explanation_review=explanation_review)
+                    _verified_candidate=repaired["item"], topic=topic, explanation_review=explanation_review, quality_review=quality_review)
                 rerun["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_allowed"] = 0
@@ -247,7 +274,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     "requires_human_review": True, "can_publish": False,
                     "database_writes": False, "rewrite_attempts_used": 1}
     return {"item_id": item_id, "item": generated["item"],
-            "generator_issues": explanation_report["issues"] if explanation_report is not None else [], "screening": screening,
+            "generator_issues": (explanation_report["issues"] if explanation_report is not None else []) + quality_issues, "screening": screening,
             "next_state": next_state, "requires_human_review": True,
             "can_publish": False, "database_writes": False,
             "rewrite_attempts_used": rewrite_attempts}

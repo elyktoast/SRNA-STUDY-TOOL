@@ -28,6 +28,8 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
             "pdf_page_start": row["pdf_page_start"],
             "pdf_page_end": row["pdf_page_end"],
             "excerpt": row["excerpt"],
+            "section_heading": row.get("section_heading"),
+            "edition": row.get("edition"),
             "citation_verified": False,
             "citation_type": "physical_pdf_page_1_based",
         })

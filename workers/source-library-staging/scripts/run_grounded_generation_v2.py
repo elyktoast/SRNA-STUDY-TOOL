@@ -45,6 +45,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             or args.objective.split(".")[:2] != [args.domain, args.section]
             or args.format not in ("MC", "MS", "SA", "DD", "HS")):
         raise ValueError("Invalid NCE/SEE blueprint classification")
+    from item_board_quality_v2 import classification
+    classification(args.domain, args.section, args.objective)
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
     if args.execute and env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
@@ -72,7 +74,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
+    quality_requested = blind_requested and explanation_requested
     summary["review_readiness"] = {
+        "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
                    "missing_generator_model" if rewrite_requested else "disabled",
         "blind_review": (
@@ -119,6 +123,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
         "explanation_review_enabled": explanation_requested,
+        "board_quality_contract": "2026-11-09-v1" if quality_requested else None,
         "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
@@ -188,6 +193,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         report = review(item, evidence["sources"],
                         lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))
         return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
+    def quality_review(item):
+        from item_board_quality_v2 import editorial, options_only
+        call = lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload)
+        reports = {"editorial_quality": editorial(item, call), "options_only": options_only(item, call)}
+        return {name: {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
+                for name, report in reports.items()}
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
@@ -227,7 +238,10 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  semantic_lookup=semantic_lookup,
                                  option_reviewer=option_reviewer if option_requested else None,
                                  option_reviewer_model_id=reviewer_model_id if option_requested else None,
-                                 explanation_review=explanation_review if explanation_requested else None)
+                                 explanation_review=explanation_review if explanation_requested else None,
+                                 quality_review=quality_review if quality_requested else None)
+    from item_board_quality_v2 import stamp_checks
+    result["item"] = stamp_checks(result["item"], result["screening"])
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,

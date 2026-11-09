@@ -85,6 +85,16 @@ def _hydrate_indexed_citations(draft, trusted_passages):
                     citations.append({"passage_id": pid, "textbook_id": source["textbook_id"],
                                       "pdf_page": source["pdf_page_start"], "excerpt": source["excerpt"]})
                     cited.add(pid)
+    for citation in citations:
+        source = sources.get(citation.get("passage_id")) if isinstance(citation, dict) else None
+        if (source and citation.get("textbook_id") == source.get("textbook_id")
+                and citation.get("pdf_page") == source.get("pdf_page_start")
+                and isinstance(citation.get("excerpt"), str) and citation["excerpt"]
+                and citation["excerpt"] in source["excerpt"]):
+            citation["printed_page_verified"] = False
+            citation["edition"] = source.get("edition")
+            citation["chapter"] = source.get("section_heading")
+            citation["edition_status"] = "recorded_unverified" if source.get("edition") else "not_recorded"
     return item
 
 

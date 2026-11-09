@@ -180,7 +180,7 @@ class RunnerTests(unittest.TestCase):
         source = {"passage_id":"p1","textbook_id":"t1","pdf_page_start":7,"excerpt":"Trusted source"}
         draft = {"evidence":[],"distractor_evidence":{"A":{"passage_ids":["p1","unknown"]}}}
         result = _hydrate_indexed_citations(draft,[source])
-        self.assertEqual(result["evidence"],[{"passage_id":"p1","textbook_id":"t1","pdf_page":7,"excerpt":"Trusted source"}])
+        self.assertEqual(result["evidence"],[{"passage_id":"p1","textbook_id":"t1","pdf_page":7,"excerpt":"Trusted source", "printed_page_verified":False,"edition":None,"chapter":None,"edition_status":"not_recorded"}])
         self.assertIn("unknown",result["distractor_evidence"]["A"]["passage_ids"])
         self.assertEqual(draft["evidence"],[])
 

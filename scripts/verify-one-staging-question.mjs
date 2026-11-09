@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['2b7f969b-b9f0-4ed4-9131-e84e0b325a37','Full v2.0 audit found obsolete halothane, incorrect airway blueprint classification, an ineffective counterfactual and faulty trap logic.'],
  ['97a2f6e0-e2e9-40a5-bb63-e29827aeff5e','Final source QA found named drug examples absent from the cited class-only passage; requires indexed support for their class membership.'],
  ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
  ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
@@ -69,7 +70,7 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
-const request={topic:'malignant hyperthermia triggering nontriggering agents',page_start:984,page_end:984,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'obese patients oxygen consumption FRC desaturation',page_start:1280,page_end:1280,mode:'NCE',domain:'IV',section:'B',objective:'IV.B.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
@@ -77,6 +78,7 @@ assert.equal(preflight.review_readiness?.blind_review,'configured');
 assert.equal(preflight.review_readiness?.rewrite,'configured');
 assert.equal(preflight.review_readiness?.independent_option_review,'configured');
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
+assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
@@ -92,6 +94,10 @@ assert.equal(saved.draft_id,generated.draft_id);
 assert.equal(saved.status,'pending_review');
 const stages=Object.fromEntries(Object.entries(generated.screening?.stages||{}).map(([name,s])=>[name,s.status]));
 console.log(JSON.stringify({draft_id:generated.draft_id,status:saved.status,published:false,stages,generator_issue_rules:(generated.generator_issues||[]).map(i=>i.rule_id),rewrite_attempts:generated.screening?.rewrite_attempts_used}));
+assert.equal(stages.editorial_quality,'pass','Independent item-writing quality review did not pass');
+assert.equal(stages.options_only,'pass','Repeated options-only cue screening did not pass');
+assert.equal(saved.question?.self_check?.recorded_by||saved.item?.self_check?.recorded_by||generated.item?.self_check?.recorded_by,'trusted_screening');
+assert.equal(generated.item.options.find(o=>generated.item.key.includes(o.id)).error_pattern,null);
 assert.equal(stages.explanation_evidence,'pass','Concept and rationale source review did not pass');
 assert.equal(stages.schema,'pass','Generated schema did not pass');
 assert.equal(stages.deterministic_text,'pass','Deterministic wording screening did not pass');

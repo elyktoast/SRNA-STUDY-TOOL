@@ -227,3 +227,13 @@ test('evidence screening uses 20 passages and generation defaults to 8',()=>{
  assert.match(backend,/"limit": \(8 if live else 20\)/);
  assert.match(ui,/up to 20 per evidence check/);
 });
+
+test('question generation requires an explicit outlined objective instead of a hidden airway default',()=>{
+ assert.ok(!ui.includes('value="III.H.4"'));
+ assert.ok(ui.includes('id="sl-objective-select"'));
+ assert.ok(ui.includes('Choose a learning objective before checking indexed evidence.'));
+ const data=JSON.parse(readFileSync(new URL('../equipment/assets/nbcrna-objectives-v2.json',import.meta.url),'utf8'));
+ assert.equal(data.objectives.find(o=>o.objective==='III.H.4').label,'Airway management · Difficult airway management');
+ assert.equal(data.objectives.find(o=>o.objective==='IV.B.4').label,'Anesthesia for special populations · Obesity');
+ assert.equal(new Set(data.objectives.map(o=>o.objective)).size,data.objectives.length);
+});

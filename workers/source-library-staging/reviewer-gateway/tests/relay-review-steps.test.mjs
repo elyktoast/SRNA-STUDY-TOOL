@@ -36,7 +36,8 @@ function request(step, model, options={}) {
       {role:'user',content:JSON.stringify({
         step, rules_version:'2.0', auto_publish:false,
         ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
-        ...(step==='explanation_review'?{independent:true}:{}),
+        ...(['explanation_review','editorial_review','options_only_review'].includes(step)?{independent:true}:{}),
+        ...options,
       })}],
   });
   const stamp = String(Math.floor(Date.now()/1000));
@@ -314,5 +315,22 @@ test('Qwen explanation audit preserves the established JSON request settings',as
   assert.equal(seen[0].reasoning_effort,undefined);
   assert.equal(seen[1].reasoning_effort,undefined);
   assert.equal(seen[2].reasoning_effort,undefined);
+ }finally{globalThis.fetch=original;}
+});
+
+test('editorial and options-only checks require authorized distinct reviewers',async()=>{
+ const original=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  const configured={...env,AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+  for(const step of ['editorial_review','options_only_review']){
+   assert.equal((await gateway.fetch(request(step,'generator-model'),configured)).status,400);
+   assert.equal((await gateway.fetch(request(step,'reviewer-model',{independent:false}),configured)).status,400);
+  }
+  assert.equal((await gateway.fetch(request('editorial_review','reviewer-model'),env)).status,400);
+  assert.equal((await gateway.fetch(request('options_only_review','reviewer-model'),{...configured,AI_BLIND_REVIEW_OPT_IN:'false'})).status,400);
+  assert.equal(calls,0);
+  for(const step of ['editorial_review','options_only_review'])assert.equal((await gateway.fetch(request(step,'reviewer-model'),configured)).status,200);
+  assert.equal(calls,2);
  }finally{globalThis.fetch=original;}
 });

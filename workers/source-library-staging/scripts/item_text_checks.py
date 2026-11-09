@@ -6,7 +6,8 @@ WORDS = re.compile(r"[A-Za-z0-9]+")
 
 
 def check(item, source_texts=()):
-    issues = []
+    from item_board_quality_v2 import obsolete_issues
+    issues = obsolete_issues(item)
     if item.get("format") not in ("MC", "MS"):
         return issues
     options = item.get("options", [])

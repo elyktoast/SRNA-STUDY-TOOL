@@ -57,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install -r workers/source-library-staging/reviewer-service/requirements.txt
-          for name in test_generation_checkpoint_store_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py test_run_grounded_generation_v2.py test_item_generation_screened_v2.py test_item_grounded_pipeline_v2.py test_explanation_review_v2.py test_source_quote_spans_v2.py; do
+          for name in test_generation_checkpoint_store_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py test_run_grounded_generation_v2.py test_item_generation_screened_v2.py test_item_grounded_pipeline_v2.py test_explanation_review_v2.py test_source_quote_spans_v2.py test_board_quality_v2.py; do
             PYTHONPATH=workers/source-library-staging/scripts python -m unittest discover \
               -s workers/source-library-staging/scripts/tests -p "$name"
           done
@@ -134,6 +134,12 @@ jobs:
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
         run: PYTHONPATH=workers/source-library-staging/scripts python scripts/verify-explanation-review-live.py --confirm-paid-review
+      - name: Explicit board-quality negative regression
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-board-quality]')
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: PYTHONPATH=workers/source-library-staging/scripts python scripts/verify-board-quality-live.py --confirm-paid-review
       - name: Explicit one-question recovery acceptance
         if: github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]')
         env:
