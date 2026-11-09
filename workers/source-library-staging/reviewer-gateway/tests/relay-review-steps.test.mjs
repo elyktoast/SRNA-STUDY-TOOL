@@ -83,62 +83,33 @@ test('relay classifies outbound network exceptions without exposing exception te
 });
 
 
-const geminiEnv={...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',
- AI_GEMINI_MODEL:'gemini-2.5-flash',AI_GEMINI_FALLBACK_MODEL:'gemini-2.5-flash-lite'};
-const okGemini=()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
-async function scenario(handler,configuration=geminiEnv){
- const original=globalThis.fetch, calls=[];
- globalThis.fetch=async(url,options)=>{calls.push({url:String(url),options});return handler(String(url),options,calls.length)};
- try{return {response:await gateway.fetch(request('concept_card','generator-model'),configuration),calls};}
+
+const cloudflareEnv={...env,AI_HYBRID_ENABLED:'true',
+ AI_CLOUDFLARE_ACCOUNT_ID:'test-account',AI_CLOUDFLARE_API_TOKEN:'test-token',
+ AI_CLOUDFLARE_MODEL:'@cf/qwen/qwen3.8-27b'};
+test('concept card uses Cloudflare AI, never Gemini',async()=>{
+ const original=globalThis.fetch,urls=[];
+ globalThis.fetch=async(url)=>{urls.push(String(url));return new Response(JSON.stringify({result:{response:'{}'}}),{status:200});};
+ try{
+  const response=await gateway.fetch(request('concept_card','generator-model'),cloudflareEnv);
+  assert.equal(response.status,200);
+  assert.equal(urls.length,1);
+  assert.ok(urls[0].includes('/ai/run/@cf/qwen/qwen3.8-27b'));
+  assert.ok(!urls[0].includes('googleapis'));
+ }finally{globalThis.fetch=original;}
+});
+test('concept card works without Gemini credentials',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>new Response(JSON.stringify({result:{response:'{}'}}),{status:200});
+ try{assert.equal((await gateway.fetch(request('concept_card','generator-model'),cloudflareEnv)).status,200)}
  finally{globalThis.fetch=original;}
-}
-test('Gemini generation never fetches model catalog',async()=>{
- const {response,calls}=await scenario(()=>okGemini());
- assert.equal(response.status,200);assert.equal(calls.length,1);
- assert.ok(calls[0].url.endsWith('/models/gemini-2.5-flash:generateContent'));
 });
-test('Gemini 429 falls back exactly once to configured alternate',async()=>{
- const {response,calls}=await scenario((url)=>url.includes('flash-lite')?okGemini():new Response('{}',{status:429}));
- assert.equal(response.status,200);assert.equal(calls.length,2);
- assert.ok(calls[1].url.includes('flash-lite:generateContent'));
-});
-test('Gemini 404 falls back to configured alternate',async()=>{
- const {response,calls}=await scenario((url)=>url.includes('flash-lite')?okGemini():new Response('{}',{status:404}));
- assert.equal(response.status,200);assert.equal(calls.length,2);
-});
-test('Gemini 429 without alternate does not retry',async()=>{
- const {response,calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:''});
- assert.equal(response.status,502);assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');assert.equal(calls.length,1);
-});
-test('Gemini duplicate alternate does not retry',async()=>{
- const {calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:'gemini-2.5-flash'});
- assert.equal(calls.length,1);
-});
-test('Gemini invalid alternate never contacts untrusted model',async()=>{
- const {calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:'../../bad'});
- assert.equal(calls.length,1);
-});
-test('Gemini 403 never falls back',async()=>{
- const {response,calls}=await scenario(()=>new Response('{}',{status:403}));
- assert.equal((await response.json()).rule,'PROVIDER_FORBIDDEN');assert.equal(calls.length,1);
-});
-test('Gemini 500 never falls back',async()=>{
- const {response,calls}=await scenario(()=>new Response('{}',{status:500}));
- assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
-});
-test('Gemini timeout never falls back',async()=>{
- const {response,calls}=await scenario(()=>{const e=new Error('timed out');e.name='TimeoutError';throw e;});
- assert.equal((await response.json()).error,'relay_timeout');assert.equal(calls.length,1);
-});
-test('Gemini malformed success never falls back',async()=>{
- const {response,calls}=await scenario(()=>new Response('not json',{status:200}));
- assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
-});
-test('Gemini alternate 429 stops after second attempt',async()=>{
- const {response,calls}=await scenario(()=>new Response('{}',{status:429}));
- assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');assert.equal(calls.length,2);
-});
-test('Gemini empty candidate never falls back',async()=>{
- const {response,calls}=await scenario(()=>new Response('{}',{status:200}));
- assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
+test('Cloudflare model 404 does not retry or call Gemini',async()=>{
+ const original=globalThis.fetch,urls=[];
+ globalThis.fetch=async(url)=>{urls.push(String(url));return new Response('{}',{status:404});};
+ try{
+  const response=await gateway.fetch(request('concept_card','generator-model'),cloudflareEnv);
+  assert.equal((await response.json()).rule,'PROVIDER_MODEL_UNAVAILABLE');
+  assert.equal(urls.length,1);
+ }finally{globalThis.fetch=original;}
 });

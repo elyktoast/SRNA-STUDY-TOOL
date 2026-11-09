@@ -62,10 +62,10 @@ async function relayGroq(request,env){
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
-  const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
+  const provider=hybrid&&['concept_card','rationale'].includes(step.step)?'cloudflare':'groq';
   activeProvider=provider;
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
-  if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
+  if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   const input=payload.messages[0].content+'\n'+payload.messages[1].content;
   const target=provider==='gemini'?'https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(env.AI_GEMINI_MODEL)+':generateContent':provider==='cloudflare'?'https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/run/'+env.AI_CLOUDFLARE_MODEL:'https://api.groq.com/openai/v1/chat/completions';
   const providerHeaders=provider==='gemini'?{'x-goog-api-key':env.AI_GEMINI_API_KEY,'Content-Type':'application/json'}:provider==='cloudflare'?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'}:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY,'Content-Type':'application/json'};
@@ -213,7 +213,7 @@ export default {
     }
    }
    if(env.AI_HYBRID_ENABLED==='true'){
-    const keys=['AI_GEMINI_API_KEY','AI_GEMINI_MODEL','AI_CLOUDFLARE_ACCOUNT_ID','AI_CLOUDFLARE_API_TOKEN','AI_CLOUDFLARE_MODEL'];
+    const keys=['AI_CLOUDFLARE_ACCOUNT_ID','AI_CLOUDFLARE_API_TOKEN','AI_CLOUDFLARE_MODEL'];
     if(env.AI_GENERATION_OPT_IN!=='true'||!keys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
      return respond(503,origin,'{"error":"staging_not_configured"}');
     }
