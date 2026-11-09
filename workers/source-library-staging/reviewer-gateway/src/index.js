@@ -377,12 +377,12 @@ export default {
     };
     const providers=await Promise.all([
      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
-     probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_HYBRID_ENABLED==='true'&&env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null)
+     env.AI_HYBRID_ENABLED==='true'?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
     ]);
     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
     const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';
     const relayOK=upstream.ok&&containerResult.provider_status===200;
-    return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:relayOK?'OK':'UNAVAILABLE',container_relay_rule:relayOK?'OK':upstream.ok?'PROVIDER_'+containerResult.provider_status:relayRule,metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK'),generation_ready:false}));
+    return respond(200,origin,JSON.stringify({check:'hybrid_provider_readiness',generation_performed:false,providers,container_relay:relayOK?'OK':'UNAVAILABLE',container_relay_rule:relayOK?'OK':upstream.ok?'PROVIDER_'+containerResult.provider_status:relayRule,metadata_ready:relayOK&&providers.every(provider=>provider.state==='OK'||provider.state==='DISABLED'),generation_ready:false}));
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){

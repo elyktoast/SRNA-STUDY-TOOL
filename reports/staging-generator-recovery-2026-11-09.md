@@ -304,3 +304,19 @@ The live API remains single-question and single-selected-textbook. It does not
 currently implement cross-textbook corroboration or queued 25-question batches.
 Only controlled recall MC generation has been verified; consistent application/
 analysis quality and multiple formats have not been established by a mixed pilot.
+
+### Cloudflare concept latency and Groq-only authoring
+
+The PR #180 deployment and authenticated smoke passed, but its fresh run timed
+out at concept_card before rationale (09:01 AM Eastern on November 9). No new
+draft was saved by that interrupted request. This confirms that authoring latency
+is not confined to the Cloudflare rationale step.
+
+The next configuration disables AI_HYBRID_ENABLED for this staging recovery path,
+using the already implemented Groq route for concept, draft and rationale. The
+separate Qwen model still performs both answer-blind and indexed-source option
+reviews through Groq. No timeout, output cap, validation rule or approval state
+is relaxed. Cloudflare remains the hosting/gateway/container platform; Cloudflare
+AI authoring is explicitly disabled. Metadata diagnostics report the disabled
+provider without making a request to it, and only enabled providers gate metadata
+readiness. Gemini remains disabled.
