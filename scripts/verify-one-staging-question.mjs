@@ -38,6 +38,7 @@ for(const [id,reason] of [
  ['273d8969-5957-4aec-9c4d-7c46548de822','Option evidence remained unsupported after the single rewrite; quality validation failed.'],
  ['217c7f66-65ff-4c4a-849a-09598f6c26c1','The single rewrite still relied on source silence to reject distractors; quality validation failed.'],
  ['bb4d1576-3ca2-4c7d-b539-56520e861957','The generated draft retained an answer-length cue and did not complete exact-quote source adjudication.'],
+ ['0e4a82b6-0d86-49c0-9868-17ac8f365d3c','The earlier explanation review and short-label wording screening did not pass.'],
  ['7bbe5981-ca10-4da8-a734-5dbbbda8d0d1','Ambiguous single-answer question had two source-supported answers; the earlier bounded repair was rate-limited.'],
  ['83916827-3192-45ab-806e-c81e2f26ba04','Independent source review was rate-limited; the draft also introduced mechanistic background beyond its supplied classification excerpt.'],
  ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
