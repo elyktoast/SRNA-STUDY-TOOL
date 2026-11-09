@@ -1,4 +1,4 @@
-import json, os, psycopg
+import json, os, psycopg, unicodedata
 from item_ai_https_transport_v2 import make_transport, TransportError
 from item_ai_provider_v2 import make_adapter
 from item_option_retrieval_audit_v2 import audit
@@ -26,6 +26,10 @@ def reviewer(payload):
     except TransportError as e:
         print(json.dumps({"rule":e.rule,"retry_after_seconds":e.retry_after_seconds,"remaining_requests":e.remaining_requests,"remaining_tokens":e.remaining_tokens}))
         raise
+    for j in response["judgments"]:
+        for quote in j.get("quotes",[]):
+            excerpts=[p["excerpt"] for p in payload["source_passages"] if p["passage_id"] in j["passage_ids"]]
+            print(json.dumps({"option_id":j["option_id"],"quote_length":len(quote),"exact":any(quote in e for e in excerpts),"nfkc":any(unicodedata.normalize("NFKC",quote) in unicodedata.normalize("NFKC",e) for e in excerpts),"whitespace_only":any(" ".join(quote.split()) in " ".join(e.split()) for e in excerpts)}))
     return [{**j,"contradiction_found":j["source_conflict_found"]} for j in response["judgments"]]
 report=run(item,retrieval,reviewer,source_passages=list(passages.values()),generator_model_id="openai/gpt-oss-120b",reviewer_model_id="qwen/qwen3.8-27b",require_quotes=True)
 print(json.dumps({"status":report["status"],"provider_rule":report.get("provider_rule"),"issues":report.get("issues")}))
