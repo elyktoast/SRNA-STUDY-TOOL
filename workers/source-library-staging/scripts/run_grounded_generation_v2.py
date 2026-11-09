@@ -154,8 +154,33 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
     def rewrite(request):
-        return adapter({**request, "step": "rewrite",
-                        "rules_version": "2.0", "auto_publish": False})
+        import copy
+        import time
+        from item_ai_https_transport_v2 import TransportError
+        from item_generation_runner_v2 import _hydrate_indexed_citations
+        references = {c.get("passage_id") for c in request.get("item", {}).get("evidence", [])
+                      if isinstance(c, dict)}
+        for entry in request.get("item", {}).get("distractor_evidence", {}).values():
+            if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
+                references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
+        trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
+        compact = copy.deepcopy(request)
+        for citation in compact.get("item", {}).get("evidence", []):
+            if isinstance(citation, dict):
+                citation.pop("excerpt", None)
+        payload = {**compact, "trusted_evidence": trusted, "step": "rewrite",
+                   "rules_version": "2.0", "auto_publish": False}
+        try:
+            candidate = adapter(payload)
+        except TransportError as exc:
+            # An explicit 429 generated no candidate. Wait once only when the
+            # provider supplies a bounded Retry-After; never retry ambiguity.
+            delay = exc.retry_after_seconds
+            if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
+                raise
+            time.sleep(delay)
+            candidate = adapter(payload)
+        return _hydrate_indexed_citations(candidate, evidence["sources"])
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,

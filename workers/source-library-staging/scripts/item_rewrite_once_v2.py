@@ -17,11 +17,13 @@ def attempt_once(original, issues, rewrite, validate):
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
                  "objective", "format", "model", "status")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
+               "protected_metadata": {field: deepcopy(original.get(field)) for field in immutable},
+               "required_output_keys": list(original),
                "max_rewrites": 1, "requires_human_review": True,
                "repair_instructions": (
-                   "Fix only the reported rule-ID issues. Preserve the question's "
+                   "Fix only the reported rule-ID issues. Copy every protected_metadata field EXACTLY, including null values, and preserve the question's "
                    "clinical meaning, answer key, protected metadata, concept "
-                   "evidence IDs, and all unaffected fields. For R-2.5, use only "
+                   "evidence IDs, and all unaffected fields. For R-6.8, leave the keyed option text EXACTLY unchanged and balance the incorrect options to similar lengths using evidence-grounded single-flaw alternatives; never shorten or edit the protected key. For R-2.5, use only "
                    "exact verbatim excerpts and matching source IDs/pages from "
                    "trusted evidence; never invent a citation. For R-12.4, give "
                    "every option an evidence-grounded verdict, valid passage IDs, "

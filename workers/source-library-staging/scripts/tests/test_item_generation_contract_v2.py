@@ -25,7 +25,7 @@ class ContractTests(unittest.TestCase):
                              concept_card={"objective": "III.H.4"})
         instructions = request["instructions"]
         for requirement in ("sa, dd, and hs", "self_check", "stats",
-                            "excerpt copied verbatim", "distractor_evidence",
+                            "trusted server attaches the exact indexed text", "distractor_evidence",
                             "supports_key", "refutes_distractor",
                             "human review"):
             self.assertIn(requirement, instructions)
@@ -36,8 +36,8 @@ class ContractTests(unittest.TestCase):
                              concept_card={"objective": "III.H.4"})
         instructions = request["instructions"]
         for requirement in (
-            "character-for-character", "line breaks and hyphenation",
-            "exact substring", "do not guess a pdf_page",
+            "Omit excerpt", "verifying all three source identifiers",
+            "OBJECTS ONLY", "do not guess a pdf_page",
             "same item_draft response", "keys exactly match the option IDs",
             "affirmative support or contradiction", "negatively worded NOT/EXCEPT",
         ):
@@ -74,6 +74,13 @@ class ContractTests(unittest.TestCase):
     def test_schema_validation(self):
         self.assertEqual(validate_complete_item(sample()), [])
         self.assertTrue(validate_complete_item({"rules_version": "1.0"}))
+
+    def test_selected_topic_is_explicit_model_scope_without_changing_evidence(self):
+        request=build_step("concept_card",**BASE,topic="obese FRC consumption")
+        self.assertEqual(request["topic"],"obese FRC consumption")
+        self.assertIn("Focus on the selected topic",request["instructions"])
+        self.assertEqual(request["evidence"],EVIDENCE)
+        self.assertFalse(request["auto_publish"])
 
 if __name__ == "__main__":
     unittest.main()

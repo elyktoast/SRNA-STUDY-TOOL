@@ -44,6 +44,45 @@ def _complete_nonclinical_schema_fields(draft):
     return item
 
 
+def _hydrate_indexed_citations(draft, trusted_passages):
+    """Materialize missing quotations only from exactly bound indexed references.
+
+    Never replace a supplied quote, repair a wrong source/page, or treat a
+    reference as proof of clinical support. All existing validators still run.
+    """
+    import copy
+    item = copy.deepcopy(draft)
+    sources = {p["passage_id"]: p for p in trusted_passages}
+    citations = item.get("evidence")
+    if not isinstance(citations, list):
+        return item
+    for citation in citations:
+        if not isinstance(citation, dict) or "excerpt" in citation:
+            continue
+        source = sources.get(citation.get("passage_id"))
+        if (source is not None
+                and citation.get("textbook_id") == source.get("textbook_id")
+                and type(citation.get("pdf_page")) is int
+                and citation["pdf_page"] == source.get("pdf_page_start")):
+            citation["excerpt"] = source["excerpt"]
+    # Option evidence already names its source IDs. Materialize any omitted
+    # citations from those trusted references; unknown IDs remain unresolved.
+    cited = {c.get("passage_id") for c in citations if isinstance(c, dict)}
+    mapping = item.get("distractor_evidence")
+    if isinstance(mapping, dict):
+        for entry in mapping.values():
+            refs = entry.get("passage_ids") if isinstance(entry, dict) else None
+            if not isinstance(refs, list):
+                continue
+            for pid in refs:
+                source = sources.get(pid) if isinstance(pid, str) else None
+                if source and pid not in cited and type(source.get("pdf_page_start")) is int:
+                    citations.append({"passage_id": pid, "textbook_id": source["textbook_id"],
+                                      "pdf_page": source["pdf_page_start"], "excerpt": source["excerpt"]})
+                    cited.add(pid)
+    return item
+
+
 def _repair_ellipsized_citations(draft, trusted_passages):
     """Replace only provably ordered, unique ellipsis spans with verbatim source text.
 
@@ -80,7 +119,7 @@ def _repair_ellipsized_citations(draft, trusted_passages):
 
 def generate_one(adapter, *, mode, domain, section, objective, evidence,
                  format="MC", item_id, checkpoint=None, on_checkpoint=None,
-                 generator_model_id=None):
+                 generator_model_id=None, topic=None):
     if not callable(adapter):
         raise ValueError("Explicit authenticated model adapter required")
     if not isinstance(item_id, str) or not item_id.strip():
@@ -96,7 +135,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if len(set(passage_ids)) != len(passage_ids):
         raise ValueError("Duplicate passage IDs in evidence bundle")
     args = dict(mode=mode, domain=domain, section=section,
-                objective=objective, evidence=evidence)
+                objective=objective, evidence=evidence, topic=topic)
     if checkpoint is not None and (not isinstance(checkpoint, dict) or set(checkpoint) - {"concept_card", "draft"} or ("draft" in checkpoint and "concept_card" not in checkpoint)):
         raise ValueError("Invalid resume checkpoint")
     if on_checkpoint is not None and not callable(on_checkpoint):
@@ -139,7 +178,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     # The model must not be allowed to overwrite identifiers, source, or approval.
-    item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(draft, evidence)), "item_id": item_id, "rules_version": "2.0",
+    item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(_hydrate_indexed_citations(draft, evidence), evidence)), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,
             "objective": objective, "format": format,
             "concept_card": concept, "rationale": rationale,

@@ -103,5 +103,36 @@ class ProviderTests(unittest.TestCase):
         with self.assertRaises(ProviderError):
             adapter(REQUEST)
 
+    def test_exact_rewrite_item_envelope_unwraps_without_synthesizing_metadata(self):
+        item = {"item_id": "q1", "status": "draft", "key": ["B"]}
+        adapter = make_adapter(**self.config(transport=lambda **kw: {
+            "choices": [{"message": {"content": json.dumps({"item": item})}}]}))
+        request = {"step": "rewrite", "rules_version": "2.0", "auto_publish": False,
+                   "max_rewrites": 1, "requires_human_review": True,
+                   "item": item, "issues": [{"rule_id": "R-2.4"}]}
+        self.assertEqual(adapter(request), item)
+
+    def test_rewrite_envelope_with_extra_claims_is_not_unwrapped(self):
+        envelope = {"item": {"item_id": "q1"}, "approved": True}
+        adapter = make_adapter(**self.config(transport=lambda **kw: {
+            "choices": [{"message": {"content": json.dumps(envelope)}}]}))
+        request = {"step": "rewrite", "rules_version": "2.0", "auto_publish": False,
+                   "max_rewrites": 1, "requires_human_review": True,
+                   "item": {"item_id": "q1"}, "issues": [{"rule_id": "R-2.4"}]}
+        self.assertEqual(adapter(request), envelope)
+
+    def test_rewrite_protocol_envelope_requires_exact_safe_values(self):
+        item = {"item_id": "q1", "status": "draft", "key": ["B"]}
+        request = {"step": "rewrite", "rules_version": "2.0", "auto_publish": False,
+                   "max_rewrites": 1, "requires_human_review": True,
+                   "item": item, "issues": [{"rule_id": "R-6.8"}]}
+        for extra,unwrap in [({"rules_version":"2.0","auto_publish":False},True),
+                             ({"rules_version":"wrong"},False),({"can_publish":True},False),
+                             ({"max_rewrites":2},False),({"auto_publish":0},False)]:
+            envelope={"item":item,**extra}
+            adapter=make_adapter(**self.config(transport=lambda **kw: {
+                "choices":[{"message":{"content":json.dumps(envelope)}}]}))
+            self.assertEqual(adapter(request),item if unwrap else envelope)
+
 if __name__ == "__main__":
     unittest.main()

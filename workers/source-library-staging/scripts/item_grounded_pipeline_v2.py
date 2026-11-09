@@ -64,7 +64,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
         rewrite=rewrite, semantic_lookup=semantic_lookup,
-        review_repair=review_repair)
+        review_repair=review_repair, topic=topic)
     # Independent retrieval is diagnostic only: finding a passage is not proof
     # that it supports the key or refutes an alternative.
     option_audit = None
