@@ -305,7 +305,7 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
  }finally{globalThis.fetch=original;}
 });
 
-test('Qwen explanation audit uses low reasoning without changing blind or option reviewer settings',async()=>{
+test('Qwen explanation audit preserves the established JSON request settings',async()=>{
  const original=globalThis.fetch,model='qwen/qwen3.8-27b',seen=[];
  globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
  try{
@@ -313,6 +313,6 @@ test('Qwen explanation audit uses low reasoning without changing blind or option
   for(const step of ['blind_review','option_review','explanation_review'])assert.equal((await gateway.fetch(request(step,model),configured)).status,200);
   assert.equal(seen[0].reasoning_effort,undefined);
   assert.equal(seen[1].reasoning_effort,undefined);
-  assert.equal(seen[2].reasoning_effort,'low');
+  assert.equal(seen[2].reasoning_effort,undefined);
  }finally{globalThis.fetch=original;}
 });

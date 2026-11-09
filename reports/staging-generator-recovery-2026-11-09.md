@@ -631,3 +631,15 @@ confirm that blind and option settings are unchanged by this mode.
 Read-only explanation regressions can now be explicitly triggered separately
 from a paid question-generation acceptance. This allows verification of the
 reviewer without immediately consuming the same minute quota before generation.
+
+
+### Provider reasoning-mode request rejected; retain established Qwen settings
+
+The read-only regression run 42685953361 stopped on an HTTP 400 for the Qwen
+request with explicit low reasoning. No new question was generated. The request
+change is removed: blind, option and explanation calls retain the established
+Qwen JSON settings, while explicit field polarity and the quoted exclusivity
+guard provide the new review contract. Fictional-variable logic examples clarify
+that a correctly refuted misconception and direct teaching application are valid,
+while an unsupported receptor mechanism is not. Actual fields still require
+complete source-span coverage; the negative/positive controls are unchanged.
