@@ -347,3 +347,35 @@ list, and its corrected output is checked for those issues too. This preserves
 the one-attempt cap, protected key/text, and the existing wording threshold.
 Negative tests cover synthesized quotes and the single-rewrite issue union.
 No cross-book search or bulk generation was enabled by these corrections.
+
+### Bounded independent review context and explicit rate-limit handling
+
+PR #182's live generation completed in about six seconds and saved draft
+83916827-3192-45ab-806e-c81e2f26ba04. Schema, wording, math, evidence and answer-blind
+checks passed without a rewrite. Source adjudication remained pending because
+Groq returned an explicit 429, verified in sanitized relay telemetry. This is not
+reported as a completed verification. Manual inspection also found background
+mechanistic claims beyond the supplied classification table, so it is not the
+final accepted question.
+
+Independent retrieval now keeps the highest-ranked option-classification passage
+and a separately retrieved topic passage, rather than sending many OR-ranked
+matches. The topic query is cached within the request. All searches remain scoped
+to the authenticated owner's selected textbook. The live MH table was verified as
+the top result for the topic, while drug-class searches supply the other pages.
+Required quote validation, full option coverage, source-conflict handling and
+human-review gates are unchanged. Failed searches remain pending.
+
+The reviewer now shares the rewrite's bounded handling for explicit 429 responses:
+wait once only with server Retry-After of 1–60 seconds, then retry the declined
+request once. Ambiguous timeouts, missing/oversized delays and second failures
+are not retried. Sanitized provider categories persist when review cannot finish.
+Tests verify bounded attempts, no timeout retries and independently retrieved
+classification/topic provenance. Authoring instructions also explicitly limit
+background claims to supplied evidence and distinguish factual recall from an
+actual clinical crisis.
+
+The user has deferred larger batches and cross-textbook sourcing. The current
+stop condition is one nice, source-supported unpublished question completing the
+automated generation/verification/repair/recheck cycle. Full semantic duplicate
+coverage and human approval remain outside that stop condition and stay pending.

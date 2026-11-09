@@ -17,6 +17,20 @@ from item_grounded_pipeline_v2 import generate_from_index
 from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
 
 
+def _call_with_bounded_rate_wait(adapter, payload):
+    """Retry once only after an explicit 429 with a bounded server delay."""
+    import time
+    from item_ai_https_transport_v2 import TransportError
+    try:
+        return adapter(payload)
+    except TransportError as exc:
+        delay = exc.retry_after_seconds
+        if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
+            raise
+        time.sleep(delay)
+        return adapter(payload)
+
+
 def execute(conn, args, environ=None, *, semantic_lookup=None):
     env = os.environ if environ is None else environ
     if semantic_lookup is not None and not callable(semantic_lookup):
@@ -140,7 +154,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             model=reviewer_model_id, transport=transport,
             owner_opt_in=True, staging=True)
         def blind_reviewer(payload):
-            return reviewer_adapter({**payload, "step": "blind_review",
+            return _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "blind_review",
                                      "blind": True, "rules_version": "2.0",
                                      "auto_publish": False})
     else:
@@ -153,7 +167,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             request_hash=request_hash, evidence_hash=evidence_hash,
             stage=stage, value=value)
     def option_reviewer(payload):
-        response = reviewer_adapter({**payload, "step": "option_review", "blind": True,
+        response = _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "option_review", "blind": True,
                                      "rules_version": "2.0", "auto_publish": False})
         if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
             raise ValueError("Independent option reviewer returned invalid judgments")
@@ -167,8 +181,6 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
     def rewrite(request):
         import copy
-        import time
-        from item_ai_https_transport_v2 import TransportError
         from item_generation_runner_v2 import _hydrate_indexed_citations
         references = {c.get("passage_id") for c in request.get("item", {}).get("evidence", [])
                       if isinstance(c, dict)}
@@ -182,16 +194,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 citation.pop("excerpt", None)
         payload = {**compact, "trusted_evidence": trusted, "step": "rewrite",
                    "rules_version": "2.0", "auto_publish": False}
-        try:
-            candidate = adapter(payload)
-        except TransportError as exc:
-            # An explicit 429 generated no candidate. Wait once only when the
-            # provider supplies a bounded Retry-After; never retry ambiguity.
-            delay = exc.retry_after_seconds
-            if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
-                raise
-            time.sleep(delay)
-            candidate = adapter(payload)
+        candidate = _call_with_bounded_rate_wait(adapter, payload)
         return _hydrate_indexed_citations(candidate, evidence["sources"])
     result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
                                  mode=args.mode, domain=args.domain,
