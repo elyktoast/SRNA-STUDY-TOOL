@@ -210,3 +210,24 @@ test('revision routes permit authenticated GET and guarded POST only',async()=>{
  assert.equal((await request(path,{method:'POST',headers:{'Content-Type':'text/plain'}})).status,400);
  assert.equal((await request(path,{method:'POST',headers:{Origin:'https://srnastudytool.com','Content-Type':'application/json'}})).status,403);
 });
+
+test('authenticated indexed textbook catalog accepts JSON without PDF attestation headers',async()=>{
+ const books=[{id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d',title:'Indexed book'}];
+ const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  assert.equal(new URL(req.url).pathname,'/generation/textbooks');
+  assert.equal(req.method,'GET');
+  return Response.json({textbooks:books});
+ }})}};
+ const url='https://gateway.example/generation/textbooks';
+ const response=await gateway.fetch(new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+ assert.equal(response.status,200);
+ assert.deepEqual(await response.json(),{textbooks:books});
+ assert.equal((await gateway.fetch(new Request(url+'?path=other',{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated)).status,400);
+ assert.equal((await gateway.fetch(new Request(url,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated)).status,405);
+});
+test('PDF review routes still require attestation header and source digest',async()=>{
+ const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({source_sha256:'a'.repeat(64),pdf_page_count:2,approval_enabled:false})})}};
+ const response=await gateway.fetch(new Request(base,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+ assert.equal(response.status,502);
+ assert.equal((await response.json()).error,'unsafe_upstream');
+});
