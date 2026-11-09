@@ -48,4 +48,12 @@ def check(item, trusted_passages):
                 "no mention of", "absence of evidence", "not discussed in the passage")):
             issues.append({"rule_id": "R-2.4", "message":
                            "Option " + str(option_id) + " relies on source silence rather than demonstrated falsehood"})
+        if option_id not in keys and isinstance(explanation, str) and isinstance(refs, list):
+            # A true contributing mechanism cannot become a false distractor
+            # merely by inventing a source hierarchy that the passage lacks.
+            ranking = ("primary", "secondary", "dominant", "principal", "main factor", "most important")
+            source_text = " ".join(indexed[pid]["excerpt"] for pid in refs if pid in indexed).casefold()
+            if any(term in explanation.casefold() for term in ranking) and not any(term in source_text for term in ranking):
+                issues.append({"rule_id": "R-2.4", "message":
+                               "Option " + str(option_id) + " uses an unsupported source ranking to dismiss an alternative"})
     return issues

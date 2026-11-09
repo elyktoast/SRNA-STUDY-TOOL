@@ -47,5 +47,13 @@ class EvidenceTests(unittest.TestCase):
         x["distractor_evidence"]["B"]["explanation"]="The passage does not endorse the proposed duration."
         self.assertTrue(any(issue["rule_id"]=="R-2.4" for issue in check(x,SOURCE)))
 
+    def test_a_second_true_mechanism_cannot_be_dismissed_by_invented_ranking(self):
+        x=item()
+        x["distractor_evidence"]["C"]["explanation"]="Higher oxygen consumption contributes, but reduced FRC is the primary factor and consumption is secondary."
+        sources=[{"passage_id":"p1","excerpt":"Rapid desaturation results from increased oxygen consumption and decreased FRC."}]
+        self.assertTrue(any(issue["rule_id"]=="R-2.4" and "ranking" in issue["message"] for issue in check(x,sources)))
+        sources[0]["excerpt"]="The primary factor is reduced FRC; increased consumption is secondary."
+        self.assertFalse(any("ranking" in issue["message"] for issue in check(x,sources)))
+
 if __name__ == "__main__":
     unittest.main()
