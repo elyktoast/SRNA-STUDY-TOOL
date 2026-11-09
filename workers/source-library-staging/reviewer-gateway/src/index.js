@@ -54,7 +54,7 @@ async function relayGroq(request,env){
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
-  const provider=hybrid&&['concept_card','rationale'].includes(step.step)?'cloudflare':'groq';
+  const provider=hybrid&&step.step==='concept_card'?'cloudflare':'groq';
   activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');

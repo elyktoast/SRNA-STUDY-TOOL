@@ -60,7 +60,8 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  const verified=await call('/generation/drafts/'+recoveredDraft+'/revisions');
  assert.equal(verified.current_question.concept_card.relevance,relevance);
  assert.deepEqual(verified.current_question.key,revisionState.current_question.key);
- assert.deepEqual(verified.current_question.evidence,revisionState.current_question.evidence);
+ const digest=async value=>Buffer.from(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(value)))).toString('hex');
+ assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
 const request={topic:'malignant hyperthermia triggering nontriggering agents',page_start:984,page_end:984,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
