@@ -133,6 +133,44 @@ test('Groq drafting retains original request without Qwen-specific settings',asy
  try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
  finally{globalThis.fetch=original;}
 });
+test('GPT-OSS drafting and rewriting request bounded JSON with low reasoning effort',async()=>{
+ const original=globalThis.fetch;
+ const model='openai/gpt-oss-120b';
+ globalThis.fetch=async(url,options)=>{
+  assert.ok(String(url).includes('api.groq.com'));
+  const body=JSON.parse(options.body);
+  assert.deepEqual(body.response_format,{type:'json_object'});
+  assert.equal(body.reasoning_effort,'low');
+  assert.equal(body.max_tokens,1024);
+  assert.equal(body.chat_template_kwargs,undefined);
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{
+  for(const step of ['item_draft','rewrite'])assert.equal((await gateway.fetch(request(step,model),{...cloudflareEnv,AI_GENERATOR_MODEL:model})).status,200);
+ }finally{globalThis.fetch=original;}
+});
+test('Groq truncated JSON is rejected before reaching the Python JSON parser',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"stem":'},finish_reason:'length'}]});
+ try{
+  const response=await gateway.fetch(request('item_draft','generator-model'),env);
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).reason,'provider_incomplete');
+ }finally{globalThis.fetch=original;}
+});
+test('distinct Groq Qwen blind reviewer requests JSON without GPT-specific reasoning controls',async()=>{
+ const original=globalThis.fetch,model='qwen/qwen3.8-27b';
+ globalThis.fetch=async(url,options)=>{
+  assert.ok(String(url).includes('api.groq.com'));
+  const body=JSON.parse(options.body);
+  assert.deepEqual(body.response_format,{type:'json_object'});
+  assert.equal(body.reasoning_effort,undefined);
+  assert.equal(JSON.parse(body.messages[1].content).blind,true);
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('blind_review',model),{...cloudflareEnv,AI_REVIEWER_MODEL:model})).status,200);}
+ finally{globalThis.fetch=original;}
+});
 test('Cloudflare model 404 does not retry or call Gemini',async()=>{
  const original=globalThis.fetch,urls=[];
  globalThis.fetch=async(url)=>{urls.push(String(url));return new Response('{}',{status:404});};

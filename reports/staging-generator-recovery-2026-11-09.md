@@ -64,4 +64,23 @@ not settle. Four offline regressions cover the early-ready window, old image,
 active rollout and invalid metadata. This is a settling criterion, not a claim
 that Wrangler itself waits for container replacement.
 
-Full live acceptance still requires verification after this deployment fix.
+## Groq drafting output budget
+
+The settling gate passed and authenticated smoke succeeded on version
+e910f323-1b49-441c-b381-16e485cb809c. The second acceptance stayed up but failed
+at item_draft with PROVIDER_RESPONSE after Groq HTTP 200.
+
+An isolated request through the signed internal relay reproduced GPT-OSS
+finish_reason=length, exactly 2,600 completion tokens, and invalid JSON
+(6,083 ms). A second immediate request received an explicit rate-limit response;
+it was not silently retried. A later candidate-only probe using JSON-object mode
+and low reasoning effort passed with all four options and their evidence-map
+entries, finish_reason=stop, 1,100 completion tokens, and valid JSON (2,931 ms).
+The token budget stayed at 2,600.
+
+The gateway now applies those verified settings to Groq GPT-OSS generation and
+rewrite requests, requests JSON for the distinct Groq Qwen reviewer, and rejects
+truncated Groq output before it becomes an ambiguous Python parsing failure.
+The diagnostic probes do not run rationale, screening, persistence or publication.
+
+Full live acceptance still requires verification after the drafting fix.

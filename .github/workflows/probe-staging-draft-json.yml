@@ -1,0 +1,25 @@
+name: Isolated staging draft JSON probe
+on:
+  push:
+    branches: [fix/staging-groq-json-recovery]
+    paths:
+      - 'workers/source-library-staging/scripts/probe_staging_draft_json_v2.py'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'psycopg[binary]>=3.2,<4'
+      - name: Compare two bounded signed drafting requests without saving
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+          CONFIRM_STAGING_DRAFT_PROBE: 'true'
+        run: python workers/source-library-staging/scripts/probe_staging_draft_json_v2.py
