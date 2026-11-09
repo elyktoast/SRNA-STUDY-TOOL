@@ -78,7 +78,8 @@ async function relayGroq(request,env){
      next=data.nextPageToken||'';if(!next)break;
     }
    }catch{}
-   candidates=labels.map(label=>discovered.get(label)).filter(Boolean);
+   candidates=[...new Set([...labels.map(label=>discovered.get(label)).filter(Boolean), 'models/'+env.AI_GEMINI_MODEL])];
+   // The configured, validated model is the last fallback when preferred display names are absent.
    if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    for(const model of candidates){
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
