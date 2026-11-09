@@ -1,51 +1,68 @@
 # Staging generator recovery
 
-## Current verified result — 2026-11-09 15:34 UTC
+## Current verified result — 2026-11-09
 
-The requested single-question milestone is complete. One authenticated,
-textbook-indexed staging generation passed schema, wording, math, indexed-evidence,
-independent blind-answer and independent option-source checks, and persisted
-unpublished. A final source-only editorial correction was saved as an immutable
-revision and revalidated through the existing source/schema guards.
+The single-question recovery milestone and automated explanation-source follow-up
+are complete. A fresh authenticated staging question passed the complete
+configured automated path and was saved unpublished, with no manual question
+edits and no rewrite needed in this run. The final fix is consolidated in
+[PR #188](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/188), squash-merged as
+`132d565aa8793b2d7b3544cf07cde9d35e7bf0de`.
 
-- Draft: `167026ce-7c1c-489f-8c4b-28255ac78ef8`.
-- Current revision: `e9ce4d51-8d6d-434e-85db-15b4726f06a4`, revision 1.
-- Source: indexed Nagelhout/Elisha textbook, physical PDF page 984.
+- Draft: `2b7f969b-b9f0-4ed4-9131-e84e0b325a37`.
+  Item: `a504e81b-c303-46bb-b90f-b6a2000c0035`.
+- Source: owned indexed Nagelhout/Elisha textbook, physical PDF page 984,
+  passage `ac27bdb7-a2ae-4482-ba62-82b3ece25e16`.
   Printed-page and page-image verification are not claimed.
-- Generation: [successful deployment and end-to-end acceptance](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42643815422).
-  Zero generator issues; zero automatic rewrites needed in this run.
-- Correction: [successful saved-revision verification](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42645233911).
-  Original question immutable; answer, choices, blueprint identity and citations
-  unchanged. Revision source/schema validation returned no issues.
-- Database verification: the question's citation matches the owned indexed
-  passage, book and physical page; all five independent reviewer quotations
-  match actual indexed source text.
-- Persistence: `pending_review`, unpublished, `can_publish=false`;
-  `reviewed_by` and `reviewed_at` remain null. Exactly one new draft was created
-  during the final acceptance interval; the correction created no new question.
-- Latest staging CI: 832 Python tests ran, with one skipped and no failures;
-  109 Node tests passed.
-  Container build, repository validation, performance/architecture budgets and
-  all four browser-regression shards passed.
-- [Latest reviewer deployment](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42645152291)
-  passed settled-container and authenticated smoke checks.
-- Gemini remains disabled. Generator and distinct independent reviewer remain
-  configured; textbook indexing was not modified by the final fixes.
+- [Fresh end-to-end acceptance](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42692156623)
+  passed schema, wording, math, indexed evidence, independent blind-answer,
+  all 15 explanatory fields, and independent option-source checks.
+  Zero generator issues; zero automatic rewrites; zero editorial revisions.
+- Direct database checks verified the citation's book, physical page and exact
+  indexed excerpt; all seven independent option-review quotations and all six
+  explanatory-review quotations match the owned index. Exactly one new draft
+  was saved in the final acceptance interval.
+- The question remains `pending_review`, unpublished, with
+  `reviewed_by=null`, `reviewed_at=null` and publication blocked.
+- [Live source controls and verification deployment](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42690966840)
+  passed four read-only cases: reject the original unsupported mechanism and
+  exclusive claim; accept the source-faithful corrected revision; accept narrow
+  supported teaching framing; reject named drug examples absent from a class-only
+  source. Every case covered all 15 fields and made no database writes.
+- [Source CI](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42690943158):
+  849 Python tests ran, one skipped and no failures; 111 Node tests passed.
+- [Deployment from merged main](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42692832470)
+  passed container readiness and authenticated staging smoke checks.
+  [Main quality gates](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42692832766)
+  passed repository validation, architecture/performance budgets, all four
+  browser-regression shards and the verified site deployment.
+- Earlier draft `97a2f6e0-e2e9-40a5-bb63-e29827aeff5e`, whose explanations
+  attributed unlisted named examples to class-only evidence, is visibly
+  `needs_revision` and remains unpublished.
 
-This is a sound recall-level MC item after an explicit editorial correction,
-not proof of uniformly autonomous question quality. Automated option review did
-not catch unsupported background physiology and an overbroad explanatory claim;
-those were removed from the saved current revision. Future questions still need
-review. Semantic duplicate verification and human clinical review remain pending,
-and publication stays blocked. Larger batches and cross-textbook sourcing are
-deferred at the user's request. The user has authorized follow-up work on automated explanation verification; larger batches and cross-textbook sourcing remain deferred.
+The original PROVIDER_UPSTREAM failure included incomplete JSON after the
+provider's reasoning consumed its completion budget. Recovery also addressed
+slow provider routing, asynchronous rollout races, model-echoed correlation IDs,
+source-review output limits, rate-limit boundaries and synthesized quotations.
+The final explanatory audit uses request-local short source aliases, restores
+real passage IDs server-side, validates exact indexed spans, and rejects missing,
+foreign or incomplete reports. Definite source failures join other ready
+screening failures in the existing single protected rewrite and full recheck.
+Unavailable reviews remain pending without spending that rewrite.
 
-The original upstream failure was incomplete JSON after thinking consumed the
-completion budget. Further live failures exposed provider routing timeouts,
-rollout races, model-echoed correlation IDs, a source-review budget above the
-reported limit, and synthesized quotations. The deployed fixes preserve quality
-gates, use server-owned correlation, fit the demonstrated review budget, and
-restore exact indexed quote spans selected independently by the reviewer.
+Gemini remains excluded. Groq GPT-OSS 120B authors questions; the distinct Qwen
+reviewer independently checks blind answers, option evidence and explanations.
+Existing textbook indexing, review functions and publication restrictions remain
+intact. No indexing or database schema changes were made in this follow-up.
+
+This is one source-grounded recall-level classification item with an unambiguous
+key and source-supported distractors. It does not establish advanced clinical
+vignette quality or uniform autonomous quality. Teaching scaffolding still merits
+editorial review: the generated counterfactual reads more like a restatement, and
+the trap wording can be improved. Human clinical review and semantic duplicate
+verification remain pending. No question was approved or published. Larger
+batches, throughput at 25 questions, and cross-textbook sourcing remain deferred
+at the user's request. Stop here after this verified single-question milestone.
 
 ## Historical investigation record
 
