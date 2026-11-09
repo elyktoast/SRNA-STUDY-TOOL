@@ -1,0 +1,27 @@
+name: Explicit explanation source controls
+on:
+  push:
+    branches: [fix/verify-explanation-review-live]
+    paths: ['.github/workflows/verify-explanation-controls.yml']
+permissions:
+  contents: read
+concurrency:
+  group: source-reviewer-staging-deployment
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: contains(github.event.head_commit.message, '[verify-explanation-controls]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r workers/source-library-staging/reviewer-service/requirements.txt
+      - name: Verify four read-only explanation controls without deployment
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: PYTHONPATH=workers/source-library-staging/scripts python scripts/verify-explanation-review-live.py --confirm-paid-review
