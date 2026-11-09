@@ -27,7 +27,8 @@ def _call_with_bounded_rate_wait(adapter, payload):
         delay = exc.retry_after_seconds
         if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
             raise
-        time.sleep(delay)
+        # The observed provider delay can leave a few tokens short at the boundary.
+        time.sleep(min(60, delay + 1))
         return adapter(payload)
 
 
