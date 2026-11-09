@@ -88,23 +88,36 @@ test('hybrid concept card falls back to configured Gemini API model when preferr
   }finally{globalThis.fetch=original;}
 });
 
-test('hybrid concept card prioritizes available documented Gemini API IDs',async()=>{
+test('hybrid concept card refuses unconfigured models without paid generation',async()=>{
  const original=globalThis.fetch;const calls=[];
  globalThis.fetch=async(url)=>{
   calls.push(String(url));
   if(String(url).includes('/v1beta/models?pageSize=')){
    return new Response(JSON.stringify({models:[
-    {name:'models/gemini-3.6-flash',supportedGenerationMethods:['generateContent']},
-    {name:'models/gemini-3.8-flash',supportedGenerationMethods:['generateContent']},
+    {name:'models/gemini-other-flash',supportedGenerationMethods:['generateContent']},
    ]}),{status:200});
   }
-  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
+  throw Error('must not call provider generation');
  };
  try{
   const response=await gateway.fetch(request('concept_card','generator-model'),{
    ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
   });
-  assert.equal(response.status,200);
-  assert.ok(calls.find(url=>url.includes(':generateContent')).endsWith('/models/gemini-3.8-flash:generateContent'));
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).rule,'PROVIDER_MODEL_UNAVAILABLE');
+  assert.equal(calls.filter(url=>url.includes(':generateContent')).length,0);
+ }finally{globalThis.fetch=original;}
+});
+
+test('relay classifies outbound network exceptions without exposing exception text',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>{throw new TypeError('private token should never be exposed');};
+ try{
+  const response=await gateway.fetch(request('item_draft','generator-model'),env);
+  assert.equal(response.status,503);
+  const body=await response.json();
+  assert.equal(body.error,'relay_network');
+  assert.equal(body.category,'network');
+  assert.equal(JSON.stringify(body).includes('private token'),false);
  }finally{globalThis.fetch=original;}
 });
