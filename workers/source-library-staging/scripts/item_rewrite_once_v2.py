@@ -24,7 +24,7 @@ def attempt_once(original, issues, rewrite, validate):
                "repair_instructions": (
                    "Fix only the reported rule-ID issues. Copy every protected_metadata field EXACTLY, including null values, and preserve the question's "
                    "clinical meaning, answer key, protected metadata, concept "
-                   "evidence IDs, and all unaffected fields. For R-6.8, leave the keyed option text EXACTLY unchanged and balance the incorrect options to similar lengths using evidence-grounded single-flaw alternatives; never shorten or edit the protected key. For R-2.5, use only "
+                   "evidence IDs, and all unaffected fields. For R-2.4 explanatory claims, replace the flagged mechanism, relevance, counterfactual or rationale text with what its cited excerpt affirmatively supports; remove unsupported background rather than preserving or inventing it. Preserve the stem and answer meaning. For R-6.8, leave the keyed option text EXACTLY unchanged and balance the incorrect options to similar lengths using evidence-grounded single-flaw alternatives; never shorten or edit the protected key. For R-2.5, use only "
                    "exact verbatim excerpts and matching source IDs/pages from "
                    "trusted evidence; never invent a citation. For R-12.4, give "
                    "every option an evidence-grounded verdict, valid passage IDs, "

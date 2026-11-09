@@ -36,6 +36,7 @@ function request(step, model, options={}) {
       {role:'user',content:JSON.stringify({
         step, rules_version:'2.0', auto_publish:false,
         ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
+        ...(step==='explanation_review'?{independent:true}:{}),
       })}],
   });
   const stamp = String(Math.floor(Date.now()/1000));
@@ -45,6 +46,18 @@ function request(step, model, options={}) {
     'Content-Type':'application/json','X-Relay-Timestamp':stamp,
     'X-Relay-Signature':signature},body});
 }
+test('source explanation review requires its own flag and distinct reviewer identity',async()=>{
+ const original=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  assert.equal((await gateway.fetch(request('explanation_review','reviewer-model'),env)).status,400);
+  const enabled={...env,AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+  assert.equal((await gateway.fetch(request('explanation_review','generator-model'),enabled)).status,400);
+  assert.equal(calls,0);
+  assert.equal((await gateway.fetch(request('explanation_review','reviewer-model'),enabled)).status,200);
+  assert.equal(calls,1);
+ }finally{globalThis.fetch=original;}
+});
 test('relay rejects swapped model identities before contacting provider', async () => {
   const original = globalThis.fetch;
   let calls=0;

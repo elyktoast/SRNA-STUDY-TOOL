@@ -17,7 +17,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
-                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None):
+                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None, explanation_review=None):
     if blind_reviewer is not None and (not callable(blind_reviewer) or not isinstance(generator_model_id, str) or not isinstance(reviewer_model_id, str) or not generator_model_id.strip() or not reviewer_model_id.strip() or generator_model_id.strip() == reviewer_model_id.strip()):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
@@ -30,6 +30,24 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id, topic=topic))
+    explanation_report = None
+    def check_explanations(item):
+        try:
+            report = explanation_review(item)
+            if (not isinstance(report, dict) or report.get("status") not in ("pass", "flag", "pending")
+                    or not isinstance(report.get("issues"), list)
+                    or report.get("can_publish") is not False
+                    or report.get("clinical_truth_verified") is not False
+                    or report.get("human_review_required") is not True
+                    or (report["status"] == "flag") != bool(report["issues"])):
+                raise ValueError("Invalid explanatory review")
+            return report
+        except Exception:
+            return {"status":"pending", "issues":[], "can_publish":False,
+                    "clinical_truth_verified":False, "human_review_required":True}
+    if explanation_review is not None and not generated["schema_issues"]:
+        explanation_report = check_explanations(generated["item"])
+        generated["schema_issues"].extend(explanation_report["issues"])
     # Collect inexpensive editorial issues before spending the only rewrite on
     # a schema/source defect; otherwise an already-visible length cue could be
     # discovered only after that budget has been exhausted.
@@ -56,6 +74,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         generated = {**generated, "item": repaired["item"],
                      "schema_issues": repaired["issues"],
                      "rewrite_attempts": repaired["rewrite_attempts"]}
+    if explanation_review is not None and rewrite_attempts and not generated["schema_issues"]:
+        explanation_report = check_explanations(generated["item"])
+        generated["schema_issues"].extend(explanation_report["issues"])
     if generated["schema_issues"]:
         issues = generated["schema_issues"]
         source_failure = any(x["rule_id"] in ("R-2.5", "R-17") for x in issues)
@@ -64,6 +85,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                    "duplicates", "blind_model", "human_review")
         stages = {name: {"status": "pending", "issues": []} for name in pending}
         stages["schema"] = {"status": "fail", "issues": issues}
+        if explanation_review is not None:
+            stages["explanation_evidence"] = explanation_report or {"status":"pending", "issues":[]}
+
         for name in ("deterministic_text", "math", "duplicates", "blind_model"):
             stages[name]["blocked_by"] = "schema"
             stages[name]["reason"] = "Generation validation failed; downstream screening not run"
@@ -133,13 +157,15 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             "reason": semantic_lookup_reason or "Semantic index not supplied; exact-stem check is insufficient"
         }
         screening["screening_complete"] = False
+    if explanation_review is not None:
+        screening["stages"]["explanation_evidence"] = explanation_report or {"status":"pending", "issues":[]}
     screening["rewrite_attempts_used"] = rewrite_attempts
     screening["rewrite_original_issues"] = rewrite_original_issues if rewrite_attempts else []
     screening["rewrite_revised_issues"] = generated["schema_issues"] if rewrite_attempts else []
     screening["rewrite_attempts_allowed"] = 1 - rewrite_attempts
     next_state = result["status"]
     pending = [name for name in ("schema", "deterministic_text", "math", "evidence",
-                                "duplicates", "blind_model")
+                                "duplicates", "blind_model", "explanation_evidence")
                if screening.get("stages", {}).get(name, {}).get("status") == "pending"]
     if pending:
         screening["screening_complete"] = False
@@ -167,7 +193,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                 next_state = screening.get("next_state", next_state)
         screening.pop("pending_verifications", None)
         pending = [name for name in ("schema", "deterministic_text", "math",
-                                    "evidence", "duplicates", "blind_model")
+                                    "evidence", "duplicates", "blind_model", "explanation_evidence")
                    if screening.get("stages", {}).get(name, {}).get("status") == "pending"]
         if pending:
             screening["pending_verifications"] = pending
@@ -176,6 +202,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             screening.pop("pending_verifications", None)
     if screening.get("stages", {}).get("duplicates", {}).get("status") == "flag" and next_state == "draft":
         next_state = "needs_editorial_review"
+    if explanation_report is not None and explanation_report["status"] == "pending":
+        next_state = "needs_source_review"
     screening["next_state"] = next_state
     # A failed independent or deterministic screening may trigger one bounded
     # repair. Never retry on missing verification (pending) or provider outages.
@@ -208,7 +236,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     generator_model_id=generator_model_id,
                     reviewer_model_id=reviewer_model_id,
                     semantic_lookup=semantic_lookup,
-                    _verified_candidate=repaired["item"], topic=topic)
+                    _verified_candidate=repaired["item"], topic=topic, explanation_review=explanation_review)
                 rerun["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_allowed"] = 0

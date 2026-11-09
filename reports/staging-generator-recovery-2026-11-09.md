@@ -38,7 +38,7 @@ not catch unsupported background physiology and an overbroad explanatory claim;
 those were removed from the saved current revision. Future questions still need
 review. Semantic duplicate verification and human clinical review remain pending,
 and publication stays blocked. Larger batches and cross-textbook sourcing are
-deferred at the user's request. No additional paid generation is scheduled.
+deferred at the user's request. The user has authorized follow-up work on automated explanation verification; larger batches and cross-textbook sourcing remain deferred.
 
 The original upstream failure was incomplete JSON after thinking consumed the
 completion budget. Further live failures exposed provider routing timeouts,
@@ -495,3 +495,31 @@ finished question. The existing append-only revision proposal now permits bounde
 corrections to existing concept explanation and rationale text. Citation IDs,
 blueprint identity, answers and verification/publication flags remain protected;
 all existing source/schema validation and human-review requirements still apply.
+
+
+## Follow-up: independent explanation evidence and one bounded repair
+
+The resumed work targets the remaining observed quality gap: the previous
+automated checks passed the options while unsupported concept-card and rationale
+claims required a later editorial revision. An explicitly enabled independent
+source review now covers each concept-card field, all rationale fields and every
+option-evidence explanation. It accepts only complete field coverage with exact
+indexed quote-span references scoped to that field's citations. A missing or
+malformed review stays pending; model outages do not consume editorial rewrites.
+
+A definite unsupported claim enters the existing one-rewrite path. Explanations
+are checked again after repair, without inheriting the old pass or spending a
+second rewrite. Blind answers, independent option review, indexing, clinical
+review and publication restrictions remain separate and intact. A classification
+excerpt may support classification rather than forcing invented physiology.
+Short source lines, including isolated negations, are retained as reviewer
+context; quotations still must meet the unchanged minimum length.
+
+Local checks: 110 Node tests passed. The Python suite ran 842 tests with one
+skip and the previously observed local PyMuPDF image-coverage fixture failure;
+there were no other failures after installing the existing runtime requirements.
+Repository validation and performance budgets passed. Full CI and paid live
+negative/positive regressions remain required before reporting this as verified.
+The planned live regression reads the existing unsupported original and corrected
+revision without changing either; a subsequent single-question acceptance must
+pass the new explanatory stage and stay unpublished.

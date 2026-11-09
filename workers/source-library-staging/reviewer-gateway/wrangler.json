@@ -10,7 +10,8 @@
     "AI_REWRITE_OPT_IN": "true",
     "AI_BLIND_REVIEW_OPT_IN": "true",
     "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b",
-    "AI_OPTION_REVIEW_OPT_IN": "true"
+    "AI_OPTION_REVIEW_OPT_IN": "true",
+    "AI_EXPLANATION_REVIEW_OPT_IN": "true"
   },
   "containers": [
     {
