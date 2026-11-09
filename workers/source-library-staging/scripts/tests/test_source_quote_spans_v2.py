@@ -6,6 +6,13 @@ from item_source_quote_spans_v2 import prepare, hydrate
 
 
 class SourceQuoteSpanTests(unittest.TestCase):
+    def test_short_negations_are_preserved_as_source_context(self):
+        request={"source_passages":[{"passage_id":"p1","excerpt":"No\ntriggering drugs.\nNever\nignore this warning."}]}
+        packet, lookup=prepare(request)
+        self.assertEqual([s["text"] for s in packet["source_passages"][0]["quote_spans"]],
+                         ["No","triggering drugs.","Never","ignore this warning."])
+        self.assertEqual(lookup["p1"]["q0"],"No")
+
     def setUp(self):
         self.request = {"step":"option_review", "rules_version":"2.0", "auto_publish":False,
             "blind":True, "format":"MC", "stem":"Which is a trigger?",
@@ -62,7 +69,7 @@ class SourceQuoteSpanTests(unittest.TestCase):
         for p, original in zip(packet["source_passages"], self.request["source_passages"]):
             self.assertEqual(len({s["id"] for s in p["quote_spans"]}), len(p["quote_spans"]))
             for span in p["quote_spans"]:
-                self.assertTrue(6 <= len(span["text"]) <= 300)
+                self.assertTrue(1 <= len(span["text"]) <= 300)
                 self.assertIn(span["text"], original["excerpt"])
 
     def test_adapter_uses_bounded_span_protocol_without_answer_leakage(self):

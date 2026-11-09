@@ -27,7 +27,8 @@ def _call_with_bounded_rate_wait(adapter, payload):
         delay = exc.retry_after_seconds
         if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
             raise
-        time.sleep(delay)
+        # The observed provider delay can leave a few tokens short at the boundary.
+        time.sleep(min(60, delay + 3))
         return adapter(payload)
 
 
@@ -70,6 +71,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     blind_requested = env.get("AI_BLIND_REVIEW_OPT_IN") == "true"
     option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
+    explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
     summary["review_readiness"] = {
         "rewrite": "configured" if rewrite_requested and generator_id else
                    "missing_generator_model" if rewrite_requested else "disabled",
@@ -80,6 +82,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             "missing_generator_model" if blind_requested and not generator_id else
             "reviewer_must_differ" if blind_requested else "disabled"),
         "independent_option_review": "configured" if option_requested and generator_id and reviewer_id and generator_id != reviewer_id else "unavailable" if option_requested else "disabled",
+        "explanation_review": "configured" if explanation_requested and generator_id and reviewer_id and generator_id != reviewer_id else "unavailable" if explanation_requested else "disabled",
         "independent_review_completed": False,
         "clinical_review_required": True,
     }
@@ -99,6 +102,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     }
     if args.execute and blind_requested and summary["review_readiness"]["blind_review"] != "configured":
         raise ValueError("Blind review requires distinct configured generator and reviewer models")
+    if args.execute and explanation_requested and summary["review_readiness"]["explanation_review"] != "configured":
+        raise ValueError("Explanatory review requires distinct configured models")
     if args.execute and rewrite_requested and not generator_id:
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
@@ -113,6 +118,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         "provider_endpoint": env.get("AI_PROVIDER_ENDPOINT", ""),
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
+        "explanation_review_enabled": explanation_requested,
+        "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
     if not args.execute:
@@ -144,7 +151,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
                            transport=transport, owner_opt_in=True, staging=True)
-    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested
+    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested or explanation_requested
     reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
     if reviewer_enabled:
         if not reviewer_model_id or reviewer_model_id == env.get("AI_GENERATOR_MODEL", "").strip():
@@ -176,6 +183,11 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             raise ValueError("Independent source conflict state required")
         # Adapt the unambiguous provider field to the existing evaluator contract.
         return [{**j, "contradiction_found": j["source_conflict_found"]} for j in judgments]
+    def explanation_review(item):
+        from item_explanation_review_v2 import review
+        report = review(item, evidence["sources"],
+                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))
+        return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
@@ -214,7 +226,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
                                  semantic_lookup=semantic_lookup,
                                  option_reviewer=option_reviewer if option_requested else None,
-                                 option_reviewer_model_id=reviewer_model_id if option_requested else None)
+                                 option_reviewer_model_id=reviewer_model_id if option_requested else None,
+                                 explanation_review=explanation_review if explanation_requested else None)
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,

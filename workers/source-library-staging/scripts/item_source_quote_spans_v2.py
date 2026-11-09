@@ -23,7 +23,7 @@ def prepare(request):
                     if boundary >= 6:
                         end = boundary
                 text = line[:end].strip()
-                if len(text) >= 6:
+                if text:
                     spans.append({"id": "q" + str(len(spans)), "text": text})
                 line = line[end:].strip()
         if not spans:

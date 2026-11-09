@@ -38,7 +38,7 @@ not catch unsupported background physiology and an overbroad explanatory claim;
 those were removed from the saved current revision. Future questions still need
 review. Semantic duplicate verification and human clinical review remain pending,
 and publication stays blocked. Larger batches and cross-textbook sourcing are
-deferred at the user's request. No additional paid generation is scheduled.
+deferred at the user's request. The user has authorized follow-up work on automated explanation verification; larger batches and cross-textbook sourcing remain deferred.
 
 The original upstream failure was incomplete JSON after thinking consumed the
 completion budget. Further live failures exposed provider routing timeouts,
@@ -495,3 +495,187 @@ finished question. The existing append-only revision proposal now permits bounde
 corrections to existing concept explanation and rationale text. Citation IDs,
 blueprint identity, answers and verification/publication flags remain protected;
 all existing source/schema validation and human-review requirements still apply.
+
+
+## Follow-up: independent explanation evidence and one bounded repair
+
+The resumed work targets the remaining observed quality gap: the previous
+automated checks passed the options while unsupported concept-card and rationale
+claims required a later editorial revision. An explicitly enabled independent
+source review now covers each concept-card field, all rationale fields and every
+option-evidence explanation. It accepts only complete field coverage with exact
+indexed quote-span references scoped to that field's citations. A missing or
+malformed review stays pending; model outages do not consume editorial rewrites.
+
+A definite unsupported claim enters the existing one-rewrite path. Explanations
+are checked again after repair, without inheriting the old pass or spending a
+second rewrite. Blind answers, independent option review, indexing, clinical
+review and publication restrictions remain separate and intact. A classification
+excerpt may support classification rather than forcing invented physiology.
+Short source lines, including isolated negations, are retained as reviewer
+context; quotations still must meet the unchanged minimum length.
+
+Local checks: 110 Node tests passed. The Python suite ran 842 tests with one
+skip and the previously observed local PyMuPDF image-coverage fixture failure;
+there were no other failures after installing the existing runtime requirements.
+Repository validation and performance budgets passed. Full CI and paid live
+negative/positive regressions remain required before reporting this as verified.
+The planned live regression reads the existing unsupported original and corrected
+revision without changing either; a subsequent single-question acceptance must
+pass the new explanatory stage and stay unpublished.
+
+
+### Live explanation regression and combined-repair sequencing
+
+The first live verification (run 42677051172) passed both source-review
+regressions: the immutable original's unsupported physiology/exhaustive claim
+were flagged and all 15 explanatory fields in the corrected revision passed.
+The fresh draft 7bbe5981-ca10-4da8-a734-5dbbbda8d0d1 stayed unpublished and did
+not pass acceptance: it contained two safe answers in a single-answer item.
+The source reviewer also flagged pedagogical framing too literally.
+
+Explanatory review now runs after deterministic and blind-answer screening, so
+all definite failures enter the same single repair rather than consuming that
+budget before answer ambiguity can be identified. All checks run again after
+a successful repair. Teaching constructs are assessed by their clinical premises,
+without demanding textbook statements about learner beliefs or test design.
+Multi-column category membership must be explicit, rather than inferred from
+neighboring treatment prose. The original negative and positive regression gates
+remain mandatory.
+
+Sanitized live telemetry also showed the initial repair blocked by token limits.
+After the provider's indicated wait, its second request was only 20 tokens short
+(3,675 remaining versus 3,695 requested). The existing one-retry helper now adds
+one second of margin while keeping the maximum wait at 60 seconds and the same
+two-attempt bound. Timeouts and missing/oversized delay hints still are not retried.
+
+
+### Reviewer and short-label calibration before merge
+
+The second live run (42679033597) verified the combined path and a successful
+provider rewrite, but did not pass final acceptance. Draft
+0e4a82b6-0d86-49c0-9868-17ac8f365d3c stayed unpublished: the reviewer still treated
+ordinary relevance/misconception framing as unsupported, and the word-count cue
+rule flagged a two-word agent name despite a visibly longer one-word distractor.
+
+The next verification uses the already-supported Groq GPT-OSS 20B JSON/low-effort
+reviewer, distinct from the unchanged GPT-OSS 120B generator. It must still flag
+the known unsupported physiology and exhaustive clinical claim, accept the saved
+source-faithful revision, and pass a separate source-supported teaching-framing
+case. No model quality improvement is assumed before those live results.
+
+R-6.8 retains its 15% word-count rule for prose. When every option is at most
+three words, it additionally requires a genuine visible-length difference before
+flagging a word-boundary cue. This avoids padding named agents merely because
+one chemical name has a space. Tests preserve flags for genuinely longer short
+choices and long explanatory answers. Clinical source and answer requirements
+are unchanged.
+
+
+### Explicit evidence for exclusive clinical wording
+
+The GPT-OSS 20B regression (run 42681278196) flagged the unsupported receptor
+mechanism but accepted the original broad exclusive drug-class claim. The live
+gate stopped before another question was generated. The negative regression is
+not relaxed: both unsupported fields must still be caught.
+
+A conservative local evidence check now rejects exclusive clinical wording in
+mechanism/core explanations when the selected supporting quotation does not
+explicitly express exclusivity. Conditional teaching counterfactuals are not
+treated as global clinical exclusivity. This supplements the independent model's
+semantic judgment; it never claims that a keyword alone proves a clinical fact.
+Tests cover a model attempting to approve an exclusive rule from a plain list,
+explicit source support, and the distinction from conditional teaching language.
+
+
+The reviewer input also now identifies assertion polarity explicitly:
+clinical facts need positive support; teaching applications need supported
+clinical premises; a misconception is a false belief the source must refute.
+This prevents evaluating an intentionally false misconception as though the
+author were asserting it as a clinical fact. These roles are server-assigned,
+not accepted from the generated question as grading authority.
+
+
+### Passed source controls; quota-isolated single acceptance
+
+Run 42683110405 passed all three live source controls using GPT-OSS 20B: the
+unsupported original was flagged for both required fields, the corrected revision
+passed all 15 explanatory fields, and supported teaching framing passed.
+Its new draft b708c1b5-399c-41ab-b0d1-444fbedbcab8 passed schema, wording, math,
+evidence, blind-answer and independent option-source review but stayed unpublished
+with explanatory review pending due to a provider rate limit. It is not reported
+as a completed cycle. The three immediately preceding regression calls consumed
+the same review-model minute quota. A standalone acceptance now reuses the settled
+deployment without rebuilding or repeating those calls immediately beforehand.
+
+Telemetry also showed request estimates increasing between a rejected call and
+its retry (2,775 to 3,005 tokens), leaving a small deficit after the prior margin.
+The existing one-retry wait adds three seconds of estimate margin, still capped
+at 60 seconds, without retrying a second failure or an ambiguous timeout.
+
+
+### Preserve the proven option reviewer; isolate explanation reasoning
+
+The isolated run 42684463260 saved draft 08649eac-2874-4265-8119-5d0ffa2fe5cd
+unpublished. All 15 explanatory fields passed, but the alternate model incorrectly
+judged nitrous oxide as triggering in the separate option audit. The trusted
+comparison rejected that report; no question was accepted or published.
+
+The shared blind/option reviewer is therefore restored to Qwen, preserving its
+previous settings. Only the new explanatory audit requests low reasoning; the
+[provider API reference](https://console.groq.com/docs/api-reference) documents Qwen's otherwise non-reasoning default, which does not serve
+the same task as a semantic explanatory entailment check. The explicit assertion
+roles and exclusive-wording evidence guard remain unchanged. Regression tests
+confirm that blind and option settings are unchanged by this mode.
+
+Read-only explanation regressions can now be explicitly triggered separately
+from a paid question-generation acceptance. This allows verification of the
+reviewer without immediately consuming the same minute quota before generation.
+
+
+### Provider reasoning-mode request rejected; retain established Qwen settings
+
+The read-only regression run 42685953361 stopped on an HTTP 400 for the Qwen
+request with explicit low reasoning. No new question was generated. The request
+change is removed: blind, option and explanation calls retain the established
+Qwen JSON settings, while explicit field polarity and the quoted exclusivity
+guard provide the new review contract. Fictional-variable logic examples clarify
+that a correctly refuted misconception and direct teaching application are valid,
+while an unsupported receptor mechanism is not. Actual fields still require
+complete source-span coverage; the negative/positive controls are unchanged.
+
+
+### Successful automated cycle; final citation specificity check
+
+The restored Qwen settings passed all three source controls in run 42687508165.
+Standalone acceptance run 42684463260, attempt 2, saved draft
+97a2f6e0-e2e9-40a5-bb63-e29827aeff5e with all automated answer, option and
+explanation checks passing, zero issues and no automatic rewrite. It remains
+unpublished and unapproved. Final editorial inspection nevertheless found two
+named drug examples attributed to a passage listing only their classes. That
+is not treated as complete source support merely because the drug-class links
+are familiar clinical knowledge.
+
+Authoring and explanation review now explicitly require indexed support for a
+named drug's class membership; class-only evidence cannot supply a missing link
+from model memory. A fourth read-only negative control requires the reviewer to
+reject those unlisted named examples. The original three controls remain.
+No textbook indexing or clinical approval was modified.
+
+
+### Bound explanatory review overhead and control-call pacing
+
+The next read-only controls stopped safely on incomplete provider output
+(run 42689262437). A read-only retry on the same deployment rejected the original
+unsupported claims and accepted the corrected revision, then reached the review
+model's minute quota (42690053714). The explicit regression harness now spaces
+calls 65 seconds apart; production one-retry bounds are unchanged. A subsequent
+first-call incomplete report (42690471217) showed that pacing alone does not
+resolve the response-size variability.
+
+The explanatory adapter now sends request-local short passage aliases and
+restores real passage IDs before complete source-span validation. Unknown or
+foreign aliases fail closed. Exact indexed quotation restoration, field coverage,
+independent judgments, model separation and the 1,000-token ceiling are unchanged.
+Focused tests verify immutable input, restored IDs and rejection of attempted
+alias bypass. No answer choice or clinical verdict is supplied by alias mapping.

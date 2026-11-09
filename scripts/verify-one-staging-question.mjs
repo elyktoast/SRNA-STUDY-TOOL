@@ -33,11 +33,14 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['97a2f6e0-e2e9-40a5-bb63-e29827aeff5e','Final source QA found named drug examples absent from the cited class-only passage; requires indexed support for their class membership.'],
  ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
  ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
  ['273d8969-5957-4aec-9c4d-7c46548de822','Option evidence remained unsupported after the single rewrite; quality validation failed.'],
  ['217c7f66-65ff-4c4a-849a-09598f6c26c1','The single rewrite still relied on source silence to reject distractors; quality validation failed.'],
  ['bb4d1576-3ca2-4c7d-b539-56520e861957','The generated draft retained an answer-length cue and did not complete exact-quote source adjudication.'],
+ ['0e4a82b6-0d86-49c0-9868-17ac8f365d3c','The earlier explanation review and short-label wording screening did not pass.'],
+ ['7bbe5981-ca10-4da8-a734-5dbbbda8d0d1','Ambiguous single-answer question had two source-supported answers; the earlier bounded repair was rate-limited.'],
  ['83916827-3192-45ab-806e-c81e2f26ba04','Independent source review was rate-limited; the draft also introduced mechanistic background beyond its supplied classification excerpt.'],
  ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
  ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
@@ -73,6 +76,7 @@ assert.ok(preflight.passage_count>0,'No indexed evidence');
 assert.equal(preflight.review_readiness?.blind_review,'configured');
 assert.equal(preflight.review_readiness?.rewrite,'configured');
 assert.equal(preflight.review_readiness?.independent_option_review,'configured');
+assert.equal(preflight.review_readiness?.explanation_review,'configured');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
@@ -88,6 +92,7 @@ assert.equal(saved.draft_id,generated.draft_id);
 assert.equal(saved.status,'pending_review');
 const stages=Object.fromEntries(Object.entries(generated.screening?.stages||{}).map(([name,s])=>[name,s.status]));
 console.log(JSON.stringify({draft_id:generated.draft_id,status:saved.status,published:false,stages,generator_issue_rules:(generated.generator_issues||[]).map(i=>i.rule_id),rewrite_attempts:generated.screening?.rewrite_attempts_used}));
+assert.equal(stages.explanation_evidence,'pass','Concept and rationale source review did not pass');
 assert.equal(stages.schema,'pass','Generated schema did not pass');
 assert.equal(stages.deterministic_text,'pass','Deterministic wording screening did not pass');
 assert.equal(stages.evidence,'pass','Evidence validation did not pass');

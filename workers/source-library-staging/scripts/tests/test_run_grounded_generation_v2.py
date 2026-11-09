@@ -14,6 +14,30 @@ EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
+    def test_rate_wait_buffer_never_exceeds_sixty_seconds_or_adds_more_attempts(self):
+        from run_grounded_generation_v2 import _call_with_bounded_rate_wait
+        from item_ai_https_transport_v2 import TransportError
+        from unittest.mock import Mock
+        adapter=Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=60),{}])
+        with patch('time.sleep') as sleep:
+            self.assertEqual(_call_with_bounded_rate_wait(adapter,{}),{})
+        sleep.assert_called_once_with(60)
+        self.assertEqual(adapter.call_count,2)
+
+    @patch("run_grounded_generation_v2.fingerprint")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_explanation_review_changes_checkpoint_identity_and_preflight_never_calls_models(self,evidence,fingerprint):
+        fingerprint.return_value="a"*64
+        base={"STAGING_ONLY":"true","AI_GENERATOR_MODEL":"generator","AI_REVIEWER_MODEL":"reviewer"}
+        disabled=execute(object(),ARGS,base)
+        enabled=execute(object(),ARGS,{**base,"AI_EXPLANATION_REVIEW_OPT_IN":"true"})
+        self.assertEqual(disabled["review_readiness"]["explanation_review"],"disabled")
+        self.assertEqual(enabled["review_readiness"]["explanation_review"],"configured")
+        self.assertFalse(fingerprint.call_args_list[0].args[0]["explanation_review_enabled"])
+        self.assertTrue(fingerprint.call_args_list[2].args[0]["explanation_review_enabled"])
+        self.assertTrue(enabled["dry_run"])
+        self.assertFalse(enabled["review_readiness"]["independent_review_completed"])
+
     @patch("run_grounded_generation_v2.fingerprint")
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     def test_checkpoint_hash_changes_with_model_and_review_configuration(self, evidence, fingerprint):
@@ -223,7 +247,7 @@ class GenerationCliTests(unittest.TestCase):
         adapter.return_value.side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2),{"evidence":[]}]
         with patch('time.sleep') as sleep:
             rewrite(request)
-        sleep.assert_called_once_with(2)
+        sleep.assert_called_once_with(5)
         self.assertEqual(adapter.return_value.call_count,2)
         sent=adapter.return_value.call_args.args[0]
         self.assertNotIn('excerpt',sent['item']['evidence'][0])
