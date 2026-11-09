@@ -2,7 +2,7 @@ import copy
 import json
 import unittest
 from unittest.mock import patch
-from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA
+from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA, teaching_specificity_issues
 from item_ai_provider_v2 import make_adapter
 from item_generation_screened_v2 import generate_and_screen
 
@@ -89,12 +89,32 @@ class BoardQualityTests(unittest.TestCase):
             with self.subTest(extra=extra),self.assertRaises(ValueError): adapter({**request,**extra})
         self.assertEqual(calls,[])
 
+    def test_restated_counterfactual_and_generic_trap_cannot_receive_a_pass(self):
+        q=item();q["concept_card"]["counterfactual"]="The original correct answer remains appropriate."
+        q["rationale"]["trap"]="A learner may select the wrong intervention."
+        result=editorial(q,lambda p:{"checks":{k:"pass" for k in CRITERIA},"findings":[]})
+        self.assertEqual(result["status"],"flag")
+        self.assertEqual(set(result["deterministic_rules"]),{"R-5.3","R-9"})
+        self.assertEqual(result["model_flagged_rules"],[])
+
+    def test_specificity_guard_does_not_claim_semantic_verification(self):
+        q=item()
+        self.assertEqual(teaching_specificity_issues(q),[])
+        q["rationale"]["trap"]="Option B may tempt a learner."
+        self.assertIn("R-9",{i["rule_id"] for i in teaching_specificity_issues(q)})
+        # A named wrong option is necessary, but the independent model must still
+        # reject incoherent reasoning even when the surface form is complete.
+        q["rationale"]["trap"]="Option A follows from an incoherent inference."
+        response={"checks":{k:"flag" if k=="trap" else "pass" for k in CRITERIA},
+                  "findings":[{"criterion":"trap","reason":"The inference leads to another choice."}]}
+        self.assertEqual(editorial(q,lambda p:response)["status"],"flag")
+
     def test_editorial_adapter_satisfies_json_mode_provider_contract(self):
         calls=[]
         def transport(**kwargs):
             body=kwargs["body"]
             self.assertIn("json",json.dumps(body["messages"]).lower())
-            self.assertEqual(body["max_tokens"],700)
+            self.assertEqual(body["max_tokens"],1000)
             calls.append(body)
             return {"choices":[{"message":{"content":json.dumps({"checks":{k:"pass" for k in CRITERIA},"findings":[]})}}]}
         adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="independent",owner_opt_in=True,transport=transport)
