@@ -88,7 +88,7 @@ test('hybrid concept card falls back to configured Gemini API model when preferr
   }finally{globalThis.fetch=original;}
 });
 
-test('hybrid concept card refuses unconfigured models without paid generation',async()=>{
+test('hybrid concept card uses catalog-listed Flash model if configured model is unavailable',async()=>{
  const original=globalThis.fetch;const calls=[];
  globalThis.fetch=async(url)=>{
   calls.push(String(url));
@@ -97,15 +97,15 @@ test('hybrid concept card refuses unconfigured models without paid generation',a
     {name:'models/gemini-other-flash',supportedGenerationMethods:['generateContent']},
    ]}),{status:200});
   }
-  throw Error('must not call provider generation');
+  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
  };
  try{
   const response=await gateway.fetch(request('concept_card','generator-model'),{
    ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
   });
-  assert.equal(response.status,502);
-  assert.equal((await response.json()).rule,'PROVIDER_MODEL_UNAVAILABLE');
-  assert.equal(calls.filter(url=>url.includes(':generateContent')).length,0);
+  assert.equal(response.status,200);
+  assert.equal(calls.filter(url=>url.includes(':generateContent')).length,1);
+  assert.ok(calls.some(url=>url.endsWith('/models/gemini-other-flash:generateContent')));
  }finally{globalThis.fetch=original;}
 });
 

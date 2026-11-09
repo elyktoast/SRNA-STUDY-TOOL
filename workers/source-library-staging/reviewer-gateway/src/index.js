@@ -72,29 +72,36 @@ async function relayGroq(request,env){
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:[{role:'user',content:input}],max_tokens:payload.max_tokens,temperature:0.2}):bytes;
   let upstream;
   if(provider==='gemini'){
-   // Resolve the API IDs from Google's own model listing; dashboard labels are not API IDs.
-   // API IDs from Google's model catalog, not human-readable display names.
-   // Prefer the configured, verified API model; never assume marketing names are valid IDs.
-   const preferred=[env.AI_GEMINI_MODEL];
+   // Select only API-listed generateContent models, never invented display names.
+   // Use the configured model first; if retired, choose a catalog-listed Flash model.
    const available=new Set();
    let listingSucceeded=false;
-   try{
-    let next='';
-    for(let page=0;page<2;page++){
-     const listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
-     if(!listing.ok)break;
-     listingSucceeded=true;
-     const data=await listing.json();
-     for(const model of data.models||[]){
-      if(typeof model.name==='string'&&model.name.startsWith('models/gemini-')&&/^[a-zA-Z0-9.-]+$/.test(model.name.slice('models/'.length))&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
-     }
-     next=data.nextPageToken||'';if(!next)break;
+   let next='';
+   for(let page=0;page<5;page++){
+    let listing;
+    try{
+     listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
+    }catch(error){return relayFailure(error,'gemini',step.step)}
+    if(!listing.ok){
+     const rule=listing.status===401?'PROVIDER_AUTH':listing.status===403?'PROVIDER_FORBIDDEN':listing.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';
+     return respond(502,null,JSON.stringify({error:'provider_failed',rule}));
     }
-   }catch{}
+    listingSucceeded=true;
+    let data;
+    try{data=await listing.json()}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}')}
+    for(const model of Array.isArray(data.models)?data.models:[]){
+     if(typeof model.name==='string'&&/^models\/gemini-[a-zA-Z0-9.-]+$/.test(model.name)&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
+    }
+    next=typeof data.nextPageToken==='string'?data.nextPageToken:'';
+    if(!next)break;
+   }
    const configured='models/'+env.AI_GEMINI_MODEL;
-   const order=[...new Set([...preferred.map(id=>'models/'+id),configured])];
-   const candidates=listingSucceeded?order.filter(id=>available.has(id)):[configured];
-   if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
+   const flash=[...available].filter(id=>id.includes('flash')&&!id.includes('embedding')&&!id.includes('image')&&!id.includes('tts'));
+   // Prefer stable general-purpose Flash IDs over preview and lite variants.
+   const score=id=>(id.includes('preview')?10:0)+(id.includes('lite')?5:0);
+   flash.sort((a,b)=>score(a)-score(b)||b.localeCompare(a,undefined,{numeric:true}));
+   const candidates=[...new Set([...(available.has(configured)?[configured]:[]),...flash])];
+   if(!listingSucceeded||!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    for(const model of candidates){
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
     // Do not retry throttled or rejected requests; no automatic paid duplicate generation.
@@ -283,7 +290,7 @@ export default {
     const allowed=new Set(['configuration','database','dependency','backend']);
     const category=body?.error==='reviewer_backend_unavailable'&&allowed.has(body?.stage)?body.stage:'unclassified';
     const rules=new Set(['STAGING_ONLY','MISSING_BINDING','PROJECT_URL','SIGNING_SECRET_LENGTH','DATABASE_URL_PARSE','DATABASE_SCHEME','DATABASE_HOST','DATABASE_CREDENTIAL_FORMAT','DATABASE_PROJECT_HOST','DATABASE_USERNAME','DATABASE_PATH','DATABASE_OPTIONS','MISSING_STAGING_DATABASE_URL','MISSING_STAGING_R2_ACCOUNT_ID','MISSING_STAGING_R2_ACCESS_KEY_ID','MISSING_STAGING_R2_SECRET_ACCESS_KEY','MISSING_SUPABASE_URL','MISSING_SUPABASE_ANON_KEY','MISSING_STAGING_RECEIPT_SIGNING_SECRET','DATABASE_PASSWORD_REJECTED','DATABASE_ROLE_OR_NAME','DATABASE_PERMISSION','DATABASE_CONNECTION','DATABASE_NETWORK_OR_TLS','DATABASE_OTHER','DATABASE_CAPACITY','DATABASE_NETWORK_UNREACHABLE','DATABASE_DNS','DATABASE_TIMEOUT','DATABASE_TLS','DATABASE_CONNECTION_REFUSED','DATABASE_ACCESS_POLICY']);
-    const generationRules=new Set(['UPSTREAM_CONNECTION','UPSTREAM_HTTP','DEPENDENCY_UNAVAILABLE','RUNTIME_IO','GENERATION_RUNTIME_ERROR','PROVIDER_TRANSPORT','PROVIDER_RESPONSE','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_REQUEST_REJECTED','PROVIDER_UPSTREAM','PROVIDER_HTTP_OTHER','PROVIDER_TIMEOUT','PROVIDER_NETWORK','PROVIDER_INVALID_JSON','PROVIDER_REDIRECT','PROVIDER_ENDPOINT','PROVIDER_REQUEST','PROVIDER_REQUEST_SIZE','PROVIDER_RESPONSE_SIZE','RELAY_AUTH','RELAY_HTTP','RELAY_UNAVAILABLE','RELAY_NETWORK','RELAY_DISABLED','RELAY_UPSTREAM','RELAY_PAYLOAD','RELAY_METHOD','RELAY_SIZE','RELAY_EDGE_403',...([400,401,403,404,405,413,429,500,502,503,504,0].map(n=>'RELAY_HTTP_'+n))]);
+    const generationRules=new Set(['UPSTREAM_CONNECTION','UPSTREAM_HTTP','DEPENDENCY_UNAVAILABLE','RUNTIME_IO','GENERATION_RUNTIME_ERROR','PROVIDER_TRANSPORT','PROVIDER_RESPONSE','PROVIDER_AUTH','PROVIDER_FORBIDDEN','PROVIDER_RATE_LIMIT','PROVIDER_REQUEST_REJECTED','PROVIDER_UPSTREAM','PROVIDER_HTTP_OTHER','PROVIDER_TIMEOUT','PROVIDER_NETWORK','PROVIDER_INVALID_JSON','PROVIDER_MODEL_UNAVAILABLE','PROVIDER_REDIRECT','PROVIDER_ENDPOINT','PROVIDER_REQUEST','PROVIDER_REQUEST_SIZE','PROVIDER_RESPONSE_SIZE','RELAY_AUTH','RELAY_HTTP','RELAY_UNAVAILABLE','RELAY_NETWORK','RELAY_DISABLED','RELAY_UPSTREAM','RELAY_PAYLOAD','RELAY_METHOD','RELAY_SIZE','RELAY_EDGE_403',...([400,401,403,404,405,413,429,500,502,503,504,0].map(n=>'RELAY_HTTP_'+n))]);
     const safeErrors=new Set(['generation_preflight_unavailable','reviewer_backend_unavailable','staging_not_configured','provider_check_unavailable']);
     const error=safeErrors.has(body?.error)?body.error:'UNCLASSIFIED';
     const rule=body?.error==='generation_preflight_unavailable'&&generationRules.has(body?.rule)?body.rule:['configuration','database'].includes(category)&&rules.has(body?.rule)?body.rule:'NONE';
