@@ -69,46 +69,6 @@ test('disabled optional review steps cannot contact provider',async()=>{
   } finally {globalThis.fetch=original;}
 });
 
-test('hybrid concept card falls back to configured Gemini API model when preferred labels are absent', async()=>{
-  const original=globalThis.fetch;
-  const calls=[];
-  globalThis.fetch=async (url,options)=>{
-    calls.push(String(url));
-    if(String(url).includes('/v1beta/models?pageSize=')){
-      return new Response(JSON.stringify({models:[{name:'models/gemini-2.5-flash',displayName:'Gemini 2.5 Flash',supportedGenerationMethods:['generateContent']}]}),{status:200});
-    }
-    return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
-  };
-  try{
-    const response=await gateway.fetch(request('concept_card','generator-model'),{
-      ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-gemini-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
-    });
-    assert.equal(response.status,200);
-    assert.ok(calls.some(url=>url.endsWith('/models/gemini-2.5-flash:generateContent')));
-  }finally{globalThis.fetch=original;}
-});
-
-test('hybrid concept card uses catalog-listed Flash model if configured model is unavailable',async()=>{
- const original=globalThis.fetch;const calls=[];
- globalThis.fetch=async(url)=>{
-  calls.push(String(url));
-  if(String(url).includes('/v1beta/models?pageSize=')){
-   return new Response(JSON.stringify({models:[
-    {name:'models/gemini-other-flash',supportedGenerationMethods:['generateContent']},
-   ]}),{status:200});
-  }
-  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
- };
- try{
-  const response=await gateway.fetch(request('concept_card','generator-model'),{
-   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
-  });
-  assert.equal(response.status,200);
-  assert.equal(calls.filter(url=>url.includes(':generateContent')).length,1);
-  assert.ok(calls.some(url=>url.endsWith('/models/gemini-other-flash:generateContent')));
- }finally{globalThis.fetch=original;}
-});
-
 test('relay classifies outbound network exceptions without exposing exception text',async()=>{
  const original=globalThis.fetch;
  globalThis.fetch=async()=>{throw new TypeError('private token should never be exposed');};
@@ -122,43 +82,63 @@ test('relay classifies outbound network exceptions without exposing exception te
  }finally{globalThis.fetch=original;}
 });
 
-test('Gemini uses listed 3.8 first and one alternate on 429',async()=>{
- const original=globalThis.fetch;const calls=[];
- globalThis.fetch=async(url)=>{
-  const value=String(url);calls.push(value);
-  if(value.includes('/v1beta/models?pageSize='))return new Response(JSON.stringify({models:[
-   {name:'models/gemini-3.8-flash',supportedGenerationMethods:['generateContent']},
-   {name:'models/gemini-3.6-flash',supportedGenerationMethods:['generateContent']},
-   {name:'models/gemini-2.5-flash',supportedGenerationMethods:['generateContent']},
-  ]}),{status:200});
-  if(value.includes('gemini-3.8-flash:generateContent'))return new Response('{}',{status:429});
-  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
- };
- try{
-  const response=await gateway.fetch(request('concept_card','generator-model'),{
-   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
-  });
-  assert.equal(response.status,200);
-  assert.deepEqual(calls.filter(x=>x.includes(':generateContent')).map(x=>x.match(/gemini-[^/:]+:generateContent/)[0]),[
-   'gemini-3.8-flash:generateContent','gemini-3.6-flash:generateContent']);
- }finally{globalThis.fetch=original;}
-});
 
-test('Gemini never attempts third model after two rate limits',async()=>{
- const original=globalThis.fetch;const calls=[];
- globalThis.fetch=async(url)=>{
-  const value=String(url);calls.push(value);
-  if(value.includes('/v1beta/models?pageSize='))return new Response(JSON.stringify({models:[
-   'gemini-3.8-flash','gemini-3.6-flash','gemini-3-flash'
-  ].map(id=>({name:'models/'+id,supportedGenerationMethods:['generateContent']}))}),{status:200});
-  return new Response('{}',{status:429});
- };
- try{
-  const response=await gateway.fetch(request('concept_card','generator-model'),{
-   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
-  });
-  assert.equal(response.status,502);
-  assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');
-  assert.equal(calls.filter(x=>x.includes(':generateContent')).length,2);
- }finally{globalThis.fetch=original;}
+const geminiEnv={...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',
+ AI_GEMINI_MODEL:'gemini-2.5-flash',AI_GEMINI_FALLBACK_MODEL:'gemini-2.5-flash-lite'};
+const okGemini=()=>new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
+async function scenario(handler,configuration=geminiEnv){
+ const original=globalThis.fetch, calls=[];
+ globalThis.fetch=async(url,options)=>{calls.push({url:String(url),options});return handler(String(url),options,calls.length)};
+ try{return {response:await gateway.fetch(request('concept_card','generator-model'),configuration),calls};}
+ finally{globalThis.fetch=original;}
+}
+test('Gemini generation never fetches model catalog',async()=>{
+ const {response,calls}=await scenario(()=>okGemini());
+ assert.equal(response.status,200);assert.equal(calls.length,1);
+ assert.ok(calls[0].url.endsWith('/models/gemini-2.5-flash:generateContent'));
+});
+test('Gemini 429 falls back exactly once to configured alternate',async()=>{
+ const {response,calls}=await scenario((url)=>url.includes('flash-lite')?okGemini():new Response('{}',{status:429}));
+ assert.equal(response.status,200);assert.equal(calls.length,2);
+ assert.ok(calls[1].url.includes('flash-lite:generateContent'));
+});
+test('Gemini 404 falls back to configured alternate',async()=>{
+ const {response,calls}=await scenario((url)=>url.includes('flash-lite')?okGemini():new Response('{}',{status:404}));
+ assert.equal(response.status,200);assert.equal(calls.length,2);
+});
+test('Gemini 429 without alternate does not retry',async()=>{
+ const {response,calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:''});
+ assert.equal(response.status,502);assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');assert.equal(calls.length,1);
+});
+test('Gemini duplicate alternate does not retry',async()=>{
+ const {calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:'gemini-2.5-flash'});
+ assert.equal(calls.length,1);
+});
+test('Gemini invalid alternate never contacts untrusted model',async()=>{
+ const {calls}=await scenario(()=>new Response('{}',{status:429}),{...geminiEnv,AI_GEMINI_FALLBACK_MODEL:'../../bad'});
+ assert.equal(calls.length,1);
+});
+test('Gemini 403 never falls back',async()=>{
+ const {response,calls}=await scenario(()=>new Response('{}',{status:403}));
+ assert.equal((await response.json()).rule,'PROVIDER_FORBIDDEN');assert.equal(calls.length,1);
+});
+test('Gemini 500 never falls back',async()=>{
+ const {response,calls}=await scenario(()=>new Response('{}',{status:500}));
+ assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
+});
+test('Gemini timeout never falls back',async()=>{
+ const {response,calls}=await scenario(()=>{const e=new Error('timed out');e.name='TimeoutError';throw e;});
+ assert.equal((await response.json()).error,'relay_timeout');assert.equal(calls.length,1);
+});
+test('Gemini malformed success never falls back',async()=>{
+ const {response,calls}=await scenario(()=>new Response('not json',{status:200}));
+ assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
+});
+test('Gemini alternate 429 stops after second attempt',async()=>{
+ const {response,calls}=await scenario(()=>new Response('{}',{status:429}));
+ assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');assert.equal(calls.length,2);
+});
+test('Gemini empty candidate never falls back',async()=>{
+ const {response,calls}=await scenario(()=>new Response('{}',{status:200}));
+ assert.equal((await response.json()).rule,'PROVIDER_UPSTREAM');assert.equal(calls.length,1);
 });

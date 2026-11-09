@@ -58,8 +58,8 @@ async function relayGroq(request,env){
  if(!([env.AI_GENERATOR_MODEL, ...(env.AI_BLIND_REVIEW_OPT_IN==='true'?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale','rewrite','blind_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&(env.AI_BLIND_REVIEW_OPT_IN!=='true'||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(step.step!=='blind_review'&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
- const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
- let activeProvider='unknown';
+ const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
+ let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
@@ -72,47 +72,28 @@ async function relayGroq(request,env){
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:[{role:'user',content:input}],max_tokens:payload.max_tokens,temperature:0.2}):bytes;
   let upstream;
   if(provider==='gemini'){
-   // Select only API-listed generateContent models, never invented display names.
-   // Use the configured model first; if retired, choose a catalog-listed Flash model.
-   const available=new Set();
-   let listingSucceeded=false;
-   let next='';
-   for(let page=0;page<5;page++){
-    let listing;
-    try{
-     listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=100'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
-    }catch(error){return relayFailure(error,'gemini',step.step)}
-    if(!listing.ok){
-     const rule=listing.status===401?'PROVIDER_AUTH':listing.status===403?'PROVIDER_FORBIDDEN':listing.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';
-     return respond(502,null,JSON.stringify({error:'provider_failed',rule}));
-    }
-    listingSucceeded=true;
-    let data;
-    try{data=await listing.json()}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}')}
-    for(const model of Array.isArray(data.models)?data.models:[]){
-     if(typeof model.name==='string'&&/^models\/gemini-[a-zA-Z0-9.-]+$/.test(model.name)&&model.supportedGenerationMethods?.includes('generateContent'))available.add(model.name);
-    }
-    next=typeof data.nextPageToken==='string'?data.nextPageToken:'';
-    if(!next)break;
-   }
-   // Route to catalog-verified model IDs only. Preserve high-quality concept reasoning.
-   const configured='models/'+env.AI_GEMINI_MODEL;
-   const priority=['gemini-3.8-flash','gemini-3.6-flash','gemini-3-flash','gemini-3.1-flash-lite','gemini-2.5-flash','gemini-2.5-flash-lite'];
-   const otherFlash=[...available].filter(id=>id.includes('flash')&&!id.includes('image')&&!id.includes('tts')&&!id.includes('embedding')).sort();
-   const candidates=[...new Set([...priority.map(id=>'models/'+id),configured,...otherFlash])].filter(id=>available.has(id));
-   if(!listingSucceeded||!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
-   // A 429 is a rejected request. One alternate model attempt is permitted;
-   // never retry the same model or retry 5xx/timeout ambiguously.
-   for(let index=0;index<Math.min(2,candidates.length);index++){
-    const model=candidates[index];
-    upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
-    if(upstream.status!==429)break;
-    if(index+1<Math.min(2,candidates.length))await upstream.body?.cancel();
+   // No ListModels calls on the generation hot path. Model IDs must be verified
+   // separately with the signed hybrid_models diagnostic before configuration.
+   const primary=env.AI_GEMINI_MODEL;
+   const alternate=env.AI_GEMINI_FALLBACK_MODEL;
+   const valid=id=>typeof id==='string'&&/^gemini-[a-zA-Z0-9.-]+$/.test(id)
+     &&!/(?:image|tts|embedding)/i.test(id);
+   const models=[primary];
+   if(valid(alternate)&&alternate!==primary)models.push(alternate);
+   for(let index=0;index<models.length;index++){
+    const model=models[index];activeModel=model;
+    upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent',
+     {method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
+    // Only definite 404 (model unavailable) and 429 (rate limit) may fall back.
+    // Never retry ambiguous network failures, timeouts, 5xx, or malformed output.
+    if(![404,429].includes(upstream.status)||index===models.length-1)break;
+    await upstream.body?.cancel();
    }
   }else{
    upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
   }
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
+  providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
    const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
@@ -131,7 +112,7 @@ async function relayGroq(request,env){
   if(typeof content!=='string'||content.length>262144)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
  }catch(error){return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
- finally{clearTimeout(timeout)}
+ finally{clearTimeout(timeout);console.log('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,model:activeModel,provider_status:providerStatus,elapsed_ms:Math.min(60000,Date.now()-started)}))}
 }
 export default {
  async fetch(request,env){
