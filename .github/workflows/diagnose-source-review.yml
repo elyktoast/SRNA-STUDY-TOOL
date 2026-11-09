@@ -5,7 +5,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: source-reviewer-staging-deployment
+  group: staging-isolated-source-review-diagnostic
   cancel-in-progress: false
 jobs:
   diagnose:

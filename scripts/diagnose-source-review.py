@@ -27,7 +27,5 @@ def reviewer(payload):
         print(json.dumps({"rule":e.rule,"retry_after_seconds":e.retry_after_seconds,"remaining_requests":e.remaining_requests,"remaining_tokens":e.remaining_tokens}))
         raise
     return [{**j,"contradiction_found":j["source_conflict_found"]} for j in response["judgments"]]
-for entry in retrieval["option_audits"]:
-    entry["retrieved_passage_ids"]=["ac27bdb7-a2ae-4482-ba62-82b3ece25e16"]
 report=run(item,retrieval,reviewer,source_passages=list(passages.values()),generator_model_id="openai/gpt-oss-120b",reviewer_model_id="qwen/qwen3.8-27b",require_quotes=True)
 print(json.dumps({"status":report["status"],"provider_rule":report.get("provider_rule"),"issues":report.get("issues")}))
