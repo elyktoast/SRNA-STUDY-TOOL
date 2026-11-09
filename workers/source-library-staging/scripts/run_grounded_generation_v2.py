@@ -157,7 +157,11 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                      "rules_version": "2.0", "auto_publish": False})
         if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
             raise ValueError("Independent option reviewer returned invalid judgments")
-        return response["judgments"]
+        judgments = response["judgments"]
+        if any(not isinstance(j, dict) or type(j.get("source_conflict_found")) is not bool for j in judgments):
+            raise ValueError("Independent source conflict state required")
+        # Adapt the unambiguous provider field to the existing evaluator contract.
+        return [{**j, "contradiction_found": j["source_conflict_found"]} for j in judgments]
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"

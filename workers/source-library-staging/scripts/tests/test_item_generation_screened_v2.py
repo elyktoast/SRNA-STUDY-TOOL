@@ -11,6 +11,30 @@ ARGS = dict(mode="NCE", domain="III", section="H", objective="III.H.4",
             item_id="new-1")
 
 class ScreenedGenerationTests(unittest.TestCase):
+    @patch("item_generation_screened_v2.generate_one")
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.validate_complete_item",return_value=[])
+    @patch("item_generation_screened_v2.reconcile",return_value=[])
+    @patch("item_generation_screened_v2.answer_evidence_check",return_value=[])
+    def test_one_source_rewrite_also_receives_existing_wording_defect(self, answers, reconcile_, schema, intake, generate):
+        import copy
+        item={"format":"MC","status":"draft","key":["A"],"options":[{"id":"A","text":"one two three four five six seven eight"},{"id":"B","text":"short option"}]}
+        generate.return_value={"item":item,"schema_issues":[{"rule_id":"R-2.5","message":"Source mismatch"}]}
+        intake.return_value={"draft_reviews":[{"status":"draft","screening":{"stages":{}}}]}
+        calls=[]
+        def rewrite(request):
+            calls.append(request)
+            revised=copy.deepcopy(request['item'])
+            revised['options'][1]['text']='one different choice with sufficient similar length now'
+            return revised
+        result=generate_and_screen(lambda request:{},**ARGS,rewrite=rewrite)
+        self.assertEqual(len(calls),1)
+        self.assertEqual({i['rule_id'] for i in calls[0]['issues']},{'R-2.5','R-6.8'})
+        self.assertEqual(result['rewrite_attempts_used'],1)
+        self.assertEqual(result['item']['key'],['A'])
+        self.assertEqual(result['item']['options'][0]['text'],item['options'][0]['text'])
+        self.assertFalse(result['can_publish'])
+
     @patch("item_generation_screened_v2.intake")
     def test_real_three_step_generator_hands_off_to_screening(self, intake):
         from test_item_standard_v2 import sample

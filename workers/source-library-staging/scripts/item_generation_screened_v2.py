@@ -30,6 +30,14 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                              evidence=evidence, format=format, item_id=item_id,
                              checkpoint=checkpoint, on_checkpoint=on_checkpoint,
                              generator_model_id=generator_model_id, topic=topic))
+    # Collect inexpensive editorial issues before spending the only rewrite on
+    # a schema/source defect; otherwise an already-visible length cue could be
+    # discovered only after that budget has been exhausted.
+    if rewrite is not None and generated["schema_issues"]:
+        from item_text_checks import check as check_text
+        editorial = check_text(generated["item"], source_texts=[p["excerpt"] for p in evidence])
+        generated["schema_issues"] = generated["schema_issues"] + [
+            issue for issue in editorial if issue not in generated["schema_issues"]]
     rewrite_attempts = 0
     rewrite_original_issues = list(generated["schema_issues"])
     if rewrite is not None and generated["schema_issues"]:
@@ -39,6 +47,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             problems.extend(answer_evidence_check(candidate, evidence)
                             if format in ("MC", "MS")
                             else special_evidence_check(candidate, evidence))
+            from item_text_checks import check as check_text
+            problems.extend(check_text(candidate, source_texts=[p["excerpt"] for p in evidence]))
             return problems
         repaired = attempt_once(generated["item"], generated["schema_issues"],
                                 rewrite, validate_rewrite)
