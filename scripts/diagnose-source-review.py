@@ -18,7 +18,7 @@ with psycopg.connect(os.environ["STAGING_DATABASE_URL"], options="-c default_tra
             for p in search(conn,query,owner,limit=5,textbook_id=book):
                 passages[p["passage_id"]]=p
 transport=make_transport(allowed_hosts=["api.groq.com"],relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
-adapter=make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",api_key="relay-authenticated",model="qwen/qwen3.8-27b",transport=transport,owner_opt_in=True,staging=True)
+adapter=make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",api_key="relay-authenticated",model="qwen/qwen3.8-27b",transport=transport,owner_opt_in=True,staging=True,max_output_tokens=1000)
 def reviewer(payload):
     print(json.dumps({"source_count":len(payload["source_passages"]),"payload_characters":len(json.dumps(payload))}))
     try:
