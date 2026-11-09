@@ -73,6 +73,31 @@ class TransportTests(unittest.TestCase):
         with self.assertRaises(TransportError) as ctx: self.call()
         self.assertEqual(ctx.exception.rule, "PROVIDER_INVALID_JSON")
 
+    def test_relay_network_and_disabled_are_distinct(self):
+        from urllib.error import HTTPError
+        from io import BytesIO
+        for response_error, expected in [
+            ("relay_network", "RELAY_NETWORK"),
+            ("relay_disabled", "RELAY_DISABLED"),
+        ]:
+            with self.subTest(response_error=response_error):
+                mock_opener = Mock()
+                mock_opener.open.side_effect = HTTPError(
+                    "https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
+                    503, "unavailable", {},
+                    BytesIO(('{"error":"' + response_error + '"}').encode()),
+                )
+                with patch("item_ai_https_transport_v2.urllib.request.build_opener", return_value=mock_opener):
+                    transport = make_transport(
+                        allowed_hosts=["api.example.test"],
+                        relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
+                        relay_secret="x" * 32,
+                    )
+                with self.assertRaises(TransportError) as ctx:
+                    transport(endpoint="https://api.example.test/v1/chat",
+                              headers={"Authorization": "Bearer test"}, body={"model": "test"})
+                self.assertEqual(ctx.exception.rule, expected)
+
     def test_requires_allowlist(self):
         with self.assertRaises(ValueError): make_transport(allowed_hosts=[])
 
