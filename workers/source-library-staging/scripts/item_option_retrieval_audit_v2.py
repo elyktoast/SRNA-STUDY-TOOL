@@ -27,10 +27,12 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5):
         label = option.get("text")
         if not isinstance(label, str) or not label.strip():
             raise ValueError("Every option needs text")
-        query = (stem[:180] + " " + label[:180]).strip()
+        query = label[:180].strip()
         rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id)
         results.append({
             "option_id": option_id,
+            "question_context": stem[:180],
+            "search_query": query,
             "expected_verdict": "supports_key" if option_id in keys else "refutes_distractor",
             "retrieved_passage_ids": [row["passage_id"] for row in rows],
             "retrieved_count": len(rows),
