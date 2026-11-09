@@ -69,6 +69,17 @@ class RewriteTests(unittest.TestCase):
                 self.assertFalse(result["can_publish"])
 
 
+    def test_rewrite_cannot_claim_page_image_verification(self):
+        original = {**draft(), "numbers_verified_against_page_image": False}
+        def revise(request):
+            item = request["item"]
+            item["numbers_verified_against_page_image"] = True
+            return item
+        result = attempt_once(original, [{"rule_id": "R-6.8"}], revise,
+                              lambda item: self.fail("Forged verification must not validate"))
+        self.assertEqual(result["item"], original)
+        self.assertTrue(any(i["rule_id"] == "R-13" for i in result["issues"]))
+
     def test_rewrite_provider_failure_preserves_original(self):
         def unavailable(request):
             raise RuntimeError("unavailable")

@@ -15,7 +15,8 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [],
                 "rewrite_attempts": 0, "can_publish": False}
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
-                 "objective", "format", "model", "status")
+                 "objective", "format", "model", "status",
+                 "numbers_verified_against_page_image")
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
                "protected_metadata": {field: deepcopy(original.get(field)) for field in immutable},
                "required_output_keys": list(original),

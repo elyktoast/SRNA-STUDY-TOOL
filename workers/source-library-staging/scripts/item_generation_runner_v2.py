@@ -35,6 +35,9 @@ def _complete_nonclinical_schema_fields(draft):
     keyed answer evidence and clinical judgments remain mandatory validations.
     """
     item = dict(draft)
+    # This stage sees indexed text, never authenticated page-image verification.
+    # A model assertion (or omitted flag) cannot create a verification receipt.
+    item["numbers_verified_against_page_image"] = False
     for field in ("sa", "dd", "hs"):
         if field not in item and item.get("format") not in (field.upper(),):
             item[field] = None
@@ -57,6 +60,8 @@ def _hydrate_indexed_citations(draft, trusted_passages):
     if not isinstance(citations, list):
         return item
     for citation in citations:
+        if isinstance(citation, dict):
+            citation.pop("numbers_verified_against_page_image", None)
         if not isinstance(citation, dict) or "excerpt" in citation:
             continue
         source = sources.get(citation.get("passage_id"))
