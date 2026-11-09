@@ -36,6 +36,7 @@ for(const [id,reason] of [
  ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
  ['11d8fe2a-af0c-4986-ab17-f1524eb2fe1a','The guarded rewrite omitted required option error_pattern tags; quality validation failed.'],
  ['273d8969-5957-4aec-9c4d-7c46548de822','Option evidence remained unsupported after the single rewrite; quality validation failed.'],
+ ['217c7f66-65ff-4c4a-849a-09598f6c26c1','The single rewrite still relied on source silence to reject distractors; quality validation failed.'],
  ['eec2209c-419d-40ea-b830-6586d2b06125','Citation/quotation validation and guarded rewrite failed.'],
  ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
 ]){
@@ -45,7 +46,7 @@ for(const [id,reason] of [
   assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
  }
 }
-const request={topic:'increased O2 consumption and decreased FRC',page_start:1280,page_end:1280,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'malignant hyperthermia triggering nontriggering agents',page_start:984,page_end:984,mode:'NCE',domain:'III',section:'H',objective:'III.H.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
