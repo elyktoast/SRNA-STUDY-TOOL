@@ -98,7 +98,7 @@ class LiveOptionEvidenceTests(unittest.TestCase):
         _,captured=self.review()
         result=adapter({**captured[0],'step':'option_review','blind':True,'rules_version':'2.0','auto_publish':False})
         self.assertEqual(result['judgments'],self.judgments)
-        self.assertEqual(calls[0]['body']['max_tokens'],1800)
+        self.assertEqual(calls[0]['body']['max_tokens'],1000)
         self.assertNotIn('key', json.loads(calls[0]['body']['messages'][1]['content']))
 
 if __name__=='__main__': unittest.main()
