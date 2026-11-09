@@ -14,6 +14,16 @@ EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_choice_quality_checks_do_not_replace_special_format_validation(self, evidence):
+        args = SimpleNamespace(**{**vars(ARGS), "format":"SA"})
+        env = {"STAGING_ONLY":"true", "AI_GENERATOR_MODEL":"generator", "AI_REVIEWER_MODEL":"reviewer",
+               "AI_BLIND_REVIEW_OPT_IN":"true", "AI_EXPLANATION_REVIEW_OPT_IN":"true"}
+        result = execute(object(), args, env)
+        self.assertEqual(result["review_readiness"]["board_quality_review"],"disabled")
+        self.assertEqual(result["review_readiness"]["blind_review"],"configured")
+        self.assertEqual(result["review_readiness"]["explanation_review"],"configured")
+
     def test_rate_wait_buffer_never_exceeds_sixty_seconds_or_adds_more_attempts(self):
         from run_grounded_generation_v2 import _call_with_bounded_rate_wait
         from item_ai_https_transport_v2 import TransportError

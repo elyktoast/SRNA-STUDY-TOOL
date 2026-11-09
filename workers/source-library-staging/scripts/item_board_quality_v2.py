@@ -85,8 +85,12 @@ def editorial(item, reviewer):
                   for k, v in findings.items()]
         return {**pending, "status": "flag" if issues else "pass", "issues": issues,
                 "checks": response["checks"]}
-    except Exception:
-        return pending
+    except Exception as exc:
+        rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
+        allowed = {"PROVIDER_REQUEST_REJECTED", "PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}
+        messages = {"Incomplete independent editorial review", "Invalid editorial finding", "Editorial finding coverage mismatch"}
+        return {**pending, "provider_rule": rule if rule in allowed else "REVIEW_RESPONSE_INVALID",
+                "review_error": str(exc) if type(exc) is ValueError and str(exc) in messages else None}
 
 
 def options_only(item, reviewer, *, shuffle=None):

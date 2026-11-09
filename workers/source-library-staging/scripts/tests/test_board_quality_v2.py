@@ -89,6 +89,19 @@ class BoardQualityTests(unittest.TestCase):
             with self.subTest(extra=extra),self.assertRaises(ValueError): adapter({**request,**extra})
         self.assertEqual(calls,[])
 
+    def test_editorial_adapter_satisfies_json_mode_provider_contract(self):
+        calls=[]
+        def transport(**kwargs):
+            body=kwargs["body"]
+            self.assertIn("json",json.dumps(body["messages"]).lower())
+            self.assertEqual(body["max_tokens"],700)
+            calls.append(body)
+            return {"choices":[{"message":{"content":json.dumps({"checks":{k:"pass" for k in CRITERIA},"findings":[]})}}]}
+        adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="independent",owner_opt_in=True,transport=transport)
+        result=editorial(item(),adapter)
+        self.assertEqual(result["status"],"pass")
+        self.assertNotIn("key",json.loads(calls[0]["messages"][1]["content"]))
+
     def test_server_self_check_does_not_inherit_forged_passes(self):
         q=item();q["self_check"]={"rules_checked":["EVERYTHING"],"human_approved":True}
         report={"stages":{"blind_model":{"status":"pass","issues":[]},

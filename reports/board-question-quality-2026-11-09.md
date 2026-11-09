@@ -60,3 +60,15 @@ text, source excerpts, prompts or provider reasoning belong in public reports.
 Production deployment requires owner approval under the governing standard
 R-17.4.5. Main merges trigger GitHub Pages deployment, so keep this consolidated
 PR open until the staging results are reviewable and approval is available.
+
+
+## First live boundary check
+
+Source CI ran 858 Python tests without failures (one skipped), but repository
+validation caught the missing frontend build-ID bump; that identifier is now
+updated. The staging reviewer deployed and its first paid editorial control
+stopped on provider HTTP 400, before grading. The new editorial prompt lacked
+an explicit JSON-output instruction; the request is corrected and covered by
+a provider-contract test. Sanitized pending-review diagnostics are added.
+Choice-specific editorial/cue checks are scoped to MC/MS, preserving existing
+numeric, matching and hotspot validation. A fresh live control remains required.
