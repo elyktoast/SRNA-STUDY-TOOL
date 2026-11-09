@@ -121,3 +121,44 @@ test('relay classifies outbound network exceptions without exposing exception te
   assert.equal(JSON.stringify(body).includes('private token'),false);
  }finally{globalThis.fetch=original;}
 });
+
+test('Gemini uses listed 3.8 first and one alternate on 429',async()=>{
+ const original=globalThis.fetch;const calls=[];
+ globalThis.fetch=async(url)=>{
+  const value=String(url);calls.push(value);
+  if(value.includes('/v1beta/models?pageSize='))return new Response(JSON.stringify({models:[
+   {name:'models/gemini-3.8-flash',supportedGenerationMethods:['generateContent']},
+   {name:'models/gemini-3.6-flash',supportedGenerationMethods:['generateContent']},
+   {name:'models/gemini-2.5-flash',supportedGenerationMethods:['generateContent']},
+  ]}),{status:200});
+  if(value.includes('gemini-3.8-flash:generateContent'))return new Response('{}',{status:429});
+  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
+ };
+ try{
+  const response=await gateway.fetch(request('concept_card','generator-model'),{
+   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
+  });
+  assert.equal(response.status,200);
+  assert.deepEqual(calls.filter(x=>x.includes(':generateContent')).map(x=>x.match(/gemini-[^/:]+:generateContent/)[0]),[
+   'gemini-3.8-flash:generateContent','gemini-3.6-flash:generateContent']);
+ }finally{globalThis.fetch=original;}
+});
+
+test('Gemini never attempts third model after two rate limits',async()=>{
+ const original=globalThis.fetch;const calls=[];
+ globalThis.fetch=async(url)=>{
+  const value=String(url);calls.push(value);
+  if(value.includes('/v1beta/models?pageSize='))return new Response(JSON.stringify({models:[
+   'gemini-3.8-flash','gemini-3.6-flash','gemini-3-flash'
+  ].map(id=>({name:'models/'+id,supportedGenerationMethods:['generateContent']}))}),{status:200});
+  return new Response('{}',{status:429});
+ };
+ try{
+  const response=await gateway.fetch(request('concept_card','generator-model'),{
+   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
+  });
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).rule,'PROVIDER_RATE_LIMIT');
+  assert.equal(calls.filter(x=>x.includes(':generateContent')).length,2);
+ }finally{globalThis.fetch=original;}
+});
