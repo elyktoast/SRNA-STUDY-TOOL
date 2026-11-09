@@ -2,6 +2,8 @@
 
 No question, revision, approval or publication is written. Never print book text.
 """
+import copy
+from pathlib import Path
 import argparse
 import json
 import os
@@ -34,12 +36,19 @@ with psycopg.connect(os.environ["STAGING_DATABASE_URL"], options="-c default_tra
 transport = make_transport(allowed_hosts=["api.groq.com"],
     relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
     relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
+reviewer_model = json.loads(Path("workers/source-library-staging/reviewer-gateway/wrangler.json").read_text())["vars"]["AI_REVIEWER_MODEL"]
 adapter = make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",
-    api_key="relay-authenticated",model="qwen/qwen3.8-27b",transport=transport,owner_opt_in=True,staging=True)
-for name, item, expected in (("unsupported_original", original, "flag"), ("corrected_revision", corrected, "pass")):
+    api_key="relay-authenticated",model=reviewer_model,transport=transport,owner_opt_in=True,staging=True)
+teaching = copy.deepcopy(corrected)
+teaching["concept_card"].update({
+    "relevance":"Recognizing triggering versus nontriggering drug categories helps clinicians select a nontriggering option for a susceptible patient.",
+    "misconception":"A potential misconception is that an agent labeled nontriggering belongs in the triggering category.",
+    "counterfactual":"Replacing a drug labeled triggering with a listed nontriggering option avoids exposure to that triggering drug."})
+for name, item, expected in (("unsupported_original", original, "flag"), ("corrected_revision", corrected, "pass"),
+                             ("supported_teaching_framing", teaching, "pass")):
     report = review(item, sources, lambda payload:_call_with_bounded_rate_wait(adapter, payload))
     fields = [i.get("field") for i in report["issues"]]
-    print(json.dumps({"case":name,"status":report["status"],"flagged_fields":fields,
+    print(json.dumps({"case":name,"reviewer_model":reviewer_model,"status":report["status"],"flagged_fields":fields,
                       "checked_fields":len(report.get("checked_fields", [])),
                       "provider_rule":report.get("provider_rule"),"review_error":report.get("review_error"),
                       "database_writes":False,"published":False}))

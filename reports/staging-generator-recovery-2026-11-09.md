@@ -548,3 +548,25 @@ After the provider's indicated wait, its second request was only 20 tokens short
 (3,675 remaining versus 3,695 requested). The existing one-retry helper now adds
 one second of margin while keeping the maximum wait at 60 seconds and the same
 two-attempt bound. Timeouts and missing/oversized delay hints still are not retried.
+
+
+### Reviewer and short-label calibration before merge
+
+The second live run (42679033597) verified the combined path and a successful
+provider rewrite, but did not pass final acceptance. Draft
+0e4a82b6-0d86-49c0-9868-17ac8f365d3c stayed unpublished: the reviewer still treated
+ordinary relevance/misconception framing as unsupported, and the word-count cue
+rule flagged a two-word agent name despite a visibly longer one-word distractor.
+
+The next verification uses the already-supported Groq GPT-OSS 20B JSON/low-effort
+reviewer, distinct from the unchanged GPT-OSS 120B generator. It must still flag
+the known unsupported physiology and exhaustive clinical claim, accept the saved
+source-faithful revision, and pass a separate source-supported teaching-framing
+case. No model quality improvement is assumed before those live results.
+
+R-6.8 retains its 15% word-count rule for prose. When every option is at most
+three words, it additionally requires a genuine visible-length difference before
+flagging a word-boundary cue. This avoids padding named agents merely because
+one chemical name has a space. Tests preserve flags for genuinely longer short
+choices and long explanatory answers. Clinical source and answer requirements
+are unchanged.
