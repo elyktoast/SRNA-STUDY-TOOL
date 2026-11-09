@@ -73,7 +73,8 @@ if os.environ.get('PROBE_SCREENING')=='true':
                 candidate=real(request)
                 if request['step']=='rewrite':
                     protected=request.get('protected_metadata',{})
-                    print(json.dumps({'probe':'rewrite_shape','recognized_keys':[k for k in candidate if k in ('item','draft','revised_item','question','item_id','rules_version','model','status')],'changed_protected_fields':[k for k,v in protected.items() if candidate.get(k)!=v]}),flush=True)
+                    import re
+                    print(json.dumps({'probe':'rewrite_shape','field_names':[k for k in candidate if re.fullmatch(r'[a-z_]{1,40}',k)],'changed_protected_fields':[k for k,v in protected.items() if candidate.get(k)!=v]}),flush=True)
                 return candidate
             return generator
         return real

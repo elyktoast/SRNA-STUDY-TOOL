@@ -90,6 +90,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return item_id and key array for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
             {"role": "user", "content": json.dumps(request, ensure_ascii=False)}
         ], "max_tokens": output_budget, "temperature": 0.2}
+        if request["step"] == "rewrite":
+            body["messages"][0]["content"] += " Return the FLAT revised item only, with all original item fields at the top level. Do not echo the request envelope, protected_metadata, issues, trusted_evidence, repair_instructions, step or max_rewrites. Keep status exactly draft and copy every original protected field and the keyed option text exactly."
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.
         response = transport(endpoint=endpoint,
@@ -113,6 +115,11 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "rewrite" and isinstance(parsed.get("item"), dict):
             protocol = {"step": "rewrite", "rules_version": "2.0", "auto_publish": False,
                         "max_rewrites": 1, "requires_human_review": True, "can_publish": False}
+            # An echoed request scaffold carries no authority. Accept it only
+            # when every such field exactly matches the trusted request.
+            for field in ("protected_metadata", "issues", "trusted_evidence", "repair_instructions"):
+                if field in request:
+                    protocol[field] = request[field]
             extras = set(parsed) - {"item"}
             if extras <= set(protocol) and all(type(parsed[k]) is type(protocol[k]) and parsed[k] == protocol[k] for k in extras):
                 parsed = parsed["item"]
