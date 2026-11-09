@@ -6,7 +6,10 @@
     "STAGING_ONLY": "true",
     "SUPABASE_URL": "https://xqyasyambwdyhsjkftqu.supabase.co",
     "AI_HYBRID_ENABLED": "true",
-    "AI_CLOUDFLARE_MODEL": "@cf/qwen/qwen3.8-27b"
+    "AI_CLOUDFLARE_MODEL": "@cf/qwen/qwen3.8-27b",
+    "AI_REWRITE_OPT_IN": "true",
+    "AI_BLIND_REVIEW_OPT_IN": "true",
+    "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b"
   },
   "containers": [
     {

@@ -140,7 +140,7 @@ const providerState=providerResponse.status===200?providerRule:providerResponse.
 console.log('STEP 11: read-only provider check: HTTP',providerResponse.status,'state',providerState);
 if(providerBody?.check==='hybrid_provider_readiness'){
  assert.equal(providerBody.generation_performed,false);
- assert.equal(providerBody.providers?.length,3);
+ assert.equal(providerBody.providers?.length,2);
  assert.equal(typeof providerBody.metadata_ready,'boolean','metadata readiness must be explicit');
  assert.equal(providerBody.generation_ready,false,'metadata probes cannot certify inference readiness');
  const providerNames=new Set();
@@ -152,9 +152,9 @@ if(providerBody?.check==='hybrid_provider_readiness'){
   providerNames.add(p.provider.toLowerCase());
   console.log('STEP 11 provider:',p.provider,'state',p.state);
  }
- assert.equal(providerNames.size,3,'provider check must report three distinct providers');
+ assert.equal(providerNames.size,2,'provider check must report two distinct active providers');
  assert.ok([...providerNames].some(name=>name.includes('groq')),'Groq provider missing');
- assert.ok([...providerNames].some(name=>name.includes('gemini')),'Gemini provider missing');
+ assert.ok(!providerNames.has('gemini'),'Gemini must remain disabled');
  assert.ok([...providerNames].some(name=>name.includes('cloudflare')),'Cloudflare AI provider missing');
 }
 assert.ok([200,403,503].includes(providerResponse.status),'unexpected provider-check HTTP status');
