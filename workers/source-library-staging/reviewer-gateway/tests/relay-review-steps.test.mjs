@@ -87,3 +87,24 @@ test('hybrid concept card falls back to configured Gemini API model when preferr
     assert.ok(calls.some(url=>url.endsWith('/models/gemini-2.5-flash:generateContent')));
   }finally{globalThis.fetch=original;}
 });
+
+test('hybrid concept card prioritizes available documented Gemini API IDs',async()=>{
+ const original=globalThis.fetch;const calls=[];
+ globalThis.fetch=async(url)=>{
+  calls.push(String(url));
+  if(String(url).includes('/v1beta/models?pageSize=')){
+   return new Response(JSON.stringify({models:[
+    {name:'models/gemini-3.6-flash',supportedGenerationMethods:['generateContent']},
+    {name:'models/gemini-3.8-flash',supportedGenerationMethods:['generateContent']},
+   ]}),{status:200});
+  }
+  return new Response(JSON.stringify({candidates:[{content:{parts:[{text:'{}'}]}}]}),{status:200});
+ };
+ try{
+  const response=await gateway.fetch(request('concept_card','generator-model'),{
+   ...env,AI_HYBRID_ENABLED:'true',AI_GEMINI_API_KEY:'test-key',AI_GEMINI_MODEL:'gemini-2.5-flash',
+  });
+  assert.equal(response.status,200);
+  assert.ok(calls.find(url=>url.includes(':generateContent')).endsWith('/models/gemini-3.8-flash:generateContent'));
+ }finally{globalThis.fetch=original;}
+});
