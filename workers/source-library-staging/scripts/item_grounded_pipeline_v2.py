@@ -15,7 +15,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, evidence_packet=None,
-                        rewrite=None, semantic_lookup=None, review_repair=None):
+                        rewrite=None, semantic_lookup=None, review_repair=None,
+                        option_reviewer=None, option_reviewer_model_id=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -27,6 +28,13 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         raise ValueError("Independent blind reviewer and distinct model identities required")
     if review_repair is not None and not callable(review_repair):
         raise ValueError("Explicit authenticated review repair adapter required")
+    if option_reviewer is not None and (
+            not callable(option_reviewer) or not isinstance(generator_model_id, str)
+            or not generator_model_id.strip()
+            or not isinstance(option_reviewer_model_id, str)
+            or not option_reviewer_model_id.strip()
+            or generator_model_id.strip() == option_reviewer_model_id.strip()):
+        raise ValueError("Explicit independent option reviewer and distinct model identities required")
     packet = evidence_packet if evidence_packet is not None else build_evidence(
         conn, owner_uid, topic, textbook_id=textbook_id, limit=limit,
         section_id=section_id, include_subsections=include_subsections,
@@ -69,10 +77,28 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                             "clinical_verification_complete": False,
                             "can_publish": False,
                             "error": "option_retrieval_unavailable"}
+    option_adjudication = None
+    if (option_reviewer is not None and format in ("MC", "MS")
+            and isinstance(result.get("item"), dict) and isinstance(option_audit, dict)):
+        from item_option_adjudication_handoff_v2 import run as review_options
+        from search_passages import search
+        passages = {}
+        for entry in option_audit.get("option_audits", []):
+            if entry.get("search_status") != "matches_found":
+                continue
+            for passage in search(conn, entry["search_query"], owner_uid,
+                                  limit=5, textbook_id=textbook_id):
+                passages[passage["passage_id"]] = passage
+        option_adjudication = review_options(
+            result["item"], option_audit, option_reviewer,
+            source_passages=list(passages.values()),
+            generator_model_id=generator_model_id,
+            reviewer_model_id=option_reviewer_model_id)
     if format in ("MC", "MS"):
         from item_option_audit_screening_v2 import attach
         result = attach(result, option_audit)
-    return {**result, "independent_option_retrieval": option_audit, "source_evidence": {
+    return {**result, "independent_option_retrieval": option_audit,
+            "independent_option_adjudication": option_adjudication, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
         "pdf_page_locations_only": True,
