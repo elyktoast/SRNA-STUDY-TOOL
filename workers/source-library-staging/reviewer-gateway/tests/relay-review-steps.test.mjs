@@ -11,6 +11,24 @@ const env = {
   AI_BLIND_REVIEW_OPT_IN: 'true', AI_REWRITE_OPT_IN: 'true',
 };
 const endpoint = 'https://example.workers.dev/internal/groq-relay';
+test('429 diagnostics expose only fixed dimensions and bounded numbers; fractional waits round up',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>Response.json({error:{message:'Rate limit reached: tokens per day (TPD): Limit 200000, Used 199999, Requested 4000. private token and source text'}},{status:429,headers:{'Retry-After':'2.45','x-ratelimit-remaining-tokens':'8000'}});
+ try{
+  const response=await gateway.fetch(request('blind_review','reviewer-model'),env);
+  assert.deepEqual(await response.json(),{error:'provider_failed',rule:'PROVIDER_RATE_LIMIT',provider_status:429,remaining_tokens:8000,rate_limit_dimension:'tokens_per_day',limit:200000,used:199999,requested:4000,retry_after_seconds:3});
+ }finally{globalThis.fetch=original;}
+});
+test('oversized and invalid upstream error bodies cannot become relay diagnostics',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const message of ['private'.repeat(1000),'not json']){
+   globalThis.fetch=async()=>new Response(message,{status:429,headers:{'Retry-After':'invalid'}});
+   const data=await (await gateway.fetch(request('blind_review','reviewer-model'),env)).json();
+   assert.deepEqual(data,{error:'provider_failed',rule:'PROVIDER_RATE_LIMIT',provider_status:429});
+  }
+ }finally{globalThis.fetch=original;}
+});
 function request(step, model, options={}) {
   const body = JSON.stringify({
     model, max_tokens: 1024, temperature: 0.2,

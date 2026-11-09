@@ -10,6 +10,20 @@ function respond(status,origin,body=''){
  if(origin===ORIGIN){headers['Access-Control-Allow-Origin']=ORIGIN;headers.Vary='Origin';}
  return new Response(status===204?null:body,{status,headers});
 }
+async function safeRateDiagnostic(response){
+ // Expose only a fixed limit dimension and numeric counters, never raw errors.
+ const reader=response.body?.getReader();if(!reader)return {};
+ let size=0;const chunks=[];
+ try{
+  while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>4096)return {};chunks.push(value);}
+  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  const message=JSON.parse(new TextDecoder().decode(bytes))?.error?.message;
+  if(typeof message!=='string')return {};
+  const dimension=/tokens per minute|\bTPM\b/i.test(message)?'tokens_per_minute':/tokens per day|\bTPD\b/i.test(message)?'tokens_per_day':/requests per minute|\bRPM\b/i.test(message)?'requests_per_minute':/requests per day|\bRPD\b/i.test(message)?'requests_per_day':'unknown';
+  const counts={};for(const label of ['limit','used','requested']){const match=message.match(new RegExp('\\b'+label+'\\s*:?\\s*(\\d{1,10})(?!\\d|\\.\\d)','i'));if(match&&Number(match[1])<=1e9)counts[label]=Number(match[1]);}
+  return {rate_limit_dimension:dimension,...counts};
+ }catch{return {};}finally{await reader.cancel().catch(()=>{});}
+}
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
 function relayFailure(error,provider,step){
  const name=String(error?.name||'');
@@ -94,7 +108,7 @@ async function relayGroq(request,env){
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
-   const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;
+   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,6})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
    const remainingTokens=upstream.headers.get('x-ratelimit-remaining-tokens');
    const safeCount=v=>v!==null&&/^\d{1,10}$/.test(v)?Number(v):null;
@@ -102,6 +116,10 @@ async function relayGroq(request,env){
     ...(safeCount(remainingRequests)!==null?{remaining_requests:safeCount(remainingRequests)}:{}),
     ...(safeCount(remainingTokens)!==null?{remaining_tokens:safeCount(remainingTokens)}:{})
    }:{};
+   if(rule==='PROVIDER_RATE_LIMIT'){
+    Object.assign(rateLimit,await safeRateDiagnostic(upstream));
+    console.error('staging_rate_limit',JSON.stringify({provider,step:step.step,model:activeModel,...rateLimit}));
+   }
    return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq'){
