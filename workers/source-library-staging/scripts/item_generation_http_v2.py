@@ -268,7 +268,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             from types import SimpleNamespace
             args = SimpleNamespace(**{**{"textbook_id": None, "section_id": None,
                 "include_subsections": False, "page_start": None,
-                "page_end": None, "limit": 5, "format": "MC"}, **data,
+                "page_end": None, "limit": (8 if live else 20), "format": "MC"}, **data,
                 "owner_uid": owner, "execute": live, "confirm_paid_calls": live})
             if (args.mode not in ("NCE", "SEE") or args.format not in ("MC", "MS", "SA", "DD", "HS")
                     or args.domain not in ("I", "II", "III", "IV")

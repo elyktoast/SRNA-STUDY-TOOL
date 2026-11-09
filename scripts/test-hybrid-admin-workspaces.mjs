@@ -221,3 +221,9 @@ test('indexed catalog failures expose safe HTTP status and reason',()=>{
  assert.match(storage,/Indexed textbook catalog request failed \(HTTP /);
  assert.match(ui,/Indexed textbook catalog error:/);
 });
+
+test('evidence screening uses 20 passages and generation defaults to 8',()=>{
+ const backend=readFileSync(new URL('../workers/source-library-staging/scripts/item_generation_http_v2.py',import.meta.url),'utf8');
+ assert.match(backend,/"limit": \(8 if live else 20\)/);
+ assert.match(ui,/up to 20 per evidence check/);
+});
