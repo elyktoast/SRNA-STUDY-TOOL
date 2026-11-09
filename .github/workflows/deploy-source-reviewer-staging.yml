@@ -97,6 +97,19 @@ jobs:
           fs.writeFileSync(process.argv[2], JSON.stringify(values), {mode:0o600});
           NODE
           npx wrangler secret bulk "$secrets_file" --config wrangler.json >/dev/null
+      # A sleeping Durable Object container may not advance its image rollout until
+      # an authenticated read wakes it. This never generates or writes a question.
+      # Cold-start/rollout failures are expected here; the gate and final smoke
+      # remain mandatory and fail closed before any paid acceptance call.
+      - name: Wake idle staging reviewer with read-only authenticated diagnostics
+        continue-on-error: true
+        env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: node scripts/diagnose-source-reviewer-staging.mjs
       - name: Wait for asynchronous container rollout before smoke and paid acceptance
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
