@@ -11,6 +11,15 @@ function respond(status,origin,body=''){
  return new Response(status===204?null:body,{status,headers});
 }
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
+function relayFailure(error,provider,step){
+ const name=String(error?.name||'');
+ const reason=String(error?.message||'').toLowerCase();
+ const timeout=name==='TimeoutError'||name==='AbortError'||/timed out|timeout/.test(reason);
+ const category=timeout?'timeout':name==='TypeError'?'network':'runtime';
+ // Never log credentials, request bodies, URLs or provider exception messages.
+ console.error('staging_relay_failure',JSON.stringify({provider,step,category}));
+ return respond(503,null,JSON.stringify({error:timeout?'relay_timeout':'relay_network',category}));
+}
 async function relayGroq(request,env){
  if(env.STAGING_ONLY!=='true'||env.AI_GENERATION_OPT_IN!=='true'||!env.AI_PROVIDER_API_KEY||!env.STAGING_RECEIPT_SIGNING_SECRET)return respond(503,null,'{"error":"relay_disabled"}');
  if(request.method!=='POST'||request.headers.get('Content-Type')!=='application/json')return respond(405,null,'{"error":"method_not_allowed"}');
@@ -49,10 +58,12 @@ async function relayGroq(request,env){
  if(!([env.AI_GENERATOR_MODEL, ...(env.AI_BLIND_REVIEW_OPT_IN==='true'?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
  if(!['concept_card','item_draft','rationale','rewrite','blind_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&(env.AI_BLIND_REVIEW_OPT_IN!=='true'||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(step.step!=='blind_review'&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
+ let activeProvider='unknown';
  try{
-  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   const provider=hybrid&&step.step==='concept_card'?'gemini':hybrid&&step.step==='rationale'?'cloudflare':'groq';
+  activeProvider=provider;
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   const input=payload.messages[0].content+'\n'+payload.messages[1].content;
@@ -63,12 +74,13 @@ async function relayGroq(request,env){
   if(provider==='gemini'){
    // Resolve the API IDs from Google's own model listing; dashboard labels are not API IDs.
    // API IDs from Google's model catalog, not human-readable display names.
-   const preferred=['gemini-3.8-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-flash-lite'];
+   // Prefer the configured, verified API model; never assume marketing names are valid IDs.
+   const preferred=[env.AI_GEMINI_MODEL];
    const available=new Set();
    let listingSucceeded=false;
    try{
     let next='';
-    for(let page=0;page<5;page++){
+    for(let page=0;page<2;page++){
      const listing=await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000'+(next?'&pageToken='+encodeURIComponent(next):''),{headers:{'x-goog-api-key':env.AI_GEMINI_API_KEY},redirect:'manual',signal:controller.signal});
      if(!listing.ok)break;
      listingSucceeded=true;
@@ -85,12 +97,14 @@ async function relayGroq(request,env){
    if(!candidates.length)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_MODEL_UNAVAILABLE"}');
    for(const model of candidates){
     upstream=await fetch('https://generativelanguage.googleapis.com/v1beta/'+model+':generateContent',{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
-    if(upstream.ok||![400,404,429,500,502,503,504].includes(upstream.status))break;
+    // Do not retry throttled or rejected requests; no automatic paid duplicate generation.
+    if(upstream.ok||![404].includes(upstream.status))break;
     await upstream.body?.cancel();
    }
   }else{
    upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
   }
+  if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
    const seconds=rawRetry!==null&&/^\d{1,5}$/.test(rawRetry)?Math.min(3600,Number(rawRetry)):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
@@ -108,7 +122,8 @@ async function relayGroq(request,env){
   const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'?JSON.stringify(rawContent):null;
   if(typeof content!=='string'||content.length>262144)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
- }catch{return respond(503,null,'{"error":"relay_network"}')}
+ }catch(error){return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
+ finally{clearTimeout(timeout)}
 }
 export default {
  async fetch(request,env){
