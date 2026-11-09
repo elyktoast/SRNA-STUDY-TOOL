@@ -42,3 +42,18 @@ for label,settings in probes:
     print(json.dumps({'probe':label,'elapsed_ms':round((time.monotonic()-started)*1000),'finish_reason':finish,'valid_json':valid,'draft_shape_valid':shape,'completion_tokens':response.get('usage',{}).get('completion_tokens')}),flush=True)
     if label=='bounded_json' and not (shape and finish=='stop'):
         raise SystemExit('Bounded JSON drafting probe failed; full generation remains unverified')
+if os.environ.get('PROBE_RATIONALE')=='true':
+    request=build_step('rationale',mode='NCE',domain='III',section='H',objective='III.H.4',evidence=evidence,format='MC',concept_card=concept,draft=parsed)
+    body={'model':'openai/gpt-oss-120b','messages':[{'role':'system','content':system},{'role':'user','content':json.dumps(request,ensure_ascii=False)}],'temperature':0.2,'max_tokens':1400}
+    started=time.monotonic()
+    try:
+        result=transport(endpoint='https://api.groq.com/openai/v1/chat/completions',headers={},body=body)
+        rationale=json.loads(result['choices'][0]['message']['content'])
+    except TransportError as error:
+        print(json.dumps({'probe':'rationale','rule':error.rule}),flush=True)
+        raise SystemExit('Isolated rationale transport failed') from None
+    except (ValueError,TypeError,KeyError):
+        raise SystemExit('Isolated rationale JSON parsing failed') from None
+    valid=isinstance(rationale,dict) and all(isinstance(rationale.get(k),str) and rationale[k].strip() for k in ('core_concept','why_key_wins','trap')) and isinstance(rationale.get('distractor_breakdown'),dict) and set(rationale['distractor_breakdown'])=={'A','B','C','D'}
+    print(json.dumps({'probe':'rationale','elapsed_ms':round((time.monotonic()-started)*1000),'required_shape_valid':valid,'all_options_explained':valid}),flush=True)
+    if not valid: raise SystemExit('Isolated rationale contract failed')
