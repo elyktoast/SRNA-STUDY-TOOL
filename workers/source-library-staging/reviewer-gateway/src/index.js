@@ -63,7 +63,7 @@ async function relayGroq(request,env){
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   const provider=hybrid&&['concept_card','rationale'].includes(step.step)?'cloudflare':'groq';
-  activeProvider=provider;
+  activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   const input=payload.messages[0].content+'\n'+payload.messages[1].content;
@@ -103,13 +103,26 @@ async function relayGroq(request,env){
     ...(safeCount(remainingRequests)!==null?{remaining_requests:safeCount(remainingRequests)}:{}),
     ...(safeCount(remainingTokens)!==null?{remaining_tokens:safeCount(remainingTokens)}:{})
    }:{};
-   return respond(502,null,JSON.stringify({error:'provider_failed',rule,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
+   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq')return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   let data;try{data=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}')}
-  const rawContent=provider==='gemini'?data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join(''):data?.result?.response;
-  const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'?JSON.stringify(rawContent):null;
-  if(typeof content!=='string'||content.length>262144)return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM"}');
+  // Cloudflare Qwen 3.8 uses the OpenAI-compatible result.choices format.
+  // Older Workers AI models use result.response. Do not forward reasoning or
+  // partial/refused generations as a clinically reviewable question.
+  const cloudflareResult=data?.result;
+  const choice=Array.isArray(cloudflareResult?.choices)?cloudflareResult.choices[0]:null;
+  const finish=choice?.finish_reason;
+  const rawContent=provider==='gemini'
+   ?data?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')
+   :choice?choice.message?.content:cloudflareResult?.response;
+  const content=typeof rawContent==='string'?rawContent:rawContent&&typeof rawContent==='object'&&!Array.isArray(rawContent)?JSON.stringify(rawContent):null;
+  const failure=(reason)=>respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+  if(provider==='cloudflare'&&data?.success===false)return failure('provider_envelope_failed');
+  if(provider==='cloudflare'&&choice?.message?.refusal)return failure('provider_refusal');
+  if(provider==='cloudflare'&&finish&&finish!=='stop')return failure('provider_incomplete');
+  if(typeof content!=='string'||!content.trim())return failure('provider_empty_content');
+  if(content.length>262144)return failure('provider_response_too_large');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
  }catch(error){return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
  finally{clearTimeout(timeout);console.log('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,model:activeModel,provider_status:providerStatus,elapsed_ms:Math.min(60000,Date.now()-started)}))}
