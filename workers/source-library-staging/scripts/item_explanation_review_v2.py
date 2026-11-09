@@ -1,4 +1,15 @@
 """Independent source-only checks of explanatory fields; never clinical approval."""
+import re
+
+
+def _exclusive_clinical_claim(field):
+    label = field["label"]
+    if label not in ("concept_card.mechanism", "rationale.core_concept") and not label.startswith(
+            ("rationale.distractor_breakdown.", "distractor_evidence.")):
+        return False
+    return bool(re.search(r"\b(?:are|is)\s+(?:the\s+)?(?:only|sole)\s+(?:[A-Za-z-]+\s+){0,3}"
+                          r"(?:agents?|drugs?|causes?|mechanisms?|triggers?|treatments?|pathways?)\b",
+                          field["text"], re.I) or re.match(r"\s*Only\b", field["text"], re.I))
 
 
 def fields_for(item):
@@ -19,6 +30,10 @@ def fields_for(item):
         if not isinstance(text, str) or not text.strip():
             raise ValueError("Complete option evidence explanations required")
         fields.append({"id": "e" + str(len(fields)), "label": "distractor_evidence." + oid, "text": text})
+    for field in fields:
+        field["assessment"] = ("misconception_to_refute" if field["label"] == "concept_card.misconception"
+            else "teaching_application" if field["label"] in ("concept_card.relevance", "concept_card.counterfactual", "rationale.trap")
+            else "clinical_fact")
     return fields
 
 
@@ -53,6 +68,7 @@ def review(item, sources, reviewer):
         if not isinstance(result["supported_groups"], list) or not isinstance(result["unsupported"], list):
             raise ValueError("Invalid explanatory judgments")
         expected = {f["id"]: f["label"] for f in fields}
+        exclusive = {f["id"] for f in fields if _exclusive_clinical_claim(f)}
         seen, evidence, issues = set(), [], []
         for group in result["supported_groups"]:
             if not isinstance(group, dict) or set(group) != {"field_ids", "quote_refs"}:
@@ -77,7 +93,13 @@ def review(item, sources, reviewer):
                 if any(q["passage_id"] not in allowed[fid] for q in quotes):
                     raise ValueError("Support not cited for this explanatory field")
                 seen.add(fid)
-            evidence.append({"fields": [expected[fid] for fid in ids], "quotes": quotes})
+                if fid in exclusive and not any(re.search(r"\b(?:only|sole|exclusively|exhaustive)\b", q["quote"], re.I) for q in quotes):
+                    issues.append({"rule_id":"R-2.4", "field":expected[fid],
+                                   "message":"Exclusive clinical wording lacks explicit exclusivity in its cited supporting quotation"})
+            flagged = {issue["field"] for issue in issues}
+            supported = [expected[fid] for fid in ids if expected[fid] not in flagged]
+            if supported:
+                evidence.append({"fields": supported, "quotes": quotes})
         for finding in result["unsupported"]:
             if not isinstance(finding, dict) or set(finding) != {"field_id", "reason"}:
                 raise ValueError("Invalid unsupported finding")

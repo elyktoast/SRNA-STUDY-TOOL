@@ -63,8 +63,9 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             sources = request.get("source_passages")
             if (set(request) != allowed or request.get("independent") is not True
                     or not isinstance(fields, list) or not 1 <= len(fields) <= 20
-                    or any(not isinstance(f, dict) or set(f) != {"id", "label", "text", "passage_ids"}
+                    or any(not isinstance(f, dict) or set(f) != {"id", "label", "text", "passage_ids", "assessment"}
                            or any(not isinstance(v, str) or not v.strip() or len(v) > 5000 for v in (f["id"], f["label"], f["text"]))
+                           or f["assessment"] not in ("clinical_fact", "teaching_application", "misconception_to_refute")
                            or not isinstance(f["passage_ids"], list) or not f["passage_ids"]
                            or any(not isinstance(pid, str) for pid in f["passage_ids"]) for f in fields)
                     or len({f["id"] for f in fields}) != len(fields)
@@ -185,7 +186,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Return one JSON object with exactly supported_groups and unsupported. supported_groups is an array of {field_ids:[IDs], quote_refs:[{passage_id,span_id}]}; "
                 "unsupported is an array of {field_id,reason}, with a brief reason at most 25 words. Each field ID must appear EXACTLY ONCE across these two arrays. "
                 "Group fields sharing source support to keep output short. Each quote reference must be allowed by EVERY grouped field's passage_ids. Select verbatim source spans at least six characters long; never reconstruct quotations. "
-                "Support means the ENTIRE clinical claim is affirmatively supported. Otherwise mark that field unsupported, even if the claim is true from your own knowledge. "
+                "Use each field's assessment mode. clinical_fact requires positive source support for the clinical proposition. teaching_application permits narrow inferences and instructional framing while checking its clinical premises. misconception_to_refute deliberately names a FALSE belief: sources must REFUTE that belief, not affirm it. A refuted misconception is a supported educational field. "
+                "Support means the ENTIRE asserted clinical claim is affirmatively supported. Otherwise mark that field unsupported, even if the claim is true from your own knowledge. "
                 "A classification table supports named drug/class classification, NOT receptor physiology, calcium-release mechanisms, treatment requirements, or exhaustive ONLY claims. "
                 "A listed specific drug does not establish a rule for its entire pharmacologic class. Universal counterfactuals exceeding the source are unsupported. "
                 "For a misconception field, evaluate whether the proposition is correctly identified as a misconception; do not mistake a deliberately false misconception for an asserted fact. "
