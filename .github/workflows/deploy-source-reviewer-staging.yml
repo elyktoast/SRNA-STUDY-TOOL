@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - fix/verify-board-question-quality
     paths:
       - 'workers/source-library-staging/reviewer-gateway/**'
       - 'workers/source-library-staging/reviewer-service/**'
