@@ -452,3 +452,10 @@ The independent changed-stem and source-premise checks remain mandatory. Enable
 the existing owner/request/evidence-bound staging checkpoint store, and expose
 only the request UUID in acceptance logs. Completed-result recovery requires
 preflight proof of completion and uses the same request, without another AI call.
+
+
+V9 CI 42846727673 and deployment 42846720519 passed, including live v9
+verification. Acceptance 42847069595 stopped before all paid calls: the gateway
+classified checkpoint readiness as a PDF manifest and demanded a PDF attestation
+header. Exempt only that recognized route from PDF checks and instead require
+its exact read-only readiness JSON contract. PDF integrity guards are unchanged.

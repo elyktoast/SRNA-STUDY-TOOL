@@ -231,3 +231,23 @@ test('PDF review routes still require attestation header and source digest',asyn
  assert.equal(response.status,502);
  assert.equal((await response.json()).error,'unsafe_upstream');
 });
+
+test('authenticated checkpoint readiness uses its exact read-only JSON contract without PDF headers',async()=>{
+ const url='https://gateway.example/generation/checkpoint-readiness';
+ const valid={ready:true,check:'checkpoint_database_readiness',generation_performed:false,database_writes:false};
+ const isolated=value=>({...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  assert.equal(req.method,'GET');
+  return Response.json(value);
+ }})}});
+ const req=()=>new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}});
+ const response=await gateway.fetch(req(),isolated(valid));
+ assert.equal(response.status,200);
+ assert.deepEqual(await response.json(),valid);
+ for(const change of [{ready:false},{check:'other'},{generation_performed:true},{database_writes:true},{extra:'private'}]){
+  const rejected=await gateway.fetch(req(),isolated({...valid,...change}));
+  assert.equal(rejected.status,502);
+  assert.equal((await rejected.json()).error,'unsafe_checkpoint_response');
+ }
+ assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:origin}}),isolated(valid))).status,401);
+ assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:'https://srnastudytool.com',Authorization:'Bearer valid'}}),isolated(valid))).status,403);
+});
