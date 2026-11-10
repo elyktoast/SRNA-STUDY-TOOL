@@ -42,4 +42,4 @@ jobs:
         run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
 # Verify authoring stages use bounded provider retry.
 
-# Verify original case with safe provider rejection diagnostics.
+# Verify high-effort authoring with bounded response size and single-call wait.

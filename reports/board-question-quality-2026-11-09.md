@@ -281,3 +281,16 @@ draft. Existing sanitization did not expose the provider's machine error code.
 Add bounded diagnostic extraction of fixed known error codes/parameter names
 only; raw error messages, failed generations and source text remain excluded.
 This does not retry the rejection or change generation/quality behavior.
+
+
+CI 42769394678 and deployment 42769390772 passed. Acceptance 42769803215
+passed authoring but exceeded the client's four-minute wait. Read-only database
+verification found exactly the saved candidate d9da16d9-6134-4688-b033-82debbfd0abe;
+it still failed the counterfactual and page-image equation guard, so no retry of
+that request or quality success is claimed. Container packaging and the protected
+rewrite handoff were inspected and preserve the intended path and key safety.
+Test high effort for generator authoring only, with bounded response ceilings
+2,400 concept / 3,500 draft / 2,400 rationale / unchanged 3,500 rewrite tokens, while keeping
+independent reviewer settings unchanged. Allow the explicit acceptance client up
+to eight minutes for a single call under observed per-minute review limits; no
+extra request or quality bypass is introduced. Fresh CI and acceptance required.

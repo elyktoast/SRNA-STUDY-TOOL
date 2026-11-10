@@ -19,7 +19,7 @@ assert.equal(identity.status,200,'Staging identity unavailable');
 assert.equal((await identity.json()).id,owner,'Acceptance run must use the textbook owner account');
 const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer '+token,'Content-Type':'application/json'};
 async function call(path,body){
- const r=await fetch(gateway+path,{method:body?'POST':'GET',headers,redirect:'error',...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(240000)});
+ const r=await fetch(gateway+path,{method:body?'POST':'GET',headers,redirect:'error',...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(path==='/generation/one'?480000:240000)});
  const data=await r.json().catch(()=>null);
  if(!data)throw Error('Staging acceptance received a non-JSON response: HTTP '+r.status);
  if(!r.ok){
@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['d9da16d9-6134-4688-b033-82debbfd0abe','The client timed out, but the backend saved a candidate that still failed its counterfactual and unverified equation checks.'],
  ['782dcc83-a42c-432f-9864-8578ad0ea84e','The question embeds its counterfactual as an implausible disease transition and contains an unverified reversed formula; not accepted as a board-quality question.'],
  ['e530328c-3266-4671-b12b-df732b5c783b','Recall-only candidate with a second defensible choice, ineffective counterfactual and options-only cue; failed acceptance after its single rewrite.'],
  ['df490c7f-4a85-4eb8-9b97-740b2a2910bc','Blind answer disagreement, unsupported distractor claim and a counterfactual absent from the stem; rejected after one rewrite.'],
