@@ -222,3 +222,14 @@ same two indexed pages. This supplies the missing contrast without changing
 indexing, search ranking, source validation, models or the one-rewrite limit.
 The execution workspace failed to recover; subsequent work uses the connected
 repository and staging services. Live acceptance is still required.
+
+
+Acceptance 42764346220 stopped at rationale with PROVIDER_RATE_LIMIT and saved
+no draft or checkpoint. Sanitized telemetry showed the same request's estimate
+rose from 4,104 to 4,740 tokens between attempts: the 34-second first wait left
+4,548 tokens available and the second attempt needed another two seconds.
+The one allowed explicit-429 retry now waits a full bounded 60-second TPM
+window; it never adds a third attempt or retries ambiguous transport failures.
+The corrected exact dynamic/static query ranks the two required passages first,
+so acceptance uses those two rather than four. This reduces payload while
+retaining both physiological definitions. New CI and live acceptance required.
