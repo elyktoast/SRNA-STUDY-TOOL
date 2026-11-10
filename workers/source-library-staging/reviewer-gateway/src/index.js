@@ -96,7 +96,13 @@ async function relayGroq(request,env){
   const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
   const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
   const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?(step.step==='concept_card'?'high':'medium'):'low'}:{})}):bytes;
+  // Constrain the existing six-field planning object; this does not grade facts.
+  const conceptFormat=groqOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='concept_card'
+   ?{type:'json_schema',json_schema:{name:'srna_concept_card_v2',strict:true,schema:{type:'object',
+     properties:{...Object.fromEntries(['objective','mechanism','relevance','misconception','counterfactual'].map(k=>[k,{type:'string'}])),evidence_ids:{type:'array',items:{type:'string'}}},
+     required:['objective','mechanism','relevance','misconception','counterfactual','evidence_ids'],additionalProperties:false}}}
+   :{type:'json_object'};
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:conceptFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?(step.step==='concept_card'?'high':'medium'):'low'}:{})}):bytes;
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){

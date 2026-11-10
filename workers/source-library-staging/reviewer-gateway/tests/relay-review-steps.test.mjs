@@ -309,7 +309,8 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
-  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
+  const step=JSON.parse(body.messages[1].content).step;
+  assert.equal(body.response_format.type,step==='concept_card'?'json_schema':'json_object'); assert.equal(body.reasoning_effort,step==='concept_card'?'high':'medium');
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{
@@ -375,4 +376,22 @@ test('request rejection exposes only fixed provider codes and parameter names',a
    assert.ok(!JSON.stringify(data).includes('private'));
   }
  }finally{globalThis.fetch=original;}
+});
+
+test('concept planning constrains only canonical fields and preserves untrusted evidence in user role',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),schema=body.response_format.json_schema;
+  assert.equal(schema.strict,true);
+  assert.equal(schema.schema.additionalProperties,false);
+  assert.deepEqual(new Set(schema.schema.required),new Set(['objective','mechanism','relevance','misconception','counterfactual','evidence_ids']));
+  assert.deepEqual(Object.keys(schema.schema.properties).sort(),[...schema.schema.required].sort());
+  assert.deepEqual(schema.schema.properties.evidence_ids,{type:'array',items:{type:'string'}});
+  assert.equal(body.messages[0].role,'system');
+  assert.equal(JSON.parse(body.messages[1].content).evidence[0].excerpt,'untrusted textbook text');
+  assert.ok(!body.messages[0].content.includes('untrusted textbook text'));
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{evidence:[{excerpt:'untrusted textbook text'}]}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
 });
