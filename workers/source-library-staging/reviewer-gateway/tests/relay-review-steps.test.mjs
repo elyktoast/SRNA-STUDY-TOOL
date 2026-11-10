@@ -368,6 +368,7 @@ test('request rejection exposes only fixed provider codes and parameter names',a
  try{
   for(const [error,expected] of [
    [{code:'json_validate_failed',message:'private',failed_generation:'private question'},{provider_error_code:'json_validate_failed',failed_generation_chars:16,failed_json_shape:'invalid_json'}],
+   [{code:'json_validate_failed',failed_generation:JSON.stringify({core_concept:'private',rationale:'private',private:'private'})},{provider_error_code:'json_validate_failed',failed_generation_chars:JSON.stringify({core_concept:'private',rationale:'private',private:'private'}).length,failed_json_shape:'object',failed_known_fields:['core_concept','rationale'],failed_unknown_field_count:1}],
    [{code:'private credential',param:'private source',message:'secret'},{}],
    [{code:'invalid_request_error',param:'reasoning_effort',message:'secret'},{provider_error_code:'invalid_request_error',provider_error_param:'reasoning_effort'}]]){
    globalThis.fetch=async()=>Response.json({error},{status:400});
@@ -429,4 +430,22 @@ test('MC planning has a private distinct-response plan while generic concept car
  };
  try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{format:'MC'}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
  finally{globalThis.fetch=original;}
+});
+
+test('planned MC rationale preserves the bound counterfactual and requests only canonical explanations',async()=>{
+ const original=globalThis.fetch;
+ for(const format of ['MC','MS']){
+  globalThis.fetch=async(url,options)=>{
+   const s=JSON.parse(options.body).response_format.json_schema.schema;
+   assert.equal(s.additionalProperties,false);
+   assert.deepEqual(s.properties.distractor_breakdown.required,['A','B','C','D']);
+   if(format==='MC'){
+    assert.deepEqual(s.required,['core_concept','why_key_wins','trap','distractor_breakdown']);
+    assert.equal(s.properties.counterfactual_test,undefined);
+   }else assert.ok(s.required.includes('counterfactual_test'));
+   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+  };
+  try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b',{format,choice_plan:{},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+  finally{globalThis.fetch=original;}
+ }
 });

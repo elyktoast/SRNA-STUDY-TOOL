@@ -22,7 +22,7 @@ jobs:
     if: (github.event_name == 'workflow_dispatch' && inputs.confirm_paid_generation) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]'))
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -49,4 +49,4 @@ jobs:
 
 # Require complete source support and a structured finished-stem counterfactual.
 
-# Require runtime v8 and keep private planning separate from final distractor annotations.
+# Require runtime v9, existing checkpoints, and source-backed canonical explanations.
