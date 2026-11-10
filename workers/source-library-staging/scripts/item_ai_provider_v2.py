@@ -255,15 +255,6 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Predict the likely keyed option(s) from wording cues, specificity, length, grammar, convergence or an odd-one-out pattern. "
                 "If no cue distinguishes them, make a guess; do not invent a stem. Return exactly one JSON object with key: an array of select_count option IDs. "
                 "Do not return explanations, confidence, a stem or approval.")
-        if request["step"] in ("concept_card", "item_draft", "rationale"):
-            # This contract is built by trusted server code. Keep retrieved
-            # textbook content and model-written cards/drafts in the user role.
-            instructions = request.get("instructions")
-            if isinstance(instructions, str) and instructions.strip():
-                body["messages"][0]["content"] += "\nTrusted step contract: " + instructions
-                body["messages"][1]["content"] = json.dumps(
-                    {k: v for k, v in request.items() if k != "instructions"},
-                    ensure_ascii=False)
         # Transport signature deliberately explicit. Caller enforces timeouts,
         # provider-specific authentication and retries.
         response = transport(endpoint=endpoint,

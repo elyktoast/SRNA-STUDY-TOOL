@@ -171,7 +171,7 @@ test('rationale uses bounded Groq JSON rather than the slow Cloudflare route',as
   calls++; assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.equal(JSON.parse(body.messages[1].content).step,'rationale');
-  assert.equal(body.reasoning_effort,'low');
+  assert.equal(body.reasoning_effort,'medium');
   assert.deepEqual(body.response_format,{type:'json_object'});
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -191,14 +191,14 @@ test('Groq drafting retains original request without Qwen-specific settings',asy
  try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
  finally{globalThis.fetch=original;}
 });
-test('GPT-OSS drafting and rewriting request bounded JSON with low reasoning effort',async()=>{
+test('GPT-OSS drafting and rewriting request bounded JSON with medium authoring effort',async()=>{
  const original=globalThis.fetch;
  const model='openai/gpt-oss-120b';
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.deepEqual(body.response_format,{type:'json_object'});
-  assert.equal(body.reasoning_effort,'low');
+  assert.equal(body.reasoning_effort,'medium');
   assert.equal(body.max_tokens,1024);
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -309,7 +309,7 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
-  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,'low');
+  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,'medium');
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{
@@ -346,5 +346,18 @@ test('editorial and options-only checks require their own authorized distinct re
   assert.equal(calls,0);
   for(const [step,model] of [['editorial_review','editorial-model'],['options_only_review','reviewer-model']])assert.equal((await gateway.fetch(request(step,model),configured)).status,200);
   assert.equal(calls,2);
+ }finally{globalThis.fetch=original;}
+});
+
+test('authoring effort never changes editorial or independent Qwen settings',async()=>{
+ const original=globalThis.fetch,seen=[];
+ globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  const configured={...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EDITORIAL_REVIEWER_MODEL:'openai/gpt-oss-20b',AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+  assert.equal((await gateway.fetch(request('editorial_review','openai/gpt-oss-20b'),configured)).status,200);
+  assert.equal((await gateway.fetch(request('blind_review','qwen/qwen3.8-27b'),configured)).status,200);
+  assert.equal(seen[0].reasoning_effort,'low');
+  assert.equal(seen[1].reasoning_effort,undefined);
+  assert.ok(seen.every(b=>b.max_tokens===1024));
  }finally{globalThis.fetch=original;}
 });
