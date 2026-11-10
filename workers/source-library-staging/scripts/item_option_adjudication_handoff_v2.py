@@ -3,6 +3,23 @@
 A validated reviewer report remains subject to clinical human review.
 """
 from item_option_adjudication_v2 import evaluate
+import re
+import unicodedata
+
+
+def _paired_component_words(item):
+    """Recognize shared labelled pairs, not arbitrary prose or clinical truth."""
+    words = lambda text: set(re.findall(r"[^\W\d_]+", unicodedata.normalize("NFKC", text).casefold()))
+    pairs = []
+    for option in item.get("options", []):
+        parts = option.get("text", "").split(";")
+        if len(parts) != 2:
+            return []
+        labels = [re.fullmatch(r"\s*([^:]{1,80}):\s*\S.*", part) for part in parts]
+        if not all(labels):
+            return []
+        pairs.append([words(label[1]) for label in labels])
+    return pairs[0] if pairs and all(pair == pairs[0] for pair in pairs) and all(pairs[0]) else []
 
 
 def run(item, retrieval, reviewer, *, source_passages, generator_model_id, reviewer_model_id, require_quotes=False):
@@ -45,6 +62,7 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
         response = reviewer(request)
         report = evaluate(item, retrieval, response)
         if require_quotes:
+            components = _paired_component_words(item)
             for judgment in response:
                 explanation = judgment.get("explanation", "")
                 if isinstance(explanation, str) and any(x in explanation.casefold() for x in
@@ -59,6 +77,15 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
                                for quote in quotes)):
                     report["issues"].append({"rule_id": "R-12.4", "option_id": judgment.get("option_id"),
                                              "message": "Independent reviewer quote is not verbatim indexed evidence"})
+                if components and judgment.get("verdict") == "supports_key" and isinstance(quotes, list):
+                    quoted_words = set(re.findall(r"[^\W\d_]+", unicodedata.normalize("NFKC", " ".join(
+                        quote for quote in quotes if isinstance(quote, str))).casefold()))
+                    # Necessary coverage only. Mentioning both components never
+                    # proves their states; the independent clinical judgment and
+                    # full explanatory source review remain mandatory.
+                    if any(not component.issubset(quoted_words) for component in components):
+                        report["issues"].append({"rule_id":"R-12.4", "option_id":judgment.get("option_id"),
+                            "message":"Independent key evidence omits a paired response component"})
             if report["issues"]:
                 report["status"] = "pending"
         report["judgments"] = [{k: j[k] for k in
