@@ -196,7 +196,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     def explanation_review(item):
         from item_explanation_review_v2 import review
         report = review(item, evidence["sources"],
-                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))
+                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload), batch_size=6)
         return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
     def quality_review(item):
         from item_board_quality_v2 import editorial, options_only

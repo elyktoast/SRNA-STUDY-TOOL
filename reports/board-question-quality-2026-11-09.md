@@ -195,3 +195,14 @@ affected/unaffected components and omit unverified MC/MS equations. A determinis
 page-image guard now includes equations written as divided/multiplied by. The
 next request caps retrieval at two already indexed relevant passages; indexing
 and evidence validation remain unchanged.
+
+
+Deployment/acceptance 42760003431 saved but rejected draft
+478fd4be-b899-41ec-8c71-2d470feba9b5. Its changed condition still did not produce
+a demonstrated unique answer; explanation review hit its existing output cap.
+Source review now supports bounded six-field batches with exact per-batch field
+coverage and unchanged global source/span/citation checks. Any missing, swapped
+or invalid response remains pending; no partial batch can pass the whole item.
+Provider output limits and independent model identity are unchanged. Initial
+planning now explicitly pairs two physiological components with the original and
+alternative source-supported conditions.
