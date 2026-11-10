@@ -112,7 +112,7 @@ async function relayGroq(request,env){
    const properties=conceptFormat.json_schema.schema.properties;
    properties.choice_plan={type:'object',properties:{dimensions:{type:'array',items:{type:'string'}},stem_condition:{type:'string'},alternate_condition:{type:'string'},
     key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
-    options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},text:{type:'string'},error_pattern:{type:['string','null']},states:{type:'array',items:{type:'string'}}},required:['id','text','error_pattern','states'],additionalProperties:false}}},
+    options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},text:{type:'string'},states:{type:'array',items:{type:'string'}}},required:['id','text','states'],additionalProperties:false}}},
     required:['dimensions','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};
    conceptFormat.json_schema.schema.required.push('choice_plan');
   }

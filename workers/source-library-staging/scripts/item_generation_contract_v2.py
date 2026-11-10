@@ -60,15 +60,17 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             " Also return private choice_plan with dimensions (exactly two source-supported observations or physiological components), "
             "stem_condition and alternate_condition (different complete clinical phrases, each at most 200 characters), "
             "key and alternate_key (different single-ID arrays), and four options A-D. Each planned option contains id, "
-            "text (a short parallel paired response WITHOUT its explanation), error_pattern (null for key), and states "
+            "text (a short parallel paired response WITHOUT its explanation), and states "
             "(two short values of the SAME dimensions, in the SAME order). All four state pairs must differ: do not use "
             "three diagnoses that all produce the same measurements. Diagnosis names and option IDs are not state values. "
             "Include a unique response for BOTH the original case and its alternative. Ground both cases and every response "
             "in the evidence. The draft will ask for this paired interpretation, not a list-definition lookup.")
     if choice_plan is not None:
         quality_instructions += (
-            " Use the supplied private choice_plan. Copy key and all planned option id/text/error_pattern fields EXACTLY, "
-            "omitting states from the final options. In the stem use stem_condition verbatim exactly once; omit the alternate "
+            " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "
+            "Omit states from final options; supply error_pattern as null ONLY for the original key and a specific learner "
+            "error for EACH of the other three options, including the option correct under the separate alternative case. "
+            "The alternate case is not the original question. In the stem use stem_condition verbatim exactly once; omit the alternate "
             "condition and do not reveal the response states. Include only other necessary discriminating context. "
             "For rationale, copy the planned counterfactual: from_text=stem_condition, to_text=alternate_condition, "
             "expected_key=alternate_key. Source and independent blind checks will still test the plan; never assert approval.")

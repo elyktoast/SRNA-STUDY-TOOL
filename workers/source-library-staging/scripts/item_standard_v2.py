@@ -84,6 +84,8 @@ def check(item):
                 if option.get("id") in key:
                     if isinstance(pattern, str) and pattern.strip().lower() in ("correct", "incorrect"):
                         fail("R-6.3", "Key error pattern must not contain a correctness label")
+                elif not isinstance(pattern, str) or not pattern.strip():
+                    fail("R-6.3", "Each distractor needs a specific learner-error description")
                 elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
                     fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
         # Every answer choice must have a substantive, individually addressable
