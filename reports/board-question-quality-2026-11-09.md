@@ -174,3 +174,11 @@ sanitized error when Retry-After is absent; the existing backend still retries
 only once, only for waits up to 60 seconds. Private errors remain unlogged.
 Targeted gateway tests pass (31), including missing-header, fractional-second,
 millisecond and oversized-wait cases. Live recovery remains to be verified.
+
+
+Acceptance 42758690112 verified relay extraction of a 25-second provider delay
+but still returned 429: initial authoring bypassed the bounded helper already
+used by rewrite and reviews. All three authoring stages now receive that same
+helper through the callback passed to the pipeline. The handoff regression test
+invokes the actual callback for concept, draft and rationale, confirms exactly
+one retry and a bounded wait for each. No quality rules were relaxed.

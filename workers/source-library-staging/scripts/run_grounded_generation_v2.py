@@ -228,7 +228,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                    "rules_version": "2.0", "auto_publish": False}
         candidate = _call_with_bounded_rate_wait(adapter, payload)
         return _hydrate_indexed_citations(candidate, evidence["sources"])
-    result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
+    def author(payload):
+        return _call_with_bounded_rate_wait(adapter, payload)
+    result = generate_from_index(conn, args.owner_uid, args.topic, author,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
                                  item_id=args.item_id, format=args.format,
