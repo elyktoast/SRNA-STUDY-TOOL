@@ -171,7 +171,7 @@ test('rationale uses bounded Groq JSON rather than the slow Cloudflare route',as
   calls++; assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.equal(JSON.parse(body.messages[1].content).step,'rationale');
-  assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
+  assert.equal(body.reasoning_effort,'medium');
   assert.deepEqual(body.response_format,{type:'json_object'});
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -191,14 +191,14 @@ test('Groq drafting retains original request without Qwen-specific settings',asy
  try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
  finally{globalThis.fetch=original;}
 });
-test('GPT-OSS drafting and rewriting request bounded JSON with high planning and medium authoring effort',async()=>{
+test('GPT-OSS drafting and rewriting request bounded JSON with medium authoring effort',async()=>{
  const original=globalThis.fetch;
  const model='openai/gpt-oss-120b';
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.deepEqual(body.response_format,{type:'json_object'});
-  assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
+  assert.equal(body.reasoning_effort,'medium');
   assert.equal(body.max_tokens,1024);
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -310,7 +310,7 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
   const step=JSON.parse(body.messages[1].content).step;
-  assert.equal(body.response_format.type,step==='concept_card'?'json_schema':'json_object'); assert.equal(body.reasoning_effort,step==='concept_card'?'high':'medium');
+  assert.equal(body.response_format.type,step==='concept_card'?'json_schema':'json_object'); assert.equal(body.reasoning_effort,'medium');
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{
@@ -367,7 +367,7 @@ test('request rejection exposes only fixed provider codes and parameter names',a
  const original=globalThis.fetch;
  try{
   for(const [error,expected] of [
-   [{code:'json_validate_failed',message:'private',failed_generation:'private question'},{provider_error_code:'json_validate_failed'}],
+   [{code:'json_validate_failed',message:'private',failed_generation:'private question'},{provider_error_code:'json_validate_failed',failed_generation_chars:16,failed_json_shape:'invalid_json'}],
    [{code:'private credential',param:'private source',message:'secret'},{}],
    [{code:'invalid_request_error',param:'reasoning_effort',message:'secret'},{provider_error_code:'invalid_request_error',provider_error_param:'reasoning_effort'}]]){
    globalThis.fetch=async()=>Response.json({error},{status:400});
