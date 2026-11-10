@@ -1,9 +1,10 @@
 """Private MC planning invariants; rendering never proves clinical correctness."""
 from copy import deepcopy
+import re
 
 
 def validate(plan):
-    fields = {"dimensions", "stem_condition", "alternate_condition", "key", "alternate_key", "options"}
+    fields = {"response_variables", "stem_condition", "alternate_condition", "key", "alternate_key", "options"}
     if not isinstance(plan, dict) or set(plan) != fields:
         raise ValueError("Concept card choice plan incomplete")
 
@@ -12,8 +13,8 @@ def validate(plan):
                 and all(isinstance(v, str) and v.strip() and len(v) <= bound for v in values))
 
     normalize = lambda value: " ".join(value.split())
-    if (not strings(plan["dimensions"], 2, 80)
-            or len({normalize(v).casefold() for v in plan["dimensions"]}) != 2
+    if (not strings(plan["response_variables"], 2, 80)
+            or len({normalize(v).casefold() for v in plan["response_variables"]}) != 2
             or not strings([plan["stem_condition"], plan["alternate_condition"]], 2, 200)
             or normalize(plan["stem_condition"]).casefold() == normalize(plan["alternate_condition"]).casefold()
             or not strings(plan["key"], 1, 1) or not strings(plan["alternate_key"], 1, 1)
@@ -21,8 +22,12 @@ def validate(plan):
         raise ValueError("Concept card choice plan invalid")
     metadata_axes = {"type", "measurement type", "compliance type", "direction", "direction of change",
                      "change direction", "state", "value", "name", "option", "answer", "response"}
-    if any(normalize(v).casefold() in metadata_axes for v in plan["dimensions"]):
-        raise ValueError("Concept card choice plan dimensions are not clinical components")
+    if any(normalize(v).casefold() in metadata_axes for v in plan["response_variables"]):
+        raise ValueError("Concept card choice plan response_variables are not clinical components")
+    for condition in (plan["stem_condition"], plan["alternate_condition"]):
+        if any(re.search(r"(?<!\w)" + re.escape(normalize(variable).casefold()) + r"(?!\w)",
+                         normalize(condition).casefold()) for variable in plan["response_variables"]):
+            raise ValueError("Concept card condition gives away a planned response")
     options = plan["options"]
     if (not isinstance(options, list) or len(options) != 4
             or any(not isinstance(o, dict) or set(o) not in ({"id", "states"}, {"id", "text", "states"}) for o in options)
@@ -35,10 +40,10 @@ def validate(plan):
     if len(signatures) != 4:
         raise ValueError("Concept card choice plan repeats a response pattern")
     result = deepcopy(plan)
-    result["dimensions"] = [normalize(v) for v in plan["dimensions"]]
+    result["response_variables"] = [normalize(v) for v in plan["response_variables"]]
     for option in result["options"]:
         option["states"] = [normalize(v) for v in option["states"]]
-        text = "; ".join(f"{component}: {state}" for component, state in zip(result["dimensions"], option["states"]))
+        text = "; ".join(f"{component}: {state}" for component, state in zip(result["response_variables"], option["states"]))
         if len(text) > 180:
             raise ValueError("Concept card choice plan response invalid")
         # Checkpoints may contain the previously rendered text. It must match;

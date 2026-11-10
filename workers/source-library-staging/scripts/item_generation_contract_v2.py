@@ -64,19 +64,24 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
     )
     if format == "MC" and step == "concept_card":
         quality_instructions += (
-            " Also return private choice_plan with dimensions (exactly two source-supported observations or physiological components), "
+            " Also return private choice_plan with response_variables (exactly two source-supported observations or physiological components), "
             "Each dimension names a different clinical measurement or response, not metadata such as measurement type and direction of change. "
-            "Return only id and states for each planned option; the server renders BOTH named dimensions and their authored states into parallel choice text. "
+            "Return only id and states for each planned option; the server renders BOTH named response_variables and their authored states into parallel choice text. "
             "Prefer an explicit source-supported clinical event or mechanical change over a bare disease-name direction lookup. "
             "stem_condition and alternate_condition (different complete clinical phrases, each at most 200 characters), "
             "key and alternate_key (different single-ID arrays), and four options A-D. Each planned option contains exactly id and states "
-            "(two short values of the SAME dimensions, in the SAME order, without explanations). Do not return text or error_pattern in this private plan. "
+            "(two short values of the SAME response_variables, in the SAME order, without explanations). Do not return text or error_pattern in this private plan. "
             "All four state pairs must differ: do not use "
             "three diagnoses that all produce the same measurements. Diagnosis names and option IDs are not state values. "
             "Include a unique response for BOTH the original case and its alternative. Ground both cases and every response "
             "in the evidence. The draft will ask for this paired interpretation, not a list-definition lookup. "
             "Tie misconception to the original case and one planned false response, not an unsupported universal or learner-prevalence claim. "
             "Keep relevance focused on interpreting the supplied mechanisms; omit treatment directives absent from the excerpts.")
+    if step == "concept_card" and format == "MC":
+        # Planning needs causal reasoning, not the full final-item writing checklist.
+        # All canonical validation and independent reviews still run on the item.
+        instructions[step] = "Return one concept-card JSON object with objective copied exactly, mechanism, relevance, misconception, counterfactual, evidence_ids, and choice_plan. Use only the provided indexed excerpts. Explain physiology qualitatively, with no equations or numerical measurements. Do not add unsupported treatments or claims about learner prevalence. Keep this an NCE application task: combine two clinical findings to distinguish affected and unaffected responses. Trace ALL source-described determinants of BOTH responses; an unchanged determinant cannot cancel a changed shared determinant. Plan two different source-supported clinical conditions: one original case and a replacement that makes a different existing choice correct. Conditions must describe causes/events and necessary qualifiers, never the requested measurement values. The original case must not contain its replacement. choice_plan must have response_variables (two clinical measurements, readable labels), stem_condition and alternate_condition (each at most 200 characters), key and alternate_key (different single-ID arrays), options A-D each with id and states (two qualitative states in the same variable order). Each pair must be unique. Source evidence must refute at least one component of EVERY wrong pair in each case. Explain the conditional reasoning in mechanism. Tie misconception to one plausible original-case distractor. State exact original/replacement phrases and changed response in counterfactual. evidence_ids contains exact supplied passage IDs. No approval claims. Prefer a reversible clinical event whose mechanical effects are explicit in the supplied source, for BOTH conditions. Avoid chronic diseases with multiple concurrent mechanisms when the excerpts cannot establish their isolated effects. The two conditions must each specify what changes and what other relevant determinants remain unchanged. Relevance must only concern interpreting the measurements, with no treatment recommendation. Misconception must state a false belief, without 'common', 'often', or a prevalence claim. Counterfactual must quote the exact choice_plan condition phrases, not an answer statement."
+        quality_instructions = ""
     if choice_plan is not None:
         quality_instructions += (
             " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "

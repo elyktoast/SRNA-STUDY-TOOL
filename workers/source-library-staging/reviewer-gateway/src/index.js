@@ -113,7 +113,8 @@ async function relayGroq(request,env){
   const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
   const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
   const cloudflareOss=cloudflareAuthoring&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
-  const schemaOss=groqOss||cloudflareOss;
+  const cloudflareGlm=cloudflareAuthoring&&payload.model==='zai-org/glm-5.3';
+  const schemaOss=groqOss||cloudflareOss||cloudflareGlm;
   // Constrain the existing six-field planning object; this does not grade facts.
   const conceptFormat=schemaOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='concept_card'
    ?{type:'json_schema',json_schema:{name:'srna_concept_card_v2',strict:true,schema:{type:'object',
@@ -122,10 +123,10 @@ async function relayGroq(request,env){
    :{type:'json_object'};
   if(conceptFormat.type==='json_schema'&&step.format==='MC'){
    const properties=conceptFormat.json_schema.schema.properties;
-   properties.choice_plan={type:'object',properties:{dimensions:{type:'array',items:{type:'string'}},stem_condition:{type:'string'},alternate_condition:{type:'string'},
+   properties.choice_plan={type:'object',properties:{response_variables:{type:'array',items:{type:'string'},description:'Names of the two clinical measurements predicted by the choices. For an explicitly paired topic, use the two measures named by the topic. Never use generic type, direction, or value axes.'},stem_condition:{type:'string'},alternate_condition:{type:'string'},
     key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
     options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',items:{type:'string'}}},required:['id','states'],additionalProperties:false}}},
-    required:['dimensions','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};
+    required:['response_variables','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};
    conceptFormat.json_schema.schema.required.push('choice_plan');
   }
   const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
@@ -142,8 +143,8 @@ async function relayGroq(request,env){
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
   }
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:rationaleFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
-  const cloudflareFormat=cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
+  const cloudflareFormat=cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
