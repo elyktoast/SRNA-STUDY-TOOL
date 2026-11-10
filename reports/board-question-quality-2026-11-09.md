@@ -382,3 +382,24 @@ instruction. Authoring contract v5 invalidates earlier checkpoints.
 Focused source-review and relay checks pass (15 and 35 tests). The full local
 suite ran 873 tests with one skip and only the known local PyMuPDF fixture
 failure. New CI and live acceptance are required before claiming completion.
+
+
+V5 CI 42835089302 and deployment 42835085517 passed. Acceptance
+42835822707 lost its client connection, but read-only database inspection
+confirmed an unpublished candidate was saved. The changed-stem blind check
+correctly found three answers, and the item retained an answer cue after its
+one rewrite. This is a rejected candidate, not a completed quality milestone.
+
+V6 adds a private MC choice plan within the existing concept call. It requires
+four distinct two-component response patterns, preserves those exact choices
+in the draft, and binds the final counterfactual to the planned stem edit. The
+plan never becomes clinical evidence or a saved question field. Independent
+source, blind, editorial and changed-stem reviews still determine their own
+results. Source review checks the clinical premises of a server-rendered
+counterfactual; the separate changed-stem blind check verifies the option mapping.
+No extra model stage, textbook indexing change, or Gemini activation is added.
+Explicit fractional retry intervals accept up to 20 decimal places while
+preserving the existing bounded rate-limit wait. Focused planning (2), source
+review (16), and relay (36) tests pass. The full local suite ran 876 tests with
+one skip and only the previously identified local PyMuPDF overlap fixture failure.
+CI, deployment and a fresh live question remain required.

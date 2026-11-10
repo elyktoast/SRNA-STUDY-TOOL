@@ -29,6 +29,14 @@ def fields_for(item):
             text = item.get(section, {}).get(name)
             if not isinstance(text, str) or not text.strip():
                 raise ValueError("Complete explanatory text required")
+            if section == "concept_card" and name == "counterfactual":
+                # The separate changed-stem blind test grades the option mapping.
+                # Here check both clinical premises, not whether a textbook names
+                # our answer letters. Match only the complete server-rendered form;
+                # never trim arbitrary appended claims from teaching text.
+                match = re.fullmatch(r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option(?:\(s\))? [A-F](?:, [A-F])*\.', text)
+                if match:
+                    text = f'Original clinical condition: {match[1]}. Replacement clinical condition: {match[2]}.'
             fields.append({"id": "e" + str(len(fields)), "label": section + "." + name, "text": text})
     for oid, text in item.get("rationale", {}).get("distractor_breakdown", {}).items():
         if not isinstance(text, str) or not text.strip():
