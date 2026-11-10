@@ -262,3 +262,14 @@ blind, editorial and options-only models/settings remain unchanged. Token caps,
 all validators and the single protected rewrite remain unchanged. No successful
 quality milestone is claimed. Official provider reference:
 https://console.groq.com/docs/reasoning (GPT-OSS supports low, medium and high).
+
+
+Medium-effort CI 42767185814 and deployment 42767204294 passed. Acceptance
+42767615194 saved unpublished 782dcc83-a42c-432f-9864-8578ad0ea84e but failed
+the anchored counterfactual. Direct inspection found an implausible disease
+transition rather than a stable case and a reversed authored equation missed
+by source review. Extend the existing page-image guard to calculated-as/from/by
+and slash notation, covered by the observed failing claims. Clarify that a
+counterfactual is a separate hypothetical, not the original stem, and that a
+component-comparison topic requires the same two components in all choices.
+No gate was relaxed; this candidate is not a successful quality milestone.
