@@ -222,7 +222,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
                                              concept_card=concept, draft=draft, choice_plan=choice_plan))
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
-    if planned_proposal is not None and rationale.get("counterfactual_test") != planned_proposal:
+    if planned_proposal is not None and "counterfactual_test" in rationale and rationale["counterfactual_test"] != planned_proposal:
         raise ValueError("Rationale incomplete: counterfactual differs from planned case")
     if format in ("MC", "MS") and "counterfactual_test" in rationale:
         concept = {**concept, "counterfactual": _final_counterfactual(draft, rationale["counterfactual_test"])}

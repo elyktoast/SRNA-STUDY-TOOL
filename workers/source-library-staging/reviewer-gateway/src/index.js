@@ -39,7 +39,13 @@ async function safeRequestDiagnostic(response){
   const shape={};
   if(error?.code==='json_validate_failed'&&typeof error.failed_generation==='string'){
    shape.failed_generation_chars=error.failed_generation.length;
-   try{const value=JSON.parse(error.failed_generation);shape.failed_json_shape=value&&typeof value==='object'&&!Array.isArray(value)?'object':'other_json';}
+   try{const value=JSON.parse(error.failed_generation);shape.failed_json_shape=value&&typeof value==='object'&&!Array.isArray(value)?'object':'other_json';
+    if(shape.failed_json_shape==='object'){
+     const known=['objective','mechanism','relevance','misconception','counterfactual','evidence_ids','choice_plan','core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test','rationale','draft','item','concept_card'];
+     shape.failed_known_fields=known.filter(k=>Object.hasOwn(value,k));
+     shape.failed_unknown_field_count=Object.keys(value).filter(k=>!known.includes(k)).length;
+    }
+   }
    catch{shape.failed_json_shape='invalid_json';}
   }
   return {...shape,...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
@@ -119,11 +125,16 @@ async function relayGroq(request,env){
   const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
   const strictRationale=groqOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='rationale'&&['MC','MS'].includes(step.format)
    &&rationaleIds.length>=4&&rationaleIds.length<=6&&new Set(rationaleIds).size===rationaleIds.length&&rationaleIds.every(id=>/^[A-F]$/.test(id));
+  const plannedRationale=strictRationale&&step.format==='MC'&&step.choice_plan&&typeof step.choice_plan==='object';
   const rationaleFormat=strictRationale?{type:'json_schema',json_schema:{name:'srna_rationale_with_counterfactual_v2',strict:true,schema:{type:'object',
    properties:{...Object.fromEntries(['core_concept','why_key_wins','trap'].map(k=>[k,{type:'string'}])),
     distractor_breakdown:{type:'object',properties:Object.fromEntries(rationaleIds.map(id=>[id,{type:'string'}])),required:rationaleIds,additionalProperties:false},
     counterfactual_test:{type:'object',properties:{from_text:{type:'string'},to_text:{type:'string'},expected_key:{type:'array',items:{type:'string',enum:rationaleIds}}},required:['from_text','to_text','expected_key'],additionalProperties:false}},
    required:['core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test'],additionalProperties:false}}}:conceptFormat;
+  if(plannedRationale){
+   delete rationaleFormat.json_schema.schema.properties.counterfactual_test;
+   rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
+  }
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:rationaleFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
   let upstream;
