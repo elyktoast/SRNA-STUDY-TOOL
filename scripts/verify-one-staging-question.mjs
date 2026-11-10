@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['782dcc83-a42c-432f-9864-8578ad0ea84e','The question embeds its counterfactual as an implausible disease transition and contains an unverified reversed formula; not accepted as a board-quality question.'],
  ['e530328c-3266-4671-b12b-df732b5c783b','Recall-only candidate with a second defensible choice, ineffective counterfactual and options-only cue; failed acceptance after its single rewrite.'],
  ['df490c7f-4a85-4eb8-9b97-740b2a2910bc','Blind answer disagreement, unsupported distractor claim and a counterfactual absent from the stem; rejected after one rewrite.'],
  ['dd641cda-00c4-49b9-9fdf-5ce19620fb9b','Failed application-level reasoning, counterfactual verification and affirmative distractor support after its single rewrite.'],
