@@ -2,7 +2,7 @@ name: Quality gates
 
 on:
   push:
-    branches: [main, fix/verify-board-question-quality]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

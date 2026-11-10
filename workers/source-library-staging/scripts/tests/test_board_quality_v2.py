@@ -2,17 +2,17 @@ import copy
 import json
 import unittest
 from unittest.mock import patch
-from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA, teaching_specificity_issues
+from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA, teaching_specificity_issues, verify_counterfactual, classification_mismatch_issues
 from item_ai_provider_v2 import make_adapter
 from item_generation_screened_v2 import generate_and_screen
 
 
 def item():
-    return {"format":"MC", "domain":"III", "section":"H", "objective":"III.H.4",
+    return {"item_id":"quality-test", "format":"MC", "domain":"III", "section":"H", "objective":"III.H.4",
         "stem":"Which intervention resolves this finding?", "reasoning_level":"application",
         "options":[{"id":x,"text":"Choice "+x,"error_pattern":"misinterprets finding"} for x in "ABCD"],
         "key":["B"], "concept_card":{"misconception":"A possible mistaken interpretation.",
-        "counterfactual":"Changing the finding changes the indicated intervention."},
+        "counterfactual":"If this finding changed to the alternate finding, the indicated intervention would change."},
         "rationale":{"trap":"Choice A reflects a reversed interpretation."}, "audit":[]}
 
 
@@ -24,6 +24,15 @@ class BoardQualityTests(unittest.TestCase):
         for domain, section, objective in [("I","H","III.H.4"),("III","H","III.H.99"),("III","X","III.X.1")]:
             with self.subTest(objective=objective), self.assertRaises(ValueError):
                 classification(domain,section,objective)
+
+    def test_clear_topic_conflicts_are_flagged_without_claiming_classification_approval(self):
+        q=item();q["stem"]="Which agent is nontriggering for malignant hyperthermia?"
+        self.assertEqual(classification_mismatch_issues(q)[0]["candidate_objective"],"I.B.4")
+        q.update(domain="I",section="B",objective="I.B.4")
+        self.assertEqual(classification_mismatch_issues(q),[])
+        q.update(domain="III",section="H",objective="III.H.4")
+        q["stem"]="How do succinylcholine and malignant hyperthermia relate?"
+        self.assertEqual(classification_mismatch_issues(q),[])
 
     def test_obsolete_authored_content_rejected_without_censoring_sources(self):
         q=item();q["evidence"]=[{"excerpt":"Halothane and ranitidine appear in an old source."}]
@@ -41,7 +50,7 @@ class BoardQualityTests(unittest.TestCase):
         def reviewer(payload):
             seen.append(payload)
             return {"checks":{k:"flag" if k in ("counterfactual","trap") else "pass" for k in CRITERIA},
-                    "findings":[{"criterion":"counterfactual","reason":"This is a restatement."},
+                    "counterfactual_test":None, "findings":[{"criterion":"counterfactual","reason":"This is a restatement."},
                                 {"criterion":"trap","reason":"The stated error does not lead to the distractor."}]}
         result=editorial(item(),reviewer)
         self.assertEqual(result["status"],"flag")
@@ -92,7 +101,7 @@ class BoardQualityTests(unittest.TestCase):
     def test_restated_counterfactual_and_generic_trap_cannot_receive_a_pass(self):
         q=item();q["concept_card"]["counterfactual"]="The original correct answer remains appropriate."
         q["rationale"]["trap"]="A learner may select the wrong intervention."
-        result=editorial(q,lambda p:{"checks":{k:"pass" for k in CRITERIA},"findings":[]})
+        result=editorial(q,lambda p:{"checks":{k:"pass" for k in CRITERIA},"findings":[],"counterfactual_test":None})
         self.assertEqual(result["status"],"flag")
         self.assertEqual(set(result["deterministic_rules"]),{"R-5.3","R-9"})
         self.assertEqual(result["model_flagged_rules"],[])
@@ -106,7 +115,7 @@ class BoardQualityTests(unittest.TestCase):
         # reject incoherent reasoning even when the surface form is complete.
         q["rationale"]["trap"]="Option A follows from an incoherent inference."
         response={"checks":{k:"flag" if k=="trap" else "pass" for k in CRITERIA},
-                  "findings":[{"criterion":"trap","reason":"The inference leads to another choice."}]}
+                  "findings":[{"criterion":"trap","reason":"The inference leads to another choice."}], "counterfactual_test":None}
         self.assertEqual(editorial(q,lambda p:response)["status"],"flag")
 
     def test_editorial_adapter_satisfies_json_mode_provider_contract(self):
@@ -114,13 +123,52 @@ class BoardQualityTests(unittest.TestCase):
         def transport(**kwargs):
             body=kwargs["body"]
             self.assertIn("json",json.dumps(body["messages"]).lower())
-            self.assertEqual(body["max_tokens"],1000)
+            self.assertEqual(body["max_tokens"],1800)
             calls.append(body)
-            return {"choices":[{"message":{"content":json.dumps({"checks":{k:"pass" for k in CRITERIA},"findings":[]})}}]}
+            return {"choices":[{"message":{"content":json.dumps({"checks":{k:"pass" for k in CRITERIA},"findings":[],"counterfactual_test":{"from_text":"this finding","to_text":"the alternate finding","expected_key":["C"]}})}}]}
         adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="independent",owner_opt_in=True,transport=transport)
-        result=editorial(item(),adapter)
+        result=editorial(item(),adapter,counterfactual_reviewer=lambda p:{"item_id":p["item_id"],"key":["C"]})
         self.assertEqual(result["status"],"pass")
         self.assertNotIn("key",json.loads(calls[0]["messages"][1]["content"]))
+
+    def test_counterfactual_requires_an_anchored_edit_and_a_different_key(self):
+        proposal={"from_text":"this finding","to_text":"the alternate finding","expected_key":["C"]}
+        calls=[]
+        def blind(payload):
+            calls.append(payload)
+            return {"item_id":payload["item_id"],"key":["C"]}
+        for change in ({"expected_key":["B"]},{"from_text":"not in stem"},{"to_text":"this finding"},{"expected_key":["Z"]}):
+            self.assertEqual(verify_counterfactual(item(),{**proposal,**change},blind)["status"],"flag")
+        self.assertEqual(calls,[])
+        result=verify_counterfactual(item(),proposal,blind)
+        self.assertEqual(result["status"],"pass")
+        self.assertNotIn("key",calls[0]);self.assertNotIn("rationale",calls[0]);self.assertNotIn("concept_card",calls[0])
+        self.assertEqual(calls[0]["stem"],"Which intervention resolves the alternate finding?")
+
+    def test_counterfactual_same_or_ambiguous_blind_answer_fails_and_outage_stays_pending(self):
+        proposal={"from_text":"this finding","to_text":"the alternate finding","expected_key":["C"]}
+        for answer in (["B"],["A","C"]):
+            result=verify_counterfactual(item(),proposal,lambda p:{"item_id":p["item_id"],"key":answer})
+            self.assertEqual(result["status"],"flag")
+        def unavailable(p): raise TimeoutError("private")
+        self.assertEqual(verify_counterfactual(item(),proposal,unavailable)["status"],"pending")
+        self.assertEqual(verify_counterfactual(item(),proposal,lambda p:{"key":["C"]})["status"],"pending")
+
+    def test_standalone_stem_and_unverified_concentration_guards(self):
+        from item_text_checks import check
+        q=item();q["stem"]="Which strategy addresses the cause described in the source?"
+        q["options"][0]["text"]="Give 40% oxygen"
+        rules={i["rule_id"] for i in check(q)}
+        self.assertTrue({"R-4.2","R-8.5"}.issubset(rules))
+        q=item();q["stem"]="Which source of bleeding explains this finding?"
+        self.assertNotIn("R-4.2",{i["rule_id"] for i in check(q)})
+
+    def test_intervention_option_cannot_contain_its_own_rationale(self):
+        from item_text_checks import check
+        q=item();q["options"][0]["text"]="Applying the intervention to improve the measured outcome"
+        self.assertIn("R-6.9",{i["rule_id"] for i in check(q)})
+        q["options"][0]["text"]="Decreased first variable with increased second variable"
+        self.assertNotIn("R-6.9",{i["rule_id"] for i in check(q)})
 
     def test_server_self_check_does_not_inherit_forged_passes(self):
         q=item();q["self_check"]={"rules_checked":["EVERYTHING"],"human_approved":True}
