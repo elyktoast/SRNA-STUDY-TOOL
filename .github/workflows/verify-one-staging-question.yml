@@ -15,7 +15,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: source-reviewer-staging-deployment
+  group: ${{ contains(github.event.head_commit.message, '[diagnose-concept-plan]') && 'source-concept-plan-diagnostic' || 'source-reviewer-staging-deployment' }}
   cancel-in-progress: false
 jobs:
   verify:
@@ -49,4 +49,46 @@ jobs:
 
 # Require complete source support and a structured finished-stem counterfactual.
 
-# Verify allowlisted planning diagnostics after the exact-image staging rollout.
+  diagnose-plan:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[diagnose-concept-plan]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install existing diagnostic dependencies
+        run: python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
+      - name: Inspect one private concept plan without drafting or writes
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+        run: |
+          PYTHONPATH=workers/source-library-staging/scripts python - <<'PY'
+          import os,json,psycopg
+          from build_question_evidence import build_evidence
+          from item_generation_contract_v2 import build_step
+          from item_ai_provider_v2 import make_adapter
+          from item_ai_https_transport_v2 import make_transport
+          from item_mc_choice_plan_v2 import validate
+          from run_grounded_generation_v2 import _call_with_bounded_rate_wait
+          with psycopg.connect(os.environ["STAGING_DATABASE_URL"],options="-c default_transaction_read_only=on") as conn:
+              evidence=build_evidence(conn,"c003287a-10ce-4cc9-926e-ef7c3a162a26",'"dynamic compliance" OR "static compliance"',textbook_id="6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d",limit=2,page_start=731,page_end=732)
+          assert evidence["evidence_count"]==2
+          request=build_step("concept_card",mode="NCE",domain="I",section="A",objective="I.A.2",format="MC",topic=evidence["topic"],evidence=evidence["sources"])
+          transport=make_transport(allowed_hosts=["api.groq.com"],relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
+          adapter=make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",api_key="relay-authenticated",model="openai/gpt-oss-120b",transport=transport,owner_opt_in=True,staging=True)
+          concept=_call_with_bounded_rate_wait(adapter,request)
+          if set(concept)=={"concept_card"}:concept=concept["concept_card"]
+          p=concept.get("choice_plan",{})
+          options=p.get("options",[])
+          keys=p.get("key",[])
+          result={"database_writes":False,"drafting_performed":False,"has_plan":bool(p),"option_count":len(options),"dimension_count":len(p.get("dimensions",[])),"ids_ordered":[o.get("id") for o in options]==list("ABCD"),"response_text_bounds":all(isinstance(o.get("text"),str) and 0<len(o["text"])<=180 for o in options),"state_counts":[len(o.get("states",[])) for o in options],"key_error_pattern_null":all(o.get("error_pattern") is None for o in options if o.get("id") in keys),"distractor_patterns_present":all(isinstance(o.get("error_pattern"),str) and 0<len(o["error_pattern"])<=400 for o in options if o.get("id") not in keys),"objective_matches":concept.get("objective")=="I.A.2","source_ids_match":bool(concept.get("evidence_ids")) and all(x in {s["passage_id"] for s in evidence["sources"]} for x in concept.get("evidence_ids",[]))}
+          try:validate(p);result["plan_valid"]=True
+          except ValueError as e:
+              result["plan_valid"]=False
+              result["plan_failure"]={"Concept card choice plan incomplete":"FIELDS","Concept card choice plan invalid":"CONDITIONS_OR_KEYS","Concept card choice plan choices invalid":"CHOICE_IDS","Concept card choice plan response invalid":"RESPONSE_FIELDS","Concept card choice plan repeats a response pattern":"REPEATED_PATTERN"}.get(str(e),"UNCLASSIFIED")
+          print(json.dumps(result))
+          PY
