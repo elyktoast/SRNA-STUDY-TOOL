@@ -233,3 +233,21 @@ window; it never adds a third attempt or retries ambiguous transport failures.
 The corrected exact dynamic/static query ranks the two required passages first,
 so acceptance uses those two rather than four. This reduces payload while
 retaining both physiological definitions. New CI and live acceptance required.
+
+
+CI 42765078712 passed 869 Python tests (one skip), 114 Worker tests, the
+container build and repository validation. Deployment 42764841722 and its
+authenticated smoke passed. Acceptance 42765180944 verified rate-limit recovery
+and saved unpublished df490c7f-4a85-4eb8-9b97-740b2a2910bc, but the candidate
+still failed blind agreement, affirmative source support and the counterfactual.
+It is not accepted. Direct inspection also found simple recall disguised as a
+case and unsupported clinical statements which a source-review pass alone would
+not establish as correct.
+
+The authoring adapter previously placed its trusted server-written step contract
+inside the same user JSON as indexed text and model-written cards. Move only
+the fixed step instructions to the system role, preserving all source/model
+content as untrusted user data. A transport-boundary regression checks all three
+authoring stages and ensures evidence and model content never gain system
+priority. This addresses instruction placement, not proven generation quality;
+CI and a fresh live candidate must still demonstrate the result.
