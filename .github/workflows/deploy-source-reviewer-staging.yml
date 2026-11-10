@@ -66,10 +66,6 @@ jobs:
       - name: Install reviewer gateway dependencies
         working-directory: workers/source-library-staging/reviewer-gateway
         run: npm install --no-audit --no-fund
-      - name: Verify container contents before deployment
-        run: |
-          docker build -t srna-contract-check -f workers/source-library-staging/reviewer-service/Dockerfile .
-          docker run --rm --entrypoint python srna-contract-check -c 'import inspect, run_grounded_generation_v2 as r; assert "authoring_contract" in inspect.getsource(r.execute); print("Built container contains authoring contract v3")'
       - name: Build container from repo root and deploy separate staging Worker
         working-directory: workers/source-library-staging/reviewer-gateway
         env:
@@ -130,13 +126,13 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/diagnose-source-reviewer-staging.mjs
-      - name: Verify authenticated runtime version without AI calls
+      - name: Verify authenticated runtime authoring contract without AI calls
         env:
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-        run: node scripts/verify-authoring-contract-readonly.mjs --confirm-paid-generation
+        run: node scripts/verify-authoring-contract-readonly.mjs
       - name: Staging deployment completed (browser activation still gated)
         run: |
           echo "Separate reviewer Worker deployed. Do not set reviewerApiUrl until live acceptance with authenticated reviewer succeeds."

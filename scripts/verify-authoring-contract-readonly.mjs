@@ -1,6 +1,5 @@
 // Explicit one-question acceptance run. Never retry paid generation or publish.
 import assert from 'node:assert/strict';
-if (!process.argv.includes('--confirm-paid-generation')) throw Error('Explicit paid-generation confirmation required');
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const owner='c003287a-10ce-4cc9-926e-ef7c3a162a26';
@@ -31,8 +30,9 @@ async function call(path,body){
  return data;
 }
 const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
-
 const preflight=await call('/generation/preflight',request);
-console.log(JSON.stringify({authoring_contract:preflight.authoring_contract??null,quality_contract:preflight.quality_contract??null,passage_count:preflight.passage_count,keys:Object.keys(preflight).sort()}));
-assert.equal(preflight.authoring_contract,'2026-11-10-v3');
-console.log('Authenticated runtime authoring contract v3 verified without AI calls');
+assert.equal(preflight.dry_run,true);assert.equal(preflight.database_writes,false);
+assert.equal(preflight.can_publish,false);
+assert.equal(preflight.authoring_contract,'2026-11-10-v4');
+assert.equal(preflight.quality_contract,'2026-11-10-v2');
+console.log('Authenticated runtime authoring contract v4 verified without AI calls');

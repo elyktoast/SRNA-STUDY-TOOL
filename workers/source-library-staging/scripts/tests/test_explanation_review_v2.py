@@ -6,6 +6,25 @@ from item_generation_screened_v2 import generate_and_screen
 
 
 class ExplanationReviewTests(unittest.TestCase):
+    def test_mixed_citation_scopes_are_separated_before_model_grouping(self):
+        self.item["evidence"].append({"passage_id":"p2"})
+        self.sources.append({"passage_id":"p2","excerpt":"Second source.\nSeparate evidence statement."})
+        self.item["concept_card"]["evidence_ids"]=["p1","p2"]
+        self.item["distractor_evidence"]={"A":{"explanation":"Option claim", "passage_ids":["p2"]}}
+        calls=[]
+        def reviewer(payload):
+            calls.append(payload)
+            scopes={tuple(f["passage_ids"]) for f in payload["fields"]}
+            self.assertEqual(len(scopes),1)
+            pid=payload["fields"][0]["passage_ids"][0]
+            return {"supported_groups":[{"field_ids":[f["id"] for f in payload["fields"]],
+                "quote_refs":[{"passage_id":pid,"span_id":"q1"}]}],"unsupported":[]}
+        report=review(self.item,self.sources,reviewer,batch_size=6)
+        self.assertEqual(report["status"],"pass")
+        self.assertEqual(len(report["checked_fields"]),len(fields_for(self.item)))
+        self.assertGreater(len(calls),1)
+        self.assertFalse(report["can_publish"])
+
     def setUp(self):
         self.item = {"evidence":[{"passage_id":"p1"}],
                      "concept_card":{k:"Classification statement" for k in ("mechanism","relevance","misconception","counterfactual")},

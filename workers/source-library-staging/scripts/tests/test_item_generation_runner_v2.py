@@ -10,6 +10,34 @@ ARGS = dict(mode="NCE", domain="III", section="III.H", objective="III.H.4",
             evidence=EVIDENCE, format="MC", item_id="new-1")
 
 class RunnerTests(unittest.TestCase):
+    def test_rationale_finalizes_teaching_edit_without_mutating_the_draft_or_approving(self):
+        from item_generation_runner_v2 import _final_counterfactual
+        draft=sample()
+        draft["stem"]="A synthetic condition X is present. Which response fits?"
+        proposal={"from_text":"condition X", "to_text":"condition Y", "expected_key":["A"]}
+        draft["key"]=["B"]
+        original=dict(draft)
+        text=_final_counterfactual(draft,proposal)
+        self.assertIn('"condition X"',text)
+        self.assertIn('"condition Y"',text)
+        self.assertEqual(draft,original)
+        def adapter(request):
+            if request["step"]=="concept_card":
+                return dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="Planning only",evidence_ids=["p1"])
+            if request["step"]=="item_draft": return draft
+            self.assertEqual(request["draft"]["stem"],draft["stem"])
+            return dict(core_concept="a",why_key_wins="b",trap="c",distractor_breakdown={"A":"x","B":"y"},counterfactual_test=proposal)
+        result=generate_one(adapter,**ARGS)
+        self.assertEqual(result["item"]["concept_card"]["counterfactual"],text)
+        self.assertNotIn("counterfactual_test",result["item"]["rationale"])
+        self.assertEqual(result["item"]["key"],["B"])
+        self.assertFalse(result["auto_approved"])
+        for change in ({"from_text":"absent"},{"from_text":draft["stem"]},
+                       {"expected_key":["B"]},{"expected_key":["Z"]},
+                       {"expected_key":["A","A"]},{"to_text":"condition X"}):
+            with self.subTest(change=change),self.assertRaises(ValueError):
+                _final_counterfactual(draft,{**proposal,**change})
+
     def test_three_separate_calls_and_never_approve(self):
         calls = []
         def adapter(request):

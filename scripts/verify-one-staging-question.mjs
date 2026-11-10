@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['49551d1a-01a6-483a-b9e6-59c892a01ad9','Counterfactual not bound to a finished stem, incomplete source review, and unnecessary unverified pressure values; rejected after one rewrite.'],
  ['d9da16d9-6134-4688-b033-82debbfd0abe','The client timed out, but the backend saved a candidate that still failed its counterfactual and unverified equation checks.'],
  ['782dcc83-a42c-432f-9864-8578ad0ea84e','The question embeds its counterfactual as an implausible disease transition and contains an unverified reversed formula; not accepted as a board-quality question.'],
  ['e530328c-3266-4671-b12b-df732b5c783b','Recall-only candidate with a second defensible choice, ineffective counterfactual and options-only cue; failed acceptance after its single rewrite.'],
@@ -88,7 +89,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v3');
+assert.equal(preflight.authoring_contract,'2026-11-10-v4');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
