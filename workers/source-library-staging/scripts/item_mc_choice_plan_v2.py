@@ -1,5 +1,6 @@
 """Private MC planning invariants, never source/clinical approval."""
 from copy import deepcopy
+import re
 
 
 def validate(plan):
@@ -10,7 +11,7 @@ def validate(plan):
         return (isinstance(values, list) and len(values) == count
                 and all(isinstance(v, str) and v.strip() and len(v) <= bound for v in values))
     if (not strings(plan["dimensions"], 2, 80)
-            or len({v.strip().casefold() for v in plan["dimensions"]}) != 2
+            or len({" ".join(v.casefold().split()) for v in plan["dimensions"]}) != 2
             or not strings([plan["stem_condition"], plan["alternate_condition"]], 2, 200)
             or plan["stem_condition"].strip().casefold() == plan["alternate_condition"].strip().casefold()
             or not strings(plan["key"], 1, 1) or not strings(plan["alternate_key"], 1, 1)
@@ -25,6 +26,12 @@ def validate(plan):
     for option in options:
         if not strings([option["text"]], 1, 180) or not strings(option["states"], 2, 80):
             raise ValueError("Concept card choice plan response invalid")
+    # Compare the same two clinical endpoints, not measurement type versus direction.
+    normalize = lambda value: " ".join(value.casefold().split())
+    for option in options:
+        if any(not re.search(r"(?<!\w)" + re.escape(normalize(component)) + r"(?!\w)",
+                             normalize(option["text"])) for component in plan["dimensions"]):
+            raise ValueError("Concept card choice plan does not compare both components")
     signatures = {tuple(" ".join(v.casefold().split()) for v in o["states"]) for o in options}
     if len(signatures) != 4 or len({o["text"].strip().casefold() for o in options}) != 4:
         raise ValueError("Concept card choice plan repeats a response pattern")

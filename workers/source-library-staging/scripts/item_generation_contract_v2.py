@@ -65,13 +65,18 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
     if format == "MC" and step == "concept_card":
         quality_instructions += (
             " Also return private choice_plan with dimensions (exactly two source-supported observations or physiological components), "
+            "Each dimension names a different clinical measurement or response, not metadata such as measurement type and direction of change. "
+            "Every option's text MUST name BOTH dimension labels verbatim, in the SAME order. Do not offer one measurement per choice. "
+            "Prefer an explicit source-supported clinical event or mechanical change over a bare disease-name direction lookup. "
             "stem_condition and alternate_condition (different complete clinical phrases, each at most 200 characters), "
             "key and alternate_key (different single-ID arrays), and four options A-D. Each planned option contains id, "
             "text (a short parallel paired response WITHOUT its explanation), and states "
             "(two short values of the SAME dimensions, in the SAME order). All four state pairs must differ: do not use "
             "three diagnoses that all produce the same measurements. Diagnosis names and option IDs are not state values. "
             "Include a unique response for BOTH the original case and its alternative. Ground both cases and every response "
-            "in the evidence. The draft will ask for this paired interpretation, not a list-definition lookup.")
+            "in the evidence. The draft will ask for this paired interpretation, not a list-definition lookup. "
+            "Tie misconception to the original case and one planned false response, not an unsupported universal or learner-prevalence claim. "
+            "Keep relevance focused on interpreting the supplied mechanisms; omit treatment directives absent from the excerpts.")
     if choice_plan is not None:
         quality_instructions += (
             " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "

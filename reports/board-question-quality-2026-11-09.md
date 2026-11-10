@@ -459,3 +459,29 @@ verification. Acceptance 42847069595 stopped before all paid calls: the gateway
 classified checkpoint readiness as a PDF manifest and demanded a PDF attestation
 header. Exempt only that recognized route from PDF checks and instead require
 its exact read-only readiness JSON contract. PDF integrity guards are unchanged.
+
+
+V9 acceptance 42848430594 verified checkpoint readiness and retained concept
+and draft checkpoints. It stopped at rationale on Groq's explicit daily token
+limit: 200,000 used of 200,000. The incomplete request is
+4f72f207-863a-487f-ace7-e2e3e8467bb5; no question was saved or approved.
+Its private plan was a type-by-direction menu, not paired component responses.
+V10 requires both component names in every choice and keeps case framing,
+misconception and relevance tied to the supplied passages.
+
+Cloudflare model discovery confirmed @cf/openai/gpt-oss-120b. A synthetic
+256-token JSON inference returned stop with the expected object. An explicit
+staging authoring-provider setting routes concept, draft, rationale and the
+single rewrite through Cloudflare using the SAME GPT-OSS 120B weights. All
+independent Qwen and GPT-OSS 20B reviews remain on Groq. Gemini and the legacy
+hybrid switch stay disabled. Cloudflare model identity must match the configured
+generator. Delivery provider/model are exposed in safe preflight metadata,
+bound into checkpoint identity and recorded with the saved draft. Cloudflare
+credentials remain in the Worker. An exact one-key rationale envelope can be
+unwrapped without inventing clinical fields. Local and repository checks plus
+fresh staging acceptance are required before claiming a completed milestone.
+
+V10 focused checks passed: 62 Node route/relay tests, two MC-plan tests and
+21 runtime tests. After restoring missing runtime dependencies, the full local
+suite ran 880 tests with one skip and only the known local PyMuPDF overlap
+fixture failure. Repository validation and architecture/performance budgets pass.
