@@ -49,16 +49,22 @@ class ChoicePlanTests(unittest.TestCase):
             self.assertEqual(request["choice_plan"],p)
             self.assertNotIn("choice_plan",request["concept_card"])
             if request["step"]=="item_draft":return copy.deepcopy(draft)
-            return {"core_concept":"m","why_key_wins":"r","trap":"x", "distractor_breakdown":{o["id"]:"explanation" for o in p["options"]},
-                    "counterfactual_test":bind(p,draft)}
+            return {"core_concept":"m","why_key_wins":"r","trap":"x", "distractor_breakdown":{o["id"]:"explanation" for o in p["options"]}}
         result=generate_one(adapter,**ARGS,on_checkpoint=lambda stage,value:checkpoints.update({stage:copy.deepcopy(value)}))
         self.assertEqual(calls,["concept_card","item_draft","rationale"])
         self.assertEqual(checkpoints["concept_card"]["choice_plan"],p)
         self.assertNotIn("choice_plan",result["item"]["concept_card"])
         self.assertNotIn("choice_plan",result["item"])
+        self.assertEqual(result["item"]["concept_card"]["counterfactual"],
+            'If "condition X" is replaced by "condition Y", the best response changes to option(s) A.')
         self.assertFalse(result["auto_approved"])
         calls.clear()
         resumed=generate_one(adapter,**ARGS,checkpoint=checkpoints)
         self.assertEqual(calls,["rationale"])
         self.assertEqual(resumed["item"],result["item"])
-
+        def drift(request):
+            response=adapter(request)
+            response["counterfactual_test"]={**bind(p,draft), "to_text":"unplanned condition"}
+            return response
+        with self.assertRaisesRegex(ValueError, "counterfactual differs from planned case"):
+            generate_one(drift,**ARGS,checkpoint=checkpoints)

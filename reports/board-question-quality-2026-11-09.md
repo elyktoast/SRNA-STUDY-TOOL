@@ -438,3 +438,17 @@ Canonical MC validation now explicitly rejects null or empty non-key learner-err
 tags under R-6.3; presence alone previously let null values through. Regression
 coverage confirms the private plan omits these tags while the final MC requires
 them. Existing treatment of legacy keyed metadata and other formats is preserved.
+
+
+V8 CI 42844619442 and deployment 42844426610 passed, including live v8
+verification and local architecture/performance budgets. Acceptance 42844916356
+passed concept planning and drafting (the bounded 429 retry recovered); rationale
+then failed provider strict-output validation before a question was saved.
+
+V9 uses the already server-bound MC plan as the counterfactual; its rationale call
+returns only the four canonical explanation fields. It cannot change the stem,
+choices or planned edit. MS and legacy no-plan rationale contracts are preserved.
+The independent changed-stem and source-premise checks remain mandatory. Enable
+the existing owner/request/evidence-bound staging checkpoint store, and expose
+only the request UUID in acceptance logs. Completed-result recovery requires
+preflight proof of completion and uses the same request, without another AI call.

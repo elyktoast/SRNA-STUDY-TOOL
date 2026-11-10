@@ -81,7 +81,7 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
-const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:process.env.SRNA_STAGING_ACCEPTANCE_ITEM_ID||crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
@@ -91,7 +91,14 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v8');
+assert.equal(preflight.authoring_contract,'2026-11-10-v9');
+const checkpointReady=await call('/generation/checkpoint-readiness');
+assert.equal(checkpointReady.ready,true,'Existing checkpoint storage is unavailable');
+assert.ok(preflight.resume,'Runtime checkpoint recovery is disabled');
+if(process.env.SRNA_STAGING_ACCEPTANCE_ITEM_ID){
+ assert.equal(preflight.resume.completed,true,'Recovery is allowed only for a proven completed result; no duplicate paid generation');
+}
+console.log(JSON.stringify({acceptance_item_id:request.item_id,recovering_completed:preflight.resume.completed===true}));
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
