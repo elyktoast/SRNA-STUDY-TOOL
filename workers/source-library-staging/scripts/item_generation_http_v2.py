@@ -349,6 +349,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 "Concept card objective differs from selected blueprint objective": "CONCEPT_OBJECTIVE",
                 "Concept card references unknown passages": "CONCEPT_UNKNOWN_SOURCE",
                 "Generated draft differs from its choice plan": "DRAFT_PLAN_MISMATCH",
+                "Generated draft differs from its choice plan: key": "DRAFT_PLAN_KEY",
+                "Generated draft differs from its choice plan: choices": "DRAFT_PLAN_CHOICES",
+                "Generated draft differs from its choice plan: condition": "DRAFT_PLAN_CONDITION",
                 "Rationale incomplete: counterfactual differs from planned case": "RATIONALE_PLAN_MISMATCH",
             }.get(message)
             return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule,

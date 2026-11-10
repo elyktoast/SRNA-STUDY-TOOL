@@ -59,6 +59,16 @@ class ChoicePlanTests(unittest.TestCase):
         self.assertEqual(p["alternate_key"],raw["alternate_key"])
         self.assertEqual(p["options"][1]["states"],raw["options"][1]["states"])
 
+    def test_repeated_variable_labels_do_not_duplicate_choice_wording_or_states(self):
+        raw=plan()
+        for option in raw["options"]:
+            option["states"]=[f"{label}: {state}" for label,state in zip(raw["response_variables"],option["states"])]
+        self.assertEqual(validate(raw),validate(plan()))
+        duplicate=plan()
+        duplicate["options"][2]["states"]=["Measurement X: reduced","Measurement Y: reduced"]
+        with self.assertRaisesRegex(ValueError,"repeats a response pattern"):
+            validate(duplicate)
+
     def test_plan_is_checkpointed_but_not_persisted_in_the_canonical_item(self):
         raw=plan();p=validate(raw);calls=[];checkpoints={}
         concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=raw)
