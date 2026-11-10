@@ -7,7 +7,7 @@ from test_item_standard_v2 import sample
 
 
 def plan():
-    return {"dimensions":["component X","component Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
+    return {"dimensions":["X","Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
             "key":["B"],"alternate_key":["A"],"options":[
                 {"id":oid,"text":text,"states":states}
                 for oid,text,states in [("A","X reduced; Y reduced",["reduced","reduced"]),
@@ -31,6 +31,16 @@ class ChoicePlanTests(unittest.TestCase):
             if change=="bad_order": bad["options"].reverse()
             if change=="missing_state": bad["options"][0]["states"].pop()
             with self.subTest(change=change),self.assertRaises(ValueError):validate(bad)
+        for text in ("X reduced", "Extra decreased; Y reduced"):
+            bad=copy.deepcopy(p)
+            bad["options"][0]["text"]=text
+            with self.assertRaisesRegex(ValueError, "does not compare both components"):
+                validate(bad)
+        type_menu=copy.deepcopy(p)
+        type_menu["dimensions"]=["Compliance type","Direction of change"]
+        type_menu["options"][0]["text"]="Static compliance is decreased"
+        with self.assertRaisesRegex(ValueError, "does not compare both components"):
+            validate(type_menu)
         for change in ("stem","options","key"):
             bad=copy.deepcopy(draft)
             if change=="stem": bad["stem"]="Different case"
@@ -62,6 +72,10 @@ class ChoicePlanTests(unittest.TestCase):
         resumed=generate_one(adapter,**ARGS,checkpoint=checkpoints)
         self.assertEqual(calls,["rationale"])
         self.assertEqual(resumed["item"],result["item"])
+        def wrapped(request):
+            return {"rationale":adapter(request)}
+        wrapped_result=generate_one(wrapped,**ARGS,checkpoint=checkpoints)
+        self.assertEqual(wrapped_result["item"]["rationale"],result["item"]["rationale"])
         def drift(request):
             response=adapter(request)
             response["counterfactual_test"]={**bind(p,draft), "to_text":"unplanned condition"}

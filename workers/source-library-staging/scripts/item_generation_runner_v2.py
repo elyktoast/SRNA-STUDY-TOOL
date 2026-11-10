@@ -220,6 +220,8 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         on_checkpoint("draft", draft)
     rationale = _response(adapter, build_step("rationale", **args, format=format,
                                              concept_card=concept, draft=draft, choice_plan=choice_plan))
+    if isinstance(rationale, dict) and set(rationale) == {"rationale"} and isinstance(rationale["rationale"], dict):
+        rationale = rationale["rationale"]
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     if planned_proposal is not None and "counterfactual_test" in rationale and rationale["counterfactual_test"] != planned_proposal:

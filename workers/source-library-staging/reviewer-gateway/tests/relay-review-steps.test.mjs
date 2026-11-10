@@ -449,3 +449,41 @@ test('planned MC rationale preserves the bound counterfactual and requests only 
   finally{globalThis.fetch=original;}
  }
 });
+
+test('explicit Cloudflare GPT-OSS authoring keeps every independent review on Groq',async()=>{
+ const old=globalThis.fetch;
+ const cf={...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_AUTHORING_PROVIDER:'cloudflare',
+  AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'cf-secret',AI_CLOUDFLARE_MODEL:'@cf/openai/gpt-oss-120b',
+  AI_OPTION_REVIEW_OPT_IN:'true',AI_EXPLANATION_REVIEW_OPT_IN:'true',AI_EDITORIAL_REVIEWER_MODEL:'openai/gpt-oss-20b'};
+ try{
+  for(const step of ['concept_card','item_draft','rationale','rewrite']){
+   globalThis.fetch=async(url,options)=>{
+    assert.equal(url,'https://api.cloudflare.com/client/v4/accounts/account/ai/run/@cf/openai/gpt-oss-120b');
+    const body=JSON.parse(options.body);
+    assert.equal(body.messages[0].role,'system');assert.equal(body.messages[1].role,'user');
+    assert.deepEqual(body.response_format,{type:'json_object'});assert.equal(body.max_tokens,1024);
+    return Response.json({success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
+   };
+   assert.equal((await gateway.fetch(request(step,'openai/gpt-oss-120b'),cf)).status,200);
+  }
+  for(const step of ['blind_review','option_review','explanation_review','editorial_review','options_only_review']){
+   const model=step==='editorial_review'?'openai/gpt-oss-20b':'qwen/qwen3.8-27b';
+   globalThis.fetch=async(url,options)=>{
+    assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+    assert.equal(JSON.parse(options.body).model,model);
+    return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+   };
+   assert.equal((await gateway.fetch(request(step,model),cf)).status,200);
+  }
+ }finally{globalThis.fetch=old;}
+});
+test('Cloudflare authoring cannot disguise a different underlying generator model',async()=>{
+ const old=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;return Response.json({});};
+ try{
+  const response=await gateway.fetch(request('concept_card','openai/gpt-oss-120b'),{...env,
+   AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_AUTHORING_PROVIDER:'cloudflare',
+   AI_CLOUDFLARE_MODEL:'@cf/qwen/qwen3.8-27b',AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'secret'});
+  assert.equal(response.status,503);assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});

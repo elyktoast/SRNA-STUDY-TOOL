@@ -95,7 +95,11 @@ async function relayGroq(request,env){
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
-  const provider=hybrid&&step.step==='concept_card'?'cloudflare':'groq';
+  if(env.AI_AUTHORING_PROVIDER!==undefined&&!['groq','cloudflare'].includes(env.AI_AUTHORING_PROVIDER))return respond(503,null,'{"error":"relay_disabled"}');
+  const authoring=['concept_card','item_draft','rationale','rewrite'].includes(step.step);
+  const cloudflareAuthoring=env.AI_AUTHORING_PROVIDER==='cloudflare'&&authoring;
+  if(cloudflareAuthoring&&env.AI_CLOUDFLARE_MODEL!=='@cf/'+env.AI_GENERATOR_MODEL)return respond(503,null,'{"error":"relay_disabled"}');
+  const provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
   activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
@@ -136,7 +140,7 @@ async function relayGroq(request,env){
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
   }
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:rationaleFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:{type:'json_object'}}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
@@ -329,6 +333,10 @@ export default {
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
+    if(env.AI_AUTHORING_PROVIDER!==undefined){
+     envVars.AI_AUTHORING_PROVIDER=env.AI_AUTHORING_PROVIDER;
+     if(env.AI_AUTHORING_PROVIDER==='cloudflare')envVars.AI_CLOUDFLARE_MODEL=env.AI_CLOUDFLARE_MODEL||'';
+    }
     if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
     if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true'){
      if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
@@ -460,7 +468,7 @@ export default {
     };
     const providers=await Promise.all([
      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
-     env.AI_HYBRID_ENABLED==='true'?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
+     (env.AI_HYBRID_ENABLED==='true'||env.AI_AUTHORING_PROVIDER==='cloudflare')?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
     ]);
     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
     const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';
