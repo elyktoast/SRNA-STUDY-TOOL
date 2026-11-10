@@ -35,4 +35,4 @@ assert.equal(preflight.dry_run,true);assert.equal(preflight.database_writes,fals
 assert.equal(preflight.can_publish,false);
 assert.equal(preflight.authoring_contract,'2026-11-10-v6');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-console.log('Authenticated runtime authoring contract v4 verified without AI calls');
+console.log('Authenticated runtime authoring contract v6 verified without AI calls');

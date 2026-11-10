@@ -25,7 +25,7 @@ async function call(path,body){
  if(!r.ok){
   // Only fixed machine-readable categories; never log provider output or evidence.
   const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(v)?v:'UNCLASSIFIED';
-  console.log(JSON.stringify({path,status:r.status,error:safe(data.error),rule:safe(data.rule),failed_step:safe(data.failed_step)}));
+  console.log(JSON.stringify({path,status:r.status,error:safe(data.error),rule:safe(data.rule),failed_step:safe(data.failed_step),validation_detail:safe(data.validation_detail)}));
   throw Error('Staging acceptance request failed: HTTP '+r.status);
  }
  return data;

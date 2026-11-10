@@ -403,3 +403,12 @@ preserving the existing bounded rate-limit wait. Focused planning (2), source
 review (16), and relay (36) tests pass. The full local suite ran 876 tests with
 one skip and only the previously identified local PyMuPDF overlap fixture failure.
 CI, deployment and a fresh live question remain required.
+
+
+V6 CI 42839845491 passed 876 Python tests (one skipped), 119 Node tests,
+container build and repository validation. Deployment 42839871179 passed
+authenticated smoke and the live v6 assertion. Acceptance 42840537365 stopped
+before drafting with CONCEPT_CARD_VALIDATION after a valid provider JSON response.
+No draft was saved. Add exact allowlisted planning-invariant diagnostics so the
+next result identifies the actual defect without exposing generated/source text.
+No clinical or structural requirement is loosened by this diagnostic change.

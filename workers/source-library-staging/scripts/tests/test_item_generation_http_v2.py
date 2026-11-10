@@ -304,6 +304,20 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertEqual(seen[0], "200 OK")
 
     @patch("item_generation_http_v2.execute")
+    def test_planning_diagnostics_are_allowlisted_and_never_echo_model_text(self, execute):
+        for message, detail in [
+            ("Concept card choice plan response invalid", "PLAN_RESPONSE_FIELDS"),
+            ("Concept card choice plan repeats a response pattern", "PLAN_REPEATED_PATTERN"),
+            ("Concept card references unknown passages", "CONCEPT_UNKNOWN_SOURCE"),
+            ("Concept card private source text and secret", None),
+        ]:
+            execute.side_effect = ValueError(message)
+            status, data = self.call()
+            self.assertEqual(status, "422 Unprocessable Entity")
+            self.assertEqual(data.get("validation_detail"), detail)
+            self.assertNotIn(message, json.dumps(data))
+
+    @patch("item_generation_http_v2.execute")
     def test_no_model_execution_from_http(self, execute):
         status, _ = self.call({**PAYLOAD, "execute": True})
         self.assertEqual(status, "400 Bad Request")
