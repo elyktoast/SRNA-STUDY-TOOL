@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['df490c7f-4a85-4eb8-9b97-740b2a2910bc','Blind answer disagreement, unsupported distractor claim and a counterfactual absent from the stem; rejected after one rewrite.'],
  ['dd641cda-00c4-49b9-9fdf-5ce19620fb9b','Failed application-level reasoning, counterfactual verification and affirmative distractor support after its single rewrite.'],
  ['478fd4be-b899-41ec-8c71-2d470feba9b5','Counterfactual still failed after one rewrite and source explanation review was truncated; not accepted as a quality milestone.'],
  ['5cdb6e33-d6f5-426a-9fd2-42e88dd597ad','Recall candidate retained a failed changed-stem blind result, unverified worded equation and incomplete source explanation review after its one rewrite.'],
