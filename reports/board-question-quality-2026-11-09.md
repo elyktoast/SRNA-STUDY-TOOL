@@ -498,3 +498,15 @@ schema envelope and explicitly requests medium reasoning. Draft/rewrite remain
 in their existing JSON-object mode. Server, source and independent clinical
 validation stay mandatory. No failed provider response is accepted as a draft.
 Reference: https://developers.cloudflare.com/workers-ai/features/json-mode/.
+
+
+V11 CI 42881096299 and deployment 42881091740 passed. Acceptance
+42881588324 passed schema shape but stopped at PLAN_RESPONSE_COMPONENTS;
+no checkpoint or question was saved. V12 removes duplicated free-form choice
+text from private planning. It renders every option from the model-authored
+component labels and its two authored states, without choosing or changing
+clinical values. Metadata axes such as measurement type/direction of change
+are rejected. Checkpointed rendered text must match exactly on resume. Final
+source, blind, editorial, cue and changed-stem reviews remain unchanged and
+mandatory; rendering is never clinical approval. Canonical question format and
+source indexing are unchanged.

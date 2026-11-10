@@ -425,7 +425,7 @@ test('MC planning has a private distinct-response plan while generic concept car
   assert.equal(s.properties.choice_plan.additionalProperties,false);
   assert.deepEqual(s.properties.choice_plan.required,['dimensions','stem_condition','alternate_condition','key','alternate_key','options']);
   assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
-  assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','text','states']);
+  assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','states']);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{format:'MC'}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
