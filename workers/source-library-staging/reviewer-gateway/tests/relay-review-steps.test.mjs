@@ -22,7 +22,7 @@ test('429 diagnostics expose only fixed dimensions and bounded numbers; fraction
 test('missing Retry-After uses only an explicit bounded provider retry interval',async()=>{
  const original=globalThis.fetch;
  try{
-  for(const [wait,expected] of [['25.123s',26],['500ms',1],['9999s',undefined]]){
+  for(const [wait,expected] of [['25.123s',26],['12.123456789012345s',13],['0.000000000000001s',1],['500ms',1],['9999s',undefined]]){
    globalThis.fetch=async()=>Response.json({error:{message:'Tokens per minute (TPM). Please try again in '+wait+'. private source text'}},{status:429});
    const data=await (await gateway.fetch(request('blind_review','reviewer-model'),env)).json();
    assert.equal(data.retry_after_seconds,expected);
@@ -413,5 +413,20 @@ test('MC rationale requires every option explanation and a bounded-edit proposal
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b',{format:'MC',draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
+});
+
+test('MC planning has a private distinct-response plan while generic concept cards retain six canonical fields',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),s=body.response_format.json_schema.schema;
+  assert.ok(s.required.includes('choice_plan'));
+  assert.equal(s.properties.choice_plan.additionalProperties,false);
+  assert.deepEqual(s.properties.choice_plan.required,['dimensions','stem_condition','alternate_condition','key','alternate_key','options']);
+  assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
+  assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','text','error_pattern','states']);
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{format:'MC'}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
  finally{globalThis.fetch=original;}
 });

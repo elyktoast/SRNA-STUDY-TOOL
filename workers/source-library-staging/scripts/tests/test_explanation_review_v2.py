@@ -6,6 +6,16 @@ from item_generation_screened_v2 import generate_and_screen
 
 
 class ExplanationReviewTests(unittest.TestCase):
+    def test_counterfactual_source_review_checks_clinical_premises_not_answer_letters(self):
+        self.item["concept_card"]["counterfactual"]='If "condition X" is replaced by "condition Y", the best response changes to option(s) A.'
+        text=next(f["text"] for f in fields_for(self.item) if f["label"]=="concept_card.counterfactual")
+        self.assertIn("condition X",text);self.assertIn("condition Y",text)
+        self.assertNotIn("option",text)
+        self.item["concept_card"]["counterfactual"] += " Additional unsupported clinical assertion."
+        text=next(f["text"] for f in fields_for(self.item) if f["label"]=="concept_card.counterfactual")
+        self.assertIn("Additional unsupported clinical assertion",text)
+        self.assertIn("option(s) A",text)
+
     def test_reviewer_pass_cannot_turn_source_silence_into_disproof(self):
         self.item["rationale"]["distractor_breakdown"]["A"]="Incorrect because the source does not mention this effect."
         report=review(self.item,self.sources,lambda p:self.response)
