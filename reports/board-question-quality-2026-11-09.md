@@ -351,3 +351,14 @@ GPT-OSS concept card now uses documented strict JSON-schema output with exactly
 the same six canonical fields; all server/source/independent validation remains
 mandatory. Other model steps retain their existing formats and identities.
 Provider reference: https://console.groq.com/docs/structured-outputs.
+
+
+Strict-output CI 42830794116 and deployment 42830827655 passed, including
+live v4 verification. Acceptance 42831453480 passed read-only smoke but concept
+JSON was again rejected before a draft. Cloudflare's deployed Worker content
+was inspected for the strict schema name and response type; the intended code
+was present. Restore medium planning effort (which previously produced valid
+concept objects), retaining strict six-field shape and finished-stem finalization.
+Fixed diagnostic categories now distinguish invalid JSON from other JSON shapes
+and record only bounded character counts; no failed text or reasoning is logged.
+All 34 focused relay tests pass. No successful quality milestone is claimed yet.

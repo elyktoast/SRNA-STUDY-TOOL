@@ -36,7 +36,13 @@ async function safeRequestDiagnostic(response){
   const error=JSON.parse(new TextDecoder().decode(bytes))?.error;
   const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','model_not_found'];
   const params=['reasoning_effort','max_tokens','max_completion_tokens','response_format'];
-  return {...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
+  const shape={};
+  if(error?.code==='json_validate_failed'&&typeof error.failed_generation==='string'){
+   shape.failed_generation_chars=error.failed_generation.length;
+   try{const value=JSON.parse(error.failed_generation);shape.failed_json_shape=value&&typeof value==='object'&&!Array.isArray(value)?'object':'other_json';}
+   catch{shape.failed_json_shape='invalid_json';}
+  }
+  return {...shape,...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
 }
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
@@ -102,7 +108,7 @@ async function relayGroq(request,env){
      properties:{...Object.fromEntries(['objective','mechanism','relevance','misconception','counterfactual'].map(k=>[k,{type:'string'}])),evidence_ids:{type:'array',items:{type:'string'}}},
      required:['objective','mechanism','relevance','misconception','counterfactual','evidence_ids'],additionalProperties:false}}}
    :{type:'json_object'};
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:conceptFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?(step.step==='concept_card'?'high':'medium'):'low'}:{})}):bytes;
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:conceptFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
