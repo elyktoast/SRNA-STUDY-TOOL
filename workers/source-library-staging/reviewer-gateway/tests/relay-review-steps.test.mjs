@@ -171,7 +171,7 @@ test('rationale uses bounded Groq JSON rather than the slow Cloudflare route',as
   calls++; assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.equal(JSON.parse(body.messages[1].content).step,'rationale');
-  assert.equal(body.reasoning_effort,'high');
+  assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
   assert.deepEqual(body.response_format,{type:'json_object'});
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -191,14 +191,14 @@ test('Groq drafting retains original request without Qwen-specific settings',asy
  try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
  finally{globalThis.fetch=original;}
 });
-test('GPT-OSS drafting and rewriting request bounded JSON with high authoring effort',async()=>{
+test('GPT-OSS drafting and rewriting request bounded JSON with high planning and medium authoring effort',async()=>{
  const original=globalThis.fetch;
  const model='openai/gpt-oss-120b';
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.deepEqual(body.response_format,{type:'json_object'});
-  assert.equal(body.reasoning_effort,'high');
+  assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
   assert.equal(body.max_tokens,1024);
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -309,7 +309,7 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
-  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,'high');
+  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,JSON.parse(body.messages[1].content).step==='concept_card'?'high':'medium');
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{

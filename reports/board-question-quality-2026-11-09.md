@@ -294,3 +294,13 @@ Test high effort for generator authoring only, with bounded response ceilings
 independent reviewer settings unchanged. Allow the explicit acceptance client up
 to eight minutes for a single call under observed per-minute review limits; no
 extra request or quality bypass is introduced. Fresh CI and acceptance required.
+
+
+CI 42770912338 and deployment 42770930756 passed. Acceptance 42771325499
+failed at concept_card before persistence. The new safe diagnostic identified
+provider_error_code=json_validate_failed (HTTP 400), rather than authentication,
+model availability or an unsupported reasoning parameter. Test a larger bounded
+4,096-token planning response and keep high effort only for that planning step;
+draft, rationale and protected rewrite use medium effort. Independent reviewers
+retain their original settings. This is a configuration experiment, not evidence
+that question quality has been solved. CI and fresh acceptance remain required.
