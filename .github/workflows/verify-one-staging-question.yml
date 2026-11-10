@@ -1,5 +1,5 @@
 name: Explicit staging one-question acceptance
-# Verify the v14 complete-case correction and cited source-review deployment.
+# Verify the v15 bounded paired-source and exact draft-plan deployment.
 on:
   workflow_dispatch:
     inputs:

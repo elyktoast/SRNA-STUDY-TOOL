@@ -28,7 +28,7 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
     context_failed = False
     if context_query:
         try:
-            context_rows = search(conn, context_query.strip(), owner_uid, limit=1, textbook_id=textbook_id)
+            context_rows = search(conn, context_query.strip(), owner_uid, limit=limit, textbook_id=textbook_id)
         except Exception:
             context_failed = True
     results = []
@@ -50,8 +50,10 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
         else:
             option_failed = False
         # A topic table and an option's classification can be on different pages.
-        # Retrieve both independently rather than sending many OR-ranked matches.
-        rows = list({row["passage_id"]: row for row in option_rows + context_rows}.values())
+        # Keep independently searched option matches first, then fill the bounded
+        # per-option budget with context. Paired concepts may span two pages;
+        # an unmatched option must not lose the second half of that evidence.
+        rows = list({row["passage_id"]: row for row in option_rows + context_rows}.values())[:limit]
         search_status = "failed" if option_failed or context_failed else "matches_found" if rows else "no_matches"
         if not rows:
             missing_evidence = True
