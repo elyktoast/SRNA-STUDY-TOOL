@@ -7,7 +7,7 @@
     "SUPABASE_URL": "https://xqyasyambwdyhsjkftqu.supabase.co",
     "AI_HYBRID_ENABLED": "false",
     "AI_GENERATION_CHECKPOINTS_ENABLED": "true",
-    "AI_CLOUDFLARE_MODEL": "@cf/openai/gpt-oss-120b",
+    "AI_CLOUDFLARE_MODEL": "@cf/zai-org/glm-5.3",
     "AI_REWRITE_OPT_IN": "true",
     "AI_BLIND_REVIEW_OPT_IN": "true",
     "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b",

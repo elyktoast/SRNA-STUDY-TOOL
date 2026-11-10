@@ -1,4 +1,5 @@
 name: Explicit staging one-question acceptance
+# Verify the v13 causal-planning and GLM deployment.
 on:
   workflow_dispatch:
     inputs:

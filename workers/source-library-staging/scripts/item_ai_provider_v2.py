@@ -176,6 +176,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
             fmt = request.get("format") or request.get("item", {}).get("format")
             if fmt in ("MC", "MS"):
                 body["messages"][0]["content"] += " This text-only MC/MS task has no verified page images: omit equations, formulas, doses and numerical measurements from authored content. Explain the physiology qualitatively. Do not copy an interleaved source equation into the concept card."
+                body["messages"][0]["content"] += " Trace EVERY source-described determinant of each tested response. Never call a response normal merely because one determinant is unchanged while another of its determinants changes. If outputs share a mechanism, preserve that shared dependency. Use clinical causes or events as original and alternate conditions, never the predicted response-variable values. Do not place an answer statement in the condition. Mechanism must explain qualitative dependencies, not a calculation or pressure-difference recipe. Never describe a misconception as common or assert learner prevalence unless the source documents that prevalence."
+
         if request["step"] == "item_draft":
             body["messages"][0]["content"] += " Match reasoning_level to the actual task: a direct drug-classification question is recall. Set crisis_scenario true only when the stem actually presents an active clinical crisis, never merely because its topic can be an emergency. Keep all options parallel; do not compare a grouped list of several agents with single-agent alternatives."
             if request.get("format") in ("MC", "MS"):

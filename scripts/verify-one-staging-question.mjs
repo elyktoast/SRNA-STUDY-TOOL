@@ -91,9 +91,9 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v12');
+assert.equal(preflight.authoring_contract,'2026-11-10-v13');
 assert.equal(preflight.authoring_provider,'cloudflare');
-assert.equal(preflight.authoring_delivery_model,'@cf/openai/gpt-oss-120b');
+assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 const checkpointReady=await call('/generation/checkpoint-readiness');
 assert.equal(checkpointReady.ready,true,'Existing checkpoint storage is unavailable');
 assert.ok(preflight.resume,'Runtime checkpoint recovery is disabled');
