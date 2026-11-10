@@ -91,7 +91,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v7');
+assert.equal(preflight.authoring_contract,'2026-11-10-v8');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');

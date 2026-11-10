@@ -9,7 +9,7 @@ from test_item_standard_v2 import sample
 def plan():
     return {"dimensions":["component X","component Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
             "key":["B"],"alternate_key":["A"],"options":[
-                {"id":oid,"text":text,"error_pattern":None if oid=="B" else "Confuses component responses", "states":states}
+                {"id":oid,"text":text,"states":states}
                 for oid,text,states in [("A","X reduced; Y reduced",["reduced","reduced"]),
                     ("B","X unchanged; Y reduced",["unchanged","reduced"]),
                     ("C","X unchanged; Y unchanged",["unchanged","unchanged"]),
@@ -20,7 +20,7 @@ class ChoicePlanTests(unittest.TestCase):
     def test_distinct_patterns_and_draft_binding_never_prove_clinical_correctness(self):
         p=validate(plan())
         draft={"stem":"During care, condition X is observed. Which response fits?", "key":["B"],
-               "options":[{k:v for k,v in o.items() if k!="states"} for o in p["options"]]}
+               "options":[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]]}
         proposal=bind(p,draft)
         self.assertEqual(proposal,{"from_text":"condition X","to_text":"condition Y","expected_key":["A"]})
         for change in ("duplicate_pattern","same_key","same_condition","bad_order","missing_state"):
@@ -42,7 +42,7 @@ class ChoicePlanTests(unittest.TestCase):
         p=plan();calls=[];checkpoints={}
         concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=p)
         draft=sample();draft.update(stem="During care, condition X is observed. Which response fits?",key=["B"],
-            options=[{k:v for k,v in o.items() if k!="states"} for o in p["options"]])
+            options=[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]])
         def adapter(request):
             calls.append(request["step"])
             if request["step"]=="concept_card":return copy.deepcopy(concept)
