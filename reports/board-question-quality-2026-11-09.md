@@ -206,3 +206,19 @@ or invalid response remains pending; no partial batch can pass the whole item.
 Provider output limits and independent model identity are unchanged. Initial
 planning now explicitly pairs two physiological components with the original and
 alternative source-supported conditions.
+
+
+## Recovery after execution workspace failure
+
+The latest source CI (42760800256) passed. Deployment 42760821633 completed
+rollout and authenticated smoke successfully; the combined run failed at paid
+acceptance, preserving unpublished draft dd641cda-00c4-49b9-9fdf-5ce19620fb9b.
+That candidate still failed application-level reasoning, meaningful counterfactual
+and affirmative distractor support. It is not an accepted quality milestone.
+A read-only reproduction of the existing ranked query showed that the two-result
+cap selected only static-compliance passages. The next acceptance request restores
+the explicit dynamic/static topic and allows all four matching passages on the
+same two indexed pages. This supplies the missing contrast without changing
+indexing, search ranking, source validation, models or the one-rewrite limit.
+The execution workspace failed to recover; subsequent work uses the connected
+repository and staging services. Live acceptance is still required.
