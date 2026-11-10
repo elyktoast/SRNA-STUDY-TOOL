@@ -361,3 +361,18 @@ test('authoring effort never changes editorial or independent Qwen settings',asy
   assert.ok(seen.every(b=>b.max_tokens===1024));
  }finally{globalThis.fetch=original;}
 });
+
+test('request rejection exposes only fixed provider codes and parameter names',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const [error,expected] of [
+   [{code:'json_validate_failed',message:'private',failed_generation:'private question'},{provider_error_code:'json_validate_failed'}],
+   [{code:'private credential',param:'private source',message:'secret'},{}],
+   [{code:'invalid_request_error',param:'reasoning_effort',message:'secret'},{provider_error_code:'invalid_request_error',provider_error_param:'reasoning_effort'}]]){
+   globalThis.fetch=async()=>Response.json({error},{status:400});
+   const data=await (await gateway.fetch(request('concept_card','generator-model'),env)).json();
+   assert.deepEqual(data,{error:'provider_failed',rule:'PROVIDER_REQUEST_REJECTED',provider_status:400,...expected});
+   assert.ok(!JSON.stringify(data).includes('private'));
+  }
+ }finally{globalThis.fetch=original;}
+});

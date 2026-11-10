@@ -26,6 +26,19 @@ async function safeRateDiagnostic(response){
   return {rate_limit_dimension:dimension,...counts,...(retrySeconds!==null&&retrySeconds>=1&&retrySeconds<=3600?{retry_after_seconds:retrySeconds}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
 }
+async function safeRequestDiagnostic(response){
+ // Read a bounded private response, return only known machine categories.
+ const reader=response.body?.getReader();if(!reader)return {};
+ let size=0;const chunks=[];
+ try{
+  while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536)return {};chunks.push(value);}
+  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  const error=JSON.parse(new TextDecoder().decode(bytes))?.error;
+  const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','model_not_found'];
+  const params=['reasoning_effort','max_tokens','max_completion_tokens','response_format'];
+  return {...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
+ }catch{return {};}finally{await reader.cancel().catch(()=>{});}
+}
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
 function relayFailure(error,provider,step){
  const name=String(error?.name||'');
@@ -122,7 +135,9 @@ async function relayGroq(request,env){
     Object.assign(rateLimit,await safeRateDiagnostic(upstream));
     console.error('staging_rate_limit',JSON.stringify({provider,step:step.step,model:activeModel,...rateLimit}));
    }
-   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
+   const requestDiagnostic=rule==='PROVIDER_REQUEST_REJECTED'?await safeRequestDiagnostic(upstream):{};
+   if(rule==='PROVIDER_REQUEST_REJECTED')console.error('staging_request_rejected',JSON.stringify({provider,step:step.step,model:activeModel,...requestDiagnostic}));
+   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...requestDiagnostic,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq'){
    let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}

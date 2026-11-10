@@ -273,3 +273,11 @@ and slash notation, covered by the observed failing claims. Clarify that a
 counterfactual is a separate hypothetical, not the original stem, and that a
 component-comparison topic requires the same two components in all choices.
 No gate was relaxed; this candidate is not a successful quality milestone.
+
+
+CI 42768488073 and deployment 42768508986 passed. Acceptance 42768901745
+stopped at concept_card with a provider HTTP 400 request rejection before any
+draft. Existing sanitization did not expose the provider's machine error code.
+Add bounded diagnostic extraction of fixed known error codes/parameter names
+only; raw error messages, failed generations and source text remain excluded.
+This does not retry the rejection or change generation/quality behavior.
