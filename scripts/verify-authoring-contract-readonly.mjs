@@ -33,7 +33,7 @@ const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.database_writes,false);
 assert.equal(preflight.can_publish,false);
-assert.equal(preflight.authoring_contract,'2026-11-10-v17');
+assert.equal(preflight.authoring_contract,'2026-11-10-v18');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');

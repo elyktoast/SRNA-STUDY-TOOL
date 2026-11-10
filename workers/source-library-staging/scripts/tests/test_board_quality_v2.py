@@ -183,6 +183,19 @@ class BoardQualityTests(unittest.TestCase):
         self.assertEqual(editorial(q,lambda p:response,counterfactual_reviewer=blind)["status"],"flag")
         self.assertEqual(calls,[])
 
+    def test_qwen_editorial_uses_a_bounded_budget_and_keeps_the_key_hidden(self):
+        calls=[]
+        def transport(**kwargs):
+            calls.append(kwargs)
+            response={"checks":{k:"pass" for k in CRITERIA},"findings":[],"counterfactual_test":None}
+            return {"choices":[{"message":{"content":json.dumps(response)}}]}
+        adapter=make_adapter(endpoint="https://provider.example/v1",api_key="test",model="qwen/qwen3.8-27b",owner_opt_in=True,transport=transport)
+        editorial(item(),adapter)
+        self.assertEqual(calls[0]["body"]["max_tokens"],1000)
+        payload=json.loads(calls[0]["body"]["messages"][1]["content"])
+        self.assertNotIn("key",payload)
+        self.assertNotIn("rationale",payload)
+
     def test_counterfactual_requires_an_anchored_edit_and_a_different_key(self):
         proposal={"from_text":"this finding","to_text":"the alternate finding","expected_key":["C"]}
         calls=[]
