@@ -182,3 +182,16 @@ used by rewrite and reviews. All three authoring stages now receive that same
 helper through the callback passed to the pipeline. The handoff regression test
 invokes the actual callback for concept, draft and rationale, confirms exactly
 one retry and a bounded wait for each. No quality rules were relaxed.
+
+
+Acceptance 42759379255 verified successful rate-limit recovery and persisted
+draft 5cdb6e33-d6f5-426a-9fd2-42e88dd597ad, but rejected it after one rewrite.
+It remained a recall task; its counterfactual left contradictory diagnostic
+qualifiers and the independent solver retained the old answer. A worded formula
+also reversed the ratio in interleaved source text, while explanation review
+remained pending. This is another failed candidate, not successful acceptance.
+New authoring instructions require interpreting multiple relevant findings or
+affected/unaffected components and omit unverified MC/MS equations. A deterministic
+page-image guard now includes equations written as divided/multiplied by. The
+next request caps retrieval at two already indexed relevant passages; indexing
+and evidence validation remain unchanged.
