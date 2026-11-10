@@ -63,7 +63,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               page_start=args.page_start, page_end=args.page_end)
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-10-v9", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-10-v10", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
@@ -77,6 +77,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
     quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
     editorial_model = env.get("AI_EDITORIAL_REVIEWER_MODEL", "").strip()
+    authoring_provider = env.get("AI_AUTHORING_PROVIDER", "groq")
+    if authoring_provider not in ("groq", "cloudflare"):
+        raise ValueError("Invalid provider delivery configuration")
+    delivery_model = env.get("AI_CLOUDFLARE_MODEL", "") if authoring_provider == "cloudflare" else generator_id
+    if authoring_provider == "cloudflare" and delivery_model != "@cf/" + generator_id:
+        raise ValueError("Cloudflare provider model must match the generator identity")
+    summary["authoring_provider"] = authoring_provider
+    summary["authoring_delivery_model"] = delivery_model
     summary["quality_contract"] = "2026-11-10-v2" if quality_requested else None
     summary["review_readiness"] = {
         "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id and editorial_model and editorial_model != generator_id else "unavailable" if quality_requested else "disabled",
@@ -117,13 +125,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"authoring_contract": "2026-11-10-v9", "owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-10-v10", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         "textbook_id": args.textbook_id, "section_id": args.section_id,
         "include_subsections": args.include_subsections, "page_start": args.page_start,
         "page_end": args.page_end, "limit": args.limit,
         "generator_model": env.get("AI_GENERATOR_MODEL", ""),
+        "authoring_provider": authoring_provider, "authoring_delivery_model": delivery_model,
         "provider_endpoint": env.get("AI_PROVIDER_ENDPOINT", ""),
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
@@ -230,7 +239,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         candidate = _call_with_bounded_rate_wait(adapter, payload)
         return _hydrate_indexed_citations(candidate, evidence["sources"])
     def author(payload):
-        return _call_with_bounded_rate_wait(adapter, payload)
+        value = _call_with_bounded_rate_wait(adapter, payload)
+        if authoring_provider == "cloudflare" and payload.get("step") == "concept_card" and payload.get("format") == "MC":
+            concept = value.get("concept_card") if isinstance(value, dict) and set(value) == {"concept_card"} else value
+            if not isinstance(concept, dict) or not isinstance(concept.get("choice_plan"), dict):
+                raise ValueError("Concept card choice plan incomplete")
+        return value
     result = generate_from_index(conn, args.owner_uid, args.topic, author,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
@@ -257,7 +271,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
-                    "objective": args.objective, "provider": host,
+                    "objective": args.objective, "provider": "api.cloudflare.com" if authoring_provider == "cloudflare" else host,
                     "model": env["AI_GENERATOR_MODEL"], "question": result["item"],
                     "screening": result["screening"] or {"next_state": result["next_state"],
                         "generator_issues": result["generator_issues"]},

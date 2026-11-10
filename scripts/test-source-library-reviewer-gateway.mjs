@@ -251,3 +251,16 @@ test('authenticated checkpoint readiness uses its exact read-only JSON contract 
  assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:origin}}),isolated(valid))).status,401);
  assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:'https://srnastudytool.com',Authorization:'Bearer valid'}}),isolated(valid))).status,403);
 });
+
+test('Cloudflare delivery metadata reaches the container without its provider credential',async()=>{
+ const target={...generationEnv,AI_GENERATION_OPT_IN:'true',AI_PROVIDER_ENDPOINT:'https://api.groq.com/openai/v1/chat/completions',
+  AI_ALLOWED_HOSTS:'api.groq.com',AI_PROVIDER_API_KEY:'groq-secret',AI_GENERATOR_MODEL:'openai/gpt-oss-120b',
+  AI_AUTHORING_PROVIDER:'cloudflare',AI_CLOUDFLARE_MODEL:'@cf/openai/gpt-oss-120b',AI_CLOUDFLARE_API_TOKEN:'cf-private'};
+ let observed;
+ target.REVIEWER_CONTAINER={getByName:()=>({startAndWaitForPorts:async options=>{observed=options.startOptions.envVars;},
+  fetch:async()=>Response.json({passage_count:2,dry_run:true,can_publish:false,database_writes:false})})};
+ const response=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),target);
+ assert.equal(response.status,200);
+ assert.equal(observed.AI_AUTHORING_PROVIDER,'cloudflare');assert.equal(observed.AI_CLOUDFLARE_MODEL,'@cf/openai/gpt-oss-120b');
+ assert.ok(!Object.hasOwn(observed,'AI_CLOUDFLARE_API_TOKEN'));
+});

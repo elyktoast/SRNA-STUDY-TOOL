@@ -339,6 +339,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 "Concept card choice plan invalid": "PLAN_CONDITIONS_OR_KEYS",
                 "Concept card choice plan choices invalid": "PLAN_CHOICE_IDS",
                 "Concept card choice plan response invalid": "PLAN_RESPONSE_FIELDS",
+                "Concept card choice plan does not compare both components": "PLAN_RESPONSE_COMPONENTS",
                 "Concept card choice plan repeats a response pattern": "PLAN_REPEATED_PATTERN",
                 "Concept card incomplete; draft generation blocked": "CONCEPT_FIELDS",
                 "Concept card must reference unique passage IDs": "CONCEPT_SOURCE_IDS",

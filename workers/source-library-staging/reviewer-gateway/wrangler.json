@@ -7,13 +7,14 @@
     "SUPABASE_URL": "https://xqyasyambwdyhsjkftqu.supabase.co",
     "AI_HYBRID_ENABLED": "false",
     "AI_GENERATION_CHECKPOINTS_ENABLED": "true",
-    "AI_CLOUDFLARE_MODEL": "@cf/qwen/qwen3.8-27b",
+    "AI_CLOUDFLARE_MODEL": "@cf/openai/gpt-oss-120b",
     "AI_REWRITE_OPT_IN": "true",
     "AI_BLIND_REVIEW_OPT_IN": "true",
     "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b",
     "AI_EDITORIAL_REVIEWER_MODEL": "openai/gpt-oss-20b",
     "AI_OPTION_REVIEW_OPT_IN": "true",
-    "AI_EXPLANATION_REVIEW_OPT_IN": "true"
+    "AI_EXPLANATION_REVIEW_OPT_IN": "true",
+    "AI_AUTHORING_PROVIDER": "cloudflare"
   },
   "containers": [
     {
