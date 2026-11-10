@@ -174,6 +174,16 @@ class GenerationCliTests(unittest.TestCase):
             model="test-model", transport=transport.return_value,
             owner_opt_in=True, staging=True)
         generate.assert_called_once()
+        # Exercise the callback actually supplied to the pipeline, not only the helper.
+        from item_ai_https_transport_v2 import TransportError
+        author = generate.call_args.args[3]
+        adapter.return_value.side_effect = [TransportError('PROVIDER_RATE_LIMIT', retry_after_seconds=25), {"ok": True}] * 3
+        with patch('time.sleep') as sleep:
+            for step in ('concept_card', 'item_draft', 'rationale'):
+                self.assertEqual(author({"step":step}), {"ok":True})
+        self.assertEqual(adapter.return_value.call_count, 6)
+        self.assertEqual(sleep.call_count, 3)
+        self.assertEqual(sleep.call_args.args, (28,))
         self.assertIsNone(generate.call_args.kwargs["checkpoint"])
         self.assertIsNone(generate.call_args.kwargs["on_checkpoint"])
         self.assertEqual(generate.call_args.kwargs["item_id"], "draft-1")
