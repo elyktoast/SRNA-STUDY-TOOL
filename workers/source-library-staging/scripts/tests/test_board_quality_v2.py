@@ -44,8 +44,19 @@ class BoardQualityTests(unittest.TestCase):
             self.assertIn("R-8.5",{i["rule_id"] for i in check(q)},claim)
         q["numbers_verified_against_page_image"]=True
         self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
+
         q["numbers_verified_against_page_image"]=False;q["concept_card"]["mechanism"]="Interpret the change in the measured components."
         q["evidence"]=[{"excerpt":"Pressure divided by volume in an indexed source is not authored text."}]
+        self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
+
+    def test_pressure_values_are_not_certified_by_text_only_generation(self):
+        from item_text_checks import check
+        q=item()
+        for pressure in ("30 cm H2O", "30\u202fcm\u202fH₂O", "90 mmHg"):
+            q["stem"]="The measured pressure is "+pressure+". Which finding fits?"
+            self.assertIn("R-8.5",{i["rule_id"] for i in check(q)})
+        q["stem"]="Static compliance is normal while dynamic compliance is reduced. Which finding fits?"
+        q["evidence"]=[{"excerpt":"Pressure was 30 cm H2O in this source."}]
         self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
 
     def test_obsolete_authored_content_rejected_without_censoring_sources(self):

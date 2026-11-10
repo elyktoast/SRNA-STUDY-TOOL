@@ -64,7 +64,13 @@ def review(item, sources, reviewer, *, batch_size=None):
         if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
             raise ValueError("Invalid explanatory batch size")
         result = {"supported_groups":[], "unsupported":[]}
-        batches = [fields[i:i+size] for i in range(0, len(fields), size)]
+        # A grouped answer may cite only sources allowed by every field in it.
+        # Partition before calling the model; never broaden field citations.
+        by_sources = {}
+        for field in fields:
+            by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
+        batches = [group[i:i+size] for group in by_sources.values()
+                   for i in range(0, len(group), size)]
         for batch in batches:
             batch_ids = {f["id"] for f in batch}
             source_ids = {pid for f in batch for pid in f["passage_ids"]}

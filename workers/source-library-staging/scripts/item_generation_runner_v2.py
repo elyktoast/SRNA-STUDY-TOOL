@@ -13,6 +13,24 @@ CONCEPT_FIELDS = ("objective", "mechanism", "relevance", "misconception",
 RATIONALE_FIELDS = ("core_concept", "why_key_wins", "trap", "distractor_breakdown")
 
 
+def _final_counterfactual(draft, proposal):
+    """Bind an author's teaching edit to the finished stem, never approve it."""
+    if not isinstance(proposal, dict) or set(proposal) != {"from_text", "to_text", "expected_key"}:
+        raise ValueError("Rationale incomplete: invalid counterfactual")
+    before, after, key = (proposal[k] for k in ("from_text", "to_text", "expected_key"))
+    ids = {o.get("id") for o in draft.get("options", []) if isinstance(o, dict)}
+    original = draft.get("key", [])
+    if (not isinstance(original, list) or not original
+            or any(not isinstance(k, str) or k not in ids for k in original)
+            or any(not isinstance(s, str) or not s.strip() or len(s) > 200 for s in (before, after))
+            or before == after or draft["stem"].count(before) != 1
+            or before == draft["stem"] or not isinstance(key, list)
+            or len(key) != len(original) or any(not isinstance(k, str) or k not in ids for k in key)
+            or len(set(key)) != len(key) or set(key) == set(original)):
+        raise ValueError("Rationale incomplete: invalid counterfactual")
+    return f'If "{before}" is replaced by "{after}", the best response changes to option(s) {", ".join(key)}.'
+
+
 def _response(adapter, request):
     try:
         result = adapter(request)
@@ -192,6 +210,9 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
                                              concept_card=concept, draft=draft))
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
+    if format in ("MC", "MS") and "counterfactual_test" in rationale:
+        concept = {**concept, "counterfactual": _final_counterfactual(draft, rationale["counterfactual_test"])}
+        rationale = {k: rationale[k] for k in RATIONALE_FIELDS}
     # The model must not be allowed to overwrite identifiers, source, or approval.
     item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(_hydrate_indexed_citations(draft, evidence), evidence)), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,

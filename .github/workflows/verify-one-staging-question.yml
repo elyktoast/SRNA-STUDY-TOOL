@@ -39,7 +39,12 @@ jobs:
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-        run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
+          SRNA_STAGING_REVIEWER_PDF_KEY: ${{ vars.STAGING_REVIEWER_PDF_KEY }}
+        run: |
+          node scripts/diagnose-source-reviewer-staging.mjs
+          node scripts/verify-one-staging-question.mjs --confirm-paid-generation
 # Verify authoring stages use bounded provider retry.
 
 # Require format-aware authoring contract v3 before generation.
+
+# Complete read-only smoke again after transient post-rollout connection reset.
