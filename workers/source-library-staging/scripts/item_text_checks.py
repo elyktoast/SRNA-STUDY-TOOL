@@ -21,6 +21,9 @@ def check(item, source_texts=()):
     if item.get("numbers_verified_against_page_image") is not True and re.search(
             r"\b\d+(?:\.\d+)?\s*(?:%|(?:mcg|mg|mL|IU|units?)(?:/kg|/mL)?\b)", authored, re.I):
         issues.append({"rule_id":"R-8.5", "field":"content", "message":"Dose, concentration or percentage requires original-page-image verification; text-only generation cannot certify it"})
+    if item.get("numbers_verified_against_page_image") is not True and re.search(
+            r"\b(?:divided by|multiplied by)\b|\b(?:calculate\w*|formula|equation)\b.{0,180}[=÷×]", authored, re.I):
+        issues.append({"rule_id":"R-8.5", "field":"content", "message":"An authored equation requires original-page-image verification, including equations expressed in words"})
     raw_key = item.get("key")
     key = set(raw_key) if isinstance(raw_key, list) and all(isinstance(k, str) for k in raw_key) else set()
     lengths = [(o["id"], len(o["text"].split())) for o in options if isinstance(o.get("id"), str)]
