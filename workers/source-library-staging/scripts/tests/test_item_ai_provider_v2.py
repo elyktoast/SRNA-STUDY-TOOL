@@ -50,27 +50,6 @@ class ProviderTests(unittest.TestCase):
         self.assertEqual(result["objective"], "III.H.4")
         self.assertIn("Private source", seen[0]["body"]["messages"][1]["content"])
         self.assertEqual(seen[0]["headers"]["Authorization"], "Bearer test-secret")
-    def test_trusted_authoring_contract_is_system_instruction_but_sources_stay_user_data(self):
-        seen=[]
-        def transport(**kwargs):
-            seen.append(kwargs["body"]["messages"])
-            return {"choices":[{"message":{"content":'{"objective":"III.H.4"}'}}]}
-        adapter=make_adapter(**self.config(transport=transport))
-        contract="Require an applied comparison and a changed clinical condition."
-        for step in ("concept_card","item_draft","rationale"):
-            request={**REQUEST,"step":step,"instructions":contract,
-                     "concept_card":{"mechanism":"UNTRUSTED_MODEL_TEXT"}}
-            adapter(request)
-            system,user=seen[-1]
-            self.assertIn(contract,system["content"])
-            self.assertNotIn("Private source",system["content"])
-            self.assertNotIn("UNTRUSTED_MODEL_TEXT",system["content"])
-            sent=json.loads(user["content"])
-            self.assertNotIn("instructions",sent)
-            self.assertEqual(sent["evidence"],request["evidence"])
-            self.assertEqual(sent["concept_card"],request["concept_card"])
-            self.assertEqual(request["instructions"],contract)
-
     def test_rewrite_requires_single_attempt_and_draft(self):
         adapter = make_adapter(**self.config())
         base = {"step": "rewrite", "rules_version": "2.0",

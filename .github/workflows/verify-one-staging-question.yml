@@ -42,4 +42,4 @@ jobs:
         run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
 # Verify authoring stages use bounded provider retry.
 
-# Verify trusted instruction placement with one fresh question.
+# Verify supported medium-effort generator authoring.
