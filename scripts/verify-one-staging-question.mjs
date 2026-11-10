@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['dd641cda-00c4-49b9-9fdf-5ce19620fb9b','Failed application-level reasoning, counterfactual verification and affirmative distractor support after its single rewrite.'],
  ['478fd4be-b899-41ec-8c71-2d470feba9b5','Counterfactual still failed after one rewrite and source explanation review was truncated; not accepted as a quality milestone.'],
  ['5cdb6e33-d6f5-426a-9fd2-42e88dd597ad','Recall candidate retained a failed changed-stem blind result, unverified worded equation and incomplete source explanation review after its one rewrite.'],
  ['b9880dde-631b-41a2-b684-c57871f89770','The only rewrite retained unsupported distractor explanations and an options-only answer cue; counterfactual wording did not actually change the keyed decision.'],
@@ -73,7 +74,7 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
-const request={topic:'"bronchospasm" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
