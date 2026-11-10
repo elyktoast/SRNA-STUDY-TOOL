@@ -12,6 +12,15 @@ def _exclusive_clinical_claim(field):
                           field["text"], re.I) or re.match(r"\s*Only\b", field["text"], re.I))
 
 
+def _source_silence_claim(field):
+    if not field["label"].startswith(("rationale.distractor_breakdown.", "distractor_evidence.")):
+        return False
+    return bool(re.search(
+        r"\bwithout mentioning\b|\bno statement about\b|"
+        r"\b(?:source|passage|textbook|excerpt)\s+(?:does not|doesn't|do not|never)\s+(?:mention|state|describe|support)\b",
+        field["text"], re.I))
+
+
 def fields_for(item):
     fields = []
     for section, names in (("concept_card", ("mechanism", "relevance", "misconception", "counterfactual")),
@@ -91,7 +100,10 @@ def review(item, sources, reviewer, *, batch_size=None):
             raise ValueError("Invalid explanatory judgments")
         expected = {f["id"]: f["label"] for f in fields}
         exclusive = {f["id"] for f in fields if _exclusive_clinical_claim(f)}
-        seen, evidence, issues = set(), [], []
+        seen, evidence = set(), []
+        issues = [{"rule_id":"R-2.4", "field":f["label"],
+                   "message":"Source silence cannot establish that this option is false; affirmative contradiction is required"}
+                  for f in fields if _source_silence_claim(f)]
         for group in result["supported_groups"]:
             if not isinstance(group, dict) or set(group) != {"field_ids", "quote_refs"}:
                 raise ValueError("Invalid supported fields")
