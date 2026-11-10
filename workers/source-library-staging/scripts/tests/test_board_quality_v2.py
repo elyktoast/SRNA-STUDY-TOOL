@@ -34,6 +34,16 @@ class BoardQualityTests(unittest.TestCase):
         q["stem"]="How do succinylcholine and malignant hyperthermia relate?"
         self.assertEqual(classification_mismatch_issues(q),[])
 
+    def test_worded_equation_requires_page_image_verification(self):
+        from item_text_checks import check
+        q=item();q["concept_card"]["mechanism"]="Compliance is calculated as pressure divided by volume."
+        self.assertIn("R-8.5",{i["rule_id"] for i in check(q)})
+        q["numbers_verified_against_page_image"]=True
+        self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
+        q["numbers_verified_against_page_image"]=False;q["concept_card"]["mechanism"]="Interpret the change in the measured components."
+        q["evidence"]=[{"excerpt":"Pressure divided by volume in an indexed source is not authored text."}]
+        self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
+
     def test_obsolete_authored_content_rejected_without_censoring_sources(self):
         q=item();q["evidence"]=[{"excerpt":"Halothane and ranitidine appear in an old source."}]
         self.assertEqual(obsolete_issues(q),[])

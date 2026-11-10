@@ -37,7 +37,7 @@ def fields_for(item):
     return fields
 
 
-def review(item, sources, reviewer):
+def review(item, sources, reviewer, *, batch_size=None):
     """The caller supplies a distinct authenticated model; outages stay pending."""
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "clinical_truth_verified": False, "human_review_required": True}
@@ -60,9 +60,25 @@ def review(item, sources, reviewer):
             allowed[field["id"]] = set(ids)
         for field in fields:
             field["passage_ids"] = sorted(allowed[field["id"]] & cited)
-        result = reviewer({"step": "explanation_review", "rules_version": "2.0",
-                           "auto_publish": False, "independent": True,
-                           "fields": fields, "source_passages": packet["source_passages"]})
+        size = len(fields) if batch_size is None else batch_size
+        if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
+            raise ValueError("Invalid explanatory batch size")
+        result = {"supported_groups":[], "unsupported":[]}
+        batches = [fields[i:i+size] for i in range(0, len(fields), size)]
+        for batch in batches:
+            batch_ids = {f["id"] for f in batch}
+            source_ids = {pid for f in batch for pid in f["passage_ids"]}
+            part = reviewer({"step": "explanation_review", "rules_version": "2.0",
+                "auto_publish": False, "independent": True, "fields": batch,
+                "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
+            if (not isinstance(part, dict) or set(part) != {"supported_groups", "unsupported"}
+                    or not isinstance(part["supported_groups"], list) or not isinstance(part["unsupported"], list)):
+                raise ValueError("Incomplete explanatory review")
+            returned = [fid for g in part["supported_groups"] for fid in g["field_ids"]] + [f["field_id"] for f in part["unsupported"]]
+            if len(returned) != len(batch_ids) or set(returned) != batch_ids:
+                raise ValueError("Every explanatory field must be reviewed")
+            result["supported_groups"].extend(part["supported_groups"])
+            result["unsupported"].extend(part["unsupported"])
         if not isinstance(result, dict) or set(result) != {"supported_groups", "unsupported"}:
             raise ValueError("Incomplete explanatory review")
         if not isinstance(result["supported_groups"], list) or not isinstance(result["unsupported"], list):
@@ -113,7 +129,7 @@ def review(item, sources, reviewer):
         if seen != set(expected):
             raise ValueError("Every explanatory field must be reviewed")
         return {**pending, "status": "flag" if issues else "pass", "issues": issues,
-                "checked_fields": list(expected.values()), "source_support": evidence}
+                "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":len(batches)}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}

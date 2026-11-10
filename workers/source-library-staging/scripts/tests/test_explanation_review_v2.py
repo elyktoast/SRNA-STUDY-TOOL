@@ -38,6 +38,19 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertNotIn("key", calls[0])
         self.assertNotIn("blind", calls[0])
 
+    def test_bounded_batches_cover_each_field_and_cannot_swap_or_omit_fields(self):
+        calls=[]
+        def reviewer(payload):
+            calls.append(payload)
+            return {"supported_groups":[{"field_ids":[f["id"] for f in payload["fields"]],
+                "quote_refs":[{"passage_id":"p1","span_id":"q1"}]}],"unsupported":[]}
+        result=review(self.item,self.sources,reviewer,batch_size=3)
+        self.assertEqual(result["status"],"pass")
+        self.assertEqual(result["batch_count"],3)
+        self.assertEqual([len(p["fields"]) for p in calls],[3,3,2])
+        self.assertEqual(len(result["checked_fields"]),8)
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response,batch_size=3)["status"],"pending")
+
     def test_unsupported_mechanism_targets_existing_rewrite_field(self):
         response = copy.deepcopy(self.response)
         response["supported_groups"][0]["field_ids"] = self.ids[1:]

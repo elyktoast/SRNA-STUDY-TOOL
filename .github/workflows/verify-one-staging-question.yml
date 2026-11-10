@@ -41,3 +41,5 @@ jobs:
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
         run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
 # Verify authoring stages use bounded provider retry.
+
+# Verify full indexed static and dynamic compliance contrast.
