@@ -165,7 +165,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 if not isinstance(figure, (str, dict)) or (isinstance(figure, dict) and (not figure or set(figure) - {"url", "alt", "width", "height"})):
                     raise ValueError("Blind hotspot figure contains unsupported fields")
         # Step-specific ceilings reduce oversized generations without changing validation.
-        step_caps = {"concept_card": 4096, "item_draft": 3500, "rationale": 2400, "rewrite": 3500, "blind_review": 1000, "option_review": 1000, "explanation_review": 1000, "editorial_review": 1800, "options_only_review": 256}
+        step_caps = {"concept_card": 4096, "item_draft": 3500, "rationale": 2400, "rewrite": 3500, "blind_review": 1000, "option_review": 1400, "explanation_review": 1000, "editorial_review": 1800, "options_only_review": 256}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         body = {"model": model, "messages": [
             {"role": "system", "content": "Return exactly one valid JSON object and no markdown. Follow the supplied NCE/SEE v2.0 step contract. For rewrite, return the complete corrected item and preserve protected metadata. For blind_review, independently solve the supplied item without a key or rationale: return the key array field for MC/MS, numeric_answer for SA, pairs for DD, or region for HS. Do not claim human verification."},
@@ -205,7 +205,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Return exactly one JSON object with judgments: an array of objects containing option_id, verdict "
                 "(supports_key if the option correctly answers the stem, refutes_distractor if demonstrably wrong, or uncertain), "
                 "passage_ids, quote_refs (an array of 1-8 objects with passage_id and span_id selected from supplied quote_spans), explanation (one sentence, at most 20 words), and source_conflict_found (boolean). "
-                "Select separate source-span IDs for table headings and drug/class entries. Do not return quotes or copy/reconstruct source text; the server restores the exact indexed span. "
+                "For a paired correct choice, cite affirmative support for BOTH named response components, not just one. Refuting a wrong pair can rely on one affirmatively contradicted component. Select separate source-span IDs for table headings and drug/class entries. Do not return quotes or copy/reconstruct source text; the server restores the exact indexed span. "
                 "source_conflict_found means unresolved disagreement WITHIN THE SOURCES or evidence against your proposed judgment. It must be false when consistent evidence refutes a false distractor; that refutation is not a source conflict. "
                 "For a negative stem, judge whether each option answers that negative question. Each option must cite ONLY IDs retrieved for that option. "
                 "Source silence is not disproof. Report uncertainty or contradiction honestly. Do not claim clinical or human approval.")

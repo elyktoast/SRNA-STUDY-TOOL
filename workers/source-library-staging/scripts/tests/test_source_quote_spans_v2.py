@@ -81,7 +81,7 @@ class SourceQuoteSpanTests(unittest.TestCase):
             api_key="test-secret",model="reviewer",transport=transport,owner_opt_in=True)
         result = adapter(self.request)
         sent = json.loads(calls[0]["body"]["messages"][1]["content"])
-        self.assertEqual(calls[0]["body"]["max_tokens"], 1000)
+        self.assertEqual(calls[0]["body"]["max_tokens"], 1400)
         self.assertIn("quote_spans", sent["source_passages"][0])
         self.assertNotIn("key", sent)
         self.assertNotIn("expected_verdict", json.dumps(sent))
