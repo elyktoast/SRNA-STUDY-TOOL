@@ -1,5 +1,7 @@
 # One-question staging acceptance — November 10, 2026
 
+> Superseded by post-acceptance audit: the earlier option reviewer cited only one component of the paired correct answer. Its automated pass did not establish complete independent key evidence. The question remains unpublished; stricter v17 coverage verification is pending.
+
 ## Verified outcome
 
 One authenticated end-to-end staging generation passed the required automated
