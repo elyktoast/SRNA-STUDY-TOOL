@@ -151,3 +151,26 @@ hyperthermia/myopathy heading and flags an unambiguous stem-topic conflict with
 the selected objective. Ambiguous matches abstain; a matching candidate never
 proves verified classification. Independent editorial review remains mandatory.
 This is a reusable mismatch guard, not a forced pass for any topic.
+
+
+## Verified v2 controls and CI
+
+Source commit 28a600bcd3be6cd91450db74dc505ced1a2a6489 passed CI
+42757571992: 867 Python tests (one skip), 113 Worker tests, reviewer container
+build, and repository validation. Focused local checks passed 17 board-quality
+tests and four existing classifier tests. Read-only live control 42757585816
+flagged the old objective/counterfactual/trap defects and the second candidate's
+ineffective counterfactual; deterministic checks also caught the obsolete drug,
+source-dependent stem, explanatory choice and unverified concentration. The
+control made no database writes and did not generate or publish a question.
+
+
+Deployment 42757659182 passed container rollout and authenticated smoke checks.
+Acceptance 42757994927 reached concept and draft generation, then failed at
+rationale with PROVIDER_RATE_LIMIT (8,000 TPM, used 7,382, requested 4,020).
+No question or resumable checkpoint was persisted for this interrupted attempt.
+The relay now retains a bounded explicit provider retry interval from the
+sanitized error when Retry-After is absent; the existing backend still retries
+only once, only for waits up to 60 seconds. Private errors remain unlogged.
+Targeted gateway tests pass (31), including missing-header, fractional-second,
+millisecond and oversized-wait cases. Live recovery remains to be verified.

@@ -40,3 +40,4 @@ jobs:
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
         run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
+# Verify explicit provider retry recovery.
