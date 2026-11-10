@@ -251,3 +251,14 @@ content as untrusted user data. A transport-boundary regression checks all three
 authoring stages and ensures evidence and model content never gain system
 priority. This addresses instruction placement, not proven generation quality;
 CI and a fresh live candidate must still demonstrate the result.
+
+
+CI 42765929647 and deployment 42765949990 passed, but instruction-placement
+acceptance 42766355689 rejected unpublished e530328c-3266-4671-b12b-df732b5c783b.
+The experiment did not improve quality and is reverted. The relay had forced
+GPT-OSS authoring to low reasoning effort. Test the documented medium effort
+only for the same generator's concept/draft/rationale/rewrite steps; source,
+blind, editorial and options-only models/settings remain unchanged. Token caps,
+all validators and the single protected rewrite remain unchanged. No successful
+quality milestone is claimed. Official provider reference:
+https://console.groq.com/docs/reasoning (GPT-OSS supports low, medium and high).
