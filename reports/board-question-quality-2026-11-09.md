@@ -339,3 +339,15 @@ values, including Unicode units; indexed passages remain untouched.
 Authoring contract v4 prevents reuse of v3 checkpoints. Add authenticated read-only
 runtime-version verification to the staging deployment before paid acceptance.
 Larger batches, cross-textbook sourcing and production deployment remain deferred.
+
+
+CI 42829268305 passed all 872 Python tests (one skip), 116 Worker tests,
+container build and repository validation. Deployment uploaded the new image;
+its final read-only smoke had ECONNRESET. Standalone acceptance 42829903998
+then passed authentication, source/PDF/page integrity, boundaries, indexed
+preflight and provider checks, but concept generation was rejected with
+json_validate_failed before a draft. No quality success is claimed. The existing
+GPT-OSS concept card now uses documented strict JSON-schema output with exactly
+the same six canonical fields; all server/source/independent validation remains
+mandatory. Other model steps retain their existing formats and identities.
+Provider reference: https://console.groq.com/docs/structured-outputs.
