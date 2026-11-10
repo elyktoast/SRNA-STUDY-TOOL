@@ -395,3 +395,23 @@ test('concept planning constrains only canonical fields and preserves untrusted 
  try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{evidence:[{excerpt:'untrusted textbook text'}]}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
  finally{globalThis.fetch=original;}
 });
+
+test('MC rationale requires every option explanation and a bounded-edit proposal in its output schema',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),schema=body.response_format.json_schema;
+  assert.equal(schema.name,'srna_rationale_with_counterfactual_v2');
+  assert.equal(schema.strict,true);
+  assert.deepEqual(schema.schema.required,['core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test']);
+  assert.deepEqual(schema.schema.properties.distractor_breakdown.required,['A','B','C','D']);
+  assert.equal(schema.schema.properties.distractor_breakdown.additionalProperties,false);
+  const proposal=schema.schema.properties.counterfactual_test;
+  assert.deepEqual(proposal.required,['from_text','to_text','expected_key']);
+  assert.equal(proposal.additionalProperties,false);
+  assert.deepEqual(proposal.properties.expected_key.items.enum,['A','B','C','D']);
+  assert.equal(body.reasoning_effort,'medium');
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b',{format:'MC',draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
+});

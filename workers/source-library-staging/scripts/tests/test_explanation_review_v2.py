@@ -6,6 +6,15 @@ from item_generation_screened_v2 import generate_and_screen
 
 
 class ExplanationReviewTests(unittest.TestCase):
+    def test_reviewer_pass_cannot_turn_source_silence_into_disproof(self):
+        self.item["rationale"]["distractor_breakdown"]["A"]="Incorrect because the source does not mention this effect."
+        report=review(self.item,self.sources,lambda p:self.response)
+        self.assertEqual(report["status"],"flag")
+        self.assertIn("rationale.distractor_breakdown.A",[x["field"] for x in report["issues"]])
+        self.assertNotIn("rationale.distractor_breakdown.A",[f for g in report["source_support"] for f in g["fields"]])
+        self.item["rationale"]["distractor_breakdown"]["A"]="The patient has no evidence of obstruction; the source states the relevant classification."
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response)["status"],"pass")
+
     def test_mixed_citation_scopes_are_separated_before_model_grouping(self):
         self.item["evidence"].append({"passage_id":"p2"})
         self.sources.append({"passage_id":"p2","excerpt":"Second source.\nSeparate evidence statement."})
