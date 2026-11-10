@@ -14,6 +14,7 @@ class RunnerTests(unittest.TestCase):
         calls = []
         def adapter(request):
             calls.append(request["step"])
+            self.assertEqual(request["format"], "MC")
             if request["step"] == "concept_card":
                 return dict(objective="III.H.4", mechanism="m", relevance="r",
                             misconception="x", counterfactual="y", evidence_ids=["p1"])

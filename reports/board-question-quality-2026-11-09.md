@@ -294,3 +294,23 @@ Test high effort for generator authoring only, with bounded response ceilings
 independent reviewer settings unchanged. Allow the explicit acceptance client up
 to eight minutes for a single call under observed per-minute review limits; no
 extra request or quality bypass is introduced. Fresh CI and acceptance required.
+
+
+CI 42770912338 and deployment 42770930756 passed. Acceptance 42771325499
+failed at concept_card before persistence. The new safe diagnostic identified
+provider_error_code=json_validate_failed (HTTP 400), rather than authentication,
+model availability or an unsupported reasoning parameter. Test a larger bounded
+4,096-token planning response and keep high effort only for that planning step;
+draft, rationale and protected rewrite use medium effort. Independent reviewers
+retain their original settings. This is a configuration experiment, not evidence
+that question quality has been solved. CI and fresh acceptance remain required.
+
+
+Code-path inspection found that the concept-card request passed format=null,
+although generate_one already knew the selected format. Pass that format through
+to planning, so format-conditional writing/page-image instructions have the same
+context in all three authoring calls. Existing runner adapters now assert the
+actual request format. Authoring contract v3 is returned by preflight and bound
+into the checkpoint fingerprint so pre-fix checkpoints cannot be reused under
+the changed planning contract. Acceptance requires v3 before spending a call.
+CI 42771750672 passed before this context fix; fresh validation is required.
