@@ -521,3 +521,24 @@ test('Cloudflare GLM uses its wrapped schema and bounded low reasoning without c
   }
  }finally{globalThis.fetch=old;}
 });
+
+test('source explanation schema requires references for support but permits every field to be rejected',async()=>{
+ const old=globalThis.fetch;
+ const cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+ try{
+  globalThis.fetch=async(url,options)=>{
+   assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+   const f=JSON.parse(options.body).response_format;
+   assert.equal(f.type,'json_schema');assert.equal(f.json_schema.strict,true);
+   const p=f.json_schema.schema.properties;
+   assert.equal(p.supported_groups.minItems,undefined,'No supported judgment is required');
+   assert.equal(p.supported_groups.items.properties.quote_refs.minItems,1);
+   assert.equal(p.supported_groups.items.properties.quote_refs.maxItems,8);
+   assert.deepEqual(p.supported_groups.items.properties.field_ids.items.enum,['e0','e1']);
+   assert.deepEqual(p.unsupported.items.properties.field_id.enum,['e0','e1']);
+   return Response.json({choices:[{message:{content:JSON.stringify({supported_groups:[],unsupported:[{field_id:'e0',reason:'Not established'},{field_id:'e1',reason:'Contradicted'}]})},finish_reason:'stop'}]});
+  };
+  const r=await gateway.fetch(request('explanation_review','qwen/qwen3.8-27b',{fields:[{id:'e0'},{id:'e1'}],source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
+  assert.equal(r.status,200);assert.deepEqual(JSON.parse((await r.json()).choices[0].message.content).supported_groups,[]);
+ }finally{globalThis.fetch=old;}
+});
