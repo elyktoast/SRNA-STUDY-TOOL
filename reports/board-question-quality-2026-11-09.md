@@ -412,3 +412,13 @@ before drafting with CONCEPT_CARD_VALIDATION after a valid provider JSON respons
 No draft was saved. Add exact allowlisted planning-invariant diagnostics so the
 next result identifies the actual defect without exposing generated/source text.
 No clinical or structural requirement is loosened by this diagnostic change.
+
+
+Diagnostic CI 42841505628 passed. Normal deployment 42841493659 built
+image c9bc9166 but its rollout did not settle. An explicit staging rollout
+08a787b7-5f18-4c6c-a652-2e50f32133ee selected that exact image and reached
+healthy state. Acceptance 42842587812 passed all read-only boundaries but again
+stopped before drafting; its validation detail was unclassified. V7 now pins
+the authenticated runtime contract before any new generation, includes a fixed
+validation-response contract, and covers every known concept validation category.
+No candidate was saved and no clinical requirement was relaxed.

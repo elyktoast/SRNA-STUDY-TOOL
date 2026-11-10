@@ -334,6 +334,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             # Never echo even part of an arbitrary exception or provider output.
             detail = {
                 "Concept card choice plan incomplete": "PLAN_FIELDS",
+                "Concept card choice plan is MC-only": "PLAN_FORMAT",
+                "Concept card required before drafting": "CONCEPT_DRAFT_CONTEXT",
                 "Concept card choice plan invalid": "PLAN_CONDITIONS_OR_KEYS",
                 "Concept card choice plan choices invalid": "PLAN_CHOICE_IDS",
                 "Concept card choice plan response invalid": "PLAN_RESPONSE_FIELDS",
@@ -346,6 +348,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 "Rationale incomplete: counterfactual differs from planned case": "RATIONALE_PLAN_MISMATCH",
             }.get(message)
             return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule,
+                "validation_contract": "2026-11-10-v1",
                 **({"validation_detail": detail} if detail is not None else {})})
         except Exception as exc:
             # Never log prompts, indexed passages, credentials or provider response bodies.
