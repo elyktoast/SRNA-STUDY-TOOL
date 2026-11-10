@@ -485,3 +485,16 @@ V10 focused checks passed: 62 Node route/relay tests, two MC-plan tests and
 21 runtime tests. After restoring missing runtime dependencies, the full local
 suite ran 880 tests with one skip and only the known local PyMuPDF overlap
 fixture failure. Repository validation and architecture/performance budgets pass.
+
+
+V10 CI 42879393191 and deployment 42879476133 passed. Acceptance
+42879715140 reached Cloudflare GPT-OSS 120B (HTTP 200) but stopped at
+PLAN_FIELDS before a checkpoint or draft. Cloudflare JSON-object mode did not
+satisfy the private planning contract. Its documented raw JSON-schema request
+shape was tested with a synthetic nested object: explicit medium reasoning,
+2,048-token limit, finish_reason stop, matching structure and 279 completion
+tokens. V11 reuses the existing concept/rationale schemas in Cloudflare's raw
+schema envelope and explicitly requests medium reasoning. Draft/rewrite remain
+in their existing JSON-object mode. Server, source and independent clinical
+validation stay mandatory. No failed provider response is accepted as a draft.
+Reference: https://developers.cloudflare.com/workers-ai/features/json-mode/.

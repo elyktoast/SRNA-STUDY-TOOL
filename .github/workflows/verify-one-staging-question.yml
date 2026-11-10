@@ -51,4 +51,4 @@ jobs:
 
 # Verify the repaired authenticated checkpoint-readiness route before generation.
 
-# Verify v10 Cloudflare authoring with distinct Groq reviewers and paired responses.
+# Verify v11 native Cloudflare schemas before accepting one source-backed draft.
