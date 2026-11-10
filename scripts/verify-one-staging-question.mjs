@@ -74,7 +74,7 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
-const request={topic:'"dynamic compliance" OR "static compliance"',limit:4,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'"dynamic compliance" OR "static compliance"',limit:2,page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');

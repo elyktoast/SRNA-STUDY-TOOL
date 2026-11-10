@@ -183,7 +183,7 @@ class GenerationCliTests(unittest.TestCase):
                 self.assertEqual(author({"step":step}), {"ok":True})
         self.assertEqual(adapter.return_value.call_count, 6)
         self.assertEqual(sleep.call_count, 3)
-        self.assertEqual(sleep.call_args.args, (28,))
+        self.assertEqual(sleep.call_args.args, (60,))
         self.assertIsNone(generate.call_args.kwargs["checkpoint"])
         self.assertIsNone(generate.call_args.kwargs["on_checkpoint"])
         self.assertEqual(generate.call_args.kwargs["item_id"], "draft-1")
@@ -267,7 +267,7 @@ class GenerationCliTests(unittest.TestCase):
         adapter.return_value.side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2),{"evidence":[]}]
         with patch('time.sleep') as sleep:
             rewrite(request)
-        sleep.assert_called_once_with(5)
+        sleep.assert_called_once_with(60)
         self.assertEqual(adapter.return_value.call_count,2)
         sent=adapter.return_value.call_args.args[0]
         self.assertNotIn('excerpt',sent['item']['evidence'][0])

@@ -42,4 +42,4 @@ jobs:
         run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
 # Verify authoring stages use bounded provider retry.
 
-# Verify full indexed static and dynamic compliance contrast.
+# Verify complementary evidence and single-window retry.
