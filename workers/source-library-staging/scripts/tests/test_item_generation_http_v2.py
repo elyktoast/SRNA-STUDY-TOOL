@@ -315,6 +315,7 @@ class HttpPreflightTests(unittest.TestCase):
             status, data = self.call()
             self.assertEqual(status, "422 Unprocessable Entity")
             self.assertEqual(data.get("validation_detail"), detail)
+            self.assertEqual(data["validation_contract"], "2026-11-10-v1")
             self.assertNotIn(message, json.dumps(data))
 
     @patch("item_generation_http_v2.execute")
