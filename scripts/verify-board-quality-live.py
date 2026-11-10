@@ -45,7 +45,7 @@ for draft, question, topic in questions:
     old = draft == "2b7f969b-b9f0-4ed4-9131-e84e0b325a37"
     print(json.dumps({"case":"previously_missed_board_defects" if old else "ineffective_management_counterfactual",
         "status":report["status"], "flagged_rules":sorted(rules), "model_flagged_rules":report.get("model_flagged_rules"),
-        "deterministic_rules":sorted(deterministic),
+        "deterministic_rules":sorted(deterministic | set(report.get("deterministic_rules",[]))),
         "counterfactual_status":report.get("counterfactual_verification",{}).get("status"),
         "provider_rule":report.get("provider_rule"), "review_error":report.get("review_error"),
         "reviewer_model":model, "database_writes":False, "published":False}))

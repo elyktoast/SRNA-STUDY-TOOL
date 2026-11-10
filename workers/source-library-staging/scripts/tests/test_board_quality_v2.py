@@ -2,7 +2,7 @@ import copy
 import json
 import unittest
 from unittest.mock import patch
-from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA, teaching_specificity_issues, verify_counterfactual
+from item_board_quality_v2 import classification, obsolete_issues, editorial, options_only, stamp_checks, CRITERIA, teaching_specificity_issues, verify_counterfactual, classification_mismatch_issues
 from item_ai_provider_v2 import make_adapter
 from item_generation_screened_v2 import generate_and_screen
 
@@ -24,6 +24,15 @@ class BoardQualityTests(unittest.TestCase):
         for domain, section, objective in [("I","H","III.H.4"),("III","H","III.H.99"),("III","X","III.X.1")]:
             with self.subTest(objective=objective), self.assertRaises(ValueError):
                 classification(domain,section,objective)
+
+    def test_clear_topic_conflicts_are_flagged_without_claiming_classification_approval(self):
+        q=item();q["stem"]="Which agent is nontriggering for malignant hyperthermia?"
+        self.assertEqual(classification_mismatch_issues(q)[0]["candidate_objective"],"I.B.4")
+        q.update(domain="I",section="B",objective="I.B.4")
+        self.assertEqual(classification_mismatch_issues(q),[])
+        q.update(domain="III",section="H",objective="III.H.4")
+        q["stem"]="How do succinylcholine and malignant hyperthermia relate?"
+        self.assertEqual(classification_mismatch_issues(q),[])
 
     def test_obsolete_authored_content_rejected_without_censoring_sources(self):
         q=item();q["evidence"]=[{"excerpt":"Halothane and ranitidine appear in an old source."}]
