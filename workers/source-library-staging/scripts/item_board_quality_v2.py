@@ -123,10 +123,29 @@ def verify_counterfactual(item, proposal, reviewer):
             "expected_key": expected, "independent_key": response.get("key") if isinstance(response, dict) else None}
 
 
+def classification_mismatch_issues(item):
+    """Conservative candidate conflicts FLAG review; no match proves nothing."""
+    from nbcrna_classifier import suggest
+    result = suggest(item.get("stem", ""))
+    if result["status"] != "suggested":
+        return []
+    candidate = result["candidates"][0]
+    code = next((code for code, name in DOMAINS.items() if name == candidate["domain"]), None)
+    labels = OBJECTIVES.get(candidate["domain"], {}).get(candidate["section"], [])
+    if code is None or candidate["objective"] not in labels:
+        return []
+    expected = f"{code}.{candidate['section']}.{labels.index(candidate['objective']) + 1}"
+    if item.get("objective") != expected:
+        return [{"rule_id":"R-1.3", "field":"objective",
+                 "message":"Selected objective conflicts with an unambiguous stem-topic candidate; blueprint review required",
+                 "candidate_objective":expected}]
+    return []
+
+
 def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=None):
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "human_review_required": True, "clinical_truth_verified": False}
-    local = teaching_specificity_issues(item)
+    local = teaching_specificity_issues(item) + classification_mismatch_issues(item)
     try:
         target = classification(item["domain"], item["section"], item["objective"])
         options = [{"id": o["id"], "text": o["text"]} for o in item.get("options", [])]
@@ -161,7 +180,7 @@ def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=No
             checks["counterfactual"] = proof["status"]
             issues.extend(proof["issues"])
         for issue in local:
-            checks["counterfactual" if issue["rule_id"] == "R-5.3" else "trap"] = "flag"
+            checks[{"R-5.3":"counterfactual", "R-9":"trap", "R-1.3":"blueprint"}[issue["rule_id"]]] = "flag"
         return {**pending, "status": "flag" if issues or local else "pending" if proof["status"] == "pending" else "pass", "issues": issues + local,
                 "checks": checks, "model_flagged_rules": model_rules,
                 "deterministic_rules": sorted({i["rule_id"] for i in local}), "model_status":"completed",

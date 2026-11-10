@@ -26,3 +26,4 @@ jobs:
         run: PYTHONPATH=workers/source-library-staging/scripts python scripts/verify-board-quality-live.py --confirm-paid-review
 # Verify model and explicit teaching guards together.
 # Verify changed-answer proof and both saved defective candidates.
+# Verify conservative objective conflict guard.

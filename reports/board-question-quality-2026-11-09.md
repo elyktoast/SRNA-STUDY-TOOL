@@ -142,3 +142,12 @@ generated question is included in this public report. Local targeted board tests
 pass (16); the full local suite ran 866 tests with only the previously observed
 PDF image-coverage fixture failure and one skip. New CI and live controls remain
 required before calling the quality milestone complete.
+
+
+The expanded v2 read-only control (42756829618) rejected the restatement and
+trap but again exposed intermittent model acceptance of the wrong objective.
+The existing conservative topic classifier now includes the official malignant
+hyperthermia/myopathy heading and flags an unambiguous stem-topic conflict with
+the selected objective. Ambiguous matches abstain; a matching candidate never
+proves verified classification. Independent editorial review remains mandatory.
+This is a reusable mismatch guard, not a forced pass for any topic.
