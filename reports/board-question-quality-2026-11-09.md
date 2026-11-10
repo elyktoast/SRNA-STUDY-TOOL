@@ -314,3 +314,28 @@ actual request format. Authoring contract v3 is returned by preflight and bound
 into the checkpoint fingerprint so pre-fix checkpoints cannot be reused under
 the changed planning contract. Acceptance requires v3 before spending a call.
 CI 42771750672 passed before this context fix; fresh validation is required.
+
+
+## Version verified; finish counterfactuals after drafting and isolate citation scopes
+
+Diagnostic deployment 42826187692 verified both the container contents and the
+authenticated runtime authoring contract v3 without AI calls. The version mismatch
+is resolved; it must not be bypassed in future acceptance. The subsequent live
+run (42772563420, job 129865907771) saved unpublished draft
+49551d1a-01a6-483a-b9e6-59c892a01ad9 but failed counterfactual screening and left
+source review pending because grouped fields had incompatible allowed citations.
+This is not a successful question-quality milestone.
+
+Partition independent source-review batches by their identical allowed source
+sets, retaining exact full-field coverage, source-span verification and rejection
+of uncited support. Let the existing rationale call finalize a bounded condition
+substitution against the actual draft; the server records this teaching proposal
+without changing stem, options, key or evidence. Existing separate editorial and
+blind changed-stem checks must still prove a different unique answer. Missing or
+invalid proposals do not grant a pass. No extra authoring call or second rewrite
+is introduced. Extend the existing text-only numerical guard to authored pressure
+values, including Unicode units; indexed passages remain untouched.
+
+Authoring contract v4 prevents reuse of v3 checkpoints. Add authenticated read-only
+runtime-version verification to the staging deployment before paid acceptance.
+Larger batches, cross-textbook sourcing and production deployment remain deferred.

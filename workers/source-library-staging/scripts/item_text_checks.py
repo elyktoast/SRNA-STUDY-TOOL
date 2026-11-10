@@ -17,10 +17,13 @@ def check(item, source_texts=()):
                  str(item.get("stem", "")), re.I):
         issues.append({"rule_id":"R-4.2", "field":"stem", "message":"Question must stand alone without referring the learner to an unspecified source passage"})
     import json
-    authored = json.dumps([item.get("stem", ""), options, item.get("concept_card", {}), item.get("rationale", {})])
+    authored = json.dumps([item.get("stem", ""), options, item.get("concept_card", {}), item.get("rationale", {})], ensure_ascii=False)
     if item.get("numbers_verified_against_page_image") is not True and re.search(
             r"\b\d+(?:\.\d+)?\s*(?:%|(?:mcg|mg|mL|IU|units?)(?:/kg|/mL)?\b)", authored, re.I):
         issues.append({"rule_id":"R-8.5", "field":"content", "message":"Dose, concentration or percentage requires original-page-image verification; text-only generation cannot certify it"})
+    if item.get("numbers_verified_against_page_image") is not True and re.search(
+            r"\b\d+(?:\.\d+)?\s*(?:cm\s*H[2₂]O|mm\s*Hg)\b", authored, re.I):
+        issues.append({"rule_id":"R-8.5", "field":"content", "message":"Authored pressure values require original-page-image verification; use qualitative findings for this text-only draft"})
     if item.get("numbers_verified_against_page_image") is not True and re.search(
             r"\b(?:divided by|multiplied by)\b|\bcalculated\s+(?:as|from|by)\b|\b(?:calculate\w*|formula|equation)\b.{0,180}[=/÷×]", authored, re.I):
         issues.append({"rule_id":"R-8.5", "field":"content", "message":"An authored equation requires original-page-image verification, including equations expressed in words"})
