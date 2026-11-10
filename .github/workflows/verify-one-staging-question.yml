@@ -1,5 +1,5 @@
 name: Explicit staging one-question acceptance
-# Verify v17 complete paired-key source coverage and independent proof.
+# Verify v18 complete paired-key evidence and independent Qwen quality review.
 on:
   workflow_dispatch:
     inputs:
