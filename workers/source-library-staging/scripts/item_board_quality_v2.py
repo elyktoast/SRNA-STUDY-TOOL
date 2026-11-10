@@ -77,20 +77,86 @@ def teaching_specificity_issues(item):
     return issues
 
 
-def editorial(item, reviewer):
+def verify_counterfactual(item, proposal, reviewer):
+    """Apply one explicit stem edit, then independently solve with the same options.
+
+    The proposed changed answer never reaches the blind solver. Worded claims
+    of validity cannot substitute for a different, uniquely solved answer.
+    """
+    issue = {"rule_id":"R-5.3", "field":"concept_card.counterfactual",
+             "message":"Counterfactual must change a unique stem condition and independently yield a different correct answer"}
+    if (not isinstance(proposal, dict) or set(proposal) != {"from_text", "to_text", "expected_key"}
+            or any(not isinstance(proposal[k], str) or not 1 <= len(proposal[k]) <= 200 for k in ("from_text", "to_text"))
+            or proposal["from_text"] == proposal["to_text"]
+            or not isinstance(item.get("stem"), str) or item["stem"].count(proposal["from_text"]) != 1
+            or proposal["from_text"].strip() == item["stem"].strip()):
+        return {"status":"flag", "issues":[issue]}
+    expected = proposal["expected_key"]
+    normalize = lambda text: " ".join(text.casefold().split())
+    statement = normalize(item.get("concept_card", {}).get("counterfactual", ""))
+    if any(normalize(proposal[k]) not in statement for k in ("from_text", "to_text")):
+        return {"status":"flag", "issues":[{**issue, "message":"The exact original condition and its replacement must both be stated in the concept-card counterfactual"}]}
+    allowed = {o["id"] for o in item["options"]}
+    if (not isinstance(expected, list) or len(expected) != len(item["key"])
+            or any(not isinstance(k, str) or k not in allowed for k in expected)
+            or len(set(expected)) != len(expected) or set(expected) == set(item["key"])):
+        return {"status":"flag", "issues":[issue]}
+    if not callable(reviewer):
+        return {"status":"pending", "issues":[]}
+    changed = copy.deepcopy(item)
+    changed["stem"] = item["stem"].replace(proposal["from_text"], proposal["to_text"], 1)
+    changed["key"] = expected
+    from item_blind_review import payload
+    from item_blind_review_scoring import compare
+    try:
+        response = reviewer(payload(changed))
+        if (not isinstance(response, dict) or response.get("item_id") != changed.get("item_id")
+                or not isinstance(response.get("key"), list)
+                or any(not isinstance(k, str) or k not in allowed for k in response["key"])
+                or len(set(response["key"])) != len(response["key"])):
+            return {"status":"pending", "issues":[]}
+        failed = compare(changed, response)
+    except Exception:
+        return {"status":"pending", "issues":[]}
+    return {"status":"flag" if failed else "pass", "issues":[issue] if failed else [],
+            "stem_change": {"from_text":proposal["from_text"], "to_text":proposal["to_text"]},
+            "expected_key": expected, "independent_key": response.get("key") if isinstance(response, dict) else None}
+
+
+def classification_mismatch_issues(item):
+    """Conservative candidate conflicts FLAG review; no match proves nothing."""
+    from nbcrna_classifier import suggest
+    result = suggest(item.get("stem", ""))
+    if result["status"] != "suggested":
+        return []
+    candidate = result["candidates"][0]
+    code = next((code for code, name in DOMAINS.items() if name == candidate["domain"]), None)
+    labels = OBJECTIVES.get(candidate["domain"], {}).get(candidate["section"], [])
+    if code is None or candidate["objective"] not in labels:
+        return []
+    expected = f"{code}.{candidate['section']}.{labels.index(candidate['objective']) + 1}"
+    if item.get("objective") != expected:
+        return [{"rule_id":"R-1.3", "field":"objective",
+                 "message":"Selected objective conflicts with an unambiguous stem-topic candidate; blueprint review required",
+                 "candidate_objective":expected}]
+    return []
+
+
+def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=None):
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "human_review_required": True, "clinical_truth_verified": False}
-    local = teaching_specificity_issues(item)
+    local = teaching_specificity_issues(item) + classification_mismatch_issues(item)
     try:
         target = classification(item["domain"], item["section"], item["objective"])
         options = [{"id": o["id"], "text": o["text"]} for o in item.get("options", [])]
         response = reviewer({"step": "editorial_review", "rules_version": "2.0", "auto_publish": False,
             "independent": True, "classification": target, "format": item["format"],
+            "selected_topic": selected_topic or target["objective_label"],
             "stem": item["stem"], "options": options, "reasoning_level": item["reasoning_level"],
             "teaching": {"misconception": item["concept_card"]["misconception"],
                          "counterfactual": item["concept_card"]["counterfactual"],
                          "trap": item["rationale"]["trap"]}})
-        if (not isinstance(response, dict) or set(response) != {"checks", "findings"}
+        if (not isinstance(response, dict) or set(response) != {"checks", "findings", "counterfactual_test"}
                 or not isinstance(response["checks"], dict) or set(response["checks"]) != set(CRITERIA)
                 or any(v not in ("pass", "flag") for v in response["checks"].values())
                 or not isinstance(response["findings"], list)):
@@ -108,11 +174,17 @@ def editorial(item, reviewer):
                   for k, v in findings.items()]
         model_rules = sorted({i["rule_id"] for i in issues})
         checks = dict(response["checks"])
+        proof = {"status":"flag", "issues":[]} if checks["counterfactual"] == "flag" else verify_counterfactual(
+            item, response["counterfactual_test"], counterfactual_reviewer)
+        if checks["counterfactual"] == "pass":
+            checks["counterfactual"] = proof["status"]
+            issues.extend(proof["issues"])
         for issue in local:
-            checks["counterfactual" if issue["rule_id"] == "R-5.3" else "trap"] = "flag"
-        return {**pending, "status": "flag" if issues or local else "pass", "issues": issues + local,
+            checks[{"R-5.3":"counterfactual", "R-9":"trap", "R-1.3":"blueprint"}[issue["rule_id"]]] = "flag"
+        return {**pending, "status": "flag" if issues or local else "pending" if proof["status"] == "pending" else "pass", "issues": issues + local,
                 "checks": checks, "model_flagged_rules": model_rules,
-                "deterministic_rules": sorted({i["rule_id"] for i in local}), "model_status":"completed"}
+                "deterministic_rules": sorted({i["rule_id"] for i in local}), "model_status":"completed",
+                "counterfactual_verification":proof}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_REQUEST_REJECTED", "PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}

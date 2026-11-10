@@ -33,6 +33,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['b9880dde-631b-41a2-b684-c57871f89770','The only rewrite retained unsupported distractor explanations and an options-only answer cue; counterfactual wording did not actually change the keyed decision.'],
  ['2b7f969b-b9f0-4ed4-9131-e84e0b325a37','Full v2.0 audit found obsolete halothane, incorrect airway blueprint classification, an ineffective counterfactual and faulty trap logic.'],
  ['97a2f6e0-e2e9-40a5-bb63-e29827aeff5e','Final source QA found named drug examples absent from the cited class-only passage; requires indexed support for their class membership.'],
  ['038defcb-295a-43a9-bdb4-5bb6a310b183','Text-only draft omitted its required item-level verification flag.'],
@@ -47,7 +48,7 @@ for(const [id,reason] of [
  ['d87e0523-a4bd-40a9-8f61-cdaabd6ad297','Another option is also source-supported; the primary/secondary ranking is unsupported.']
 ]){
  const previous=await call('/generation/drafts/'+id);
- if(['pending_review','needs_revision'].includes(previous.status)){
+ if(previous.status==='pending_review'){
   const flagged=await call('/generation/drafts/'+id+'/review',{status:'needs_revision',notes:'Automated recovery QA: '+reason+' Kept unpublished; no human clinical approval performed.'});
   assert.equal(flagged.status,'needs_revision');assert.equal(flagged.published,false);
  }
@@ -70,7 +71,7 @@ if(revisionState.current_question?.concept_card?.relevance!==relevance){
  assert.equal(await digest(verified.current_question.evidence),await digest(revisionState.current_question.evidence),'Revision changed source references');
  console.log(JSON.stringify({corrected_draft:recoveredDraft,revision_id:revised.revision_id,published:false,human_review_required:true}));
 }
-const request={topic:'obese patients oxygen consumption FRC desaturation',page_start:1280,page_end:1280,mode:'NCE',domain:'IV',section:'B',objective:'IV.B.4',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
+const request={topic:'"dynamic compliance" OR "static compliance"',page_start:731,page_end:732,mode:'NCE',domain:'I',section:'A',objective:'I.A.2',format:'MC',item_id:crypto.randomUUID(),textbook_id:'6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d'};
 const preflight=await call('/generation/preflight',request);
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
@@ -79,6 +80,7 @@ assert.equal(preflight.review_readiness?.rewrite,'configured');
 assert.equal(preflight.review_readiness?.independent_option_review,'configured');
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
+assert.equal(preflight.quality_contract,'2026-11-10-v2');
 console.log('Indexed textbook evidence and independent review configuration verified');
 const connection=await call('/generation/provider-check');
 assert.equal(connection.container_relay,'OK');
@@ -95,6 +97,7 @@ assert.equal(saved.status,'pending_review');
 const stages=Object.fromEntries(Object.entries(generated.screening?.stages||{}).map(([name,s])=>[name,s.status]));
 console.log(JSON.stringify({draft_id:generated.draft_id,status:saved.status,published:false,stages,generator_issue_rules:(generated.generator_issues||[]).map(i=>i.rule_id),rewrite_attempts:generated.screening?.rewrite_attempts_used}));
 assert.equal(stages.editorial_quality,'pass','Independent item-writing quality review did not pass');
+assert.equal(generated.screening.stages.editorial_quality.counterfactual_verification?.status,'pass','Changed stem did not independently yield a new correct answer');
 assert.equal(stages.options_only,'pass','Repeated options-only cue screening did not pass');
 assert.equal(saved.question?.self_check?.recorded_by||saved.item?.self_check?.recorded_by||generated.item?.self_check?.recorded_by,'trusted_screening');
 assert.equal(generated.item.options.find(o=>generated.item.key.includes(o.id)).error_pattern,null);

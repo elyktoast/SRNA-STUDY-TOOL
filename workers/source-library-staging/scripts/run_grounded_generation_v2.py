@@ -76,6 +76,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
     quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
     editorial_model = env.get("AI_EDITORIAL_REVIEWER_MODEL", "").strip()
+    summary["quality_contract"] = "2026-11-10-v2" if quality_requested else None
     summary["review_readiness"] = {
         "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id and editorial_model and editorial_model != generator_id else "unavailable" if quality_requested else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
@@ -126,7 +127,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
         "explanation_review_enabled": explanation_requested,
-        "board_quality_contract": "2026-11-09-v1" if quality_requested else None,
+        "board_quality_contract": "2026-11-10-v2" if quality_requested else None,
         "editorial_reviewer_model": editorial_model if quality_requested else None,
         "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
@@ -201,7 +202,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         from item_board_quality_v2 import editorial, options_only
         editorial_adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
             model=editorial_model, transport=transport, owner_opt_in=True, staging=True)
-        reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload)),
+        reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload),
+                counterfactual_reviewer=blind_reviewer, selected_topic=args.topic),
                    "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))}
         return {name: {**report, "generator_model_id": generator_id,
                       "reviewer_model_id": editorial_model if name == "editorial_quality" else reviewer_model_id}
