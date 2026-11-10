@@ -110,3 +110,35 @@ cannot override missing specificity and that a well-formed but incoherent trap
 still fails independent screening. Per-rule self-checks retain individual
 editorial criterion results instead of treating every criterion as failed when
 only one was flagged.
+
+
+## Fresh v1 generation rejected; require a demonstrated counterfactual
+
+After deployment 42703637120 and all four browser shards in 42703637236
+passed (production deployment skipped), fresh acceptance 42754450165 created
+draft b9880dde-631b-41a2-b684-c57871f89770. It remains unpublished. The candidate
+drifted into a preoxygenation-management task and retained unsupported alternate
+strategies plus a repeated options-only cue after its single rewrite. Its
+editorial pass was insufficient: the stated counterfactual did not change which
+answer was correct. This is a failed candidate, not a completed quality milestone.
+
+Contract v2 now requires an exact bounded stem substitution and a proposed
+different existing key. Both the original condition and replacement must appear
+in the concept-card counterfactual. The server reconstructs the changed stem
+and sends only that stem and the unchanged choices to the independent blind
+solver. Same-answer, ambiguous, unanchored or unrelated proposed changes fail;
+unavailable or malformed verification remains pending. Expected answers are
+never disclosed to the blind solver. Topic matching also becomes an explicit
+part of editorial review. Guards reject references to an unspecified source in
+the stem, treatment choices containing their own explanatory rationale, and
+unverified dose/concentration/percentage claims in text-only MC/MS content.
+
+The next single-question acceptance uses indexed static/dynamic compliance
+passages on physical PDF pages 731–732, with respiratory-physiology objective
+I.A.2. This evidence explicitly contrasts tissue/chest-wall compliance with the
+airway-resistance component of dynamic compliance, allowing condition changes
+to be checked against actual alternative answers. No source text or complete
+generated question is included in this public report. Local targeted board tests
+pass (16); the full local suite ran 866 tests with only the previously observed
+PDF image-coverage fixture failure and one skip. New CI and live controls remain
+required before calling the quality milestone complete.
