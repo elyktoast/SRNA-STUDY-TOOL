@@ -362,3 +362,23 @@ concept objects), retaining strict six-field shape and finished-stem finalizatio
 Fixed diagnostic categories now distinguish invalid JSON from other JSON shapes
 and record only bounded character counts; no failed text or reasoning is logged.
 All 34 focused relay tests pass. No successful quality milestone is claimed yet.
+
+
+Medium-effort strict-output CI 42832359944 and deployment 42832406927 passed.
+Acceptance 42833139010 completed source review with four citation-scope batches
+and saved unpublished 34c128dd-8586-47f8-b7bd-1a8af8d6d2e4. It still failed
+clinical uniqueness, reasoning level, equation/wording and counterfactual checks.
+The model omitted the new rationale proposal field, so legacy planning text
+remained; no successful milestone is claimed.
+
+For live MC/MS rationale calls, a strict schema now requires the bounded-edit
+proposal and explanations for every existing choice. Independent changed-stem
+verification still must prove a different unique answer; the author proposal
+never grants a pass. Source review also flags explicit absence-as-disproof
+reasoning even if the model says it is supported. Give qualitative text-only
+and applied-case requirements system priority without promoting source text or
+model content. The existing single rewrite gets an explicit R-8.5 correction
+instruction. Authoring contract v5 invalidates earlier checkpoints.
+Focused source-review and relay checks pass (15 and 35 tests). The full local
+suite ran 873 tests with one skip and only the known local PyMuPDF fixture
+failure. New CI and live acceptance are required before claiming completion.
