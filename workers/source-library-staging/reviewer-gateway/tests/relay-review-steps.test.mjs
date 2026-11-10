@@ -461,10 +461,18 @@ test('explicit Cloudflare GPT-OSS authoring keeps every independent review on Gr
     assert.equal(url,'https://api.cloudflare.com/client/v4/accounts/account/ai/run/@cf/openai/gpt-oss-120b');
     const body=JSON.parse(options.body);
     assert.equal(body.messages[0].role,'system');assert.equal(body.messages[1].role,'user');
-    assert.deepEqual(body.response_format,{type:'json_object'});assert.equal(body.max_tokens,1024);
+    assert.equal(body.reasoning_effort,'medium');assert.equal(body.max_tokens,1024);
+    if(['concept_card','rationale'].includes(step)){
+     assert.equal(body.response_format.type,'json_schema');
+     const schema=body.response_format.json_schema;
+     assert.equal(schema.type,'object');assert.equal(schema.additionalProperties,false);
+     assert.equal(schema.schema,undefined,'Cloudflare takes the raw schema, not the Groq schema envelope');
+     if(step==='concept_card')assert.ok(schema.required.includes('choice_plan'));
+     else assert.deepEqual(schema.required,['core_concept','why_key_wins','trap','distractor_breakdown']);
+    }else assert.deepEqual(body.response_format,{type:'json_object'});
     return Response.json({success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
    };
-   assert.equal((await gateway.fetch(request(step,'openai/gpt-oss-120b'),cf)).status,200);
+   assert.equal((await gateway.fetch(request(step,'openai/gpt-oss-120b',{format:'MC',choice_plan:{},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),cf)).status,200);
   }
   for(const step of ['blind_review','option_review','explanation_review','editorial_review','options_only_review']){
    const model=step==='editorial_review'?'openai/gpt-oss-20b':'qwen/qwen3.8-27b';
