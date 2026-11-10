@@ -176,8 +176,17 @@ def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=No
                   for k, v in findings.items()]
         model_rules = sorted({i["rule_id"] for i in issues})
         checks = dict(response["checks"])
+        # The generator already renders its bounded author proposal into this
+        # exact complete form. Do not ask a second model to transcribe the same
+        # punctuation again. This supplies a TEST, never its clinical verdict:
+        # the independent editorial grade and fresh blind solve remain required.
+        canonical = re.fullmatch(r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option\(s\) ([A-F](?:, [A-F])*)\.',
+                                 item["concept_card"]["counterfactual"])
+        proposal = ({"from_text":canonical[1], "to_text":canonical[2], "expected_key":canonical[3].split(", ")}
+                    if canonical else response["counterfactual_test"])
         proof = {"status":"flag", "issues":[]} if checks["counterfactual"] == "flag" else verify_counterfactual(
-            item, response["counterfactual_test"], counterfactual_reviewer)
+            item, proposal, counterfactual_reviewer)
+        proof["proposal_source"] = "canonical_teaching_edit" if canonical else "editorial_proposal"
         if checks["counterfactual"] == "pass":
             checks["counterfactual"] = proof["status"]
             issues.extend(proof["issues"])

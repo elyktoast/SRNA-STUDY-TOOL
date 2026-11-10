@@ -156,6 +156,33 @@ class BoardQualityTests(unittest.TestCase):
         self.assertEqual(result["status"],"pass")
         self.assertNotIn("key",json.loads(calls[0]["messages"][1]["content"]))
 
+    def test_canonical_author_edit_still_requires_independent_editorial_and_blind_passes(self):
+        q=item()
+        q["concept_card"]["counterfactual"]='If "this finding" is replaced by "the alternate finding", the best response changes to option(s) C.'
+        response={"checks":{k:"pass" for k in CRITERIA},"findings":[],"counterfactual_test":None}
+        calls=[]
+        def blind(payload):
+            calls.append(payload)
+            self.assertNotIn("key",payload)
+            self.assertNotIn("concept_card",payload)
+            self.assertEqual(payload["stem"],"Which intervention resolves the alternate finding?")
+            return {"item_id":payload["item_id"],"key":["C"]}
+        report=editorial(q,lambda p:response,counterfactual_reviewer=blind)
+        self.assertEqual(report["status"],"pass")
+        self.assertEqual(len(calls),1)
+        self.assertEqual(report["counterfactual_verification"]["proposal_source"],"canonical_teaching_edit")
+        wrong=editorial(q,lambda p:response,counterfactual_reviewer=lambda p:{"item_id":p["item_id"],"key":["B"]})
+        self.assertEqual(wrong["status"],"flag")
+        rejected=copy.deepcopy(response)
+        rejected["checks"]["counterfactual"]="flag"
+        rejected["findings"]=[{"criterion":"counterfactual","reason":"The replacement is not clinically meaningful."}]
+        calls.clear()
+        self.assertEqual(editorial(q,lambda p:rejected,counterfactual_reviewer=blind)["status"],"flag")
+        self.assertEqual(calls,[])
+        q["concept_card"]["counterfactual"]+=" Additional clinical assertion."
+        self.assertEqual(editorial(q,lambda p:response,counterfactual_reviewer=blind)["status"],"flag")
+        self.assertEqual(calls,[])
+
     def test_counterfactual_requires_an_anchored_edit_and_a_different_key(self):
         proposal={"from_text":"this finding","to_text":"the alternate finding","expected_key":["C"]}
         calls=[]
