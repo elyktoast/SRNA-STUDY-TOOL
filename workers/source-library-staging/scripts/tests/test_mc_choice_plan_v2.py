@@ -7,7 +7,7 @@ from test_item_standard_v2 import sample
 
 
 def plan():
-    return {"dimensions":["X","Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
+    return {"response_variables":["Measurement X","Measurement Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
             "key":["B"],"alternate_key":["A"],"options":[
                 {"id":oid,"states":states}
                 for oid,states in [("A",["reduced","reduced"]),
@@ -35,8 +35,12 @@ class ChoicePlanTests(unittest.TestCase):
         bad["options"][0]["text"]="A changed clinical response"
         with self.assertRaisesRegex(ValueError, "rendered response differs"):
             validate(bad)
+        given=plan()
+        given["stem_condition"]="Measurement X is reduced by condition X"
+        with self.assertRaisesRegex(ValueError, "gives away a planned response"):
+            validate(given)
         type_menu=plan()
-        type_menu["dimensions"]=["Compliance type","Direction of change"]
+        type_menu["response_variables"]=["Compliance type","Direction of change"]
         with self.assertRaisesRegex(ValueError, "not clinical components"):
             validate(type_menu)
         for change in ("stem","options","key"):
@@ -48,7 +52,7 @@ class ChoicePlanTests(unittest.TestCase):
 
     def test_rendering_only_formats_authored_components_and_states(self):
         raw=plan();p=validate(raw)
-        self.assertEqual(p["options"][1]["text"],"X: unchanged; Y: reduced")
+        self.assertEqual(p["options"][1]["text"],"Measurement X: unchanged; Measurement Y: reduced")
         self.assertNotIn("text",raw["options"][1])
         self.assertEqual(validate(p),p)
         self.assertEqual(p["key"],raw["key"])

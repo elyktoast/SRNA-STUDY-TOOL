@@ -423,7 +423,7 @@ test('MC planning has a private distinct-response plan while generic concept car
   const body=JSON.parse(options.body),s=body.response_format.json_schema.schema;
   assert.ok(s.required.includes('choice_plan'));
   assert.equal(s.properties.choice_plan.additionalProperties,false);
-  assert.deepEqual(s.properties.choice_plan.required,['dimensions','stem_condition','alternate_condition','key','alternate_key','options']);
+  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','key','alternate_key','options']);
   assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
   assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','states']);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -493,5 +493,31 @@ test('Cloudflare authoring cannot disguise a different underlying generator mode
    AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_AUTHORING_PROVIDER:'cloudflare',
    AI_CLOUDFLARE_MODEL:'@cf/qwen/qwen3.8-27b',AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'secret'});
   assert.equal(response.status,503);assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});
+
+test('Cloudflare GLM uses its wrapped schema and bounded low reasoning without changing review delivery',async()=>{
+ const old=globalThis.fetch;
+ const cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_GENERATOR_MODEL:'zai-org/glm-5.3',AI_AUTHORING_PROVIDER:'cloudflare',
+  AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'cf-secret',AI_CLOUDFLARE_MODEL:'@cf/zai-org/glm-5.3'};
+ try{
+  for(const step of ['concept_card','item_draft','rationale','rewrite','blind_review']){
+   globalThis.fetch=async(url,options)=>{
+    const body=JSON.parse(options.body);
+    if(step==='blind_review')assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+    else {
+     assert.ok(url.endsWith('/ai/run/@cf/zai-org/glm-5.3'));
+     assert.equal(body.reasoning_effort,'low');assert.equal(body.max_tokens,1024);
+     if(step==='concept_card'){
+      assert.equal(body.response_format.type,'json_schema');
+      assert.equal(body.response_format.json_schema.name,'srna_concept_card_v2');
+      assert.ok(body.response_format.json_schema.schema.required.includes('choice_plan'));
+     }
+    }
+    return Response.json(step==='blind_review'?{choices:[{message:{content:'{}'},finish_reason:'stop'}]}:
+     {success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
+   };
+   assert.equal((await gateway.fetch(request(step,step==='blind_review'?'qwen/qwen3.8-27b':'zai-org/glm-5.3',{format:'MC'}),cfg)).status,200);
+  }
  }finally{globalThis.fetch=old;}
 });
