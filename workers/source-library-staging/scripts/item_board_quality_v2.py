@@ -118,6 +118,8 @@ def verify_counterfactual(item, proposal, reviewer):
         failed = compare(changed, response)
     except Exception:
         return {"status":"pending", "issues":[]}
+    if failed:
+        issue = {**issue, "message": issue["message"] + "; the independent changed-stem answer did not match. Check for original-condition findings left outside the replacement, and repair the complete case without changing the original key."}
     return {"status":"flag" if failed else "pass", "issues":[issue] if failed else [],
             "stem_change": {"from_text":proposal["from_text"], "to_text":proposal["to_text"]},
             "expected_key": expected, "independent_key": response.get("key") if isinstance(response, dict) else None}

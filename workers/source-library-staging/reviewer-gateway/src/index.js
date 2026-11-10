@@ -142,7 +142,22 @@ async function relayGroq(request,env){
    delete rationaleFormat.json_schema.schema.properties.counterfactual_test;
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
   }
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:rationaleFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
+  let reviewFormat=rationaleFormat;
+  if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
+   const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
+   const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
+   if(fieldIds.every(x=>typeof x==='string')&&passageIds.every(x=>typeof x==='string')&&spanIds.length){
+    // A valid judgment can support OR reject any field. The schema guarantees
+    // references exist structurally; source identity, coverage and truth remain
+    // independently validated by the server, never inferred from JSON shape.
+    reviewFormat={type:'json_schema',json_schema:{name:'srna_explanation_review_v2',strict:true,schema:{type:'object',properties:{
+     supported_groups:{type:'array',items:{type:'object',properties:{field_ids:{type:'array',minItems:1,items:{type:'string',enum:fieldIds}},
+      quote_refs:{type:'array',minItems:1,maxItems:8,items:{type:'object',properties:{passage_id:{type:'string',enum:passageIds},span_id:{type:'string',enum:spanIds}},required:['passage_id','span_id'],additionalProperties:false}}},required:['field_ids','quote_refs'],additionalProperties:false}},
+     unsupported:{type:'array',items:{type:'object',properties:{field_id:{type:'string',enum:fieldIds},reason:{type:'string'}},required:['field_id','reason'],additionalProperties:false}}
+    },required:['supported_groups','unsupported'],additionalProperties:false}}};
+   }
+  }
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
   const cloudflareFormat=cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
