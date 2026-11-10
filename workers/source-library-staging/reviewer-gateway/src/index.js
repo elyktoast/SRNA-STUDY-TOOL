@@ -21,7 +21,9 @@ async function safeRateDiagnostic(response){
   if(typeof message!=='string')return {};
   const dimension=/tokens per minute|\bTPM\b/i.test(message)?'tokens_per_minute':/tokens per day|\bTPD\b/i.test(message)?'tokens_per_day':/requests per minute|\bRPM\b/i.test(message)?'requests_per_minute':/requests per day|\bRPD\b/i.test(message)?'requests_per_day':'unknown';
   const counts={};for(const label of ['limit','used','requested']){const match=message.match(new RegExp('\\b'+label+'\\s*:?\\s*(\\d{1,10})(?!\\d|\\.\\d)','i'));if(match&&Number(match[1])<=1e9)counts[label]=Number(match[1]);}
-  return {rate_limit_dimension:dimension,...counts};
+  const retry=message.match(/\btry again in\s+(\d{1,4}(?:\.\d{1,6})?)(ms|s)\b/i);
+  const retrySeconds=retry?Math.ceil(Number(retry[1])/(retry[2].toLowerCase()==='ms'?1000:1)):null;
+  return {rate_limit_dimension:dimension,...counts,...(retrySeconds!==null&&retrySeconds>=1&&retrySeconds<=3600?{retry_after_seconds:retrySeconds}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
 }
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.

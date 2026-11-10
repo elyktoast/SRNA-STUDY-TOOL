@@ -19,6 +19,18 @@ test('429 diagnostics expose only fixed dimensions and bounded numbers; fraction
   assert.deepEqual(await response.json(),{error:'provider_failed',rule:'PROVIDER_RATE_LIMIT',provider_status:429,remaining_tokens:8000,rate_limit_dimension:'tokens_per_day',limit:200000,used:199999,requested:4000,retry_after_seconds:3});
  }finally{globalThis.fetch=original;}
 });
+test('missing Retry-After uses only an explicit bounded provider retry interval',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const [wait,expected] of [['25.123s',26],['500ms',1],['9999s',undefined]]){
+   globalThis.fetch=async()=>Response.json({error:{message:'Tokens per minute (TPM). Please try again in '+wait+'. private source text'}},{status:429});
+   const data=await (await gateway.fetch(request('blind_review','reviewer-model'),env)).json();
+   assert.equal(data.retry_after_seconds,expected);
+   assert.equal(data.rate_limit_dimension,'tokens_per_minute');
+   assert.ok(!JSON.stringify(data).includes('private'));
+  }
+ }finally{globalThis.fetch=original;}
+});
 test('oversized and invalid upstream error bodies cannot become relay diagnostics',async()=>{
  const original=globalThis.fetch;
  try{
