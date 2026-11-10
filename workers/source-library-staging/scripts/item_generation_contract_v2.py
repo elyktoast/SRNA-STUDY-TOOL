@@ -11,7 +11,7 @@ STEPS = ("concept_card", "item_draft", "rationale")
 
 
 def build_step(step, *, mode, domain, section, objective, evidence, format=None,
-               concept_card=None, draft=None, topic=None):
+               concept_card=None, draft=None, topic=None, choice_plan=None):
     if step not in STEPS:
         raise ValueError("Unknown generation step")
     if topic is not None and (not isinstance(topic, str) or not topic.strip() or len(topic) > 500):
@@ -55,7 +55,25 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
         "Set keyed options' error_pattern to null. Tag each distractor with the specific learner error, not merely its drug class or whether it is correct. "
         "Do not claim a self-check passed; the server records observed screening results."
     )
+    if format == "MC" and step == "concept_card":
+        quality_instructions += (
+            " Also return private choice_plan with dimensions (exactly two source-supported observations or physiological components), "
+            "stem_condition and alternate_condition (different complete clinical phrases, each at most 200 characters), "
+            "key and alternate_key (different single-ID arrays), and four options A-D. Each planned option contains id, "
+            "text (a short parallel paired response WITHOUT its explanation), error_pattern (null for key), and states "
+            "(two short values of the SAME dimensions, in the SAME order). All four state pairs must differ: do not use "
+            "three diagnoses that all produce the same measurements. Diagnosis names and option IDs are not state values. "
+            "Include a unique response for BOTH the original case and its alternative. Ground both cases and every response "
+            "in the evidence. The draft will ask for this paired interpretation, not a list-definition lookup.")
+    if choice_plan is not None:
+        quality_instructions += (
+            " Use the supplied private choice_plan. Copy key and all planned option id/text/error_pattern fields EXACTLY, "
+            "omitting states from the final options. In the stem use stem_condition verbatim exactly once; omit the alternate "
+            "condition and do not reveal the response states. Include only other necessary discriminating context. "
+            "For rationale, copy the planned counterfactual: from_text=stem_condition, to_text=alternate_condition, "
+            "expected_key=alternate_key. Source and independent blind checks will still test the plan; never assert approval.")
     return {"rules_version": RULES_VERSION, "step": step,
+            **({"choice_plan": choice_plan} if choice_plan is not None else {}),
             **({"topic": topic} if topic is not None else {}),
             "mode": mode, "domain": domain, "section": section, "objective": objective,
             "blueprint_labels": target_labels,

@@ -181,6 +181,13 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         concept = concept["concept_card"]
     if not isinstance(concept, dict):
         raise ValueError("Concept card incomplete; draft generation blocked")
+    concept = dict(concept)
+    choice_plan = concept.pop("choice_plan", None)
+    if choice_plan is not None:
+        from item_mc_choice_plan_v2 import validate as validate_plan
+        if format != "MC":
+            raise ValueError("Concept card choice plan is MC-only")
+        choice_plan = validate_plan(choice_plan)
     if any(not isinstance(concept.get(field), str) or not concept[field].strip()
            for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
@@ -195,21 +202,28 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     ):
         raise ValueError("Concept card references unknown passages")
     if "concept_card" not in checkpoint and on_checkpoint is not None:
-        on_checkpoint("concept_card", concept)
+        on_checkpoint("concept_card", {**concept, **({"choice_plan":choice_plan} if choice_plan is not None else {})})
     draft = checkpoint.get("draft") if "draft" in checkpoint else _response(adapter, build_step("item_draft", **args,
-                                        format=format, concept_card=concept))
+                                        format=format, concept_card=concept, choice_plan=choice_plan))
     if not isinstance(draft, dict):
         raise ValueError("Generated draft has wrong format or missing stem")
     if set(draft) == {"draft"} and isinstance(draft["draft"], dict):
         draft = draft["draft"]
     if draft.get("format") != format or not isinstance(draft.get("stem"), str):
         raise ValueError("Generated draft has wrong format or missing stem")
+    planned_proposal = None
+    if choice_plan is not None:
+        from item_mc_choice_plan_v2 import bind
+        planned_proposal = bind(choice_plan, draft)
+        concept = {**concept, "counterfactual": _final_counterfactual(draft, planned_proposal)}
     if "draft" not in checkpoint and on_checkpoint is not None:
         on_checkpoint("draft", draft)
     rationale = _response(adapter, build_step("rationale", **args, format=format,
-                                             concept_card=concept, draft=draft))
+                                             concept_card=concept, draft=draft, choice_plan=choice_plan))
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
+    if planned_proposal is not None and rationale.get("counterfactual_test") != planned_proposal:
+        raise ValueError("Rationale incomplete: counterfactual differs from planned case")
     if format in ("MC", "MS") and "counterfactual_test" in rationale:
         concept = {**concept, "counterfactual": _final_counterfactual(draft, rationale["counterfactual_test"])}
         rationale = {k: rationale[k] for k in RATIONALE_FIELDS}

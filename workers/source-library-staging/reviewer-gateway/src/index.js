@@ -21,7 +21,7 @@ async function safeRateDiagnostic(response){
   if(typeof message!=='string')return {};
   const dimension=/tokens per minute|\bTPM\b/i.test(message)?'tokens_per_minute':/tokens per day|\bTPD\b/i.test(message)?'tokens_per_day':/requests per minute|\bRPM\b/i.test(message)?'requests_per_minute':/requests per day|\bRPD\b/i.test(message)?'requests_per_day':'unknown';
   const counts={};for(const label of ['limit','used','requested']){const match=message.match(new RegExp('\\b'+label+'\\s*:?\\s*(\\d{1,10})(?!\\d|\\.\\d)','i'));if(match&&Number(match[1])<=1e9)counts[label]=Number(match[1]);}
-  const retry=message.match(/\btry again in\s+(\d{1,4}(?:\.\d{1,6})?)(ms|s)\b/i);
+  const retry=message.match(/\btry again in\s+(\d{1,4}(?:\.\d{1,20})?)(ms|s)\b/i);
   const retrySeconds=retry?Math.ceil(Number(retry[1])/(retry[2].toLowerCase()==='ms'?1000:1)):null;
   return {rate_limit_dimension:dimension,...counts,...(retrySeconds!==null&&retrySeconds>=1&&retrySeconds<=3600?{retry_after_seconds:retrySeconds}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
@@ -108,6 +108,14 @@ async function relayGroq(request,env){
      properties:{...Object.fromEntries(['objective','mechanism','relevance','misconception','counterfactual'].map(k=>[k,{type:'string'}])),evidence_ids:{type:'array',items:{type:'string'}}},
      required:['objective','mechanism','relevance','misconception','counterfactual','evidence_ids'],additionalProperties:false}}}
    :{type:'json_object'};
+  if(conceptFormat.type==='json_schema'&&step.format==='MC'){
+   const properties=conceptFormat.json_schema.schema.properties;
+   properties.choice_plan={type:'object',properties:{dimensions:{type:'array',items:{type:'string'}},stem_condition:{type:'string'},alternate_condition:{type:'string'},
+    key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
+    options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},text:{type:'string'},error_pattern:{type:['string','null']},states:{type:'array',items:{type:'string'}}},required:['id','text','error_pattern','states'],additionalProperties:false}}},
+    required:['dimensions','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};
+   conceptFormat.json_schema.schema.required.push('choice_plan');
+  }
   const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
   const strictRationale=groqOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='rationale'&&['MC','MS'].includes(step.format)
    &&rationaleIds.length>=4&&rationaleIds.length<=6&&new Set(rationaleIds).size===rationaleIds.length&&rationaleIds.every(id=>/^[A-F]$/.test(id));
@@ -143,7 +151,7 @@ async function relayGroq(request,env){
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
-   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,6})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
+   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,20})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
    const remainingTokens=upstream.headers.get('x-ratelimit-remaining-tokens');
    const safeCount=v=>v!==null&&/^\d{1,10}$/.test(v)?Number(v):null;
