@@ -330,7 +330,23 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 rule = "PROVIDER_CONFIGURATION"
             else:
                 rule = "GENERATION_VALIDATION"
-            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule})
+            # Exact allowlist: expose only which private planning invariant failed.
+            # Never echo even part of an arbitrary exception or provider output.
+            detail = {
+                "Concept card choice plan incomplete": "PLAN_FIELDS",
+                "Concept card choice plan invalid": "PLAN_CONDITIONS_OR_KEYS",
+                "Concept card choice plan choices invalid": "PLAN_CHOICE_IDS",
+                "Concept card choice plan response invalid": "PLAN_RESPONSE_FIELDS",
+                "Concept card choice plan repeats a response pattern": "PLAN_REPEATED_PATTERN",
+                "Concept card incomplete; draft generation blocked": "CONCEPT_FIELDS",
+                "Concept card must reference unique passage IDs": "CONCEPT_SOURCE_IDS",
+                "Concept card objective differs from selected blueprint objective": "CONCEPT_OBJECTIVE",
+                "Concept card references unknown passages": "CONCEPT_UNKNOWN_SOURCE",
+                "Generated draft differs from its choice plan": "DRAFT_PLAN_MISMATCH",
+                "Rationale incomplete: counterfactual differs from planned case": "RATIONALE_PLAN_MISMATCH",
+            }.get(message)
+            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule,
+                **({"validation_detail": detail} if detail is not None else {})})
         except Exception as exc:
             # Never log prompts, indexed passages, credentials or provider response bodies.
             # Fixed categories distinguish infrastructure failures from provider failures.
