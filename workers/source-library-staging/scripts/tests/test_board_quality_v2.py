@@ -36,8 +36,12 @@ class BoardQualityTests(unittest.TestCase):
 
     def test_worded_equation_requires_page_image_verification(self):
         from item_text_checks import check
-        q=item();q["concept_card"]["mechanism"]="Compliance is calculated as pressure divided by volume."
-        self.assertIn("R-8.5",{i["rule_id"] for i in check(q)})
+        q=item()
+        for claim in ("Compliance is calculated as pressure divided by volume.",
+                      "Compliance is calculated as (plateau pressure-PEEP)/tidal volume.",
+                      "Compliance is calculated from plateau pressure minus PEEP."):
+            q["concept_card"]["mechanism"]=claim
+            self.assertIn("R-8.5",{i["rule_id"] for i in check(q)},claim)
         q["numbers_verified_against_page_image"]=True
         self.assertNotIn("R-8.5",{i["rule_id"] for i in check(q)})
         q["numbers_verified_against_page_image"]=False;q["concept_card"]["mechanism"]="Interpret the change in the measured components."
