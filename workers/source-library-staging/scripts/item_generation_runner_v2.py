@@ -156,7 +156,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if on_checkpoint is not None and not callable(on_checkpoint):
         raise ValueError("Checkpoint writer must be callable")
     checkpoint = checkpoint or {}
-    concept = checkpoint.get("concept_card") if "concept_card" in checkpoint else _response(adapter, build_step("concept_card", **args))
+    concept = checkpoint.get("concept_card") if "concept_card" in checkpoint else _response(adapter, build_step("concept_card", **args, format=format))
     # Some JSON-mode providers wrap the requested object under its step name.
     # Unwrap only the exact one-key envelope; never invent missing fields or IDs.
     if isinstance(concept, dict) and set(concept) == {"concept_card"} and isinstance(concept["concept_card"], dict):

@@ -304,3 +304,13 @@ model availability or an unsupported reasoning parameter. Test a larger bounded
 draft, rationale and protected rewrite use medium effort. Independent reviewers
 retain their original settings. This is a configuration experiment, not evidence
 that question quality has been solved. CI and fresh acceptance remain required.
+
+
+Code-path inspection found that the concept-card request passed format=null,
+although generate_one already knew the selected format. Pass that format through
+to planning, so format-conditional writing/page-image instructions have the same
+context in all three authoring calls. Existing runner adapters now assert the
+actual request format. Authoring contract v3 is returned by preflight and bound
+into the checkpoint fingerprint so pre-fix checkpoints cannot be reused under
+the changed planning contract. Acceptance requires v3 before spending a call.
+CI 42771750672 passed before this context fix; fresh validation is required.
