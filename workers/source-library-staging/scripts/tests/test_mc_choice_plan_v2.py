@@ -9,11 +9,11 @@ from test_item_standard_v2 import sample
 def plan():
     return {"dimensions":["X","Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
             "key":["B"],"alternate_key":["A"],"options":[
-                {"id":oid,"text":text,"states":states}
-                for oid,text,states in [("A","X reduced; Y reduced",["reduced","reduced"]),
-                    ("B","X unchanged; Y reduced",["unchanged","reduced"]),
-                    ("C","X unchanged; Y unchanged",["unchanged","unchanged"]),
-                    ("D","X reduced; Y unchanged",["reduced","unchanged"])]]}
+                {"id":oid,"states":states}
+                for oid,states in [("A",["reduced","reduced"]),
+                    ("B",["unchanged","reduced"]),
+                    ("C",["unchanged","unchanged"]),
+                    ("D",["reduced","unchanged"])]]}
 
 
 class ChoicePlanTests(unittest.TestCase):
@@ -31,15 +31,13 @@ class ChoicePlanTests(unittest.TestCase):
             if change=="bad_order": bad["options"].reverse()
             if change=="missing_state": bad["options"][0]["states"].pop()
             with self.subTest(change=change),self.assertRaises(ValueError):validate(bad)
-        for text in ("X reduced", "Extra decreased; Y reduced"):
-            bad=copy.deepcopy(p)
-            bad["options"][0]["text"]=text
-            with self.assertRaisesRegex(ValueError, "does not compare both components"):
-                validate(bad)
-        type_menu=copy.deepcopy(p)
+        bad=copy.deepcopy(p)
+        bad["options"][0]["text"]="A changed clinical response"
+        with self.assertRaisesRegex(ValueError, "rendered response differs"):
+            validate(bad)
+        type_menu=plan()
         type_menu["dimensions"]=["Compliance type","Direction of change"]
-        type_menu["options"][0]["text"]="Static compliance is decreased"
-        with self.assertRaisesRegex(ValueError, "does not compare both components"):
+        with self.assertRaisesRegex(ValueError, "not clinical components"):
             validate(type_menu)
         for change in ("stem","options","key"):
             bad=copy.deepcopy(draft)
@@ -48,9 +46,18 @@ class ChoicePlanTests(unittest.TestCase):
             if change=="key": bad["key"]=["A"]
             with self.subTest(change=change),self.assertRaises(ValueError):bind(p,bad)
 
+    def test_rendering_only_formats_authored_components_and_states(self):
+        raw=plan();p=validate(raw)
+        self.assertEqual(p["options"][1]["text"],"X: unchanged; Y: reduced")
+        self.assertNotIn("text",raw["options"][1])
+        self.assertEqual(validate(p),p)
+        self.assertEqual(p["key"],raw["key"])
+        self.assertEqual(p["alternate_key"],raw["alternate_key"])
+        self.assertEqual(p["options"][1]["states"],raw["options"][1]["states"])
+
     def test_plan_is_checkpointed_but_not_persisted_in_the_canonical_item(self):
-        p=plan();calls=[];checkpoints={}
-        concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=p)
+        raw=plan();p=validate(raw);calls=[];checkpoints={}
+        concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=raw)
         draft=sample();draft.update(stem="During care, condition X is observed. Which response fits?",key=["B"],
             options=[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]])
         def adapter(request):
