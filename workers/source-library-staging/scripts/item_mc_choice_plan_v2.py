@@ -43,6 +43,13 @@ def validate(plan):
     result["response_variables"] = [normalize(v) for v in plan["response_variables"]]
     for option in result["options"]:
         option["states"] = [normalize(v) for v in option["states"]]
+        # Models sometimes repeat the literal component label inside its state.
+        # Remove that repeated label only; never infer or change the state.
+        for index, component in enumerate(result["response_variables"]):
+            state = option["states"][index]
+            repeated = re.match(re.escape(component) + r"(?:\s*:\s*|\s+)(.+)$", state, re.I)
+            if repeated:
+                option["states"][index] = repeated[1]
         text = "; ".join(f"{component}: {state}" for component, state in zip(result["response_variables"], option["states"]))
         if len(text) > 180:
             raise ValueError("Concept card choice plan response invalid")
@@ -51,6 +58,8 @@ def validate(plan):
         if "text" in option and option["text"] != text:
             raise ValueError("Concept card choice plan rendered response differs")
         option["text"] = text
+    if len({tuple(v.casefold() for v in o["states"]) for o in result["options"]}) != 4:
+        raise ValueError("Concept card choice plan repeats a response pattern")
     return result
 
 
@@ -61,9 +70,12 @@ def bind(plan, draft):
     if not isinstance(actual, list) or len(actual) != 4 or any(not isinstance(o, dict) for o in actual):
         raise ValueError("Generated draft differs from its choice plan")
     actual = [{k:o.get(k) for k in ("id", "text")} for o in actual]
-    if (draft.get("key") != plan["key"] or actual != options
-            or draft["stem"].count(plan["stem_condition"]) != 1
+    if draft.get("key") != plan["key"]:
+        raise ValueError("Generated draft differs from its choice plan: key")
+    if actual != options:
+        raise ValueError("Generated draft differs from its choice plan: choices")
+    if (draft["stem"].count(plan["stem_condition"]) != 1
             or plan["alternate_condition"] in draft["stem"]):
-        raise ValueError("Generated draft differs from its choice plan")
+        raise ValueError("Generated draft differs from its choice plan: condition")
     return {"from_text":plan["stem_condition"], "to_text":plan["alternate_condition"],
             "expected_key":deepcopy(plan["alternate_key"])}

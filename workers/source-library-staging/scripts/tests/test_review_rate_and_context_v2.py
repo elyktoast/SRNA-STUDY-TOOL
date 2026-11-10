@@ -25,7 +25,7 @@ class ReviewRateAndContextTests(unittest.TestCase):
     @patch('item_option_retrieval_audit_v2.search')
     def test_topic_and_classification_retrieved_once_without_answer_or_citation_seeding(self,search):
         def lookup(conn,query,owner,**kwargs):
-            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':1,'textbook_id':'book'})
+            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':2 if query=='topic' else 1,'textbook_id':'book'})
             return [{'passage_id':'topic-source' if query=='topic' else query+'-class-source'}]
         search.side_effect=lookup
         item={'format':'MC','stem':'Which?', 'options':[{'id':'A','text':'Drug A'},{'id':'B','text':'Drug B'}], 'key':['A'], 'evidence':[{'passage_id':'forged-generator-source'}]}

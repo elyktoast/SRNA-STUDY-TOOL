@@ -63,7 +63,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               page_start=args.page_start, page_end=args.page_end)
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-10-v14", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-10-v15", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
@@ -125,7 +125,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"authoring_contract": "2026-11-10-v14", "owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-10-v15", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         "textbook_id": args.textbook_id, "section_id": args.section_id,
