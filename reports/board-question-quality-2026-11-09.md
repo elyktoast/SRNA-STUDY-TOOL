@@ -422,3 +422,19 @@ stopped before drafting; its validation detail was unclassified. V7 now pins
 the authenticated runtime contract before any new generation, includes a fixed
 validation-response contract, and covers every known concept validation category.
 No candidate was saved and no clinical requirement was relaxed.
+
+
+Read-only isolated concept diagnostic 42843871130 confirmed the actual defect:
+all four choices and state-pair shapes were valid, objective and source IDs
+matched, but original-context distractor annotations were missing. V8 removes
+that duplicate annotation requirement from the PRIVATE plan, which now contains
+only IDs, text and component states. The existing draft stage still must supply
+null for the original key and a specific error pattern for all three distractors,
+including the alternative-case key. Canonical schema and quality checks remain
+unchanged. Planning still binds exact choice text and original/alternative keys;
+no clinical evidence or correctness requirement is waived.
+
+Canonical MC validation now explicitly rejects null or empty non-key learner-error
+tags under R-6.3; presence alone previously let null values through. Regression
+coverage confirms the private plan omits these tags while the final MC requires
+them. Existing treatment of legacy keyed metadata and other formats is preserved.

@@ -50,6 +50,15 @@ class StandardTests(unittest.TestCase):
         self.assertNotIn("R-6.8", rules)  # Length imbalance is an editorial flag, not a schema failure
         self.assertIn("R-6.3", rules)
 
+    def test_missing_or_empty_distractor_error_tags_are_rejected(self):
+        for value in (None, "", "  ", {}, 12):
+            item=sample()
+            item["options"][1]["error_pattern"]=value
+            self.assertIn("R-6.3", {e["rule_id"] for e in check(item)})
+        item=sample()
+        self.assertIsNone(item["options"][0]["error_pattern"])
+        self.assertEqual(check(item), [])
+
     def test_malformed_option_text_returns_diagnostics_not_exception(self):
         for bad in (None, 17, [], {"unexpected": True}):
             with self.subTest(bad=repr(bad)):

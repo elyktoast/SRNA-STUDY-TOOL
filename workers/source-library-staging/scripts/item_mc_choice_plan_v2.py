@@ -18,14 +18,12 @@ def validate(plan):
         raise ValueError("Concept card choice plan invalid")
     options = plan["options"]
     if (not isinstance(options, list) or len(options) != 4
-            or any(not isinstance(o, dict) or set(o) != {"id", "text", "error_pattern", "states"} for o in options)
+            or any(not isinstance(o, dict) or set(o) != {"id", "text", "states"} for o in options)
             or [o["id"] for o in options] != list("ABCD")
             or any(k not in "ABCD" for k in plan["key"] + plan["alternate_key"])):
         raise ValueError("Concept card choice plan choices invalid")
     for option in options:
-        if (not strings([option["text"]], 1, 180) or not strings(option["states"], 2, 80)
-                or (option["error_pattern"] is not None if option["id"] in plan["key"]
-                    else not strings([option["error_pattern"]], 1, 400))):
+        if not strings([option["text"]], 1, 180) or not strings(option["states"], 2, 80):
             raise ValueError("Concept card choice plan response invalid")
     signatures = {tuple(" ".join(v.casefold().split()) for v in o["states"]) for o in options}
     if len(signatures) != 4 or len({o["text"].strip().casefold() for o in options}) != 4:
@@ -36,7 +34,8 @@ def validate(plan):
 def bind(plan, draft):
     """Require the actual draft to use the plan; truth remains independently checked."""
     options = [{k:v for k,v in o.items() if k != "states"} for o in plan["options"]]
-    if (draft.get("key") != plan["key"] or draft.get("options") != options
+    actual = [{k:o.get(k) for k in ("id", "text")} for o in draft.get("options", []) if isinstance(o, dict)]
+    if (draft.get("key") != plan["key"] or actual != options
             or draft["stem"].count(plan["stem_condition"]) != 1
             or plan["alternate_condition"] in draft["stem"]):
         raise ValueError("Generated draft differs from its choice plan")
