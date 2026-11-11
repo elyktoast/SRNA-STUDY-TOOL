@@ -359,3 +359,11 @@ test('lecture PDF/PPTX uploader uses authenticated bounded file-plan route',()=>
  assert.match(gateway,/const lectureFile=url\.pathname==='\/generation\/lecture-file-plan'/);
  assert.match(gateway,/lectureFile\?12\*1024\*1024/);
 });
+
+test('lecture PDF preview stays local and invalidates old object URLs',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/URL\.createObjectURL\(file\)/);
+ assert.match(ui,/URL\.revokeObjectURL\(lecturePreviewUrl\)/);
+ assert.match(ui,/Local PDF lecture preview/);
+ assert.match(ui,/lectureInput\.addEventListener\('change'/);
+});
