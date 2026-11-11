@@ -40,7 +40,7 @@ const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted'
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
 lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
-evidencePanel.after(lecturePanel);
+// Mount after the evidence panel is attached to its final parent.
 lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
  const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
  const lecture_text=lecturePanel.querySelector('#sl-lecture-text').value.trim();
@@ -382,7 +382,7 @@ function ensureAICommandCenter(){
  const editor=document.createElement('section');editor.id='sl-clinical-editor';editor.className='sl-clinical-editor';editor.hidden=true;editor.innerHTML='<div class="sl-clinical-head"><div><span>CLINICAL REVIEW · UNPUBLISHED</span><h3>Question Editor</h3><p>Review the question, correct its wording, verify source evidence, and save a versioned draft.</p></div><button type="button" id="sl-editor-back">Back to drafts</button></div><div id="sl-clinical-editor-body"></div>';
  const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||view!==name;for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
  center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('drafts');
- create.append(evidencePanel);
+ create.append(evidencePanel,lecturePanel);
  const draftControls=generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
