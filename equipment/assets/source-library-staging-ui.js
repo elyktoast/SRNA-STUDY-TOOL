@@ -102,6 +102,23 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   for(const job of jobs){
    const li=document.createElement('li');
    li.textContent=String(job.body?.topic||'Untitled')+' — '+String(job.body?.objective||'unclassified')+' ('+String(job.body?.format||format)+')';
+   const check=document.createElement('button');check.type='button';
+   check.textContent='Check indexed evidence';check.style.marginLeft='8px';
+   check.addEventListener('click',async()=>{
+    if(job.path!=='/generation/preflight'||!job.body||typeof job.body!=='object'){
+     out.textContent='Unsafe lecture planning job; cannot check evidence.';return;
+    }
+    check.disabled=true;out.textContent='Checking indexed textbook evidence for '+String(job.body.topic||'topic')+'…';
+    try{
+     const preflight=await storage.generationPreflight(job.body);
+     if(preflight.dry_run!==true||preflight.can_publish!==false||preflight.database_writes!==false)
+      throw Error('Unsafe or incomplete evidence preflight response.');
+     const passages=Number.isSafeInteger(preflight.passage_count)?preflight.passage_count:0;
+     out.textContent='Evidence preflight completed: '+passages+' indexed passage(s). No AI generation, draft save, or publication performed.';
+    }catch(error){out.textContent=error.message||'Evidence preflight unavailable.';}
+    finally{check.disabled=false;}
+   });
+   li.append(check);
    ul.append(li);
   }
   results.append(ul);
