@@ -446,3 +446,15 @@ test('lecture uploads allow 25 MiB files with base64 transport headroom',()=>{
  assert.match(ui,/max 25 MB/);
  assert.match(gateway,/lectureFile\?36\*1024\*1024/);
 });
+
+
+test('bulk draft review requires confirmation and per-draft validation; removal preserves audit history',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/Select all reviewable drafts/);
+ assert.match(ui,/Approve selected to bank/);
+ assert.match(ui,/Remove selected/);
+ assert.match(ui,/await storage\.revalidateGeneratedDraft\(id\)/);
+ assert.match(ui,/await storage\.reviewGeneratedDraft\(id,status,notes\)/);
+ assert.match(ui,/Records remain in audit history/);
+ assert.match(ui,/response\.status!==status\|\|response\.published!==false/);
+});
