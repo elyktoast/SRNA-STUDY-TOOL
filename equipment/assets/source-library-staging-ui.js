@@ -39,16 +39,17 @@ for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['inpu
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
-lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 8 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
 // Mount after the evidence panel is attached to its final parent.
 lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
  const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
  const lecture_text=lecturePanel.querySelector('#sl-lecture-text').value.trim();
+ const lectureFile=lecturePanel.querySelector('#sl-lecture-file').files?.[0];
  const textbook_id=genEl('sl-gen-book-select')?.value||researchBookSelect.value;
  const count=Number(lecturePanel.querySelector('#sl-lecture-count').value);
  results.replaceChildren();
  if(!textbook_id){out.textContent='Choose an indexed textbook in the generation workspace first.';return;}
- if(!lecture_text||lecture_text.length>12000){out.textContent='Enter up to 12,000 characters of lecture content.';return;}
+ if(!lectureFile&&(!lecture_text||lecture_text.length>12000)){out.textContent='Upload a PDF/PPTX or enter up to 12,000 characters.';return;}
  if(!Number.isInteger(count)||count<1||count>5){out.textContent='Choose 1–5 questions.';return;}
  btn.disabled=true;out.textContent='Preparing grounded lecture plan…';
  try{
@@ -58,7 +59,9 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   if(useObjective&&(!blueprint.domain||!blueprint.section||!blueprint.objective)){
    out.textContent='Choose a learning objective in AI Question Studio, or turn off the selected-objective option.';return;
   }
-  const data=await storage.planLectureQuestions({lecture_text,textbook_id,count,mode,format,...blueprint});
+  const options={textbook_id,count,mode,format,...blueprint};
+  const data=lectureFile?await storage.planLectureFile(lectureFile,options):await storage.planLectureQuestions({lecture_text,...options});
+  if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   const held=data.classification?.held_count||0;
   out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.';
