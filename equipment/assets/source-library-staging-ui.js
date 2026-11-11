@@ -125,7 +125,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
        topicField.value=body.topic;modeField.value=body.mode;formatField.value=body.format;
        const bookSelect=genEl('sl-gen-book-select');
        if([...bookSelect.options].some(option=>option.value===body.textbook_id)){
-        bookSelect.value=body.textbook_id;
+        bookSelect.value=body.textbook_id;genEl('sl-gen-book').value='';
        }else{
         bookSelect.value='';genEl('sl-gen-book').value=body.textbook_id;
        }
