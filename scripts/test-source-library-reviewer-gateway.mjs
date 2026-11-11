@@ -324,3 +324,14 @@ test('lecture planning UI offers optional user-selected blueprint without requir
  assert.match(ui,/\.\.\.blueprint\}\)/);
  assert.match(ui,/otherwise suggest automatically/);
 });
+
+test('staging question bank uses existing authenticated review contract and remains unpublished',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ assert.match(ui,/Approved Question Bank \(staging only\)/);
+ assert.match(ui,/renderDraftCollection\('bank'\)/);
+ assert.match(ui,/storage\.reviewGeneratedDraft\(draft\.draft_id,'approved_for_bank',notes\)/);
+ assert.match(ui,/storage\.reviewGeneratedDraft\(draft\.draft_id,'rejected','Rejected by admin'\)/);
+ assert.match(storage,/generationRequest\('\/generation\/drafts\/'\+draftId\+'\/review'/);
+ assert.match(ui,/result\.published!==false/);
+});
