@@ -112,6 +112,14 @@ class LectureHandoffTests(unittest.TestCase):
             prepare_staging_jobs(object(), "owner", "lecture",
                                  textbook_id="", item_id_factory=lambda: str(uuid4()))
 
+    def test_composed_lecture_rejects_over_five_before_retrieval(self):
+        with patch("lecture_to_question_plan.prepare") as mock_prepare:
+            with self.assertRaisesRegex(ValueError, "between 1 and 5"):
+                prepare_staging_jobs(object(), "owner", "lecture",
+                                     textbook_id="t1", item_id_factory=lambda: str(uuid4()),
+                                     count=6)
+        mock_prepare.assert_not_called()
+
     def test_paid_execution_requires_explicit_flag(self):
         prepared = requests(self.sample(), mode="NCE")
         result = staging_http_jobs(prepared, textbook_id="t1",
