@@ -270,7 +270,7 @@ export default {
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
   if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?12*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
   if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
   if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
