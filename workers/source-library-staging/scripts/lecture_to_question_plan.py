@@ -39,8 +39,8 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
     draft persistence, or publication. The trusted authenticated service must
     execute any generated jobs separately after explicit owner authorization.
     """
-    if not isinstance(textbook_id, str) or not textbook_id.strip():
-        raise ValueError("Explicit indexed textbook ID required")
+    if textbook_id is not None and (not isinstance(textbook_id, str) or not textbook_id.strip()):
+        raise ValueError("Invalid textbook selection")
     if type(count) is not int or not 1 <= count <= 5:
         raise ValueError("Question count must be between 1 and 5")
     from lecture_generation_requests import requests, staging_http_jobs
