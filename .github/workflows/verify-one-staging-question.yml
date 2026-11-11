@@ -1,5 +1,5 @@
 name: Explicit staging one-question acceptance
-# Verify v18 complete paired-key evidence and independent Qwen quality review.
+# Verify v19 compact complete citations and safe connection recovery.
 on:
   workflow_dispatch:
     inputs:

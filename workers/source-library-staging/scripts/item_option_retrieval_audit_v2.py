@@ -28,7 +28,7 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
     context_failed = False
     if context_query:
         try:
-            context_rows = search(conn, context_query.strip(), owner_uid, limit=limit, textbook_id=textbook_id)
+            context_rows = search(conn, context_query.strip(), owner_uid, limit=min(limit, 2), textbook_id=textbook_id)
         except Exception:
             context_failed = True
     results = []
@@ -42,7 +42,7 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
         query = label[:180].strip()
         queries = [query] + ([context_query.strip()] if context_query else [])
         try:
-            option_rows = search(conn, query, owner_uid, limit=limit - 1 if context_query else limit, textbook_id=textbook_id)
+            option_rows = search(conn, query, owner_uid, limit=max(1, limit - 2) if context_query else limit, textbook_id=textbook_id)
         except Exception:
             option_rows = []
             search_failed = True
