@@ -93,7 +93,15 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
     options.page_start=Number(start);options.page_end=Number(end);
    }
   }
-  const data=lectureFile?await storage.planLectureFile(lectureFile,options):await storage.planLectureQuestions({lecture_text,...options});
+  let data;
+  try{
+   data=lectureFile?await storage.planLectureFile(lectureFile,options):await storage.planLectureQuestions({lecture_text,...options});
+  }catch(error){
+   if(String(error?.message||error).includes('lecture_text_exceeds_planning_limit')){
+    out.textContent='This lecture has more extracted text than one planning request supports. Enter a smaller page/slide range above (for example 1–5) and try again.';return;
+   }
+   throw error;
+  }
   if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   const held=data.classification?.held_count||0;
