@@ -348,3 +348,14 @@ test('AI workspace has a dedicated approved bank tab sharing the draft collectio
  assert.match(ui,/view==='bank'\|\|view==='drafts'/);
  assert.match(ui,/renderDraftCollection\(view\)/);
 });
+
+test('lecture PDF/PPTX uploader uses authenticated bounded file-plan route',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(ui,/id="sl-lecture-file" accept="\.pdf,\.pptx/);
+ assert.match(ui,/storage\.planLectureFile\(lectureFile,options\)/);
+ assert.match(storage,/generationRequest\('\/generation\/lecture-file-plan'/);
+ assert.match(gateway,/const lectureFile=url\.pathname==='\/generation\/lecture-file-plan'/);
+ assert.match(gateway,/lectureFile\?12\*1024\*1024/);
+});
