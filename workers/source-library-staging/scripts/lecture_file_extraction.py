@@ -20,7 +20,10 @@ def extract_lecture(data, filename, *, enable_ocr=False):
         if not data.startswith(b"%PDF-"):
             raise ValueError("PDF signature mismatch")
         import fitz
-        doc = fitz.open(stream=data, filetype="pdf")
+        try:
+            doc = fitz.open(stream=data, filetype="pdf")
+        except (fitz.FileDataError, RuntimeError) as exc:
+            raise ValueError("Invalid PDF file") from exc
         try:
             if doc.needs_pass or not 1 <= len(doc) <= MAX_LECTURE_PAGES:
                 raise ValueError("Encrypted or oversized PDF")
