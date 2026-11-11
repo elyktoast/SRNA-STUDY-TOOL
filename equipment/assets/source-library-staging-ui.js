@@ -115,6 +115,25 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
       throw Error('Unsafe or incomplete evidence preflight response.');
      const passages=Number.isSafeInteger(preflight.passage_count)?preflight.passage_count:0;
      out.textContent='Evidence preflight completed: '+passages+' indexed passage(s). No AI generation, draft save, or publication performed.';
+     if(passages>0){
+      const transfer=document.createElement('button');transfer.type='button';
+      transfer.textContent='Use this lecture topic in AI Question Studio';
+      transfer.addEventListener('click',()=>{
+       const body=job.body;
+       if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format))return;
+       const topicField=el('sl-topic'),modeField=el('sl-mode'),formatField=el('sl-format');
+       topicField.value=body.topic;modeField.value=body.mode;formatField.value=body.format;
+       genEl('sl-gen-book-select').value=body.textbook_id;
+       genEl('sl-gen-domain').value=body.domain;
+       genEl('sl-gen-section').value=body.section;
+       genEl('sl-gen-objective').value=body.objective;
+       checkedEvidence={topic:body.topic,mode:body.mode,format:body.format,
+        textbook_id:body.textbook_id,domain:body.domain,section:body.section,objective:body.objective};
+       genEl('sl-gen-status').textContent='Lecture topic loaded and evidence checked. Review the blueprint and use Generate 1 question to confirm a paid AI call. The resulting draft remains unpublished.';
+       out.textContent='Lecture topic transferred to AI Question Studio. Generation requires your confirmation.';
+      });
+      li.append(transfer);
+     }
     }catch(error){out.textContent=error.message||'Evidence preflight unavailable.';}
     finally{check.disabled=false;}
    });
