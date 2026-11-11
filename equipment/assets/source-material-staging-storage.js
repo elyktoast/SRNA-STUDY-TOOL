@@ -174,6 +174,7 @@ async function generationRequest(path,request){
  if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';const error=Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);error.status=response.status;error.rule=data.rule;throw error;}
  return data;
 }
+async function planLectureQuestions(request){return generationRequest('/generation/lecture-plan',request);}
 async function checkGroqConnection(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
  const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
@@ -246,5 +247,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
 })();
