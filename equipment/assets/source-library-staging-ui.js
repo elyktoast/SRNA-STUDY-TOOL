@@ -40,6 +40,29 @@ const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted'
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
 lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 8 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+// Local-only lecture preview. Blob URLs are never sent to the generation service.
+const lectureInput=lecturePanel.querySelector('#sl-lecture-file');
+const lecturePreview=document.createElement('div');lecturePreview.id='sl-lecture-preview';
+lecturePreview.setAttribute('aria-label','Selected lecture preview');
+lectureInput.closest('label').after(lecturePreview);
+let lecturePreviewUrl=null;
+lectureInput.addEventListener('change',()=>{
+ if(lecturePreviewUrl){URL.revokeObjectURL(lecturePreviewUrl);lecturePreviewUrl=null;}
+ lecturePreview.replaceChildren();
+ const file=lectureInput.files?.[0];if(!file)return;
+ const info=document.createElement('p');info.textContent=file.name+' · '+(file.size/1048576).toFixed(2)+' MB';
+ lecturePreview.append(info);
+ if(!/\\.(pdf|pptx)$/i.test(file.name)||file.size>8*1048576||file.size===0){info.textContent+=' — unsupported or oversized file';return;}
+ if(/\\.pdf$/i.test(file.name)){
+  lecturePreviewUrl=URL.createObjectURL(file);
+  const frame=document.createElement('iframe');frame.title='Local PDF lecture preview';frame.style.cssText='width:100%;height:360px;border:1px solid #aabbd1;border-radius:8px';
+  frame.src=lecturePreviewUrl;lecturePreview.append(frame);
+ }else{
+  const hint=document.createElement('p');hint.className='sl-muted';
+  hint.textContent='PowerPoint slide previews require the server-side image reader. Text and tables can be extracted; slides containing images are held for visual review.';
+  lecturePreview.append(hint);
+ }
+});
 // Mount after the evidence panel is attached to its final parent.
 lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
  const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
