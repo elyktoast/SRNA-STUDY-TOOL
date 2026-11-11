@@ -441,3 +441,51 @@ class DraftBasketHttpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class LecturePlanningHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true"})
+
+    def call(self, payload, *, token="valid", origin="https://staging.srnastudytool.com",
+             method="POST"):
+        raw = json.dumps(payload).encode()
+        env = {"PATH_INFO": "/generation/lecture-plan", "REQUEST_METHOD": method,
+               "HTTP_ORIGIN": origin, "HTTP_AUTHORIZATION": "Bearer " + token,
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        result = b"".join(self.app(env, lambda status, headers: seen.append(status)))
+        return seen[0], json.loads(result)
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs",
+           return_value={"jobs": [], "count": 0, "auto_publish": False})
+    def test_owner_scoped_plan_no_generation(self, planner):
+        status, body = self.call({"lecture_text": "Learning objective: Airway",
+                                  "textbook_id": "book-1"})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["count"], 0)
+        self.assertEqual(planner.call_args.args[1], UID)
+        self.assertEqual(planner.call_args.kwargs["textbook_id"], "book-1")
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_unauthorized_or_wrong_origin(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload, token="invalid")[0], "403 Forbidden")
+        self.assertEqual(self.call(payload, origin="https://example.org")[0], "403 Forbidden")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_client_identity_and_oversize(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1",
+                   "owner_uid": UID}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        payload = {"lecture_text": "a" * 12001, "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_non_post(self, planner):
+        self.assertEqual(self.call({"lecture_text": "Airway", "textbook_id": "book-1"},
+                                   method="GET")[0], "405 Method Not Allowed")
+        planner.assert_not_called()
