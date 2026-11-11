@@ -1,6 +1,6 @@
 import copy
 import unittest
-from item_mc_choice_plan_v2 import validate, bind
+from item_mc_choice_plan_v2 import validate, bind, render_condition, CONDITION_SLOT
 from item_generation_runner_v2 import generate_one
 from test_item_generation_runner_v2 import ARGS
 from test_item_standard_v2 import sample
@@ -17,6 +17,20 @@ def plan():
 
 
 class ChoicePlanTests(unittest.TestCase):
+    def test_condition_slot_preserves_exact_case_and_rejects_duplicate_cases(self):
+        p=validate(plan())
+        original={"stem":CONDITION_SLOT+" Which response fits?", "key":p["key"],
+                  "options":[{"id":o["id"],"text":o["text"]} for o in p["options"]]}
+        rendered=render_condition(p,original)
+        self.assertEqual(rendered["stem"],"condition X Which response fits?")
+        self.assertEqual(bind(p,rendered)["from_text"],"condition X")
+        self.assertEqual(original["stem"],CONDITION_SLOT+" Which response fits?")
+        for extra in (CONDITION_SLOT,p["stem_condition"],p["alternate_condition"]):
+            with self.subTest(extra=extra),self.assertRaises(ValueError):
+                render_condition(p,{**original,"stem":original["stem"]+extra})
+        missing={**original,"stem":"A paraphrased clinical case. Which response fits?"}
+        with self.assertRaises(ValueError):bind(p,render_condition(p,missing))
+
     def test_distinct_patterns_and_draft_binding_never_prove_clinical_correctness(self):
         p=validate(plan())
         draft={"stem":"During care, condition X is observed. Which response fits?", "key":["B"],
@@ -79,7 +93,8 @@ class ChoicePlanTests(unittest.TestCase):
             if request["step"]=="concept_card":return copy.deepcopy(concept)
             self.assertEqual(request["choice_plan"],p)
             self.assertNotIn("choice_plan",request["concept_card"])
-            if request["step"]=="item_draft":return copy.deepcopy(draft)
+            if request["step"]=="item_draft":
+                return {**copy.deepcopy(draft),"stem":draft["stem"].replace(p["stem_condition"],CONDITION_SLOT)}
             return {"core_concept":"m","why_key_wins":"r","trap":"x", "distractor_breakdown":{o["id"]:"explanation" for o in p["options"]}}
         result=generate_one(adapter,**ARGS,on_checkpoint=lambda stage,value:checkpoints.update({stage:copy.deepcopy(value)}))
         self.assertEqual(calls,["concept_card","item_draft","rationale"])
