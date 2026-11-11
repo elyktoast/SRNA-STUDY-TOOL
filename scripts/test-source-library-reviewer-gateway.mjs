@@ -472,3 +472,10 @@ test('lecture file planning bypasses manifest-only upstream approval header guar
  const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
  assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream\.headers\.get\('X-Review-Approval-Enabled'\)!=='false'/);
 });
+
+
+test('lecture file planning bypasses review-manifest source integrity guard',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList\)/);
+ assert.match(gateway,/if\(!\/\^\[a-f0-9\]\{64\}\$\/\.test\(digest\)\)return respond\(502,origin,'\{"error":"missing_source_integrity"\}'\)/);
+});
