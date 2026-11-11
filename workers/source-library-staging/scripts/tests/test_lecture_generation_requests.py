@@ -59,6 +59,12 @@ class LectureHandoffTests(unittest.TestCase):
             staging_http_jobs(prepared, textbook_id="",
                               item_id_factory=lambda: str(uuid4()))
 
+    def test_unrelated_textbook_rejected(self):
+        prepared = requests(self.sample(), mode="NCE")
+        with self.assertRaisesRegex(ValueError, "Selected textbook"):
+            staging_http_jobs(prepared, textbook_id="different-book",
+                              item_id_factory=lambda: str(uuid4()))
+
     def test_duplicate_item_id_rejected(self):
         prepared = requests(self.sample(count=2), mode="NCE")
         fixed = str(uuid4())
