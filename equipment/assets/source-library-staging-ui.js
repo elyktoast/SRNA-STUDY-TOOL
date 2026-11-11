@@ -39,7 +39,7 @@ for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['inpu
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
-lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 8 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 8 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><div class="sl-row"><label>Start page/slide <input id="sl-lecture-page-start" type="number" min="1" placeholder="All" style="width:75px"></label><label>End page/slide <input id="sl-lecture-page-end" type="number" min="1" placeholder="All" style="width:75px"></label></div><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
 // Local-only lecture preview. Blob URLs are never sent to the generation service.
 const lectureInput=lecturePanel.querySelector('#sl-lecture-file');
 const lecturePreview=document.createElement('div');lecturePreview.id='sl-lecture-preview';
@@ -83,6 +83,16 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
    out.textContent='Choose a learning objective in AI Question Studio, or turn off the selected-objective option.';return;
   }
   const options={textbook_id,count,mode,format,...blueprint};
+  if(lectureFile){
+   const start=lecturePanel.querySelector('#sl-lecture-page-start').value.trim();
+   const end=lecturePanel.querySelector('#sl-lecture-page-end').value.trim();
+   if(start||end){
+    if(!start||!end||!Number.isInteger(Number(start))||!Number.isInteger(Number(end))||Number(start)<1||Number(end)<Number(start)){
+     out.textContent='Enter both a valid start and end page/slide, or leave both blank for the full lecture.';return;
+    }
+    options.page_start=Number(start);options.page_end=Number(end);
+   }
+  }
   const data=lectureFile?await storage.planLectureFile(lectureFile,options):await storage.planLectureQuestions({lecture_text,...options});
   if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
