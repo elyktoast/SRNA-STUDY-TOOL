@@ -321,7 +321,7 @@ test('lecture planning UI offers optional user-selected blueprint without requir
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
  assert.match(ui,/id="sl-lecture-use-objective"/);
  assert.match(ui,/const blueprint=useObjective\?/);
- assert.match(ui,/\.\.\.blueprint\}\)/);
+ assert.match(ui,/const options=\{textbook_id,count,mode,format,\.\.\.blueprint\}/);
  assert.match(ui,/otherwise suggest automatically/);
 });
 
