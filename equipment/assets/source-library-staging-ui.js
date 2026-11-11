@@ -107,7 +107,14 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   const held=data.classification?.held_count||0;
   const skipped=data.file_extraction?.skipped_blank_pages;
   const blankNote=Array.isArray(skipped)&&skipped.length?' Blank pages/slides skipped: '+skipped.join(', ')+'.':'';
-  out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
+  const diag=data.planning_diagnostics;
+  if(!jobs.length&&diag){
+   const summary='Concepts identified: '+diag.extracted_concepts+'. Textbook-supported concepts: '+diag.grounded_concepts+'. Missing textbook support: '+diag.missing_textbook_support+'. Held for classification: '+diag.held_for_classification+'. Chunks processed: '+diag.processed_chunks+'. Remaining: '+diag.remaining_chunks+'.';
+   const reason=!diag.extracted_concepts?'No usable lecture concepts were identified.':!diag.grounded_concepts?'No indexed textbook evidence matched the extracted concepts.':diag.held_for_classification?'Evidence was found, but NCE/SEE classification needs review.':'No eligible generation jobs were created.';
+   out.textContent=reason+' '+summary+' No generation performed.'+blankNote;
+  }else{
+   out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
+  }
   const ul=document.createElement('ul');
   for(const job of jobs){
    const li=document.createElement('li');
