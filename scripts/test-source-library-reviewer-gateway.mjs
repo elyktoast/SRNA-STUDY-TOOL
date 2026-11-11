@@ -293,3 +293,11 @@ test('lecture planning enforces POST CORS and 16KiB limit',async()=>{
  assert.equal(oversized.status,413);
  assert.equal(calls.container,before);
 });
+
+test('lecture planning rejects upstream generation or publishing claims',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const unsafe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({jobs:[{path:'/generation/one',body:{execute:true}}],count:1,auto_generate:true,auto_publish:false,database_writes:false})})}};
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),unsafe);
+ assert.equal(res.status,502);
+ assert.equal((await res.json()).error,'unsafe_lecture_plan');
+});
