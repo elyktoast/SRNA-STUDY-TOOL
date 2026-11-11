@@ -311,7 +311,8 @@ async function renderDraftCollection(view='drafts'){
     if(notes===null)return;if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required.';return;}
     approve.disabled=true;
     try{const checked=await storage.revalidateGeneratedDraft(draft.draft_id);
-     if(checked.published!==false||checked.can_publish===true)throw Error('Unexpected validation state.');
+     if(checked.published!==false||checked.can_publish===true||!Array.isArray(checked.issues))throw Error('Unexpected validation state.');
+     if(checked.issues.length)throw Error('Draft has '+checked.issues.length+' unresolved validation issue(s). Open the draft, correct and revalidate it before approval.');
      const result=await storage.reviewGeneratedDraft(draft.draft_id,'approved_for_bank',notes);
      if(result.status!=='approved_for_bank'||result.published!==false)throw Error('Approval state not verified.');
      genEl('sl-gen-status').textContent='Approved into the private staging question bank; not published.';
