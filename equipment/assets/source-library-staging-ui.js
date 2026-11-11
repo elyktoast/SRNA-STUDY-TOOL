@@ -290,27 +290,48 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 };
 genEl('sl-open-draft-id').value='abc90a93-41f8-4d7c-8e27-94a609135572';
 genEl('sl-open-draft-id-button').onclick=()=>openSavedDraft(genEl('sl-open-draft-id').value.trim(),genEl('sl-open-draft-id-button'));
-genEl('sl-list-generated').onclick=async()=>{
- const btn=genEl('sl-list-generated');btn.disabled=true;
+async function renderDraftCollection(view='drafts'){
  const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
- genEl('sl-draft-detail').hidden=true;
- try{
-  const result=await storage.listGeneratedDrafts();const drafts=result.drafts||[];
-  if(!Array.isArray(drafts))throw Error('Unexpected draft list.');
-  if(!drafts.length){out.textContent='No saved drafts yet.';return;}
-  for(const draft of drafts){
-   const row=document.createElement('div');row.className='sl-item';
-   const info=document.createElement('div');info.className='sl-name';
-   const heading=document.createElement('strong');heading.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
-   const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
-   info.append(heading,meta);
-   const actions=document.createElement('div');actions.className='sl-actions';
-   const open=document.createElement('button');open.type='button';open.textContent='Open draft';
-   open.addEventListener('click',()=>openSavedDraft(draft.draft_id,open));actions.append(open);row.append(info,actions);out.append(row);
+ const result=await storage.listGeneratedDrafts();const all=result.drafts||[];
+ if(!Array.isArray(all))throw Error('Unexpected draft list.');
+ const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank');
+ const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);
+ if(!drafts.length){const empty=document.createElement('p');empty.textContent='No questions in this collection.';out.append(empty);return;}
+ for(const draft of drafts){
+  const row=document.createElement('div');row.className='sl-item';
+  const info=document.createElement('div');info.className='sl-name';
+  const title=document.createElement('strong');title.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
+  const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
+  info.append(title,meta);const actions=document.createElement('div');actions.className='sl-actions';
+  const open=document.createElement('button');open.type='button';open.textContent='Open';open.onclick=()=>openSavedDraft(draft.draft_id,open);actions.append(open);
+  if(view!=='bank'&&['pending_review','needs_revision'].includes(draft.status)){
+   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';
+   approve.onclick=async()=>{
+    const notes=window.prompt('Clinical review notes (required). Confirm source evidence and answer accuracy before approval:');
+    if(notes===null)return;if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required.';return;}
+    approve.disabled=true;
+    try{const checked=await storage.revalidateGeneratedDraft(draft.draft_id);
+     if(checked.published!==false||checked.can_publish===true)throw Error('Unexpected validation state.');
+     const result=await storage.reviewGeneratedDraft(draft.draft_id,'approved_for_bank',notes);
+     if(result.status!=='approved_for_bank'||result.published!==false)throw Error('Approval state not verified.');
+     genEl('sl-gen-status').textContent='Approved into the private staging question bank; not published.';
+     await renderDraftCollection('drafts');
+    }catch(error){genEl('sl-gen-status').textContent='Approval failed: '+(error.message||'Unknown error');approve.disabled=false;}
+   };actions.append(approve);
+   const reject=document.createElement('button');reject.type='button';reject.textContent='Reject draft';
+   reject.onclick=async()=>{if(!window.confirm('Reject this draft? It will remain in the audit history.'))return;
+    reject.disabled=true;try{await storage.reviewGeneratedDraft(draft.draft_id,'rejected','Rejected by admin');await renderDraftCollection('drafts');}
+    catch(error){genEl('sl-gen-status').textContent='Rejection failed: '+(error.message||'Unknown error');reject.disabled=false;}
+   };actions.append(reject);
   }
- }catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}
- finally{btn.disabled=false;}
-};
+  row.append(info,actions);out.append(row);
+ }
+}
+const bankButton=document.createElement('button');bankButton.type='button';bankButton.textContent='Approved question bank (staging)';
+genEl('sl-list-generated').after(bankButton);
+bankButton.onclick=async()=>{bankButton.disabled=true;try{await renderDraftCollection('bank');}catch(error){genEl('sl-gen-status').textContent=error.message||'Bank unavailable.';}finally{bankButton.disabled=false;}};
+genEl('sl-list-generated').onclick=async()=>{const btn=genEl('sl-list-generated');btn.disabled=true;try{await renderDraftCollection('drafts');}catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}finally{btn.disabled=false;}};
+
 let busy=false, previewUrl=null, currentPageInput=null, currentFrame=null, lastSourcesView='library', lastAIView='create';
 function clearPreview(){currentPageInput=null;currentFrame=null;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}const frame=dialog.querySelector('#sl-preview-frame');if(frame)frame.remove();const controls=dialog.querySelector('#sl-preview-controls');if(controls)controls.remove();const flagged=dialog.querySelector('#sl-flagged-pages');if(flagged)flagged.remove();const empty=dialog.querySelector('#sl-research-preview');if(empty&&!empty.querySelector('.sl-research-empty'))empty.innerHTML='<div class="sl-research-empty">Choose <strong>Review PDF</strong> beside a textbook to open it here.</div>';}
 async function previewPdf(path){if(typeof storage.reviewPdf!=='function')throw Error('Staging preview adapter unavailable');const blob=await storage.reviewPdf(path);clearPreview();previewUrl=URL.createObjectURL(blob);let frame=document.createElement('iframe');frame.id='sl-preview-frame';frame.setAttribute('loading','eager');frame.setAttribute('referrerpolicy','no-referrer');frame.title='Original textbook PDF (read-only)';frame.style.cssText='width:100%;height:55vh;border:1px solid #94a3b8;border-radius:8px';const controls=document.createElement('div');controls.id='sl-preview-controls';controls.className='sl-row';const pageLabel=document.createElement('label');pageLabel.textContent='Physical PDF page ';const pageInput=document.createElement('input');pageInput.type='number';pageInput.min='1';pageInput.step='1';pageInput.value='1';pageInput.style.width='5rem';const go=document.createElement('button');go.type='button';go.textContent='Go to page';const previous=document.createElement('button');previous.type='button';previous.textContent='← Previous';const nextPage=document.createElement('button');nextPage.type='button';nextPage.textContent='Next →';const openOriginal=document.createElement('a');openOriginal.textContent='Open original in new tab';openOriginal.href=previewUrl;openOriginal.target='_blank';openOriginal.rel='noopener noreferrer';openOriginal.setAttribute('aria-label','Open read-only original PDF in new tab');const jump=page=>{if(!Number.isSafeInteger(page)||page<1||page>100000){message('Enter a valid physical PDF page.',true);return;}const next=frame.cloneNode(false);next.src=previewUrl+'#page='+page;frame.replaceWith(next);currentFrame=next;frame=next;pageInput.value=String(page);previous.disabled=page===1;message('Opened physical PDF page '+page+'. No approval recorded.');};go.onclick=()=>jump(Number(pageInput.value));previous.onclick=()=>jump(Number(pageInput.value)-1);nextPage.onclick=()=>jump(Number(pageInput.value)+1);pageInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go.click();}};previous.disabled=true;pageLabel.append(pageInput);controls.append(previous,pageLabel,go,nextPage,openOriginal);currentPageInput=pageInput;currentFrame=frame;frame.src=previewUrl+'#page=1';const target=dialog.querySelector('#sl-research-preview');const reader=target||dialog.querySelector('.sl-body');if(!reader)throw Error('PDF reader panel is unavailable. Reopen Sources and try again.');if(target)target.replaceChildren();reader.append(controls,frame);dialog.querySelector('#sl-research-layout')?.showSourceView?.('reader');reader.setAttribute('tabindex','-1');reader.focus({preventScroll:true});reader.scrollIntoView({behavior:'smooth',block:'nearest'});frame.addEventListener('error',()=>{message('PDF viewer could not display the downloaded file. Use Download to inspect it.',true);const notice=document.createElement('p');notice.setAttribute('role','alert');notice.textContent='PDF viewer failed. Try Download or the secure page reviewer.';reader.prepend(notice);},{once:true});message('PDF downloaded and sent to the document reader.');}
