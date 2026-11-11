@@ -388,3 +388,11 @@ test('lecture job evidence check uses read-only preflight, never generation',()=
  assert.match(ui,/storage\.generationPreflight\(job\.body\)/);
  assert.match(ui,/preflight\.dry_run!==true\|\|preflight\.can_publish!==false\|\|preflight\.database_writes!==false/);
 });
+
+test('lecture evidence handoff retains explicit paid-generation confirmation',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/transfer\.textContent='Use this lecture topic in AI Question Studio'/);
+ assert.match(ui,/checkedEvidence=\{topic:body\.topic,mode:body\.mode,format:body\.format,/);
+ assert.match(ui,/if\(!confirm\('Generate one staging AI question\?/);
+ assert.match(ui,/storage\.generateOne\(request,/);
+});
