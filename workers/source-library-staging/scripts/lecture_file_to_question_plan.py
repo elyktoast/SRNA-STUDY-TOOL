@@ -29,11 +29,17 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                        and p.get("needs_visual_review", p["page"] in extracted.get("review_pages", []))]
     if not extracted["pages"] and page_start is None and page_end is None:
         selected_review = list(extracted.get("review_pages", []))
-    # Text on a slide is usable without pretending that embedded diagrams were read.\n    # Only hold pages whose visual content is the sole available source.\n    text_only_visual_pages = [p["page"] for p in selected\n                              if p["page"] in selected_review and p.get("text", "").strip()]\n    selected_review = [n for n in selected_review if n not in text_only_visual_pages]\n    if selected_review:\n        return {"jobs": [], "count": 0, "auto_generate": False,
+    # Text on a slide is usable without pretending that embedded diagrams were read.
+    # Only hold pages whose visual content is the sole available source.
+    text_only_visual_pages = [p["page"] for p in selected
+                              if p["page"] in selected_review and p.get("text", "").strip()]
+    selected_review = [n for n in selected_review if n not in text_only_visual_pages]
+    if selected_review:\n        return {"jobs": [], "count": 0, "auto_generate": False,
                 "auto_publish": False, "database_writes": False,
                 "file_extraction": {"filename": filename, "format": extracted["format"],
                                     "page_count": extracted["page_count"], "selected_pages": [p["page"] for p in selected],
-                                    "skipped_blank_pages": blank_pages,\n                                    "text_only_visual_pages": text_only_visual_pages,
+                                    "skipped_blank_pages": blank_pages,
+                                    "text_only_visual_pages": text_only_visual_pages,
                                     "review_pages": selected_review,
                                     "requires_visual_review": True},
                 "held_reason": "visual_review_required"}
@@ -49,6 +55,7 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
                                  "selected_pages": [p["page"] for p in selected],
-                                 "skipped_blank_pages": blank_pages,\n                                 "text_only_visual_pages": text_only_visual_pages,
+                                 "skipped_blank_pages": blank_pages,
+                                 "text_only_visual_pages": text_only_visual_pages,
                                  "review_pages": [], "requires_visual_review": False}
     return result
