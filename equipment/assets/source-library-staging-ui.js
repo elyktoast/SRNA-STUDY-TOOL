@@ -115,7 +115,9 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
      const preflight=await storage.generationPreflight(job.body);
      if(preflight.dry_run!==true||preflight.can_publish!==false||preflight.database_writes!==false)
       throw Error('Unsafe or incomplete evidence preflight response.');
-     const passages=Number.isSafeInteger(preflight.passage_count)?preflight.passage_count:0;
+     if(!Number.isSafeInteger(preflight.passage_count)||preflight.passage_count<0)
+      throw Error('Evidence preflight returned an invalid passage count.');
+     const passages=preflight.passage_count;
      out.textContent='Evidence preflight completed: '+passages+' indexed passage(s). No AI generation, draft save, or publication performed.';
      if(passages>0){
       const transfer=document.createElement('button');transfer.type='button';
