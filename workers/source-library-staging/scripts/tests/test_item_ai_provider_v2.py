@@ -9,6 +9,19 @@ REQUEST = {"step": "concept_card", "rules_version": "2.0",
            "auto_publish": False, "evidence": [{"excerpt": "Private source"}]}
 
 class ProviderTests(unittest.TestCase):
+    def test_planned_draft_requests_a_literal_condition_slot(self):
+        captured=[]
+        def transport(**kw):
+            captured.append(kw["body"])
+            return {"choices":[{"message":{"content":"{}"}}]}
+        request={**REQUEST,"step":"item_draft","format":"MC","choice_plan":{
+            "stem_condition":"An authored clinical condition.","key":["B"],
+            "options":[{"id":x,"text":"planned response "+x} for x in "ABCD"]}}
+        make_adapter(**self.config(transport=transport))(request)
+        prompt=captured[0]["messages"][0]["content"]
+        self.assertIn("literal token {{STEM_CONDITION}} exactly once",prompt)
+        self.assertNotIn("stem must contain this complete condition once",prompt)
+
     def config(self, **overrides):
         def synthetic_transport(**kw):
             request = json.loads(kw["body"]["messages"][1]["content"])

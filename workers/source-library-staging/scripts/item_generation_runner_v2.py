@@ -213,7 +213,8 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Generated draft has wrong format or missing stem")
     planned_proposal = None
     if choice_plan is not None:
-        from item_mc_choice_plan_v2 import bind
+        from item_mc_choice_plan_v2 import bind, render_condition
+        draft = render_condition(choice_plan, draft)
         planned_proposal = bind(choice_plan, draft)
         concept = {**concept, "counterfactual": _final_counterfactual(draft, planned_proposal)}
     if "draft" not in checkpoint and on_checkpoint is not None:
