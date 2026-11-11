@@ -41,8 +41,8 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
     """
     if not isinstance(textbook_id, str) or not textbook_id.strip():
         raise ValueError("Explicit indexed textbook ID required")
-    if type(count) is not int or not 1 <= count <= 100:
-        raise ValueError("Question count must be between 1 and 100")
+    if type(count) is not int or not 1 <= count <= 5:
+        raise ValueError("Question count must be between 1 and 5")
     from lecture_generation_requests import requests, staging_http_jobs
     planned = prepare(conn, owner_uid, lecture_text, textbook_id=textbook_id,
                       count=count)
