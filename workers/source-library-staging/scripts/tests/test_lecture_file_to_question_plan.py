@@ -123,6 +123,16 @@ class LectureFilePlanningTests(unittest.TestCase):
         self.assertEqual(result['planning_diagnostics']['grounded_concepts'],0)
         self.assertEqual(result['planning_diagnostics']['missing_textbook_support'],1)
 
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_all_indexed_books_passes_unrestricted_evidence_scope(self, extract):
+        extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
+            'pages':[{'page':1,'text':'Breathing circuits'}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0,'classification':{'held_count':0}}) as planner:
+            prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id=None,item_id_factory=lambda:'id')
+        self.assertIsNone(planner.call_args.kwargs['textbook_id'])
+
     def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
         from pathlib import Path
         source = (Path(__file__).resolve().parents[1] / 'source_review_wsgi_v2.py').read_text()
