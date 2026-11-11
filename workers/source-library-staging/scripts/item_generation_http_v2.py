@@ -106,7 +106,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 return respond("200 OK", result)
             except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError, base64.binascii.Error):
                 return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
-            except Exception:
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).exception("lecture_file_planning_unavailable exception_type=%s", type(exc).__name__)
                 return respond("503 Service Unavailable", {"error": "lecture_file_planning_unavailable"})
         if lecture_plan:
             if method != "POST":
