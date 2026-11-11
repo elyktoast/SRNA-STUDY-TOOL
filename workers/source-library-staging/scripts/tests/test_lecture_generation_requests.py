@@ -24,9 +24,6 @@ class LectureRequestTests(unittest.TestCase):
             requests(p, mode="NCE", domain="III",
                      section="III.H", objective="III.H.4")
 
-if __name__ == "__main__":
-    unittest.main()
-
 class LectureHandoffTests(unittest.TestCase):
     def sample(self, title="malignant hyperthermia", count=1):
         return {"topics": [{"title": title, "question_count": count,
@@ -83,3 +80,7 @@ class LectureHandoffTests(unittest.TestCase):
         self.assertEqual(result["jobs"][0]["path"], "/generation/one")
         self.assertTrue(result["jobs"][0]["body"]["confirm_paid_calls"])
         self.assertFalse(result["auto_publish"])
+
+
+if __name__ == "__main__":
+    unittest.main()
