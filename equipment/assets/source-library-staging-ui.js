@@ -37,6 +37,36 @@ const evidencePanel=document.createElement('section');evidencePanel.className='s
 for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['input','change'])evidencePanel.querySelector('#'+id).addEventListener(eventName,()=>{checkedEvidence=null;evidencePanel.querySelector('#sl-evidence-status').textContent='Topic or format changed. Run evidence check again.';});
 
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
+const lecturePanel=document.createElement('section');
+lecturePanel.setAttribute('aria-label','Lecture question planning');
+lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+list.before(lecturePanel);
+lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
+ const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
+ const lecture_text=lecturePanel.querySelector('#sl-lecture-text').value.trim();
+ const textbook_id=genEl('sl-gen-book-select')?.value||researchBookSelect.value;
+ const count=Number(lecturePanel.querySelector('#sl-lecture-count').value);
+ results.replaceChildren();
+ if(!textbook_id){out.textContent='Choose an indexed textbook in the generation workspace first.';return;}
+ if(!lecture_text||lecture_text.length>12000){out.textContent='Enter up to 12,000 characters of lecture content.';return;}
+ if(!Number.isInteger(count)||count<1||count>5){out.textContent='Choose 1–5 questions.';return;}
+ btn.disabled=true;out.textContent='Preparing grounded lecture plan…';
+ try{
+  const mode=evidencePanel.querySelector('#sl-mode').value,format=evidencePanel.querySelector('#sl-format').value;
+  const data=await storage.planLectureQuestions({lecture_text,textbook_id,count,mode,format});
+  const jobs=Array.isArray(data.jobs)?data.jobs:[];
+  const held=data.classification?.held_count||0;
+  out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.';
+  const ul=document.createElement('ul');
+  for(const job of jobs){
+   const li=document.createElement('li');
+   li.textContent=String(job.body?.topic||'Untitled')+' — '+String(job.body?.objective||'unclassified')+' ('+String(job.body?.format||format)+')';
+   ul.append(li);
+  }
+  results.append(ul);
+ }catch(error){out.textContent=error.message||'Lecture planning unavailable.';}
+ finally{btn.disabled=false;}
+});
 const providerPanel=document.createElement('section');providerPanel.setAttribute('aria-label','AI provider connection diagnostic');
 providerPanel.innerHTML='<h3>AI provider readiness · Staging</h3><p class="sl-muted">Read-only connection check. Tests configured provider endpoints without generating a question. A successful connection does not guarantee question generation.</p><div class="sl-row"><button type="button" id="sl-check-groq">Check AI connections</button><span id="sl-groq-status" role="status" aria-live="polite">Not checked</span></div>';
 list.before(providerPanel);
