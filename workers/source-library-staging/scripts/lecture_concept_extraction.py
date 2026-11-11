@@ -44,7 +44,8 @@ def extract(text, *, max_concepts=60):
         elif in_objectives and BULLET.match(line):
             line = BULLET.sub("", line).strip()
         elif at_page_start:
-            # Slide title candidate, not a verified clinical fact.\n            at_page_start = False
+            # Slide title candidate, not a verified clinical fact.
+            at_page_start = False
         else:
             continue
         at_page_start = False
