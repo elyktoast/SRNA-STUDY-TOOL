@@ -102,7 +102,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     raise ValueError("Invalid lecture page range")
                 from lecture_file_to_question_plan import prepare_lecture_file_jobs
                 with conn_factory() as conn:
-                    result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=payload["textbook_id"], item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
+                    result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=(None if payload["textbook_id"] == "all" else payload["textbook_id"]), item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
                 return respond("200 OK", result)
             except ValueError as exc:
                 # Report an oversized extracted lecture separately from malformed uploads.
