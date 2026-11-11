@@ -434,6 +434,18 @@ export default {
        data?.check!=='checkpoint_database_readiness'||data?.generation_performed!==false||data?.database_writes!==false||
        Object.keys(data).some(k=>!allowed.includes(k)))return respond(502,origin,'{"error":"unsafe_checkpoint_response"}');
    }
+   if(upstream.ok&&lecturePlan){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_plan"}');
+    }
+   }
    if(upstream.ok&&generation){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
