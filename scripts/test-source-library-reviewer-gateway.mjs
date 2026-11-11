@@ -466,3 +466,9 @@ test('staging admin initializes source workspace config without enabling product
  assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\)window\.MBU_SOURCE_LIBRARY_STAGING=Object\.freeze\(\{enabled:true,apiUrl:'https:\/\/source-library-staging\.srnastudytool\.com'\}\)/);
  assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\.enabled\)throw Error\('Staging source workspace is disabled by configuration\.'\)/);
 });
+
+
+test('lecture file planning bypasses manifest-only upstream approval header guard',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream\.headers\.get\('X-Review-Approval-Enabled'\)!=='false'/);
+});
