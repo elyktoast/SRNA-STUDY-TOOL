@@ -335,3 +335,9 @@ test('staging question bank uses existing authenticated review contract and rema
  assert.match(storage,/generationRequest\('\/generation\/drafts\/'\+draftId\+'\/review'/);
  assert.match(ui,/result\.published!==false/);
 });
+
+test('staging approval UI blocks unresolved current-index validation issues',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/if\(checked\.issues\.length\)throw Error/);
+ assert.match(ui,/unresolved validation issue\(s\)/);
+});
