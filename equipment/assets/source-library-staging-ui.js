@@ -123,7 +123,12 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
        if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format))return;
        const topicField=el('sl-topic'),modeField=el('sl-mode'),formatField=el('sl-format');
        topicField.value=body.topic;modeField.value=body.mode;formatField.value=body.format;
-       genEl('sl-gen-book-select').value=body.textbook_id;
+       const bookSelect=genEl('sl-gen-book-select');
+       if([...bookSelect.options].some(option=>option.value===body.textbook_id)){
+        bookSelect.value=body.textbook_id;
+       }else{
+        bookSelect.value='';genEl('sl-gen-book').value=body.textbook_id;
+       }
        genEl('sl-gen-domain').value=body.domain;
        genEl('sl-gen-section').value=body.section;
        genEl('sl-gen-objective').value=body.objective;
