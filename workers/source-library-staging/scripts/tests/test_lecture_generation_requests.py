@@ -18,7 +18,11 @@ class LectureRequestTests(unittest.TestCase):
         self.assertEqual(result["count"], 2)
         self.assertEqual(result["requests"][0]["concept_request"]["step"], "concept_card")
         self.assertEqual(result["requests"][0]["lecture_locator"], "slide 4")
-        self.assertFalse(result["auto_generate"])
+        self.assertFalse(result["auto_generate"])\n        self.assertEqual(result["requests"][0]["concept_request"]["section"], "H")\n        self.assertEqual(result["requests"][0]["concept_request"]["format"], "MC")
+    def test_invalid_format_rejected(self):
+        with self.assertRaisesRegex(ValueError, "format"):
+            requests({"topics": []}, mode="NCE", format="INVALID")
+
     def test_missing_evidence_rejected(self):
         p = {"topics": [{"title": "Unsupported", "question_count": 1, "evidence": []}]}
         with self.assertRaises(ValueError):
