@@ -271,6 +271,15 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if set(payload) != {"status", "notes"}:
                     raise ValueError("Invalid review body")
                 with conn_factory() as conn:
+                    if payload["status"] == "approved_for_bank":
+                        validation = revalidate(conn, owner_uid=owner, draft_id=draft_match.group(1))
+                        if (validation.get("published") is not False or
+                                validation.get("clinical_review_required") is not True or
+                                not isinstance(validation.get("issues"), list) or
+                                validation["issues"]):
+                            return respond("422 Unprocessable Entity", {
+                                "error": "draft_validation_required",
+                                "issues": validation.get("issues", []) if isinstance(validation, dict) else []})
                     result = review(conn, owner_uid=owner, reviewer_uid=owner,
                                     draft_id=draft_match.group(1),
                                     status=payload["status"], notes=payload["notes"])
