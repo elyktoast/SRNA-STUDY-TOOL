@@ -245,6 +245,7 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
+  const lecturePlan=url.pathname==='/generation/lecture-plan';
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
@@ -252,26 +253,26 @@ export default {
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+    const allowedMethods=(generation||generateOne||lecturePlan)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||generateOne||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||lecturePlan||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||draftWrite)&&Number(request.headers.get('Content-Length')||0)>8192)return respond(413,origin,'{"error":"request_too_large"}');
-  if((generation||generateOne||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if((generation||generateOne||lecturePlan||lecturePlan||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((generation||generateOne||lecturePlan||lecturePlan||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -372,22 +373,22 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||generateOne||draftWrite){
+   if(generation||generateOne||lecturePlan||lecturePlan||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>8192){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>(lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||generateOne||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||draftWrite)?{body}:{})
+    method:(generation||generateOne||lecturePlan||lecturePlan||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
-   if(upstream.status===500 && (generation||generateOne)){
+   if(upstream.status===500 && (generation||generateOne||lecturePlan)){
     // Never log upstream response text: it could contain source excerpts or secrets.
     const contentType=(upstream.headers.get('Content-Type')||'').toLowerCase();
     const body=contentType.startsWith('application/json')?await upstream.clone().json().catch(()=>null):null;
@@ -425,7 +426,7 @@ export default {
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&checkpointCheck){
     const data=await upstream.clone().json().catch(()=>null);
     const allowed=['ready','check','generation_performed','database_writes'];
@@ -451,7 +452,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
+   if(upstream.ok&&!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
