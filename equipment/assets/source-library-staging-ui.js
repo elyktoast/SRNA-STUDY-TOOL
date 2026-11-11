@@ -122,7 +122,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
        const body=job.body;
        if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format)||
           !/^(I|II|III|IV)$/.test(body.domain)||!/^[A-Z]$/.test(body.section)||
-          !/^(I|II|III|IV)\\.[A-Z]\\.\\d+(?:\\.\\d+)*$/.test(body.objective)||
+          !/^(I|II|III|IV)\.[A-Z]\.\d+(?:\.\d+)*$/.test(body.objective)||
           !body.objective.startsWith(body.domain+'.'+body.section+'.')||
           typeof body.topic!=='string'||!body.topic.trim()||
           typeof body.textbook_id!=='string'||!body.textbook_id.trim()){
