@@ -39,8 +39,8 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                     except (RuntimeError, OSError):
                         pass  # Missing Tesseract or failed OCR remains flagged for review.
                 pages.append({"page": i + 1, "text": value,
-                              "needs_visual_review": not bool(value) or images > 0,
-                              "image_count": images})
+                              "needs_visual_review": not bool(value) or images > 0 or vectors > 0,
+                              "image_count": images, "vector_count": vectors})
         finally:
             doc.close()
         kind = "pdf"
