@@ -309,3 +309,10 @@ test('lecture planning rejects unauthenticated requests before contacting review
  assert.equal(res.status,401);
  assert.equal(calls.container,before);
 });
+
+test('lecture panel is mounted in the AI create workspace, not after a detached node',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/create\.append\(evidencePanel,lecturePanel\)/);
+ assert.doesNotMatch(ui,/evidencePanel\.after\(lecturePanel\)/);
+ assert.match(ui,/storage\.planLectureQuestions\(/);
+});
