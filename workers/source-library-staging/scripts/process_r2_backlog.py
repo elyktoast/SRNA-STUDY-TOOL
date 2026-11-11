@@ -162,6 +162,8 @@ def main():
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--r2-key", help="Process exactly one owner-scoped PDF")
+    parser.add_argument("--discover-only", action="store_true",
+                        help="List owner-scoped R2 PDF keys and upload names without downloading or indexing")
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
     parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
@@ -190,6 +192,24 @@ def main():
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
         region_name="auto",
     )
+    if args.discover_only:
+        if args.apply or args.force_reindex or args.r2_key:
+            parser.error("Discovery cannot apply, force reindex, or specify a target key")
+        candidates = []
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=BUCKET, Prefix=args.owner_uid + "/"):
+            for item in page.get("Contents", []):
+                key = item.get("Key")
+                try:
+                    validate_target_key(key, args.owner_uid)
+                except ValueError:
+                    continue
+                head = client.head_object(Bucket=BUCKET, Key=key)
+                name = head.get("Metadata", {}).get("name")
+                candidates.append({"key": key, "original_filename": name if isinstance(name, str) else None,
+                                   "size_bytes": head.get("ContentLength")})
+        print(json.dumps({"mode": "discover-only", "objects": candidates}, indent=2))
+        return
     ready = None
     # A dry run should also avoid reprocessing already indexed textbooks when
     # the database is configured. Without DATABASE_URL it remains an R2-only
