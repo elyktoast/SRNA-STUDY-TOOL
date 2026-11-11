@@ -99,5 +99,13 @@ class LectureFileExtractionTests(unittest.TestCase):
         self.assertEqual(result['review_pages'], [1])
         self.assertEqual(result['pages'][0]['diagram_count'], 1)
 
+    def test_corrupted_pdf_with_valid_header_is_rejected(self):
+        try:
+            import fitz
+        except ImportError:
+            self.skipTest('PyMuPDF not installed')
+        with self.assertRaises(ValueError):
+            extract_lecture(b'%PDF-1.7\\nthis is not a PDF document', 'corrupt.pdf')
+
 if __name__ == '__main__':
     unittest.main()
