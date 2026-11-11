@@ -39,7 +39,7 @@ for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['inpu
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
-lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
 // Mount after the evidence panel is attached to its final parent.
 lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
  const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
@@ -53,7 +53,12 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
  btn.disabled=true;out.textContent='Preparing grounded lecture plan…';
  try{
   const mode=evidencePanel.querySelector('#sl-mode').value,format=evidencePanel.querySelector('#sl-format').value;
-  const data=await storage.planLectureQuestions({lecture_text,textbook_id,count,mode,format});
+  const useObjective=lecturePanel.querySelector('#sl-lecture-use-objective').checked;
+  const blueprint=useObjective?{domain:genEl('sl-gen-domain')?.value,section:genEl('sl-gen-section')?.value,objective:genEl('sl-gen-objective')?.value}:{};
+  if(useObjective&&(!blueprint.domain||!blueprint.section||!blueprint.objective)){
+   out.textContent='Choose a learning objective in AI Question Studio, or turn off the selected-objective option.';return;
+  }
+  const data=await storage.planLectureQuestions({lecture_text,textbook_id,count,mode,format,...blueprint});
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   const held=data.classification?.held_count||0;
   out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.';
