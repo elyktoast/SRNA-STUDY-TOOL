@@ -107,6 +107,11 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
             raise ValueError("Unsupported blueprint selection status")
         target = {key: classification_data.get(key) for key in ("domain", "section", "objective")}
         classification(**target)
+        evidence = request.get("evidence")
+        if (not isinstance(evidence, list) or not evidence
+                or not any(isinstance(p, dict) and p.get("textbook_id") == textbook_id
+                           for p in evidence)):
+            raise ValueError("Selected textbook does not match grounded evidence")
         if request.get("step") != "concept_card" or request.get("topic") != entry.get("topic"):
             raise ValueError("Concept request topic mismatch")
         if any(request.get(key) != value for key, value in target.items()):
