@@ -316,3 +316,11 @@ test('lecture panel is mounted in the AI create workspace, not after a detached 
  assert.doesNotMatch(ui,/evidencePanel\.after\(lecturePanel\)/);
  assert.match(ui,/storage\.planLectureQuestions\(/);
 });
+
+test('lecture planning UI offers optional user-selected blueprint without requiring domain codes',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/id="sl-lecture-use-objective"/);
+ assert.match(ui,/const blueprint=useObjective\?/);
+ assert.match(ui,/\.\.\.blueprint\}\)/);
+ assert.match(ui,/otherwise suggest automatically/);
+});
