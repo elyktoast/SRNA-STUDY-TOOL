@@ -68,7 +68,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
  const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
  const lecture_text=lecturePanel.querySelector('#sl-lecture-text').value.trim();
  const lectureFile=lecturePanel.querySelector('#sl-lecture-file').files?.[0];
- const textbook_id=genEl('sl-gen-book-select')?.value||researchBookSelect.value;
+ const textbook_id=genEl('sl-gen-book-select')?.value||genEl('sl-gen-book')?.value.trim()||researchBookSelect.value;
  const count=Number(lecturePanel.querySelector('#sl-lecture-count').value);
  results.replaceChildren();
  if(!textbook_id){out.textContent='Choose an indexed textbook in the generation workspace first.';return;}
