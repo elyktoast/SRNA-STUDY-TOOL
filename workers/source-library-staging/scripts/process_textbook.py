@@ -24,6 +24,10 @@ from import_extraction import read_jsonl
 class ReviewRequiredError(ValueError):
     """Source needs authenticated review; other backlog items may proceed."""
 
+    def __init__(self, message, diagnostics=None):
+        super().__init__(message)
+        self.diagnostics = diagnostics or {}
+
 
 def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=False, review_images=False, reviewed_pages=(), page_review_file=None):
     manifest = extract(pdf, out, owner_uid, r2_key, ocr=ocr, review_images=review_images)
@@ -79,7 +83,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
     }
     if apply:
         if not quality["ready_for_unqualified_indexing"]:
-            raise ReviewRequiredError("Unresolved OCR or low-text pages require documented review before indexing")
+            raise ReviewRequiredError("Unresolved OCR or low-text pages require documented review before indexing", diagnostics=result)
         url = os.environ.get("DATABASE_URL")
         if not url:
             raise ValueError("DATABASE_URL required for --apply")
