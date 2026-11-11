@@ -3,6 +3,7 @@ import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from lecture_generation_requests import requests, staging_http_jobs
+from lecture_to_question_plan import prepare_staging_jobs
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -78,6 +79,25 @@ class LectureHandoffTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "topic mismatch"):
             staging_http_jobs(prepared, textbook_id="t1",
                               item_id_factory=lambda: str(uuid4()))
+
+    def test_composed_lecture_preflight_only(self):
+        prepared_plan = self.sample()
+        prepared_plan["extraction"] = {"method": "headings", "requires_review": True}
+        with patch("lecture_to_question_plan.prepare", return_value=prepared_plan) as mock_prepare:
+            result = prepare_staging_jobs(object(), "owner", "lecture text",
+                                          textbook_id="t1",
+                                          item_id_factory=lambda: str(uuid4()),
+                                          count=1)
+        mock_prepare.assert_called_once()
+        self.assertEqual(result["count"], 1)
+        self.assertEqual(result["jobs"][0]["path"], "/generation/preflight")
+        self.assertFalse(result["auto_generate"])
+        self.assertFalse(result["database_writes"])
+
+    def test_composed_lecture_requires_book(self):
+        with self.assertRaisesRegex(ValueError, "textbook"):
+            prepare_staging_jobs(object(), "owner", "lecture",
+                                 textbook_id="", item_id_factory=lambda: str(uuid4()))
 
     def test_paid_execution_requires_explicit_flag(self):
         prepared = requests(self.sample(), mode="NCE")
