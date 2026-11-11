@@ -88,7 +88,11 @@ class LectureHandoffTests(unittest.TestCase):
 
     def test_composed_lecture_preflight_only(self):
         prepared_plan = self.sample()
-        prepared_plan["extraction"] = {"method": "headings", "requires_review": True}
+        prepared_plan.update({"requested": 1, "planned": 1,
+                              "coverage": {"lecture_concepts": 1, "grounded_concepts": 1,
+                                           "uncovered_concepts": 0},
+                              "missing_textbook_support": [],
+                              "extraction": {"method": "headings", "requires_review": True}})
         with patch("lecture_to_question_plan.prepare", return_value=prepared_plan) as mock_prepare:
             result = prepare_staging_jobs(object(), "owner", "lecture text",
                                           textbook_id="t1",
@@ -99,6 +103,9 @@ class LectureHandoffTests(unittest.TestCase):
         self.assertEqual(result["jobs"][0]["path"], "/generation/preflight")
         self.assertFalse(result["auto_generate"])
         self.assertFalse(result["database_writes"])
+        self.assertNotIn("evidence", result["lecture_plan"]["topics"][0])
+        self.assertNotIn("Grounded textbook evidence", str(result["lecture_plan"]))
+        self.assertEqual(result["lecture_plan"]["planned"], 1)
 
     def test_composed_lecture_requires_book(self):
         with self.assertRaisesRegex(ValueError, "textbook"):
