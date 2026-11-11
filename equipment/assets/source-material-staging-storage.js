@@ -171,7 +171,7 @@ async function generationRequest(path,request){
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
  const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
  const data=await response.json().catch(()=>({}));
- if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';throw Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);}
+ if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';const error=Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);error.status=response.status;error.rule=data.rule;throw error;}
  return data;
 }
 async function checkGroqConnection(){
@@ -185,7 +185,7 @@ async function checkGroqConnection(){
  if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
  return data;
 }
-async function generateOne(request){return generationRequest('/generation/one',request);}
+async function generateOne(request,{onRecovery=()=>{}}={}){try{return await generationRequest('/generation/one',request);}catch(error){if(!(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))&&!['AbortError','TimeoutError'].includes(error?.name))throw error;const recovery=await import('./generation-completion-recovery.js');return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}}
 async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
 async function listGeneratedDrafts(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};

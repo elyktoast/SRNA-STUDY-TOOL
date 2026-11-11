@@ -18,6 +18,8 @@ on:
       - 'scripts/test-source-library-reviewer-gateway.mjs'
       - 'scripts/test-source-library-staging-live.mjs'
       - 'scripts/test-source-library-reviewer-live.mjs'
+      - 'scripts/test-generation-completion-recovery.mjs'
+      - 'equipment/assets/generation-completion-recovery.js'
       - '.github/workflows/source-library-staging.yml'
   push:
     branches:
@@ -37,6 +39,8 @@ on:
       - 'scripts/test-source-library-reviewer-browser.mjs'
       - 'scripts/test-source-library-reviewer-gateway.mjs'
       - 'scripts/test-source-library-staging-live.mjs'
+      - 'scripts/test-generation-completion-recovery.mjs'
+      - 'equipment/assets/generation-completion-recovery.js'
       - '.github/workflows/source-library-staging.yml'
   workflow_dispatch:
     inputs:
@@ -65,6 +69,7 @@ jobs:
           node-version: '22'
       - name: Syntax check
         run: |
+          node --check equipment/assets/generation-completion-recovery.js
           node --check workers/source-library-staging/src/index.js
           node --check equipment/assets/source-material-staging-storage.js
           node --check equipment/assets/source-library-staging-ui.js
@@ -78,7 +83,7 @@ jobs:
           node --check workers/source-library-staging/reviewer-gateway/src/entry.js
           node --check scripts/test-source-library-reviewer-live.mjs
       - name: Staging Worker tests
-        run: node --test scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
+        run: node --test scripts/test-generation-completion-recovery.mjs scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
       - name: Python staging pipeline tests
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng

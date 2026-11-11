@@ -59,6 +59,25 @@ class GenerationCliTests(unittest.TestCase):
         adapter.return_value.return_value={"choice_plan":{}}
         self.assertEqual(author({"step":"concept_card","format":"MC"}), {"choice_plan":{}})
 
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.recover_completed")
+    @patch("run_grounded_generation_v2.build_evidence",return_value=EVIDENCE)
+    def test_completed_only_never_falls_through_when_missing_stale_or_disabled(self,evidence,recover,transport,adapter,generate):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        args=SimpleNamespace(**{**vars(ARGS),"execute":True,"confirm_paid_calls":True,"resume_completed_only":True,"textbook_id":"00000000-0000-4000-8000-000000000002"})
+        env={"STAGING_ONLY":"true","AI_GENERATION_OPT_IN":"true","AI_GENERATOR_MODEL":"generator","AI_GENERATION_CHECKPOINTS_ENABLED":"true"}
+        recover.return_value=None
+        with self.assertRaises(CompletedGenerationUnavailable):execute(object(),args,env)
+        with self.assertRaises(CompletedGenerationUnavailable):execute(object(),args,{**env,"AI_GENERATION_CHECKPOINTS_ENABLED":"false"})
+        transport.assert_not_called();adapter.assert_not_called();generate.assert_not_called()
+        recover.return_value={"item":{"item_id":"draft-1"},"can_publish":False}
+        result=execute(object(),args,env)
+        self.assertEqual(result["item"]["item_id"],"draft-1")
+        self.assertIn("_checkpoint_key",result)
+        transport.assert_not_called();adapter.assert_not_called();generate.assert_not_called()
+
     def test_rate_wait_buffer_never_exceeds_sixty_seconds_or_adds_more_attempts(self):
         from run_grounded_generation_v2 import _call_with_bounded_rate_wait
         from item_ai_https_transport_v2 import TransportError

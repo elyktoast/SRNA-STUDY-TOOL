@@ -72,6 +72,28 @@ class SourceQuoteSpanTests(unittest.TestCase):
                 self.assertTrue(1 <= len(span["text"]) <= 300)
                 self.assertIn(span["text"], original["excerpt"])
 
+    def test_option_aliases_restore_identity_without_changing_verdict_or_authorization(self):
+        original=copy.deepcopy(self.request)
+        response=copy.deepcopy(self.response)
+        response["judgments"][0]["passage_ids"]=["s0"]
+        response["judgments"][0]["quote_refs"]=[{"passage_id":"s0","span_id":"q1"}]
+        def transport(**kwargs):
+            sent=json.loads(kwargs["body"]["messages"][1]["content"])
+            self.assertEqual([p["passage_id"] for p in sent["source_passages"]],["s0","s1"])
+            self.assertEqual(sent["retrieval"]["option_audits"][0]["retrieved_passage_ids"],["s0"])
+            self.assertNotIn("key",sent)
+            return {"choices":[{"message":{"content":json.dumps(response)}}]}
+        adapter=make_adapter(endpoint="https://provider.example/v1",api_key="secret",model="reviewer",transport=transport,owner_opt_in=True)
+        result=adapter(self.request)
+        self.assertEqual(self.request,original)
+        self.assertEqual(result["judgments"][0]["passage_ids"],["p1"])
+        self.assertEqual(result["judgments"][0]["quotes"],["Sevoﬂurane is listed."])
+        self.assertEqual(result["judgments"][0]["verdict"],"refutes_distractor")
+        for alias in ("s99","s1"):
+            response["judgments"][0]["passage_ids"]=[alias]
+            response["judgments"][0]["quote_refs"]=[{"passage_id":alias,"span_id":"q1"}]
+            with self.subTest(alias=alias),self.assertRaises(ValueError):adapter(self.request)
+
     def test_adapter_uses_bounded_span_protocol_without_answer_leakage(self):
         calls = []
         def transport(**kwargs):

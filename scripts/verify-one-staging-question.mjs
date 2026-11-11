@@ -1,5 +1,6 @@
 // Explicit one-question acceptance run. Never retry paid generation or publish.
 import assert from 'node:assert/strict';
+import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 if (!process.argv.includes('--confirm-paid-generation')) throw Error('Explicit paid-generation confirmation required');
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
@@ -26,13 +27,14 @@ async function call(path,body){
   // Only fixed machine-readable categories; never log provider output or evidence.
   const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(v)?v:'UNCLASSIFIED';
   console.log(JSON.stringify({path,status:r.status,error:safe(data.error),rule:safe(data.rule),failed_step:safe(data.failed_step),validation_detail:safe(data.validation_detail),validation_contract:typeof data.validation_contract==='string'&&/^2026-11-10-v[0-9]{1,2}$/.test(data.validation_contract)?data.validation_contract:'UNCLASSIFIED'}));
-  throw Error('Staging acceptance request failed: HTTP '+r.status);
+  const error=Error('Staging acceptance request failed: HTTP '+r.status);error.status=r.status;error.rule=data.rule;throw error;
  }
  return data;
 }
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['4ff052a4-ab09-4fe4-90e4-f73431562adc','The final independent option review was truncated by the provider; the question passed its other automated checks but did not obtain complete option verification.'],
  ['445d3676-0efe-42b2-ba45-8c47f2220472','The allowed rewrite did not obtain a passing editorial review; independent option adjudication did not complete. Kept unpublished.'],
  ['578abeb7-edfa-4864-9a2f-cb0e611a5cde','Post-acceptance audit found that independent option evidence for the paired key omitted one response component; the earlier automated pass is superseded by stricter coverage verification.'],
  ['33921917-94a7-4382-bce1-a336675e75fd','The independent editorial edit did not preserve exact quoted conditions after one rewrite; source explanation passed but quality acceptance did not.'],
@@ -95,7 +97,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v18');
+assert.equal(preflight.authoring_contract,'2026-11-10-v19');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 const checkpointReady=await call('/generation/checkpoint-readiness');
@@ -111,7 +113,9 @@ assert.equal(connection.container_relay,'OK');
 assert.equal(connection.metadata_ready,true);
 assert.ok(connection.providers.every(p=>p.provider!=='gemini'));
 console.log('Signed container relay and active provider metadata verified');
-const generated=await call('/generation/one',request);
+let generated;
+try{generated=await call('/generation/one',{...request,...(process.env.SRNA_STAGING_ACCEPTANCE_ITEM_ID?{resume_completed_only:true}:{})});}
+catch(error){if(!isGenerationDisconnect(error))throw error;console.log('Generation connection interrupted; checking only the existing completed checkpoint');generated=await recoverCompletedGeneration(request,cached=>call('/generation/one',cached));}
 assert.equal(generated.can_publish,false);assert.equal(generated.published,false);
 assert.equal(generated.dry_run,false);assert.ok(generated.item);
 assert.match(generated.draft_id,/^[a-f0-9-]{36}$/);

@@ -17,6 +17,10 @@ from item_grounded_pipeline_v2 import generate_from_index
 from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
 
 
+class CompletedGenerationUnavailable(ValueError):
+    """A recovery-only request may never fall through into paid generation."""
+
+
 def _call_with_bounded_rate_wait(adapter, payload):
     """Retry once only after an explicit 429 with a bounded server delay."""
     import time
@@ -63,7 +67,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               page_start=args.page_start, page_end=args.page_end)
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-10-v18", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-10-v19", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
@@ -125,7 +129,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"authoring_contract": "2026-11-10-v18", "owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-10-v19", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         "textbook_id": args.textbook_id, "section_id": args.section_id,
@@ -158,6 +162,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         if recovered is not None:
             return {**recovered, "_checkpoint_key": {"textbook_id": args.textbook_id,
                 "request_hash": request_hash, "evidence_hash": evidence_hash}}
+    if getattr(args, "resume_completed_only", False):
+        raise CompletedGenerationUnavailable()
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):

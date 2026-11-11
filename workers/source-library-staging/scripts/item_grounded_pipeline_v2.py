@@ -71,7 +71,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=2)
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=3)
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,
