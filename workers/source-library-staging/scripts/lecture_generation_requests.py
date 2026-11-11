@@ -92,8 +92,8 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
     """
     if not isinstance(prepared, dict) or not isinstance(prepared.get("requests"), list):
         raise ValueError("Prepared lecture requests required")
-    if not isinstance(textbook_id, str) or not textbook_id.strip():
-        raise ValueError("Explicit indexed textbook ID required")
+    if textbook_id is not None and (not isinstance(textbook_id, str) or not textbook_id.strip()):
+        raise ValueError("Invalid textbook selection")
     if not callable(item_id_factory):
         raise ValueError("Trusted item ID factory required")
     if type(execute) is not bool:
@@ -113,9 +113,11 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
         target = {key: classification_data.get(key) for key in ("domain", "section", "objective")}
         classification(**target)
         evidence = request.get("evidence")
-        if (not isinstance(evidence, list) or not evidence
-                or not any(isinstance(p, dict) and p.get("textbook_id") == textbook_id
-                           for p in evidence)):
+        if not isinstance(evidence, list) or not evidence:
+            raise ValueError("Grounded evidence required")
+        chosen_book = textbook_id or evidence[0].get("textbook_id")
+        if not isinstance(chosen_book, str) or not any(
+                isinstance(p, dict) and p.get("textbook_id") == chosen_book for p in evidence):
             raise ValueError("Selected textbook does not match grounded evidence")
         if request.get("step") != "concept_card" or request.get("topic") != entry.get("topic"):
             raise ValueError("Concept request topic mismatch")
@@ -137,6 +139,6 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
         jobs.append({"path": "/generation/one" if execute else "/generation/preflight",
                      "body": {"topic": entry["topic"], "mode": request["mode"],
                               **target, "format": fmt, "item_id": normalized_id,
-                              "textbook_id": textbook_id}})
+                              "textbook_id": chosen_book}})
     return {"jobs": jobs, "count": len(jobs), "paid_calls_requested": execute,
             "auto_publish": False, "database_writes": False}
