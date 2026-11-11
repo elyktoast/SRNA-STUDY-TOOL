@@ -15,6 +15,21 @@ from process_textbook import ReviewRequiredError
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
+def safe_error_details(exc):
+    """Expose only structured PostgreSQL diagnostics; never exception text or SQL."""
+    details = {"error_type": type(exc).__name__}
+    sqlstate = getattr(exc, "sqlstate", None)
+    if isinstance(sqlstate, str) and re.fullmatch(r"[0-9A-Z]{5}", sqlstate):
+        details["sqlstate"] = sqlstate
+    diag = getattr(exc, "diag", None)
+    if diag is not None:
+        for field in ("column_name", "constraint_name", "table_name"):
+            value = getattr(diag, field, None)
+            if isinstance(value, str) and re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]{0,127}", value):
+                details[field] = value
+    return details
+
+
 
 def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
     if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
@@ -134,7 +149,7 @@ def process_backlog(client, owner_uid, limit=10, apply=False,
             results.append({"key": key, "ok": True, "indexed": False, "needs_review": True})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
-            results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
+            results.append({"key": key, "ok": False, **safe_error_details(exc)})
     return {"mode": "apply" if apply else "dry-run", "results": results,
             "succeeded": sum(bool(x["ok"]) and not x.get("skipped") and not x.get("needs_review") for x in results),
             "failed": sum(not x["ok"] for x in results),
@@ -221,7 +236,7 @@ def main():
             except Exception as exc:
                 summary = {"mode": "apply" if args.apply else "dry-run",
                            "results": [{"key": key, "ok": False,
-                                        "error_type": type(exc).__name__}],
+                                        **safe_error_details(exc)}],
                            "succeeded": 0, "failed": 1, "skipped": 0}
     else:
         summary = process_backlog(client, args.owner_uid, args.limit,
