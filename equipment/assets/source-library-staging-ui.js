@@ -97,7 +97,9 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   const held=data.classification?.held_count||0;
-  out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.';
+  const skipped=data.file_extraction?.skipped_blank_pages;
+  const blankNote=Array.isArray(skipped)&&skipped.length?' Blank pages/slides skipped: '+skipped.join(', ')+'.':'';
+  out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
   const ul=document.createElement('ul');
   for(const job of jobs){
    const li=document.createElement('li');
