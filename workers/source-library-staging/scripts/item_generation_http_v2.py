@@ -5,7 +5,7 @@ Cloudflare upload Worker. Defaults to evidence-only preflight, no model calls.
 """
 import json
 import re
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
@@ -42,11 +42,12 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
 
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
+        lecture_plan = path == "/generation/lecture-plan"
         textbook_list = path == "/generation/textbooks"
         readiness = path == "/generation/index-readiness"
         checkpoint_readiness = path == "/generation/checkpoint-readiness"
         diagnostic = path == "/generation/provider-check"
-        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness", "/generation/textbooks") and not draft_match:
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness", "/generation/textbooks", "/generation/lecture-plan") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
@@ -79,6 +80,38 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if lecture_plan:
+            if method != "POST":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            try:
+                length = int(environ.get("CONTENT_LENGTH", "0"))
+                if not 1 <= length <= 16384:
+                    raise ValueError("Invalid lecture request length")
+                data = json.loads(environ["wsgi.input"].read(length))
+                if (not isinstance(data, dict) or
+                        not {"lecture_text", "textbook_id"} <= data.keys() or
+                        not data.keys() <= {"lecture_text", "textbook_id", "mode",
+                                            "format", "count", "domain", "section", "objective"}):
+                    raise ValueError("Invalid lecture request")
+                lecture_text, book = data["lecture_text"], data["textbook_id"]
+                if (not isinstance(lecture_text, str) or not 1 <= len(lecture_text.strip()) <= 12000
+                        or not isinstance(book, str) or not 1 <= len(book) <= 200
+                        or type(data.get("count", 1)) is not int
+                        or not 1 <= data.get("count", 1) <= 5):
+                    raise ValueError("Invalid lecture input")
+                from lecture_to_question_plan import prepare_staging_jobs
+                with conn_factory() as conn:
+                    result = prepare_staging_jobs(
+                        conn, owner, lecture_text, textbook_id=book,
+                        item_id_factory=lambda: str(uuid4()),
+                        mode=data.get("mode", "NCE"), format=data.get("format", "MC"),
+                        count=data.get("count", 1), domain=data.get("domain"),
+                        section=data.get("section"), objective=data.get("objective"))
+                return respond("200 OK", result)
+            except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError):
+                return respond("400 Bad Request", {"error": "invalid_lecture_request"})
+            except Exception:
+                return respond("503 Service Unavailable", {"error": "lecture_planning_unavailable"})
         if textbook_list:
             try:
                 with conn_factory() as conn:
