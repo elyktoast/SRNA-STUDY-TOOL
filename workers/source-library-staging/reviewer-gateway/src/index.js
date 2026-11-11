@@ -427,7 +427,7 @@ export default {
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&checkpointCheck){
     const data=await upstream.clone().json().catch(()=>null);
     const allowed=['ready','check','generation_performed','database_writes'];
