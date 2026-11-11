@@ -50,7 +50,23 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
                         section=section, objective=objective, format=format)
     handoff = staging_http_jobs(selected, textbook_id=textbook_id,
                                 item_id_factory=item_id_factory, execute=False)
-    return {"lecture_plan": planned, "classification": {
+    # Return planning metadata only. Never echo retrieved textbook passages or
+    # lecture text into an HTTP response or client-side diagnostics.
+    public_plan = {
+        "requested": planned["requested"],
+        "planned": planned["planned"],
+        "coverage": planned["coverage"],
+        "extraction": planned["extraction"],
+        "lecture_text_stored": False,
+        "topics": [
+            {"title": topic["title"],
+             "question_count": topic["question_count"],
+             "lecture_locator": topic.get("lecture_locator")}
+            for topic in planned["topics"]
+        ],
+        "missing_textbook_support": planned["missing_textbook_support"],
+    }
+    return {"lecture_plan": public_plan, "classification": {
                 "held_for_classification": selected["held_for_classification"],
                 "held_count": selected["held_count"]},
             **handoff, "auto_generate": False, "auto_publish": False,
