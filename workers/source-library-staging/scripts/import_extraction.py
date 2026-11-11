@@ -181,6 +181,21 @@ def validate_source_replacement(exists, prior_digest, incoming_digest):
         raise ValueError("Reindex blocked: source PDF changed; create a new version")
 
 
+def check_db_text(value, field, index=None):
+    """Fail before psycopg adaptation with a safe, actionable location."""
+    if not isinstance(value, str):
+        raise ValueError(f"Invalid database text field: {field}")
+    try:
+        value.encode("utf-8", errors="strict")
+    except UnicodeEncodeError as exc:
+        location = f" at record {index}" if index is not None else ""
+        raise ValueError(f"Invalid Unicode in {field}{location}: code point U+{ord(value[exc.start]):04X}") from None
+    if "\\x00" in value:
+        location = f" at record {index}" if index is not None else ""
+        raise ValueError(f"PostgreSQL NUL character in {field}{location}")
+    return value
+
+
 def import_passages(folder, manifest, connection, *,
                     authenticated_reviewer_uid=None, reviewer_is_admin=False):
     # This is the central DB write boundary, including direct CLI and R2 imports.
@@ -309,7 +324,7 @@ def import_passages(folder, manifest, connection, *,
                             """insert into source_library_staging.sections
                                (textbook_id,parent_section_id,heading,section_order,start_page)
                                values (%s,%s,%s,%s,%s) returning id""",
-                            (textbook_id, parent_id, section["heading"], order,
+                            (textbook_id, parent_id, check_db_text(section["heading"], "section.heading", order), order,
                              section["start_page"]),
                         )
                         section_id = cur.fetchone()[0]
@@ -320,7 +335,7 @@ def import_passages(folder, manifest, connection, *,
                 section_id = next((sid for page, sid in reversed(section_ids)
                                    if page <= item["page_start"]), None)
                 batch.append((textbook_id,section_id,item["chunk_index"],item["page_start"],
-                              item["page_end"],item["content"]))
+                              item["page_end"],check_db_text(item["content"], "passage.content", item["chunk_index"])))
                 if len(batch) >= MAX_BATCH:
                     cur.executemany(
                         """insert into source_library_staging.passages
