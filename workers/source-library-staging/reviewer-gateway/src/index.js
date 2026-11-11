@@ -268,7 +268,7 @@ export default {
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?12*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
   if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
@@ -379,7 +379,7 @@ export default {
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>(lectureFile?12*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>(lectureFile?36*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
