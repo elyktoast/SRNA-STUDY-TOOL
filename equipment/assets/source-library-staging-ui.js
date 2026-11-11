@@ -400,12 +400,62 @@ async function renderDraftCollection(view='drafts'){
  const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank'&&d.status!=='rejected');
  const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);
  if(!drafts.length){const empty=document.createElement('p');empty.textContent='No questions in this collection.';out.append(empty);return;}
+ const selectable=view==='bank'?[]:drafts.filter(d=>['pending_review','needs_revision'].includes(d.status));
+ const selected=new Set(),checkboxes=[];
+ if(selectable.length){
+  const toolbar=document.createElement('div');toolbar.className='sl-row';toolbar.setAttribute('aria-label','Bulk draft review actions');
+  const selectAll=document.createElement('input');selectAll.type='checkbox';selectAll.setAttribute('aria-label','Select all reviewable drafts');
+  const countLabel=document.createElement('span');countLabel.textContent='0 selected';
+  const bulkApprove=document.createElement('button');bulkApprove.type='button';bulkApprove.textContent='Approve selected to bank';bulkApprove.disabled=true;
+  const bulkRemove=document.createElement('button');bulkRemove.type='button';bulkRemove.textContent='Remove selected';bulkRemove.disabled=true;
+  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkApprove.disabled=bulkRemove.disabled=!selected.size;selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
+  selectAll.onchange=()=>{for(const entry of checkboxes){entry.input.checked=selectAll.checked;if(selectAll.checked)selected.add(entry.id);else selected.delete(entry.id);}sync();};
+  const execute=async status=>{
+   const ids=[...selected];if(!ids.length)return;
+   let notes;
+   if(status==='approved_for_bank'){
+    notes=window.prompt('Clinical review notes for '+ids.length+' selected drafts (required). Only drafts passing individual evidence revalidation will be approved:');
+    if(notes===null)return;
+    if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required for bulk approval.';return;}
+    if(!window.confirm('Approve '+ids.length+' selected drafts to the private staging bank? Each must pass its own validation. No questions will be published.'))return;
+   }else{
+    if(!window.confirm('Remove '+ids.length+' selected drafts from the active queue? Records remain in audit history.'))return;
+    notes='Removed from active queue by admin (bulk review)';
+   }
+   bulkApprove.disabled=bulkRemove.disabled=true;selectAll.disabled=true;
+   let succeeded=0;const failures=[];
+   for(const id of ids){
+    try{
+     if(status==='approved_for_bank'){
+      const checked=await storage.revalidateGeneratedDraft(id);
+      if(checked.published!==false||checked.can_publish===true||!Array.isArray(checked.issues)||checked.issues.length)
+       throw Error('Evidence validation failed or unresolved issues remain');
+     }
+     const response=await storage.reviewGeneratedDraft(id,status,notes);
+     if(response.status!==status||response.published!==false)throw Error('Review state not verified');
+     succeeded++;
+    }catch(error){failures.push(id+': '+(error.message||'Unknown error'));}
+   }
+   try{await renderDraftCollection('drafts');}catch(error){failures.push('Refresh: '+error.message);}
+   genEl('sl-gen-status').textContent=succeeded+'/'+ids.length+' drafts '+(status==='approved_for_bank'?'approved':'removed')+'.'+(failures.length?' Failed: '+failures.join('; '):'');
+  };
+  bulkApprove.onclick=()=>execute('approved_for_bank');
+  bulkRemove.onclick=()=>execute('rejected');
+  const label=document.createElement('label');label.append(selectAll,document.createTextNode(' Select all reviewable'));
+  toolbar.append(label,countLabel,bulkApprove,bulkRemove);out.append(toolbar);
+  out._bulkSelection={selected,checkboxes,sync};
+ }
  for(const draft of drafts){
   const row=document.createElement('div');row.className='sl-item';
   const info=document.createElement('div');info.className='sl-name';
   const title=document.createElement('strong');title.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
   const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
   info.append(title,meta);const actions=document.createElement('div');actions.className='sl-actions';
+  if(out._bulkSelection&&['pending_review','needs_revision'].includes(draft.status)&&view!=='bank'){
+   const input=document.createElement('input');input.type='checkbox';input.setAttribute('aria-label','Select draft '+draft.draft_id);
+   input.onchange=()=>{if(input.checked)out._bulkSelection.selected.add(draft.draft_id);else out._bulkSelection.selected.delete(draft.draft_id);out._bulkSelection.sync();};
+   out._bulkSelection.checkboxes.push({id:draft.draft_id,input});row.prepend(input);
+  }
   const open=document.createElement('button');open.type='button';open.textContent='Open';open.onclick=()=>openSavedDraft(draft.draft_id,open);actions.append(open);
   if(view!=='bank'&&['pending_review','needs_revision'].includes(draft.status)){
    const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';
