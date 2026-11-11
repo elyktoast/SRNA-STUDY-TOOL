@@ -120,7 +120,14 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
       transfer.textContent='Use this lecture topic in AI Question Studio';
       transfer.addEventListener('click',()=>{
        const body=job.body;
-       if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format))return;
+       if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format)||
+          !/^(I|II|III|IV)$/.test(body.domain)||!/^[A-Z]$/.test(body.section)||
+          !/^(I|II|III|IV)\\.[A-Z]\\.\\d+(?:\\.\\d+)*$/.test(body.objective)||
+          !body.objective.startsWith(body.domain+'.'+body.section+'.')||
+          typeof body.topic!=='string'||!body.topic.trim()||
+          typeof body.textbook_id!=='string'||!body.textbook_id.trim()){
+        out.textContent='Lecture question classification is incomplete. Choose a validated objective before generation.';return;
+       }
        const topicField=el('sl-topic'),modeField=el('sl-mode'),formatField=el('sl-format');
        topicField.value=body.topic;modeField.value=body.mode;formatField.value=body.format;
        const bookSelect=genEl('sl-gen-book-select');
