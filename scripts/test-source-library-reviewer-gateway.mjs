@@ -402,3 +402,14 @@ test('lecture transfer rejects missing exam blueprint classification',()=>{
  assert.match(ui,/Lecture question classification is incomplete/);
  assert.match(ui,/body\.objective\.startsWith\(body\.domain\+'\.'\+body\.section\+'\.'\)/);
 });
+
+test('lecture blueprint objective pattern accepts real NCE objective IDs',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const pattern=ui.match(/!\/(\^\(I\|II\|III\|IV\).*?\$)\/\.test\(body\.objective\)/);
+ assert.ok(pattern,'lecture objective validator must exist');
+ const validator=new RegExp(pattern[1]);
+ assert.equal(validator.test('II.A.3'),true);
+ assert.equal(validator.test('IV.C.12.1'),true);
+ assert.equal(validator.test('II.A'),false);
+ assert.equal(validator.test('II/A/3'),false);
+});
