@@ -367,3 +367,11 @@ test('lecture PDF preview stays local and invalidates old object URLs',()=>{
  assert.match(ui,/Local PDF lecture preview/);
  assert.match(ui,/lectureInput\.addEventListener\('change'/);
 });
+
+test('file plan responses must pass fail-closed gateway schema validation',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&lectureFile\)/);
+ assert.match(gateway,/unsafe_lecture_file_plan/);
+ assert.match(gateway,/data\.paid_calls_requested!==false/);
+ assert.match(gateway,/extraction\.requires_visual_review!==true/);
+});
