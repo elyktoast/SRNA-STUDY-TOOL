@@ -16,7 +16,7 @@ def requests(plan, *, mode, domain, section, objective, format="MC"):
         for index in range(count):
             step = build_step("concept_card", mode=mode, domain=domain,
                               section=section, objective=objective,
-                              evidence=topic["evidence"])
+                              evidence=topic["evidence"], topic=topic["title"])
             result.append({"topic": topic["title"],
                            "lecture_locator": topic.get("lecture_locator"),
                            "question_slot": index + 1,
