@@ -8,7 +8,7 @@ import re
 HEADING = re.compile(r"^(?:#{1,4}\s+|(?:topic|section|unit|module)\s*\d*\s*[:.-]\s*)", re.I)
 OBJECTIVE = re.compile(r"^(?:learning\s+)?objectives?\s*[:.-]\s*(.*)$", re.I)
 BULLET = re.compile(r"^(?:[-*•]\s+|\d+[.)]\s+)")
-PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*$", re.I)
+PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
 
 
 def extract(text, *, max_concepts=60):
