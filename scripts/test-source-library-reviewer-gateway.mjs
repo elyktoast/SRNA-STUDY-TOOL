@@ -341,3 +341,10 @@ test('staging approval UI blocks unresolved current-index validation issues',()=
  assert.match(ui,/if\(checked\.issues\.length\)throw Error/);
  assert.match(ui,/unresolved validation issue\(s\)/);
 });
+
+test('AI workspace has a dedicated approved bank tab sharing the draft collection view',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/data-sl-ai-view="bank" aria-pressed="false">Approved bank/);
+ assert.match(ui,/view==='bank'\|\|view==='drafts'/);
+ assert.match(ui,/renderDraftCollection\(view\)/);
+});
