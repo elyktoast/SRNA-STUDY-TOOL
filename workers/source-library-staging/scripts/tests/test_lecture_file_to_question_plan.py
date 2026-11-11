@@ -109,6 +109,20 @@ class LectureFilePlanningTests(unittest.TestCase):
         self.assertEqual(result['file_extraction']['text_only_visual_pages'],[1])
         self.assertEqual(result['file_extraction']['review_pages'],[])
 
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_zero_jobs_exposes_aggregate_failure_counts(self, extract):
+        extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
+            'pages':[{'page':1,'text':'Airway management'}]}
+        plan = {'jobs':[],'count':0,'classification':{'held_count':0},
+                'lecture_plan':{'coverage':{'lecture_concepts':1,
+                    'grounded_concepts':0,'uncovered_concepts':1}}}
+        with patch('lecture_to_question_plan.prepare_staging_jobs', return_value=plan):
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id')
+        self.assertEqual(result['planning_diagnostics']['extracted_concepts'],1)
+        self.assertEqual(result['planning_diagnostics']['grounded_concepts'],0)
+        self.assertEqual(result['planning_diagnostics']['missing_textbook_support'],1)
+
     def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
         from pathlib import Path
         source = (Path(__file__).resolve().parents[1] / 'source_review_wsgi_v2.py').read_text()
