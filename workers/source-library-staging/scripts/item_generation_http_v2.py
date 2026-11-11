@@ -95,6 +95,11 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 raw = base64.b64decode(payload["file_base64"], validate=True)
                 if len(raw) > 8 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
                     raise ValueError("Invalid lecture file")
+                start, end = payload.get("page_start"), payload.get("page_end")
+                if (start is None) != (end is None) or (
+                        start is not None and (type(start) is not int or type(end) is not int
+                                               or not 1 <= start <= end <= 500)):
+                    raise ValueError("Invalid lecture page range")
                 from lecture_file_to_question_plan import prepare_lecture_file_jobs
                 with conn_factory() as conn:
                     result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=payload["textbook_id"], item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
