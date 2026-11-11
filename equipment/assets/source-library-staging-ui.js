@@ -52,8 +52,8 @@ lectureInput.addEventListener('change',()=>{
  const file=lectureInput.files?.[0];if(!file)return;
  const info=document.createElement('p');info.textContent=file.name+' · '+(file.size/1048576).toFixed(2)+' MB';
  lecturePreview.append(info);
- if(!/\\.(pdf|pptx)$/i.test(file.name)||file.size>8*1048576||file.size===0){info.textContent+=' — unsupported or oversized file';return;}
- if(/\\.pdf$/i.test(file.name)){
+ if(!/\.(pdf|pptx)$/i.test(file.name)||file.size>8*1048576||file.size===0){info.textContent+=' — unsupported or oversized file';return;}
+ if(/\.pdf$/i.test(file.name)){
   lecturePreviewUrl=URL.createObjectURL(file);
   const frame=document.createElement('iframe');frame.title='Local PDF lecture preview';frame.style.cssText='width:100%;height:360px;border:1px solid #aabbd1;border-radius:8px';
   frame.src=lecturePreviewUrl;lecturePreview.append(frame);
