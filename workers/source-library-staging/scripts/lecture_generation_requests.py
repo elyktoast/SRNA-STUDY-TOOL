@@ -132,7 +132,6 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
         jobs.append({"path": "/generation/one" if execute else "/generation/preflight",
                      "body": {"topic": entry["topic"], "mode": request["mode"],
                               **target, "format": fmt, "item_id": normalized_id,
-                              "textbook_id": textbook_id, "execute": execute,
-                              "confirm_paid_calls": execute}})
+                              "textbook_id": textbook_id}})
     return {"jobs": jobs, "count": len(jobs), "paid_calls_requested": execute,
             "auto_publish": False, "database_writes": False}
