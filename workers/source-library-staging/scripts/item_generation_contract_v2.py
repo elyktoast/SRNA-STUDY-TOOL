@@ -88,7 +88,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "
             "Omit states from final options; supply error_pattern as null ONLY for the original key and a specific learner "
             "error for EACH of the other three options, including the option correct under the separate alternative case. "
-            "The alternate case is not the original question. In the stem use stem_condition verbatim exactly once; omit the alternate "
+            "The alternate case is not the original question. For item_draft, put the literal token {{STEM_CONDITION}} exactly once in stem; the server inserts stem_condition verbatim. For rationale, use the already rendered draft. Omit the alternate "
             "condition and do not reveal the response states. Outside this complete condition phrase, add only neutral context and the lead-in. Do not add dependent measurements or physiological findings outside the replaceable phrase; they would be left unchanged in the alternate case. "
             "Do not return a new counterfactual in the rationale: the server preserves the exact planned stem edit. "
             "Source and independent blind checks will still test the plan; never assert approval.")

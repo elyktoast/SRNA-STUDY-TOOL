@@ -26,7 +26,7 @@ async function call(path,body){
  if(!r.ok){
   // Only fixed machine-readable categories; never log provider output or evidence.
   const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(v)?v:'UNCLASSIFIED';
-  console.log(JSON.stringify({path,status:r.status,error:safe(data.error),rule:safe(data.rule),failed_step:safe(data.failed_step),validation_detail:safe(data.validation_detail),validation_contract:typeof data.validation_contract==='string'&&/^2026-11-10-v[0-9]{1,2}$/.test(data.validation_contract)?data.validation_contract:'UNCLASSIFIED'}));
+  console.log(JSON.stringify({path,status:r.status,error:safe(data.error),rule:safe(data.rule),failed_step:safe(data.failed_step),validation_detail:safe(data.validation_detail),validation_contract:typeof data.validation_contract==='string'&&/^2026-11-(10|11)-v[0-9]{1,2}$/.test(data.validation_contract)?data.validation_contract:'UNCLASSIFIED'}));
   const error=Error('Staging acceptance request failed: HTTP '+r.status);error.status=r.status;error.rule=data.rule;throw error;
  }
  return data;
@@ -97,7 +97,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-10-v19');
+assert.equal(preflight.authoring_contract,'2026-11-11-v20');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 const checkpointReady=await call('/generation/checkpoint-readiness');

@@ -2,6 +2,20 @@
 from copy import deepcopy
 import re
 
+CONDITION_SLOT = "{{STEM_CONDITION}}"
+
+
+def render_condition(plan, draft):
+    """Insert the authored case literally; never infer or repair clinical prose."""
+    stem = draft.get("stem")
+    if not isinstance(stem, str) or CONDITION_SLOT not in stem:
+        return draft  # Older literal drafts still have to pass strict bind().
+    if (stem.count(CONDITION_SLOT) != 1
+            or plan["stem_condition"] in stem
+            or plan["alternate_condition"] in stem):
+        raise ValueError("Generated draft differs from its choice plan: condition")
+    return {**draft, "stem": stem.replace(CONDITION_SLOT, plan["stem_condition"])}
+
 
 def validate(plan):
     fields = {"response_variables", "stem_condition", "alternate_condition", "key", "alternate_key", "options"}

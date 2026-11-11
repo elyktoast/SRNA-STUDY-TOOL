@@ -1,5 +1,5 @@
 name: Explicit staging one-question acceptance
-# Verify v19 compact complete citations and safe connection recovery.
+# Verify v20 literal case rendering and complete independent source checks.
 on:
   workflow_dispatch:
     inputs:
