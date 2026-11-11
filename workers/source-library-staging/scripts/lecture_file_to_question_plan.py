@@ -37,5 +37,6 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                                   section=section, objective=objective)
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
+                                 "selected_pages": [p["page"] for p in selected],
                                  "review_pages": [], "requires_visual_review": False}
     return result
