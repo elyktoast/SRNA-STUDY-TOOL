@@ -12,7 +12,8 @@ MAX_LECTURE_PAGES = 500
 def extract_lecture(data, filename, *, enable_ocr=False):
     if not isinstance(data, bytes) or not 0 < len(data) <= MAX_LECTURE_BYTES:
         raise ValueError("Lecture file is empty or exceeds 25 MB")
-    if not isinstance(filename, str) or len(filename) > 255:
+    if (not isinstance(filename, str) or not 1 <= len(filename) <= 255
+            or "/" in filename or "\\\\" in filename or "\\x00" in filename):
         raise ValueError("Invalid filename")
     name = filename.lower()
     if name.endswith(".pdf"):
