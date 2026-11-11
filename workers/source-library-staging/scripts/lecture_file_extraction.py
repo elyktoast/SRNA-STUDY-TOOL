@@ -8,7 +8,7 @@ from io import BytesIO
 MAX_LECTURE_BYTES = 25 * 1024 * 1024
 MAX_LECTURE_PAGES = 500
 
-def extract_lecture(data, filename):
+def extract_lecture(data, filename, *, enable_ocr=False):
     if not isinstance(data, bytes) or not 0 < len(data) <= MAX_LECTURE_BYTES:
         raise ValueError("Lecture file is empty or exceeds 25 MB")
     if not isinstance(filename, str) or len(filename) > 255:
@@ -26,6 +26,14 @@ def extract_lecture(data, filename):
             for i, page in enumerate(doc):
                 value = page.get_text("text", sort=True).strip()
                 images = len(page.get_images(full=True))
+                if enable_ocr and (not value or (images and len(value) < 100)):
+                    try:
+                        ocr_page = page.get_textpage_ocr(language="eng", dpi=180, full=False)
+                        ocr_text = page.get_text("text", textpage=ocr_page, sort=True).strip()
+                        if len(ocr_text) > len(value):
+                            value = ocr_text
+                    except (RuntimeError, OSError):
+                        pass  # Missing Tesseract or failed OCR remains flagged for review.
                 pages.append({"page": i + 1, "text": value,
                               "needs_visual_review": not bool(value) or (images > 0 and len(value) < 100),
                               "image_count": images})
@@ -61,5 +69,5 @@ def extract_lecture(data, filename):
     review_pages = [p["page"] for p in pages if p["needs_visual_review"]]
     return {"format": kind, "filename": filename, "page_count": len(pages),
             "pages": pages, "requires_ocr_or_visual_review": bool(review_pages),
-            "review_pages": review_pages, "extraction_complete": not bool(review_pages),
+            "review_pages": review_pages, "extraction_complete": not bool(review_pages), "ocr_requested": bool(enable_ocr),
             "database_writes": False, "provider_calls": False}
