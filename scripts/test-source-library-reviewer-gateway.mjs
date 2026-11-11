@@ -264,3 +264,32 @@ test('Cloudflare delivery metadata reaches the container without its provider cr
  assert.equal(observed.AI_AUTHORING_PROVIDER,'cloudflare');assert.equal(observed.AI_CLOUDFLARE_MODEL,'@cf/openai/gpt-oss-120b');
  assert.ok(!Object.hasOwn(observed,'AI_CLOUDFLARE_API_TOKEN'));
 });
+
+
+test('lecture planning forwards authenticated POST to private reviewer without generation',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ let forwarded=false;
+ const safe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  forwarded=true;
+  assert.equal(req.method,'POST');
+  assert.equal(new URL(req.url).pathname,'/generation/lecture-plan');
+  const body=await req.json();
+  assert.equal(body.lecture_text,'Airway management objectives');
+  return Response.json({jobs:[],count:0,auto_generate:false,auto_publish:false,database_writes:false});
+ }})}};
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({lecture_text:'Airway management objectives',textbook_id:'book-1'})}),safe);
+ assert.equal(res.status,200);
+ assert.equal((await res.json()).auto_generate,false);
+ assert.equal(forwarded,true);
+});
+test('lecture planning enforces POST CORS and 16KiB limit',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const options=await request(endpoint,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Content-Type, Authorization'}});
+ assert.equal(options.status,204);
+ const get=await request(endpoint,{method:'GET'});
+ assert.equal(get.status,405);
+ const before=calls.container;
+ const oversized=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'x'.repeat(16385)}),generationEnv);
+ assert.equal(oversized.status,413);
+ assert.equal(calls.container,before);
+});
