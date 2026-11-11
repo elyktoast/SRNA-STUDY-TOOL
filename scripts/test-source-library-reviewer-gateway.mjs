@@ -275,7 +275,7 @@ test('lecture planning forwards authenticated POST to private reviewer without g
   assert.equal(new URL(req.url).pathname,'/generation/lecture-plan');
   const body=await req.json();
   assert.equal(body.lecture_text,'Airway management objectives');
-  return Response.json({jobs:[],count:0,auto_generate:false,auto_publish:false,database_writes:false});
+  return Response.json({jobs:[],count:0,auto_generate:false,auto_publish:false,database_writes:false,paid_calls_requested:false});
  }})}};
  const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({lecture_text:'Airway management objectives',textbook_id:'book-1'})}),safe);
  assert.equal(res.status,200);
