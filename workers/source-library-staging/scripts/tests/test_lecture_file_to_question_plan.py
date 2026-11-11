@@ -36,5 +36,29 @@ class LectureFilePlanningTests(unittest.TestCase):
             prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
                 textbook_id='book',item_id_factory=lambda:'id')
 
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_range_excludes_unselected_visual_pages(self, extract):
+        extract.return_value = {'format':'pdf','page_count':3,'review_pages':[3],
+            'requires_ocr_or_visual_review':True,
+            'pages':[{'page':1,'text':'Airway anatomy','needs_visual_review':False},
+                     {'page':2,'text':'Laryngoscopy','needs_visual_review':False},
+                     {'page':3,'text':'Diagram','needs_visual_review':True}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id',page_start=1,page_end=2)
+        self.assertEqual(result['file_extraction']['selected_pages'],[1,2])
+        self.assertNotIn('Diagram',planner.call_args.args[2])
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_range_must_be_complete_and_bounded(self, extract):
+        extract.return_value = {'format':'pdf','page_count':2,'pages':[],
+            'requires_ocr_or_visual_review':False}
+        for start,end in [(1,None),(0,1),(2,1),(1,3),(True,1)]:
+            with self.subTest(start=start,end=end),self.assertRaises(ValueError):
+                prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                    textbook_id='book',item_id_factory=lambda:'id',
+                    page_start=start,page_end=end)
+
 if __name__ == '__main__':
     unittest.main()
