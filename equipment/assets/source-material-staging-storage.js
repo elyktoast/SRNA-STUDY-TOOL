@@ -260,5 +260,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
 })();
