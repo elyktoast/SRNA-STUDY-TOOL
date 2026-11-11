@@ -257,18 +257,18 @@ export default {
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((generation||generateOne||lecturePlan||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||lecturePlan||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||lecturePlan||lecturePlan||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
-  if((generation||generateOne||lecturePlan||lecturePlan||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if((generation||generateOne||lecturePlan||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((generation||generateOne||lecturePlan||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
@@ -373,7 +373,7 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||generateOne||lecturePlan||lecturePlan||draftWrite){
+   if(generation||generateOne||lecturePlan||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
@@ -385,7 +385,7 @@ export default {
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||generateOne||lecturePlan||lecturePlan||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||lecturePlan||draftWrite)?{body}:{})
+    method:(generation||generateOne||lecturePlan||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
    if(upstream.status===500 && (generation||generateOne||lecturePlan)){
