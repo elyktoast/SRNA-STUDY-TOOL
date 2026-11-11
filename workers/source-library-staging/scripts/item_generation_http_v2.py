@@ -104,7 +104,14 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 with conn_factory() as conn:
                     result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=payload["textbook_id"], item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
                 return respond("200 OK", result)
-            except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError, base64.binascii.Error):
+            except ValueError as exc:
+                # Report an oversized extracted lecture separately from malformed uploads.
+                if str(exc) == "Extracted lecture exceeds planning limit; select relevant pages":
+                    return respond("422 Unprocessable Entity", {"error": "lecture_text_exceeds_planning_limit", "action": "select_smaller_page_range"})
+                import logging
+                logging.getLogger(__name__).warning("invalid_lecture_file_request reason=%s", type(exc).__name__)
+                return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
+            except (TypeError, KeyError, UnicodeError, json.JSONDecodeError, base64.binascii.Error):
                 return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
             except Exception as exc:
                 import logging
