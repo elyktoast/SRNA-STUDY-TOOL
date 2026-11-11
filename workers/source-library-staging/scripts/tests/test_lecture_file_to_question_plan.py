@@ -60,6 +60,25 @@ class LectureFilePlanningTests(unittest.TestCase):
                     textbook_id='book',item_id_factory=lambda:'id',
                     page_start=start,page_end=end)
 
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_blank_page_is_skipped_but_image_only_page_is_held(self, extract):
+        extract.return_value = {'format':'pdf','page_count':2,'review_pages':[1],
+            'pages':[{'page':1,'text':'','needs_visual_review':True,'image_count':0,'vector_count':0},
+                     {'page':2,'text':'Airway anatomy','needs_visual_review':False}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id')
+        self.assertEqual(result['file_extraction']['skipped_blank_pages'],[1])
+        self.assertFalse(result['file_extraction']['requires_visual_review'])
+        self.assertIn('Airway anatomy',planner.call_args.args[2])
+        extract.return_value['pages'][0]['image_count'] = 1
+        with patch('lecture_to_question_plan.prepare_staging_jobs') as planner:
+            held = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id')
+            planner.assert_not_called()
+        self.assertEqual(held['held_reason'],'visual_review_required')
+
     def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
         from pathlib import Path
         source = (Path(__file__).resolve().parents[1] / 'source_review_wsgi_v2.py').read_text()
