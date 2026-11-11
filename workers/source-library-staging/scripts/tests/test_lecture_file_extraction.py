@@ -65,5 +65,18 @@ class LectureFileExtractionTests(unittest.TestCase):
         self.assertEqual(result['pages'][0]['image_count'], 1)
         self.assertIn('Hemodynamic waveform', result['pages'][0]['text'])
 
+    def test_pdf_vector_diagram_is_flagged(self):
+        try:
+            import fitz
+        except ImportError:
+            self.skipTest('PyMuPDF not installed')
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text((50, 50), 'Hemodynamic physiology')
+        page.draw_line((50, 100), (200, 100))
+        result = extract_lecture(doc.tobytes(), 'diagram.pdf')
+        self.assertGreater(result['pages'][0]['vector_count'], 0)
+        self.assertEqual(result['review_pages'], [1])
+
 if __name__ == '__main__':
     unittest.main()
