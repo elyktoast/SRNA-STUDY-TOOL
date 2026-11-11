@@ -396,3 +396,9 @@ test('lecture evidence handoff retains explicit paid-generation confirmation',()
  assert.match(ui,/if\(!confirm\('Generate one staging AI question\?/);
  assert.match(ui,/storage\.generateOne\(request,/);
 });
+
+test('lecture transfer rejects missing exam blueprint classification',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/Lecture question classification is incomplete/);
+ assert.match(ui,/body\.objective\.startsWith\(body\.domain\+'\.'\+body\.section\+'\.'\)/);
+});
