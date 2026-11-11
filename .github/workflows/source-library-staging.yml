@@ -86,18 +86,19 @@ jobs:
         run: node --test scripts/test-generation-completion-recovery.mjs scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
       - name: Python staging pipeline tests
         run: |
-          # Hosted runners often already include Tesseract. Avoid unnecessary apt
-          # network calls, which can stall when Ubuntu mirrors are unreachable.
-          if ! command -v tesseract >/dev/null 2>&1 || ! tesseract --list-langs 2>/dev/null | grep -qx eng; then
-            sudo env DEBIAN_FRONTEND=noninteractive timeout 90s apt-get update -o Acquire::Retries=0 -o Acquire::http::Timeout=15 -qq
-            sudo env DEBIAN_FRONTEND=noninteractive timeout 90s apt-get install -y -qq -o Acquire::Retries=0 -o Acquire::http::Timeout=15 tesseract-ocr tesseract-ocr-eng
+          # Unit tests must not depend on Ubuntu apt mirror availability.
+          # OCR engine installation is validated separately by the reviewer
+          # container build; the Python unit suite exercises extraction logic.
+          if command -v tesseract >/dev/null 2>&1; then
+            tesseract --version
+            tesseract --list-langs
+          else
+            echo "Tesseract not installed on host; continuing Python unit tests."
           fi
           python3 -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'python-pptx>=1.0,<2'
           python3 -m compileall -q workers/source-library-staging/scripts
-          tesseract --version
-          tesseract --list-langs
           python3 -c 'import fitz; print(fitz.__doc__)'
-          TESSDATA_PREFIX=/usr/share/tesseract-ocr/5/tessdata python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
+          python3 -m unittest discover -s workers/source-library-staging/scripts/tests -v
       - name: Staging reviewer container build
         run: docker build -f workers/source-library-staging/reviewer-service/Dockerfile -t srna-reviewer-staging:test .
       - name: Repository validation
