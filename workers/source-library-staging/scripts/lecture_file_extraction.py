@@ -74,9 +74,31 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                         chunks.append(" | ".join(cell.text for cell in row.cells))
                 if shape.shape_type == 13:
                     images += 1
+                    if enable_ocr:
+                        try:
+                            import fitz
+                            image_doc = fitz.open(stream=shape.image.blob,
+                                                  filetype=shape.image.ext)
+                            try:
+                                ocr_page = image_doc[0]
+                                ocr_textpage = ocr_page.get_textpage_ocr(language="eng", dpi=180)
+                                ocr_text = ocr_page.get_text("text", textpage=ocr_textpage).strip()
+                                if ocr_text:
+                                    chunks.append("[Image OCR; verify against slide] " + ocr_text)
+                            finally:
+                                image_doc.close()
+                        except (RuntimeError, OSError, ValueError):
+                            pass
+            # Speaker notes often contain instructor context missing from slide text.
+            if slide.has_notes_slide:
+                notes = slide.notes_slide.notes_text_frame
+                if notes is not None:
+                    note_text = notes.text.strip()
+                    if note_text:
+                        chunks.append("[Speaker notes] " + note_text)
             value = "\n".join(chunks).strip()
             pages.append({"page": i + 1, "text": value,
-                          "needs_visual_review": not bool(value) or (images > 0 and len(value) < 100),
+                          "needs_visual_review": not bool(value) or images > 0,
                           "image_count": images})
         kind = "pptx"
     else:
