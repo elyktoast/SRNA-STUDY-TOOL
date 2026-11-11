@@ -33,13 +33,15 @@ def _candidate_blueprint(title):
 def requests(plan, *, mode, domain=None, section=None, objective=None, format="MC"):
     if mode not in ("NCE", "SEE"):
         raise ValueError("Invalid exam mode")
-    if not isinstance(plan, dict) or not isinstance(plan.get("topics"), list):
+    if format not in ("MC", "MS", "SA", "DD", "HS"):\n        raise ValueError("Unsupported question format")\n    if not isinstance(plan, dict) or not isinstance(plan.get("topics"), list):
         raise ValueError("Grounded lecture plan required")
     explicit = (domain, section, objective)
     if any(value is not None for value in explicit):
         if not all(value is not None for value in explicit):
             raise ValueError("Provide all blueprint fields or none")
-        classification(domain, section, objective)
+        normalized = classification(domain, section, objective)
+        domain, section, objective = (normalized["domain"], normalized["section"],
+                                      normalized["objective"])
     result, held = [], []
     for topic in plan["topics"]:
         count = topic.get("question_count")
@@ -62,7 +64,7 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
             continue
         for index in range(count):
             step = build_step("concept_card", mode=mode, **target,
-                              evidence=topic["evidence"], topic=topic["title"])
+                              evidence=topic["evidence"], topic=topic["title"],\n                              format=format)
             result.append({"topic": topic["title"],
                            "lecture_locator": topic.get("lecture_locator"),
                            "question_slot": index + 1,
