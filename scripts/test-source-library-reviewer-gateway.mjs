@@ -375,3 +375,9 @@ test('file plan responses must pass fail-closed gateway schema validation',()=>{
  assert.match(gateway,/data\.paid_calls_requested!==false/);
  assert.match(gateway,/extraction\.requires_visual_review!==true/);
 });
+
+test('lecture file upload body is not rejected as a forbidden GET payload',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request\.headers\.get\('Content-Length'\)/);
+ assert.match(gateway,/lectureFile\?12\*1024\*1024/);
+});
