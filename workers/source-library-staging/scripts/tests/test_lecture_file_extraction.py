@@ -44,5 +44,26 @@ class LectureFileExtractionTests(unittest.TestCase):
         self.assertEqual(result['review_pages'], [2])
         self.assertIn('PEEP | 5', result['pages'][0]['text'])
 
+    def test_pptx_image_is_held_even_with_slide_text(self):
+        try:
+            from pptx import Presentation
+            import fitz
+        except ImportError:
+            self.skipTest('Presentation or PyMuPDF dependency unavailable')
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+        slide.shapes.title.text = 'Hemodynamic waveform'
+        doc = fitz.open()
+        page = doc.new_page(width=100, height=100)
+        page.insert_text((10, 50), 'MAP')
+        image = page.get_pixmap().tobytes('png')
+        slide.shapes.add_picture(io.BytesIO(image), 0, 1200000, width=1000000)
+        output = io.BytesIO()
+        prs.save(output)
+        result = extract_lecture(output.getvalue(), 'waveform.pptx')
+        self.assertEqual(result['review_pages'], [1])
+        self.assertEqual(result['pages'][0]['image_count'], 1)
+        self.assertIn('Hemodynamic waveform', result['pages'][0]['text'])
+
 if __name__ == '__main__':
     unittest.main()
