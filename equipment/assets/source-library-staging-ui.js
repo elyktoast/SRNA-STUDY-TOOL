@@ -244,14 +244,29 @@ genEl('sl-generate-one').onclick=async()=>{
     (issues.length?' '+issues.length+' generator issue(s) require review.':'')+
     ' Indexed PDF page locations are not verified printed-page citations. Check the source before approval.';
   preview.append(reviewNote);preview.hidden=false;genEl('sl-gen-technical').hidden=false;genEl('sl-gen-result').textContent=JSON.stringify({question:result.item,screening:result.screening,source_evidence:result.source_evidence,issues:result.generator_issues},null,2);
-  genEl('sl-gen-result').hidden=false;genEl('sl-gen-status').textContent=result.draft_id?'Unpublished draft saved: '+result.draft_id:'Generated for review. Not saved or published.';
+  genEl('sl-gen-result').hidden=false;
+  if(result.draft_id){
+   genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;
+  }else if(result.save_payload){
+   genEl('sl-gen-status').textContent='Question generated. Saving unpublished draft…';
+   try{
+    const saved=await storage.saveGeneratedDraft(result.save_payload);
+    if(typeof saved?.draft_id!=='string'||!saved.draft_id.trim())throw Error('Draft save did not return an ID.');
+    result.draft_id=saved.draft_id;
+    genEl('sl-gen-status').textContent='Unpublished draft saved: '+saved.draft_id;
+   }catch(saveError){
+    genEl('sl-gen-status').textContent='Question generated, but draft save failed: '+(saveError.message||'Unknown error')+'. Use Save unpublished draft to retry.';
+   }
+  }else{
+   genEl('sl-gen-status').textContent='Question generated but no draft ID or save payload returned. Nothing was saved or published.';
+  }
   genEl('sl-save-generated').disabled=!!result.draft_id||!result.save_payload;
  }catch(error){genEl('sl-gen-status').textContent=error.message||'Generation failed.'}finally{btn.disabled=false}
 };
 genEl('sl-save-generated').onclick=async()=>{
  if(generatedForReview?.result?.draft_id||!generatedForReview?.result?.save_payload)return;
  const btn=genEl('sl-save-generated');btn.disabled=true;
- try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
+ try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);if(typeof result?.draft_id!=='string'||!result.draft_id.trim())throw Error('Draft save did not return an ID.');generatedForReview.result.draft_id=result.draft_id;genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
  catch(error){genEl('sl-gen-status').textContent=error.message||'Draft save failed.';btn.disabled=false;}
 };
 async function openSavedDraft(draftId,button){
