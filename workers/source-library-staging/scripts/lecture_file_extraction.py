@@ -28,6 +28,8 @@ def extract_lecture(data, filename, *, enable_ocr=False):
             for i, page in enumerate(doc):
                 value = page.get_text("text", sort=True).strip()
                 images = len(page.get_images(full=True))
+                # PDF charts and diagrams can be vector drawings, not raster images.
+                vectors = len(page.get_drawings())
                 if enable_ocr and (not value or (images and len(value) < 100)):
                     try:
                         ocr_page = page.get_textpage_ocr(language="eng", dpi=180, full=False)
