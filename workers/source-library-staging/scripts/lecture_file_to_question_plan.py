@@ -34,7 +34,8 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     text_only_visual_pages = [p["page"] for p in selected
                               if p["page"] in selected_review and p.get("text", "").strip()]
     selected_review = [n for n in selected_review if n not in text_only_visual_pages]
-    if selected_review:\n        return {"jobs": [], "count": 0, "auto_generate": False,
+    if selected_review:
+        return {"jobs": [], "count": 0, "auto_generate": False,
                 "auto_publish": False, "database_writes": False,
                 "file_extraction": {"filename": filename, "format": extracted["format"],
                                     "page_count": extracted["page_count"], "selected_pages": [p["page"] for p in selected],
