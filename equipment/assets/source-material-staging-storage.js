@@ -239,6 +239,12 @@ async function draftRevisionRequest(draftId,method,payload){
  }
  return data;
 }
+async function reviewGeneratedDraft(draftId,status,notes){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ if(!['approved_for_bank','rejected','needs_revision'].includes(status))throw Error('Invalid review decision.');
+ if(typeof notes!=='string'||notes.length>5000||(status==='approved_for_bank'&&!notes.trim()))throw Error('Approval requires clinical review notes.');
+ return generationRequest('/generation/drafts/'+draftId+'/review',{status,notes});
+}
 async function listDraftRevisions(draftId){return draftRevisionRequest(draftId,'GET');}
 async function saveDraftRevision(draftId,payload){
  if(!payload||typeof payload!=='object'||typeof payload.expected_parent_sha256!=='string'||
@@ -247,5 +253,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
 })();
