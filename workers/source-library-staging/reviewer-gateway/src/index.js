@@ -440,6 +440,7 @@ export default {
        !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
        data.count!==data.jobs.length||data.auto_generate!==false||
        data.auto_publish!==false||data.database_writes!==false||
+       data.paid_calls_requested!==false||
        data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
          typeof job.body!=='object'||'execute' in job.body||
          'confirm_paid_calls' in job.body)){
