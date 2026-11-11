@@ -555,6 +555,8 @@ function updateTextbookChoices(items){
  if([...select.options].some(o=>o.value===previous))select.value=previous;
  researchBookSelect.replaceChildren(...[...select.options].map(option=>new Option(option.textContent,option.value)));
  researchBookSelect.value=select.value;
+ const lectureBook=lecturePanel.querySelector('#sl-lecture-book');
+ if(lectureBook){const prior=lectureBook.value;lectureBook.replaceChildren(new Option('All indexed textbooks (recommended)','all'),...[...select.options].filter(o=>o.value).map(o=>new Option(o.textContent,o.value)));lectureBook.value=[...lectureBook.options].some(o=>o.value===prior)?prior:'all';}
  const hasIndexed=select.options.length>1;
  select.parentElement.hidden=false;
  if(!hasIndexed){select.options[0].textContent='No ready indexed textbooks available';}
