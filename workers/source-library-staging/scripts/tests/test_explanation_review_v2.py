@@ -112,6 +112,21 @@ class ExplanationReviewTests(unittest.TestCase):
         report=review(self.item,self.sources,lambda p:self.response)
         self.assertEqual(report["status"],"pass")
 
+    def test_causal_only_claims_cannot_pass_from_nonexclusive_source_examples(self):
+        claims=("Static compliance is increased only by emphysema.",
+                "The source lists static compliance decreases only for these conditions.",
+                "The response occurs exclusively with this mechanism.")
+        for text in claims:
+            for label in ("core_concept","why_key_wins"):
+                with self.subTest(text=text,label=label):
+                    self.item["rationale"][label]=text
+                    report=review(self.item,self.sources,lambda p:self.response)
+                    self.assertEqual(report["status"],"flag")
+                    self.assertIn("rationale."+label,[i["field"] for i in report["issues"]])
+                    self.item["rationale"][label]="Classification statement"
+        self.item["rationale"]["core_concept"]="Static compliance is increased by emphysema."
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response)["status"],"pass")
+
     def test_missing_repeated_unknown_or_uncited_support_never_passes(self):
         for change in ("missing", "duplicate", "unknown_field", "unknown_span", "uncited"):
             response = copy.deepcopy(self.response)

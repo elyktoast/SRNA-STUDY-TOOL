@@ -34,6 +34,7 @@ async function call(path,body){
 // Keep earlier recovery failures visibly flagged; this is an automated defect
 // report under the authenticated owner account, never human clinical approval.
 for(const [id,reason] of [
+ ['49f52ff1-1826-4197-87f6-9f5bb18a5cea','Post-save inspection found that the teaching explanation turns an indexed example into an unsupported exclusive physiological cause. Superseded by the expanded source-exclusivity guard.'],
  ['4ff052a4-ab09-4fe4-90e4-f73431562adc','The final independent option review was truncated by the provider; the question passed its other automated checks but did not obtain complete option verification.'],
  ['445d3676-0efe-42b2-ba45-8c47f2220472','The allowed rewrite did not obtain a passing editorial review; independent option adjudication did not complete. Kept unpublished.'],
  ['578abeb7-edfa-4864-9a2f-cb0e611a5cde','Post-acceptance audit found that independent option evidence for the paired key omitted one response component; the earlier automated pass is superseded by stricter coverage verification.'],
@@ -97,7 +98,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-11-v20');
+assert.equal(preflight.authoring_contract,'2026-11-11-v21');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 const checkpointReady=await call('/generation/checkpoint-readiness');
