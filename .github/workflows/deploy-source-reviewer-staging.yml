@@ -57,7 +57,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install -r workers/source-library-staging/reviewer-service/requirements.txt
-          for name in test_generation_checkpoint_store_v2.py test_mc_choice_plan_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py test_run_grounded_generation_v2.py test_item_generation_screened_v2.py test_item_grounded_pipeline_v2.py test_explanation_review_v2.py test_source_quote_spans_v2.py test_board_quality_v2.py; do
+          for name in test_generation_checkpoint_store_v2.py test_mc_choice_plan_v2.py test_item_generation_http_v2.py test_item_generation_runner_v2.py test_run_grounded_generation_v2.py test_item_generation_screened_v2.py test_item_grounded_pipeline_v2.py test_explanation_review_v2.py test_source_quote_spans_v2.py test_board_quality_v2.py test_lecture_file_extraction.py test_lecture_file_to_question_plan.py; do
             PYTHONPATH=workers/source-library-staging/scripts python -m unittest discover \
               -s workers/source-library-staging/scripts/tests -p "$name"
           done
