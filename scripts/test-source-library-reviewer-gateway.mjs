@@ -458,3 +458,11 @@ test('bulk draft review requires confirmation and per-draft validation; removal 
  assert.match(ui,/Records remain in audit history/);
  assert.match(ui,/response\.status!==status\|\|response\.published!==false/);
 });
+
+
+test('staging admin initializes source workspace config without enabling production',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
+ assert.match(ui,/if\(location\.hostname!=='staging\.srnastudytool\.com'\)throw Error\('Staging source workspace is disabled on this page\.'\)/);
+ assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\)window\.MBU_SOURCE_LIBRARY_STAGING=Object\.freeze\(\{enabled:true,apiUrl:'https:\/\/source-library-staging\.srnastudytool\.com'\}\)/);
+ assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\.enabled\)throw Error\('Staging source workspace is disabled by configuration\.'\)/);
+});
