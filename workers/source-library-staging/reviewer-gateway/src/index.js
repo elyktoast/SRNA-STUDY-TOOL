@@ -273,7 +273,7 @@ export default {
   if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -434,6 +434,25 @@ export default {
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||data?.ready!==true||
        data?.check!=='checkpoint_database_readiness'||data?.generation_performed!==false||data?.database_writes!==false||
        Object.keys(data).some(k=>!allowed.includes(k)))return respond(502,origin,'{"error":"unsafe_checkpoint_response"}');
+   }
+   if(upstream.ok&&lectureFile){
+    const data=await upstream.clone().json().catch(()=>null);
+    const extraction=data?.file_extraction;
+    const held=data?.held_reason==='visual_review_required';
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       !extraction||!['pdf','pptx'].includes(extraction.format)||
+       !Number.isSafeInteger(extraction.page_count)||extraction.page_count<1||
+       !Array.isArray(extraction.review_pages)||
+       (held&&(data.count!==0||data.jobs.length!==0||extraction.requires_visual_review!==true))||
+       (!held&&data.paid_calls_requested!==false)||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_file_plan"}');
+    }
    }
    if(upstream.ok&&lecturePlan){
     const data=await upstream.clone().json().catch(()=>null);
