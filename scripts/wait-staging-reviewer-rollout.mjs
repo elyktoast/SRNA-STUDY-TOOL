@@ -20,7 +20,9 @@ async function main(){
   const body=await r.json();if(!body.success)throw Error('Container rollout metadata unavailable');return body.result;
  };
  const started=Date.now();
- while(Date.now()-started<240000){
+ // The observed staging replacement exceeded four minutes even with no health
+ // errors. Allow ten minutes; never waive image, health or quiet-period checks.
+ while(Date.now()-started<600000){
   const [app,instances]=await Promise.all([read(''),read('/instances-v2')]);
   if(settled(app,instances,Date.now(),started)){console.log('Staging container configuration settled; authenticated smoke may begin');return;}
   console.log('Waiting for staging container rollout; no AI calls performed');
