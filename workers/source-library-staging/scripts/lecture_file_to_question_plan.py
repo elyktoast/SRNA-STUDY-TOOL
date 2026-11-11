@@ -44,15 +44,59 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                                     "review_pages": selected_review,
                                     "requires_visual_review": True},
                 "held_reason": "visual_review_required"}
-    text = "\n\n".join("Page "+str(p["page"])+":\n"+p["text"]
-                       for p in selected if p["text"])
-    if not 1 <= len(text.strip()) <= 12000:
-        raise ValueError("Extracted lecture exceeds planning limit; select relevant pages")
+    # Chunk by page, then by paragraph for unusually text-heavy pages.
+    # Never truncate source text or silently skip an oversized page.
+    chunks = []
+    current = ""
+    for p in selected:
+        value = p.get("text", "").strip()
+        if not value:
+            continue
+        prefix = "Page " + str(p["page"]) + ":\n"
+        remaining = value
+        while remaining:
+            room = 12000 - len(prefix)
+            if room <= 0:
+                raise ValueError("Invalid page label")
+            if len(remaining) <= room:
+                part, remaining = remaining, ""
+            else:
+                cut = remaining.rfind("\n", 0, room + 1)
+                if cut < room // 2:
+                    cut = remaining.rfind(" ", 0, room + 1)
+                if cut < room // 2:
+                    cut = room
+                part, remaining = remaining[:cut], remaining[cut:].lstrip()
+            entry = prefix + part
+            if current and len(current) + 2 + len(entry) > 12000:
+                chunks.append(current)
+                current = ""
+            current = current + ("\n\n" if current else "") + entry
+    if current:
+        chunks.append(current)
+    if not chunks:
+        raise ValueError("No extractable lecture text")
+    # Bound the work per request without losing content: excess chunks are
+    # explicitly reported as pending rather than silently discarded.
     from lecture_to_question_plan import prepare_staging_jobs
-    result = prepare_staging_jobs(conn, owner_uid, text, textbook_id=textbook_id,
-                                  item_id_factory=item_id_factory, count=count,
-                                  mode=mode, format=format, domain=domain,
-                                  section=section, objective=objective)
+    processed = chunks[:5]
+    results = [prepare_staging_jobs(conn, owner_uid, chunk, textbook_id=textbook_id,
+                                   item_id_factory=item_id_factory, count=1,
+                                   mode=mode, format=format, domain=domain,
+                                   section=section, objective=objective)
+               for chunk in processed]
+    result = dict(results[0])
+    result["jobs"] = [job for r in results for job in r.get("jobs", [])][:count]
+    result["count"] = len(result["jobs"])
+    result["auto_generate"] = False
+    result["auto_publish"] = False
+    result["database_writes"] = False
+    result["chunk_count"] = len(chunks)
+    result["processed_chunk_count"] = len(processed)
+    result["remaining_chunk_count"] = len(chunks) - len(processed)
+    if len(results) > 1:
+        result["classification"] = {"held_count": sum(r.get("classification", {}).get("held_count", 0) for r in results),
+                                    "held_for_classification": [item for r in results for item in r.get("classification", {}).get("held_for_classification", [])]}
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
                                  "selected_pages": [p["page"] for p in selected],
