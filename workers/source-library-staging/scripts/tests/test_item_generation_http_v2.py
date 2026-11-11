@@ -120,11 +120,11 @@ class DraftRevisionHttpTests(unittest.TestCase):
         saver.assert_not_called()
 
 class LiveDraftPersistenceTests(unittest.TestCase):
-    def request(self, *, token="valid"):
+    def request(self, *, token="valid", extra=None):
         app = create_app(conn_factory=Connection,
             resolve_admin=lambda bearer: UID if bearer == "valid" else None,
             environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"})
-        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
+        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002", **(extra or {})}).encode()
         env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
                "HTTP_ORIGIN": "https://staging.srnastudytool.com",
                "HTTP_AUTHORIZATION": "Bearer " + token,
@@ -132,6 +132,23 @@ class LiveDraftPersistenceTests(unittest.TestCase):
         statuses = []
         body = b"".join(app(env, lambda status, headers: statuses.append(status)))
         return statuses[0], json.loads(body)
+
+    @patch("item_generation_http_v2.save")
+    @patch("item_generation_http_v2.execute")
+    def test_completed_only_pending_is_an_explicit_conflict_without_saving(self,execute,saver):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        execute.side_effect=CompletedGenerationUnavailable()
+        status,data=self.request(extra={"resume_completed_only":True})
+        self.assertEqual(status,"409 Conflict")
+        self.assertEqual(data["rule"],"CHECKPOINT_NOT_COMPLETE")
+        self.assertTrue(execute.call_args.args[1].resume_completed_only)
+        saver.assert_not_called()
+        execute.reset_mock()
+        self.assertEqual(self.request(token="invalid",extra={"resume_completed_only":True})[0],"403 Forbidden")
+        execute.assert_not_called()
+        for value in ("true",1,None):
+            self.assertEqual(self.request(extra={"resume_completed_only":value})[0],"400 Bad Request")
+        execute.assert_not_called()
 
     @patch("item_generation_http_v2.save", return_value={
         "draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})

@@ -91,12 +91,12 @@ let generatedForReview=null,currentDraftQuestion=null;
 genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
  if(!topic||!textbook_id){genEl('sl-gen-status').textContent='Choose a question subject or enter a specific topic, then select an indexed textbook. Advanced textbook ID entry is available if needed.';return;}if(!checkedEvidence||checkedEvidence.topic!==topic||checkedEvidence.mode!==el('sl-mode').value||checkedEvidence.format!==el('sl-format').value||checkedEvidence.textbook_id!==textbook_id||checkedEvidence.domain!==genEl('sl-gen-domain').value||checkedEvidence.section!==genEl('sl-gen-section').value.trim().toUpperCase()||checkedEvidence.objective!==genEl('sl-gen-objective').value.trim()){genEl('sl-gen-status').textContent='Run Check indexed evidence for the current topic and exam format before making a paid AI generation call.';return;}
- if(!confirm('Generate one staging AI question? This may incur provider charges. The question will not be published or saved automatically.'))return;
+ if(!confirm('Generate one staging AI question? Provider charges may apply. It will be saved as an unpublished draft.'))return;
  const btn=genEl('sl-generate-one');btn.disabled=true;generatedForReview=null;genEl('sl-save-generated').disabled=true;genEl('sl-gen-result').hidden=true;genEl('sl-generated-preview').hidden=true;genEl('sl-gen-technical').hidden=true;genEl('sl-gen-status').textContent='Generating one question…';
  try{
   const domain=genEl('sl-gen-domain').value,section=genEl('sl-gen-section').value.trim().toUpperCase(),objective=genEl('sl-gen-objective').value.trim();
   const request={topic,textbook_id,mode:el('sl-mode').value,format:el('sl-format').value,domain,section,objective,item_id:crypto.randomUUID()};
-  const result=await storage.generateOne(request);
+  const result=await storage.generateOne(request,{onRecovery:()=>{genEl('sl-gen-status').textContent='Still working. Checking for the saved draft…';}});
   if(result.dry_run!==false||result.can_publish!==false||result.database_writes!==false||result.requires_human_review!==true||!result.item)throw Error('Unsafe or incomplete generated question.');
   generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);
   const preview=genEl('sl-generated-preview');

@@ -30,3 +30,16 @@ class OptionContextEvidenceTests(unittest.TestCase):
         with patch('item_option_retrieval_audit_v2.search',side_effect=search):
             report=audit(None,'owner',item,textbook_id='book',limit=2,context_query='context')
         self.assertEqual(report['option_audits'][0]['retrieved_passage_ids'],['direct','context-1'])
+
+    def test_three_passage_budget_keeps_direct_match_and_both_context_components(self):
+        item={'format':'MC','stem':'Which pair?', 'options':[{'id':'A','text':'specific pair'}],'key':['A']}
+        calls=[]
+        def search(conn,query,owner,*,limit,textbook_id):
+            calls.append((query,limit))
+            return ([{'passage_id':'context-x'},{'passage_id':'context-y'}] if query=='context'
+                    else [{'passage_id':'direct'}])[:limit]
+        with patch('item_option_retrieval_audit_v2.search',side_effect=search):
+            report=audit(None,'owner',item,textbook_id='book',limit=3,context_query='context')
+        self.assertEqual(calls,[('context',2),('specific pair',1)])
+        self.assertEqual(report['option_audits'][0]['retrieved_passage_ids'],['direct','context-x','context-y'])
+        self.assertFalse(report['clinical_verification_complete'])

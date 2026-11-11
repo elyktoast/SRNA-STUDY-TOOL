@@ -7,7 +7,7 @@ import json
 import re
 from uuid import UUID
 
-from run_grounded_generation_v2 import execute
+from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_generation_checkpoint_store_v2 import save_once
 from item_draft_revalidation_v2 import revalidate
@@ -16,7 +16,7 @@ from item_draft_revision_storage_v2 import save_revision, list_revisions, Revisi
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
           "item_id", "textbook_id", "section_id", "include_subsections",
-          "page_start", "page_end", "limit", "execute", "confirm_paid_calls"}
+          "page_start", "page_end", "limit", "execute", "confirm_paid_calls", "resume_completed_only"}
 REQUIRED = {"topic", "mode", "domain", "section", "objective", "item_id"}
 
 
@@ -261,6 +261,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             if "execute" in data or "confirm_paid_calls" in data:
                 raise ValueError("Execution flags cannot be supplied by client")
             live = path == "/generation/one"
+            if ("resume_completed_only" in data and
+                    (type(data["resume_completed_only"]) is not bool or not live)):
+                raise ValueError()
             if live and (not isinstance(data.get("textbook_id"), str) or not data["textbook_id"].strip()):
                 raise ValueError("Explicit textbook required for saving generated drafts")
             if live and environment.get("AI_GENERATION_OPT_IN") != "true":
@@ -312,6 +315,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                               "draft_status": saved["status"], "published": False,
                               "requires_human_review": True}
             return respond("200 OK", result)
+        except CompletedGenerationUnavailable:
+            return respond("409 Conflict", {"error":"completed_generation_unavailable", "rule":"CHECKPOINT_NOT_COMPLETE"})
         except ValueError as exc:
             # Safe fixed categories only. Do not return source passages, model text,
             # credentials, or arbitrary exception strings to the browser.
