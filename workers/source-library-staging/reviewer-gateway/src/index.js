@@ -485,7 +485,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!generation&&!generateOne&&!lecturePlan&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
+   if(upstream.ok&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
