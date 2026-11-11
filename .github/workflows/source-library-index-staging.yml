@@ -17,6 +17,11 @@ on:
         required: false
         default: ''
         type: string
+      discover_only:
+        description: 'List owner R2 PDF keys and original filenames without extracting or importing'
+        required: true
+        default: false
+        type: boolean
       apply:
         description: 'Write extracted passages to staging Supabase (false = dry run)'
         required: true
@@ -80,6 +85,7 @@ jobs:
           OWNER_UID: ${{ inputs.owner_uid }}
           LIMIT: ${{ inputs.limit }}
           R2_KEY: ${{ inputs.r2_key }}
+          DISCOVER_ONLY: ${{ inputs.discover_only }}
           APPLY: ${{ inputs.apply }}
           OCR: ${{ inputs.ocr }}
           FORCE_REINDEX: ${{ inputs.force_reindex }}
@@ -95,7 +101,11 @@ jobs:
           if [[ "$FORCE_REINDEX" == "true" && "$APPLY" != "true" ]]; then
             echo 'Force reindex requires apply'; exit 1
           fi
+          if [[ "$DISCOVER_ONLY" == "true" && ( "$APPLY" == "true" || "$FORCE_REINDEX" == "true" || -n "$R2_KEY" ) ]]; then
+            echo "Discovery requires apply=false, force_reindex=false, and blank r2_key"; exit 1
+          fi
           args=(--owner-uid "$OWNER_UID" --limit "$LIMIT")
+          if [[ "$DISCOVER_ONLY" == "true" ]]; then args+=(--discover-only); fi
           if [[ -n "$R2_KEY" ]]; then args+=(--r2-key "$R2_KEY"); fi
           if [[ "$APPLY" == "true" ]]; then args+=(--apply); fi
           if [[ "$OCR" == "true" ]]; then args+=(--ocr); fi
