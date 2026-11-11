@@ -19,8 +19,14 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         selected = extracted["pages"]
     if not selected and extracted["pages"]:
         raise ValueError("No lecture pages selected")
+    # A truly empty page is not a visual concept. Skip it rather than blocking
+    # the entire lecture; image-only pages and diagrams remain held for review.
+    blank_pages = [p["page"] for p in selected
+                   if not p.get("text", "").strip()
+                   and not any(p.get(key, 0) for key in ("image_count", "vector_count", "diagram_count"))]
     selected_review = [p["page"] for p in selected
-                       if p.get("needs_visual_review", p["page"] in extracted.get("review_pages", []))]
+                       if p["page"] not in blank_pages
+                       and p.get("needs_visual_review", p["page"] in extracted.get("review_pages", []))]
     if not extracted["pages"] and page_start is None and page_end is None:
         selected_review = list(extracted.get("review_pages", []))
     if selected_review:
@@ -28,6 +34,7 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                 "auto_publish": False, "database_writes": False,
                 "file_extraction": {"filename": filename, "format": extracted["format"],
                                     "page_count": extracted["page_count"], "selected_pages": [p["page"] for p in selected],
+                                    "skipped_blank_pages": blank_pages,
                                     "review_pages": selected_review,
                                     "requires_visual_review": True},
                 "held_reason": "visual_review_required"}
@@ -43,5 +50,6 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
                                  "selected_pages": [p["page"] for p in selected],
+                                 "skipped_blank_pages": blank_pages,
                                  "review_pages": [], "requires_visual_review": False}
     return result
