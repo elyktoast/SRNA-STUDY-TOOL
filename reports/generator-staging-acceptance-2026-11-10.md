@@ -1,104 +1,137 @@
-# One-question staging acceptance — November 10, 2026
-
-> Superseded by post-acceptance audit: the earlier option reviewer cited only one component of the paired correct answer. Its automated pass did not establish complete independent key evidence. The question remains unpublished; stricter v17 coverage verification is pending.
+# One-question staging verification — November 11, 2026
 
 ## Verified outcome
 
-One authenticated end-to-end staging generation passed the required automated
-acceptance checks and saved one private, unpublished draft. No approval or
-publication was performed.
+One fresh authenticated staging generation passed the source, schema, wording,
+blind-answer, teaching, editorial and independent option-evidence checks and
+saved exactly one private unpublished draft. No rewrite was needed. No approval,
+publication or production/main merge was performed.
 
-- Draft: `578abeb7-edfa-4864-9a2f-cb0e611a5cde`
-- Item: `ab4f5532-7ea1-4303-b9df-e1e2f772e9d3`
-- Saved: 2026-11-10 20:53:08 UTC
+- Draft: `43d13b5b-bceb-483a-bec0-d3c77231a45b`
+- Item: `b7d4b4cf-23db-48f5-915a-7ae53c917076`
+- Saved: 2026-11-11 01:01:56 UTC
 - Status: `pending_review`; `reviewed_by` and `reviewed_at` remain null.
 - Classification: NCE MC, I.A.2 Respiratory, application.
-- Source: ready indexed `Nagelhout__Elisha_.pdf`, PDF pages 731–732.
-- Both stored excerpts match the current owned index exactly. All 19 explanatory
-  support-quote references were independently checked as verbatim indexed text.
-- Exactly one draft record exists for the item ID.
-- One protected automatic rewrite corrected flagged blueprint/context/reasoning
-  and distractor issues. Its complete rechecks passed; zero generator issues
-  remained. The key, keyed text and concept source IDs remain protected.
+- Source: owned, ready indexed `Nagelhout__Elisha_.pdf`, PDF pages 731–732.
+- Both stored excerpts and their PDF pages match the current owned index exactly.
+- All 24 explanation-support quotations and all nine independent option-review
+  quotations were separately checked as verbatim current indexed text.
+- The independent key judgment cites both source passages and both tested
+  measurements. Every wrong option has an affirmative source-grounded refutation.
+- The final clinical case, four choices and four-part teaching rationale were
+  inspected after persistence. Full question text and copyrighted excerpts remain
+  in the private staging bank rather than this public report.
 
-| Automated check | Result |
+| Check | Result |
 | --- | --- |
-| Canonical schema | Pass |
-| Deterministic wording and numeric guard | Pass |
-| Indexed source/citation validation | Pass |
-| Independent blind answer | Pass |
+| Canonical v2 schema and deterministic wording | Pass |
+| Indexed source, page and excerpt validation | Pass |
+| Fresh independent blind answer | Pass |
 | Concept and rationale source review, all 15 fields | Pass |
-| Independent editorial quality, all seven criteria | Pass |
-| Changed-case fresh blind solve with different expected answer | Pass |
-| Five shuffled options-only trials | Pass |
-| Independent option retrieval and source adjudication | Pass |
-| Unpublished persistence and subsequent authenticated read | Pass |
+| Independent editorial review, all seven criteria | Pass |
+| Changed-case fresh blind answer, different correct choice | Pass |
+| Five shuffled options-only trials | Pass; zero keyed guesses |
+| Independent retrieval and adjudication of all four options | Pass |
+| Save once and subsequent authenticated draft retrieval | Pass |
+| Browser preview of the saved question and structured explanations | Pass |
+| Human clinical approval | Pending; publication blocked |
+| Semantic duplicate verification | Pending; publication blocked |
 
-The final stem, choices and explanations were inspected after persistence. The
-question distinguishes airway resistance from lung/chest-wall compliance and
-explains why each alternative fails under the stated conditions. The full item
-and copyrighted source excerpts remain in the private staging bank, not this
-public report.
+## Recovery fixes
 
-## Recovery changes
+PROVIDER_UPSTREAM covered distinct failures. Groq GPT-OSS authoring exhausted its
+daily quota. Cloudflare GPT-OSS exposed response-contract failures and incorrect
+shared-dependency reasoning in exact-source probes. Staging authoring now uses
+Cloudflare `@cf/zai-org/glm-5.3`, its wrapped JSON schema, bounded low reasoning and
+explicit step limits. Independent blind, editorial, explanation and option
+reviews use Groq `qwen/qwen3.8-27b`, separately from the author. Blind requests
+exclude the author key. Gemini and legacy hybrid generation remain disabled.
 
-Provider failures had several distinct causes, rather than one interchangeable
-upstream outage. Groq GPT-OSS 120B reached its explicit daily authoring quota.
-Cloudflare GPT-OSS responses exposed response-format/contract failures, and exact
-indexed-source planning probes also produced incorrect shared-dependency
-reasoning. Staging authoring now uses verified Cloudflare `@cf/zai-org/glm-5.3`
-with its documented wrapped JSON schema and bounded low reasoning. The recorded
-underlying generator is `zai-org/glm-5.3`. Malformed, incomplete and refused
-provider output still fails closed.
+Incomplete option-review responses also produced PROVIDER_UPSTREAM. Temporary
+source aliases shorten output while preserving real passage IDs and per-option
+retrieval authorization. Unknown or unauthorized references, nonverbatim quotes
+and missing paired-key coverage fail. Retrieval retains two context passages and
+a direct option match within a three-passage budget; it never supplies a verdict.
 
-Independent Qwen source/blind/option reviews and GPT-OSS 20B editorial review
-remain on Groq, separate from the author. Gemini and legacy hybrid generation
-remain disabled. Per-minute review limits still occur; explicit bounded waits
-were exercised in the successful run. A prior client connection reset did not
-justify duplicate generation: its completed checkpoint and private saved result
-were inspected before proceeding.
+v19 failed DRAFT_PLAN_CONDITION. The generator now inserts the authored clinical
+case at one explicit stem slot before strict binding, rationale generation,
+validation and independent reviews. Missing, duplicate or conflicting cases are
+rejected; clinical prose is never inferred or silently repaired.
 
-Private MC planning now names clinical response variables, renders parallel
-choices without repeated labels, and diagnoses exact key/choice/condition
-mismatches. All condition-dependent findings must belong to the complete
-replaceable case. Existing canonical author edits can be tested without asking
-another model to transcribe the same punctuation again. Independent editorial
-rejection or a wrong changed-case blind answer still fails; a regression verifies
-both and rejects appended unverified claims.
+The v20 API test passed, but post-save inspection found unsupported exclusive
+physiology in its teaching explanations. That acceptance is superseded and its
+draft `49f52ff1-1826-4197-87f6-9f5bb18a5cea` is marked `needs_revision`. The existing
+exclusivity guard covered drug/class lists but missed causal wording such as
+“increased only by.” v21 extends it to causal physiological assertions and the
+key explanation. Replaying the old source-review report flags all five affected
+fields without provider calls. Nonexclusive statements and explicitly supported
+exclusive claims remain supported. The earlier v16 paired-evidence acceptance is
+also superseded; earlier failed candidates remain unpublished and flagged.
 
-The source-explanation schema requires references for supported judgments while
-allowing every field to be rejected. Existing exact-span, authorized-passage and
-complete-field checks remain mandatory. Independent option retrieval retains up
-to two context passages within its existing per-option budget, so a paired
-concept does not lose its second source page. Direct option matches keep
-priority. Retrieval alone never supplies a clinical verdict.
+Disconnect recovery polls only an owner/request/source-bound completed checkpoint.
+Incomplete recovery fails before any model adapter is constructed. Recovery
+cannot restart paid authoring, preserves the original request/item ID and uses
+save-once persistence. Synthetic disconnect integration and server no-fallthrough
+regressions pass; the final live run completed without a disconnect.
 
-Textbook extraction/indexing, other question formats, independent review,
-authentication/RLS, the one-rewrite limit and publication controls are preserved.
-No database schema or indexing changes were made.
+One protected rewrite remains the maximum. Authentication, source authorization,
+independent review and publication gates remain in force. Textbook extraction,
+indexing and all five canonical formats are preserved. No database schema,
+indexing or existing learner/question-bank changes were made.
 
-## Reproducible verification
+## Verification and deployment
 
-Runtime code commit: `c06e53296a5582443e865c9019b17d08d2e72eef`
+Backend runtime source: `7aaca84b8a60e851ead7cac5f06cbe31fc1f42d2`.
+Authoring contract: `2026-11-11-v21`; quality contract: `2026-11-10-v2`.
+Preview/readiness source: `fd7b78e191aa44840a6716a4ce2263f76aa8d6e4`.
 
-- [CI 42897945056](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42897945056):
-  885 Python tests, one skipped; 126 Node tests; container build and repository
-  validation passed.
-- [Deployment 42897941447](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42897941447):
-  settled container rollout, authenticated smoke and expected runtime authoring
-  contract passed.
-- [Acceptance 42898227641](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42898227641):
-  fresh generation, one rewrite, independent rechecks, private save and
-  authenticated retrieval passed at 20:53:09 UTC.
+- [Backend CI 42934580281](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42934580281):
+  894 Python tests ran with one skipped; all 132 Node tests passed, as did the
+  container build and repository validation.
+- [Final UI CI 42936363654](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42936363654):
+  894 Python tests ran with one skipped; all 134 Node tests, container build and
+  repository validation passed. Local performance budgets and four additional
+  targeted rollout-predicate tests also passed.
+- [Staging deployment 42934708221](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42934708221):
+  image upload succeeded but the four-minute readiness deadline expired. The
+  replacement subsequently finished at 00:58:46 UTC without health errors. The
+  deadline now allows ten minutes; active-rollout, image, health and quiet-period
+  safety requirements remain unchanged. This root-level readiness change and the
+  browser rendering fix do not change the tested backend image.
+- [Live acceptance 42934711111](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/42934711111):
+  the separate readiness retry passed without rebuilding. Authenticated manifest,
+  page-image preview, CORS/auth boundaries, indexed preflight, exact v21 runtime
+  and configured provider metadata passed before paid generation. Generation,
+  independent checks, save and authenticated read passed at 01:01:57 UTC.
 
-## Limits and release state
+Local Python has a different PDF runtime and reproduces the previously known
+image-placement fixture mismatch; CI runs the complete suite successfully.
+Extraction code was not changed to accommodate the local dependency difference.
 
-This verifies one staging API flow, not batch reliability or empirical item
-hardness. Response statistics remain fresh at zero/null; no psychometric results
-were fabricated. Human clinical review and semantic duplicate verification remain
-pending, and publication remains blocked. Edition and printed-page verification
-are explicitly unrecorded/unverified; citations identify PDF pages only.
+## Browser and release state
 
-The consolidated changes remain in PR #189. Production/main was not merged or
-deployed. This acceptance does not claim a fresh browser/admin-UI release test.
-Larger batches and cross-textbook sourcing remain deferred as requested.
+The saved-question preview now renders the structured core concept, key reasoning,
+trap and each wrong-answer explanation, plus objective and PDF-page citations.
+In the owner’s signed-in browser, the saved draft opens with all four teaching
+sections, the wrong-choice explanations, I.A.2 and both PDF page citations.
+Legacy string explanations remain readable. Model content is inserted as text,
+never HTML; both behavior and safe rendering have regressions.
+
+The isolated Pages project `srna-study-tool-staging` tracks
+`fix/board-question-quality` so the canonical staging hostname serves the PR UI.
+Its deployment label “production” refers only to this staging project, whose
+domains are `staging.srnastudytool.com` and its staging pages.dev domain.
+Frontend deployment `e627224c-731d-4e10-8d57-1ce9f7a0e598` matches the preview source
+above and succeeded. Main remains `fa20a18e840cf6fa9466122fe511b5d5ba08a0ce`.
+Return this staging project to main when the approved PR is released; do not
+restore the older UI before that release. Changes are consolidated in PR #189.
+
+## Limits
+
+This verifies one staging flow, not batch reliability or empirical item hardness.
+Response statistics remain fresh at zero/null; no quality score or psychometric
+calibration was fabricated. Human clinical review and semantic duplicate
+verification remain pending and publication remains blocked. The staging semantic
+index is not provisioned; Gemini remains off. Edition and printed-page checks are
+explicitly unrecorded/unverified; citations identify PDF pages only. Larger
+batches and cross-textbook sourcing remain deferred as requested.
