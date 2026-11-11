@@ -413,3 +413,10 @@ test('lecture blueprint objective pattern accepts real NCE objective IDs',()=>{
  assert.equal(validator.test('II.A'),false);
  assert.equal(validator.test('II/A/3'),false);
 });
+
+test('lecture planning reports skipped blank pages and rejects malformed preflight counts',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/file_extraction\?\.skipped_blank_pages/);
+ assert.match(ui,/Blank pages\/slides skipped:/);
+ assert.match(ui,/!Number\.isSafeInteger\(preflight\.passage_count\)\|\|preflight\.passage_count<0/);
+});
