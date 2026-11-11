@@ -59,7 +59,9 @@ class LectureFileHttpTests(unittest.TestCase):
     @patch("lecture_file_to_question_plan.prepare_lecture_file_jobs")
     def test_rejects_bad_base64_and_unexpected_client_fields(self, planner):
         for mutation in ({"file_base64": "invalid@@@"}, {"owner_uid": UID},
-                         {"count": True}, {"page_start": "1"},\n                         {"page_start": 0}, {"page_start": 3}, {"page_end": None},\n                         {"page_start": True}):
+                         {"count": True}, {"page_start": "1"},
+                         {"page_start": 0}, {"page_start": 3}, {"page_end": None},
+                         {"page_start": True}):
             with self.subTest(mutation=mutation):
                 payload = {**self.payload(), **mutation}
                 status, _ = self.call(payload)
