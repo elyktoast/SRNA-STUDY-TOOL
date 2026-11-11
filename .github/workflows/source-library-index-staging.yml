@@ -22,6 +22,11 @@ on:
         required: true
         default: false
         type: boolean
+      publish_review_queue:
+        description: 'Publish private source-bound review queue to staging R2 only (requires exact r2_key; no page approvals)'
+        required: true
+        default: false
+        type: boolean
       review_queue_dry_run:
         description: 'Check source-bound private page review queue readiness; no R2 or DB writes (requires exact r2_key)'
         required: true
@@ -92,6 +97,7 @@ jobs:
           R2_KEY: ${{ inputs.r2_key }}
           DISCOVER_ONLY: ${{ inputs.discover_only }}
           REVIEW_QUEUE_DRY_RUN: ${{ inputs.review_queue_dry_run }}
+          PUBLISH_REVIEW_QUEUE: ${{ inputs.publish_review_queue }}
           APPLY: ${{ inputs.apply }}
           OCR: ${{ inputs.ocr }}
           FORCE_REINDEX: ${{ inputs.force_reindex }}
@@ -109,6 +115,27 @@ jobs:
           fi
           if [[ "$DISCOVER_ONLY" == "true" && ( "$APPLY" == "true" || "$FORCE_REINDEX" == "true" || -n "$R2_KEY" ) ]]; then
             echo "Discovery requires apply=false, force_reindex=false, and blank r2_key"; exit 1
+          fi
+          if [[ "$PUBLISH_REVIEW_QUEUE" == "true" && "$REVIEW_QUEUE_DRY_RUN" == "true" ]]; then
+            echo "Choose either publish_review_queue or review_queue_dry_run"; exit 1
+          fi
+          if [[ "$PUBLISH_REVIEW_QUEUE" == "true" ]]; then
+            if [[ "$APPLY" == "true" || "$DISCOVER_ONLY" == "true" || "$FORCE_REINDEX" == "true" || -z "$R2_KEY" || -z "$DATABASE_URL" ]]; then
+              echo "Publication requires exact r2_key, staging database lock secret, apply=false, discover_only=false, force_reindex=false"; exit 1
+            fi
+            export PYTHONPATH=workers/source-library-staging/scripts
+            python - <<'PY'
+          import json, os
+          from process_r2_textbook import run
+          result = run(os.environ["OWNER_UID"], os.environ["R2_KEY"], apply=False,
+                       ocr=os.environ["OCR"] == "true", review_queue_mode="apply")
+          print(json.dumps({"mode": "publish-review-queue",
+                            "pdf_pages": result["pdf_pages"],
+                            "passages": result["passages"],
+                            "unresolved_pages": result["extraction_quality"]["unresolved_pdf_pages"],
+                            "review_queue_publication": result["review_queue_publication"]}, indent=2))
+          PY
+            exit 0
           fi
           if [[ "$REVIEW_QUEUE_DRY_RUN" == "true" ]]; then
             if [[ "$APPLY" == "true" || "$DISCOVER_ONLY" == "true" || "$FORCE_REINDEX" == "true" || -z "$R2_KEY" ]]; then
