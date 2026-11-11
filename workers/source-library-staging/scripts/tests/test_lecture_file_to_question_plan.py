@@ -61,9 +61,8 @@ class LectureFilePlanningTests(unittest.TestCase):
                     page_start=start,page_end=end)
 
     def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
-        import inspect
-        import source_review_wsgi_v2
-        source = inspect.getsource(source_review_wsgi_v2.build_app)
+        from pathlib import Path
+        source = (Path(__file__).resolve().parents[1] / 'source_review_wsgi_v2.py').read_text()
         self.assertIn('"/generation/lecture-plan"', source)
         self.assertIn('"/generation/lecture-file-plan"', source)
 
