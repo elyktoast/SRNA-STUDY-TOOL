@@ -294,7 +294,7 @@ async function renderDraftCollection(view='drafts'){
  const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
  const result=await storage.listGeneratedDrafts();const all=result.drafts||[];
  if(!Array.isArray(all))throw Error('Unexpected draft list.');
- const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank');
+ const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank'&&d.status!=='rejected');
  const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);
  if(!drafts.length){const empty=document.createElement('p');empty.textContent='No questions in this collection.';out.append(empty);return;}
  for(const draft of drafts){
@@ -318,8 +318,8 @@ async function renderDraftCollection(view='drafts'){
      await renderDraftCollection('drafts');
     }catch(error){genEl('sl-gen-status').textContent='Approval failed: '+(error.message||'Unknown error');approve.disabled=false;}
    };actions.append(approve);
-   const reject=document.createElement('button');reject.type='button';reject.textContent='Reject draft';
-   reject.onclick=async()=>{if(!window.confirm('Reject this draft? It will remain in the audit history.'))return;
+   const reject=document.createElement('button');reject.type='button';reject.textContent='Remove draft';
+   reject.onclick=async()=>{if(!window.confirm('Remove this draft from your active list? The record will be retained in the audit history.'))return;
     reject.disabled=true;try{await storage.reviewGeneratedDraft(draft.draft_id,'rejected','Rejected by admin');await renderDraftCollection('drafts');}
     catch(error){genEl('sl-gen-status').textContent='Rejection failed: '+(error.message||'Unknown error');reject.disabled=false;}
    };actions.append(reject);
