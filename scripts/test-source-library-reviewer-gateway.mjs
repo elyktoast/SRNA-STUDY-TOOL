@@ -301,3 +301,11 @@ test('lecture planning rejects upstream generation or publishing claims',async()
  assert.equal(res.status,502);
  assert.equal((await res.json()).error,'unsafe_lecture_plan');
 });
+
+test('lecture planning rejects unauthenticated requests before contacting reviewer',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const before=calls.container;
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'}),generationEnv);
+ assert.equal(res.status,401);
+ assert.equal(calls.container,before);
+});
