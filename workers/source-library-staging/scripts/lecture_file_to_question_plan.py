@@ -17,7 +17,12 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         selected = [p for p in extracted["pages"] if page_start <= p["page"] <= page_end]
     else:
         selected = extracted["pages"]
-    selected_review = [p["page"] for p in selected if p.get("needs_visual_review", p["page"] in extracted.get("review_pages", []))]
+    if not selected and extracted["pages"]:
+        raise ValueError("No lecture pages selected")
+    selected_review = [p["page"] for p in selected
+                       if p.get("needs_visual_review", p["page"] in extracted.get("review_pages", []))]
+    if not extracted["pages"] and page_start is None and page_end is None:
+        selected_review = list(extracted.get("review_pages", []))
     if selected_review:
         return {"jobs": [], "count": 0, "auto_generate": False,
                 "auto_publish": False, "database_writes": False,
