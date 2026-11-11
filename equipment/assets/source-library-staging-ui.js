@@ -79,11 +79,23 @@ function renderReadableQuestion(host,question){
  if(!q||typeof q!=='object'){host.textContent='Question preview unavailable.';return;}
  const add=(tag,text,parent=host)=>{const n=document.createElement(tag);n.textContent=String(text??'');parent.append(n);return n;};
  add('h4','Question preview');
+ if(q.mode&&q.objective)add('p',[q.mode,q.objective,q.reasoning_level].filter(Boolean).join(' · ')).className='sl-muted';
  add('p',q.what||q.stem||q.question_text||'No question stem available');
  const options=Array.isArray(q.options)?q.options:Object.entries(q.options||{}).map(([id,value])=>({id,...(typeof value==='object'?value:{text:value})}));
  if(options.length){const list=document.createElement('ol');list.className='sl-answer-list';for(const opt of options){const item=document.createElement('li');item.textContent=(opt.id?opt.id+'. ':'')+(opt.text||opt.label||opt.value||'');list.append(item)}host.append(list);}
  const answer=q.key??q.correct_answer??q.answer;if(answer!=null)add('p','Answer key: '+(typeof answer==='object'?JSON.stringify(answer):answer));
  const rationale=q.rationale||q.explanation;if(typeof rationale==='string')add('p','Rationale: '+rationale);
+ else if(rationale&&typeof rationale==='object'){
+  for(const [field,title] of [['core_concept','Core concept'],['why_key_wins','Why the answer is correct'],['trap','The trap']]){
+   if(typeof rationale[field]==='string'&&rationale[field].trim()){add('h4',title);add('p',rationale[field]);}
+  }
+  const keys=Array.isArray(q.key)?q.key:[];
+  for(const [id,text] of Object.entries(rationale.distractor_breakdown||{})){
+   if(!keys.includes(id)&&typeof text==='string'&&text.trim()){add('h4','Why '+id+' is wrong');add('p',text);}
+  }
+ }
+ const pages=[...new Set((Array.isArray(q.evidence)?q.evidence:[]).map(e=>e?.pdf_page).filter(p=>p!=null&&String(p).trim()))];
+ if(pages.length)add('p','Indexed source PDF pages: '+pages.join(', ')+'. Printed page numbers remain unverified.').className='sl-muted';
  add('p','Unpublished · Clinical review required').className='sl-muted';
 }
 let generatedForReview=null,currentDraftQuestion=null;

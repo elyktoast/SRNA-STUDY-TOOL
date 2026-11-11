@@ -11,6 +11,25 @@ const reviewer='https://reviewer-staging.srnastudytool.com';
 const pdf='123e4567-e89b-42d3-a456-426614174000/book.pdf';
 const sha=async bytes=>Buffer.from(await webcrypto.subtle.digest('SHA-256',bytes)).toString('hex');
 
+function preview(question){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]},set innerHTML(value){throw Error('Generated content must be text')}});
+ const document={createElement:node},host=node('div');
+ const render=vm.runInNewContext(ui.slice(ui.indexOf('function renderReadableQuestion('),ui.indexOf('let generatedForReview='))+'\nrenderReadableQuestion',{document});
+ render(host,question);
+ const text=n=>[n.textContent,...n.children.map(text)].join('\n');return text(host);
+}
+test('saved v2 question preview exposes the four-part teaching rationale and PDF citations safely',()=>{
+ const html='<img src=x onerror=alert(1)>';
+ const text=preview({stem:'Clinical case',mode:'NCE',objective:'I.A.2',reasoning_level:'application',key:['B'],options:[{id:'A',text:'First response'},{id:'B',text:'Second response'}],
+  rationale:{core_concept:'Core teaching',why_key_wins:'Key mechanism',trap:html,distractor_breakdown:{A:'Specific wrong mechanism',B:'Duplicate keyed breakdown'}},evidence:[{pdf_page:731},{pdf_page:732}]});
+ for(const value of ['Core teaching','Key mechanism',html,'Specific wrong mechanism','I.A.2','731, 732','Clinical review required'])assert.ok(text.includes(value),value);
+ assert.ok(!text.includes('Duplicate keyed breakdown'));
+});
+test('legacy string rationale remains readable',()=>{
+ assert.ok(preview({stem:'Legacy case',explanation:'Legacy teaching'}).includes('Legacy teaching'));
+});
+
 function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,handler}={}){
  const calls=[];
  const context={
