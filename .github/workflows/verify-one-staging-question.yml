@@ -1,5 +1,5 @@
 name: Explicit staging one-question acceptance
-# Verify v20 literal case rendering and complete independent source checks.
+# Verify v21 source-faithful physiological teaching and complete independent checks.
 on:
   workflow_dispatch:
     inputs:

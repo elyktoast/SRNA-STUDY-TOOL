@@ -4,6 +4,14 @@ import re
 
 def _exclusive_clinical_claim(field):
     label = field["label"]
+    # A named example does not establish the sole cause of an effect. This
+    # applies to physiology as well as drug lists, including the key rationale.
+    if label != "concept_card.misconception" and re.search(
+            r"\b(?:increas(?:e[sd]?|ing)|decreas(?:e[sd]?|ing)|reduc(?:e[sd]?|ing)|"
+            r"rais(?:e[sd]?|ing)|caus(?:e[sd]?|ing)|trigger(?:s|ed)?|occur(?:s|red)?)"
+            r"\s+(?:only|exclusively)\s+(?:by|with|for|when|in|from|due\s+to)\b",
+            field["text"], re.I):
+        return True
     if label not in ("concept_card.mechanism", "rationale.core_concept") and not label.startswith(
             ("rationale.distractor_breakdown.", "distractor_evidence.")):
         return False
