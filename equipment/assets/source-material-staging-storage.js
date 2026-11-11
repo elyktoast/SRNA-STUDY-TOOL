@@ -176,7 +176,7 @@ async function generationRequest(path,request){
 }
 async function planLectureQuestions(request){return generationRequest('/generation/lecture-plan',request);}
 async function planLectureFile(file,options){
- if(!(file instanceof File)||!/\.(pdf|pptx)$/i.test(file.name)||file.size<1||file.size>8*1024*1024)throw Error('Choose a PDF or PPTX lecture up to 8 MB.');
+ if(!(file instanceof File)||!/\.(pdf|pptx)$/i.test(file.name)||file.size<1||file.size>25*1024*1024)throw Error('Choose a PDF or PPTX lecture up to 25 MB.');
  const bytes=new Uint8Array(await file.arrayBuffer());
  let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
  return generationRequest('/generation/lecture-file-plan',{...options,filename:file.name,file_base64:btoa(binary)});
