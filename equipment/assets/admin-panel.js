@@ -12,7 +12,9 @@ function show(host,view,modal){modal?.classList.add('mbu-admin-fullscreen-worksp
  if(window.MBUStagingSourceWorkbench){try{mountWorkbench();}catch(error){renderError(error);}return;}
  host.innerHTML='<div role="status" class="admin-loading">Loading '+section+' workspace…</div>';
  void(async()=>{try{
-  if(location.hostname!=='staging.srnastudytool.com'||!window.MBU_SOURCE_LIBRARY_STAGING?.enabled)throw Error('Staging source workspace is disabled on this page.');
+  if(location.hostname!=='staging.srnastudytool.com')throw Error('Staging source workspace is disabled on this page.');
+  if(!window.MBU_SOURCE_LIBRARY_STAGING)window.MBU_SOURCE_LIBRARY_STAGING=Object.freeze({enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com'});
+  if(!window.MBU_SOURCE_LIBRARY_STAGING.enabled)throw Error('Staging source workspace is disabled by configuration.');
   if(!window.MBUSourceMaterialStagingStorage)await window.MBUBuild?.loadScript?.('source-material-staging-storage.js');
   if(!window.MBUSourceMaterialStagingStorage)throw Error('Source storage adapter failed to initialize.');
   if(!window.MBUStagingSourceWorkbench){
