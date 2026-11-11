@@ -39,8 +39,8 @@ class LectureHandoffTests(unittest.TestCase):
                                  item_id_factory=lambda: str(uuid4()))
         self.assertEqual(jobs["jobs"][0]["path"], "/generation/preflight")
         self.assertEqual(jobs["jobs"][0]["body"]["topic"], "malignant hyperthermia")
-        self.assertFalse(jobs["jobs"][0]["body"]["execute"])
-        self.assertFalse(jobs["jobs"][0]["body"]["confirm_paid_calls"])
+        self.assertNotIn("execute", jobs["jobs"][0]["body"])
+        self.assertNotIn("confirm_paid_calls", jobs["jobs"][0]["body"])
 
     def test_unclassified_topic_held(self):
         result = requests(self.sample("unrecognized concept xyz"), mode="SEE")
@@ -104,7 +104,8 @@ class LectureHandoffTests(unittest.TestCase):
         result = staging_http_jobs(prepared, textbook_id="t1",
                                    item_id_factory=lambda: str(uuid4()), execute=True)
         self.assertEqual(result["jobs"][0]["path"], "/generation/one")
-        self.assertTrue(result["jobs"][0]["body"]["confirm_paid_calls"])
+        self.assertNotIn("confirm_paid_calls", result["jobs"][0]["body"])
+        self.assertNotIn("execute", result["jobs"][0]["body"])
         self.assertFalse(result["auto_publish"])
 
 
