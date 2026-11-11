@@ -97,6 +97,18 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     if len(results) > 1:
         result["classification"] = {"held_count": sum(r.get("classification", {}).get("held_count", 0) for r in results),
                                     "held_for_classification": [item for r in results for item in r.get("classification", {}).get("held_for_classification", [])]}
+    # Aggregate diagnostic counts across chunks without exposing lecture text or passages.
+    plans = [r.get("lecture_plan", {}) for r in results]
+    coverage = [p.get("coverage", {}) for p in plans]
+    result["planning_diagnostics"] = {
+        "extracted_concepts": sum(c.get("lecture_concepts", 0) for c in coverage),
+        "grounded_concepts": sum(c.get("grounded_concepts", 0) for c in coverage),
+        "missing_textbook_support": sum(c.get("uncovered_concepts", 0) for c in coverage),
+        "classified_jobs": len(result["jobs"]),
+        "held_for_classification": result.get("classification", {}).get("held_count", 0),
+        "processed_chunks": len(processed),
+        "remaining_chunks": len(chunks) - len(processed),
+    }
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
                                  "selected_pages": [p["page"] for p in selected],
