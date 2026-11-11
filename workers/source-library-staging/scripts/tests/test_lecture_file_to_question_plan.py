@@ -60,5 +60,12 @@ class LectureFilePlanningTests(unittest.TestCase):
                     textbook_id='book',item_id_factory=lambda:'id',
                     page_start=start,page_end=end)
 
+    def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
+        import inspect
+        import source_review_wsgi_v2
+        source = inspect.getsource(source_review_wsgi_v2.build_app)
+        self.assertIn('"/generation/lecture-plan"', source)
+        self.assertIn('"/generation/lecture-file-plan"', source)
+
 if __name__ == '__main__':
     unittest.main()
