@@ -69,12 +69,16 @@ def extract_lecture(data, filename, *, enable_ocr=False):
         for i, slide in enumerate(prs.slides):
             chunks = []
             images = 0
+            diagrams = 0
             for shape in slide.shapes:
                 if shape.has_text_frame:
                     chunks.extend(p.text for p in shape.text_frame.paragraphs if p.text.strip())
                 if shape.has_table:
                     for row in shape.table.rows:
                         chunks.append(" | ".join(cell.text for cell in row.cells))
+                # Charts and grouped drawings are not equivalent to text extraction.
+                if shape.has_chart or shape.shape_type == 6:
+                    diagrams += 1
                 if shape.shape_type == 13:
                     images += 1
                     if enable_ocr:
@@ -101,8 +105,8 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                         chunks.append("[Speaker notes] " + note_text)
             value = "\n".join(chunks).strip()
             pages.append({"page": i + 1, "text": value,
-                          "needs_visual_review": not bool(value) or images > 0,
-                          "image_count": images})
+                          "needs_visual_review": not bool(value) or images > 0 or diagrams > 0,
+                          "image_count": images, "diagram_count": diagrams})
         kind = "pptx"
     else:
         raise ValueError("Only PDF and PPTX lectures are supported")
