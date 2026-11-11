@@ -87,13 +87,13 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             try:
                 import base64
                 length = int(environ.get("CONTENT_LENGTH", "0"))
-                if not 1 <= length <= 12 * 1024 * 1024:
+                if not 1 <= length <= 36 * 1024 * 1024:
                     raise ValueError("Invalid file request size")
                 payload = json.loads(environ["wsgi.input"].read(length))
                 if not isinstance(payload, dict) or not {"filename", "file_base64", "textbook_id"} <= payload.keys() or not payload.keys() <= {"filename", "file_base64", "textbook_id", "count", "mode", "format", "domain", "section", "objective", "page_start", "page_end"}:
                     raise ValueError("Invalid lecture file payload")
                 raw = base64.b64decode(payload["file_base64"], validate=True)
-                if len(raw) > 8 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
+                if len(raw) > 25 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
                     raise ValueError("Invalid lecture file")
                 start, end = payload.get("page_start"), payload.get("page_end")
                 if (start is None) != (end is None) or (
