@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/lecture-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -246,6 +246,7 @@ export default {
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
   const lecturePlan=url.pathname==='/generation/lecture-plan';
+  const lectureFile=url.pathname==='/generation/lecture-file-plan';
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
@@ -253,22 +254,22 @@ export default {
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(generation||generateOne||lecturePlan)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+    const allowedMethods=(generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||generateOne||lecturePlan||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((generation||generateOne||lecturePlan||lectureFile||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||lectureFile||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||lecturePlan||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
-  if((generation||generateOne||lecturePlan||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?12*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
@@ -373,22 +374,22 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||generateOne||lecturePlan||draftWrite){
+   if(generation||generateOne||lecturePlan||lectureFile||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>(lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>(lectureFile?12*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||generateOne||lecturePlan||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||draftWrite)?{body}:{})
+    method:(generation||generateOne||lecturePlan||lectureFile||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||lectureFile||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||lectureFile||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
-   if(upstream.status===500 && (generation||generateOne||lecturePlan)){
+   if(upstream.status===500 && (generation||generateOne||lecturePlan||lectureFile)){
     // Never log upstream response text: it could contain source excerpts or secrets.
     const contentType=(upstream.headers.get('Content-Type')||'').toLowerCase();
     const body=contentType.startsWith('application/json')?await upstream.clone().json().catch(()=>null):null;
