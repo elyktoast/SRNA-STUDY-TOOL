@@ -39,12 +39,12 @@ concurrency:
   cancel-in-progress: false
 jobs:
   index:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/fix/board-question-quality'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: source-library-staging
     steps:
-      - name: Check out exact dispatched main revision
+      - name: Check out exact dispatched staging revision
         uses: actions/checkout@v4
         with:
           ref: ${{ github.sha }}
