@@ -79,6 +79,19 @@ class LectureFilePlanningTests(unittest.TestCase):
             planner.assert_not_called()
         self.assertEqual(held['held_reason'],'visual_review_required')
 
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_text_with_diagram_plans_text_only_and_flags_visual(self, extract):
+        extract.return_value = {'format':'pdf','page_count':1,'review_pages':[1],
+            'pages':[{'page':1,'text':'Text on volatile anesthetic uptake',
+                      'needs_visual_review':True,'vector_count':3}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0,'auto_generate':False}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id')
+        self.assertIn('volatile anesthetic uptake',planner.call_args.args[2])
+        self.assertEqual(result['file_extraction']['text_only_visual_pages'],[1])
+        self.assertEqual(result['file_extraction']['review_pages'],[])
+
     def test_wsgi_routes_both_lecture_endpoints_to_generation(self):
         from pathlib import Path
         source = (Path(__file__).resolve().parents[1] / 'source_review_wsgi_v2.py').read_text()
