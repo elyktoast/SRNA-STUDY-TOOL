@@ -59,7 +59,7 @@ permissions:
 jobs:
   staging-unit-tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,8 +86,13 @@ jobs:
         run: node --test scripts/test-generation-completion-recovery.mjs scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
       - name: Python staging pipeline tests
         run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq tesseract-ocr tesseract-ocr-eng
-          python3 -m pip install --disable-pip-version-check pymupdf
+          # Hosted runners often already include Tesseract. Avoid unnecessary apt
+          # network calls, which can stall when Ubuntu mirrors are unreachable.
+          if ! command -v tesseract >/dev/null 2>&1 || ! tesseract --list-langs 2>/dev/null | grep -qx eng; then
+            sudo env DEBIAN_FRONTEND=noninteractive timeout 90s apt-get update -o Acquire::Retries=0 -o Acquire::http::Timeout=15 -qq
+            sudo env DEBIAN_FRONTEND=noninteractive timeout 90s apt-get install -y -qq -o Acquire::Retries=0 -o Acquire::http::Timeout=15 tesseract-ocr tesseract-ocr-eng
+          fi
+          python3 -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'python-pptx>=1.0,<2'
           python3 -m compileall -q workers/source-library-staging/scripts
           tesseract --version
           tesseract --list-langs
