@@ -357,7 +357,7 @@ test('lecture PDF/PPTX uploader uses authenticated bounded file-plan route',()=>
  assert.match(ui,/storage\.planLectureFile\(lectureFile,options\)/);
  assert.match(storage,/generationRequest\('\/generation\/lecture-file-plan'/);
  assert.match(gateway,/const lectureFile=url\.pathname==='\/generation\/lecture-file-plan'/);
- assert.match(gateway,/lectureFile\?12\*1024\*1024/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
 });
 
 test('lecture PDF preview stays local and invalidates old object URLs',()=>{
@@ -379,7 +379,7 @@ test('file plan responses must pass fail-closed gateway schema validation',()=>{
 test('lecture file upload body is not rejected as a forbidden GET payload',()=>{
  const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
  assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request\.headers\.get\('Content-Length'\)/);
- assert.match(gateway,/lectureFile\?12\*1024\*1024/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
 });
 
 test('lecture job evidence check uses read-only preflight, never generation',()=>{
@@ -435,4 +435,14 @@ test('generated question auto-saves unpublished draft and preserves manual retry
  assert.match(ui,/Use Save unpublished draft to retry/);
  assert.match(ui,/generatedForReview\.result\.draft_id=result\.draft_id/);
  assert.match(ui,/genEl\('sl-save-generated'\)\.disabled=!!result\.draft_id\|\|!result\.save_payload/);
+});
+
+
+test('lecture uploads allow 25 MiB files with base64 transport headroom',()=>{
+ const adapter=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(adapter,/file\.size>25\*1024\*1024/);
+ assert.match(ui,/max 25 MB/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
 });
