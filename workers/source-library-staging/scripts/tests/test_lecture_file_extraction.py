@@ -78,5 +78,26 @@ class LectureFileExtractionTests(unittest.TestCase):
         self.assertGreater(result['pages'][0]['vector_count'], 0)
         self.assertEqual(result['review_pages'], [1])
 
+    def test_pptx_chart_is_held_even_with_text(self):
+        try:
+            from pptx import Presentation
+            from pptx.chart.data import CategoryChartData
+            from pptx.enum.chart import XL_CHART_TYPE
+        except ImportError:
+            self.skipTest('PowerPoint parser not installed')
+        prs = Presentation()
+        slide = prs.slides.add_slide(prs.slide_layouts[5])
+        slide.shapes.title.text = 'Cardiac output'
+        chart_data = CategoryChartData()
+        chart_data.categories = ['Rest', 'Exercise']
+        chart_data.add_series('CO', (5, 12))
+        slide.shapes.add_chart(XL_CHART_TYPE.COLUMN_CLUSTERED, 0, 1200000,
+                               5000000, 3000000, chart_data)
+        stream = io.BytesIO()
+        prs.save(stream)
+        result = extract_lecture(stream.getvalue(), 'chart.pptx')
+        self.assertEqual(result['review_pages'], [1])
+        self.assertEqual(result['pages'][0]['diagram_count'], 1)
+
 if __name__ == '__main__':
     unittest.main()
