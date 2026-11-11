@@ -190,7 +190,7 @@ def check_db_text(value, field, index=None):
     except UnicodeEncodeError as exc:
         location = f" at record {index}" if index is not None else ""
         raise ValueError(f"Invalid Unicode in {field}{location}: code point U+{ord(value[exc.start]):04X}") from None
-    if "\\x00" in value:
+    if "\x00" in value:
         location = f" at record {index}" if index is not None else ""
         raise ValueError(f"PostgreSQL NUL character in {field}{location}")
     return value
