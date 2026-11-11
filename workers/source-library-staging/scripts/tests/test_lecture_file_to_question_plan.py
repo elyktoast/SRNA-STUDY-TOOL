@@ -28,13 +28,30 @@ class LectureFilePlanningTests(unittest.TestCase):
         self.assertFalse(result['file_extraction']['requires_visual_review'])
 
     @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_long_lecture_is_chunked_without_truncation(self, extract):
+        source = "airway management " * 1500
+        extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
+            'pages':[{'page':1,'text':source}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0,'auto_generate':False}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                textbook_id='book',item_id_factory=lambda:'id')
+        self.assertGreater(result['chunk_count'], 1)
+        self.assertEqual(planner.call_count, result['processed_chunk_count'])
+        self.assertTrue(all(len(call.args[2]) <= 12000 for call in planner.call_args_list))
+        self.assertFalse(result['auto_generate'])
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
     def test_oversize_extraction_fails_closed(self, extract):
         extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
             'requires_ocr_or_visual_review':False,
             'pages':[{'page':1,'text':'x'*12001}]}
-        with self.assertRaisesRegex(ValueError,'planning limit'):
-            prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+        with patch('lecture_to_question_plan.prepare_staging_jobs',
+                   return_value={'jobs':[],'count':0,'auto_generate':False}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
                 textbook_id='book',item_id_factory=lambda:'id')
+        self.assertEqual(result['chunk_count'], 2)
+        self.assertEqual(planner.call_count, 2)
 
     @patch('lecture_file_to_question_plan.extract_lecture')
     def test_range_excludes_unselected_visual_pages(self, extract):
