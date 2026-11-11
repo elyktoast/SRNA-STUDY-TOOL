@@ -145,8 +145,13 @@ def process_backlog(client, owner_uid, limit=10, apply=False,
                 "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
                 "citation_verified": result.get("citation_verified", False),
             }})
-        except ReviewRequiredError:
-            results.append({"key": key, "ok": True, "indexed": False, "needs_review": True})
+        except ReviewRequiredError as exc:
+            details = exc.diagnostics
+            results.append({"key": key, "ok": True, "indexed": False, "needs_review": True,
+                            "result": {field: details.get(field) for field in (
+                                "pdf_pages", "passages", "source_sha256", "extraction_quality",
+                                "review_required_pages", "requires_ocr_review", "section_count",
+                                "ocr_attempted", "ocr_pages", "ocr_failed_pages")}})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
             results.append({"key": key, "ok": False, **safe_error_details(exc)})
@@ -249,9 +254,14 @@ def main():
                                                    "ocr_failed_pages": result.get("ocr_failed_pages", []),
                                                    "citation_verified": False}}],
                            "succeeded": 1, "failed": 0, "skipped": 0}
-            except ReviewRequiredError:
+            except ReviewRequiredError as exc:
+                details = exc.diagnostics
                 summary = {"mode": "apply" if args.apply else "dry-run",
-                           "results": [{"key": key, "ok": True, "indexed": False, "needs_review": True}],
+                           "results": [{"key": key, "ok": True, "indexed": False, "needs_review": True,
+                                        "result": {field: details.get(field) for field in (
+                                            "pdf_pages", "passages", "source_sha256", "extraction_quality",
+                                            "review_required_pages", "requires_ocr_review", "section_count",
+                                            "ocr_attempted", "ocr_pages", "ocr_failed_pages")}}],
                            "succeeded": 0, "failed": 0, "skipped": 0, "needs_review": 1}
             except Exception as exc:
                 summary = {"mode": "apply" if args.apply else "dry-run",
