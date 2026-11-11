@@ -76,3 +76,58 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
             "held_count": sum(item["question_count"] for item in held),
             "auto_generate": False, "auto_publish": False,
             "database_writes": False}
+
+
+def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
+    """Adapt a classified lecture plan to the existing /generation/one contract.
+
+    This is a request builder, not an HTTP client. The authenticated staging
+    service must supply owner identity and enforce its own generation, review,
+    checkpoint and unpublished-draft safeguards. Never silently enable paid calls.
+    """
+    if not isinstance(prepared, dict) or not isinstance(prepared.get("requests"), list):
+        raise ValueError("Prepared lecture requests required")
+    if not isinstance(textbook_id, str) or not textbook_id.strip():
+        raise ValueError("Explicit indexed textbook ID required")
+    if not callable(item_id_factory):
+        raise ValueError("Trusted item ID factory required")
+    if type(execute) is not bool:
+        raise ValueError("Invalid execution flag")
+    from uuid import UUID
+    jobs = []
+    seen = set()
+    for entry in prepared["requests"]:
+        if not isinstance(entry, dict) or entry.get("status") != "awaiting_concept_generation":
+            raise ValueError("Only prepared concept requests may be submitted")
+        classification_data = entry.get("classification")
+        request = entry.get("concept_request")
+        if not isinstance(classification_data, dict) or not isinstance(request, dict):
+            raise ValueError("Validated classification and concept request required")
+        if classification_data.get("status") != "candidate_requires_review" and classification_data.get("status") != "user_selected_requires_review":
+            raise ValueError("Unsupported blueprint selection status")
+        target = {key: classification_data.get(key) for key in ("domain", "section", "objective")}
+        classification(**target)
+        if request.get("step") != "concept_card" or request.get("topic") != entry.get("topic"):
+            raise ValueError("Concept request topic mismatch")
+        if any(request.get(key) != value for key, value in target.items()):
+            raise ValueError("Concept request blueprint mismatch")
+        if request.get("mode") not in ("NCE", "SEE"):
+            raise ValueError("Invalid generation mode")
+        fmt = entry.get("requested_format")
+        if fmt not in ("MC", "MS", "SA", "DD", "HS"):
+            raise ValueError("Unsupported format")
+        item_id = item_id_factory()
+        try:
+            normalized_id = str(UUID(item_id))
+        except (ValueError, TypeError, AttributeError):
+            raise ValueError("Item ID factory must return UUID strings") from None
+        if normalized_id in seen:
+            raise ValueError("Duplicate item ID")
+        seen.add(normalized_id)
+        jobs.append({"path": "/generation/one" if execute else "/generation/preflight",
+                     "body": {"topic": entry["topic"], "mode": request["mode"],
+                              **target, "format": fmt, "item_id": normalized_id,
+                              "textbook_id": textbook_id, "execute": execute,
+                              "confirm_paid_calls": execute}})
+    return {"jobs": jobs, "count": len(jobs), "paid_calls_requested": execute,
+            "auto_publish": False, "database_writes": False}
