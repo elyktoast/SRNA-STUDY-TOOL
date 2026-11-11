@@ -90,14 +90,14 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if not 1 <= length <= 12 * 1024 * 1024:
                     raise ValueError("Invalid file request size")
                 payload = json.loads(environ["wsgi.input"].read(length))
-                if not isinstance(payload, dict) or not {"filename", "file_base64", "textbook_id"} <= payload.keys() or not payload.keys() <= {"filename", "file_base64", "textbook_id", "count", "mode", "format", "domain", "section", "objective"}:
+                if not isinstance(payload, dict) or not {"filename", "file_base64", "textbook_id"} <= payload.keys() or not payload.keys() <= {"filename", "file_base64", "textbook_id", "count", "mode", "format", "domain", "section", "objective", "page_start", "page_end"}:
                     raise ValueError("Invalid lecture file payload")
                 raw = base64.b64decode(payload["file_base64"], validate=True)
                 if len(raw) > 8 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
                     raise ValueError("Invalid lecture file")
                 from lecture_file_to_question_plan import prepare_lecture_file_jobs
                 with conn_factory() as conn:
-                    result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=payload["textbook_id"], item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True)
+                    result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=payload["textbook_id"], item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
                 return respond("200 OK", result)
             except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError, base64.binascii.Error):
                 return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
