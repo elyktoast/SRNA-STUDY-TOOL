@@ -4,6 +4,7 @@ Never silently treat image-only slides as complete text. OCR must be run by
 an explicitly configured trusted worker before planning such slides.
 """
 from io import BytesIO
+from zipfile import ZipFile, BadZipFile
 
 MAX_LECTURE_BYTES = 25 * 1024 * 1024
 MAX_LECTURE_PAGES = 500
@@ -35,7 +36,7 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                     except (RuntimeError, OSError):
                         pass  # Missing Tesseract or failed OCR remains flagged for review.
                 pages.append({"page": i + 1, "text": value,
-                              "needs_visual_review": not bool(value) or (images > 0 and len(value) < 100),
+                              "needs_visual_review": not bool(value) or images > 0,
                               "image_count": images})
         finally:
             doc.close()
@@ -43,6 +44,20 @@ def extract_lecture(data, filename, *, enable_ocr=False):
     elif name.endswith(".pptx"):
         if data[:2] != b"PK":
             raise ValueError("PowerPoint signature mismatch")
+        # Inspect the OOXML container before handing it to the PowerPoint parser.
+        # Prevent compressed archive bombs and unsupported macro-enabled files.
+        try:
+            with ZipFile(BytesIO(data)) as archive:
+                members = archive.infolist()
+                if len(members) > 3000 or sum(x.file_size for x in members) > 150 * 1024 * 1024:
+                    raise ValueError("Presentation expanded size exceeds safe limit")
+                if any(x.filename.startswith("/") or ".." in x.filename.split("/")
+                       or x.flag_bits & 0x1 for x in members):
+                    raise ValueError("Unsafe or encrypted presentation archive")
+                if "[Content_Types].xml" not in archive.namelist() or "ppt/presentation.xml" not in archive.namelist():
+                    raise ValueError("Not a valid PowerPoint presentation")
+        except BadZipFile as exc:
+            raise ValueError("Invalid PowerPoint archive") from exc
         from pptx import Presentation
         prs = Presentation(BytesIO(data))
         if not 1 <= len(prs.slides) <= MAX_LECTURE_PAGES:
