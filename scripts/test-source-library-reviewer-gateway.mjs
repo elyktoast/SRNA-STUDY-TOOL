@@ -426,3 +426,13 @@ test('lecture planning accepts manually entered indexed textbook ID',()=>{
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
  assert.match(ui,/const textbook_id=genEl\('sl-gen-book-select'\)\?\.value\|\|genEl\('sl-gen-book'\)\?\.value\.trim\(\)\|\|researchBookSelect\.value/);
 });
+
+
+test('generated question auto-saves unpublished draft and preserves manual retry',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/const saved=await storage\.saveGeneratedDraft\(result\.save_payload\)/);
+ assert.match(ui,/result\.draft_id=saved\.draft_id/);
+ assert.match(ui,/Use Save unpublished draft to retry/);
+ assert.match(ui,/generatedForReview\.result\.draft_id=result\.draft_id/);
+ assert.match(ui,/genEl\('sl-save-generated'\)\.disabled=!!result\.draft_id\|\|!result\.save_payload/);
+});
