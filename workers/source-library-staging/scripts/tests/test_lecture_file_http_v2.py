@@ -68,5 +68,34 @@ class LectureFileHttpTests(unittest.TestCase):
                 self.assertEqual(status, "400 Bad Request")
         planner.assert_not_called()
 
+    @patch("lecture_file_to_question_plan.prepare_lecture_file_jobs",
+           return_value={"jobs": [], "count": 0, "auto_generate": False,
+                         "auto_publish": False, "database_writes": False,
+                         "file_extraction": {"format": "pdf", "page_count": 1,
+                                             "review_pages": [], "requires_visual_review": False}})
+    def test_accepts_25_mib_and_rejects_larger_decoded_file(self, planner):
+        # Avoid base64-encoding a 25 MiB fixture: this isolates the decoded
+        # file boundary without adding a large artifact to the test suite.
+        with patch("base64.b64decode", return_value=b"x" * (25 * 1024 * 1024)):
+            status, _ = self.call(self.payload())
+            self.assertEqual(status, "200 OK")
+        self.assertEqual(planner.call_count, 1)
+        with patch("base64.b64decode", return_value=b"x" * (25 * 1024 * 1024 + 1)):
+            status, _ = self.call(self.payload())
+            self.assertEqual(status, "400 Bad Request")
+        self.assertEqual(planner.call_count, 1)
+
+    def test_rejects_encoded_request_above_36_mib(self):
+        payload = self.payload()
+        raw = json.dumps(payload).encode()
+        env = {"PATH_INFO": PATH, "REQUEST_METHOD": "POST",
+               "HTTP_ORIGIN": "https://staging.srnastudytool.com",
+               "HTTP_AUTHORIZATION": "Bearer valid",
+               "CONTENT_LENGTH": str(36 * 1024 * 1024 + 1),
+               "wsgi.input": io.BytesIO(raw)}
+        statuses = []
+        self.app(env, lambda status, headers: statuses.append(status))
+        self.assertEqual(statuses[0], "400 Bad Request")
+
 if __name__ == "__main__":
     unittest.main()
