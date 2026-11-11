@@ -381,3 +381,10 @@ test('lecture file upload body is not rejected as a forbidden GET payload',()=>{
  assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request\.headers\.get\('Content-Length'\)/);
  assert.match(gateway,/lectureFile\?12\*1024\*1024/);
 });
+
+test('lecture job evidence check uses read-only preflight, never generation',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/check\.textContent='Check indexed evidence'/);
+ assert.match(ui,/storage\.generationPreflight\(job\.body\)/);
+ assert.match(ui,/preflight\.dry_run!==true\|\|preflight\.can_publish!==false\|\|preflight\.database_writes!==false/);
+});
