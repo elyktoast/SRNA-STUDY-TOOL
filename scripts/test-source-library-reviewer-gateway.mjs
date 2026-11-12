@@ -424,7 +424,8 @@ test('lecture planning reports skipped blank pages and rejects malformed preflig
 
 test('lecture planning accepts manually entered indexed textbook ID',()=>{
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
- assert.match(ui,/const textbook_id=genEl\('sl-gen-book-select'\)\?\.value\|\|genEl\('sl-gen-book'\)\?\.value\.trim\(\)\|\|researchBookSelect\.value/);
+ assert.match(ui,/textbook_id=genEl\('sl-gen-book-select'\)\.value\|\|genEl\('sl-gen-book'\)\.value\.trim\(\)/);
+ assert.match(ui,/researchBookSelect\.addEventListener\('change'/);
 });
 
 
