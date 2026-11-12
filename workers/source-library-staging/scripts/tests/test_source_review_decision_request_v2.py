@@ -25,7 +25,7 @@ class DecisionRequestTests(unittest.TestCase):
         invalid = [
             {**PAYLOAD, "page": True},
             {**PAYLOAD, "page": 0},
-            {**PAYLOAD, "page": 3012},
+            {**PAYLOAD, "page": 100001},
             {**PAYLOAD, "path": "../secret.pdf"},
             {**PAYLOAD, "path": KEY.replace(".pdf", "/../bad.pdf")},
             {**PAYLOAD, "path": KEY.replace(".pdf", ".txt")},
