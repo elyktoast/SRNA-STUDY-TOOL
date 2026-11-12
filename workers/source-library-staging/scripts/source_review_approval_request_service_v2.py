@@ -6,6 +6,7 @@ verify a one-time receipt before any approval write.
 """
 from source_review_decision_request_v2 import parse_approval_request
 from source_review_page_loader_v2 import load_verified_review_page
+from source_review_r2_loader_v2 import fetch_verified_staging_pdf
 from source_review_identity_v2 import resolve_admin_reviewer
 from source_review_approval_service_v2 import approve_inspected_page
 
@@ -26,9 +27,7 @@ def approve_verified_request(runtime, *, access_token, body):
     page = load_verified_review_page(
         owner_uid=reviewer.uid, r2_key=request["path"], pdf_page=page_number,
         manifest_loader=lambda owner, key: manifest,
-        source_loader=lambda owner, key: __import__(
-            "source_review_r2_loader_v2", fromlist=["fetch_verified_staging_pdf"]
-        ).fetch_verified_staging_pdf(
+        source_loader=lambda owner, key: fetch_verified_staging_pdf(
             runtime.r2, owner_uid=owner, r2_key=key,
             expected_sha256=manifest["sha256"]))
     if page["image_sha256"] != request["image_sha256"]:
