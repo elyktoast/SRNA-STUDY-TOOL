@@ -130,7 +130,7 @@ test('verified queue returns only digest-bound metadata and rejects tampering',a
  const digest='a'.repeat(64);
  const pdfBytes=new TextEncoder().encode('%PDF-1.4\\nverified');
  const queue={source_sha256:digest,r2_key:pdf,pdf_page_count:3,approval_enabled:false,
-  pages:[{pdf_page:2,review_category:'ocr_error',characters:0,ocr_failed:true,has_images:false,extra:'must-not-leak'}]};
+  pages:[{pdf_page:2,review_category:'visual_blank_candidate_review',characters:0,ocr_failed:false,has_images:true,extra:'must-not-leak'}]};
  const savedGet=env.TEXTBOOKS.get,savedHead=env.TEXTBOOKS.head;
  env.TEXTBOOKS.head=async key=>key===pdf?{key:pdf,customMetadata:{sha256:digest},size:pdfBytes.length,etag:'etag-1'}:savedHead(key);
  env.TEXTBOOKS.get=async key=>key===queueKey+'.source.json'?{text:async()=>JSON.stringify({schema_version:1,r2_key:pdf,source_sha256:digest,source_etag:'etag-1',size_bytes:pdfBytes.length,queue_sha256:Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(JSON.stringify(queue))))).map(b=>b.toString(16).padStart(2,'0')).join('')})}:key===queueKey?{size:JSON.stringify(queue).length,text:async()=>JSON.stringify(queue)}:
@@ -145,7 +145,7 @@ test('verified queue returns only digest-bound metadata and rejects tampering',a
   assert.equal((await request(path)).status,409);
   queue.source_sha256=digest;queue.pages[0].review_category='approved';
   assert.equal((await request(path)).status,409);
-  queue.pages[0].review_category='ocr_error';queue.pages.push({...queue.pages[0]});
+  queue.pages[0].review_category='visual_blank_candidate_review';queue.pages.push({...queue.pages[0]});
   assert.equal((await request(path)).status,409);
  }finally{env.TEXTBOOKS.get=savedGet;env.TEXTBOOKS.head=savedHead}
 });
