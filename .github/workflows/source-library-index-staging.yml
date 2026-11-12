@@ -22,6 +22,11 @@ on:
         required: true
         default: false
         type: boolean
+      verify_published_queue:
+        description: 'Read back and verify published staging R2 queue and attestation (no writes)'
+        required: true
+        default: false
+        type: boolean
       publish_review_queue:
         description: 'Publish private source-bound review queue to staging R2 only (requires exact r2_key; no page approvals)'
         required: true
@@ -98,6 +103,7 @@ jobs:
           DISCOVER_ONLY: ${{ inputs.discover_only }}
           REVIEW_QUEUE_DRY_RUN: ${{ inputs.review_queue_dry_run }}
           PUBLISH_REVIEW_QUEUE: ${{ inputs.publish_review_queue }}
+          VERIFY_PUBLISHED_QUEUE: ${{ inputs.verify_published_queue }}
           APPLY: ${{ inputs.apply }}
           OCR: ${{ inputs.ocr }}
           FORCE_REINDEX: ${{ inputs.force_reindex }}
@@ -115,6 +121,24 @@ jobs:
           fi
           if [[ "$DISCOVER_ONLY" == "true" && ( "$APPLY" == "true" || "$FORCE_REINDEX" == "true" || -n "$R2_KEY" ) ]]; then
             echo "Discovery requires apply=false, force_reindex=false, and blank r2_key"; exit 1
+          fi
+          if [[ "$VERIFY_PUBLISHED_QUEUE" == "true" ]]; then
+            if [[ "$PUBLISH_REVIEW_QUEUE" == "true" || "$REVIEW_QUEUE_DRY_RUN" == "true" || "$APPLY" == "true" || "$DISCOVER_ONLY" == "true" || "$FORCE_REINDEX" == "true" || -z "$R2_KEY" ]]; then
+              echo "Queue verification requires exact r2_key and all other operation modes disabled"; exit 1
+            fi
+            export PYTHONPATH=workers/source-library-staging/scripts
+            python - <<'PY'
+          import json, os, boto3
+          from source_review_manifest_r2_v2 import load_staging_review_manifest
+          client = boto3.client("s3", endpoint_url="https://" + os.environ["R2_ACCOUNT_ID"] + ".r2.cloudflarestorage.com",
+                                aws_access_key_id=os.environ["R2_ACCESS_KEY_ID"],
+                                aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"], region_name="auto")
+          result = load_staging_review_manifest(client, owner_uid=os.environ["OWNER_UID"], r2_key=os.environ["R2_KEY"])
+          print(json.dumps({"mode":"verify-published-queue", "verified_source_binding":True,
+                            "pdf_pages":result["pdf_page_count"], "source_sha256":result["sha256"],
+                            "approval_enabled":False, "indexed":False}, indent=2))
+          PY
+            exit 0
           fi
           if [[ "$PUBLISH_REVIEW_QUEUE" == "true" && "$REVIEW_QUEUE_DRY_RUN" == "true" ]]; then
             echo "Choose either publish_review_queue or review_queue_dry_run"; exit 1
