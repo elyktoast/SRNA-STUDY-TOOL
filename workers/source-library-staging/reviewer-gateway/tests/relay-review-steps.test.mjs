@@ -568,3 +568,38 @@ test('acknowledgment is disabled by default and approval is never public',async(
    {...reviewer,STAGING_ACKNOWLEDGMENT_ENABLED:'true'})).status,403);
  assert.equal(backendCalls,0);
 });
+
+test('opted-in acknowledgment authenticates, forwards only expected body and rejects unsafe upstream receipt',async()=>{
+ const oldFetch=globalThis.fetch;
+ const forwarded=[];
+ const container={
+   startAndWaitForPorts:async()=>{},
+   fetch:async req=>{
+     forwarded.push({path:new URL(req.url).pathname,method:req.method,body:await req.text()});
+     return Response.json({receipt:'x'.repeat(80),approved:false});
+   }
+ };
+ const reviewer={...env,STAGING_ACKNOWLEDGMENT_ENABLED:'true',
+   SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',SUPABASE_ANON_KEY:'test-anon',
+   STAGING_DATABASE_URL:'test-db',STAGING_R2_ACCOUNT_ID:'test-account',
+   STAGING_R2_ACCESS_KEY_ID:'test-id',STAGING_R2_SECRET_ACCESS_KEY:'test-secret',
+   REVIEWER_CONTAINER:{getByName:()=>container}};
+ const payload={path:'d7c8ad4c-673d-4d87-a122-7d9bff4451bb/book.pdf',
+   page:7,challenge:'signed.fixture',acknowledged:true};
+ const make=body=>new Request('https://staging.example/review/acknowledge',{
+   method:'POST',headers:{Origin:'https://staging.srnastudytool.com',
+     Authorization:'Bearer test','Content-Type':'application/json'},body:JSON.stringify(body)});
+ globalThis.fetch=async()=>Response.json({id:'d7c8ad4c-673d-4d87-a122-7d9bff4451bb'});
+ try{
+   const ok=await gateway.fetch(make(payload),reviewer);
+   assert.equal(ok.status,200);
+   assert.equal((await ok.json()).approved,false);
+   assert.deepEqual(forwarded,[{path:'/review/acknowledge',method:'POST',body:JSON.stringify(payload)}]);
+   const invalid=await gateway.fetch(make({...payload,acknowledged:false}),reviewer);
+   assert.equal(invalid.status,400);
+   assert.equal(forwarded.length,1);
+   container.fetch=async()=>Response.json({receipt:'x'.repeat(80),approved:true});
+   const unsafe=await gateway.fetch(make(payload),reviewer);
+   assert.equal(unsafe.status,502);
+ }finally{globalThis.fetch=oldFetch;}
+});
