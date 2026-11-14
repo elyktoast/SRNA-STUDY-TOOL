@@ -53,7 +53,7 @@ class DecisionRequestTests(unittest.TestCase):
         for constant in ("NaN", "Infinity", "-Infinity"):
             with self.subTest(constant=constant), self.assertRaises(ValueError):
                 parse_approval_request(body.replace('"page": 2882', '"page": ' + constant).encode())
-        for note in ("Valid note\\nwith newline", "Valid note\\twith tab", "Valid note\\u007fDEL"):
+        for note in ("Valid note\nwith newline", "Valid note\twith tab", "Valid note\u007fDEL"):
             with self.subTest(note=note), self.assertRaises(ValueError):
                 parse_approval_request(self.encode({**PAYLOAD, "review_note": note}))
 
