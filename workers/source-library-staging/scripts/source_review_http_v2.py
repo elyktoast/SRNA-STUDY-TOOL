@@ -15,7 +15,8 @@ from wsgiref.simple_server import make_server
 from source_review_runtime_v2 import StagingReviewRuntime
 from source_review_page_loader_v2 import load_verified_review_page
 from source_review_manifest_r2_v2 import load_staging_review_manifest
-from source_review_r2_loader_v2 import fetch_verified_staging_pdf
+from source_review_r2_loader_v2 import verified_staging_pdf_file
+from source_review_page_render_v2 import render_verified_pdf_file_page
 from source_review_approval_request_service_v2 import approve_verified_request
 from source_review_decision_request_v2 import MAX_BODY_BYTES
 
@@ -209,13 +210,15 @@ def create_app(runtime):
                 return response(start_response, "200 OK", body, extra=[("X-Verified-Source-SHA256", manifest["sha256"])])
             if page_number > manifest["pdf_page_count"]:
                 raise ValueError("Page outside verified manifest")
-            source = fetch_verified_staging_pdf(
-                runtime.r2, owner_uid=reviewer.uid, r2_key=key,
-                expected_sha256=manifest["sha256"])
-            page = load_verified_review_page(
-                owner_uid=reviewer.uid, r2_key=key, pdf_page=page_number,
-                manifest_loader=lambda owner, source_key: manifest,
-                source_loader=lambda owner, source_key: source)
+            with verified_staging_pdf_file(
+                    runtime.r2, owner_uid=reviewer.uid, r2_key=key,
+                    expected_sha256=manifest["sha256"]) as verified_path:
+                png, image_sha256 = render_verified_pdf_file_page(
+                    verified_path, pdf_page=page_number)
+            page = {"png": png, "image_sha256": image_sha256,
+                    "source_sha256": manifest["sha256"],
+                    "owner_uid": reviewer.uid, "r2_key": key,
+                    "pdf_page": page_number}
             png = page["png"]
             if (not isinstance(png, bytes) or not png.startswith(bytes([137, 80, 78, 71, 13, 10, 26, 10]))
                     or hashlib.sha256(png).hexdigest() != page["image_sha256"]
