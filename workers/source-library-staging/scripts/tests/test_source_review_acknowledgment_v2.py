@@ -39,6 +39,7 @@ class AcknowledgmentTests(unittest.TestCase):
         self.assertEqual(register.call_args.kwargs["delivered_image_sha256"], "b" * 64)
         consume.assert_called_once()
 
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
     @patch("source_review_receipt_service_v2.register_delivered_page_receipt")
     @patch("source_review_receipt_service_v2.resolve_admin_reviewer")
     def test_no_receipt_for_unacknowledged_stale_or_mismatched_page(self, reviewer, register, consume):
