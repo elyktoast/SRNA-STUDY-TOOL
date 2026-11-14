@@ -21,7 +21,8 @@ class AdapterTests(unittest.TestCase):
         self.runtime = SimpleNamespace(
             auth=object(), roles=object(), r2=object(), conn=object(),
             secret=b"synthetic-secret-32-bytes-minimum!!",
-            manifest=lambda **kwargs: dict(MANIFEST))
+            manifest=lambda **kwargs: dict(MANIFEST),
+            verified_page=lambda **kwargs: {})
 
     def call(self, value=None):
         return approve_verified_request(
@@ -29,11 +30,10 @@ class AdapterTests(unittest.TestCase):
             body=json.dumps(REQUEST if value is None else value).encode())
 
     @patch("source_review_approval_request_service_v2.approve_inspected_page", return_value=1)
-    @patch("source_review_approval_request_service_v2.load_verified_review_page")
     @patch("source_review_approval_request_service_v2.resolve_admin_reviewer")
-    def test_validated_request_preserves_classification(self, reviewer, page, approve):
+    def test_validated_request_preserves_classification(self, reviewer, approve):
         reviewer.return_value = SimpleNamespace(uid=UID)
-        page.return_value = {"owner_uid": UID, "r2_key": KEY, "source_sha256": "a" * 64, "pdf_page": 2882, "image_sha256": "b" * 64}
+        self.runtime.verified_page = lambda **kwargs: {"owner_uid": UID, "r2_key": KEY, "source_sha256": "a" * 64, "pdf_page": 2882, "image_sha256": "b" * 64}
         self.assertEqual(self.call(), 1)
         self.assertEqual(approve.call_args.kwargs["pdf_page"], 2882)
         self.assertEqual(approve.call_args.kwargs["image_sha256"], "b" * 64)
@@ -41,9 +41,8 @@ class AdapterTests(unittest.TestCase):
                          "[non_content_divider] Manually inspected section index divider")
 
     @patch("source_review_approval_request_service_v2.approve_inspected_page")
-    @patch("source_review_approval_request_service_v2.load_verified_review_page")
     @patch("source_review_approval_request_service_v2.resolve_admin_reviewer")
-    def test_rejects_page_loader_identity_mismatch_without_writing(self, reviewer, page, approve):
+    def test_rejects_page_loader_identity_mismatch_without_writing(self, reviewer, approve):
         reviewer.return_value = SimpleNamespace(uid=UID)
         valid = {"owner_uid": UID, "r2_key": KEY, "source_sha256": "a" * 64,
                  "pdf_page": 2882, "image_sha256": "b" * 64}
@@ -56,16 +55,15 @@ class AdapterTests(unittest.TestCase):
             {"pdf_page": None},
         ):
             with self.subTest(change=change), self.assertRaisesRegex(ValueError, "page identity"):
-                page.return_value = {**valid, **change}
+                self.runtime.verified_page = lambda **kwargs: {**valid, **change}
                 self.call()
         approve.assert_not_called()
 
     @patch("source_review_approval_request_service_v2.approve_inspected_page")
-    @patch("source_review_approval_request_service_v2.load_verified_review_page")
     @patch("source_review_approval_request_service_v2.resolve_admin_reviewer")
-    def test_rejects_unverified_source_and_page_without_writing(self, reviewer, page, approve):
+    def test_rejects_unverified_source_and_page_without_writing(self, reviewer, approve):
         reviewer.return_value = SimpleNamespace(uid=UID)
-        page.return_value = {"image_sha256": "b" * 64}
+        self.runtime.verified_page = lambda **kwargs: {"image_sha256": "b" * 64}
         cases = [
             {**REQUEST, "source_sha256": "c" * 64},
             {**REQUEST, "image_sha256": "c" * 64},
