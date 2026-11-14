@@ -27,7 +27,9 @@ def parse_approval_request(body):
     if not isinstance(body, bytes) or not 0 < len(body) <= MAX_BODY_BYTES:
         raise ValueError("Invalid approval request size")
     try:
-        value = json.loads(body.decode("utf-8", errors="strict"),\n                           object_pairs_hook=_unique_fields,\n                           parse_constant=_reject_nonfinite)
+        value = json.loads(body.decode("utf-8", errors="strict"),
+                           object_pairs_hook=_unique_fields,
+                           parse_constant=_reject_nonfinite)
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("Invalid approval request JSON") from exc
     if not isinstance(value, dict) or set(value) != {
