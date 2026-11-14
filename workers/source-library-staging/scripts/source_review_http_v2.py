@@ -248,6 +248,7 @@ def create_app(runtime):
                 "Invalid review queue JSON": "QUEUE_JSON_INVALID",
                 "Invalid owner-scoped PDF key": "OWNER_SCOPED_KEY_INVALID",
                 "Staging bucket required": "STAGING_BUCKET_INVALID",
+                "Invalid source size": "SOURCE_SIZE_LIMIT_EXCEEDED",
             }
             rule = rules.get(message, "SOURCE_VERIFICATION_UNKNOWN")
             logging.getLogger("reviewer").error("staging_review_manifest_conflict rule=%s", rule)
