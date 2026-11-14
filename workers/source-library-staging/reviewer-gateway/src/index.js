@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/review/approve', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -245,6 +245,8 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const acknowledgment=url.pathname==='/review/acknowledge';
+  const approval=url.pathname==='/review/approve';
+  if(approval&&env.STAGING_PAGE_APPROVAL_ENABLED!=='true')return respond(403,origin,'{"error":"approval_disabled"}');
   if(acknowledgment&&env.STAGING_ACKNOWLEDGMENT_ENABLED!=='true')return respond(403,origin,'{"error":"acknowledgment_disabled"}');
   const generation=url.pathname==='/generation/preflight';
   const lecturePlan=url.pathname==='/generation/lecture-plan';
@@ -256,22 +258,22 @@ export default {
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(acknowledgment||generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+    const allowedMethods=(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((acknowledgment||generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
-  if((acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!acknowledgment&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
@@ -376,16 +378,26 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite){
+   if(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>(acknowledgment?8192:lectureFile?36*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>((acknowledgment||approval)?8192:lectureFile?36*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+    if(approval){
+     let data;try{data=JSON.parse(body)}catch{return respond(400,origin,'{"error":"invalid_request"}')}
+     if(!data||Array.isArray(data)||typeof data!=='object'||Object.keys(data).sort().join(',')!=='classification,image_sha256,page,path,receipt,review_note,source_sha256'||
+       !Number.isSafeInteger(data.page)||data.page<1||typeof data.path!=='string'||data.path.length>1024||
+       !/^[a-f0-9]{64}$/.test(data.source_sha256)||!/^[a-f0-9]{64}$/.test(data.image_sha256)||
+       typeof data.receipt!=='string'||data.receipt.length<40||data.receipt.length>4096||
+       !['non_content_divider','content_reviewed'].includes(data.classification)||
+       typeof data.review_note!=='string'||data.review_note.trim().length<8||data.review_note.length>1000)
+      return respond(400,origin,'{"error":"invalid_request"}');
+    }
     if(acknowledgment){
      let data;try{data=JSON.parse(body)}catch{return respond(400,origin,'{"error":"invalid_request"}')}
      if(!data||Array.isArray(data)||typeof data!=='object'||Object.keys(data).sort().join(',')!=='acknowledged,challenge,page,path'||
@@ -395,7 +407,7 @@ export default {
     }
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{'Content-Type':'application/json'}:{})},...((acknowledgment||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{body}:{})
+    method:(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{'Content-Type':'application/json'}:{})},...((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
    if(upstream.status===500 && (generation||generateOne||lecturePlan||lectureFile)){
@@ -515,6 +527,14 @@ export default {
    }
    if(upstream.ok&&url.pathname==='/review/page.png')
     headers.set('X-Page-Delivery-Challenge',upstream.headers.get('X-Page-Delivery-Challenge'));
+   if(approval){
+    if(upstream.ok){
+     const data=await upstream.clone().json().catch(()=>null);
+     if(!(upstream.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')||
+       !data||Object.keys(data).sort().join(',')!=='approved,ok'||data.approved!==true||data.ok!==true)
+      return respond(502,origin,'{"error":"unsafe_approval_response"}');
+    }else if(![400,401,403,409,413,415,503].includes(upstream.status))return respond(502,origin,'{"error":"unsafe_approval_status"}');
+   }
    if(acknowledgment){
     if(upstream.ok){
      const data=await upstream.clone().json().catch(()=>null);
