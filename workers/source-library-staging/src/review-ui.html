@@ -68,8 +68,7 @@ el('acknowledge').onclick=async()=>{
   if(result?.approved!==false||typeof result.receipt!=='string'||!result.receipt)
    throw new Error('Unexpected acknowledgment response');
   el('inspection-status').textContent='Inspection acknowledged. Receipt issued (not approved). Keep this page open for the protected approval step.';
-  // Receipt intentionally remains only in this page's volatile memory, never URL or storage.
-  window.__stagingInspectionReceipt=result.receipt;
+  // Never persist or expose the one-time receipt in a URL, global variable, or storage.
  }catch(e){el('inspection-status').textContent=e.message+'; reload the image to retry'}
 };
 el('form').onsubmit=async event=>{
