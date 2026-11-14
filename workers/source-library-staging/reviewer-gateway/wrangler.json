@@ -14,7 +14,9 @@
     "AI_EDITORIAL_REVIEWER_MODEL": "qwen/qwen3.8-27b",
     "AI_OPTION_REVIEW_OPT_IN": "true",
     "AI_EXPLANATION_REVIEW_OPT_IN": "true",
-    "AI_AUTHORING_PROVIDER": "cloudflare"
+    "AI_AUTHORING_PROVIDER": "cloudflare",
+    "STAGING_ACKNOWLEDGMENT_ENABLED": "true",
+    "STAGING_PAGE_APPROVAL_ENABLED": "true"
   },
   "containers": [
     {
