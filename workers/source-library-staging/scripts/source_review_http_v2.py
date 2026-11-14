@@ -67,10 +67,12 @@ def create_app(runtime):
             # This route is private-container only until the gateway explicitly
             # permits it. No browser-supplied inspection claim issues a receipt.
             auth = environ.get("HTTP_AUTHORIZATION", "")
-            if not auth.startswith("Bearer ") or len(auth) > 8192 or not auth[7:].strip():
+            if (not auth.startswith("Bearer ") or len(auth) > 8192 or not auth[7:] or auth[7:] != auth[7:].strip()):
                 return response(start_response, "401 Unauthorized", b'{"error":"authentication_required"}')
             if origin != STAGING_ORIGIN:
                 return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
+            if environ.get("QUERY_STRING", ""):
+                return response(start_response, "400 Bad Request", b'{"error":"unexpected_query"}')
             # Reject revoked/non-admin sessions before reading request bodies or
             # performing any source lookup. Never expose auth provider details.
             try:
