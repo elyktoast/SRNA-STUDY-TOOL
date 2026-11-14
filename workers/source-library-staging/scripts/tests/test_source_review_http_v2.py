@@ -318,6 +318,21 @@ class HttpTests(unittest.TestCase):
                 self.assertNotIn(b"Invalid token", body)
         approve.assert_not_called()
 
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_whitespace_tokens_and_query_fields(self, approve):
+        origin = "https://staging.srnastudytool.com"
+        for token in (" valid", "valid ", " valid "):
+            with self.subTest(token=token):
+                status, _, _ = self.call(
+                    "/review/approve", method="POST", origin=origin,
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertEqual(status, 401)
+        status, _, _ = self.call(
+            "/review/approve", query="approved=true", method="POST",
+            origin=origin, post_body=b"{}", content_type="application/json")
+        self.assertEqual(status, 400)
+        approve.assert_not_called()
+
     @patch("source_review_http_v2.approve_verified_request", return_value=1)
     def test_private_approval_requires_bounded_json_and_exact_origin(self, approve):
         origin = "https://staging.srnastudytool.com"
