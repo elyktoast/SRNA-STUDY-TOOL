@@ -54,9 +54,9 @@ class AcknowledgmentTests(unittest.TestCase):
                 self.call(**change)
         register.assert_not_called()
 
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
     @patch("source_review_receipt_service_v2.register_delivered_page_receipt")
     @patch("source_review_receipt_service_v2.resolve_admin_reviewer")
-    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
     def test_revoked_or_other_owner_never_registers(self, reviewer, register, consume):
         reviewer.side_effect = ValueError("revoked")
         with self.assertRaises(ValueError):
