@@ -41,6 +41,22 @@ class DecisionRequestTests(unittest.TestCase):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 parse_approval_request(self.encode(value))
 
+    def test_rejects_duplicate_keys_even_when_last_value_is_valid(self):
+        body = self.encode(PAYLOAD).decode()
+        for duplicate in ('"page":0,', '"classification":"auto_approved",',
+                          '"path":"other.pdf",'):
+            with self.subTest(duplicate=duplicate), self.assertRaisesRegex(ValueError, "Duplicate"):
+                parse_approval_request(("{" + duplicate + body[1:]).encode())
+
+    def test_rejects_nonfinite_values_and_control_character_notes(self):
+        body = self.encode(PAYLOAD).decode()
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant=constant), self.assertRaises(ValueError):
+                parse_approval_request(body.replace('"page": 2882', '"page": ' + constant).encode())
+        for note in ("Valid note\\nwith newline", "Valid note\\twith tab", "Valid note\\u007fDEL"):
+            with self.subTest(note=note), self.assertRaises(ValueError):
+                parse_approval_request(self.encode({**PAYLOAD, "review_note": note}))
+
     def test_rejects_invalid_transport_bytes(self):
         for value in (b"", b"{", b"\xff", b"x" * 8193, None, "not bytes"):
             with self.subTest(value=repr(value)[:30]), self.assertRaises(ValueError):
