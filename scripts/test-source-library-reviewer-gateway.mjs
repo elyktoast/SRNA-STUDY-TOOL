@@ -480,3 +480,10 @@ test('lecture file planning bypasses review-manifest source integrity guard',()=
  assert.match(gateway,/if\(upstream\.ok&&!acknowledgment&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList\)/);
  assert.match(gateway,/if\(!\/\^\[a-f0-9\]\{64\}\$\/\.test\(digest\)\)return respond\(502,origin,'\{"error":"missing_source_integrity"\}'\)/);
 });
+
+test('page delivery challenge is forwarded only for verified successful PNG',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&url\.pathname==='\/review\/page\.png'\)/);
+ assert.match(gateway,/headers\.set\('X-Page-Delivery-Challenge',upstream\.headers\.get\('X-Page-Delivery-Challenge'\)\)/);
+ assert.doesNotMatch(gateway,/for\(const name of \['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256','X-Page-Delivery-Challenge'\]\)/);
+});
