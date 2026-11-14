@@ -553,3 +553,18 @@ test('review approval and acknowledgment remain blocked at public gateway',async
   assert.equal(result.status,403,path);
  }
 });
+
+test('acknowledgment is disabled by default and approval is never public',async()=>{
+ let backendCalls=0;
+ const reviewer={...env,SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',
+   SUPABASE_ANON_KEY:'test-anon',REVIEWER_CONTAINER:{fetch:async()=>{backendCalls++;throw Error('private endpoint reached')}}};
+ const make=(path)=>new Request('https://staging.example'+path,{
+   method:'POST',headers:{Origin:'https://staging.srnastudytool.com',
+     Authorization:'Bearer test','Content-Type':'application/json'},body:'{}'});
+ const ack=await gateway.fetch(make('/review/acknowledge'),reviewer);
+ assert.equal(ack.status,403);
+ assert.equal((await ack.json()).error,'acknowledgment_disabled');
+ assert.equal((await gateway.fetch(make('/review/approve'),
+   {...reviewer,STAGING_ACKNOWLEDGMENT_ENABLED:'true'})).status,403);
+ assert.equal(backendCalls,0);
+});
