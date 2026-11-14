@@ -8,6 +8,7 @@ acknowledgment protocol is designed and accepted.
 import hashlib
 import json
 import os
+import re
 from urllib.parse import parse_qs
 from wsgiref.simple_server import make_server
 
@@ -45,7 +46,7 @@ def create_app(runtime):
             if environ.get("HTTP_ORIGIN") == STAGING_ORIGIN:
                 headers = [*headers, ("Access-Control-Allow-Origin", STAGING_ORIGIN),
                            ("Access-Control-Expose-Headers",
-                            "X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256"),
+                            "X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256, X-Page-Delivery-Challenge"),
                            ("Vary", "Origin")]
             if exc_info is None:
                 return original_start_response(status, headers)
@@ -63,6 +64,62 @@ def create_app(runtime):
                 ("Access-Control-Allow-Methods", "GET"),
                 ("Access-Control-Allow-Headers", "Authorization"),
                 ("Access-Control-Max-Age", "300")])
+        if environ.get("PATH_INFO") == "/review/acknowledge" and environ.get("REQUEST_METHOD") == "POST":
+            auth = environ.get("HTTP_AUTHORIZATION", "")
+            if (not auth.startswith("Bearer ") or len(auth) > 8192
+                    or not auth[7:] or auth[7:] != auth[7:].strip()):
+                return response(start_response, "401 Unauthorized", b'{"error":"authentication_required"}')
+            if origin != STAGING_ORIGIN:
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
+            if environ.get("QUERY_STRING", ""):
+                return response(start_response, "400 Bad Request", b'{"error":"unexpected_query"}')
+            try:
+                runtime._reviewer(auth[7:])
+            except Exception:
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden"}')
+            if environ.get("CONTENT_TYPE", "").split(";", 1)[0].strip().lower() != "application/json":
+                return response(start_response, "415 Unsupported Media Type", b'{"error":"invalid_content_type"}')
+            length_text = environ.get("CONTENT_LENGTH", "")
+            if not length_text.isascii() or not length_text.isdecimal() or len(length_text) > 8:
+                return response(start_response, "400 Bad Request", b'{"error":"invalid_content_length"}')
+            length = int(length_text)
+            if not 0 < length <= MAX_BODY_BYTES:
+                return response(start_response, "413 Payload Too Large", b'{"error":"invalid_body_size"}')
+            stream = environ.get("wsgi.input")
+            if stream is None:
+                return response(start_response, "400 Bad Request", b'{"error":"missing_body"}')
+            raw = stream.read(length)
+            if len(raw) != length:
+                return response(start_response, "400 Bad Request", b'{"error":"incomplete_body"}')
+            try:
+                def unique_pairs(pairs):
+                    obj = {}
+                    for key, value in pairs:
+                        if key in obj:
+                            raise ValueError("Duplicate JSON key")
+                        obj[key] = value
+                    return obj
+                data = json.loads(raw.decode("utf-8"), object_pairs_hook=unique_pairs)
+                if not isinstance(data, dict) or set(data) != {"path", "page", "challenge", "acknowledged"}:
+                    raise ValueError("Invalid acknowledgment fields")
+                if (not isinstance(data["path"], str) or not isinstance(data["challenge"], str)
+                        or type(data["page"]) is not int or data["page"] < 1
+                        or data["acknowledged"] is not True):
+                    raise ValueError("Invalid acknowledgment values")
+                if len(data["path"]) > MAX_PATH or len(data["challenge"]) > 4096:
+                    raise ValueError("Oversized acknowledgment fields")
+            except (ValueError, UnicodeError, TypeError):
+                return response(start_response, "400 Bad Request", b'{"error":"invalid_request"}')
+            try:
+                receipt = runtime.acknowledge(
+                    token=auth[7:], r2_key=data["path"], pdf_page=data["page"],
+                    challenge=data["challenge"], acknowledged=True)
+            except ValueError:
+                return response(start_response, "409 Conflict", b'{"error":"acknowledgment_verification_failed"}')
+            except Exception:
+                return response(start_response, "503 Service Unavailable", b'{"error":"acknowledgment_unavailable"}')
+            body = json.dumps({"receipt": receipt, "approved": False}, separators=(",", ":")).encode()
+            return response(start_response, "200 OK", body)
         if environ.get("PATH_INFO") == "/review/approve" and environ.get("REQUEST_METHOD") == "POST":
             # This route is private-container only until the gateway explicitly
             # permits it. No browser-supplied inspection claim issues a receipt.
@@ -164,9 +221,11 @@ def create_app(runtime):
                     or hashlib.sha256(png).hexdigest() != page["image_sha256"]
                     or page["source_sha256"] != manifest["sha256"]):
                 raise ValueError("Rendered page integrity mismatch")
+            challenge = runtime.delivery_challenge(token=token, page=page)
             return response(start_response, "200 OK", png, "image/png",
                             [("X-Verified-Source-SHA256", page["source_sha256"]),
-                             ("X-Page-Image-SHA256", page["image_sha256"])])
+                             ("X-Page-Image-SHA256", page["image_sha256"]),
+                             ("X-Page-Delivery-Challenge", challenge)])
         except ValueError as exc:
             # Log only a fixed diagnostic category, never the exception text or private R2 keys.
             import logging
