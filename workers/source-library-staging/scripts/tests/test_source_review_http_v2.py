@@ -41,7 +41,7 @@ class HttpTests(unittest.TestCase):
             status.append(s)
             headers.extend(h)
         env = {"REQUEST_METHOD": method, "PATH_INFO": path,
-               "QUERY_STRING": query if query is not None else "path=" + KEY + "&page=1"}
+               "QUERY_STRING": query if query is not None else ("path=" + KEY + "&page=1" if method == "GET" else "")}
         if post_body is not None:
             env["wsgi.input"] = io.BytesIO(post_body)
             env["CONTENT_LENGTH"] = str(len(post_body)) if content_length is None else content_length
