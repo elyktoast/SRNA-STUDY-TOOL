@@ -71,6 +71,12 @@ def create_app(runtime):
                 return response(start_response, "401 Unauthorized", b'{"error":"authentication_required"}')
             if origin != STAGING_ORIGIN:
                 return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
+            # Reject revoked/non-admin sessions before reading request bodies or
+            # performing any source lookup. Never expose auth provider details.
+            try:
+                runtime._reviewer(auth[7:])
+            except Exception:
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden"}')
             if environ.get("CONTENT_TYPE", "").split(";", 1)[0].strip().lower() != "application/json":
                 return response(start_response, "415 Unsupported Media Type", b'{"error":"invalid_content_type"}')
             raw_length = environ.get("CONTENT_LENGTH", "")
