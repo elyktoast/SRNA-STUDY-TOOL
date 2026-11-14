@@ -10,11 +10,24 @@ MAX_BODY_BYTES = 8192
 ALLOWED_CLASSIFICATIONS = frozenset(("non_content_divider", "content_reviewed"))
 
 
+def _unique_fields(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate approval request field")
+        result[key] = value
+    return result
+
+
+def _reject_nonfinite(value):
+    raise ValueError("Non-finite approval request number")
+
+
 def parse_approval_request(body):
     if not isinstance(body, bytes) or not 0 < len(body) <= MAX_BODY_BYTES:
         raise ValueError("Invalid approval request size")
     try:
-        value = json.loads(body.decode("utf-8", errors="strict"))
+        value = json.loads(body.decode("utf-8", errors="strict"),\n                           object_pairs_hook=_unique_fields,\n                           parse_constant=_reject_nonfinite)
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise ValueError("Invalid approval request JSON") from exc
     if not isinstance(value, dict) or set(value) != {
@@ -37,6 +50,7 @@ def parse_approval_request(body):
     if not isinstance(value["classification"], str) or value["classification"] not in ALLOWED_CLASSIFICATIONS:
         raise ValueError("Invalid review classification")
     note = value["review_note"]
-    if not isinstance(note, str) or not 8 <= len(note.strip()) <= 1000:
+    if (not isinstance(note, str) or not 8 <= len(note.strip()) <= 1000
+            or any(ord(char) < 32 or ord(char) == 127 for char in note)):
         raise ValueError("Review justification required")
     return value
