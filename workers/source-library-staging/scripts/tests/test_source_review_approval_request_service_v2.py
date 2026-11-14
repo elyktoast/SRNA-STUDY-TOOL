@@ -33,12 +33,32 @@ class AdapterTests(unittest.TestCase):
     @patch("source_review_approval_request_service_v2.resolve_admin_reviewer")
     def test_validated_request_preserves_classification(self, reviewer, page, approve):
         reviewer.return_value = SimpleNamespace(uid=UID)
-        page.return_value = {"image_sha256": "b" * 64}
+        page.return_value = {"owner_uid": UID, "r2_key": KEY, "source_sha256": "a" * 64, "pdf_page": 2882, "image_sha256": "b" * 64}
         self.assertEqual(self.call(), 1)
         self.assertEqual(approve.call_args.kwargs["pdf_page"], 2882)
         self.assertEqual(approve.call_args.kwargs["image_sha256"], "b" * 64)
         self.assertEqual(approve.call_args.kwargs["review_note"],
                          "[non_content_divider] Manually inspected section index divider")
+
+    @patch("source_review_approval_request_service_v2.approve_inspected_page")
+    @patch("source_review_approval_request_service_v2.load_verified_review_page")
+    @patch("source_review_approval_request_service_v2.resolve_admin_reviewer")
+    def test_rejects_page_loader_identity_mismatch_without_writing(self, reviewer, page, approve):
+        reviewer.return_value = SimpleNamespace(uid=UID)
+        valid = {"owner_uid": UID, "r2_key": KEY, "source_sha256": "a" * 64,
+                 "pdf_page": 2882, "image_sha256": "b" * 64}
+        for change in (
+            {"owner_uid": "00000000-0000-4000-8000-000000000000"},
+            {"r2_key": UID + "/other.pdf"},
+            {"source_sha256": "c" * 64},
+            {"pdf_page": 2881},
+            {"pdf_page": True},
+            {"pdf_page": None},
+        ):
+            with self.subTest(change=change), self.assertRaisesRegex(ValueError, "page identity"):
+                page.return_value = {**valid, **change}
+                self.call()
+        approve.assert_not_called()
 
     @patch("source_review_approval_request_service_v2.approve_inspected_page")
     @patch("source_review_approval_request_service_v2.load_verified_review_page")
