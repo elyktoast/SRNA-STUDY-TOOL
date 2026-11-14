@@ -24,7 +24,7 @@ class StagingReviewRuntime:
         self.r2 = r2_client
         self.auth = auth_provider or SupabaseAuthProvider(supabase_url, supabase_api_key)
         self.roles = role_store or ProtectedReviewerRoleStore(conn)
-        self.secret = signing_secret
+        self.secret = signing_secret.encode("utf-8") if isinstance(signing_secret, str) else signing_secret
 
     def _reviewer(self, token):
         return resolve_admin_reviewer(token, auth_provider=self.auth,
