@@ -5,8 +5,6 @@ load the source from trusted storage, verify the rendered page digest, and
 verify a one-time receipt before any approval write.
 """
 from source_review_decision_request_v2 import parse_approval_request
-from source_review_page_loader_v2 import load_verified_review_page
-from source_review_r2_loader_v2 import fetch_verified_staging_pdf
 from source_review_identity_v2 import resolve_admin_reviewer
 from source_review_approval_service_v2 import approve_inspected_page
 
@@ -24,12 +22,10 @@ def approve_verified_request(runtime, *, access_token, body):
     page_number = request["page"]
     if type(manifest.get("pdf_page_count")) is not int or not 1 <= page_number <= manifest["pdf_page_count"]:
         raise ValueError("Physical PDF page outside trusted manifest")
-    page = load_verified_review_page(
-        owner_uid=reviewer.uid, r2_key=request["path"], pdf_page=page_number,
-        manifest_loader=lambda owner, key: manifest,
-        source_loader=lambda owner, key: fetch_verified_staging_pdf(
-            runtime.r2, owner_uid=owner, r2_key=key,
-            expected_sha256=manifest["sha256"]))
+    # Re-render the original from a fully verified, file-backed source.
+    # This preserves receipt/image identity for large textbooks.
+    page = runtime.verified_page(
+        token=access_token, r2_key=request["path"], pdf_page=page_number)
     if (page.get("owner_uid") != reviewer.uid
             or page.get("r2_key") != request["path"]
             or page.get("source_sha256") != manifest["sha256"]
