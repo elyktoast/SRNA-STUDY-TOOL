@@ -103,5 +103,68 @@ class ReceiptServiceTests(unittest.TestCase):
             register(Conn())
 
 
+
+class AcknowledgmentExchangeTests(unittest.TestCase):
+    def _exchange(self, conn, challenge, **changes):
+        from source_review_receipt_service_v2 import register_acknowledged_page_receipt
+        params = dict(page=PAGE, access_token="valid", auth_provider=Auth(),
+                      protected_role_store=Roles(), signing_secret=SECRET,
+                      delivery_challenge=challenge, acknowledged=True, now=1000)
+        params.update(changes)
+        return register_acknowledged_page_receipt(conn, **params)
+
+    @patch("source_review_receipt_service_v2.register_inspection_nonce")
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
+    def test_exchange_consumes_challenge_before_registering_receipt(self, consume, register_nonce):
+        from source_review_delivery_challenge_v2 import issue_delivery_challenge
+        challenge = issue_delivery_challenge(SECRET, reviewer_uid=UID, page=PAGE, now=1000)
+        conn = Conn()
+        receipt = self._exchange(conn, challenge)
+        self.assertTrue(conn.tx.entered)
+        self.assertEqual(len(receipt.split(".")), 2)
+        consume.assert_called_once()
+        register_nonce.assert_called_once()
+        self.assertEqual(consume.call_args.kwargs["pdf_page"], PAGE["pdf_page"])
+
+    @patch("source_review_receipt_service_v2.register_inspection_nonce")
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
+    def test_replay_is_rejected_before_new_receipt(self, consume, register_nonce):
+        from source_review_delivery_challenge_v2 import issue_delivery_challenge
+        challenge = issue_delivery_challenge(SECRET, reviewer_uid=UID, page=PAGE, now=1000)
+        consumed = set()
+        def once(conn, *, nonce, **kwargs):
+            if nonce in consumed:
+                raise ValueError("Already consumed")
+            consumed.add(nonce)
+        consume.side_effect = once
+        self._exchange(Conn(), challenge)
+        with self.assertRaisesRegex(ValueError, "Already consumed"):
+            self._exchange(Conn(), challenge)
+        self.assertEqual(register_nonce.call_count, 1)
+
+    @patch("source_review_receipt_service_v2.register_inspection_nonce")
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
+    def test_revoked_role_or_missing_acknowledgment_cannot_consume(self, consume, register_nonce):
+        from source_review_delivery_challenge_v2 import issue_delivery_challenge
+        challenge = issue_delivery_challenge(SECRET, reviewer_uid=UID, page=PAGE, now=1000)
+        for changes in ({"protected_role_store": Roles(False)},
+                        {"acknowledged": False}, {"access_token": "invalid"}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                self._exchange(Conn(), challenge, **changes)
+        consume.assert_not_called()
+        register_nonce.assert_not_called()
+
+    @patch("source_review_receipt_service_v2.register_inspection_nonce")
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
+    def test_changed_image_or_expired_challenge_cannot_consume(self, consume, register_nonce):
+        from source_review_delivery_challenge_v2 import issue_delivery_challenge
+        challenge = issue_delivery_challenge(SECRET, reviewer_uid=UID, page=PAGE, now=1000)
+        with self.assertRaises(ValueError):
+            self._exchange(Conn(), challenge, page={**PAGE, "image_sha256": "c" * 64})
+        with self.assertRaises(ValueError):
+            self._exchange(Conn(), challenge, now=1121)
+        consume.assert_not_called()
+        register_nonce.assert_not_called()
+
 if __name__ == "__main__":
     unittest.main()
