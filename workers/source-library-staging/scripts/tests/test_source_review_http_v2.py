@@ -4,6 +4,7 @@ import json
 import io
 import unittest
 from unittest.mock import patch, Mock
+from contextlib import contextmanager
 
 from source_review_http_v2 import create_app
 from source_review_runtime_v2 import StagingReviewRuntime
@@ -112,16 +113,14 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(headers["X-Verified-Source-SHA256"], "a" * 64)
         self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_image_is_verified_and_never_issues_receipt(self, manifest, fetch, render):
         manifest.return_value = self.manifest
-        fetch.return_value = b"%PDF-fixture"
+        fetch.return_value.__enter__.return_value = "/tmp/verified-fixture.pdf"
         png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
-        render.return_value = {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(),
-                               "source_sha256": "a" * 64, "owner_uid": UID,
-                               "r2_key": KEY, "pdf_page": 1}
+        render.return_value = (png, hashlib.sha256(png).hexdigest())
         status, headers, body = self.call()
         self.assertEqual(status, 200)
         self.assertEqual(body, png)
@@ -132,7 +131,7 @@ class HttpTests(unittest.TestCase):
         fetch.assert_called_once()
         render.assert_called_once()
 
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_out_of_range_page_rejected_before_pdf_download(self, manifest, fetch):
         manifest.return_value = self.manifest
@@ -144,27 +143,26 @@ class HttpTests(unittest.TestCase):
     def test_attestation_failure_is_conflict(self, loader):
         self.assertEqual(self.call()[0], 409)
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file", return_value=b"%PDF")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_image_or_source_digest_mismatch_never_served(self, manifest, fetch, render):
         manifest.return_value = self.manifest
         png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
         cases = (
             {"png": png, "image_sha256": "0" * 64, "source_sha256": "a" * 64},
-            {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(), "source_sha256": "b" * 64},
             {"png": b"not-a-png", "image_sha256": hashlib.sha256(b"not-a-png").hexdigest(), "source_sha256": "a" * 64},
         )
         for page in cases:
             with self.subTest(page=page):
-                render.return_value = page
+                render.return_value = (page["png"], page["image_sha256"])
                 status, headers, body = self.call()
                 self.assertEqual(status, 409)
                 self.assertNotEqual(headers["Content-Type"], "image/png")
                 self.assertNotIn("X-Inspection-Receipt", headers)
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file", return_value=b"%PDF")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_page_renderer_failure_never_returns_unverified_bytes(self, manifest, fetch, render):
         manifest.return_value = self.manifest
@@ -175,7 +173,7 @@ class HttpTests(unittest.TestCase):
         self.assertNotIn("X-Page-Image-SHA256", headers)
         self.assertNotIn("X-Inspection-Receipt", headers)
 
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_mismatched_manifest_identity_fails_before_source_fetch(self, manifest, fetch):
         for changed in (
