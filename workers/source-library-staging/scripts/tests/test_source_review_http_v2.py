@@ -306,6 +306,18 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.call("/review/approve", method="POST",
                                    origin="https://staging.srnastudytool.com")[0], 415)
 
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_invalid_reviewer_before_body(self, approve):
+        for token in ("invalid", " "):
+            with self.subTest(token=token):
+                status, _, body = self.call(
+                    "/review/approve", method="POST",
+                    origin="https://staging.srnastudytool.com",
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertIn(status, (401, 403))
+                self.assertNotIn(b"Invalid token", body)
+        approve.assert_not_called()
+
     @patch("source_review_http_v2.approve_verified_request", return_value=1)
     def test_private_approval_requires_bounded_json_and_exact_origin(self, approve):
         origin = "https://staging.srnastudytool.com"
