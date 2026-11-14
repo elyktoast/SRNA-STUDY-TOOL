@@ -79,7 +79,7 @@ class RuntimeTests(unittest.TestCase):
 
     @patch("source_review_runtime_v2.approve_inspected_page", return_value=1)
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", return_value=b"%PDF-test")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     def test_approval_rechecks_original_source_before_nonce_consumption(self, fetch, manifest, approve):
         self.assertEqual(self.runtime.approve(token="valid", r2_key=KEY, pdf_page=1,
                          review_note="inspected", receipt="receipt", image_sha256="b" * 64), 1)
@@ -88,30 +88,28 @@ class RuntimeTests(unittest.TestCase):
 
     @patch("source_review_runtime_v2.approve_inspected_page")
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", side_effect=ValueError("Source changed"))
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     def test_changed_source_blocks_approval_before_nonce(self, fetch, manifest, approve):
+        fetch.return_value.__enter__.side_effect = ValueError("Source changed")
         with self.assertRaisesRegex(ValueError, "Source changed"):
             self.runtime.approve(token="valid", r2_key=KEY, pdf_page=1,
                                  review_note="inspected", receipt="receipt", image_sha256="b" * 64)
         approve.assert_not_called()
 
-
     @patch("source_review_runtime_v2.register_acknowledged_page_receipt", return_value="signed-receipt")
-    @patch("source_review_runtime_v2.load_verified_review_page")
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", return_value=b"%PDF-test")
+    @patch("source_review_runtime_v2.render_verified_pdf_file_page")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
     def test_acknowledgment_rerenders_trusted_original_before_receipt(
             self, manifest, fetch, render, register):
+        fetch.return_value.__enter__.return_value = "/tmp/verified.pdf"
+        render.return_value = (b"png", "b" * 64)
         page = {"owner_uid": UID, "r2_key": KEY, "pdf_page": 1,
                 "source_sha256": "a" * 64, "image_sha256": "b" * 64, "png": b"png"}
-        def verify(**kwargs):
-            self.assertEqual(kwargs["manifest_loader"](UID, KEY), MANIFEST)
-            self.assertEqual(kwargs["source_loader"](UID, KEY), b"%PDF-test")
-            return page
-        render.side_effect = verify
         self.assertEqual(self.runtime.acknowledge(
             token="valid", r2_key=KEY, pdf_page=1,
             challenge="signed-challenge", acknowledged=True), "signed-receipt")
+        render.assert_called_once_with("/tmp/verified.pdf", pdf_page=1)
         register.assert_called_once_with(
             self.conn, page=page, access_token="valid",
             auth_provider=self.runtime.auth, protected_role_store=self.runtime.roles,
@@ -119,15 +117,12 @@ class RuntimeTests(unittest.TestCase):
             acknowledged=True)
 
     @patch("source_review_runtime_v2.register_acknowledged_page_receipt")
-    @patch("source_review_runtime_v2.load_verified_review_page")
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf",
-           side_effect=ValueError("Original PDF fingerprint changed"))
+    @patch("source_review_runtime_v2.render_verified_pdf_file_page")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
     def test_changed_original_blocks_acknowledgment_before_nonce_consumption(
             self, manifest, fetch, render, register):
-        def verify(**kwargs):
-            kwargs["source_loader"](UID, KEY)
-        render.side_effect = verify
+        fetch.return_value.__enter__.side_effect = ValueError("Original PDF fingerprint changed")
         with self.assertRaisesRegex(ValueError, "fingerprint changed"):
             self.runtime.acknowledge(
                 token="valid", r2_key=KEY, pdf_page=1,
