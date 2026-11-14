@@ -7,7 +7,8 @@ Never expose signing secrets or direct database credentials to the Worker.
 from source_review_auth_supabase_v2 import SupabaseAuthProvider
 from source_review_roles_supabase_v2 import ProtectedReviewerRoleStore
 from source_review_manifest_r2_v2 import load_staging_review_manifest
-from source_review_r2_loader_v2 import fetch_verified_staging_pdf
+from source_review_r2_loader_v2 import fetch_verified_staging_pdf, verified_staging_pdf_file
+from source_review_page_render_v2 import render_verified_pdf_file_page
 from source_review_inspection_service_v2 import inspect_and_register_page
 from source_review_approval_service_v2 import approve_inspected_page
 from source_review_identity_v2 import resolve_admin_reviewer
@@ -59,16 +60,17 @@ class StagingReviewRuntime:
     def verified_page(self, *, token, r2_key, pdf_page):
         """Re-fetch immutable source bytes and render a trusted physical page."""
         reviewer = self._reviewer(token)
-        def manifest_loader(owner, key):
-            return load_staging_review_manifest(self.r2, owner_uid=owner, r2_key=key)
-        def source_loader(owner, key):
-            manifest = manifest_loader(owner, key)
-            return fetch_verified_staging_pdf(
-                self.r2, owner_uid=owner, r2_key=key,
-                expected_sha256=manifest["sha256"])
-        return load_verified_review_page(
-            owner_uid=reviewer.uid, r2_key=r2_key, pdf_page=pdf_page,
-            manifest_loader=manifest_loader, source_loader=source_loader)
+        manifest = load_staging_review_manifest(self.r2, owner_uid=reviewer.uid, r2_key=r2_key)
+        if type(pdf_page) is not int or not 1 <= pdf_page <= manifest["pdf_page_count"]:
+            raise ValueError("Page outside verified manifest")
+        with verified_staging_pdf_file(
+                self.r2, owner_uid=reviewer.uid, r2_key=r2_key,
+                expected_sha256=manifest["sha256"]) as verified_path:
+            png, image_sha256 = render_verified_pdf_file_page(
+                verified_path, pdf_page=pdf_page)
+        return {"png": png, "image_sha256": image_sha256,
+                "source_sha256": manifest["sha256"], "owner_uid": reviewer.uid,
+                "r2_key": r2_key, "pdf_page": pdf_page}
 
     def delivery_challenge(self, *, token, page):
         return register_delivery_challenge(
@@ -89,9 +91,10 @@ class StagingReviewRuntime:
                 image_sha256):
         manifest = self.manifest(token=token, r2_key=r2_key)
         # Re-check source bytes before consuming a one-time receipt.
-        fetch_verified_staging_pdf(
-            self.r2, owner_uid=manifest["owner_uid"], r2_key=r2_key,
-            expected_sha256=manifest["sha256"])
+        with verified_staging_pdf_file(
+                self.r2, owner_uid=manifest["owner_uid"], r2_key=r2_key,
+                expected_sha256=manifest["sha256"]):
+            pass
         return approve_inspected_page(
             self.conn, manifest, pdf_page=pdf_page, review_note=review_note,
             receipt=receipt, image_sha256=image_sha256,
