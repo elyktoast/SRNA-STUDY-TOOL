@@ -542,3 +542,14 @@ test('source explanation schema requires references for support but permits ever
   assert.equal(r.status,200);assert.deepEqual(JSON.parse((await r.json()).choices[0].message.content).supported_groups,[]);
  }finally{globalThis.fetch=old;}
 });
+
+test('review approval and acknowledgment remain blocked at public gateway',async()=>{
+ const reviewer={...env,SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',
+   SUPABASE_ANON_KEY:'test-anon',REVIEWER_CONTAINER:{fetch:async()=>{throw Error('private endpoint reached')}}};
+ for(const path of ['/review/approve','/review/acknowledge']){
+  const result=await gateway.fetch(new Request('https://staging.example'+path,{
+   method:'POST',headers:{Origin:'https://staging.srnastudytool.com',
+     Authorization:'Bearer test','Content-Type':'application/json'},body:'{}'}),reviewer);
+  assert.equal(result.status,403,path);
+ }
+});
