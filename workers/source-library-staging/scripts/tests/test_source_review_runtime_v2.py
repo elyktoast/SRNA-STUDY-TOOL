@@ -96,5 +96,55 @@ class RuntimeTests(unittest.TestCase):
         approve.assert_not_called()
 
 
+    @patch("source_review_runtime_v2.register_acknowledged_page_receipt", return_value="signed-receipt")
+    @patch("source_review_runtime_v2.load_verified_review_page")
+    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", return_value=b"%PDF-test")
+    @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
+    def test_acknowledgment_rerenders_trusted_original_before_receipt(
+            self, manifest, fetch, render, register):
+        page = {"owner_uid": UID, "r2_key": KEY, "pdf_page": 1,
+                "source_sha256": "a" * 64, "image_sha256": "b" * 64, "png": b"png"}
+        def verify(**kwargs):
+            self.assertEqual(kwargs["manifest_loader"](UID, KEY), MANIFEST)
+            self.assertEqual(kwargs["source_loader"](UID, KEY), b"%PDF-test")
+            return page
+        render.side_effect = verify
+        self.assertEqual(self.runtime.acknowledge(
+            token="valid", r2_key=KEY, pdf_page=1,
+            challenge="signed-challenge", acknowledged=True), "signed-receipt")
+        register.assert_called_once_with(
+            self.conn, page=page, access_token="valid",
+            auth_provider=self.runtime.auth, protected_role_store=self.runtime.roles,
+            signing_secret=self.runtime.secret, delivery_challenge="signed-challenge",
+            acknowledged=True)
+
+    @patch("source_review_runtime_v2.register_acknowledged_page_receipt")
+    @patch("source_review_runtime_v2.load_verified_review_page")
+    @patch("source_review_runtime_v2.fetch_verified_staging_pdf",
+           side_effect=ValueError("Original PDF fingerprint changed"))
+    @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
+    def test_changed_original_blocks_acknowledgment_before_nonce_consumption(
+            self, manifest, fetch, render, register):
+        def verify(**kwargs):
+            kwargs["source_loader"](UID, KEY)
+        render.side_effect = verify
+        with self.assertRaisesRegex(ValueError, "fingerprint changed"):
+            self.runtime.acknowledge(
+                token="valid", r2_key=KEY, pdf_page=1,
+                challenge="signed-challenge", acknowledged=True)
+        register.assert_not_called()
+
+    @patch("source_review_runtime_v2.register_delivery_challenge", return_value="signed-challenge")
+    def test_delivery_challenge_reauthenticates_via_receipt_service(self, register):
+        page = {"owner_uid": UID, "r2_key": KEY, "pdf_page": 1,
+                "source_sha256": "a" * 64, "image_sha256": "b" * 64}
+        self.assertEqual(self.runtime.delivery_challenge(token="valid", page=page),
+                         "signed-challenge")
+        register.assert_called_once_with(
+            self.conn, page=page, access_token="valid",
+            auth_provider=self.runtime.auth, protected_role_store=self.runtime.roles,
+            signing_secret=self.runtime.secret)
+
+
 if __name__ == "__main__":
     unittest.main()
