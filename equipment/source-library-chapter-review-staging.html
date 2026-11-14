@@ -42,7 +42,7 @@ button{padding:.6rem 1rem;cursor:pointer}iframe{width:100%;height:min(75vh,900px
 &lt;p class=&quot;notice&quot;&gt;&lt;strong&gt;Reviewer preview.&lt;/strong&gt; The optional verified-image acknowledgment can issue a one-time receipt when the protected staging gateway enables it. A receipt is not a page approval; final approval remains private. Only use staging textbooks.&lt;/p&gt;
 &lt;form id=&quot;form&quot;&gt;&lt;label&gt;Staging API URL &lt;input id=&quot;api&quot; type=&quot;url&quot; required placeholder=&quot;https://your-staging-worker.example&quot;&gt;&lt;/label&gt;
 &lt;label&gt;Reviewer gateway URL &lt;input id=&quot;gateway&quot; type=&quot;url&quot; required placeholder=&quot;https://your-staging-reviewer-gateway.example&quot;&gt;&lt;/label&gt;
-&lt;p id=&quot;auth-status&quot; role=&quot;status&quot;&gt;Checking SRNA Study Tool session…&lt;/p&gt;
+&lt;p id=&quot;auth-status&quot; role=&quot;status&quot;&gt;Checking SRNA Study Tool session… &lt;a href=&quot;/&quot;&gt;Sign in through the main app&lt;/a&gt;&lt;/p&gt;
 &lt;label&gt;Owner-scoped PDF path &lt;input id=&quot;path&quot; required placeholder=&quot;your-uid/document.pdf&quot;&gt;&lt;/label&gt;
 &lt;label&gt;Physical PDF page &lt;input id=&quot;page&quot; type=&quot;number&quot; min=&quot;1&quot; step=&quot;1&quot; value=&quot;1&quot; required&gt;&lt;/label&gt;
 &lt;button type=&quot;submit&quot;&gt;Open PDF page&lt;/button&gt;&lt;button type=&quot;button&quot; id=&quot;clear&quot;&gt;Clear preview&lt;/button&gt;&lt;/form&gt;
@@ -85,8 +85,9 @@ el('clear').onclick=()=&gt;{clear();el('status').textContent='Preview cleared'};
 el('inspected').onchange=()=&gt;{el('acknowledge').disabled=!(challenge&amp;&amp;el('inspected').checked)};
 for(const id of ['api','gateway','path','page'])el(id).addEventListener('input',clearInspection);
 el('verified').onclick=async()=&gt;{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  clearInspection();const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!/^https:\/\//.test(api)||!path||!Number.isSafeInteger(page)||page&lt;1||!jwt){
   el('inspection-status').textContent='Enter a valid HTTPS gateway URL, token, source path and page';return;
  }
@@ -106,8 +107,9 @@ el('verified').onclick=async()=&gt;{
  }catch(e){clearInspection();el('inspection-status').textContent=e.message}
 };
 el('acknowledge').onclick=async()=&gt;{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!challenge||!el('inspected').checked||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
  const proof=challenge;challenge=null;el('acknowledge').disabled=true;el('inspected').disabled=true;
  el('inspection-status').textContent='Submitting one-time inspection acknowledgment…';
@@ -125,8 +127,9 @@ el('acknowledge').onclick=async()=&gt;{
  }catch(e){el('inspection-status').textContent=e.message+'; reload the image to retry'}
 };
 el('approve').onclick=async()=&gt;{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!receipt||!sourceDigest||!imageDigest||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
  const note=el('reason').value.trim();
  if(note.length&lt;8||note.length&gt;1000){el('inspection-status').textContent='A reason of 8–1000 characters is required';return}
@@ -143,6 +146,7 @@ el('approve').onclick=async()=&gt;{
 };
 el('form').onsubmit=async event=&gt;{
  event.preventDefault();clear();
+ try{token()}catch(e){el('status').textContent=e.message;return}
  const api=el('api').value.trim().replace(/\/$/,'');
  const page=Number(el('page').value),path=el('path').value.trim();
  if(!Number.isSafeInteger(page)||page&lt;1){el('status').textContent='Invalid physical PDF page';return}
