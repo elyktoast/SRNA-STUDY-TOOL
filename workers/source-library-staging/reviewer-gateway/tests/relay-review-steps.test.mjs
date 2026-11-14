@@ -576,7 +576,7 @@ test('opted-in acknowledgment authenticates, forwards only expected body and rej
    startAndWaitForPorts:async()=>{},
    fetch:async req=>{
      forwarded.push({path:new URL(req.url).pathname,method:req.method,body:await req.text()});
-     return Response.json({receipt:'x'.repeat(80),approved:false});
+     return Response.json({receipt:'x'.repeat(80),approved:false},{headers:{'X-Review-Approval-Enabled':'false'}});
    }
  };
  const reviewer={...env,STAGING_ACKNOWLEDGMENT_ENABLED:'true',
@@ -598,7 +598,7 @@ test('opted-in acknowledgment authenticates, forwards only expected body and rej
    const invalid=await gateway.fetch(make({...payload,acknowledged:false}),reviewer);
    assert.equal(invalid.status,400);
    assert.equal(forwarded.length,1);
-   container.fetch=async()=>Response.json({receipt:'x'.repeat(80),approved:true});
+   container.fetch=async()=>Response.json({receipt:'x'.repeat(80),approved:true},{headers:{'X-Review-Approval-Enabled':'false'}});
    const unsafe=await gateway.fetch(make(payload),reviewer);
    assert.equal(unsafe.status,502);
  }finally{globalThis.fetch=oldFetch;}
