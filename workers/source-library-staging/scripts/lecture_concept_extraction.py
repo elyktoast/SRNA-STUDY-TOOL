@@ -8,7 +8,7 @@ import re
 HEADING = re.compile(r"^(?:#{1,4}\s+|(?:topic|section|unit|module)\s*\d*\s*[:.-]\s*)", re.I)
 OBJECTIVE = re.compile(r"^(?:learning\s+)?objectives?\s*[:.-]\s*(.*)$", re.I)
 BULLET = re.compile(r"^(?:[-*•]\s+|\d+[.)]\s+)")
-PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*$", re.I)
+PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
 
 
 def extract(text, *, max_concepts=60):
@@ -20,6 +20,7 @@ def extract(text, *, max_concepts=60):
     seen = set()
     locator = None
     in_objectives = False
+    at_page_start = False
     for line_no, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
         if not line:
@@ -28,6 +29,8 @@ def extract(text, *, max_concepts=60):
         page = PAGE.fullmatch(line)
         if page:
             locator = "slide/page " + page.group(1)
+            at_page_start = True
+            in_objectives = False
             continue
         objective = OBJECTIVE.match(line)
         if objective:
@@ -40,8 +43,12 @@ def extract(text, *, max_concepts=60):
             in_objectives = False
         elif in_objectives and BULLET.match(line):
             line = BULLET.sub("", line).strip()
+        elif at_page_start:
+            # Slide title candidate, not a verified clinical fact.
+            at_page_start = False
         else:
             continue
+        at_page_start = False
         if not 5 <= len(line) <= 180 or len(line.split()) > 24:
             continue
         key = re.sub(r"\s+", " ", line.casefold())

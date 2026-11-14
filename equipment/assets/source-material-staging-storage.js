@@ -171,9 +171,17 @@ async function generationRequest(path,request){
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
  const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
  const data=await response.json().catch(()=>({}));
- if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';throw Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);}
+ if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';const error=Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);error.status=response.status;error.rule=data.rule;throw error;}
  return data;
 }
+async function planLectureQuestions(request){return generationRequest('/generation/lecture-plan',request);}
+async function planLectureFile(file,options){
+ if(!(file instanceof File)||!/\.(pdf|pptx)$/i.test(file.name)||file.size<1||file.size>25*1024*1024)throw Error('Choose a PDF or PPTX lecture up to 25 MB.');
+ const bytes=new Uint8Array(await file.arrayBuffer());
+ let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+ return generationRequest('/generation/lecture-file-plan',{...options,filename:file.name,file_base64:btoa(binary)});
+}
+
 async function checkGroqConnection(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
  const raw=cfg.generationApiUrl===undefined?'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/':cfg.generationApiUrl;
@@ -185,7 +193,7 @@ async function checkGroqConnection(){
  if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
  return data;
 }
-async function generateOne(request){return generationRequest('/generation/one',request);}
+async function generateOne(request,{onRecovery=()=>{}}={}){try{return await generationRequest('/generation/one',request);}catch(error){if(!(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))&&!['AbortError','TimeoutError'].includes(error?.name))throw error;const recovery=await import('./generation-completion-recovery.js');return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}}
 async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
 async function listGeneratedDrafts(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
@@ -238,6 +246,12 @@ async function draftRevisionRequest(draftId,method,payload){
  }
  return data;
 }
+async function reviewGeneratedDraft(draftId,status,notes){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId))throw Error('Invalid draft ID.');
+ if(!['approved_for_bank','rejected','needs_revision'].includes(status))throw Error('Invalid review decision.');
+ if(typeof notes!=='string'||notes.length>5000||(status==='approved_for_bank'&&!notes.trim()))throw Error('Approval requires clinical review notes.');
+ return generationRequest('/generation/drafts/'+draftId+'/review',{status,notes});
+}
 async function listDraftRevisions(draftId){return draftRevisionRequest(draftId,'GET');}
 async function saveDraftRevision(draftId,payload){
  if(!payload||typeof payload!=='object'||typeof payload.expected_parent_sha256!=='string'||
@@ -246,5 +260,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
 })();

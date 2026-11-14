@@ -17,6 +17,10 @@ from item_grounded_pipeline_v2 import generate_from_index
 from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
 
 
+class CompletedGenerationUnavailable(ValueError):
+    """A recovery-only request may never fall through into paid generation."""
+
+
 def _call_with_bounded_rate_wait(adapter, payload):
     """Retry once only after an explicit 429 with a bounded server delay."""
     import time
@@ -27,8 +31,9 @@ def _call_with_bounded_rate_wait(adapter, payload):
         delay = exc.retry_after_seconds
         if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
             raise
-        # The observed provider delay can leave a few tokens short at the boundary.
-        time.sleep(min(60, delay + 3))
+        # The provider can increase its token estimate between identical attempts.
+        # Let one full TPM window drain, still with exactly one bounded retry.
+        time.sleep(60)
         return adapter(payload)
 
 
@@ -45,6 +50,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             or args.objective.split(".")[:2] != [args.domain, args.section]
             or args.format not in ("MC", "MS", "SA", "DD", "HS")):
         raise ValueError("Invalid NCE/SEE blueprint classification")
+    from item_board_quality_v2 import classification
+    classification(args.domain, args.section, args.objective)
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
     if args.execute and env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
@@ -60,7 +67,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               page_start=args.page_start, page_end=args.page_end)
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-11-v21", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
@@ -72,7 +79,19 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
+    quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
+    editorial_model = env.get("AI_EDITORIAL_REVIEWER_MODEL", "").strip()
+    authoring_provider = env.get("AI_AUTHORING_PROVIDER", "groq")
+    if authoring_provider not in ("groq", "cloudflare"):
+        raise ValueError("Invalid provider delivery configuration")
+    delivery_model = env.get("AI_CLOUDFLARE_MODEL", "") if authoring_provider == "cloudflare" else generator_id
+    if authoring_provider == "cloudflare" and delivery_model != "@cf/" + generator_id:
+        raise ValueError("Cloudflare provider model must match the generator identity")
+    summary["authoring_provider"] = authoring_provider
+    summary["authoring_delivery_model"] = delivery_model
+    summary["quality_contract"] = "2026-11-10-v2" if quality_requested else None
     summary["review_readiness"] = {
+        "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id and editorial_model and editorial_model != generator_id else "unavailable" if quality_requested else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
                    "missing_generator_model" if rewrite_requested else "disabled",
         "blind_review": (
@@ -104,21 +123,26 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Blind review requires distinct configured generator and reviewer models")
     if args.execute and explanation_requested and summary["review_readiness"]["explanation_review"] != "configured":
         raise ValueError("Explanatory review requires distinct configured models")
+    if args.execute and quality_requested and summary["review_readiness"]["board_quality_review"] != "configured":
+        raise ValueError("Editorial review requires a distinct configured model")
     if args.execute and rewrite_requested and not generator_id:
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-11-v21", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         "textbook_id": args.textbook_id, "section_id": args.section_id,
         "include_subsections": args.include_subsections, "page_start": args.page_start,
         "page_end": args.page_end, "limit": args.limit,
         "generator_model": env.get("AI_GENERATOR_MODEL", ""),
+        "authoring_provider": authoring_provider, "authoring_delivery_model": delivery_model,
         "provider_endpoint": env.get("AI_PROVIDER_ENDPOINT", ""),
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
         "explanation_review_enabled": explanation_requested,
+        "board_quality_contract": "2026-11-10-v2" if quality_requested else None,
+        "editorial_reviewer_model": editorial_model if quality_requested else None,
         "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
@@ -138,6 +162,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         if recovered is not None:
             return {**recovered, "_checkpoint_key": {"textbook_id": args.textbook_id,
                 "request_hash": request_hash, "evidence_hash": evidence_hash}}
+    if getattr(args, "resume_completed_only", False):
+        raise CompletedGenerationUnavailable()
     endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
     host = urlsplit(endpoint).hostname
     if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
@@ -186,8 +212,18 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     def explanation_review(item):
         from item_explanation_review_v2 import review
         report = review(item, evidence["sources"],
-                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))
+                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload), batch_size=6)
         return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
+    def quality_review(item):
+        from item_board_quality_v2 import editorial, options_only
+        editorial_adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+            model=editorial_model, transport=transport, owner_opt_in=True, staging=True)
+        reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload),
+                counterfactual_reviewer=blind_reviewer, selected_topic=args.topic),
+                   "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))}
+        return {name: {**report, "generator_model_id": generator_id,
+                      "reviewer_model_id": editorial_model if name == "editorial_quality" else reviewer_model_id}
+                for name, report in reports.items()}
     # A rewrite is an additional paid provider call. It is disabled by default
     # and requires a separate explicit staging opt-in.
     rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
@@ -208,7 +244,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                    "rules_version": "2.0", "auto_publish": False}
         candidate = _call_with_bounded_rate_wait(adapter, payload)
         return _hydrate_indexed_citations(candidate, evidence["sources"])
-    result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
+    def author(payload):
+        value = _call_with_bounded_rate_wait(adapter, payload)
+        if authoring_provider == "cloudflare" and payload.get("step") == "concept_card" and payload.get("format") == "MC":
+            concept = value.get("concept_card") if isinstance(value, dict) and set(value) == {"concept_card"} else value
+            if not isinstance(concept, dict) or not isinstance(concept.get("choice_plan"), dict):
+                raise ValueError("Concept card choice plan incomplete")
+        return value
+    result = generate_from_index(conn, args.owner_uid, args.topic, author,
                                  mode=args.mode, domain=args.domain,
                                  section=args.section, objective=args.objective,
                                  item_id=args.item_id, format=args.format,
@@ -227,11 +270,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  semantic_lookup=semantic_lookup,
                                  option_reviewer=option_reviewer if option_requested else None,
                                  option_reviewer_model_id=reviewer_model_id if option_requested else None,
-                                 explanation_review=explanation_review if explanation_requested else None)
+                                 explanation_review=explanation_review if explanation_requested else None,
+                                 quality_review=quality_review if quality_requested else None)
+    from item_board_quality_v2 import stamp_checks
+    result["item"] = stamp_checks(result["item"], result["screening"])
     save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
                     "mode": args.mode, "format": args.format,
                     "domain": args.domain, "section": args.section,
-                    "objective": args.objective, "provider": host,
+                    "objective": args.objective, "provider": "api.cloudflare.com" if authoring_provider == "cloudflare" else host,
                     "model": env["AI_GENERATOR_MODEL"], "question": result["item"],
                     "screening": result["screening"] or {"next_state": result["next_state"],
                         "generator_issues": result["generator_issues"]},

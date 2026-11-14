@@ -12,6 +12,9 @@ python3 -m unittest \
   tests.test_item_draft_revision_v2 \
   tests.test_item_draft_revision_storage_v2 \
   tests.test_generation_nonclinical_defaults_v2 \
+  tests.test_lecture_file_extraction \
+  tests.test_lecture_file_to_question_plan \
+  tests.test_lecture_file_http_v2 \
   tests.test_item_evidence_stage_consistency_v2
 cd "$ROOT/workers/source-library-staging/reviewer-gateway"
 node --test tests/relay-review-steps.test.mjs

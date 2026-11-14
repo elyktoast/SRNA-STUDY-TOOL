@@ -120,11 +120,11 @@ class DraftRevisionHttpTests(unittest.TestCase):
         saver.assert_not_called()
 
 class LiveDraftPersistenceTests(unittest.TestCase):
-    def request(self, *, token="valid"):
+    def request(self, *, token="valid", extra=None):
         app = create_app(conn_factory=Connection,
             resolve_admin=lambda bearer: UID if bearer == "valid" else None,
             environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"})
-        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
+        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002", **(extra or {})}).encode()
         env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
                "HTTP_ORIGIN": "https://staging.srnastudytool.com",
                "HTTP_AUTHORIZATION": "Bearer " + token,
@@ -132,6 +132,23 @@ class LiveDraftPersistenceTests(unittest.TestCase):
         statuses = []
         body = b"".join(app(env, lambda status, headers: statuses.append(status)))
         return statuses[0], json.loads(body)
+
+    @patch("item_generation_http_v2.save")
+    @patch("item_generation_http_v2.execute")
+    def test_completed_only_pending_is_an_explicit_conflict_without_saving(self,execute,saver):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        execute.side_effect=CompletedGenerationUnavailable()
+        status,data=self.request(extra={"resume_completed_only":True})
+        self.assertEqual(status,"409 Conflict")
+        self.assertEqual(data["rule"],"CHECKPOINT_NOT_COMPLETE")
+        self.assertTrue(execute.call_args.args[1].resume_completed_only)
+        saver.assert_not_called()
+        execute.reset_mock()
+        self.assertEqual(self.request(token="invalid",extra={"resume_completed_only":True})[0],"403 Forbidden")
+        execute.assert_not_called()
+        for value in ("true",1,None):
+            self.assertEqual(self.request(extra={"resume_completed_only":value})[0],"400 Bad Request")
+        execute.assert_not_called()
 
     @patch("item_generation_http_v2.save", return_value={
         "draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
@@ -304,6 +321,21 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertEqual(seen[0], "200 OK")
 
     @patch("item_generation_http_v2.execute")
+    def test_planning_diagnostics_are_allowlisted_and_never_echo_model_text(self, execute):
+        for message, detail in [
+            ("Concept card choice plan response invalid", "PLAN_RESPONSE_FIELDS"),
+            ("Concept card choice plan repeats a response pattern", "PLAN_REPEATED_PATTERN"),
+            ("Concept card references unknown passages", "CONCEPT_UNKNOWN_SOURCE"),
+            ("Concept card private source text and secret", None),
+        ]:
+            execute.side_effect = ValueError(message)
+            status, data = self.call()
+            self.assertEqual(status, "422 Unprocessable Entity")
+            self.assertEqual(data.get("validation_detail"), detail)
+            self.assertEqual(data["validation_contract"], "2026-11-10-v1")
+            self.assertNotIn(message, json.dumps(data))
+
+    @patch("item_generation_http_v2.execute")
     def test_no_model_execution_from_http(self, execute):
         status, _ = self.call({**PAYLOAD, "execute": True})
         self.assertEqual(status, "400 Bad Request")
@@ -409,3 +441,51 @@ class DraftBasketHttpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class LecturePlanningHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true"})
+
+    def call(self, payload, *, token="valid", origin="https://staging.srnastudytool.com",
+             method="POST"):
+        raw = json.dumps(payload).encode()
+        env = {"PATH_INFO": "/generation/lecture-plan", "REQUEST_METHOD": method,
+               "HTTP_ORIGIN": origin, "HTTP_AUTHORIZATION": "Bearer " + token,
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        result = b"".join(self.app(env, lambda status, headers: seen.append(status)))
+        return seen[0], json.loads(result)
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs",
+           return_value={"jobs": [], "count": 0, "auto_publish": False})
+    def test_owner_scoped_plan_no_generation(self, planner):
+        status, body = self.call({"lecture_text": "Learning objective: Airway",
+                                  "textbook_id": "book-1"})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["count"], 0)
+        self.assertEqual(planner.call_args.args[1], UID)
+        self.assertEqual(planner.call_args.kwargs["textbook_id"], "book-1")
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_unauthorized_or_wrong_origin(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload, token="invalid")[0], "403 Forbidden")
+        self.assertEqual(self.call(payload, origin="https://example.org")[0], "403 Forbidden")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_client_identity_and_oversize(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1",
+                   "owner_uid": UID}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        payload = {"lecture_text": "a" * 12001, "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_non_post(self, planner):
+        self.assertEqual(self.call({"lecture_text": "Airway", "textbook_id": "book-1"},
+                                   method="GET")[0], "405 Method Not Allowed")
+        planner.assert_not_called()

@@ -2,7 +2,7 @@
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -21,7 +21,34 @@ async function safeRateDiagnostic(response){
   if(typeof message!=='string')return {};
   const dimension=/tokens per minute|\bTPM\b/i.test(message)?'tokens_per_minute':/tokens per day|\bTPD\b/i.test(message)?'tokens_per_day':/requests per minute|\bRPM\b/i.test(message)?'requests_per_minute':/requests per day|\bRPD\b/i.test(message)?'requests_per_day':'unknown';
   const counts={};for(const label of ['limit','used','requested']){const match=message.match(new RegExp('\\b'+label+'\\s*:?\\s*(\\d{1,10})(?!\\d|\\.\\d)','i'));if(match&&Number(match[1])<=1e9)counts[label]=Number(match[1]);}
-  return {rate_limit_dimension:dimension,...counts};
+  const retry=message.match(/\btry again in\s+(\d{1,4}(?:\.\d{1,20})?)(ms|s)\b/i);
+  const retrySeconds=retry?Math.ceil(Number(retry[1])/(retry[2].toLowerCase()==='ms'?1000:1)):null;
+  return {rate_limit_dimension:dimension,...counts,...(retrySeconds!==null&&retrySeconds>=1&&retrySeconds<=3600?{retry_after_seconds:retrySeconds}:{})};
+ }catch{return {};}finally{await reader.cancel().catch(()=>{});}
+}
+async function safeRequestDiagnostic(response){
+ // Read a bounded private response, return only known machine categories.
+ const reader=response.body?.getReader();if(!reader)return {};
+ let size=0;const chunks=[];
+ try{
+  while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536)return {};chunks.push(value);}
+  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  const error=JSON.parse(new TextDecoder().decode(bytes))?.error;
+  const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','model_not_found'];
+  const params=['reasoning_effort','max_tokens','max_completion_tokens','response_format'];
+  const shape={};
+  if(error?.code==='json_validate_failed'&&typeof error.failed_generation==='string'){
+   shape.failed_generation_chars=error.failed_generation.length;
+   try{const value=JSON.parse(error.failed_generation);shape.failed_json_shape=value&&typeof value==='object'&&!Array.isArray(value)?'object':'other_json';
+    if(shape.failed_json_shape==='object'){
+     const known=['objective','mechanism','relevance','misconception','counterfactual','evidence_ids','choice_plan','core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test','rationale','draft','item','concept_card'];
+     shape.failed_known_fields=known.filter(k=>Object.hasOwn(value,k));
+     shape.failed_unknown_field_count=Object.keys(value).filter(k=>!known.includes(k)).length;
+    }
+   }
+   catch{shape.failed_json_shape='invalid_json';}
+  }
+  return {...shape,...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
 }
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
@@ -61,14 +88,18 @@ async function relayGroq(request,env){
  }
  // Gemini remains disabled, including signed metadata diagnostics.
  if(payload?.diagnostic==='hybrid_models')return respond(503,null,'{"error":"relay_disabled"}');
- if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
+ if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[]),...(env.AI_EXPLANATION_REVIEW_OPT_IN==='true'?[env.AI_EDITORIAL_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
- if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review'].includes(step.step)&&(payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(!['blind_review','option_review','explanation_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
-  const provider=hybrid&&step.step==='concept_card'?'cloudflare':'groq';
+  if(env.AI_AUTHORING_PROVIDER!==undefined&&!['groq','cloudflare'].includes(env.AI_AUTHORING_PROVIDER))return respond(503,null,'{"error":"relay_disabled"}');
+  const authoring=['concept_card','item_draft','rationale','rewrite'].includes(step.step);
+  const cloudflareAuthoring=env.AI_AUTHORING_PROVIDER==='cloudflare'&&authoring;
+  if(cloudflareAuthoring&&env.AI_CLOUDFLARE_MODEL!=='@cf/'+env.AI_GENERATOR_MODEL)return respond(503,null,'{"error":"relay_disabled"}');
+  const provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
   activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
@@ -81,8 +112,54 @@ async function relayGroq(request,env){
   const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
   const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
   const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...(groqOss?{reasoning_effort:'low'}:{})}):bytes;
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
+  const cloudflareOss=cloudflareAuthoring&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
+  const cloudflareGlm=cloudflareAuthoring&&payload.model==='zai-org/glm-5.3';
+  const schemaOss=groqOss||cloudflareOss||cloudflareGlm;
+  // Constrain the existing six-field planning object; this does not grade facts.
+  const conceptFormat=schemaOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='concept_card'
+   ?{type:'json_schema',json_schema:{name:'srna_concept_card_v2',strict:true,schema:{type:'object',
+     properties:{...Object.fromEntries(['objective','mechanism','relevance','misconception','counterfactual'].map(k=>[k,{type:'string'}])),evidence_ids:{type:'array',items:{type:'string'}}},
+     required:['objective','mechanism','relevance','misconception','counterfactual','evidence_ids'],additionalProperties:false}}}
+   :{type:'json_object'};
+  if(conceptFormat.type==='json_schema'&&step.format==='MC'){
+   const properties=conceptFormat.json_schema.schema.properties;
+   properties.choice_plan={type:'object',properties:{response_variables:{type:'array',items:{type:'string'},description:'Names of the two clinical measurements predicted by the choices. For an explicitly paired topic, use the two measures named by the topic. Never use generic type, direction, or value axes.'},stem_condition:{type:'string'},alternate_condition:{type:'string'},
+    key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
+    options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',items:{type:'string'}}},required:['id','states'],additionalProperties:false}}},
+    required:['response_variables','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};
+   conceptFormat.json_schema.schema.required.push('choice_plan');
+  }
+  const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
+  const strictRationale=schemaOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='rationale'&&['MC','MS'].includes(step.format)
+   &&rationaleIds.length>=4&&rationaleIds.length<=6&&new Set(rationaleIds).size===rationaleIds.length&&rationaleIds.every(id=>/^[A-F]$/.test(id));
+  const plannedRationale=strictRationale&&step.format==='MC'&&step.choice_plan&&typeof step.choice_plan==='object';
+  const rationaleFormat=strictRationale?{type:'json_schema',json_schema:{name:'srna_rationale_with_counterfactual_v2',strict:true,schema:{type:'object',
+   properties:{...Object.fromEntries(['core_concept','why_key_wins','trap'].map(k=>[k,{type:'string'}])),
+    distractor_breakdown:{type:'object',properties:Object.fromEntries(rationaleIds.map(id=>[id,{type:'string'}])),required:rationaleIds,additionalProperties:false},
+    counterfactual_test:{type:'object',properties:{from_text:{type:'string'},to_text:{type:'string'},expected_key:{type:'array',items:{type:'string',enum:rationaleIds}}},required:['from_text','to_text','expected_key'],additionalProperties:false}},
+   required:['core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test'],additionalProperties:false}}}:conceptFormat;
+  if(plannedRationale){
+   delete rationaleFormat.json_schema.schema.properties.counterfactual_test;
+   rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
+  }
+  let reviewFormat=rationaleFormat;
+  if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
+   const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
+   const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
+   if(fieldIds.every(x=>typeof x==='string')&&passageIds.every(x=>typeof x==='string')&&spanIds.length){
+    // A valid judgment can support OR reject any field. The schema guarantees
+    // references exist structurally; source identity, coverage and truth remain
+    // independently validated by the server, never inferred from JSON shape.
+    reviewFormat={type:'json_schema',json_schema:{name:'srna_explanation_review_v2',strict:true,schema:{type:'object',properties:{
+     supported_groups:{type:'array',items:{type:'object',properties:{field_ids:{type:'array',minItems:1,items:{type:'string',enum:fieldIds}},
+      quote_refs:{type:'array',minItems:1,maxItems:8,items:{type:'object',properties:{passage_id:{type:'string',enum:passageIds},span_id:{type:'string',enum:spanIds}},required:['passage_id','span_id'],additionalProperties:false}}},required:['field_ids','quote_refs'],additionalProperties:false}},
+     unsupported:{type:'array',items:{type:'object',properties:{field_id:{type:'string',enum:fieldIds},reason:{type:'string'}},required:['field_id','reason'],additionalProperties:false}}
+    },required:['supported_groups','unsupported'],additionalProperties:false}}};
+   }
+  }
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{})}):bytes;
+  const cloudflareFormat=cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
@@ -108,7 +185,7 @@ async function relayGroq(request,env){
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
-   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,6})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
+   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,20})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
    const remainingTokens=upstream.headers.get('x-ratelimit-remaining-tokens');
    const safeCount=v=>v!==null&&/^\d{1,10}$/.test(v)?Number(v):null;
@@ -120,7 +197,9 @@ async function relayGroq(request,env){
     Object.assign(rateLimit,await safeRateDiagnostic(upstream));
     console.error('staging_rate_limit',JSON.stringify({provider,step:step.step,model:activeModel,...rateLimit}));
    }
-   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
+   const requestDiagnostic=rule==='PROVIDER_REQUEST_REJECTED'?await safeRequestDiagnostic(upstream):{};
+   if(rule==='PROVIDER_REQUEST_REJECTED')console.error('staging_request_rejected',JSON.stringify({provider,step:step.step,model:activeModel,...requestDiagnostic}));
+   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...requestDiagnostic,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq'){
    let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}
@@ -166,6 +245,8 @@ export default {
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
   const generation=url.pathname==='/generation/preflight';
+  const lecturePlan=url.pathname==='/generation/lecture-plan';
+  const lectureFile=url.pathname==='/generation/lecture-file-plan';
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
@@ -173,26 +254,26 @@ export default {
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
   const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+    const allowedMethods=(generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||generateOne||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((generation||generateOne||lecturePlan||lectureFile||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||lecturePlan||lectureFile||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||draftWrite)&&Number(request.headers.get('Content-Length')||0)>8192)return respond(413,origin,'{"error":"request_too_large"}');
-  if((generation||generateOne||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if(url.search.length>2048||(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -273,6 +354,10 @@ export default {
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
+    if(env.AI_AUTHORING_PROVIDER!==undefined){
+     envVars.AI_AUTHORING_PROVIDER=env.AI_AUTHORING_PROVIDER;
+     if(env.AI_AUTHORING_PROVIDER==='cloudflare')envVars.AI_CLOUDFLARE_MODEL=env.AI_CLOUDFLARE_MODEL||'';
+    }
     if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
     if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true'){
      if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
@@ -281,6 +366,7 @@ export default {
      if(env.AI_OPTION_REVIEW_OPT_IN==='true')envVars.AI_OPTION_REVIEW_OPT_IN='true';
      if(env.AI_EXPLANATION_REVIEW_OPT_IN==='true')envVars.AI_EXPLANATION_REVIEW_OPT_IN='true';
      envVars.AI_REVIEWER_MODEL=env.AI_REVIEWER_MODEL;
+     if(typeof env.AI_EDITORIAL_REVIEWER_MODEL==='string'&&env.AI_EDITORIAL_REVIEWER_MODEL.trim()&&env.AI_EDITORIAL_REVIEWER_MODEL!==env.AI_GENERATOR_MODEL)envVars.AI_EDITORIAL_REVIEWER_MODEL=env.AI_EDITORIAL_REVIEWER_MODEL;
     }
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
     if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
@@ -288,22 +374,22 @@ export default {
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||generateOne||draftWrite){
+   if(generation||generateOne||lecturePlan||lectureFile||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>8192){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>(lectureFile?36*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||generateOne||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||draftWrite)?{body}:{})
+    method:(generation||generateOne||lecturePlan||lectureFile||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||lecturePlan||lectureFile||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||lecturePlan||lectureFile||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
-   if(upstream.status===500 && (generation||generateOne)){
+   if(upstream.status===500 && (generation||generateOne||lecturePlan||lectureFile)){
     // Never log upstream response text: it could contain source excerpts or secrets.
     const contentType=(upstream.headers.get('Content-Type')||'').toLowerCase();
     const body=contentType.startsWith('application/json')?await upstream.clone().json().catch(()=>null):null;
@@ -341,7 +427,46 @@ export default {
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(upstream.ok&&checkpointCheck){
+    const data=await upstream.clone().json().catch(()=>null);
+    const allowed=['ready','check','generation_performed','database_writes'];
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||data?.ready!==true||
+       data?.check!=='checkpoint_database_readiness'||data?.generation_performed!==false||data?.database_writes!==false||
+       Object.keys(data).some(k=>!allowed.includes(k)))return respond(502,origin,'{"error":"unsafe_checkpoint_response"}');
+   }
+   if(upstream.ok&&lectureFile){
+    const data=await upstream.clone().json().catch(()=>null);
+    const extraction=data?.file_extraction;
+    const held=data?.held_reason==='visual_review_required';
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       !extraction||!['pdf','pptx'].includes(extraction.format)||
+       !Number.isSafeInteger(extraction.page_count)||extraction.page_count<1||
+       !Array.isArray(extraction.review_pages)||
+       (held&&(data.count!==0||data.jobs.length!==0||extraction.requires_visual_review!==true))||
+       (!held&&data.paid_calls_requested!==false)||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_file_plan"}');
+    }
+   }
+   if(upstream.ok&&lecturePlan){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       data.paid_calls_requested!==false||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_plan"}');
+    }
+   }
    if(upstream.ok&&generation){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
@@ -360,7 +485,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!textbookList){
+   if(upstream.ok&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
@@ -396,7 +521,7 @@ export default {
     };
     const providers=await Promise.all([
      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
-     env.AI_HYBRID_ENABLED==='true'?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
+     (env.AI_HYBRID_ENABLED==='true'||env.AI_AUTHORING_PROVIDER==='cloudflare')?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
     ]);
     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
     const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';

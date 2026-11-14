@@ -80,9 +80,12 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
         # Use explicit PDF bookmarks where available; never infer chapter titles
         # from arbitrary text and present them as verified metadata.
         for level, heading, page in doc.get_toc(simple=True):
+            # PDF bookmark titles can contain NUL characters. PostgreSQL text
+            # rejects them (psycopg.DataError), even if passage text is clean.
+            clean_heading = str(heading).replace('\x00', '').strip()
             if (type(level) is int and 1 <= level <= 32 and type(page) is int
-                    and 1 <= page <= page_count and str(heading).strip()):
-                sections.append({'level':level,'heading':str(heading).strip(),
+                    and 1 <= page <= page_count and clean_heading):
+                sections.append({'level':level,'heading':clean_heading,
                                  'start_page':page,'source':'pdf_bookmark'})
         for i in range(page_count):
             page=i+1

@@ -33,10 +33,148 @@ researchBookSelect.addEventListener('change',()=>{
  generationSelect.value=researchBookSelect.value;
  generationSelect.dispatchEvent(new Event('change',{bubbles:true}));
 });
-const evidencePanel=document.createElement('section');evidencePanel.className='sl-evidence-preflight';evidencePanel.setAttribute('aria-label','Indexed evidence preflight');evidencePanel.innerHTML='<h3>Question generation · Evidence check</h3><p class="sl-muted">Checks indexed textbook passages only. No paid AI calls, drafts, or approvals.</p><div class="sl-row"><label>Question subject <select id="sl-topic-preset" aria-label="Choose a question subject"><option value="">Choose a subject or enter your own</option><option value="Airway management">Airway management</option><option value="Anesthesia machine and equipment">Anesthesia machine and equipment</option><option value="Respiratory physiology and ventilation">Respiratory physiology and ventilation</option><option value="Cardiovascular physiology and hemodynamics">Cardiovascular physiology and hemodynamics</option><option value="Anesthetic pharmacology">Anesthetic pharmacology</option><option value="Patient assessment and monitoring">Patient assessment and monitoring</option><option value="Regional anesthesia">Regional anesthesia</option><option value="Perioperative complications">Perioperative complications</option><option value="Pediatric anesthesia">Pediatric anesthesia</option><option value="Obstetric anesthesia">Obstetric anesthesia</option></select></label><input id="sl-topic" aria-label="Specific question topic" placeholder="Specific topic, e.g., awake extubation" required><select id="sl-mode" aria-label="Exam mode"><option>NCE</option><option>SEE</option></select><label>Question type <select id="sl-format" aria-label="Question format"><option value="MC">Single best answer</option><option value="MS">Select all that apply</option><option value="SA">Short answer</option><option value="DD">Drag and drop</option><option value="HS">Hotspot</option></select></label><button type="button" id="sl-evidence-check">Check indexed evidence</button></div><p id="sl-evidence-status" role="status" aria-live="polite"></p>';list.before(evidencePanel);evidencePanel.prepend(researchBookControl);evidencePanel.querySelector('#sl-topic-preset').addEventListener('change',event=>{if(event.target.value){const topicInput=evidencePanel.querySelector('#sl-topic');topicInput.value=event.target.value;topicInput.dispatchEvent(new Event('input',{bubbles:true}));}});if(window.MBU_SOURCE_LIBRARY_STAGING?.generationApiUrl===null||window.MBU_SOURCE_LIBRARY_STAGING?.generationApiUrl===false){const check=evidencePanel.querySelector('#sl-evidence-check');check.disabled=true;check.title='Evidence checks disabled by staging configuration';evidencePanel.querySelector('#sl-evidence-status').textContent='Evidence checks are disabled in staging configuration.';}evidencePanel.querySelector('#sl-evidence-check').onclick=async()=>{const btn=evidencePanel.querySelector('button'),output=evidencePanel.querySelector('#sl-evidence-status'),topic=evidencePanel.querySelector('#sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();checkedEvidence=null;if(!textbook_id){output.textContent='Choose an indexed textbook before checking evidence.';return;}if(!topic){output.textContent='Enter a topic first.';return;}btn.disabled=true;output.textContent='Checking indexed evidence…';try{const data=await storage.generationPreflight({topic,textbook_id,mode:evidencePanel.querySelector('#sl-mode').value,format:evidencePanel.querySelector('#sl-format').value,domain:genEl('sl-gen-domain').value,section:genEl('sl-gen-section').value.trim().toUpperCase(),objective:genEl('sl-gen-objective').value.trim(),item_id:'preflight'});output.textContent=data.passage_count+' indexed passages retrieved (up to 20 per evidence check; not the textbook total). Generation uses up to 8. No AI generation performed.';if(Number(data.passage_count)>0){checkedEvidence={topic,mode:el('sl-mode').value,format:el('sl-format').value,textbook_id,domain:genEl('sl-gen-domain').value,section:genEl('sl-gen-section').value.trim().toUpperCase(),objective:genEl('sl-gen-objective').value.trim()};evidenceHint.textContent='Evidence found for '+topic+'. Select an indexed textbook and generate an unpublished question below.';}else{evidenceHint.textContent='No indexed passages found. Refine the topic or choose a different source before generating.';}}catch(error){checkedEvidence=null;output.textContent=error.message;evidenceHint.textContent='Evidence check failed. Generation remains unavailable until the check succeeds.';}finally{btn.disabled=false}};
+const evidencePanel=document.createElement('section');evidencePanel.className='sl-evidence-preflight';evidencePanel.setAttribute('aria-label','Indexed evidence preflight');evidencePanel.innerHTML='<h3>Question generation · Evidence check</h3><p class="sl-muted">Checks indexed textbook passages only. No paid AI calls, drafts, or approvals.</p><div class="sl-row"><label>Question subject <select id="sl-topic-preset" aria-label="Choose a question subject"><option value="">Choose a subject or enter your own</option><option value="Airway management">Airway management</option><option value="Anesthesia machine and equipment">Anesthesia machine and equipment</option><option value="Respiratory physiology and ventilation">Respiratory physiology and ventilation</option><option value="Cardiovascular physiology and hemodynamics">Cardiovascular physiology and hemodynamics</option><option value="Anesthetic pharmacology">Anesthetic pharmacology</option><option value="Patient assessment and monitoring">Patient assessment and monitoring</option><option value="Regional anesthesia">Regional anesthesia</option><option value="Perioperative complications">Perioperative complications</option><option value="Pediatric anesthesia">Pediatric anesthesia</option><option value="Obstetric anesthesia">Obstetric anesthesia</option></select></label><input id="sl-topic" aria-label="Specific question topic" placeholder="Specific topic, e.g., awake extubation" required><select id="sl-mode" aria-label="Exam mode"><option>NCE</option><option>SEE</option></select><label>Question type <select id="sl-format" aria-label="Question format"><option value="MC">Single best answer</option><option value="MS">Select all that apply</option><option value="SA">Short answer</option><option value="DD">Drag and drop</option><option value="HS">Hotspot</option></select></label><button type="button" id="sl-evidence-check">Check indexed evidence</button></div><p id="sl-evidence-status" role="status" aria-live="polite"></p>';list.before(evidencePanel);evidencePanel.prepend(researchBookControl);evidencePanel.querySelector('#sl-topic-preset').addEventListener('change',event=>{if(event.target.value){const topicInput=evidencePanel.querySelector('#sl-topic');topicInput.value=event.target.value;topicInput.dispatchEvent(new Event('input',{bubbles:true}));}});if(window.MBU_SOURCE_LIBRARY_STAGING?.generationApiUrl===null||window.MBU_SOURCE_LIBRARY_STAGING?.generationApiUrl===false){const check=evidencePanel.querySelector('#sl-evidence-check');check.disabled=true;check.title='Evidence checks disabled by staging configuration';evidencePanel.querySelector('#sl-evidence-status').textContent='Evidence checks are disabled in staging configuration.';}evidencePanel.querySelector('#sl-evidence-check').onclick=async()=>{const btn=evidencePanel.querySelector('button'),output=evidencePanel.querySelector('#sl-evidence-status'),topic=evidencePanel.querySelector('#sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();checkedEvidence=null;if(!textbook_id){output.textContent='Choose an indexed textbook before checking evidence.';return;}if(!topic){output.textContent='Enter a topic first.';return;}if(!genEl('sl-gen-objective').value){output.textContent='Choose a learning objective before checking indexed evidence.';return;}btn.disabled=true;output.textContent='Checking indexed evidence…';try{const data=await storage.generationPreflight({topic,textbook_id,mode:evidencePanel.querySelector('#sl-mode').value,format:evidencePanel.querySelector('#sl-format').value,domain:genEl('sl-gen-domain').value,section:genEl('sl-gen-section').value.trim().toUpperCase(),objective:genEl('sl-gen-objective').value.trim(),item_id:'preflight'});output.textContent=data.passage_count+' indexed passages retrieved (up to 20 per evidence check; not the textbook total). Generation uses up to 8. No AI generation performed.';if(Number(data.passage_count)>0){checkedEvidence={topic,mode:el('sl-mode').value,format:el('sl-format').value,textbook_id,domain:genEl('sl-gen-domain').value,section:genEl('sl-gen-section').value.trim().toUpperCase(),objective:genEl('sl-gen-objective').value.trim()};evidenceHint.textContent='Evidence found for '+topic+'. Select an indexed textbook and generate an unpublished question below.';}else{evidenceHint.textContent='No indexed passages found. Refine the topic or choose a different source before generating.';}}catch(error){checkedEvidence=null;output.textContent=error.message;evidenceHint.textContent='Evidence check failed. Generation remains unavailable until the check succeeds.';}finally{btn.disabled=false}};
 for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['input','change'])evidencePanel.querySelector('#'+id).addEventListener(eventName,()=>{checkedEvidence=null;evidencePanel.querySelector('#sl-evidence-status').textContent='Topic or format changed. Run evidence check again.';});
 
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
+const lecturePanel=document.createElement('section');
+lecturePanel.setAttribute('aria-label','Lecture question planning');
+lecturePanel.innerHTML='<h3>Lecture → question plan (staging)</h3><p class="sl-muted">Paste lecture text or learning objectives. Planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 25 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><div class="sl-row"><label>Start page/slide <input id="sl-lecture-page-start" type="number" min="1" placeholder="All" style="width:75px"></label><label>End page/slide <input id="sl-lecture-page-end" type="number" min="1" placeholder="All" style="width:75px"></label></div><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture evidence sources <select id="sl-lecture-book"><option value="all">All indexed textbooks (recommended)</option></select></label><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+// Local-only lecture preview. Blob URLs are never sent to the generation service.
+const lectureInput=lecturePanel.querySelector('#sl-lecture-file');
+const lecturePreview=document.createElement('div');lecturePreview.id='sl-lecture-preview';
+lecturePreview.setAttribute('aria-label','Selected lecture preview');
+lectureInput.closest('label').after(lecturePreview);
+let lecturePreviewUrl=null;
+lectureInput.addEventListener('change',()=>{
+ if(lecturePreviewUrl){URL.revokeObjectURL(lecturePreviewUrl);lecturePreviewUrl=null;}
+ lecturePreview.replaceChildren();
+ const file=lectureInput.files?.[0];if(!file)return;
+ const info=document.createElement('p');info.textContent=file.name+' · '+(file.size/1048576).toFixed(2)+' MB';
+ lecturePreview.append(info);
+ if(!/\.(pdf|pptx)$/i.test(file.name)||file.size>8*1048576||file.size===0){info.textContent+=' — unsupported or oversized file';return;}
+ if(/\.pdf$/i.test(file.name)){
+  lecturePreviewUrl=URL.createObjectURL(file);
+  const frame=document.createElement('iframe');frame.title='Local PDF lecture preview';frame.style.cssText='width:100%;height:360px;border:1px solid #aabbd1;border-radius:8px';
+  frame.src=lecturePreviewUrl;lecturePreview.append(frame);
+ }else{
+  const hint=document.createElement('p');hint.className='sl-muted';
+  hint.textContent='PowerPoint slide previews require the server-side image reader. Text and tables can be extracted; slides containing images are held for visual review.';
+  lecturePreview.append(hint);
+ }
+});
+// Mount after the evidence panel is attached to its final parent.
+lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=>{
+ const btn=lecturePanel.querySelector('#sl-lecture-plan'),out=lecturePanel.querySelector('#sl-lecture-status'),results=lecturePanel.querySelector('#sl-lecture-results');
+ const lecture_text=lecturePanel.querySelector('#sl-lecture-text').value.trim();
+ const lectureFile=lecturePanel.querySelector('#sl-lecture-file').files?.[0];
+ const textbook_id=lecturePanel.querySelector('#sl-lecture-book')?.value||'all';
+ const count=Number(lecturePanel.querySelector('#sl-lecture-count').value);
+ results.replaceChildren();
+ if(!textbook_id){out.textContent='Choose a textbook evidence scope.';return;}
+ if(!lectureFile&&(!lecture_text||lecture_text.length>12000)){out.textContent='Upload a PDF/PPTX or enter up to 12,000 characters.';return;}
+ if(!Number.isInteger(count)||count<1||count>5){out.textContent='Choose 1–5 questions.';return;}
+ btn.disabled=true;out.textContent='Preparing grounded lecture plan…';
+ try{
+  const mode=evidencePanel.querySelector('#sl-mode').value,format=evidencePanel.querySelector('#sl-format').value;
+  const useObjective=lecturePanel.querySelector('#sl-lecture-use-objective').checked;
+  const blueprint=useObjective?{domain:genEl('sl-gen-domain')?.value,section:genEl('sl-gen-section')?.value,objective:genEl('sl-gen-objective')?.value}:{};
+  if(useObjective&&(!blueprint.domain||!blueprint.section||!blueprint.objective)){
+   out.textContent='Choose a learning objective in AI Question Studio, or turn off the selected-objective option.';return;
+  }
+  const options={textbook_id,count,mode,format,...blueprint};
+  if(lectureFile){
+   const start=lecturePanel.querySelector('#sl-lecture-page-start').value.trim();
+   const end=lecturePanel.querySelector('#sl-lecture-page-end').value.trim();
+   if(start||end){
+    if(!start||!end||!Number.isInteger(Number(start))||!Number.isInteger(Number(end))||Number(start)<1||Number(end)<Number(start)){
+     out.textContent='Enter both a valid start and end page/slide, or leave both blank for the full lecture.';return;
+    }
+    options.page_start=Number(start);options.page_end=Number(end);
+   }
+  }
+  let data;
+  try{
+   data=lectureFile?await storage.planLectureFile(lectureFile,options):await storage.planLectureQuestions({lecture_text,...options});
+  }catch(error){
+   if(String(error?.message||error).includes('lecture_text_exceeds_planning_limit')){
+    out.textContent='This lecture has more extracted text than one planning request supports. Enter a smaller page/slide range above (for example 1–5) and try again.';return;
+   }
+   throw error;
+  }
+  if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
+  const jobs=Array.isArray(data.jobs)?data.jobs:[];
+  const held=data.classification?.held_count||0;
+  const skipped=data.file_extraction?.skipped_blank_pages;
+  const blankNote=Array.isArray(skipped)&&skipped.length?' Blank pages/slides skipped: '+skipped.join(', ')+'.':'';
+  const diag=data.planning_diagnostics;
+  if(!jobs.length&&diag){
+   const summary='Concepts identified: '+diag.extracted_concepts+'. Textbook-supported concepts: '+diag.grounded_concepts+'. Missing textbook support: '+diag.missing_textbook_support+'. Held for classification: '+diag.held_for_classification+'. Chunks processed: '+diag.processed_chunks+'. Remaining: '+diag.remaining_chunks+'.';
+   const reason=!diag.extracted_concepts?'No usable lecture concepts were identified.':!diag.grounded_concepts?'No indexed textbook evidence matched the extracted concepts.':diag.held_for_classification?'Evidence was found, but NCE/SEE classification needs review.':'No eligible generation jobs were created.';
+   out.textContent=reason+' '+summary+' No generation performed.'+blankNote;
+  }else{
+   out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
+  }
+  const ul=document.createElement('ul');
+  for(const job of jobs){
+   const li=document.createElement('li');
+   li.textContent=String(job.body?.topic||'Untitled')+' — '+String(job.body?.objective||'unclassified')+' ('+String(job.body?.format||format)+')';
+   const check=document.createElement('button');check.type='button';
+   check.textContent='Check indexed evidence';check.style.marginLeft='8px';
+   check.addEventListener('click',async()=>{
+    if(job.path!=='/generation/preflight'||!job.body||typeof job.body!=='object'){
+     out.textContent='Unsafe lecture planning job; cannot check evidence.';return;
+    }
+    check.disabled=true;out.textContent='Checking indexed textbook evidence for '+String(job.body.topic||'topic')+'…';
+    try{
+     const preflight=await storage.generationPreflight(job.body);
+     if(preflight.dry_run!==true||preflight.can_publish!==false||preflight.database_writes!==false)
+      throw Error('Unsafe or incomplete evidence preflight response.');
+     if(!Number.isSafeInteger(preflight.passage_count)||preflight.passage_count<0)
+      throw Error('Evidence preflight returned an invalid passage count.');
+     const passages=preflight.passage_count;
+     out.textContent='Evidence preflight completed: '+passages+' indexed passage(s). No AI generation, draft save, or publication performed.';
+     if(passages>0){
+      const transfer=document.createElement('button');transfer.type='button';
+      transfer.textContent='Use this lecture topic in AI Question Studio';
+      transfer.addEventListener('click',()=>{
+       const body=job.body;
+       if(!['NCE','SEE'].includes(body.mode)||!['MC','MS','SA','DD','HS'].includes(body.format)||
+          !/^(I|II|III|IV)$/.test(body.domain)||!/^[A-Z]$/.test(body.section)||
+          !/^(I|II|III|IV)\.[A-Z]\.\d+(?:\.\d+)*$/.test(body.objective)||
+          !body.objective.startsWith(body.domain+'.'+body.section+'.')||
+          typeof body.topic!=='string'||!body.topic.trim()||
+          typeof body.textbook_id!=='string'||!body.textbook_id.trim()){
+        out.textContent='Lecture question classification is incomplete. Choose a validated objective before generation.';return;
+       }
+       const topicField=el('sl-topic'),modeField=el('sl-mode'),formatField=el('sl-format');
+       topicField.value=body.topic;modeField.value=body.mode;formatField.value=body.format;
+       const bookSelect=genEl('sl-gen-book-select');
+       if([...bookSelect.options].some(option=>option.value===body.textbook_id)){
+        bookSelect.value=body.textbook_id;genEl('sl-gen-book').value='';
+       }else{
+        bookSelect.value='';genEl('sl-gen-book').value=body.textbook_id;
+       }
+       genEl('sl-gen-domain').value=body.domain;
+       genEl('sl-gen-section').value=body.section;
+       genEl('sl-gen-objective').value=body.objective;
+       checkedEvidence={topic:body.topic,mode:body.mode,format:body.format,
+        textbook_id:body.textbook_id,domain:body.domain,section:body.section,objective:body.objective};
+       genEl('sl-gen-status').textContent='Lecture topic loaded and evidence checked. Review the blueprint and use Generate 1 question to confirm a paid AI call. The resulting draft remains unpublished.';
+       out.textContent='Lecture topic transferred to AI Question Studio. Generation requires your confirmation.';
+      });
+      li.append(transfer);
+     }
+    }catch(error){out.textContent=error.message||'Evidence preflight unavailable.';}
+    finally{check.disabled=false;}
+   });
+   li.append(check);
+   ul.append(li);
+  }
+  results.append(ul);
+ }catch(error){out.textContent=error.message||'Lecture planning unavailable.';}
+ finally{btn.disabled=false;}
+});
 const providerPanel=document.createElement('section');providerPanel.setAttribute('aria-label','AI provider connection diagnostic');
 providerPanel.innerHTML='<h3>AI provider readiness · Staging</h3><p class="sl-muted">Read-only connection check. Tests configured provider endpoints without generating a question. A successful connection does not guarantee question generation.</p><div class="sl-row"><button type="button" id="sl-check-groq">Check AI connections</button><span id="sl-groq-status" role="status" aria-live="polite">Not checked</span></div>';
 list.before(providerPanel);
@@ -57,8 +195,20 @@ groqButton.addEventListener('click',async()=>{
 });
 const generationPanel=document.createElement('section');generationPanel.className='sl-generation-panel';
 generationPanel.setAttribute('aria-label','Single-question generation review');
-generationPanel.innerHTML='<h3>AI Question Studio</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Indexed textbook <select id="sl-gen-book-select"><option value="">Choose a textbook</option></select></label><details id="sl-manual-book"><summary>Enter indexed textbook ID manually</summary><input id="sl-gen-book" placeholder="Indexed textbook UUID" size="38"></details><details id="sl-blueprint-advanced"><summary>Advanced exam blueprint (optional)</summary><p class="sl-muted">These identifiers are used by the question generator. Leave the defaults unless you know the blueprint mapping.</p><label>Domain <select id="sl-gen-domain"><option>I</option><option>II</option><option selected>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="H" size="2"></label><label>Objective <input id="sl-gen-objective" value="III.H.4" size="12"></label></details><button type="button" id="sl-generate-one">Generate 1 question</button><span class="sl-muted">Step 1: select a book and topic. Step 2: check indexed evidence. Step 3: generate and review. Step 4: save unpublished.</span></div><p id="sl-gen-status" role="status" aria-live="polite"></p><div id="sl-generated-preview" class="sl-readable-question" hidden></div><details id="sl-gen-technical" hidden><summary>Technical generation details</summary><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre></details><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button><details><summary>Open draft by ID</summary><label>Draft ID <input id="sl-open-draft-id" size="38" placeholder="Saved draft UUID"></label><button type="button" id="sl-open-draft-id-button">Open</button></details></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><button type="button" id="sl-draft-revalidate">Revalidate against indexed textbook (no AI)</button><details><summary>Revision history</summary><button type="button" id="sl-draft-history">Load history</button><pre id="sl-draft-history-output" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:25vh;overflow:auto" hidden></pre><pre id="sl-current-revision" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:35vh;overflow:auto" hidden></pre></details><details id="sl-revision-editor"><summary>Prepare manually verified revision (unpublished)</summary><p>Review original textbook pages before entering corrections. Every answer option needs evidence. Saving never approves or publishes the question.</p><div class="sl-editor-group"><h4>Question wording</h4><p class="sl-muted">Edit stem and existing answer text. Correct-answer IDs remain locked. All edits require revalidation and remain unpublished.</p><label>Question stem<textarea id="sl-edit-stem" rows="4" style="width:100%"></textarea></label><div id="sl-edit-options"></div><p id="sl-edit-key" class="sl-muted"></p></div><div class="sl-editor-group"><h4>Verified source excerpts</h4><p class="sl-muted">Enter the citation number and exact quotation checked against the original PDF.</p><div id="sl-citation-rows"></div><button type="button" id="sl-add-citation">Add citation</button></div><div class="sl-editor-group"><h4>Evidence for each answer choice</h4><p class="sl-muted">Record whether each choice is supported or contradicted, the indexed passage IDs, and the explanation.</p><div id="sl-option-rows"></div><button type="button" id="sl-add-option">Add answer evidence</button></div><label>Reviewer notes<textarea id="sl-revision-notes" rows="3" style="width:100%" placeholder="Describe the source pages checked and clinical reasoning"></textarea></label><button type="button" id="sl-save-revision">Save verified revision (unpublished)</button><p id="sl-revision-status" role="status" aria-live="polite"></p></details><pre id="sl-draft-validation" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto" hidden></pre><div id="sl-readable-question" class="sl-readable-question" aria-label="Question preview"></div><details><summary>Technical details (JSON)</summary><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></details></section>';
+generationPanel.innerHTML='<h3>AI Question Studio</h3><p class="sl-muted">Admin-only AI test. Generation may incur provider charges. Generated questions are never published automatically.</p><div class="sl-row"><label>Indexed textbook <select id="sl-gen-book-select"><option value="">Choose a textbook</option></select></label><details id="sl-manual-book"><summary>Enter indexed textbook ID manually</summary><input id="sl-gen-book" placeholder="Indexed textbook UUID" size="38"></details><label>Learning objective <select id="sl-objective-select"><option value="">Choose the concept this question should test</option></select></label><details id="sl-blueprint-advanced"><summary>Selected exam blueprint</summary><p class="sl-muted">Choose the learning objective before checking evidence. The reviewer also checks whether the question fits it.</p><label>Domain <select id="sl-gen-domain" disabled><option value="">Choose objective</option><option>I</option><option>II</option><option>III</option><option>IV</option></select></label><label>Section <input id="sl-gen-section" maxlength="1" value="" size="2" readonly></label><label>Objective <input id="sl-gen-objective" value="" size="12" readonly></label></details><button type="button" id="sl-generate-one">Generate 1 question</button><span class="sl-muted">Step 1: select a book and topic. Step 2: check indexed evidence. Step 3: generate and review. Step 4: save unpublished.</span></div><p id="sl-gen-status" role="status" aria-live="polite"></p><div id="sl-generated-preview" class="sl-readable-question" hidden></div><details id="sl-gen-technical" hidden><summary>Technical generation details</summary><pre id="sl-gen-result" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:40vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px" hidden></pre></details><div class="sl-row"><button type="button" id="sl-save-generated" disabled>Save unpublished draft</button><button type="button" id="sl-list-generated">View saved drafts</button><details><summary>Open draft by ID</summary><label>Draft ID <input id="sl-open-draft-id" size="38" placeholder="Saved draft UUID"></label><button type="button" id="sl-open-draft-id-button">Open</button></details></div><div id="sl-saved-results" aria-label="Saved unpublished drafts" hidden></div><section id="sl-draft-detail" aria-label="Saved draft details" hidden><h4>Unpublished draft · Review only</h4><p id="sl-draft-status" role="status" aria-live="polite"></p><button type="button" id="sl-draft-revalidate">Revalidate against indexed textbook (no AI)</button><details><summary>Revision history</summary><button type="button" id="sl-draft-history">Load history</button><pre id="sl-draft-history-output" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:25vh;overflow:auto" hidden></pre><pre id="sl-current-revision" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:35vh;overflow:auto" hidden></pre></details><details id="sl-revision-editor"><summary>Prepare manually verified revision (unpublished)</summary><p>Review original textbook pages before entering corrections. Every answer option needs evidence. Saving never approves or publishes the question.</p><div class="sl-editor-group"><h4>Question wording</h4><p class="sl-muted">Edit stem and existing answer text. Correct-answer IDs remain locked. All edits require revalidation and remain unpublished.</p><label>Question stem<textarea id="sl-edit-stem" rows="4" style="width:100%"></textarea></label><div id="sl-edit-options"></div><p id="sl-edit-key" class="sl-muted"></p></div><div class="sl-editor-group"><h4>Verified source excerpts</h4><p class="sl-muted">Enter the citation number and exact quotation checked against the original PDF.</p><div id="sl-citation-rows"></div><button type="button" id="sl-add-citation">Add citation</button></div><div class="sl-editor-group"><h4>Evidence for each answer choice</h4><p class="sl-muted">Record whether each choice is supported or contradicted, the indexed passage IDs, and the explanation.</p><div id="sl-option-rows"></div><button type="button" id="sl-add-option">Add answer evidence</button></div><label>Reviewer notes<textarea id="sl-revision-notes" rows="3" style="width:100%" placeholder="Describe the source pages checked and clinical reasoning"></textarea></label><button type="button" id="sl-save-revision">Save verified revision (unpublished)</button><p id="sl-revision-status" role="status" aria-live="polite"></p></details><pre id="sl-draft-validation" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:30vh;overflow:auto" hidden></pre><div id="sl-readable-question" class="sl-readable-question" aria-label="Question preview"></div><details><summary>Technical details (JSON)</summary><pre id="sl-draft-json" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:50vh;overflow:auto;padding:12px;border:1px solid #cbd5e1;border-radius:8px"></pre></details></section>';
 
+const objectiveSelect=generationPanel.querySelector('#sl-objective-select');
+let objectiveChoices=[];
+fetch('/equipment/assets/nbcrna-objectives-v2.json',{credentials:'omit',redirect:'error'}).then(response=>{if(!response.ok)throw Error('Objective list unavailable');return response.json();}).then(data=>{
+ if(!Array.isArray(data.objectives))throw Error('Objective list invalid');
+ objectiveChoices=data.objectives.filter(o=>typeof o.objective==='string'&&/^(I|II|III|IV)\.[A-Z]\.\d+$/.test(o.objective)&&typeof o.label==='string'&&o.domain===o.objective.split('.')[0]&&o.section===o.objective.split('.')[1]);
+ for(const o of objectiveChoices){const choice=document.createElement('option');choice.value=o.objective;choice.textContent=o.objective+' · '+o.label;objectiveSelect.append(choice);}
+}).catch(()=>{objectiveSelect.disabled=true;genEl('sl-gen-status').textContent='Learning objectives could not load. Reopen Question Studio before generating.';});
+objectiveSelect.addEventListener('change',()=>{
+ const selected=objectiveChoices.find(o=>o.objective===objectiveSelect.value);
+ for(const [id,value] of [['sl-gen-domain',selected?.domain||''],['sl-gen-section',selected?.section||''],['sl-gen-objective',selected?.objective||'']])generationPanel.querySelector('#'+id).value=value;
+ checkedEvidence=null;evidencePanel.querySelector('#sl-evidence-status').textContent='Learning objective changed. Check indexed evidence again.';
+});
 generationPanel.querySelector('#sl-gen-book-select').addEventListener('change',event=>{researchBookSelect.value=event.target.value;});
 for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective'])for(const eventName of ['input','change'])generationPanel.querySelector('#'+id).addEventListener(eventName,()=>{checkedEvidence=null;evidencePanel.querySelector('#sl-evidence-status').textContent='Textbook changed. Check indexed evidence again.';});evidencePanel.after(generationPanel);
 function renderReadableQuestion(host,question){
@@ -67,11 +217,23 @@ function renderReadableQuestion(host,question){
  if(!q||typeof q!=='object'){host.textContent='Question preview unavailable.';return;}
  const add=(tag,text,parent=host)=>{const n=document.createElement(tag);n.textContent=String(text??'');parent.append(n);return n;};
  add('h4','Question preview');
+ if(q.mode&&q.objective)add('p',[q.mode,q.objective,q.reasoning_level].filter(Boolean).join(' · ')).className='sl-muted';
  add('p',q.what||q.stem||q.question_text||'No question stem available');
  const options=Array.isArray(q.options)?q.options:Object.entries(q.options||{}).map(([id,value])=>({id,...(typeof value==='object'?value:{text:value})}));
  if(options.length){const list=document.createElement('ol');list.className='sl-answer-list';for(const opt of options){const item=document.createElement('li');item.textContent=(opt.id?opt.id+'. ':'')+(opt.text||opt.label||opt.value||'');list.append(item)}host.append(list);}
  const answer=q.key??q.correct_answer??q.answer;if(answer!=null)add('p','Answer key: '+(typeof answer==='object'?JSON.stringify(answer):answer));
  const rationale=q.rationale||q.explanation;if(typeof rationale==='string')add('p','Rationale: '+rationale);
+ else if(rationale&&typeof rationale==='object'){
+  for(const [field,title] of [['core_concept','Core concept'],['why_key_wins','Why the answer is correct'],['trap','The trap']]){
+   if(typeof rationale[field]==='string'&&rationale[field].trim()){add('h4',title);add('p',rationale[field]);}
+  }
+  const keys=Array.isArray(q.key)?q.key:[];
+  for(const [id,text] of Object.entries(rationale.distractor_breakdown||{})){
+   if(!keys.includes(id)&&typeof text==='string'&&text.trim()){add('h4','Why '+id+' is wrong');add('p',text);}
+  }
+ }
+ const pages=[...new Set((Array.isArray(q.evidence)?q.evidence:[]).map(e=>e?.pdf_page).filter(p=>p!=null&&String(p).trim()))];
+ if(pages.length)add('p','Indexed source PDF pages: '+pages.join(', ')+'. Printed page numbers remain unverified.').className='sl-muted';
  add('p','Unpublished · Clinical review required').className='sl-muted';
 }
 let generatedForReview=null,currentDraftQuestion=null;
@@ -79,12 +241,12 @@ let generatedForReview=null,currentDraftQuestion=null;
 genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
  if(!topic||!textbook_id){genEl('sl-gen-status').textContent='Choose a question subject or enter a specific topic, then select an indexed textbook. Advanced textbook ID entry is available if needed.';return;}if(!checkedEvidence||checkedEvidence.topic!==topic||checkedEvidence.mode!==el('sl-mode').value||checkedEvidence.format!==el('sl-format').value||checkedEvidence.textbook_id!==textbook_id||checkedEvidence.domain!==genEl('sl-gen-domain').value||checkedEvidence.section!==genEl('sl-gen-section').value.trim().toUpperCase()||checkedEvidence.objective!==genEl('sl-gen-objective').value.trim()){genEl('sl-gen-status').textContent='Run Check indexed evidence for the current topic and exam format before making a paid AI generation call.';return;}
- if(!confirm('Generate one staging AI question? This may incur provider charges. The question will not be published or saved automatically.'))return;
+ if(!confirm('Generate one staging AI question? Provider charges may apply. It will be saved as an unpublished draft.'))return;
  const btn=genEl('sl-generate-one');btn.disabled=true;generatedForReview=null;genEl('sl-save-generated').disabled=true;genEl('sl-gen-result').hidden=true;genEl('sl-generated-preview').hidden=true;genEl('sl-gen-technical').hidden=true;genEl('sl-gen-status').textContent='Generating one question…';
  try{
   const domain=genEl('sl-gen-domain').value,section=genEl('sl-gen-section').value.trim().toUpperCase(),objective=genEl('sl-gen-objective').value.trim();
   const request={topic,textbook_id,mode:el('sl-mode').value,format:el('sl-format').value,domain,section,objective,item_id:crypto.randomUUID()};
-  const result=await storage.generateOne(request);
+  const result=await storage.generateOne(request,{onRecovery:()=>{genEl('sl-gen-status').textContent='Still working. Checking for the saved draft…';}});
   if(result.dry_run!==false||result.can_publish!==false||result.database_writes!==false||result.requires_human_review!==true||!result.item)throw Error('Unsafe or incomplete generated question.');
   generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);
   const preview=genEl('sl-generated-preview');
@@ -97,14 +259,29 @@ genEl('sl-generate-one').onclick=async()=>{
     (issues.length?' '+issues.length+' generator issue(s) require review.':'')+
     ' Indexed PDF page locations are not verified printed-page citations. Check the source before approval.';
   preview.append(reviewNote);preview.hidden=false;genEl('sl-gen-technical').hidden=false;genEl('sl-gen-result').textContent=JSON.stringify({question:result.item,screening:result.screening,source_evidence:result.source_evidence,issues:result.generator_issues},null,2);
-  genEl('sl-gen-result').hidden=false;genEl('sl-gen-status').textContent=result.draft_id?'Unpublished draft saved: '+result.draft_id:'Generated for review. Not saved or published.';
+  genEl('sl-gen-result').hidden=false;
+  if(result.draft_id){
+   genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;
+  }else if(result.save_payload){
+   genEl('sl-gen-status').textContent='Question generated. Saving unpublished draft…';
+   try{
+    const saved=await storage.saveGeneratedDraft(result.save_payload);
+    if(typeof saved?.draft_id!=='string'||!saved.draft_id.trim())throw Error('Draft save did not return an ID.');
+    result.draft_id=saved.draft_id;
+    genEl('sl-gen-status').textContent='Unpublished draft saved: '+saved.draft_id;
+   }catch(saveError){
+    genEl('sl-gen-status').textContent='Question generated, but draft save failed: '+(saveError.message||'Unknown error')+'. Use Save unpublished draft to retry.';
+   }
+  }else{
+   genEl('sl-gen-status').textContent='Question generated but no draft ID or save payload returned. Nothing was saved or published.';
+  }
   genEl('sl-save-generated').disabled=!!result.draft_id||!result.save_payload;
  }catch(error){genEl('sl-gen-status').textContent=error.message||'Generation failed.'}finally{btn.disabled=false}
 };
 genEl('sl-save-generated').onclick=async()=>{
  if(generatedForReview?.result?.draft_id||!generatedForReview?.result?.save_payload)return;
  const btn=genEl('sl-save-generated');btn.disabled=true;
- try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
+ try{const result=await storage.saveGeneratedDraft(generatedForReview.result.save_payload);if(typeof result?.draft_id!=='string'||!result.draft_id.trim())throw Error('Draft save did not return an ID.');generatedForReview.result.draft_id=result.draft_id;genEl('sl-gen-status').textContent='Unpublished draft saved: '+result.draft_id;}
  catch(error){genEl('sl-gen-status').textContent=error.message||'Draft save failed.';btn.disabled=false;}
 };
 async function openSavedDraft(draftId,button){
@@ -231,27 +408,99 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 };
 genEl('sl-open-draft-id').value='abc90a93-41f8-4d7c-8e27-94a609135572';
 genEl('sl-open-draft-id-button').onclick=()=>openSavedDraft(genEl('sl-open-draft-id').value.trim(),genEl('sl-open-draft-id-button'));
-genEl('sl-list-generated').onclick=async()=>{
- const btn=genEl('sl-list-generated');btn.disabled=true;
+async function renderDraftCollection(view='drafts'){
  const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
- genEl('sl-draft-detail').hidden=true;
- try{
-  const result=await storage.listGeneratedDrafts();const drafts=result.drafts||[];
-  if(!Array.isArray(drafts))throw Error('Unexpected draft list.');
-  if(!drafts.length){out.textContent='No saved drafts yet.';return;}
-  for(const draft of drafts){
-   const row=document.createElement('div');row.className='sl-item';
-   const info=document.createElement('div');info.className='sl-name';
-   const heading=document.createElement('strong');heading.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
-   const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
-   info.append(heading,meta);
-   const actions=document.createElement('div');actions.className='sl-actions';
-   const open=document.createElement('button');open.type='button';open.textContent='Open draft';
-   open.addEventListener('click',()=>openSavedDraft(draft.draft_id,open));actions.append(open);row.append(info,actions);out.append(row);
+ const result=await storage.listGeneratedDrafts();const all=result.drafts||[];
+ if(!Array.isArray(all))throw Error('Unexpected draft list.');
+ const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank'&&d.status!=='rejected');
+ const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);
+ if(!drafts.length){const empty=document.createElement('p');empty.textContent='No questions in this collection.';out.append(empty);return;}
+ const selectable=view==='bank'?[]:drafts.filter(d=>['pending_review','needs_revision'].includes(d.status));
+ const selected=new Set(),checkboxes=[];
+ if(selectable.length){
+  const toolbar=document.createElement('div');toolbar.className='sl-row';toolbar.setAttribute('aria-label','Bulk draft review actions');
+  const selectAll=document.createElement('input');selectAll.type='checkbox';selectAll.setAttribute('aria-label','Select all reviewable drafts');
+  const countLabel=document.createElement('span');countLabel.textContent='0 selected';
+  const bulkApprove=document.createElement('button');bulkApprove.type='button';bulkApprove.textContent='Approve selected to bank';bulkApprove.disabled=true;
+  const bulkRemove=document.createElement('button');bulkRemove.type='button';bulkRemove.textContent='Remove selected';bulkRemove.disabled=true;
+  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkApprove.disabled=bulkRemove.disabled=!selected.size;selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
+  selectAll.onchange=()=>{for(const entry of checkboxes){entry.input.checked=selectAll.checked;if(selectAll.checked)selected.add(entry.id);else selected.delete(entry.id);}sync();};
+  const execute=async status=>{
+   const ids=[...selected];if(!ids.length)return;
+   let notes;
+   if(status==='approved_for_bank'){
+    notes=window.prompt('Clinical review notes for '+ids.length+' selected drafts (required). Only drafts passing individual evidence revalidation will be approved:');
+    if(notes===null)return;
+    if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required for bulk approval.';return;}
+    if(!window.confirm('Approve '+ids.length+' selected drafts to the private staging bank? Each must pass its own validation. No questions will be published.'))return;
+   }else{
+    if(!window.confirm('Remove '+ids.length+' selected drafts from the active queue? Records remain in audit history.'))return;
+    notes='Removed from active queue by admin (bulk review)';
+   }
+   bulkApprove.disabled=bulkRemove.disabled=true;selectAll.disabled=true;
+   let succeeded=0;const failures=[];
+   for(const id of ids){
+    try{
+     if(status==='approved_for_bank'){
+      const checked=await storage.revalidateGeneratedDraft(id);
+      if(checked.published!==false||checked.can_publish===true||!Array.isArray(checked.issues)||checked.issues.length)
+       throw Error('Evidence validation failed or unresolved issues remain');
+     }
+     const response=await storage.reviewGeneratedDraft(id,status,notes);
+     if(response.status!==status||response.published!==false)throw Error('Review state not verified');
+     succeeded++;
+    }catch(error){failures.push(id+': '+(error.message||'Unknown error'));}
+   }
+   try{await renderDraftCollection('drafts');}catch(error){failures.push('Refresh: '+error.message);}
+   genEl('sl-gen-status').textContent=succeeded+'/'+ids.length+' drafts '+(status==='approved_for_bank'?'approved':'removed')+'.'+(failures.length?' Failed: '+failures.join('; '):'');
+  };
+  bulkApprove.onclick=()=>execute('approved_for_bank');
+  bulkRemove.onclick=()=>execute('rejected');
+  const label=document.createElement('label');label.append(selectAll,document.createTextNode(' Select all reviewable'));
+  toolbar.append(label,countLabel,bulkApprove,bulkRemove);out.append(toolbar);
+  out._bulkSelection={selected,checkboxes,sync};
+ }
+ for(const draft of drafts){
+  const row=document.createElement('div');row.className='sl-item';
+  const info=document.createElement('div');info.className='sl-name';
+  const title=document.createElement('strong');title.textContent=(draft.topic||'Untitled')+' · '+(draft.format||'Question');
+  const meta=document.createElement('p');meta.className='sl-muted';meta.textContent=(draft.status||'unknown')+' · '+(draft.created_at||'')+' · '+draft.draft_id;
+  info.append(title,meta);const actions=document.createElement('div');actions.className='sl-actions';
+  if(out._bulkSelection&&['pending_review','needs_revision'].includes(draft.status)&&view!=='bank'){
+   const input=document.createElement('input');input.type='checkbox';input.setAttribute('aria-label','Select draft '+draft.draft_id);
+   input.onchange=()=>{if(input.checked)out._bulkSelection.selected.add(draft.draft_id);else out._bulkSelection.selected.delete(draft.draft_id);out._bulkSelection.sync();};
+   out._bulkSelection.checkboxes.push({id:draft.draft_id,input});row.prepend(input);
   }
- }catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}
- finally{btn.disabled=false;}
-};
+  const open=document.createElement('button');open.type='button';open.textContent='Open';open.onclick=()=>openSavedDraft(draft.draft_id,open);actions.append(open);
+  if(view!=='bank'&&['pending_review','needs_revision'].includes(draft.status)){
+   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';
+   approve.onclick=async()=>{
+    const notes=window.prompt('Clinical review notes (required). Confirm source evidence and answer accuracy before approval:');
+    if(notes===null)return;if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required.';return;}
+    approve.disabled=true;
+    try{const checked=await storage.revalidateGeneratedDraft(draft.draft_id);
+     if(checked.published!==false||checked.can_publish===true||!Array.isArray(checked.issues))throw Error('Unexpected validation state.');
+     if(checked.issues.length)throw Error('Draft has '+checked.issues.length+' unresolved validation issue(s). Open the draft, correct and revalidate it before approval.');
+     const result=await storage.reviewGeneratedDraft(draft.draft_id,'approved_for_bank',notes);
+     if(result.status!=='approved_for_bank'||result.published!==false)throw Error('Approval state not verified.');
+     genEl('sl-gen-status').textContent='Approved into the private staging question bank; not published.';
+     await renderDraftCollection('drafts');
+    }catch(error){genEl('sl-gen-status').textContent='Approval failed: '+(error.message||'Unknown error');approve.disabled=false;}
+   };actions.append(approve);
+   const reject=document.createElement('button');reject.type='button';reject.textContent='Remove draft';
+   reject.onclick=async()=>{if(!window.confirm('Remove this draft from your active list? The record will be retained in the audit history.'))return;
+    reject.disabled=true;try{await storage.reviewGeneratedDraft(draft.draft_id,'rejected','Rejected by admin');await renderDraftCollection('drafts');}
+    catch(error){genEl('sl-gen-status').textContent='Rejection failed: '+(error.message||'Unknown error');reject.disabled=false;}
+   };actions.append(reject);
+  }
+  row.append(info,actions);out.append(row);
+ }
+}
+const bankButton=document.createElement('button');bankButton.type='button';bankButton.textContent='Approved question bank (staging)';
+genEl('sl-list-generated').after(bankButton);
+bankButton.onclick=async()=>{bankButton.disabled=true;try{await renderDraftCollection('bank');}catch(error){genEl('sl-gen-status').textContent=error.message||'Bank unavailable.';}finally{bankButton.disabled=false;}};
+genEl('sl-list-generated').onclick=async()=>{const btn=genEl('sl-list-generated');btn.disabled=true;try{await renderDraftCollection('drafts');}catch(error){genEl('sl-gen-status').textContent=error.message||'Cannot list drafts.';}finally{btn.disabled=false;}};
+
 let busy=false, previewUrl=null, currentPageInput=null, currentFrame=null, lastSourcesView='library', lastAIView='create';
 function clearPreview(){currentPageInput=null;currentFrame=null;if(previewUrl){URL.revokeObjectURL(previewUrl);previewUrl=null}const frame=dialog.querySelector('#sl-preview-frame');if(frame)frame.remove();const controls=dialog.querySelector('#sl-preview-controls');if(controls)controls.remove();const flagged=dialog.querySelector('#sl-flagged-pages');if(flagged)flagged.remove();const empty=dialog.querySelector('#sl-research-preview');if(empty&&!empty.querySelector('.sl-research-empty'))empty.innerHTML='<div class="sl-research-empty">Choose <strong>Review PDF</strong> beside a textbook to open it here.</div>';}
 async function previewPdf(path){if(typeof storage.reviewPdf!=='function')throw Error('Staging preview adapter unavailable');const blob=await storage.reviewPdf(path);clearPreview();previewUrl=URL.createObjectURL(blob);let frame=document.createElement('iframe');frame.id='sl-preview-frame';frame.setAttribute('loading','eager');frame.setAttribute('referrerpolicy','no-referrer');frame.title='Original textbook PDF (read-only)';frame.style.cssText='width:100%;height:55vh;border:1px solid #94a3b8;border-radius:8px';const controls=document.createElement('div');controls.id='sl-preview-controls';controls.className='sl-row';const pageLabel=document.createElement('label');pageLabel.textContent='Physical PDF page ';const pageInput=document.createElement('input');pageInput.type='number';pageInput.min='1';pageInput.step='1';pageInput.value='1';pageInput.style.width='5rem';const go=document.createElement('button');go.type='button';go.textContent='Go to page';const previous=document.createElement('button');previous.type='button';previous.textContent='← Previous';const nextPage=document.createElement('button');nextPage.type='button';nextPage.textContent='Next →';const openOriginal=document.createElement('a');openOriginal.textContent='Open original in new tab';openOriginal.href=previewUrl;openOriginal.target='_blank';openOriginal.rel='noopener noreferrer';openOriginal.setAttribute('aria-label','Open read-only original PDF in new tab');const jump=page=>{if(!Number.isSafeInteger(page)||page<1||page>100000){message('Enter a valid physical PDF page.',true);return;}const next=frame.cloneNode(false);next.src=previewUrl+'#page='+page;frame.replaceWith(next);currentFrame=next;frame=next;pageInput.value=String(page);previous.disabled=page===1;message('Opened physical PDF page '+page+'. No approval recorded.');};go.onclick=()=>jump(Number(pageInput.value));previous.onclick=()=>jump(Number(pageInput.value)-1);nextPage.onclick=()=>jump(Number(pageInput.value)+1);pageInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go.click();}};previous.disabled=true;pageLabel.append(pageInput);controls.append(previous,pageLabel,go,nextPage,openOriginal);currentPageInput=pageInput;currentFrame=frame;frame.src=previewUrl+'#page=1';const target=dialog.querySelector('#sl-research-preview');const reader=target||dialog.querySelector('.sl-body');if(!reader)throw Error('PDF reader panel is unavailable. Reopen Sources and try again.');if(target)target.replaceChildren();reader.append(controls,frame);dialog.querySelector('#sl-research-layout')?.showSourceView?.('reader');reader.setAttribute('tabindex','-1');reader.focus({preventScroll:true});reader.scrollIntoView({behavior:'smooth',block:'nearest'});frame.addEventListener('error',()=>{message('PDF viewer could not display the downloaded file. Use Download to inspect it.',true);const notice=document.createElement('p');notice.setAttribute('role','alert');notice.textContent='PDF viewer failed. Try Download or the secure page reviewer.';reader.prepend(notice);},{once:true});message('PDF downloaded and sent to the document reader.');}
@@ -306,6 +555,8 @@ function updateTextbookChoices(items){
  if([...select.options].some(o=>o.value===previous))select.value=previous;
  researchBookSelect.replaceChildren(...[...select.options].map(option=>new Option(option.textContent,option.value)));
  researchBookSelect.value=select.value;
+ const lectureBook=lecturePanel.querySelector('#sl-lecture-book');
+ if(lectureBook){const prior=lectureBook.value;lectureBook.replaceChildren(new Option('All indexed textbooks (recommended)','all'),...[...select.options].filter(o=>o.value).map(o=>new Option(o.textContent,o.value)));lectureBook.value=[...lectureBook.options].some(o=>o.value===prior)?prior:'all';}
  const hasIndexed=select.options.length>1;
  select.parentElement.hidden=false;
  if(!hasIndexed){select.options[0].textContent='No ready indexed textbooks available';}
@@ -323,12 +574,12 @@ function openLibrary(section){if(!dialog.open && !dialog.dataset.embedded)dialog
 function ensureAICommandCenter(){
  const body=dialog.querySelector('.sl-body');let center=body.querySelector('#sl-ai-command-center');if(center)return center;
  center=document.createElement('div');center.id='sl-ai-command-center';
- center.innerHTML='<nav class="sl-ai-view-nav" aria-label="AI workspace views"><button type="button" data-sl-ai-view="create" aria-pressed="true">Create question</button><button type="button" data-sl-ai-view="drafts" aria-pressed="false">Drafts & review</button><button type="button" data-sl-ai-view="providers" aria-pressed="false">Provider diagnostics</button><button type="button" data-sl-ai-view="editor" aria-pressed="false" hidden>Clinical Question Editor</button></nav><section class="sl-ai-workflow" aria-label="AI generation"><div class="sl-ai-panel-title"><span>01 · CREATE</span><h3>Generate a question</h3><p>Choose a verified textbook, check evidence, and generate one unpublished draft.</p></div><div id="sl-ai-create-content"></div></section><section class="sl-ai-drafts" aria-label="Draft review"><div class="sl-ai-panel-title"><span>02 · REVIEW</span><h3>Drafts & clinical review</h3><p>Open saved drafts, inspect answers, and save validated revisions.</p></div><div id="sl-ai-drafts-content"></div></section><aside class="sl-ai-operations" aria-label="AI diagnostics"><div class="sl-ai-panel-title"><span>03 · SYSTEM</span><h3>Provider diagnostics</h3><p>Connection checks do not generate questions.</p></div><div id="sl-ai-operations-content"></div></aside>';
+ center.innerHTML='<nav class="sl-ai-view-nav" aria-label="AI workspace views"><button type="button" data-sl-ai-view="create" aria-pressed="true">Create question</button><button type="button" data-sl-ai-view="drafts" aria-pressed="false">Drafts & review</button><button type="button" data-sl-ai-view="bank" aria-pressed="false">Approved bank</button><button type="button" data-sl-ai-view="providers" aria-pressed="false">Provider diagnostics</button><button type="button" data-sl-ai-view="editor" aria-pressed="false" hidden>Clinical Question Editor</button></nav><section class="sl-ai-workflow" aria-label="AI generation"><div class="sl-ai-panel-title"><span>01 · CREATE</span><h3>Generate a question</h3><p>Choose a verified textbook, check evidence, and generate one unpublished draft.</p></div><div id="sl-ai-create-content"></div></section><section class="sl-ai-drafts" aria-label="Draft review"><div class="sl-ai-panel-title"><span>02 · REVIEW</span><h3>Drafts & clinical review</h3><p>Open saved drafts, inspect answers, and save validated revisions.</p></div><div id="sl-ai-drafts-content"></div></section><aside class="sl-ai-operations" aria-label="AI diagnostics"><div class="sl-ai-panel-title"><span>03 · SYSTEM</span><h3>Provider diagnostics</h3><p>Connection checks do not generate questions.</p></div><div id="sl-ai-operations-content"></div></aside>';
  const create=center.querySelector('#sl-ai-create-content'),drafts=center.querySelector('#sl-ai-drafts-content'),ops=center.querySelector('#sl-ai-operations-content');
  const editor=document.createElement('section');editor.id='sl-clinical-editor';editor.className='sl-clinical-editor';editor.hidden=true;editor.innerHTML='<div class="sl-clinical-head"><div><span>CLINICAL REVIEW · UNPUBLISHED</span><h3>Question Editor</h3><p>Review the question, correct its wording, verify source evidence, and save a versioned draft.</p></div><button type="button" id="sl-editor-back">Back to drafts</button></div><div id="sl-clinical-editor-body"></div>';
- const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||view!==name;for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
+ const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','bank','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;if(view==='bank'||view==='drafts')renderDraftCollection(view).catch(error=>{genEl('sl-gen-status').textContent=error.message||'Question list unavailable.';});editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||(name==='drafts'?(view!=='drafts'&&view!=='bank'):view!==name);for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
  center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('drafts');
- create.append(evidencePanel);
+ create.append(evidencePanel,lecturePanel);
  const draftControls=generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');

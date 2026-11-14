@@ -4,12 +4,29 @@ import re
 
 def _exclusive_clinical_claim(field):
     label = field["label"]
+    # A named example does not establish the sole cause of an effect. This
+    # applies to physiology as well as drug lists, including the key rationale.
+    if label != "concept_card.misconception" and re.search(
+            r"\b(?:increas(?:e[sd]?|ing)|decreas(?:e[sd]?|ing)|reduc(?:e[sd]?|ing)|"
+            r"rais(?:e[sd]?|ing)|caus(?:e[sd]?|ing)|trigger(?:s|ed)?|occur(?:s|red)?)"
+            r"\s+(?:only|exclusively)\s+(?:by|with|for|when|in|from|due\s+to)\b",
+            field["text"], re.I):
+        return True
     if label not in ("concept_card.mechanism", "rationale.core_concept") and not label.startswith(
             ("rationale.distractor_breakdown.", "distractor_evidence.")):
         return False
     return bool(re.search(r"\b(?:are|is)\s+(?:the\s+)?(?:only|sole)\s+(?:[A-Za-z-]+\s+){0,3}"
                           r"(?:agents?|drugs?|causes?|mechanisms?|triggers?|treatments?|pathways?)\b",
                           field["text"], re.I) or re.match(r"\s*Only\b", field["text"], re.I))
+
+
+def _source_silence_claim(field):
+    if not field["label"].startswith(("rationale.distractor_breakdown.", "distractor_evidence.")):
+        return False
+    return bool(re.search(
+        r"\bwithout mentioning\b|\bno statement about\b|"
+        r"\b(?:source|passage|textbook|excerpt)\s+(?:does not|doesn't|do not|never)\s+(?:mention|state|describe|support)\b",
+        field["text"], re.I))
 
 
 def fields_for(item):
@@ -20,6 +37,14 @@ def fields_for(item):
             text = item.get(section, {}).get(name)
             if not isinstance(text, str) or not text.strip():
                 raise ValueError("Complete explanatory text required")
+            if section == "concept_card" and name == "counterfactual":
+                # The separate changed-stem blind test grades the option mapping.
+                # Here check both clinical premises, not whether a textbook names
+                # our answer letters. Match only the complete server-rendered form;
+                # never trim arbitrary appended claims from teaching text.
+                match = re.fullmatch(r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option(?:\(s\))? [A-F](?:, [A-F])*\.', text)
+                if match:
+                    text = f'Original clinical condition: {match[1]}. Replacement clinical condition: {match[2]}.'
             fields.append({"id": "e" + str(len(fields)), "label": section + "." + name, "text": text})
     for oid, text in item.get("rationale", {}).get("distractor_breakdown", {}).items():
         if not isinstance(text, str) or not text.strip():
@@ -37,7 +62,7 @@ def fields_for(item):
     return fields
 
 
-def review(item, sources, reviewer):
+def review(item, sources, reviewer, *, batch_size=None):
     """The caller supplies a distinct authenticated model; outages stay pending."""
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "clinical_truth_verified": False, "human_review_required": True}
@@ -60,16 +85,41 @@ def review(item, sources, reviewer):
             allowed[field["id"]] = set(ids)
         for field in fields:
             field["passage_ids"] = sorted(allowed[field["id"]] & cited)
-        result = reviewer({"step": "explanation_review", "rules_version": "2.0",
-                           "auto_publish": False, "independent": True,
-                           "fields": fields, "source_passages": packet["source_passages"]})
+        size = len(fields) if batch_size is None else batch_size
+        if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
+            raise ValueError("Invalid explanatory batch size")
+        result = {"supported_groups":[], "unsupported":[]}
+        # A grouped answer may cite only sources allowed by every field in it.
+        # Partition before calling the model; never broaden field citations.
+        by_sources = {}
+        for field in fields:
+            by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
+        batches = [group[i:i+size] for group in by_sources.values()
+                   for i in range(0, len(group), size)]
+        for batch in batches:
+            batch_ids = {f["id"] for f in batch}
+            source_ids = {pid for f in batch for pid in f["passage_ids"]}
+            part = reviewer({"step": "explanation_review", "rules_version": "2.0",
+                "auto_publish": False, "independent": True, "fields": batch,
+                "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
+            if (not isinstance(part, dict) or set(part) != {"supported_groups", "unsupported"}
+                    or not isinstance(part["supported_groups"], list) or not isinstance(part["unsupported"], list)):
+                raise ValueError("Incomplete explanatory review")
+            returned = [fid for g in part["supported_groups"] for fid in g["field_ids"]] + [f["field_id"] for f in part["unsupported"]]
+            if len(returned) != len(batch_ids) or set(returned) != batch_ids:
+                raise ValueError("Every explanatory field must be reviewed")
+            result["supported_groups"].extend(part["supported_groups"])
+            result["unsupported"].extend(part["unsupported"])
         if not isinstance(result, dict) or set(result) != {"supported_groups", "unsupported"}:
             raise ValueError("Incomplete explanatory review")
         if not isinstance(result["supported_groups"], list) or not isinstance(result["unsupported"], list):
             raise ValueError("Invalid explanatory judgments")
         expected = {f["id"]: f["label"] for f in fields}
         exclusive = {f["id"] for f in fields if _exclusive_clinical_claim(f)}
-        seen, evidence, issues = set(), [], []
+        seen, evidence = set(), []
+        issues = [{"rule_id":"R-2.4", "field":f["label"],
+                   "message":"Source silence cannot establish that this option is false; affirmative contradiction is required"}
+                  for f in fields if _source_silence_claim(f)]
         for group in result["supported_groups"]:
             if not isinstance(group, dict) or set(group) != {"field_ids", "quote_refs"}:
                 raise ValueError("Invalid supported fields")
@@ -113,7 +163,7 @@ def review(item, sources, reviewer):
         if seen != set(expected):
             raise ValueError("Every explanatory field must be reviewed")
         return {**pending, "status": "flag" if issues else "pass", "issues": issues,
-                "checked_fields": list(expected.values()), "source_support": evidence}
+                "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":len(batches)}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}

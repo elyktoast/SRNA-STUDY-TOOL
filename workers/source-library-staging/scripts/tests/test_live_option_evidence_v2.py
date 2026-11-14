@@ -31,6 +31,33 @@ class LiveOptionEvidenceTests(unittest.TestCase):
         self.assertEqual(result['screening']['stages']['human_review']['status'],'pending')
         self.assertFalse(result['can_publish']); self.assertFalse(report['clinical_truth_verified'])
         self.assertEqual(result['screening']['independent_option_adjudication']['judgments'],self.judgments)
+    def test_paired_key_needs_both_components_but_refutation_can_use_one(self):
+        self.item={'format':'MC','stem':'Which pair follows the event?',
+                   'options':[{'id':'A','text':'Component X: unchanged; Component Y: decreased'},
+                              {'id':'B','text':'Component X: decreased; Component Y: decreased'}], 'key':['A']}
+        self.sources=[{'passage_id':'p1','excerpt':'Component X remains unchanged.'},
+                      {'passage_id':'p2','excerpt':'Component Y is decreased.'}]
+        for audit in self.audit['option_audits']:
+            audit['retrieved_passage_ids']=['p1','p2']
+        self.judgments=[{'option_id':oid,'passage_ids':['p1'],'verdict':verdict,
+                        'explanation':'X is unchanged.', 'quotes':['Component X remains unchanged.'],
+                        'contradiction_found':False} for oid,verdict in [('A','supports_key'),('B','refutes_distractor')]]
+        report,_=self.review()
+        self.assertEqual(report['status'],'pending')
+        self.assertEqual([i['option_id'] for i in report['issues']],['A'])
+        self.assertIn('paired response component',report['issues'][0]['message'])
+        self.judgments[0]['passage_ids'].append('p2')
+        self.judgments[0]['quotes'].append('Component Y is decreased.')
+        report,_=self.review()
+        self.assertEqual(report['status'],'reviewed')
+        # Full support can also occur in ONE passage; no arbitrary two-source rule.
+        self.sources[0]['excerpt']+=' Component Y is decreased.'
+        self.judgments[0]['passage_ids']=['p1']
+        report,_=self.review()
+        self.assertEqual(report['status'],'reviewed')
+        self.assertFalse(report['clinical_truth_verified'])
+        self.assertFalse(report['can_publish'])
+
     def test_fabricated_quote_or_wrong_citation_never_clears_gate(self):
         for field,value in [('quotes',['Fabricated source quotation']),('passage_ids',['unknown']),('contradiction_found',True),('verdict','supports_key')]:
             with self.subTest(field=field):

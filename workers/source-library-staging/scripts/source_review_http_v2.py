@@ -15,6 +15,8 @@ from source_review_runtime_v2 import StagingReviewRuntime
 from source_review_page_loader_v2 import load_verified_review_page
 from source_review_manifest_r2_v2 import load_staging_review_manifest
 from source_review_r2_loader_v2 import fetch_verified_staging_pdf
+from source_review_approval_request_service_v2 import approve_verified_request
+from source_review_decision_request_v2 import MAX_BODY_BYTES
 
 MAX_PATH = 2048
 STAGING_ORIGIN = "https://staging.srnastudytool.com"
@@ -61,6 +63,43 @@ def create_app(runtime):
                 ("Access-Control-Allow-Methods", "GET"),
                 ("Access-Control-Allow-Headers", "Authorization"),
                 ("Access-Control-Max-Age", "300")])
+        if environ.get("PATH_INFO") == "/review/approve" and environ.get("REQUEST_METHOD") == "POST":
+            # This route is private-container only until the gateway explicitly
+            # permits it. No browser-supplied inspection claim issues a receipt.
+            auth = environ.get("HTTP_AUTHORIZATION", "")
+            if (not auth.startswith("Bearer ") or len(auth) > 8192 or not auth[7:] or auth[7:] != auth[7:].strip()):
+                return response(start_response, "401 Unauthorized", b'{"error":"authentication_required"}')
+            if origin != STAGING_ORIGIN:
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden_origin"}')
+            if environ.get("QUERY_STRING", ""):
+                return response(start_response, "400 Bad Request", b'{"error":"unexpected_query"}')
+            # Reject revoked/non-admin sessions before reading request bodies or
+            # performing any source lookup. Never expose auth provider details.
+            try:
+                runtime._reviewer(auth[7:])
+            except Exception:
+                return response(start_response, "403 Forbidden", b'{"error":"forbidden"}')
+            if environ.get("CONTENT_TYPE", "").split(";", 1)[0].strip().lower() != "application/json":
+                return response(start_response, "415 Unsupported Media Type", b'{"error":"invalid_content_type"}')
+            raw_length = environ.get("CONTENT_LENGTH", "")
+            if not raw_length.isascii() or not raw_length.isdecimal():
+                return response(start_response, "400 Bad Request", b'{"error":"invalid_content_length"}')
+            length = int(raw_length)
+            if not 0 < length <= MAX_BODY_BYTES:
+                return response(start_response, "413 Payload Too Large", b'{"error":"invalid_body_size"}')
+            stream = environ.get("wsgi.input")
+            if stream is None:
+                return response(start_response, "400 Bad Request", b'{"error":"missing_body"}')
+            body = stream.read(length)
+            if len(body) != length:
+                return response(start_response, "400 Bad Request", b'{"error":"incomplete_body"}')
+            try:
+                approve_verified_request(runtime, access_token=auth[7:], body=body)
+            except ValueError:
+                return response(start_response, "409 Conflict", b'{"error":"approval_verification_failed"}')
+            except Exception:
+                return response(start_response, "503 Service Unavailable", b'{"error":"approval_unavailable"}')
+            return response(start_response, "200 OK", b'{"ok":true,"approved":true}')
         if environ.get("REQUEST_METHOD") != "GET":
             return response(start_response, "405 Method Not Allowed", b'{"error":"method_not_allowed"}')
         path = environ.get("PATH_INFO", "")

@@ -5,9 +5,9 @@ Cloudflare upload Worker. Defaults to evidence-only preflight, no model calls.
 """
 import json
 import re
-from uuid import UUID
+from uuid import UUID, uuid4
 
-from run_grounded_generation_v2 import execute
+from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_generation_checkpoint_store_v2 import save_once
 from item_draft_revalidation_v2 import revalidate
@@ -16,7 +16,7 @@ from item_draft_revision_storage_v2 import save_revision, list_revisions, Revisi
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
           "item_id", "textbook_id", "section_id", "include_subsections",
-          "page_start", "page_end", "limit", "execute", "confirm_paid_calls"}
+          "page_start", "page_end", "limit", "execute", "confirm_paid_calls", "resume_completed_only"}
 REQUIRED = {"topic", "mode", "domain", "section", "objective", "item_id"}
 
 
@@ -42,11 +42,13 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
 
         path = environ.get("PATH_INFO", "")
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
+        lecture_plan = path == "/generation/lecture-plan"
+        lecture_file = path == "/generation/lecture-file-plan"
         textbook_list = path == "/generation/textbooks"
         readiness = path == "/generation/index-readiness"
         checkpoint_readiness = path == "/generation/checkpoint-readiness"
         diagnostic = path == "/generation/provider-check"
-        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness", "/generation/textbooks") and not draft_match:
+        if path not in ("/generation/preflight", "/generation/one", "/generation/drafts", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness", "/generation/textbooks", "/generation/lecture-plan", "/generation/lecture-file-plan") and not draft_match:
             return respond("404 Not Found", {"error": "not_found"})
         if environ.get("HTTP_ORIGIN") != "https://staging.srnastudytool.com":
             return respond("403 Forbidden", {"error": "forbidden_origin"})
@@ -79,6 +81,74 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 raise ValueError('Invalid identity')
         except Exception:
             return respond("403 Forbidden", {"error": "forbidden"})
+        if lecture_file:
+            if method != "POST":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            try:
+                import base64
+                length = int(environ.get("CONTENT_LENGTH", "0"))
+                if not 1 <= length <= 36 * 1024 * 1024:
+                    raise ValueError("Invalid file request size")
+                payload = json.loads(environ["wsgi.input"].read(length))
+                if not isinstance(payload, dict) or not {"filename", "file_base64", "textbook_id"} <= payload.keys() or not payload.keys() <= {"filename", "file_base64", "textbook_id", "count", "mode", "format", "domain", "section", "objective", "page_start", "page_end"}:
+                    raise ValueError("Invalid lecture file payload")
+                raw = base64.b64decode(payload["file_base64"], validate=True)
+                if len(raw) > 25 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
+                    raise ValueError("Invalid lecture file")
+                start, end = payload.get("page_start"), payload.get("page_end")
+                if (start is None) != (end is None) or (
+                        start is not None and (type(start) is not int or type(end) is not int
+                                               or not 1 <= start <= end <= 500)):
+                    raise ValueError("Invalid lecture page range")
+                from lecture_file_to_question_plan import prepare_lecture_file_jobs
+                with conn_factory() as conn:
+                    result = prepare_lecture_file_jobs(conn, owner, raw, payload["filename"], textbook_id=(None if payload["textbook_id"] == "all" else payload["textbook_id"]), item_id_factory=lambda: str(uuid4()), count=payload.get("count", 1), mode=payload.get("mode", "NCE"), format=payload.get("format", "MC"), domain=payload.get("domain"), section=payload.get("section"), objective=payload.get("objective"), enable_ocr=True, page_start=payload.get("page_start"), page_end=payload.get("page_end"))
+                return respond("200 OK", result)
+            except ValueError as exc:
+                # Report an oversized extracted lecture separately from malformed uploads.
+                if str(exc) == "Extracted lecture exceeds planning limit; select relevant pages":
+                    return respond("422 Unprocessable Entity", {"error": "lecture_text_exceeds_planning_limit", "action": "select_smaller_page_range"})
+                import logging
+                logging.getLogger(__name__).warning("invalid_lecture_file_request reason=%s", type(exc).__name__)
+                return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
+            except (TypeError, KeyError, UnicodeError, json.JSONDecodeError, base64.binascii.Error):
+                return respond("400 Bad Request", {"error": "invalid_lecture_file_request"})
+            except Exception as exc:
+                import logging
+                logging.getLogger(__name__).exception("lecture_file_planning_unavailable exception_type=%s", type(exc).__name__)
+                return respond("503 Service Unavailable", {"error": "lecture_file_planning_unavailable"})
+        if lecture_plan:
+            if method != "POST":
+                return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
+            try:
+                length = int(environ.get("CONTENT_LENGTH", "0"))
+                if not 1 <= length <= 16384:
+                    raise ValueError("Invalid lecture request length")
+                data = json.loads(environ["wsgi.input"].read(length))
+                if (not isinstance(data, dict) or
+                        not {"lecture_text", "textbook_id"} <= data.keys() or
+                        not data.keys() <= {"lecture_text", "textbook_id", "mode",
+                                            "format", "count", "domain", "section", "objective"}):
+                    raise ValueError("Invalid lecture request")
+                lecture_text, book = data["lecture_text"], data["textbook_id"]
+                if (not isinstance(lecture_text, str) or not 1 <= len(lecture_text.strip()) <= 12000
+                        or not isinstance(book, str) or not 1 <= len(book) <= 200
+                        or type(data.get("count", 1)) is not int
+                        or not 1 <= data.get("count", 1) <= 5):
+                    raise ValueError("Invalid lecture input")
+                from lecture_to_question_plan import prepare_staging_jobs
+                with conn_factory() as conn:
+                    result = prepare_staging_jobs(
+                        conn, owner, lecture_text, textbook_id=book,
+                        item_id_factory=lambda: str(uuid4()),
+                        mode=data.get("mode", "NCE"), format=data.get("format", "MC"),
+                        count=data.get("count", 1), domain=data.get("domain"),
+                        section=data.get("section"), objective=data.get("objective"))
+                return respond("200 OK", result)
+            except (ValueError, TypeError, KeyError, UnicodeError, json.JSONDecodeError):
+                return respond("400 Bad Request", {"error": "invalid_lecture_request"})
+            except Exception:
+                return respond("503 Service Unavailable", {"error": "lecture_planning_unavailable"})
         if textbook_list:
             try:
                 with conn_factory() as conn:
@@ -238,6 +308,15 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if set(payload) != {"status", "notes"}:
                     raise ValueError("Invalid review body")
                 with conn_factory() as conn:
+                    if payload["status"] == "approved_for_bank":
+                        validation = revalidate(conn, owner_uid=owner, draft_id=draft_match.group(1))
+                        if (validation.get("published") is not False or
+                                validation.get("clinical_review_required") is not True or
+                                not isinstance(validation.get("issues"), list) or
+                                validation["issues"]):
+                            return respond("422 Unprocessable Entity", {
+                                "error": "draft_validation_required",
+                                "issues": validation.get("issues", []) if isinstance(validation, dict) else []})
                     result = review(conn, owner_uid=owner, reviewer_uid=owner,
                                     draft_id=draft_match.group(1),
                                     status=payload["status"], notes=payload["notes"])
@@ -261,6 +340,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             if "execute" in data or "confirm_paid_calls" in data:
                 raise ValueError("Execution flags cannot be supplied by client")
             live = path == "/generation/one"
+            if ("resume_completed_only" in data and
+                    (type(data["resume_completed_only"]) is not bool or not live)):
+                raise ValueError()
             if live and (not isinstance(data.get("textbook_id"), str) or not data["textbook_id"].strip()):
                 raise ValueError("Explicit textbook required for saving generated drafts")
             if live and environment.get("AI_GENERATION_OPT_IN") != "true":
@@ -312,6 +394,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                               "draft_status": saved["status"], "published": False,
                               "requires_human_review": True}
             return respond("200 OK", result)
+        except CompletedGenerationUnavailable:
+            return respond("409 Conflict", {"error":"completed_generation_unavailable", "rule":"CHECKPOINT_NOT_COMPLETE"})
         except ValueError as exc:
             # Safe fixed categories only. Do not return source passages, model text,
             # credentials, or arbitrary exception strings to the browser.
@@ -330,7 +414,33 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 rule = "PROVIDER_CONFIGURATION"
             else:
                 rule = "GENERATION_VALIDATION"
-            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule})
+            # Exact allowlist: expose only which private planning invariant failed.
+            # Never echo even part of an arbitrary exception or provider output.
+            detail = {
+                "Concept card choice plan incomplete": "PLAN_FIELDS",
+                "Concept card choice plan is MC-only": "PLAN_FORMAT",
+                "Concept card required before drafting": "CONCEPT_DRAFT_CONTEXT",
+                "Concept card choice plan invalid": "PLAN_CONDITIONS_OR_KEYS",
+                "Concept card choice plan choices invalid": "PLAN_CHOICE_IDS",
+                "Concept card choice plan response invalid": "PLAN_RESPONSE_FIELDS",
+                "Concept card choice plan does not compare both components": "PLAN_RESPONSE_COMPONENTS",
+                "Concept card choice plan response_variables are not clinical components": "PLAN_COMPONENT_AXES",
+                "Concept card choice plan rendered response differs": "PLAN_RENDERED_RESPONSE",
+                "Concept card condition gives away a planned response": "PLAN_GIVEN_RESPONSE",
+                "Concept card choice plan repeats a response pattern": "PLAN_REPEATED_PATTERN",
+                "Concept card incomplete; draft generation blocked": "CONCEPT_FIELDS",
+                "Concept card must reference unique passage IDs": "CONCEPT_SOURCE_IDS",
+                "Concept card objective differs from selected blueprint objective": "CONCEPT_OBJECTIVE",
+                "Concept card references unknown passages": "CONCEPT_UNKNOWN_SOURCE",
+                "Generated draft differs from its choice plan": "DRAFT_PLAN_MISMATCH",
+                "Generated draft differs from its choice plan: key": "DRAFT_PLAN_KEY",
+                "Generated draft differs from its choice plan: choices": "DRAFT_PLAN_CHOICES",
+                "Generated draft differs from its choice plan: condition": "DRAFT_PLAN_CONDITION",
+                "Rationale incomplete: counterfactual differs from planned case": "RATIONALE_PLAN_MISMATCH",
+            }.get(message)
+            return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule,
+                "validation_contract": "2026-11-10-v1",
+                **({"validation_detail": detail} if detail is not None else {})})
         except Exception as exc:
             # Never log prompts, indexed passages, credentials or provider response bodies.
             # Fixed categories distinguish infrastructure failures from provider failures.

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import vm from 'node:vm';
+import {fileURLToPath} from 'node:url';
 import {webcrypto} from 'node:crypto';
 
 const source=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
@@ -9,6 +10,25 @@ const origin='https://staging.srnastudytool.com';
 const reviewer='https://reviewer-staging.srnastudytool.com';
 const pdf='123e4567-e89b-42d3-a456-426614174000/book.pdf';
 const sha=async bytes=>Buffer.from(await webcrypto.subtle.digest('SHA-256',bytes)).toString('hex');
+
+function preview(question){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]},set innerHTML(value){throw Error('Generated content must be text')}});
+ const document={createElement:node},host=node('div');
+ const render=vm.runInNewContext(ui.slice(ui.indexOf('function renderReadableQuestion('),ui.indexOf('let generatedForReview='))+'\nrenderReadableQuestion',{document});
+ render(host,question);
+ const text=n=>[n.textContent,...n.children.map(text)].join('\n');return text(host);
+}
+test('saved v2 question preview exposes the four-part teaching rationale and PDF citations safely',()=>{
+ const html='<img src=x onerror=alert(1)>';
+ const text=preview({stem:'Clinical case',mode:'NCE',objective:'I.A.2',reasoning_level:'application',key:['B'],options:[{id:'A',text:'First response'},{id:'B',text:'Second response'}],
+  rationale:{core_concept:'Core teaching',why_key_wins:'Key mechanism',trap:html,distractor_breakdown:{A:'Specific wrong mechanism',B:'Duplicate keyed breakdown'}},evidence:[{pdf_page:731},{pdf_page:732}]});
+ for(const value of ['Core teaching','Key mechanism',html,'Specific wrong mechanism','I.A.2','731, 732','Clinical review required'])assert.ok(text.includes(value),value);
+ assert.ok(!text.includes('Duplicate keyed breakdown'));
+});
+test('legacy string rationale remains readable',()=>{
+ assert.ok(preview({stem:'Legacy case',explanation:'Legacy teaching'}).includes('Legacy teaching'));
+});
 
 function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,handler}={}){
  const calls=[];
@@ -19,7 +39,7 @@ function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,han
   fetch:async(url,options)=>{calls.push({url:String(url),options});return handler(url,options)}
  };
  context.globalThis=context;
- vm.runInNewContext(source,context);
+ vm.runInNewContext(source,context,{filename:fileURLToPath(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url)),importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER});
  return {api:context.window.MBUSourceMaterialStagingStorage,calls};
 }
 function response(bytes,sourceSha,imageSha,{mime='image/png',approval='false'}={}){
@@ -184,4 +204,18 @@ test('saved draft detail rejects invalid IDs and non-staging origin before fetch
 test('saved draft detail surfaces backend failures',async()=>{
  const {api}=setup({handler:()=>new Response(JSON.stringify({error:'Draft not found'}),{status:404,headers:{'Content-Type':'application/json'}})});
  await assert.rejects(api.getGeneratedDraft('abc90a93-41f8-4d7c-8e27-94a609135572'),/Draft not found/);
+});
+
+
+test('disconnected generation retrieves only the same completed request without new authoring',async()=>{
+ const request={item_id:'stable-id',topic:'original topic',textbook_id:'owned-book'};let networkCalls=0,recoveryNotice=0;
+ const {api,calls}=setup({handler:async(url,options)=>{
+  const body=JSON.parse(options.body);
+  if(++networkCalls===1){assert.equal(body.resume_completed_only,undefined);throw TypeError('fetch failed');}
+  assert.deepEqual(body,{...request,resume_completed_only:true});
+  return {ok:true,json:async()=>({draft_id:'saved-id',published:false,can_publish:false})};
+ }});
+ const result=await api.generateOne(request,{onRecovery:()=>recoveryNotice++});
+ assert.equal(result.draft_id,'saved-id');assert.equal(result.published,false);
+ assert.equal(calls.length,2);assert.equal(recoveryNotice,1);assert.equal(request.resume_completed_only,undefined);
 });

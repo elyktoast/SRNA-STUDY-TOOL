@@ -14,6 +14,12 @@ class LectureExtractionTests(unittest.TestCase):
                          ["Airway management", "Describe airway assessment", "Identify aspiration risks"])
         self.assertEqual(result["concepts"][0]["lecture_locator"], "slide/page 2")
         self.assertTrue(result["requires_review"])
+    def test_file_planner_page_prefix_with_colon(self):
+        result = extract("Page 1:\nBREATHING CIRCUITS, HUMIDIFICATION/FILTRATION AND CLOSED CIRCUIT\nAdditional notes")
+        self.assertEqual(len(result["concepts"]), 1)
+        self.assertEqual(result["concepts"][0]["lecture_locator"], "slide/page 1")
+        self.assertIn("BREATHING CIRCUITS", result["concepts"][0]["title"])
+
     def test_plain_text_does_not_invent_concepts(self):
         self.assertEqual(extract("This is a narrative lecture with no explicit headings.")["concepts"], [])
     def test_private_retrieval_plans_only_grounded_concepts(self):

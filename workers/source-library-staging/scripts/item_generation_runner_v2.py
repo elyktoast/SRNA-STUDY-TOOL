@@ -13,6 +13,24 @@ CONCEPT_FIELDS = ("objective", "mechanism", "relevance", "misconception",
 RATIONALE_FIELDS = ("core_concept", "why_key_wins", "trap", "distractor_breakdown")
 
 
+def _final_counterfactual(draft, proposal):
+    """Bind an author's teaching edit to the finished stem, never approve it."""
+    if not isinstance(proposal, dict) or set(proposal) != {"from_text", "to_text", "expected_key"}:
+        raise ValueError("Rationale incomplete: invalid counterfactual")
+    before, after, key = (proposal[k] for k in ("from_text", "to_text", "expected_key"))
+    ids = {o.get("id") for o in draft.get("options", []) if isinstance(o, dict)}
+    original = draft.get("key", [])
+    if (not isinstance(original, list) or not original
+            or any(not isinstance(k, str) or k not in ids for k in original)
+            or any(not isinstance(s, str) or not s.strip() or len(s) > 200 for s in (before, after))
+            or before == after or draft["stem"].count(before) != 1
+            or before == draft["stem"] or not isinstance(key, list)
+            or len(key) != len(original) or any(not isinstance(k, str) or k not in ids for k in key)
+            or len(set(key)) != len(key) or set(key) == set(original)):
+        raise ValueError("Rationale incomplete: invalid counterfactual")
+    return f'If "{before}" is replaced by "{after}", the best response changes to option(s) {", ".join(key)}.'
+
+
 def _response(adapter, request):
     try:
         result = adapter(request)
@@ -85,6 +103,16 @@ def _hydrate_indexed_citations(draft, trusted_passages):
                     citations.append({"passage_id": pid, "textbook_id": source["textbook_id"],
                                       "pdf_page": source["pdf_page_start"], "excerpt": source["excerpt"]})
                     cited.add(pid)
+    for citation in citations:
+        source = sources.get(citation.get("passage_id")) if isinstance(citation, dict) else None
+        if (source and citation.get("textbook_id") == source.get("textbook_id")
+                and citation.get("pdf_page") == source.get("pdf_page_start")
+                and isinstance(citation.get("excerpt"), str) and citation["excerpt"]
+                and citation["excerpt"] in source["excerpt"]):
+            citation["printed_page_verified"] = False
+            citation["edition"] = source.get("edition")
+            citation["chapter"] = source.get("section_heading")
+            citation["edition_status"] = "recorded_unverified" if source.get("edition") else "not_recorded"
     return item
 
 
@@ -146,13 +174,20 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     if on_checkpoint is not None and not callable(on_checkpoint):
         raise ValueError("Checkpoint writer must be callable")
     checkpoint = checkpoint or {}
-    concept = checkpoint.get("concept_card") if "concept_card" in checkpoint else _response(adapter, build_step("concept_card", **args))
+    concept = checkpoint.get("concept_card") if "concept_card" in checkpoint else _response(adapter, build_step("concept_card", **args, format=format))
     # Some JSON-mode providers wrap the requested object under its step name.
     # Unwrap only the exact one-key envelope; never invent missing fields or IDs.
     if isinstance(concept, dict) and set(concept) == {"concept_card"} and isinstance(concept["concept_card"], dict):
         concept = concept["concept_card"]
     if not isinstance(concept, dict):
         raise ValueError("Concept card incomplete; draft generation blocked")
+    concept = dict(concept)
+    choice_plan = concept.pop("choice_plan", None)
+    if choice_plan is not None:
+        from item_mc_choice_plan_v2 import validate as validate_plan
+        if format != "MC":
+            raise ValueError("Concept card choice plan is MC-only")
+        choice_plan = validate_plan(choice_plan)
     if any(not isinstance(concept.get(field), str) or not concept[field].strip()
            for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
@@ -167,21 +202,34 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
     ):
         raise ValueError("Concept card references unknown passages")
     if "concept_card" not in checkpoint and on_checkpoint is not None:
-        on_checkpoint("concept_card", concept)
+        on_checkpoint("concept_card", {**concept, **({"choice_plan":choice_plan} if choice_plan is not None else {})})
     draft = checkpoint.get("draft") if "draft" in checkpoint else _response(adapter, build_step("item_draft", **args,
-                                        format=format, concept_card=concept))
+                                        format=format, concept_card=concept, choice_plan=choice_plan))
     if not isinstance(draft, dict):
         raise ValueError("Generated draft has wrong format or missing stem")
     if set(draft) == {"draft"} and isinstance(draft["draft"], dict):
         draft = draft["draft"]
     if draft.get("format") != format or not isinstance(draft.get("stem"), str):
         raise ValueError("Generated draft has wrong format or missing stem")
+    planned_proposal = None
+    if choice_plan is not None:
+        from item_mc_choice_plan_v2 import bind, render_condition
+        draft = render_condition(choice_plan, draft)
+        planned_proposal = bind(choice_plan, draft)
+        concept = {**concept, "counterfactual": _final_counterfactual(draft, planned_proposal)}
     if "draft" not in checkpoint and on_checkpoint is not None:
         on_checkpoint("draft", draft)
     rationale = _response(adapter, build_step("rationale", **args, format=format,
-                                             concept_card=concept, draft=draft))
+                                             concept_card=concept, draft=draft, choice_plan=choice_plan))
+    if isinstance(rationale, dict) and set(rationale) == {"rationale"} and isinstance(rationale["rationale"], dict):
+        rationale = rationale["rationale"]
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
+    if planned_proposal is not None and "counterfactual_test" in rationale and rationale["counterfactual_test"] != planned_proposal:
+        raise ValueError("Rationale incomplete: counterfactual differs from planned case")
+    if format in ("MC", "MS") and "counterfactual_test" in rationale:
+        concept = {**concept, "counterfactual": _final_counterfactual(draft, rationale["counterfactual_test"])}
+        rationale = {k: rationale[k] for k in RATIONALE_FIELDS}
     # The model must not be allowed to overwrite identifiers, source, or approval.
     item = {**_complete_nonclinical_schema_fields(_repair_ellipsized_citations(_hydrate_indexed_citations(draft, evidence), evidence)), "item_id": item_id, "rules_version": "2.0",
             "mode": mode, "domain": domain, "section": section,

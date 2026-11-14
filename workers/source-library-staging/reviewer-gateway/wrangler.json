@@ -6,12 +6,15 @@
     "STAGING_ONLY": "true",
     "SUPABASE_URL": "https://xqyasyambwdyhsjkftqu.supabase.co",
     "AI_HYBRID_ENABLED": "false",
-    "AI_CLOUDFLARE_MODEL": "@cf/qwen/qwen3.8-27b",
+    "AI_GENERATION_CHECKPOINTS_ENABLED": "true",
+    "AI_CLOUDFLARE_MODEL": "@cf/zai-org/glm-5.3",
     "AI_REWRITE_OPT_IN": "true",
     "AI_BLIND_REVIEW_OPT_IN": "true",
     "AI_REVIEWER_MODEL": "qwen/qwen3.8-27b",
+    "AI_EDITORIAL_REVIEWER_MODEL": "qwen/qwen3.8-27b",
     "AI_OPTION_REVIEW_OPT_IN": "true",
-    "AI_EXPLANATION_REVIEW_OPT_IN": "true"
+    "AI_EXPLANATION_REVIEW_OPT_IN": "true",
+    "AI_AUTHORING_PROVIDER": "cloudflare"
   },
   "containers": [
     {

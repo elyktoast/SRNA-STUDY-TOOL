@@ -16,7 +16,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, evidence_packet=None,
                         rewrite=None, semantic_lookup=None, review_repair=None,
-                        option_reviewer=None, option_reviewer_model_id=None, explanation_review=None):
+                        option_reviewer=None, option_reviewer_model_id=None, explanation_review=None, quality_review=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -64,14 +64,14 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
         rewrite=rewrite, semantic_lookup=semantic_lookup,
-        review_repair=review_repair, topic=topic, explanation_review=explanation_review)
+        review_repair=review_repair, topic=topic, explanation_review=explanation_review, quality_review=quality_review)
     # Independent retrieval is diagnostic only: finding a passage is not proof
     # that it supports the key or refutes an alternative.
     option_audit = None
     if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=2)
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=3)
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,

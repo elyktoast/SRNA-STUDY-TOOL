@@ -6,6 +6,44 @@ from item_generation_screened_v2 import generate_and_screen
 
 
 class ExplanationReviewTests(unittest.TestCase):
+    def test_counterfactual_source_review_checks_clinical_premises_not_answer_letters(self):
+        self.item["concept_card"]["counterfactual"]='If "condition X" is replaced by "condition Y", the best response changes to option(s) A.'
+        text=next(f["text"] for f in fields_for(self.item) if f["label"]=="concept_card.counterfactual")
+        self.assertIn("condition X",text);self.assertIn("condition Y",text)
+        self.assertNotIn("option",text)
+        self.item["concept_card"]["counterfactual"] += " Additional unsupported clinical assertion."
+        text=next(f["text"] for f in fields_for(self.item) if f["label"]=="concept_card.counterfactual")
+        self.assertIn("Additional unsupported clinical assertion",text)
+        self.assertIn("option(s) A",text)
+
+    def test_reviewer_pass_cannot_turn_source_silence_into_disproof(self):
+        self.item["rationale"]["distractor_breakdown"]["A"]="Incorrect because the source does not mention this effect."
+        report=review(self.item,self.sources,lambda p:self.response)
+        self.assertEqual(report["status"],"flag")
+        self.assertIn("rationale.distractor_breakdown.A",[x["field"] for x in report["issues"]])
+        self.assertNotIn("rationale.distractor_breakdown.A",[f for g in report["source_support"] for f in g["fields"]])
+        self.item["rationale"]["distractor_breakdown"]["A"]="The patient has no evidence of obstruction; the source states the relevant classification."
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response)["status"],"pass")
+
+    def test_mixed_citation_scopes_are_separated_before_model_grouping(self):
+        self.item["evidence"].append({"passage_id":"p2"})
+        self.sources.append({"passage_id":"p2","excerpt":"Second source.\nSeparate evidence statement."})
+        self.item["concept_card"]["evidence_ids"]=["p1","p2"]
+        self.item["distractor_evidence"]={"A":{"explanation":"Option claim", "passage_ids":["p2"]}}
+        calls=[]
+        def reviewer(payload):
+            calls.append(payload)
+            scopes={tuple(f["passage_ids"]) for f in payload["fields"]}
+            self.assertEqual(len(scopes),1)
+            pid=payload["fields"][0]["passage_ids"][0]
+            return {"supported_groups":[{"field_ids":[f["id"] for f in payload["fields"]],
+                "quote_refs":[{"passage_id":pid,"span_id":"q1"}]}],"unsupported":[]}
+        report=review(self.item,self.sources,reviewer,batch_size=6)
+        self.assertEqual(report["status"],"pass")
+        self.assertEqual(len(report["checked_fields"]),len(fields_for(self.item)))
+        self.assertGreater(len(calls),1)
+        self.assertFalse(report["can_publish"])
+
     def setUp(self):
         self.item = {"evidence":[{"passage_id":"p1"}],
                      "concept_card":{k:"Classification statement" for k in ("mechanism","relevance","misconception","counterfactual")},
@@ -38,6 +76,19 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertNotIn("key", calls[0])
         self.assertNotIn("blind", calls[0])
 
+    def test_bounded_batches_cover_each_field_and_cannot_swap_or_omit_fields(self):
+        calls=[]
+        def reviewer(payload):
+            calls.append(payload)
+            return {"supported_groups":[{"field_ids":[f["id"] for f in payload["fields"]],
+                "quote_refs":[{"passage_id":"p1","span_id":"q1"}]}],"unsupported":[]}
+        result=review(self.item,self.sources,reviewer,batch_size=3)
+        self.assertEqual(result["status"],"pass")
+        self.assertEqual(result["batch_count"],3)
+        self.assertEqual([len(p["fields"]) for p in calls],[3,3,2])
+        self.assertEqual(len(result["checked_fields"]),8)
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response,batch_size=3)["status"],"pending")
+
     def test_unsupported_mechanism_targets_existing_rewrite_field(self):
         response = copy.deepcopy(self.response)
         response["supported_groups"][0]["field_ids"] = self.ids[1:]
@@ -60,6 +111,21 @@ class ExplanationReviewTests(unittest.TestCase):
         self.sources[0]["excerpt"]="Classification.\nOnly volatile anesthetics are triggering agents."
         report=review(self.item,self.sources,lambda p:self.response)
         self.assertEqual(report["status"],"pass")
+
+    def test_causal_only_claims_cannot_pass_from_nonexclusive_source_examples(self):
+        claims=("Static compliance is increased only by emphysema.",
+                "The source lists static compliance decreases only for these conditions.",
+                "The response occurs exclusively with this mechanism.")
+        for text in claims:
+            for label in ("core_concept","why_key_wins"):
+                with self.subTest(text=text,label=label):
+                    self.item["rationale"][label]=text
+                    report=review(self.item,self.sources,lambda p:self.response)
+                    self.assertEqual(report["status"],"flag")
+                    self.assertIn("rationale."+label,[i["field"] for i in report["issues"]])
+                    self.item["rationale"][label]="Classification statement"
+        self.item["rationale"]["core_concept"]="Static compliance is increased by emphysema."
+        self.assertEqual(review(self.item,self.sources,lambda p:self.response)["status"],"pass")
 
     def test_missing_repeated_unknown_or_uncited_support_never_passes(self):
         for change in ("missing", "duplicate", "unknown_field", "unknown_span", "uncited"):

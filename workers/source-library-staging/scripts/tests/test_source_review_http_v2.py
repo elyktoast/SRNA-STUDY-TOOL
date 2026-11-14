@@ -34,14 +34,21 @@ class HttpTests(unittest.TestCase):
         self.manifest = {"owner_uid": UID, "r2_key": KEY,
                          "sha256": "a" * 64, "pdf_page_count": 2}
 
-    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None, preflight_headers="Authorization"):
+    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None, preflight_headers="Authorization", post_body=None, content_type=None, content_length=None):
         headers = []
         status = []
         def start(s, h):
             status.append(s)
             headers.extend(h)
         env = {"REQUEST_METHOD": method, "PATH_INFO": path,
-               "QUERY_STRING": query if query is not None else "path=" + KEY + "&page=1"}
+               "QUERY_STRING": query if query is not None else ("path=" + KEY + "&page=1" if method == "GET" else "")}
+        if post_body is not None:
+            env["wsgi.input"] = io.BytesIO(post_body)
+            env["CONTENT_LENGTH"] = str(len(post_body)) if content_length is None else content_length
+        elif content_length is not None:
+            env["CONTENT_LENGTH"] = content_length
+        if content_type is not None:
+            env["CONTENT_TYPE"] = content_type
         if origin is not None:
             env["HTTP_ORIGIN"] = origin
         if preflight_method is not None:
@@ -58,7 +65,7 @@ class HttpTests(unittest.TestCase):
                              ("/missing", "GET")):
             with self.subTest(path=path, method=method):
                 status, headers, _ = self.call(path, method=method, token=None)
-                self.assertIn(status, (200, 404, 405))
+                self.assertIn(status, (200, 401, 403, 404, 405))
                 self.assertEqual(headers["X-Frame-Options"], "DENY")
                 self.assertEqual(headers["Referrer-Policy"], "no-referrer")
                 self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
@@ -291,8 +298,79 @@ class HttpTests(unittest.TestCase):
         status, _, _ = self.call(query="path=" + KEY + "&page=2")
         self.assertEqual(status, 409)
 
+    def test_approval_route_rejects_untrusted_origins_and_invalid_transport(self):
+        # The private route remains unreachable from the public Worker allowlist.
+        self.assertEqual(self.call("/review/approve", method="POST", origin=None)[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://srnastudytool.com")[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://staging.srnastudytool.com")[0], 415)
+
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_invalid_reviewer_before_body(self, approve):
+        for token in ("invalid", " "):
+            with self.subTest(token=token):
+                status, _, body = self.call(
+                    "/review/approve", method="POST",
+                    origin="https://staging.srnastudytool.com",
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertIn(status, (401, 403))
+                self.assertNotIn(b"Invalid token", body)
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_whitespace_tokens_and_query_fields(self, approve):
+        origin = "https://staging.srnastudytool.com"
+        for token in (" valid", "valid ", " valid "):
+            with self.subTest(token=token):
+                status, _, _ = self.call(
+                    "/review/approve", method="POST", origin=origin,
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertEqual(status, 401)
+        status, _, _ = self.call(
+            "/review/approve", query="approved=true", method="POST",
+            origin=origin, post_body=b"{}", content_type="application/json")
+        self.assertEqual(status, 400)
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request", return_value=1)
+    def test_private_approval_requires_bounded_json_and_exact_origin(self, approve):
+        origin = "https://staging.srnastudytool.com"
+        body = b'{"example":"placeholder"}'
+        status, headers, result = self.call(
+            "/review/approve", method="POST", origin=origin,
+            post_body=body, content_type="application/json")
+        self.assertEqual(status, 200)
+        self.assertIn(b'"approved":true', result)
+        approve.assert_called_once_with(self.runtime, access_token="valid", body=body)
+        approve.reset_mock()
+        cases = [
+            {"content_type": "text/plain"},
+            {"content_type": "application/json", "content_length": "0"},
+            {"content_type": "application/json", "content_length": "8193"},
+            {"content_type": "application/json", "content_length": "NaN"},
+            {"content_type": "application/json", "content_length": str(len(body) + 1)},
+        ]
+        for options in cases:
+            with self.subTest(options=options):
+                status, _, _ = self.call(
+                    "/review/approve", method="POST", origin=origin,
+                    post_body=body, **options)
+                self.assertIn(status, (400, 413, 415))
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request", side_effect=ValueError("secret internal detail"))
+    def test_approval_validation_failure_does_not_expose_private_details(self, approve):
+        status, _, result = self.call(
+            "/review/approve", method="POST",
+            origin="https://staging.srnastudytool.com",
+            post_body=b"{}", content_type="application/json")
+        self.assertEqual(status, 409)
+        self.assertNotIn(b"secret", result)
+        approve.assert_called_once()
+
     def test_approval_routes_are_not_exposed(self):
-        self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
+        self.assertEqual(self.call("/review/approve", method="POST")[0], 403)
         self.assertEqual(self.call("/review/approve")[0], 404)
 
 

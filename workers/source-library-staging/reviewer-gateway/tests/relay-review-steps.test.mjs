@@ -19,6 +19,18 @@ test('429 diagnostics expose only fixed dimensions and bounded numbers; fraction
   assert.deepEqual(await response.json(),{error:'provider_failed',rule:'PROVIDER_RATE_LIMIT',provider_status:429,remaining_tokens:8000,rate_limit_dimension:'tokens_per_day',limit:200000,used:199999,requested:4000,retry_after_seconds:3});
  }finally{globalThis.fetch=original;}
 });
+test('missing Retry-After uses only an explicit bounded provider retry interval',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const [wait,expected] of [['25.123s',26],['12.123456789012345s',13],['0.000000000000001s',1],['500ms',1],['9999s',undefined]]){
+   globalThis.fetch=async()=>Response.json({error:{message:'Tokens per minute (TPM). Please try again in '+wait+'. private source text'}},{status:429});
+   const data=await (await gateway.fetch(request('blind_review','reviewer-model'),env)).json();
+   assert.equal(data.retry_after_seconds,expected);
+   assert.equal(data.rate_limit_dimension,'tokens_per_minute');
+   assert.ok(!JSON.stringify(data).includes('private'));
+  }
+ }finally{globalThis.fetch=original;}
+});
 test('oversized and invalid upstream error bodies cannot become relay diagnostics',async()=>{
  const original=globalThis.fetch;
  try{
@@ -36,7 +48,8 @@ function request(step, model, options={}) {
       {role:'user',content:JSON.stringify({
         step, rules_version:'2.0', auto_publish:false,
         ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
-        ...(step==='explanation_review'?{independent:true}:{}),
+        ...(['explanation_review','editorial_review','options_only_review'].includes(step)?{independent:true}:{}),
+        ...options,
       })}],
   });
   const stamp = String(Math.floor(Date.now()/1000));
@@ -158,7 +171,7 @@ test('rationale uses bounded Groq JSON rather than the slow Cloudflare route',as
   calls++; assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.equal(JSON.parse(body.messages[1].content).step,'rationale');
-  assert.equal(body.reasoning_effort,'low');
+  assert.equal(body.reasoning_effort,'medium');
   assert.deepEqual(body.response_format,{type:'json_object'});
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -178,14 +191,14 @@ test('Groq drafting retains original request without Qwen-specific settings',asy
  try{assert.equal((await gateway.fetch(request('item_draft','generator-model'),cloudflareEnv)).status,200);}
  finally{globalThis.fetch=original;}
 });
-test('GPT-OSS drafting and rewriting request bounded JSON with low reasoning effort',async()=>{
+test('GPT-OSS drafting and rewriting request bounded JSON with medium authoring effort',async()=>{
  const original=globalThis.fetch;
  const model='openai/gpt-oss-120b';
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body);
   assert.deepEqual(body.response_format,{type:'json_object'});
-  assert.equal(body.reasoning_effort,'low');
+  assert.equal(body.reasoning_effort,'medium');
   assert.equal(body.max_tokens,1024);
   assert.equal(body.chat_template_kwargs,undefined);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -296,7 +309,8 @@ test('Groq-only authoring mode keeps all three calls on the existing JSON route'
  globalThis.fetch=async(url,options)=>{
   assert.ok(String(url).includes('api.groq.com'));
   const body=JSON.parse(options.body); steps.push(JSON.parse(body.messages[1].content).step);
-  assert.deepEqual(body.response_format,{type:'json_object'}); assert.equal(body.reasoning_effort,'low');
+  const step=JSON.parse(body.messages[1].content).step;
+  assert.equal(body.response_format.type,step==='concept_card'?'json_schema':'json_object'); assert.equal(body.reasoning_effort,'medium');
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
  };
  try{
@@ -315,4 +329,216 @@ test('Qwen explanation audit preserves the established JSON request settings',as
   assert.equal(seen[1].reasoning_effort,undefined);
   assert.equal(seen[2].reasoning_effort,undefined);
  }finally{globalThis.fetch=original;}
+});
+
+test('editorial and options-only checks require their own authorized distinct reviewers',async()=>{
+ const original=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  const configured={...env,AI_EXPLANATION_REVIEW_OPT_IN:'true',AI_EDITORIAL_REVIEWER_MODEL:'editorial-model'};
+  for(const [step,model] of [['editorial_review','editorial-model'],['options_only_review','reviewer-model']]){
+   assert.equal((await gateway.fetch(request(step,'generator-model'),configured)).status,400);
+   assert.equal((await gateway.fetch(request(step,model,{independent:false}),configured)).status,400);
+  }
+  assert.equal((await gateway.fetch(request('editorial_review','reviewer-model'),configured)).status,400);
+  assert.equal((await gateway.fetch(request('blind_review','editorial-model'),configured)).status,400);
+  assert.equal((await gateway.fetch(request('editorial_review','editorial-model'),env)).status,400);
+  assert.equal((await gateway.fetch(request('options_only_review','reviewer-model'),{...configured,AI_BLIND_REVIEW_OPT_IN:'false'})).status,400);
+  assert.equal(calls,0);
+  for(const [step,model] of [['editorial_review','editorial-model'],['options_only_review','reviewer-model']])assert.equal((await gateway.fetch(request(step,model),configured)).status,200);
+  assert.equal(calls,2);
+ }finally{globalThis.fetch=original;}
+});
+
+test('authoring effort never changes editorial or independent Qwen settings',async()=>{
+ const original=globalThis.fetch,seen=[];
+ globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  const configured={...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EDITORIAL_REVIEWER_MODEL:'openai/gpt-oss-20b',AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+  assert.equal((await gateway.fetch(request('editorial_review','openai/gpt-oss-20b'),configured)).status,200);
+  assert.equal((await gateway.fetch(request('blind_review','qwen/qwen3.8-27b'),configured)).status,200);
+  assert.equal(seen[0].reasoning_effort,'low');
+  assert.equal(seen[1].reasoning_effort,undefined);
+  assert.ok(seen.every(b=>b.max_tokens===1024));
+ }finally{globalThis.fetch=original;}
+});
+
+test('request rejection exposes only fixed provider codes and parameter names',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const [error,expected] of [
+   [{code:'json_validate_failed',message:'private',failed_generation:'private question'},{provider_error_code:'json_validate_failed',failed_generation_chars:16,failed_json_shape:'invalid_json'}],
+   [{code:'json_validate_failed',failed_generation:JSON.stringify({core_concept:'private',rationale:'private',private:'private'})},{provider_error_code:'json_validate_failed',failed_generation_chars:JSON.stringify({core_concept:'private',rationale:'private',private:'private'}).length,failed_json_shape:'object',failed_known_fields:['core_concept','rationale'],failed_unknown_field_count:1}],
+   [{code:'private credential',param:'private source',message:'secret'},{}],
+   [{code:'invalid_request_error',param:'reasoning_effort',message:'secret'},{provider_error_code:'invalid_request_error',provider_error_param:'reasoning_effort'}]]){
+   globalThis.fetch=async()=>Response.json({error},{status:400});
+   const data=await (await gateway.fetch(request('concept_card','generator-model'),env)).json();
+   assert.deepEqual(data,{error:'provider_failed',rule:'PROVIDER_REQUEST_REJECTED',provider_status:400,...expected});
+   assert.ok(!JSON.stringify(data).includes('private'));
+  }
+ }finally{globalThis.fetch=original;}
+});
+
+test('concept planning constrains only canonical fields and preserves untrusted evidence in user role',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),schema=body.response_format.json_schema;
+  assert.equal(schema.strict,true);
+  assert.equal(schema.schema.additionalProperties,false);
+  assert.deepEqual(new Set(schema.schema.required),new Set(['objective','mechanism','relevance','misconception','counterfactual','evidence_ids']));
+  assert.deepEqual(Object.keys(schema.schema.properties).sort(),[...schema.schema.required].sort());
+  assert.deepEqual(schema.schema.properties.evidence_ids,{type:'array',items:{type:'string'}});
+  assert.equal(body.messages[0].role,'system');
+  assert.equal(JSON.parse(body.messages[1].content).evidence[0].excerpt,'untrusted textbook text');
+  assert.ok(!body.messages[0].content.includes('untrusted textbook text'));
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{evidence:[{excerpt:'untrusted textbook text'}]}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
+});
+
+test('MC rationale requires every option explanation and a bounded-edit proposal in its output schema',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),schema=body.response_format.json_schema;
+  assert.equal(schema.name,'srna_rationale_with_counterfactual_v2');
+  assert.equal(schema.strict,true);
+  assert.deepEqual(schema.schema.required,['core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test']);
+  assert.deepEqual(schema.schema.properties.distractor_breakdown.required,['A','B','C','D']);
+  assert.equal(schema.schema.properties.distractor_breakdown.additionalProperties,false);
+  const proposal=schema.schema.properties.counterfactual_test;
+  assert.deepEqual(proposal.required,['from_text','to_text','expected_key']);
+  assert.equal(proposal.additionalProperties,false);
+  assert.deepEqual(proposal.properties.expected_key.items.enum,['A','B','C','D']);
+  assert.equal(body.reasoning_effort,'medium');
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b',{format:'MC',draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
+});
+
+test('MC planning has a private distinct-response plan while generic concept cards retain six canonical fields',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body),s=body.response_format.json_schema.schema;
+  assert.ok(s.required.includes('choice_plan'));
+  assert.equal(s.properties.choice_plan.additionalProperties,false);
+  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','key','alternate_key','options']);
+  assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
+  assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','states']);
+  return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+ };
+ try{assert.equal((await gateway.fetch(request('concept_card','openai/gpt-oss-120b',{format:'MC'}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+ finally{globalThis.fetch=original;}
+});
+
+test('planned MC rationale preserves the bound counterfactual and requests only canonical explanations',async()=>{
+ const original=globalThis.fetch;
+ for(const format of ['MC','MS']){
+  globalThis.fetch=async(url,options)=>{
+   const s=JSON.parse(options.body).response_format.json_schema.schema;
+   assert.equal(s.additionalProperties,false);
+   assert.deepEqual(s.properties.distractor_breakdown.required,['A','B','C','D']);
+   if(format==='MC'){
+    assert.deepEqual(s.required,['core_concept','why_key_wins','trap','distractor_breakdown']);
+    assert.equal(s.properties.counterfactual_test,undefined);
+   }else assert.ok(s.required.includes('counterfactual_test'));
+   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+  };
+  try{assert.equal((await gateway.fetch(request('rationale','openai/gpt-oss-120b',{format,choice_plan:{},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),{...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b'})).status,200);}
+  finally{globalThis.fetch=original;}
+ }
+});
+
+test('explicit Cloudflare GPT-OSS authoring keeps every independent review on Groq',async()=>{
+ const old=globalThis.fetch;
+ const cf={...env,AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_AUTHORING_PROVIDER:'cloudflare',
+  AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'cf-secret',AI_CLOUDFLARE_MODEL:'@cf/openai/gpt-oss-120b',
+  AI_OPTION_REVIEW_OPT_IN:'true',AI_EXPLANATION_REVIEW_OPT_IN:'true',AI_EDITORIAL_REVIEWER_MODEL:'openai/gpt-oss-20b'};
+ try{
+  for(const step of ['concept_card','item_draft','rationale','rewrite']){
+   globalThis.fetch=async(url,options)=>{
+    assert.equal(url,'https://api.cloudflare.com/client/v4/accounts/account/ai/run/@cf/openai/gpt-oss-120b');
+    const body=JSON.parse(options.body);
+    assert.equal(body.messages[0].role,'system');assert.equal(body.messages[1].role,'user');
+    assert.equal(body.reasoning_effort,'medium');assert.equal(body.max_tokens,1024);
+    if(['concept_card','rationale'].includes(step)){
+     assert.equal(body.response_format.type,'json_schema');
+     const schema=body.response_format.json_schema;
+     assert.equal(schema.type,'object');assert.equal(schema.additionalProperties,false);
+     assert.equal(schema.schema,undefined,'Cloudflare takes the raw schema, not the Groq schema envelope');
+     if(step==='concept_card')assert.ok(schema.required.includes('choice_plan'));
+     else assert.deepEqual(schema.required,['core_concept','why_key_wins','trap','distractor_breakdown']);
+    }else assert.deepEqual(body.response_format,{type:'json_object'});
+    return Response.json({success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
+   };
+   assert.equal((await gateway.fetch(request(step,'openai/gpt-oss-120b',{format:'MC',choice_plan:{},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}}),cf)).status,200);
+  }
+  for(const step of ['blind_review','option_review','explanation_review','editorial_review','options_only_review']){
+   const model=step==='editorial_review'?'openai/gpt-oss-20b':'qwen/qwen3.8-27b';
+   globalThis.fetch=async(url,options)=>{
+    assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+    assert.equal(JSON.parse(options.body).model,model);
+    return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+   };
+   assert.equal((await gateway.fetch(request(step,model),cf)).status,200);
+  }
+ }finally{globalThis.fetch=old;}
+});
+test('Cloudflare authoring cannot disguise a different underlying generator model',async()=>{
+ const old=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;return Response.json({});};
+ try{
+  const response=await gateway.fetch(request('concept_card','openai/gpt-oss-120b'),{...env,
+   AI_GENERATOR_MODEL:'openai/gpt-oss-120b',AI_AUTHORING_PROVIDER:'cloudflare',
+   AI_CLOUDFLARE_MODEL:'@cf/qwen/qwen3.8-27b',AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'secret'});
+  assert.equal(response.status,503);assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});
+
+test('Cloudflare GLM uses its wrapped schema and bounded low reasoning without changing review delivery',async()=>{
+ const old=globalThis.fetch;
+ const cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_GENERATOR_MODEL:'zai-org/glm-5.3',AI_AUTHORING_PROVIDER:'cloudflare',
+  AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'cf-secret',AI_CLOUDFLARE_MODEL:'@cf/zai-org/glm-5.3'};
+ try{
+  for(const step of ['concept_card','item_draft','rationale','rewrite','blind_review']){
+   globalThis.fetch=async(url,options)=>{
+    const body=JSON.parse(options.body);
+    if(step==='blind_review')assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+    else {
+     assert.ok(url.endsWith('/ai/run/@cf/zai-org/glm-5.3'));
+     assert.equal(body.reasoning_effort,'low');assert.equal(body.max_tokens,1024);
+     if(step==='concept_card'){
+      assert.equal(body.response_format.type,'json_schema');
+      assert.equal(body.response_format.json_schema.name,'srna_concept_card_v2');
+      assert.ok(body.response_format.json_schema.schema.required.includes('choice_plan'));
+     }
+    }
+    return Response.json(step==='blind_review'?{choices:[{message:{content:'{}'},finish_reason:'stop'}]}:
+     {success:true,result:{choices:[{message:{content:'{}'},finish_reason:'stop'}]}});
+   };
+   assert.equal((await gateway.fetch(request(step,step==='blind_review'?'qwen/qwen3.8-27b':'zai-org/glm-5.3',{format:'MC'}),cfg)).status,200);
+  }
+ }finally{globalThis.fetch=old;}
+});
+
+test('source explanation schema requires references for support but permits every field to be rejected',async()=>{
+ const old=globalThis.fetch;
+ const cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EXPLANATION_REVIEW_OPT_IN:'true'};
+ try{
+  globalThis.fetch=async(url,options)=>{
+   assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
+   const f=JSON.parse(options.body).response_format;
+   assert.equal(f.type,'json_schema');assert.equal(f.json_schema.strict,true);
+   const p=f.json_schema.schema.properties;
+   assert.equal(p.supported_groups.minItems,undefined,'No supported judgment is required');
+   assert.equal(p.supported_groups.items.properties.quote_refs.minItems,1);
+   assert.equal(p.supported_groups.items.properties.quote_refs.maxItems,8);
+   assert.deepEqual(p.supported_groups.items.properties.field_ids.items.enum,['e0','e1']);
+   assert.deepEqual(p.unsupported.items.properties.field_id.enum,['e0','e1']);
+   return Response.json({choices:[{message:{content:JSON.stringify({supported_groups:[],unsupported:[{field_id:'e0',reason:'Not established'},{field_id:'e1',reason:'Contradicted'}]})},finish_reason:'stop'}]});
+  };
+  const r=await gateway.fetch(request('explanation_review','qwen/qwen3.8-27b',{fields:[{id:'e0'},{id:'e1'}],source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
+  assert.equal(r.status,200);assert.deepEqual(JSON.parse((await r.json()).choices[0].message.content).supported_groups,[]);
+ }finally{globalThis.fetch=old;}
 });

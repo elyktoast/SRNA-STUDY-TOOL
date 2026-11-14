@@ -15,6 +15,21 @@ from process_textbook import ReviewRequiredError
 
 OWNER_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
+def safe_error_details(exc):
+    """Expose only structured PostgreSQL diagnostics; never exception text or SQL."""
+    details = {"error_type": type(exc).__name__}
+    sqlstate = getattr(exc, "sqlstate", None)
+    if isinstance(sqlstate, str) and re.fullmatch(r"[0-9A-Z]{5}", sqlstate):
+        details["sqlstate"] = sqlstate
+    diag = getattr(exc, "diag", None)
+    if diag is not None:
+        for field in ("column_name", "constraint_name", "table_name"):
+            value = getattr(diag, field, None)
+            if isinstance(value, str) and re.fullmatch(r"[A-Za-z_][A-Za-z_0-9]{0,127}", value):
+                details[field] = value
+    return details
+
+
 
 def enumerate_keys(client, owner_uid, limit=20, exclude_keys=None):
     if not isinstance(owner_uid, str) or not OWNER_RE.fullmatch(owner_uid):
@@ -130,11 +145,16 @@ def process_backlog(client, owner_uid, limit=10, apply=False,
                 "ocr_failed_pages_count": len(result.get("ocr_failed_pages", [])),
                 "citation_verified": result.get("citation_verified", False),
             }})
-        except ReviewRequiredError:
-            results.append({"key": key, "ok": True, "indexed": False, "needs_review": True})
+        except ReviewRequiredError as exc:
+            details = exc.diagnostics
+            results.append({"key": key, "ok": True, "indexed": False, "needs_review": True,
+                            "result": {field: details.get(field) for field in (
+                                "pdf_pages", "passages", "source_sha256", "extraction_quality",
+                                "review_required_pages", "requires_ocr_review", "section_count",
+                                "ocr_attempted", "ocr_pages", "ocr_failed_pages")}})
         except Exception as exc:
             # Do not include connection strings, secret-bearing exception text, or file contents.
-            results.append({"key": key, "ok": False, "error_type": type(exc).__name__})
+            results.append({"key": key, "ok": False, **safe_error_details(exc)})
     return {"mode": "apply" if apply else "dry-run", "results": results,
             "succeeded": sum(bool(x["ok"]) and not x.get("skipped") and not x.get("needs_review") for x in results),
             "failed": sum(not x["ok"] for x in results),
@@ -147,6 +167,8 @@ def main():
     parser.add_argument("--owner-uid", required=True)
     parser.add_argument("--limit", type=int, default=10)
     parser.add_argument("--r2-key", help="Process exactly one owner-scoped PDF")
+    parser.add_argument("--discover-only", action="store_true",
+                        help="List owner-scoped R2 PDF keys and upload names without downloading or indexing")
     parser.add_argument("--apply", action="store_true",
                         help="Explicitly import into private staging Supabase schema")
     parser.add_argument("--ocr", action="store_true", help="Attempt Tesseract OCR on low-text pages")
@@ -175,6 +197,24 @@ def main():
         aws_secret_access_key=os.environ["R2_SECRET_ACCESS_KEY"],
         region_name="auto",
     )
+    if args.discover_only:
+        if args.apply or args.force_reindex or args.r2_key:
+            parser.error("Discovery cannot apply, force reindex, or specify a target key")
+        candidates = []
+        paginator = client.get_paginator("list_objects_v2")
+        for page in paginator.paginate(Bucket=BUCKET, Prefix=args.owner_uid + "/"):
+            for item in page.get("Contents", []):
+                key = item.get("Key")
+                try:
+                    validate_target_key(key, args.owner_uid)
+                except ValueError:
+                    continue
+                head = client.head_object(Bucket=BUCKET, Key=key)
+                name = head.get("Metadata", {}).get("name")
+                candidates.append({"key": key, "original_filename": name if isinstance(name, str) else None,
+                                   "size_bytes": head.get("ContentLength")})
+        print(json.dumps({"mode": "discover-only", "objects": candidates}, indent=2))
+        return
     ready = None
     # A dry run should also avoid reprocessing already indexed textbooks when
     # the database is configured. Without DATABASE_URL it remains an R2-only
@@ -214,14 +254,19 @@ def main():
                                                    "ocr_failed_pages": result.get("ocr_failed_pages", []),
                                                    "citation_verified": False}}],
                            "succeeded": 1, "failed": 0, "skipped": 0}
-            except ReviewRequiredError:
+            except ReviewRequiredError as exc:
+                details = exc.diagnostics
                 summary = {"mode": "apply" if args.apply else "dry-run",
-                           "results": [{"key": key, "ok": True, "indexed": False, "needs_review": True}],
+                           "results": [{"key": key, "ok": True, "indexed": False, "needs_review": True,
+                                        "result": {field: details.get(field) for field in (
+                                            "pdf_pages", "passages", "source_sha256", "extraction_quality",
+                                            "review_required_pages", "requires_ocr_review", "section_count",
+                                            "ocr_attempted", "ocr_pages", "ocr_failed_pages")}}],
                            "succeeded": 0, "failed": 0, "skipped": 0, "needs_review": 1}
             except Exception as exc:
                 summary = {"mode": "apply" if args.apply else "dry-run",
                            "results": [{"key": key, "ok": False,
-                                        "error_type": type(exc).__name__}],
+                                        **safe_error_details(exc)}],
                            "succeeded": 0, "failed": 1, "skipped": 0}
     else:
         summary = process_backlog(client, args.owner_uid, args.limit,

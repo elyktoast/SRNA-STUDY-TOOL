@@ -21,6 +21,10 @@ export class ReviewerContainer extends Container {
     result[key] = this.env[key];
    }
    result.AI_GENERATION_OPT_IN = 'true';
+   if (this.env.AI_AUTHORING_PROVIDER !== undefined) {
+    result.AI_AUTHORING_PROVIDER = this.env.AI_AUTHORING_PROVIDER;
+    if (this.env.AI_AUTHORING_PROVIDER === 'cloudflare') result.AI_CLOUDFLARE_MODEL = this.env.AI_CLOUDFLARE_MODEL || '';
+   }
    if (this.env.AI_HYBRID_ENABLED === 'true') {
     const hybridKeys = ['AI_CLOUDFLARE_ACCOUNT_ID', 'AI_CLOUDFLARE_API_TOKEN', 'AI_CLOUDFLARE_MODEL'];
     for (const key of hybridKeys) {

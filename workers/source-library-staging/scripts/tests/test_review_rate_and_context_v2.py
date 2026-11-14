@@ -10,7 +10,7 @@ class ReviewRateAndContextTests(unittest.TestCase):
         request={'step':'option_review'}
         adapter=Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=3), {'judgments':[]}])
         self.assertEqual(_call_with_bounded_rate_wait(adapter,request),{'judgments':[]})
-        sleep.assert_called_once_with(6); self.assertEqual(adapter.call_count,2)
+        sleep.assert_called_once_with(60); self.assertEqual(adapter.call_count,2)
         self.assertIs(adapter.call_args.args[0],request)
         for error in (TransportError('PROVIDER_TIMEOUT'),TransportError('PROVIDER_RATE_LIMIT'),TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=61)):
             with self.subTest(rule=error.rule):
@@ -21,11 +21,11 @@ class ReviewRateAndContextTests(unittest.TestCase):
     def test_second_429_is_not_retried(self,sleep):
         adapter=Mock(side_effect=TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2))
         with self.assertRaises(TransportError):_call_with_bounded_rate_wait(adapter,{})
-        sleep.assert_called_once_with(5);self.assertEqual(adapter.call_count,2)
+        sleep.assert_called_once_with(60);self.assertEqual(adapter.call_count,2)
     @patch('item_option_retrieval_audit_v2.search')
     def test_topic_and_classification_retrieved_once_without_answer_or_citation_seeding(self,search):
         def lookup(conn,query,owner,**kwargs):
-            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':1,'textbook_id':'book'})
+            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':2 if query=='topic' else 1,'textbook_id':'book'})
             return [{'passage_id':'topic-source' if query=='topic' else query+'-class-source'}]
         search.side_effect=lookup
         item={'format':'MC','stem':'Which?', 'options':[{'id':'A','text':'Drug A'},{'id':'B','text':'Drug B'}], 'key':['A'], 'evidence':[{'passage_id':'forged-generator-source'}]}
