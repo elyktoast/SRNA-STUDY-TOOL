@@ -441,7 +441,7 @@ export default {
     const conflict=await upstream.clone().json().catch(()=>null);
     const category=typeof conflict?.error==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(conflict.error)?conflict.error:'unclassified';
     // Log only fixed diagnostic codes emitted by the trusted reviewer; never log source paths or raw upstream data.
-    const manifestRules=new Set(['ATTESTATION_MISMATCH','QUEUE_FINGERPRINT_MISMATCH','QUEUE_SOURCE_MISMATCH','QUEUE_PAGE_INVALID','SOURCE_CHANGED','MANIFEST_IDENTITY_MISMATCH','PAGE_OUT_OF_RANGE','PAGE_INTEGRITY_MISMATCH','SOURCE_MISSING','ATTESTATION_MISSING','QUEUE_MISSING','ATTESTATION_SIZE_INVALID','ATTESTATION_JSON_INVALID','QUEUE_SIZE_INVALID','QUEUE_JSON_INVALID','OWNER_SCOPED_KEY_INVALID','STAGING_BUCKET_INVALID','SOURCE_VERIFICATION_UNKNOWN']);
+    const manifestRules=new Set(['ATTESTATION_MISMATCH','QUEUE_FINGERPRINT_MISMATCH','QUEUE_SOURCE_MISMATCH','QUEUE_PAGE_INVALID','SOURCE_CHANGED','MANIFEST_IDENTITY_MISMATCH','PAGE_OUT_OF_RANGE','PAGE_INTEGRITY_MISMATCH','SOURCE_MISSING','ATTESTATION_MISSING','QUEUE_MISSING','ATTESTATION_SIZE_INVALID','ATTESTATION_JSON_INVALID','QUEUE_SIZE_INVALID','QUEUE_JSON_INVALID','OWNER_SCOPED_KEY_INVALID','STAGING_BUCKET_INVALID','SOURCE_SIZE_LIMIT_EXCEEDED','SOURCE_VERIFICATION_UNKNOWN']);
     const rule=conflict?.error==='source_or_page_verification_failed'&&manifestRules.has(conflict?.rule)?conflict.rule:'NONE';
     console.error('staging_reviewer_failure',JSON.stringify({stage:'manifest',reason:'upstream_409',category,rule}));
    }
