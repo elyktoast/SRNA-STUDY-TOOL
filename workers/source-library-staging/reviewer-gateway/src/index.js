@@ -423,8 +423,8 @@ export default {
    }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
-   headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
-   for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
+   headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256, X-Page-Delivery-Challenge');
+   for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256','X-Page-Delivery-Challenge']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
    if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
@@ -490,7 +490,7 @@ export default {
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
     if(url.pathname==='/review/page.png'){
-      if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||''))
+      if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||'')||!/^[A-Za-z0-9_-]{20,4096}\.[A-Za-z0-9_-]{40,128}$/.test(upstream.headers.get('X-Page-Delivery-Challenge')||''))
        return respond(502,origin,'{"error":"invalid_page_integrity"}');
     }else{
      if(!type.startsWith('application/json'))return respond(502,origin,'{"error":"invalid_manifest_type"}');
