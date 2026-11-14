@@ -58,7 +58,7 @@ class HttpTests(unittest.TestCase):
                              ("/missing", "GET")):
             with self.subTest(path=path, method=method):
                 status, headers, _ = self.call(path, method=method, token=None)
-                self.assertIn(status, (200, 404, 405))
+                self.assertIn(status, (200, 401, 403, 404, 405))
                 self.assertEqual(headers["X-Frame-Options"], "DENY")
                 self.assertEqual(headers["Referrer-Policy"], "no-referrer")
                 self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
@@ -291,8 +291,16 @@ class HttpTests(unittest.TestCase):
         status, _, _ = self.call(query="path=" + KEY + "&page=2")
         self.assertEqual(status, 409)
 
+    def test_approval_route_rejects_untrusted_origins_and_invalid_transport(self):
+        # The private route remains unreachable from the public Worker allowlist.
+        self.assertEqual(self.call("/review/approve", method="POST", origin=None)[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://srnastudytool.com")[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://staging.srnastudytool.com")[0], 415)
+
     def test_approval_routes_are_not_exposed(self):
-        self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
+        self.assertEqual(self.call("/review/approve", method="POST")[0], 403)
         self.assertEqual(self.call("/review/approve")[0], 404)
 
 
