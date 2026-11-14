@@ -120,7 +120,8 @@ class HttpTests(unittest.TestCase):
         fetch.return_value = b"%PDF-fixture"
         png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
         render.return_value = {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(),
-                               "source_sha256": "a" * 64}
+                               "source_sha256": "a" * 64, "owner_uid": UID,
+                               "r2_key": KEY, "pdf_page": 1}
         status, headers, body = self.call()
         self.assertEqual(status, 200)
         self.assertEqual(body, png)
