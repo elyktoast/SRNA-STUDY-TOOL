@@ -450,7 +450,7 @@ export default {
    }
    // A challenge is visible only with a successfully verified page response.
    // Never copy it from errors, manifests, generation responses, or acknowledgments.
-   if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&checkpointCheck){
     const data=await upstream.clone().json().catch(()=>null);
     const allowed=['ready','check','generation_performed','database_writes'];
@@ -508,7 +508,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!acknowledgment&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
+   if(upstream.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
