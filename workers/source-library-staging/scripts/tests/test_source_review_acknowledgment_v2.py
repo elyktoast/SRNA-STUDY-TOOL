@@ -1,6 +1,7 @@
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
+from contextlib import nullcontext
 
 from source_review_delivery_challenge_v2 import issue_delivery_challenge
 from source_review_receipt_service_v2 import register_acknowledged_page_receipt
@@ -11,29 +12,36 @@ PAGE = {"owner_uid": UID, "r2_key": UID + "/book.pdf",
 SECRET = b"strong-staging-secret-not-for-production-123"
 
 
+class FakeConn:
+    def transaction(self):
+        return nullcontext()
+
+
 class AcknowledgmentTests(unittest.TestCase):
     def setUp(self):
         self.challenge = issue_delivery_challenge(
             SECRET, reviewer_uid=UID, page=PAGE, now=100)
 
     def call(self, **changes):
-        values = dict(conn=object(), page=PAGE, access_token="valid",
+        values = dict(conn=FakeConn(), page=PAGE, access_token="valid",
                       auth_provider=object(), protected_role_store=object(),
                       signing_secret=SECRET, delivery_challenge=self.challenge,
                       acknowledged=True, now=100)
         return register_acknowledged_page_receipt(**{**values, **changes})
 
+    @patch("source_review_receipt_service_v2.consume_inspection_nonce")
     @patch("source_review_receipt_service_v2.register_delivered_page_receipt",
            return_value="signed-receipt")
     @patch("source_review_receipt_service_v2.resolve_admin_reviewer")
-    def test_explicit_acknowledgment_registers_receipt(self, reviewer, register):
+    def test_explicit_acknowledgment_registers_receipt(self, reviewer, register, consume):
         reviewer.return_value = SimpleNamespace(uid=UID)
         self.assertEqual(self.call(), "signed-receipt")
         self.assertEqual(register.call_args.kwargs["delivered_image_sha256"], "b" * 64)
+        consume.assert_called_once()
 
     @patch("source_review_receipt_service_v2.register_delivered_page_receipt")
     @patch("source_review_receipt_service_v2.resolve_admin_reviewer")
-    def test_no_receipt_for_unacknowledged_stale_or_mismatched_page(self, reviewer, register):
+    def test_no_receipt_for_unacknowledged_stale_or_mismatched_page(self, reviewer, register, consume):
         reviewer.return_value = SimpleNamespace(uid=UID)
         for change in (
             {"acknowledged": False}, {"acknowledged": 1},
@@ -47,7 +55,7 @@ class AcknowledgmentTests(unittest.TestCase):
 
     @patch("source_review_receipt_service_v2.register_delivered_page_receipt")
     @patch("source_review_receipt_service_v2.resolve_admin_reviewer")
-    def test_revoked_or_other_owner_never_registers(self, reviewer, register):
+    def test_revoked_or_other_owner_never_registers(self, reviewer, register, consume):
         reviewer.side_effect = ValueError("revoked")
         with self.assertRaises(ValueError):
             self.call()
