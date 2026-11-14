@@ -433,9 +433,11 @@ export default {
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
    headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256, X-Page-Delivery-Challenge');
-   for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256','X-Page-Delivery-Challenge']){
+   for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
+   // A challenge is visible only with a successfully verified page response.
+   // Never copy it from errors, manifests, generation responses, or acknowledgments.
    if(!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
    if(upstream.ok&&checkpointCheck){
     const data=await upstream.clone().json().catch(()=>null);
@@ -511,6 +513,8 @@ export default {
       return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
     }
    }
+   if(upstream.ok&&url.pathname==='/review/page.png')
+    headers.set('X-Page-Delivery-Challenge',upstream.headers.get('X-Page-Delivery-Challenge'));
    if(acknowledgment){
     if(upstream.ok){
      const data=await upstream.clone().json().catch(()=>null);
