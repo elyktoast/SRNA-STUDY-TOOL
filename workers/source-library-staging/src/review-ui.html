@@ -12,7 +12,7 @@ button{padding:.6rem 1rem;cursor:pointer}iframe{width:100%;height:min(75vh,900px
 <p class="notice"><strong>Reviewer preview.</strong> The optional verified-image acknowledgment can issue a one-time receipt when the protected staging gateway enables it. A receipt is not a page approval; final approval remains private. Only use staging textbooks.</p>
 <form id="form"><label>Staging API URL <input id="api" type="url" required placeholder="https://your-staging-worker.example"></label>
 <label>Reviewer gateway URL <input id="gateway" type="url" required placeholder="https://your-staging-reviewer-gateway.example"></label>
-<p id="auth-status" role="status">Checking SRNA Study Tool session…</p>
+<p id="auth-status" role="status">Checking SRNA Study Tool session… <a href="/">Sign in through the main app</a></p>
 <label>Owner-scoped PDF path <input id="path" required placeholder="your-uid/document.pdf"></label>
 <label>Physical PDF page <input id="page" type="number" min="1" step="1" value="1" required></label>
 <button type="submit">Open PDF page</button><button type="button" id="clear">Clear preview</button></form>
@@ -55,8 +55,9 @@ el('clear').onclick=()=>{clear();el('status').textContent='Preview cleared'};
 el('inspected').onchange=()=>{el('acknowledge').disabled=!(challenge&&el('inspected').checked)};
 for(const id of ['api','gateway','path','page'])el(id).addEventListener('input',clearInspection);
 el('verified').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  clearInspection();const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!/^https:\/\//.test(api)||!path||!Number.isSafeInteger(page)||page<1||!jwt){
   el('inspection-status').textContent='Enter a valid HTTPS gateway URL, token, source path and page';return;
  }
@@ -76,8 +77,9 @@ el('verified').onclick=async()=>{
  }catch(e){clearInspection();el('inspection-status').textContent=e.message}
 };
 el('acknowledge').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!challenge||!el('inspected').checked||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
  const proof=challenge;challenge=null;el('acknowledge').disabled=true;el('inspected').disabled=true;
  el('inspection-status').textContent='Submitting one-time inspection acknowledgment…';
@@ -95,8 +97,9 @@ el('acknowledge').onclick=async()=>{
  }catch(e){el('inspection-status').textContent=e.message+'; reload the image to retry'}
 };
 el('approve').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
  const api=el('gateway').value.trim().replace(/\/$/,'');
- const path=el('path').value.trim(),page=Number(el('page').value),jwt=token();
+ const path=el('path').value.trim(),page=Number(el('page').value);
  if(!receipt||!sourceDigest||!imageDigest||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
  const note=el('reason').value.trim();
  if(note.length<8||note.length>1000){el('inspection-status').textContent='A reason of 8–1000 characters is required';return}
@@ -113,6 +116,7 @@ el('approve').onclick=async()=>{
 };
 el('form').onsubmit=async event=>{
  event.preventDefault();clear();
+ try{token()}catch(e){el('status').textContent=e.message;return}
  const api=el('api').value.trim().replace(/\/$/,'');
  const page=Number(el('page').value),path=el('path').value.trim();
  if(!Number.isSafeInteger(page)||page<1){el('status').textContent='Invalid physical PDF page';return}
