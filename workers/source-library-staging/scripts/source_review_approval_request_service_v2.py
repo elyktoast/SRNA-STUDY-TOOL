@@ -17,7 +17,7 @@ def approve_verified_request(runtime, *, access_token, body):
         access_token, auth_provider=runtime.auth,
         protected_role_store=runtime.roles)
     manifest = runtime.manifest(token=access_token, r2_key=request["path"])
-    if manifest.get("owner_uid") != reviewer.uid:
+    if manifest.get("owner_uid") != reviewer.uid or manifest.get("r2_key") != request["path"]:
         raise ValueError("Reviewer does not own source")
     if manifest.get("sha256") != request["source_sha256"]:
         raise ValueError("Source fingerprint mismatch")
