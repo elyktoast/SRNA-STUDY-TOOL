@@ -144,7 +144,7 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(self.call()[0], 409)
 
     @patch("source_review_http_v2.render_verified_pdf_file_page")
-    @patch("source_review_http_v2.verified_staging_pdf_file", return_value=b"%PDF")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_image_or_source_digest_mismatch_never_served(self, manifest, fetch, render):
         manifest.return_value = self.manifest
@@ -162,7 +162,7 @@ class HttpTests(unittest.TestCase):
                 self.assertNotIn("X-Inspection-Receipt", headers)
 
     @patch("source_review_http_v2.render_verified_pdf_file_page")
-    @patch("source_review_http_v2.verified_staging_pdf_file", return_value=b"%PDF")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_page_renderer_failure_never_returns_unverified_bytes(self, manifest, fetch, render):
         manifest.return_value = self.manifest
