@@ -3,7 +3,7 @@ import hashlib
 import json
 import io
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from source_review_http_v2 import create_app
 from source_review_runtime_v2 import StagingReviewRuntime
@@ -30,6 +30,7 @@ class HttpTests(unittest.TestCase):
             conn=object(), r2_client=object(), supabase_url="unused",
             supabase_api_key="unused", signing_secret="x" * 64,
             auth_provider=Auth(), role_store=Roles())
+        self.runtime.delivery_challenge = Mock(return_value='signed-fixture-challenge')
         self.app = create_app(self.runtime)
         self.manifest = {"owner_uid": UID, "r2_key": KEY,
                          "sha256": "a" * 64, "pdf_page_count": 2}
@@ -297,6 +298,32 @@ class HttpTests(unittest.TestCase):
         self.assertNotIn("X-Inspection-Receipt", headers)
         status, _, _ = self.call(query="path=" + KEY + "&page=2")
         self.assertEqual(status, 409)
+
+
+    def test_acknowledgment_strict_validation(self):
+        self.runtime.acknowledge = Mock(return_value="receipt")
+        origin = "https://staging.srnastudytool.com"
+        for body in (b'{}', b'{"path":"x","page":1,"challenge":"c","acknowledged":false}',
+                     b'{"path":"x","page":1,"challenge":"c","acknowledged":true,"acknowledged":true}',
+                     b'{"path":"x","page":true,"challenge":"c","acknowledged":true}'):
+            with self.subTest(body=body):
+                status, _, _ = self.call("/review/acknowledge", method="POST",
+                    origin=origin, post_body=body, content_type="application/json")
+                self.assertEqual(status, 400)
+        self.runtime.acknowledge.assert_not_called()
+
+    def test_acknowledgment_returns_receipt_without_approval(self):
+        self.runtime.acknowledge = Mock(return_value="signed-receipt")
+        body = json.dumps({"path": KEY, "page": 1, "challenge": "challenge",
+                           "acknowledged": True}).encode()
+        status, _, result = self.call("/review/acknowledge", method="POST",
+            origin="https://staging.srnastudytool.com",
+            post_body=body, content_type="application/json")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(result), {"receipt": "signed-receipt", "approved": False})
+        self.runtime.acknowledge.assert_called_once_with(
+            token="valid", r2_key=KEY, pdf_page=1,
+            challenge="challenge", acknowledged=True)
 
     def test_approval_route_rejects_untrusted_origins_and_invalid_transport(self):
         # The private route remains unreachable from the public Worker allowlist.
