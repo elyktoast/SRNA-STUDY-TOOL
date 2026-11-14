@@ -11,13 +11,14 @@ button{padding:.6rem 1rem;cursor:pointer}iframe{width:100%;height:min(75vh,900px
 <header><h1>Textbook PDF review — staging</h1></header>
 <p class="notice"><strong>Reviewer preview.</strong> The optional verified-image acknowledgment can issue a one-time receipt when the protected staging gateway enables it. A receipt is not a page approval; final approval remains private. Only use staging textbooks.</p>
 <form id="form"><label>Staging API URL <input id="api" type="url" required placeholder="https://your-staging-worker.example"></label>
+<label>Reviewer gateway URL <input id="gateway" type="url" required placeholder="https://your-staging-reviewer-gateway.example"></label>
 <label>Supabase access token <input id="token" type="password" required autocomplete="off"></label>
 <label>Owner-scoped PDF path <input id="path" required placeholder="your-uid/document.pdf"></label>
 <label>Physical PDF page <input id="page" type="number" min="1" step="1" value="1" required></label>
 <button type="submit">Open PDF page</button><button type="button" id="clear">Clear preview</button></form>
 <section class="notice" aria-label="Verified page inspection">
 <h2>Verified page inspection (staging only)</h2>
-<p>Use the private reviewer gateway URL above. This loads a freshly rendered, source-verified page rather than the full PDF preview. Review the actual image before acknowledging.</p>
+<p>Use the separate reviewer gateway URL above. This loads a freshly rendered, source-verified page rather than the full PDF preview. Review the actual image before acknowledging.</p>
 <div class="toolbar"><button type="button" id="verified">Load verified page image</button>
 <label><input id="inspected" type="checkbox" disabled> I personally inspected this rendered page</label>
 <button type="button" id="acknowledge" disabled>Record inspection acknowledgment</button></div>
@@ -33,9 +34,9 @@ function clearInspection(){if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=nu
 function clear(){clearInspection();if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}el('viewer').removeAttribute('src')}
 el('clear').onclick=()=>{clear();el('token').value='';el('status').textContent='Preview cleared'};
 el('inspected').onchange=()=>{el('acknowledge').disabled=!(challenge&&el('inspected').checked)};
-for(const id of ['api','token','path','page'])el(id).addEventListener('input',clearInspection);
+for(const id of ['api','gateway','token','path','page'])el(id).addEventListener('input',clearInspection);
 el('verified').onclick=async()=>{
- clearInspection();const api=el('api').value.trim().replace(/\/$/,'');
+ clearInspection();const api=el('gateway').value.trim().replace(/\/$/,'');
  const path=el('path').value.trim(),page=Number(el('page').value),token=el('token').value;
  if(!/^https:\/\//.test(api)||!path||!Number.isSafeInteger(page)||page<1||!token){
   el('inspection-status').textContent='Enter a valid HTTPS gateway URL, token, source path and page';return;
@@ -54,7 +55,7 @@ el('verified').onclick=async()=>{
  }catch(e){clearInspection();el('inspection-status').textContent=e.message}
 };
 el('acknowledge').onclick=async()=>{
- const api=el('api').value.trim().replace(/\/$/,'');
+ const api=el('gateway').value.trim().replace(/\/$/,'');
  const path=el('path').value.trim(),page=Number(el('page').value),token=el('token').value;
  if(!challenge||!el('inspected').checked||loadedKey!==JSON.stringify([api,path,page,token])){clearInspection();return}
  const proof=challenge;challenge=null;el('acknowledge').disabled=true;el('inspected').disabled=true;
@@ -67,7 +68,7 @@ el('acknowledge').onclick=async()=>{
   const result=await res.json();
   if(result?.approved!==false||typeof result.receipt!=='string'||!result.receipt)
    throw new Error('Unexpected acknowledgment response');
-  el('inspection-status').textContent='Inspection acknowledged. Receipt issued (not approved). Keep this page open for the protected approval step.';
+  el('inspection-status').textContent='Inspection acknowledged, but the page is NOT approved. The protected approval workflow must be completed separately.';
   // Never persist or expose the one-time receipt in a URL, global variable, or storage.
  }catch(e){el('inspection-status').textContent=e.message+'; reload the image to retry'}
 };
@@ -79,7 +80,7 @@ el('form').onsubmit=async event=>{
  if(!/^https:\/\//.test(api)){el('status').textContent='HTTPS staging API required';return}
  el('status').textContent='Loading authenticated PDF…';
  try{
-  const response=await fetch(api+'/materials/review-pdf?path='+encodeURIComponent(path),{
+  const response=await fetch(api+'/materials/verified-review-pdf?path='+encodeURIComponent(path),{
    headers:{authorization:'Bearer '+el('token').value},cache:'no-store'});
   if(!response.ok)throw new Error('Preview unavailable (HTTP '+response.status+')');
   const blob=await response.blob();
