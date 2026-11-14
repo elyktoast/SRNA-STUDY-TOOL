@@ -30,7 +30,13 @@ def approve_verified_request(runtime, *, access_token, body):
         source_loader=lambda owner, key: fetch_verified_staging_pdf(
             runtime.r2, owner_uid=owner, r2_key=key,
             expected_sha256=manifest["sha256"]))
-    if page["image_sha256"] != request["image_sha256"]:
+    if (page.get("owner_uid") != reviewer.uid
+            or page.get("r2_key") != request["path"]
+            or page.get("source_sha256") != manifest["sha256"]
+            or type(page.get("pdf_page")) is not int
+            or page["pdf_page"] != page_number):
+        raise ValueError("Verified page identity mismatch")
+    if page.get("image_sha256") != request["image_sha256"]:
         raise ValueError("Rendered image fingerprint mismatch")
     # The classification is explicitly preserved in the auditable note while
     # the existing protected approval schema continues using decision=approved.
