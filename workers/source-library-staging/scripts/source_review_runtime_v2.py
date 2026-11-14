@@ -11,6 +11,9 @@ from source_review_r2_loader_v2 import fetch_verified_staging_pdf
 from source_review_inspection_service_v2 import inspect_and_register_page
 from source_review_approval_service_v2 import approve_inspected_page
 from source_review_identity_v2 import resolve_admin_reviewer
+from source_review_page_loader_v2 import load_verified_review_page
+from source_review_receipt_service_v2 import (register_delivery_challenge,
+                                              register_acknowledged_page_receipt)
 
 
 class StagingReviewRuntime:
@@ -51,6 +54,36 @@ class StagingReviewRuntime:
             r2_key=r2_key, pdf_page=pdf_page, manifest_loader=manifest_loader,
             source_loader=source_loader, write_image=write_image,
             signing_secret=self.secret)
+
+
+    def verified_page(self, *, token, r2_key, pdf_page):
+        """Re-fetch immutable source bytes and render a trusted physical page."""
+        reviewer = self._reviewer(token)
+        def manifest_loader(owner, key):
+            return load_staging_review_manifest(self.r2, owner_uid=owner, r2_key=key)
+        def source_loader(owner, key):
+            manifest = manifest_loader(owner, key)
+            return fetch_verified_staging_pdf(
+                self.r2, owner_uid=owner, r2_key=key,
+                expected_sha256=manifest["sha256"])
+        return load_verified_review_page(
+            owner_uid=reviewer.uid, r2_key=r2_key, pdf_page=pdf_page,
+            manifest_loader=manifest_loader, source_loader=source_loader)
+
+    def delivery_challenge(self, *, token, page):
+        return register_delivery_challenge(
+            self.conn, page=page, access_token=token,
+            auth_provider=self.auth, protected_role_store=self.roles,
+            signing_secret=self.secret)
+
+    def acknowledge(self, *, token, r2_key, pdf_page, challenge, acknowledged):
+        """No approval write: exchange a one-time challenge for an inspection receipt."""
+        page = self.verified_page(token=token, r2_key=r2_key, pdf_page=pdf_page)
+        return register_acknowledged_page_receipt(
+            self.conn, page=page, access_token=token,
+            auth_provider=self.auth, protected_role_store=self.roles,
+            signing_secret=self.secret, delivery_challenge=challenge,
+            acknowledged=acknowledged)
 
     def approve(self, *, token, r2_key, pdf_page, review_note, receipt,
                 image_sha256):
