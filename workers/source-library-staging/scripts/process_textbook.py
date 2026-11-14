@@ -102,7 +102,7 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
                 reviewed = approved_pages_for_import(
                     validated, proof, authenticated_reviewer_uid=owner_uid,
                     reviewer_is_admin=True)
-                quality = assess(validated, reviewed_pages=reviewed)
+                quality = assess(validated, reviewed_pages=tuple(sorted(reviewed)))
                 result["extraction_quality"] = quality
                 result["review_required_pages"] = [
                     page for page in review_required_pages
