@@ -18,6 +18,9 @@ from extract_textbook import extract
 from import_extraction import import_passages, validate
 from source_extraction_quality_v2 import assess
 from source_page_review_v2 import load_reviewed_pages
+from source_review_roles_supabase_v2 import ProtectedReviewerRoleStore
+from source_review_db_v2 import load_approved_pages
+from source_review_authorization_v2 import approved_pages_for_import
 from import_extraction import read_jsonl
 
 
@@ -82,14 +85,39 @@ def process(pdf, out, owner_uid, r2_key, apply=False, expected_sha256=None, ocr=
         "citation_verified": False,
     }
     if apply:
-        if not quality["ready_for_unqualified_indexing"]:
-            raise ReviewRequiredError("Unresolved OCR or low-text pages require documented review before indexing", diagnostics=result)
         url = os.environ.get("DATABASE_URL")
         if not url:
             raise ValueError("DATABASE_URL required for --apply")
         import psycopg
         with psycopg.connect(url, autocommit=False) as conn:
-            result["textbook_id"] = import_passages(out, validated, conn)
+            # A workflow input is NOT reviewer authorization. Check the canonical
+            # protected admin store, then read immutable, active approvals for this
+            # exact owner, PDF digest and R2 key. Missing/unsafe schema fails closed.
+            if ProtectedReviewerRoleStore(conn).is_active_admin(owner_uid) is not True:
+                raise ValueError("Active operator-admin required for staging indexing")
+            if not quality["ready_for_unqualified_indexing"]:
+                proof = load_approved_pages(
+                    conn, validated, authenticated_reviewer_uid=owner_uid,
+                    reviewer_is_admin=True)
+                reviewed = approved_pages_for_import(
+                    validated, proof, authenticated_reviewer_uid=owner_uid,
+                    reviewer_is_admin=True)
+                quality = assess(validated, reviewed_pages=reviewed)
+                result["extraction_quality"] = quality
+                result["review_required_pages"] = [
+                    page for page in review_required_pages
+                    if page["pdf_page"] in quality["unresolved_pdf_pages"]
+                ]
+            if not quality["ready_for_unqualified_indexing"]:
+                raise ReviewRequiredError(
+                    "Unresolved OCR or low-text pages require documented review before indexing",
+                    diagnostics=result)
+            # The importer checks and locks protected approvals again inside
+            # the same transaction as the index write, preventing stale approval
+            # evidence or concurrent revocation from authorizing publication.
+            result["textbook_id"] = import_passages(
+                out, validated, conn, authenticated_reviewer_uid=owner_uid,
+                reviewer_is_admin=True)
         result["indexed"] = True
     return result
 
