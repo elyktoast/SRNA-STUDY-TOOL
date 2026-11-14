@@ -29,6 +29,23 @@ class RuntimeTests(unittest.TestCase):
             supabase_api_key="unused", signing_secret="s" * 64,
             auth_provider=Auth(), role_store=Roles())
 
+    def test_signing_secret_is_normalized_for_cryptographic_receipts(self):
+        self.assertEqual(self.runtime.secret, b"s" * 64)
+        from source_review_receipts_v2 import issue_receipt, verify_receipt
+        receipt = issue_receipt(
+            self.runtime.secret, reviewer_uid=UID, owner_uid=UID,
+            source_sha256=MANIFEST["sha256"], r2_key=KEY,
+            pdf_page=1, image_sha256="b" * 64, now=1000)
+        self.assertEqual(len(verify_receipt(
+            self.runtime.secret, receipt, reviewer_uid=UID, owner_uid=UID,
+            source_sha256=MANIFEST["sha256"], r2_key=KEY,
+            pdf_page=1, image_sha256="b" * 64, now=1001)), 32)
+        binary_runtime = StagingReviewRuntime(
+            conn=self.conn, r2_client=self.r2, supabase_url="unused",
+            supabase_api_key="unused", signing_secret=b"z" * 64,
+            auth_provider=Auth(), role_store=Roles())
+        self.assertEqual(binary_runtime.secret, b"z" * 64)
+
     def test_requires_privileged_adapters(self):
         with self.assertRaisesRegex(ValueError, "connections"):
             StagingReviewRuntime(conn=None, r2_client=self.r2, supabase_url="",
