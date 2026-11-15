@@ -11,6 +11,14 @@ import re
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
+# Dense keyword lists can outrank explanatory text with cover-density ranking.
+# Demote explicitly labelled back matter, without deleting it or guessing that
+# every numbered list is a bibliography. Keep all scope/page predicates intact.
+BACK_MATTER_ORDER_SQL = r"""case when
+    coalesce(s.heading, '') ~* '^[[:space:]]*(index|references|bibliography)[[:space:]]*$'
+    or p.content ~* '^[[:space:]]*(references|bibliography)([[:space:]]|$)'
+    then 1 else 0 end"""
+
 
 def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
            include_subsections=False, page_start=None, page_end=None):
@@ -70,7 +78,7 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
     if page_end is not None:
         sql += " and p.page_start <= %s"
         params.append(page_end)
-    sql += " order by rank desc, t.id, p.chunk_index limit %s"
+    sql += " order by " + BACK_MATTER_ORDER_SQL + ", rank desc, t.id, p.chunk_index limit %s"
     params.append(limit)
     with conn.cursor() as cur:
         cur.execute(sql, params)
