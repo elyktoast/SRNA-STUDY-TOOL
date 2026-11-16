@@ -123,7 +123,7 @@ async function relayGroq(request,env){
    :{type:'json_object'};
   if(conceptFormat.type==='json_schema'&&step.format==='MC'){
    const properties=conceptFormat.json_schema.schema.properties;
-   properties.choice_plan={type:'object',properties:{response_variables:{type:'array',items:{type:'string'},description:'Names of the two clinical measurements predicted by the choices. For an explicitly paired topic, use the two measures named by the topic. Never use generic type, direction, or value axes.'},stem_condition:{type:'string'},alternate_condition:{type:'string'},
+   properties.choice_plan={type:'object',properties:{response_variables:{type:'array',items:{type:'string'},description:'One clinical response/category for ordinary single-best-answer choices, or two related clinical components for a genuinely paired concept. Never force an unrelated second variable or use generic type, direction, or value axes.'},stem_condition:{type:'string'},alternate_condition:{type:'string'},
     key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
     options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',items:{type:'string'}}},required:['id','states'],additionalProperties:false}}},
     required:['response_variables','stem_condition','alternate_condition','key','alternate_key','options'],additionalProperties:false};

@@ -14,7 +14,8 @@ def prepare(conn, owner_uid, lecture_text, *, textbook_id=None, count=20,
     evidence = {}
     for topic in concepts:
         result = build_evidence(conn, owner_uid, topic["title"],
-                                textbook_id=textbook_id, limit=passage_limit)
+                                textbook_id=textbook_id, limit=passage_limit,
+                                **({'balance_books':True} if textbook_id is None else {}))
         evidence[topic["title"]] = result["sources"]
     planned = plan(concepts, evidence, count=count) if concepts else {
         "requested": count, "planned": 0, "topics": [],

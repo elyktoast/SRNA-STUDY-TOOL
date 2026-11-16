@@ -139,7 +139,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 from lecture_to_question_plan import prepare_staging_jobs
                 with conn_factory() as conn:
                     result = prepare_staging_jobs(
-                        conn, owner, lecture_text, textbook_id=book,
+                        conn, owner, lecture_text, textbook_id=(None if book == 'all' else book),
                         item_id_factory=lambda: str(uuid4()),
                         mode=data.get("mode", "NCE"), format=data.get("format", "MC"),
                         count=data.get("count", 1), domain=data.get("domain"),
