@@ -50,8 +50,10 @@ def validate(plan):
             or [o["id"] for o in options] != list("ABCD")
             or any(k not in "ABCD" for k in plan["key"] + plan["alternate_key"])):
         raise ValueError("Concept card choice plan choices invalid")
+    if any(not isinstance(o['states'],list) or len(o['states']) != count for o in options):
+        raise ValueError('Concept card choice plan state count differs from components')
     if any(not strings(o["states"], count, 80) for o in options):
-        raise ValueError("Concept card choice plan response invalid")
+        raise ValueError('Concept card choice plan states exceed text bounds')
     signatures = {tuple(normalize(v).casefold() for v in o["states"]) for o in options}
     if len(signatures) != 4:
         raise ValueError("Concept card choice plan repeats a response pattern")
@@ -69,7 +71,7 @@ def validate(plan):
         text = (option['states'][0] if count == 1 else
                 "; ".join(f"{component}: {state}" for component, state in zip(result["response_variables"], option["states"])))
         if len(text) > 180:
-            raise ValueError("Concept card choice plan response invalid")
+            raise ValueError('Concept card choice plan rendered option exceeds text bounds')
         # Checkpoints may contain the previously rendered text. It must match;
         # never silently replace a changed clinical response in a resumed plan.
         if "text" in option and option["text"] != text:
