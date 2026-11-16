@@ -1,7 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {settled,completedWorkerBuild} from './wait-staging-reviewer-rollout.mjs';
+import {settled,completedWorkerBuild,needsReadOnlyWarmup} from './wait-staging-reviewer-rollout.mjs';
 const now=200000,started=0,app={updated_at:new Date(100000).toISOString(),configuration:{image:'new-image'},health:{errors:[]}};
+test('idle active rollout permits only a read-only warm-up after exact-build quiet period',()=>{
+ const idle=[{status:{state:'inactive'}}],active={...app,active_rollout_id:'rollout'};
+ assert.equal(needsReadOnlyWarmup(active,idle,now,100000),true);
+ assert.equal(settled(active,idle,now,started,100000),false);
+ for(const [a,i,t] of [[active,idle,180000],[app,idle,100000],[active,[{status:{state:'running'}}],100000],[{...active,health:{errors:[{}]}},idle,100000],[active,[],100000]]){
+  assert.equal(needsReadOnlyWarmup(a,i,now,t),false);
+ }
+});
 test('rollout gate rejects the early ready window that interrupted generation',()=>{
  assert.equal(settled(app,[],80000,started),false);
  assert.equal(settled({...app,updated_at:new Date(160000).toISOString()},[],now,started),false);
