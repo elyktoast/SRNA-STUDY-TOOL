@@ -1,5 +1,6 @@
 // Explicit one-question acceptance run. Never retry paid generation or publish.
 import assert from 'node:assert/strict';
+import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 const paid=process.argv.includes('--confirm-paid-generation');
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
@@ -20,6 +21,9 @@ assert.equal(identity.status,200,'Staging identity unavailable');
 assert.equal((await identity.json()).id,owner,'Acceptance run must use the textbook owner account');
 const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer '+token,'Content-Type':'application/json'};
 async function call(path,body){
+ return stagingReadOnlyRetry(path,()=>callOnce(path,body));
+}
+async function callOnce(path,body){
  const r=await fetch(gateway+path,{method:body?'POST':'GET',headers,redirect:'error',...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(path==='/generation/one'?480000:240000)});
  const data=await r.json().catch(()=>null);
  if(!data){const error=Error('Staging acceptance received a non-JSON response: HTTP '+r.status);error.status=r.status;throw error;}

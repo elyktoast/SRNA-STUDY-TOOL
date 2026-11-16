@@ -37,6 +37,8 @@ The corrected gate requires the exact dispatched commit's Cloudflare Workers bui
 
 ## Open acceptance requirements
 
+[Run 43945411972](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43945411972) confirmed the exact-build deployment gate and multi-book preflight (seven books, eight passages), then encountered a TLS connection reset during the first read-only lecture plan. It made no paid generation call and created no draft. The acceptance client now allows at most three attempts for explicitly enumerated read-only planning/readiness operations on transport failures or HTTP 502/503/504. Generation, writes, unknown endpoints, validation/authentication errors, HTTP 429 and HTTP 500 are not retried by this helper.
+
 1. Representative generated drafts that pass all applicable automated reviews; one success does not establish consistency.
 2. Independent per-option/component evidence and source checks on a small varied batch, including semantic duplicate screening.
 3. Numeric original-page verification and independent recomputation for SA; a real licensed/original figure and verified region placement for HS.
