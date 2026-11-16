@@ -79,6 +79,8 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Each states array has exactly one value per response_variable, in that order. All four alternatives must differ. "
             "Keep each component label to a few words, each state at most 80 characters, and each complete rendered option at most 180 characters. "
             "For one component, each state becomes the complete ordinary option text, with no label prefix. "
+            "Each option states only the requested answer, never an answer plus its explanation. Do not use because, thereby or so that. "
+            "All options must answer the same lead-in and belong to the same clinical category; do not mix quality, onset and mechanism as alternatives. "
             "For two components, the server renders parallel labelled pairs. Return id and states only, not text or error_pattern. "
             "Plan both cases before drafting: the original case must have one source-supported key and a meaningful change "
             "to its clinical condition must make a different existing choice correct. Evidence must affirm the correct response "

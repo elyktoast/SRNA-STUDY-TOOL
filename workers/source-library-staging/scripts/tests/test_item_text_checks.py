@@ -5,6 +5,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_text_checks import check
 
 class EditorialTests(unittest.TestCase):
+    def test_rationale_inside_a_result_choice_is_flagged_without_an_intervention_verb(self):
+        item={'format':'MC','key':['A'],'options':[
+            {'id':'A','text':'Poor, because the stated environment changes the drug fraction'},
+            {'id':'B','text':'Favorable result'}, {'id':'C','text':'Unchanged result'}, {'id':'D','text':'Other result'}]}
+        self.assertIn('R-6.9',{issue['rule_id'] for issue in check(item)})
+        item['options'][0]['text']='Reduced receptor activation'
+        self.assertNotIn('R-6.9',{issue['rule_id'] for issue in check(item)})
+
     def test_short_multiword_drug_name_is_not_a_length_cue_when_visibly_shorter(self):
         item={"format":"MC","key":["C"],"options":[{"id":"A","text":"Desflurane"},
               {"id":"B","text":"Succinylcholine"},{"id":"C","text":"Nitrous oxide"},

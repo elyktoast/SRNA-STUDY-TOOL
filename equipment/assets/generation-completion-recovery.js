@@ -1,6 +1,6 @@
 // Recover an existing completed generation; never retry its paid authoring call.
 export function isGenerationDisconnect(error){
- return (error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))||['AbortError','TimeoutError'].includes(error?.name);
+ return [500,502,503,504].includes(error?.status)||(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))||['AbortError','TimeoutError'].includes(error?.name);
 }
 export async function recoverCompletedGeneration(request,completedRequest,{attempts=24,intervalMs=15000,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),onProgress=()=>{}}={}){
  if(!request?.item_id||typeof completedRequest!=='function'||!Number.isInteger(attempts)||attempts<1||attempts>32||!Number.isInteger(intervalMs)||intervalMs<0||intervalMs>30000)throw Error('Invalid generation recovery configuration');

@@ -22,7 +22,7 @@ const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer 
 async function call(path,body){
  const r=await fetch(gateway+path,{method:body?'POST':'GET',headers,redirect:'error',...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(path==='/generation/one'?480000:240000)});
  const data=await r.json().catch(()=>null);
- if(!data)throw Error('Staging acceptance received a non-JSON response: HTTP '+r.status);
+ if(!data){const error=Error('Staging acceptance received a non-JSON response: HTTP '+r.status);error.status=r.status;throw error;}
  if(!r.ok){
   // Only fixed machine-readable categories; never log provider output or evidence.
   const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_]{1,80}$/.test(v)?v:'UNCLASSIFIED';
@@ -33,7 +33,14 @@ async function call(path,body){
 }
 const format=process.env.SRNA_STAGING_ACCEPTANCE_FORMAT||'MC';
 assert.ok(['MC','MS','SA','DD','HS'].includes(format));
-const request={topic:'local anesthetic ionization in acidic tissue',limit:8,mode:'NCE',domain:'I',section:'C',objective:'I.C.5',format,item_id:process.env.SRNA_STAGING_ACCEPTANCE_ITEM_ID||crypto.randomUUID(),textbook_id:'62f162fd-6c12-4899-b45b-6466e688f570'};
+const topic=process.env.SRNA_STAGING_ACCEPTANCE_TOPIC||'Local anesthetic pharmacology';
+const objective=process.env.SRNA_STAGING_ACCEPTANCE_OBJECTIVE||'I.C.5';
+const textbook_id=process.env.SRNA_STAGING_ACCEPTANCE_TEXTBOOK||'62f162fd-6c12-4899-b45b-6466e688f570';
+assert.ok(typeof topic==='string'&&topic.trim()&&topic.length<=500);
+assert.match(objective,/^(I|II|III|IV)\.[A-Z]\.\d+(?:\.\d+)*$/);
+assert.match(textbook_id,/^[a-f0-9-]{36}$/);
+const [domain,section]=objective.split('.');
+const request={topic,limit:8,mode:'NCE',domain,section,objective,format,item_id:process.env.SRNA_STAGING_ACCEPTANCE_ITEM_ID||crypto.randomUUID(),textbook_id};
 // No-cost full-library preflight proves the multi-book path without forcing
 // every generated question to cite books that do not help its particular claim.
 const library=await call('/generation/textbooks');

@@ -196,7 +196,10 @@ async function checkGroqConnection(){
  if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
  return data;
 }
-async function generateOne(request,{onRecovery=()=>{}}={}){try{return await generationRequest('/generation/one',request);}catch(error){if(!(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))&&!['AbortError','TimeoutError'].includes(error?.name))throw error;const recovery=await import('./generation-completion-recovery.js');return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}}
+async function generateOne(request,{onRecovery=()=>{}}={}){
+ try{return await generationRequest('/generation/one',request);}
+ catch(error){const recovery=await import('./generation-completion-recovery.js');if(!recovery.isGenerationDisconnect(error))throw error;return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}
+}
 async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
 async function listGeneratedDrafts(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};

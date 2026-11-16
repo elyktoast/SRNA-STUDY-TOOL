@@ -47,10 +47,12 @@ def check(item, source_texts=()):
         issues.append({"rule_id": "R-6.10", "message": "Absolute wording in distractor requires review"})
     if any(re.search(r"\b(?:all|none) of the above\b", o["text"], re.I) for o in options):
         issues.append({"rule_id": "R-6.11", "message": "All/none of the above prohibited"})
-    if any(re.match(r"\s*(?:apply(?:ing)?|administer(?:ing)?|giv(?:e|ing)|us(?:e|ing)|provid(?:e|ing))\b", o["text"], re.I)
+    if any(re.search(r'\b(?:because|thereby|so that|in order to)\b',o['text'],re.I)
+           or (re.match(r"\s*(?:apply(?:ing)?|administer(?:ing)?|giv(?:e|ing)|us(?:e|ing)|provid(?:e|ing))\b", o["text"], re.I)
            and re.search(r"\b(?:because|thereby|so that|in order to|to (?:increase|decrease|prevent|reduce|improve|maximize|maintain|restore))\b", o["text"], re.I)
+           )
            for o in options):
-        issues.append({"rule_id":"R-6.9", "field":"options", "message":"An intervention choice contains its own explanatory rationale"})
+        issues.append({"rule_id":"R-6.9", "field":"options", "message":"An answer choice contains its own explanatory rationale"})
     candidates = [item.get("stem", "")] + [o["text"] for o in options]
     sources = [WORDS.findall(source.casefold()) for source in source_texts if isinstance(source, str)]
     for candidate in candidates:

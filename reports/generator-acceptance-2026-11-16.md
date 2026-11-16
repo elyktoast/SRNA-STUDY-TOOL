@@ -29,6 +29,12 @@ Its single paid MC sample was saved as `needs_revision`: schema, deterministic t
 
 [Run 43895899023](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43895899023) repeated all ten lecture-format planning checks successfully and blocked the unsupported topic. Its paid call stopped at concept-plan response-field validation before creating a draft. No clinical gate was bypassed; finer state-count/state-length/option-length diagnostics and native output bounds are being added.
 
+## Rollout race found in the next sample
+
+[Run 43897366480](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43897366480) again passed all ten lecture planning checks. Its generation request failed with a non-JSON HTTP 500 during a container rollout. Cloudflare's exact-commit build did not finish until 15:34:26 UTC, after generation had already started at 15:34:15 UTC; the application configuration updated at 15:34:55 UTC. Logs explicitly reported termination for a new-version rollout. The old gate had accepted the previous deployment's stable state while the new build was still running.
+
+The corrected gate requires the exact dispatched commit's Cloudflare Workers build check to succeed before its quiet period can begin. It also retains current image, instance state and health checks. Transient HTTP 500/502/503/504 responses now trigger only completed-checkpoint recovery; authentication, validation and rate-limit errors do not cause paid retries. Acceptance does not claim that this interrupted attempt passed clinical quality.
+
 ## Open acceptance requirements
 
 1. Representative generated drafts that pass all applicable automated reviews; one success does not establish consistency.

@@ -28,3 +28,13 @@ test('a disconnected recovery request can retry only the completed-only operatio
  assert.equal(isGenerationDisconnect(TypeError('fetch failed')),true);
  assert.equal(isGenerationDisconnect(Error('provider rejected')),false);assert.equal(isGenerationDisconnect(TypeError('Invalid URL')),false);
 });
+
+test('transient server failures recover only the existing completed checkpoint',async()=>{
+ for(const status of [500,502,503,504]){
+  const failure=Object.assign(Error('server disconnected'),{status});assert.equal(isGenerationDisconnect(failure),true);
+  let calls=0;
+  const result=await recoverCompletedGeneration(request,async body=>{assert.equal(body.resume_completed_only,true);if(++calls===1)throw failure;return {draft_id:'existing'};},{attempts:2,intervalMs:0,wait:async()=>{}});
+  assert.equal(result.draft_id,'existing');assert.equal(calls,2);
+ }
+ assert.equal(isGenerationDisconnect(Object.assign(Error('rate limited'),{status:429})),false);
+});

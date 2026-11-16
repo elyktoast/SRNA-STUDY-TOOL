@@ -12,6 +12,18 @@ on:
         type: choice
         options: [MC, MS, SA, DD, HS]
         default: MC
+      topic:
+        description: Topic for the one paid sample
+        type: string
+        default: Local anesthetic pharmacology
+      objective:
+        description: NCE/SEE objective code
+        type: string
+        default: I.C.5
+      textbook_id:
+        description: Primary owned staging textbook UUID
+        type: string
+        default: 62f162fd-6c12-4899-b45b-6466e688f570
   push:
     branches: [fix/staging-final-acceptance]
     paths:
@@ -19,6 +31,7 @@ on:
       - '.github/workflows/verify-one-staging-question.yml'
 permissions:
   contents: read
+  checks: read
 concurrency:
   group: source-reviewer-staging-deployment
   cancel-in-progress: false
@@ -64,6 +77,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/wait-staging-reviewer-rollout.mjs
       - name: Verify exactly one indexed question and unpublished persistence
         env:
@@ -72,6 +86,9 @@ jobs:
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           SRNA_STAGING_ACCEPTANCE_FORMAT: ${{ inputs.format || 'MC' }}
+          SRNA_STAGING_ACCEPTANCE_TOPIC: ${{ inputs.topic || 'Local anesthetic pharmacology' }}
+          SRNA_STAGING_ACCEPTANCE_OBJECTIVE: ${{ inputs.objective || 'I.C.5' }}
+          SRNA_STAGING_ACCEPTANCE_TEXTBOOK: ${{ inputs.textbook_id || '62f162fd-6c12-4899-b45b-6466e688f570' }}
           SRNA_STAGING_LECTURE_FIXTURES: /tmp/srna-lecture-fixtures.json
           CONFIRM_PAID_GENERATION: ${{ inputs.confirm_paid_generation }}
         run: |
