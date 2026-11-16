@@ -57,7 +57,31 @@ def visual_blank_candidate(pdf_page):
     return dark_fraction < 0.0005, round(dark_fraction, 6)
 
 
-def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
+def page_text(pdf_page, *, reading_order='legacy', textpage=None):
+    """Keep an opt-in block candidate separate from established index text.
+
+    PyMuPDF's sorted plain text can combine side-by-side lines into one row.
+    Blocks preserve paragraph boundaries; they do not certify complete column,
+    table, equation, or figure reading order. Original-page review is required
+    before using changed extraction to replace an existing index.
+    """
+    if reading_order not in ('legacy', 'blocks'):
+        raise ValueError('Unsupported PDF reading order')
+    options = {'sort': True}
+    if textpage is not None:
+        options['textpage'] = textpage
+    if reading_order == 'blocks':
+        blocks = pdf_page.get_text('blocks', **options)
+        value = '\n\n'.join(block[4].strip() for block in blocks
+                            if block[6] == 0 and block[4].strip())
+    else:
+        value = pdf_page.get_text('text', **options)
+    return re.sub(r'[ \t]+', ' ', value.replace('\x00', '')).strip()
+
+
+def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False,reading_order='legacy'):
+    if reading_order not in ('legacy', 'blocks'):
+        raise ValueError('Unsupported PDF reading order')
     if not UUID.fullmatch(owner_uid):raise ValueError('Invalid owner UUID')
     if not r2_key.startswith(owner_uid+'/') or '..' in r2_key or not r2_key.endswith('.pdf'):
         raise ValueError('R2 key outside owner PDF prefix')
@@ -90,7 +114,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
         for i in range(page_count):
             page=i+1
             pdf_page=doc.load_page(i)
-            text=re.sub(r'[ \t]+',' ',pdf_page.get_text('text',sort=True).replace('\x00','')).strip()
+            text=page_text(pdf_page, reading_order=reading_order)
             # A scanned page may also contain a small selectable header or watermark.
             # Detect image-dominant pages before deciding whether OCR is needed.
             page_area = max(0.0, float(pdf_page.rect.get_area()))
@@ -113,7 +137,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
             if needs_ocr and ocr:
                 try:
                     ocr_page = pdf_page.get_textpage_ocr(language="eng", dpi=200, full=True)
-                    recovered = re.sub(r'[ \t]+', ' ', pdf_page.get_text('text', textpage=ocr_page, sort=True).replace('\x00', '')).strip()
+                    recovered = page_text(pdf_page, reading_order=reading_order, textpage=ocr_page)
                     if len(recovered)>len(text):
                         text=recovered
                         ocr_pages.append(page)
@@ -241,6 +265,7 @@ def extract(pdf,out,owner_uid,r2_key,ocr=False,review_images=False):
         'visual_blank_candidates':blank_candidates,
         'visual_blank_candidates_verified':False,'requires_ocr_review':bool(low_text),
         'blank_candidate_passages_excluded':True,
+        'text_reading_order':reading_order,'reading_order_verified':False,
         'page_numbering':'physical_pdf_page_1_based','status':'extracted_not_indexed','citation_verified':False}
     (out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n',encoding='utf-8')
     return manifest
@@ -253,5 +278,6 @@ if __name__=='__main__':
     p.add_argument('--r2-key',required=True)
     p.add_argument('--ocr',action='store_true',help='Attempt local Tesseract OCR on low-text pages')
     p.add_argument('--review-images',action='store_true',help='Save local PNG previews of low-text pages for visual review')
+    p.add_argument('--reading-order',choices=('legacy','blocks'),default='legacy',help='Opt-in paragraph-block candidate; inspect original pages before reindexing')
     a=p.parse_args()
-    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr,review_images=a.review_images),indent=2))
+    print(json.dumps(extract(a.pdf,a.out,a.owner_uid,a.r2_key,ocr=a.ocr,review_images=a.review_images,reading_order=a.reading_order),indent=2))

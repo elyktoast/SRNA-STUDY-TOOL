@@ -20,9 +20,9 @@ def save(conn, payload):
           insert into source_library_staging.generated_question_drafts_v2
           (owner_uid,textbook_id,topic,exam_mode,question_format,
            blueprint_domain,blueprint_section,blueprint_objective,
-           provider,model,question_json,screening_json,evidence_json)
+           provider,model,question_json,screening_json,evidence_json,status)
           select t.owner_uid,t.id,%s,%s,%s,%s,%s,%s,%s,%s,
-                 %s::jsonb,%s::jsonb,%s::jsonb
+                 %s::jsonb,%s::jsonb,%s::jsonb,%s
           from source_library_staging.textbooks t
           where t.id=%s::uuid and t.owner_uid=%s::uuid and t.status='ready'
             and not exists (
@@ -38,7 +38,7 @@ def save(conn, payload):
               payload["domain"],payload["section"],payload["objective"],
               payload["provider"],payload["model"],
               json.dumps(payload["question"]),json.dumps(payload["screening"]),
-              json.dumps(payload["evidence"]),book,owner,json.dumps(payload["evidence"])))
+              json.dumps(payload["evidence"]),outcome["status"],book,owner,json.dumps(payload["evidence"])))
         record = cur.fetchone()
     if not record:
         raise ValueError("Textbook not ready, not owned by admin, or evidence not indexed in this textbook")

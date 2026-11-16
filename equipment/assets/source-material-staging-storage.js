@@ -51,11 +51,14 @@ async function reviewPdf(path){
  }finally{clearTimeout(timeout);}
 }
 function reviewerSettings(){
- const base=String(config.reviewerApiUrl||'');let url;
+ // Match the deployed generation gateway when older staging entry pages omit
+ // this setting. An explicitly empty setting still disables reviewer access.
+ const gateway='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
+ const base=config.reviewerApiUrl===undefined?'https://'+gateway+'/':String(config.reviewerApiUrl||'');let url;
  try{url=new URL(base)}catch{}
  if(location.hostname!=='staging.srnastudytool.com'||!config.enabled||!url||
     url.protocol!=='https:'||url.username||url.password||url.search||url.hash||
-    url.pathname!=='/'||!url.hostname.endsWith('.srnastudytool.com')||
+    url.pathname!=='/'||!(url.hostname===gateway||url.hostname.endsWith('.srnastudytool.com'))||
     url.hostname==='srnastudytool.com'||url.hostname==='www.srnastudytool.com'||
     url.hostname==='staging.srnastudytool.com')
    throw Error('Verified reviewer service is not configured for staging.');
