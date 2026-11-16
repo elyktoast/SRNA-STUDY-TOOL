@@ -24,7 +24,11 @@ def validate_draft(payload):
            or str(x.get("textbook_id")) != str(payload["textbook_id"])
            for x in evidence):
         raise ValueError("Evidence must match textbook")
-    return {"status": "pending_review", "requires_human_review": True,
+    stages = payload["screening"].get("stages", {})
+    needs_revision = isinstance(stages, dict) and any(
+        isinstance(stage, dict) and stage.get("status") in ("flag", "fail")
+        for stage in stages.values())
+    return {"status": "needs_revision" if needs_revision else "pending_review", "requires_human_review": True,
             "published": False}
 
 def validate_review(status, reviewer_uid, notes):

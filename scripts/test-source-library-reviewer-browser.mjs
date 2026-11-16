@@ -30,7 +30,7 @@ test('legacy string rationale remains readable',()=>{
  assert.ok(preview({stem:'Legacy case',explanation:'Legacy teaching'}).includes('Legacy teaching'));
 });
 
-function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,handler}={}){
+function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,omitReviewerConfig=false,handler}={}){
  const calls=[];
  const context={
   window:{MBU_SOURCE_LIBRARY_STAGING:{enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com',reviewerApiUrl}},
@@ -38,6 +38,7 @@ function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,han
   localStorage:{getItem:()=>JSON.stringify({access_token:'staging-jwt'})},
   fetch:async(url,options)=>{calls.push({url:String(url),options});return handler(url,options)}
  };
+ if(omitReviewerConfig)delete context.window.MBU_SOURCE_LIBRARY_STAGING.reviewerApiUrl;
  context.globalThis=context;
  vm.runInNewContext(source,context,{filename:fileURLToPath(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url)),importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER});
  return {api:context.window.MBUSourceMaterialStagingStorage,calls};
@@ -68,6 +69,16 @@ test('browser rejects a forged PNG fingerprint',async()=>{
  const {api}=setup({handler:()=>response(png,'a'.repeat(64),'0'.repeat(64))});
  await assert.rejects(api.verifiedReviewPage(pdf,1),/fingerprint mismatch/);
 });
+test('chapter review without an override uses the pinned deployed staging gateway',async()=>{
+ const digest=await sha(png);
+ for(const settings of [{omitReviewerConfig:true},{reviewerApiUrl:'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/'}]){
+  const {api,calls}=setup({...settings,handler:()=>response(png,'a'.repeat(64),digest)});
+  const result=await api.verifiedReviewPage(pdf,731);
+  assert.equal(result.imageSha256,digest);
+  assert.equal(calls[0].url,'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/review/page.png?path='+encodeURIComponent(pdf)+'&page=731');
+  assert.equal(calls[0].options.redirect,'error');
+ }
+});
 test('browser rejects missing approval guard and non-PNG payload',async()=>{
  for(const options of [{approval:'true'},{mime:'text/plain'}]){
   const {api}=setup({handler:()=>response(png,'a'.repeat(64),'0'.repeat(64),options)});
@@ -76,6 +87,9 @@ test('browser rejects missing approval guard and non-PNG payload',async()=>{
 });
 test('browser refuses production, lookalike, and insecure reviewer URLs',async()=>{
  for(const reviewerApiUrl of [
+  '',null,
+  'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev.evil.test/',
+  'https://another-staging-worker.workers.dev/',
   'http://reviewer-staging.srnastudytool.com',
   'https://srnastudytool.com',
   'https://staging.srnastudytool.com',

@@ -37,6 +37,18 @@ def payload():
                 evidence=[{"passage_id":"p1","textbook_id":BOOK}])
 
 class StorageTests(unittest.TestCase):
+    def test_failed_quality_status_is_persisted_with_unchanged_evidence(self):
+        cur=Cursor(row=(DRAFT,))
+        data=payload()
+        data['screening']={'stages':{'editorial_quality':{'status':'flag'}}}
+        result=save(Conn(cur),data)
+        self.assertEqual(result['status'],'needs_revision')
+        self.assertFalse(result['published'])
+        # This value must reach INSERT, rather than exist only in its response.
+        self.assertEqual(cur.params[-4],'needs_revision')
+        self.assertIn('evidence_json,status)',cur.sql)
+        self.assertEqual(cur.params[-3:-1],(BOOK,OWNER))
+
     def test_save_scopes_textbook_to_owner(self):
         cur=Cursor(row=(DRAFT,))
         result=save(Conn(cur),payload())
