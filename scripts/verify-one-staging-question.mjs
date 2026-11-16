@@ -53,6 +53,8 @@ if(process.argv.includes('--warmup-only')){
  process.exit(0);
 }
 const books=library.textbooks.map(b=>b.id);
+// Match the studio default: search all owned indexed books for generation too.
+request.textbook_ids=books;
 const multi=await call('/generation/preflight',{...request,textbook_ids:books});
 assert.ok(multi.source_textbook_count>1,'Multi-book evidence packet collapsed to one book');
 console.log(JSON.stringify({check:'multi_book_preflight',source_textbook_count:multi.source_textbook_count,passage_count:multi.passage_count,paid_calls:0}));

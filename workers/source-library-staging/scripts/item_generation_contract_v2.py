@@ -80,7 +80,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Keep each component label to a few words, each state at most 80 characters, and each complete rendered option at most 180 characters. "
             "For one component, each state becomes the complete ordinary option text, with no label prefix. "
             "Each option states only the requested answer, never an answer plus its explanation. Do not use because, thereby or so that. "
-            "All options must answer the same lead-in and belong to the same clinical category; do not mix quality, onset and mechanism as alternatives. "
+            "All options must answer the same lead-in and belong to the same clinical category; do not mix quality, onset and mechanism as alternatives. Keep shared drug, device, patient and exposure context in the stem. When the question asks for a mechanism, offer competing mechanisms under that SAME context; do not make the keyed option the only one naming the case drug while distractors name unrelated drugs, populations or procedures. True trivia about a different agent is not a plausible competing explanation of this case. "
             "For two components, the server renders parallel labelled pairs. Return id and states only, not text or error_pattern. "
             "Plan both cases before drafting: the original case must have one source-supported key and a meaningful change "
             "to its clinical condition must make a different existing choice correct. Evidence must affirm the correct response "
@@ -102,7 +102,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Omit states from final options; supply error_pattern as null ONLY for the original key and a specific learner "
             "error for EACH of the other three options, including the option correct under the separate alternative case. "
             "The alternate case is not the original question. For item_draft, put the literal token {{STEM_CONDITION}} exactly once in stem; the server inserts stem_condition verbatim. For rationale, use the already rendered draft. Omit the alternate "
-            "condition and do not reveal the response states. Outside this complete condition phrase, add only neutral context and the lead-in. Do not add dependent measurements or physiological findings outside the replaceable phrase; they would be left unchanged in the alternate case. "
+            "condition and do not reveal the response states. Outside this complete condition phrase, add only neutral context and a lead-in that remains meaningful in BOTH cases. Do not repeat an original-only symptom, drug, device, exposure or population in the lead-in. Use a neutral reference such as this finding or this effect where appropriate, rather than asking about an original symptom absent in the alternate case. Do not add dependent measurements or physiological findings outside the replaceable phrase; they would be left unchanged in the alternate case. "
             "Do not return a new counterfactual in the rationale: the server preserves the exact planned stem edit. "
             "Source and independent blind checks will still test the plan; never assert approval.")
     return {"rules_version": RULES_VERSION, "step": step,
