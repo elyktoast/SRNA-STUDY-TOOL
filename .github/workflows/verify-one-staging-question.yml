@@ -29,10 +29,7 @@ on:
         type: string
         default: 62f162fd-6c12-4899-b45b-6466e688f570
   push:
-    branches: [fix/staging-final-acceptance]
-    paths:
-      - 'scripts/verify-one-staging-question.mjs'
-      - '.github/workflows/verify-one-staging-question.yml'
+    branches: [fix/staging-final-acceptance, fix/staging-semantic-index-backfill]
 permissions:
   contents: read
   checks: read
@@ -41,7 +38,9 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && ((github.ref == 'refs/heads/fix/staging-final-acceptance' && contains(github.event.head_commit.message, '[verify-one-staging-question]')) || (github.ref == 'refs/heads/fix/staging-semantic-index-backfill' && contains(github.event.head_commit.message, '[backfill-staging-semantic-index]'))))
+    env:
+      BACKFILL_SEMANTIC_INDEX: ${{ inputs.backfill_semantic_index || (github.event_name == 'push' && github.ref == 'refs/heads/fix/staging-semantic-index-backfill' && contains(github.event.head_commit.message, '[backfill-staging-semantic-index]')) }}
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 15
@@ -54,7 +53,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build disposable lecture extraction fixtures
-        if: ${{ !inputs.backfill_semantic_index }}
+        if: ${{ env.BACKFILL_SEMANTIC_INDEX != 'true' }}
         run: |
           python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'python-pptx>=1.0,<2'
           python - <<'PY'
@@ -79,7 +78,7 @@ jobs:
           pdf.close()
           PY
       - name: Require settled existing staging deployment without rebuilding
-        if: ${{ !inputs.backfill_semantic_index }}
+        if: ${{ env.BACKFILL_SEMANTIC_INDEX != 'true' }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -90,7 +89,7 @@ jobs:
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
         run: node scripts/wait-staging-reviewer-rollout.mjs
       - name: Verify exactly one indexed question and unpublished persistence
-        if: ${{ !inputs.backfill_semantic_index }}
+        if: ${{ env.BACKFILL_SEMANTIC_INDEX != 'true' }}
         env:
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
@@ -109,7 +108,7 @@ jobs:
             node scripts/verify-one-staging-question.mjs
           fi
       - name: Populate and reconcile private Cloudflare semantic index
-        if: ${{ inputs.backfill_semantic_index }}
+        if: ${{ env.BACKFILL_SEMANTIC_INDEX == 'true' }}
         env:
           STAGING_ONLY: 'true'
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
