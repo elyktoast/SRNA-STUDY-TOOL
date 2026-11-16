@@ -52,6 +52,9 @@ def compare_page(page, probes=None):
         'block_matches_source_glyphs': glyphs(candidate) == glyphs(original),
         'legacy_only_codepoints': differences(legacy, candidate),
         'block_only_codepoints': differences(candidate, legacy),
+        'unmapped_control_glyphs': {f'U+{ord(char):04X}': count
+                                    for char, count in sorted(glyphs(original).items())
+                                    if unicodedata.category(char) == 'Cc'},
         'legacy_wide_gap_rows': sum(bool(re.search(r'\S[ \t]{8,}\S', line))
                                     for line in page.get_text('text', sort=True).splitlines()),
         'text_block_count': sum(b[6] == 0 for b in page.get_text('blocks')),
@@ -96,11 +99,17 @@ def audit(conn, client, *, owner_uid, textbook_id, pages):
                 raise ValueError('Original page count differs from source provenance')
             results = [{'pdf_page': page, **compare_page(doc[page-1], probes.get(page))}
                        for page in pages]
-    passed = all(r['non_whitespace_characters_preserved'] and
+    # The original character inventory is the conservation reference. The
+    # legacy word reconstruction can itself omit source glyphs; retaining
+    # those glyphs must not be misclassified as candidate character loss.
+    # Unmapped controls still require original-page review before indexing.
+    passed = all(r['block_matches_source_glyphs'] and
                  all(r['block_continuity_checks'].values()) for r in results)
     return {'textbook_id': textbook_id, 'filename': filename,
             'source_sha256': digest, 'source_binding_verified': True,
             'pdf_page_count': count, 'pages': results, 'candidate_checks_passed': passed,
+            'pages_with_unmapped_glyphs': [r['pdf_page'] for r in results if r['unmapped_control_glyphs']],
+            'ready_for_index_replacement': False,
             'clinical_accuracy_verified': False, 'full_reading_order_verified': False,
             'database_writes': False, 'r2_writes': False, 'provider_calls': False,
             'index_replaced': False}

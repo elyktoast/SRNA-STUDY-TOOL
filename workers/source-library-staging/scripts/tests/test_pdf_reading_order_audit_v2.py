@@ -45,6 +45,21 @@ class ReadingOrderAuditTests(unittest.TestCase):
         self.assertFalse(result['block_matches_source_glyphs'])
         self.assertEqual(result['legacy_only_codepoints'], {'U+0074':1})
 
+    def test_legacy_omitted_control_glyph_is_preserved_and_explicitly_flagged(self):
+        page = MagicMock()
+        page.get_text.side_effect = lambda kind, **kwargs: {
+            'rawdict': {'blocks':[{'type':0,'lines':[{'spans':[
+                {'chars':[{'c':c} for c in 'Original\x01text']}]}]}]},
+            'text': 'Original text', 'blocks':[(0,0,10,10,'Original\x01text',0,0)]
+        }[kind]
+        with patch('audit_pdf_reading_order_v2.page_text',
+                   side_effect=['Original text','Original\x01text']):
+            result = compare_page(page)
+        self.assertFalse(result['non_whitespace_characters_preserved'])
+        self.assertFalse(result['legacy_matches_source_glyphs'])
+        self.assertTrue(result['block_matches_source_glyphs'])
+        self.assertEqual(result['unmapped_control_glyphs'], {'U+0001':1})
+
     def test_missing_provenance_blocks_source_read(self):
         conn = MagicMock()
         conn.cursor.return_value.__enter__.return_value.fetchone.return_value = None
@@ -79,7 +94,8 @@ class ReadingOrderAuditTests(unittest.TestCase):
             self.assertEqual(source.call_args.kwargs['expected_sha256'], digest)
             self.assertTrue(result['candidate_checks_passed'])
             for key in ('database_writes','r2_writes','provider_calls','index_replaced',
-                        'clinical_accuracy_verified','full_reading_order_verified'):
+                        'clinical_accuracy_verified','full_reading_order_verified',
+                        'ready_for_index_replacement'):
                 self.assertFalse(result[key])
             self.assertNotIn(str(pdf), json.dumps(result))
             self.assertNotIn('Private textbook contents.', json.dumps(result))
