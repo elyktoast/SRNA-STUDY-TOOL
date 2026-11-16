@@ -22,6 +22,8 @@ class ReadingOrderAuditTests(unittest.TestCase):
         self.assertFalse(result['legacy_continuity_checks']['continuity'])
         self.assertTrue(result['block_continuity_checks']['continuity'])
         self.assertTrue(result['non_whitespace_characters_preserved'])
+        self.assertTrue(result['block_matches_source_glyphs'])
+        self.assertTrue(result['legacy_matches_source_glyphs'])
         self.assertGreater(result['legacy_wide_gap_rows'], 0)
         self.assertNotIn('Private', json.dumps(result))
 
@@ -31,6 +33,17 @@ class ReadingOrderAuditTests(unittest.TestCase):
             page.insert_text((40,70), 'A short single paragraph.')
             result = compare_page(page, {'missing': 'Absent evidence'})
         self.assertFalse(result['block_continuity_checks']['missing'])
+
+    def test_candidate_character_loss_fails_independent_raw_glyph_inventory(self):
+        with fitz.open() as doc:
+            page = doc.new_page()
+            page.insert_text((40,70), 'Original source text.')
+            with patch('audit_pdf_reading_order_v2.page_text',
+                       side_effect=['Original source text.', 'Original source tex.']):
+                result = compare_page(page)
+        self.assertTrue(result['legacy_matches_source_glyphs'])
+        self.assertFalse(result['block_matches_source_glyphs'])
+        self.assertEqual(result['legacy_only_codepoints'], {'U+0074':1})
 
     def test_missing_provenance_blocks_source_read(self):
         conn = MagicMock()

@@ -35,11 +35,23 @@ def compare_page(page, probes=None):
     candidate = page_text(page, reading_order='blocks')
     probes = probes or {}
     glyphs = lambda text: Counter(c for c in unicodedata.normalize('NFKC', text) if not c.isspace())
+    # A separate raw character inventory distinguishes candidate loss from
+    # omissions introduced by the legacy word/line reconstruction itself.
+    raw = page.get_text('rawdict')
+    original = ''.join(char['c'] for block in raw['blocks'] if block['type'] == 0
+                       for line in block['lines'] for span in line['spans']
+                       for char in span['chars'])
+    differences = lambda a, b: {f'U+{ord(char):04X}': count
+                                for char, count in sorted((glyphs(a)-glyphs(b)).items())}
     return {
         'legacy_sha256': hashlib.sha256(legacy.encode()).hexdigest(),
         'block_sha256': hashlib.sha256(candidate.encode()).hexdigest(),
         'text_changed': legacy != candidate,
         'non_whitespace_characters_preserved': glyphs(legacy) == glyphs(candidate),
+        'legacy_matches_source_glyphs': glyphs(legacy) == glyphs(original),
+        'block_matches_source_glyphs': glyphs(candidate) == glyphs(original),
+        'legacy_only_codepoints': differences(legacy, candidate),
+        'block_only_codepoints': differences(candidate, legacy),
         'legacy_wide_gap_rows': sum(bool(re.search(r'\S[ \t]{8,}\S', line))
                                     for line in page.get_text('text', sort=True).splitlines()),
         'text_block_count': sum(b[6] == 0 for b in page.get_text('blocks')),
