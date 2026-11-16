@@ -43,6 +43,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Trusted semantic lookup callback required")
     if env.get("STAGING_ONLY") != "true":
         raise ValueError("Staging-only execution required")
+    from item_source_scope_v2 import source_scope
+    books = source_scope(args.textbook_id, getattr(args, 'textbook_ids', None))
     if (args.mode not in ("NCE", "SEE") or args.domain not in ("I", "II", "III", "IV")
             or not isinstance(args.section, str) or not re.fullmatch(r"[A-Z]", args.section)
             or not isinstance(args.objective, str)
@@ -64,10 +66,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               textbook_id=args.textbook_id, limit=args.limit,
                               section_id=args.section_id,
                               include_subsections=args.include_subsections,
-                              page_start=args.page_start, page_end=args.page_end)
+                              page_start=args.page_start, page_end=args.page_end,
+                              **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
     summary = {"authoring_contract": "2026-11-11-v21", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+               "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
@@ -132,7 +136,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     request_hash = fingerprint({"authoring_contract": "2026-11-11-v21", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
-        "textbook_id": args.textbook_id, "section_id": args.section_id,
+        "textbook_id": args.textbook_id,
+        **({'textbook_ids': books} if books else {}),
+        "section_id": args.section_id,
         "include_subsections": args.include_subsections, "page_start": args.page_start,
         "page_end": args.page_end, "limit": args.limit,
         "generator_model": env.get("AI_GENERATOR_MODEL", ""),
@@ -256,6 +262,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                  section=args.section, objective=args.objective,
                                  item_id=args.item_id, format=args.format,
                                  textbook_id=args.textbook_id, limit=args.limit,
+                                 textbook_ids=books,
                                  section_id=args.section_id,
                                  include_subsections=args.include_subsections,
                                  page_start=args.page_start, page_end=args.page_end,
@@ -284,6 +291,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                     "evidence": [{"passage_id": p["passage_id"],
                                   "textbook_id": p["textbook_id"]}
                                  for p in evidence["sources"]]}
+    if books:
+        save_payload['textbook_ids'] = books
     response = {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
             "next_state": result["next_state"],
             "item": result["item"], "requires_human_review": True,

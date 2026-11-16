@@ -118,8 +118,9 @@ def audit(conn, client, *, owner_uid, textbook_id, pages):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--owner-uid', required=True)
-    parser.add_argument('--textbook-id', required=True)
-    parser.add_argument('--pages', required=True)
+    parser.add_argument('--textbook-id')
+    parser.add_argument('--pages')
+    parser.add_argument('--all-owned', action='store_true')
     args = parser.parse_args()
     if os.environ.get('STAGING_ONLY') != 'true':
         raise SystemExit('Explicit staging-only execution required')
@@ -132,8 +133,37 @@ def main():
     with psycopg.connect(os.environ['STAGING_DATABASE_URL']) as conn:
         with conn.transaction():
             conn.execute('SET TRANSACTION READ ONLY')
-            result = audit(conn, client, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-                           pages=[int(value) for value in args.pages.split(',')])
+            if args.all_owned:
+                if args.textbook_id or args.pages:
+                    raise ValueError('Choose all-owned sample or explicit textbook pages')
+                with conn.cursor() as cur:
+                    cur.execute("""select t.id::text,t.page_count,exists(
+                      select 1 from source_library_staging.source_versions v
+                      where v.textbook_id=t.id and v.owner_uid=t.owner_uid
+                        and v.r2_key=t.r2_key and v.file_size_bytes=t.file_size_bytes)
+                      from source_library_staging.textbooks t
+                      where t.owner_uid=%s::uuid and t.status='ready' order by t.id""", (args.owner_uid,))
+                    books = cur.fetchall()
+                results, blocked = [], []
+                for book, count, bound in books:
+                    if not bound:
+                        blocked.append({'textbook_id':book, 'reason':'matching_source_provenance_missing'})
+                        continue
+                    pages = sorted({min(count,120), max(1,count//3), max(1,count//2), max(1,2*count//3)})
+                    if book == NAGELHOUT_ID:
+                        pages = sorted(set(pages) | set(NAGELHOUT_PROBES))
+                    result = audit(conn, client, owner_uid=args.owner_uid, textbook_id=book, pages=pages)
+                    results.append(result)
+                result = {'textbooks':results, 'blocked_textbooks':blocked,
+                          'candidate_checks_passed':bool(results) and all(r['candidate_checks_passed'] for r in results),
+                          'all_sources_bound':bool(books) and not blocked,
+                          'ready_for_index_replacement':False, 'database_writes':False,
+                          'r2_writes':False, 'provider_calls':False}
+            else:
+                if not args.textbook_id or not args.pages:
+                    raise ValueError('Explicit textbook and physical PDF pages required')
+                result = audit(conn, client, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                               pages=[int(value) for value in args.pages.split(',')])
     print(json.dumps(result, indent=2))
     if not result['candidate_checks_passed']:
         raise SystemExit(1)

@@ -1,5 +1,6 @@
 """Validation contract for private staging question drafts; no network or database writes."""
 from uuid import UUID
+from item_source_scope_v2 import source_scope
 
 def validate_draft(payload):
     if not isinstance(payload, dict):
@@ -20,10 +21,13 @@ def validate_draft(payload):
     evidence = payload.get("evidence")
     if not isinstance(evidence, list) or not evidence:
         raise ValueError("Indexed evidence required")
+    books = source_scope(payload['textbook_id'], payload.get('textbook_ids')) or [str(payload['textbook_id'])]
     if any(not isinstance(x, dict) or not x.get("passage_id")
-           or str(x.get("textbook_id")) != str(payload["textbook_id"])
+           or str(x.get("textbook_id")) not in books
            for x in evidence):
         raise ValueError("Evidence must match textbook")
+    if str(payload['textbook_id']) not in {str(x['textbook_id']) for x in evidence}:
+        raise ValueError('Primary textbook must supply indexed evidence')
     stages = payload["screening"].get("stages", {})
     needs_revision = isinstance(stages, dict) and any(
         isinstance(stage, dict) and stage.get("status") in ("flag", "fail")

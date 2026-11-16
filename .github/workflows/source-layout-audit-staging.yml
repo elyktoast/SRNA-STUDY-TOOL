@@ -1,7 +1,7 @@
 name: Read-only staging PDF layout comparison
 on:
   push:
-    branches: [fix/retrieval-back-matter-ranking]
+    branches: [fix/retrieval-back-matter-ranking, fix/multi-textbook-question-evidence]
     paths:
       - 'workers/source-library-staging/scripts/audit_pdf_reading_order_v2.py'
       - '.github/workflows/source-layout-audit-staging.yml'
@@ -25,7 +25,12 @@ jobs:
           python-version: '3.12'
       - name: Install read-only source inspection dependencies
         run: python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'boto3>=1.35,<2' 'psycopg[binary]>=3.2,<4'
-      - name: Compare selected original Nagelhout pages without importing
+      - name: Verify multi-textbook ownership predicates in read-only PostgreSQL
+        env:
+          SRNA_RETRIEVAL_TEST_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          PYTHONPATH: workers/source-library-staging/scripts
+        run: python -m unittest discover -s workers/source-library-staging/scripts/tests -p test_multi_textbook_postgres_v2.py -v
+      - name: Compare original pages across owned books without importing
         env:
           STAGING_ONLY: 'true'
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
@@ -35,5 +40,4 @@ jobs:
         run: >-
           python workers/source-library-staging/scripts/audit_pdf_reading_order_v2.py
           --owner-uid c003287a-10ce-4cc9-926e-ef7c3a162a26
-          --textbook-id 6f1b2869-d6ad-4adf-a9d8-888e8a3d9b9d
-          --pages 135,213,566,599,731,732
+          --all-owned

@@ -21,7 +21,7 @@ def revalidate(conn, *, owner_uid, draft_id):
     item = draft["question"]
     if not isinstance(item, dict):
         raise ValueError("Invalid saved question")
-    # Restrict retrieval to cited and saved evidence IDs, same owned textbook.
+    # Restrict retrieval to cited and saved evidence IDs in ready owned books.
     refs = draft["evidence"]
     citations = item.get("evidence", [])
     if not isinstance(refs, list) or not isinstance(citations, list):
@@ -35,9 +35,9 @@ def revalidate(conn, *, owner_uid, draft_id):
           select p.id::text,p.textbook_id::text,p.page_start,p.content
           from source_library_staging.passages p
           join source_library_staging.textbooks t on t.id=p.textbook_id
-          where p.id::text = any(%s::text[]) and t.id=%s::uuid
+          where p.id::text = any(%s::text[])
             and t.owner_uid=%s::uuid and t.status='ready'
-        """, (sorted(ids), draft["textbook_id"], owner_uid))
+        """, (sorted(ids), owner_uid))
         rows = cur.fetchall()
     # Never treat a truncated passage as proof that a valid quotation is absent.
     # Fail closed on unusually large indexed passages rather than silently clipping them.
