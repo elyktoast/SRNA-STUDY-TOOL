@@ -61,6 +61,14 @@ The container builds its own IDs/hash inventory from the exact course manifests;
 
 Unit verification: 1,027 Python tests (four skipped), 188 Node checks and repository/diff checks passed. Failure injection covers interruption/resume, ownership conflicts, stale hashes/models/dimensions, malformed vectors, unsigned or oversized relay requests, private export error logging and stale approval reports. The live indexing workflow also verifies an exact canonical-stem positive control and an unrelated-text negative control through the same full-bank lookup and cosine scorer. Live population, native binding response shape, complete reconciliation and a real generated candidate still require deployed verification.
 
+## First live canonical index run
+
+[Run 43956832836](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43956832836) confirmed the deployed native binding, signed relay, vector protocol and private database writes across four batches, durably saving 128 of 9,000 entries. The fifth relay invocation returned HTTP 503; Cloudflare request telemetry confirmed four HTTP 200 responses followed by that HTTP 503. No question generation ran. Complete coverage and live controls are not yet proven.
+
+The embedding adapter now makes at most four identical attempts for explicitly transient transport failures, with bounded backoff; authentication/configuration failures and invalid vectors are not retried. This applies only to embeddings. Paid question authoring remains single-attempt. The CLI reports fixed provider-rule/SQLSTATE categories rather than private exception text. Resume must skip the 128 already validated rows and still require complete reconciliation and both live controls.
+
+The deployed approval UI and backend were also checked against draft `14520cc3-f42d-4fb9-b340-00de12b04e6e`: its approval button is disabled, and read-only revalidation retained blocking checks for duplicates, explanation support, editorial quality, options-only screening and independent option evidence, with no model calls or database writes.
+
 ## Open acceptance requirements
 
 [Run 43945411972](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43945411972) confirmed the exact-build deployment gate and multi-book preflight (seven books, eight passages), then encountered a TLS connection reset during the first read-only lecture plan. It made no paid generation call and created no draft. The acceptance client now allows at most three attempts for explicitly enumerated read-only planning/readiness operations on transport failures or HTTP 502/503/504. Generation, writes, unknown endpoints, validation/authentication errors, HTTP 429 and HTTP 500 are not retried by this helper.
