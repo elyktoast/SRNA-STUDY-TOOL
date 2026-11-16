@@ -6,6 +6,7 @@ or vector artifact is uploaded. A fresh complete reconciliation is required.
 import argparse
 import json
 import os
+import re
 from uuid import UUID
 from backfill_semantic_embeddings_v2 import load_source
 from import_semantic_index_v2 import validate_staging_db_url
@@ -114,8 +115,15 @@ def main():
                 print(json.dumps(verify_controls(conn,args.source,owner_uid=os.environ.get('SEMANTIC_INDEX_OWNER_UID',''),embed_many=embed)),flush=True)
         print(json.dumps(result,sort_keys=True))
         return 0 if result['complete'] or not args.apply else 1
-    except Exception:
-        print(json.dumps({'ok':False,'error':'SEMANTIC_BACKFILL_UNAVAILABLE'}))
+    except Exception as error:
+        # Machine categories only. Never echo provider/database exception text.
+        rule=getattr(error,'rule',None)
+        safe_rule=rule if isinstance(rule,str) and re.fullmatch('[A-Z0-9_]{1,80}',rule) else None
+        state=getattr(error,'sqlstate',None)
+        safe_state=state if isinstance(state,str) and re.fullmatch('[A-Z0-9]{5}',state) else None
+        print(json.dumps({'ok':False,'error':'SEMANTIC_BACKFILL_UNAVAILABLE',
+                          'provider_rule':safe_rule,'sqlstate':safe_state,
+                          'category':'validation' if isinstance(error,ValueError) else 'database' if safe_state else 'provider' if safe_rule else 'unclassified'}))
         return 2
 
 if __name__=='__main__':
