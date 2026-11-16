@@ -42,7 +42,7 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
       select p.id::text, t.id::text, t.filename, p.chunk_index,
              p.page_start, p.page_end, s.id::text, s.heading,
              ts_rank_cd(p.content_search, websearch_to_tsquery('english', %s)) as rank,
-             left(p.content, 1200) as excerpt
+             left(p.content, 1600) as excerpt
         from source_library_staging.passages p
         join source_library_staging.textbooks t on t.id=p.textbook_id
         left join source_library_staging.sections s on s.id=p.section_id

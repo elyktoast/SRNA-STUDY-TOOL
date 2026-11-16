@@ -15,7 +15,7 @@ from item_draft_revision_storage_v2 import save_revision, list_revisions, Revisi
 
 MAX_BODY = 8192
 FIELDS = {"topic", "mode", "domain", "section", "objective", "format",
-          "item_id", "textbook_id", "section_id", "include_subsections",
+          "item_id", "textbook_id", "textbook_ids", "section_id", "include_subsections",
           "page_start", "page_end", "limit", "execute", "confirm_paid_calls", "resume_completed_only"}
 REQUIRED = {"topic", "mode", "domain", "section", "objective", "item_id"}
 
@@ -361,6 +361,12 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             if type(args.limit) is not int or not 1 <= args.limit <= 20:
                 raise ValueError()
             if type(args.include_subsections) is not bool:
+                raise ValueError()
+            from item_source_scope_v2 import source_scope
+            args.textbook_ids = source_scope(args.textbook_id, getattr(args, 'textbook_ids', None))
+            if args.textbook_ids and len(args.textbook_ids) > 1 and (
+                    args.limit < len(args.textbook_ids) or args.section_id is not None
+                    or args.page_start is not None or args.page_end is not None or args.include_subsections):
                 raise ValueError()
             for field in ("textbook_id", "section_id"):
                 value = getattr(args, field)

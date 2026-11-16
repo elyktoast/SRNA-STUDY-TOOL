@@ -52,7 +52,7 @@ class RevalidationTests(unittest.TestCase):
         self.assertTrue(any(x["message"]=="Excerpt mismatch at index 0" for x in result["issues"]))
         self.assertTrue(any("option evidence map" in x["message"] for x in result["issues"]))
         self.assertIn("t.owner_uid=%s::uuid",conn.cur.sql)
-        self.assertEqual(conn.cur.params[1:],(BOOK,OWNER))
+        self.assertEqual(conn.cur.params[1:],(OWNER,))
 
     @patch("item_draft_revalidation_v2.get_draft")
     def test_option_worksheet_is_read_only_and_does_not_invent_evidence(self,get_draft):

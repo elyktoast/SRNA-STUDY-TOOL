@@ -158,7 +158,7 @@ test('missing staging workspace retries loading without blank screen or stale na
 
 test('Sources and AI initialization and remount safety',()=>{
  const generationDeclaration=ui.indexOf('const generationPanel=document.createElement');
- const generationListeners=ui.indexOf("for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective'])");
+ const generationListeners=ui.indexOf("for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective','sl-multi-source'])");
  assert.ok(generationDeclaration>=0&&generationListeners>generationDeclaration,'generationPanel must exist before listeners are attached');
  assert.ok(ui.includes("generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row')"),'drafts row must remain locatable after Save button moves');
  assert.ok(ui.includes("if(drafts)for(const child of [...drafts.children])"),'safe draft teardown');

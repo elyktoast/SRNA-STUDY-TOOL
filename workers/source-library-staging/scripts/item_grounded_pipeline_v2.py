@@ -10,7 +10,7 @@ from item_generation_screened_v2 import generate_and_screen
 
 def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, section,
                         objective, item_id, format="MC", textbook_id=None,
-                        limit=8, section_id=None, include_subsections=False,
+                        limit=8, section_id=None, include_subsections=False, textbook_ids=None,
                         page_start=None, page_end=None, known_stems=(), calculation=None,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
@@ -21,6 +21,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
         raise ValueError("Explicit authenticated generator adapter required")
+    from item_source_scope_v2 import source_scope
+    books = source_scope(textbook_id, textbook_ids)
     if blind_reviewer is not None and (not callable(blind_reviewer)
                                       or not generator_model_id
                                       or not reviewer_model_id
@@ -38,7 +40,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     packet = evidence_packet if evidence_packet is not None else build_evidence(
         conn, owner_uid, topic, textbook_id=textbook_id, limit=limit,
         section_id=section_id, include_subsections=include_subsections,
-        page_start=page_start, page_end=page_end)
+        page_start=page_start, page_end=page_end,
+        **({'textbook_ids': textbook_ids} if textbook_ids else {}))
     if not isinstance(packet, dict):
         raise ValueError("Invalid indexed evidence packet")
     if not packet["can_generate_grounded_questions"]:
@@ -54,7 +57,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                    or p["pdf_page_end"] < p["pdf_page_start"]
                    or p.get("citation_verified") is not False
                    for p in evidence)
-            or len({p["passage_id"] for p in evidence}) != len(evidence)):
+            or len({p["passage_id"] for p in evidence}) != len(evidence)
+            or (books is not None and any(p['textbook_id'] not in books for p in evidence))):
         raise ValueError("Invalid or unverified indexed evidence; generation blocked")
     result = generate_and_screen(
         adapter, mode=mode, domain=domain, section=section,
@@ -71,7 +75,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
     if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=3)
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=max(3,len(books or [])),
+                                 **({'textbook_ids': textbook_ids} if textbook_ids else {}))
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,
@@ -90,8 +95,10 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                 if entry.get("search_status") != "matches_found":
                     continue
                 for query in entry.get("search_queries") or [entry["search_query"]]:
-                    for passage in search(conn, query, owner_uid, limit=5, textbook_id=textbook_id):
-                        passages[passage["passage_id"]] = passage
+                    for book in textbook_ids or [textbook_id]:
+                        for passage in search(conn, query, owner_uid, limit=5, textbook_id=book):
+                            if passage['passage_id'] in entry['retrieved_passage_ids']:
+                                passages[passage["passage_id"]] = passage
         except Exception:
             passages = {}
         option_adjudication = review_options(
@@ -106,6 +113,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
             "independent_option_adjudication": option_adjudication, "source_evidence": {
         "topic": packet["topic"],
         "passage_ids": [p["passage_id"] for p in evidence],
+        "textbook_ids": sorted({p['textbook_id'] for p in evidence}),
         "pdf_page_locations_only": True,
         "printed_page_citations_verified": False,
     }, "requires_human_review": True, "can_publish": False,

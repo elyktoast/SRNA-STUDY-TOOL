@@ -140,5 +140,12 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
                      "body": {"topic": entry["topic"], "mode": request["mode"],
                               **target, "format": fmt, "item_id": normalized_id,
                               "textbook_id": chosen_book}})
+        if textbook_id is None:
+            # Preserve the books found during all-library planning in the
+            # executable request, rather than silently collapsing to one book.
+            from item_source_scope_v2 import source_scope
+            books = list(dict.fromkeys(p['textbook_id'] for p in evidence))
+            if len(books) > 1:
+                jobs[-1]['body']['textbook_ids'] = source_scope(chosen_book, books)
     return {"jobs": jobs, "count": len(jobs), "paid_calls_requested": execute,
             "auto_publish": False, "database_writes": False}

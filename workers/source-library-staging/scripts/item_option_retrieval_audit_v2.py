@@ -5,7 +5,7 @@ Retrieval is not proof of clinical correctness. No model calls or publication.
 from search_passages import search
 
 
-def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
+def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, textbook_ids=None):
     if not isinstance(item, dict) or item.get("format") not in ("MC", "MS"):
         raise ValueError("MC/MS item required")
     if not isinstance(textbook_id, str) or not textbook_id:
@@ -24,11 +24,16 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
         raise ValueError("Invalid independent retrieval context")
     if context_query and limit < 2:
         raise ValueError("Context-aware retrieval requires at least two candidates")
+    from item_source_scope_v2 import source_scope
+    books = source_scope(textbook_id, textbook_ids) or [textbook_id]
+    def retrieve(query, count):
+        groups = [search(conn, query, owner_uid, limit=count, textbook_id=book) for book in books]
+        return [group[index] for index in range(count) for group in groups if index < len(group)][:count]
     context_rows = []
     context_failed = False
     if context_query:
         try:
-            context_rows = search(conn, context_query.strip(), owner_uid, limit=min(limit, 2), textbook_id=textbook_id)
+            context_rows = retrieve(context_query.strip(), min(limit, 2))
         except Exception:
             context_failed = True
     results = []
@@ -42,7 +47,7 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None):
         query = label[:180].strip()
         queries = [query] + ([context_query.strip()] if context_query else [])
         try:
-            option_rows = search(conn, query, owner_uid, limit=max(1, limit - 2) if context_query else limit, textbook_id=textbook_id)
+            option_rows = retrieve(query, max(1, limit - 2) if context_query else limit)
         except Exception:
             option_rows = []
             search_failed = True

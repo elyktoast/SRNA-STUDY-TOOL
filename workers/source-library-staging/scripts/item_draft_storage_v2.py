@@ -7,6 +7,12 @@ import json
 from uuid import UUID
 from item_draft_review_contract_v2 import validate_draft, validate_review
 
+# Shared with a read-only PostgreSQL regression: a passage must match the
+# claimed book, and that book must be ready and owned by the primary's owner.
+SOURCE_EVIDENCE_MATCH_SQL = """p.id::text = ev->>'passage_id'
+                  and p.textbook_id::text = ev->>'textbook_id'
+                  and source.owner_uid = t.owner_uid and source.status='ready'"""
+
 def save(conn, payload):
     outcome = validate_draft(payload)
     owner = str(UUID(str(payload["owner_uid"])))
@@ -29,8 +35,8 @@ def save(conn, payload):
               select 1 from jsonb_array_elements(%s::jsonb) ev
               where not exists (
                 select 1 from source_library_staging.passages p
-                where p.id::text = ev->>'passage_id'
-                  and p.textbook_id = t.id
+                join source_library_staging.textbooks source on source.id=p.textbook_id
+                where """ + SOURCE_EVIDENCE_MATCH_SQL + """
               )
             )
           returning id::text
