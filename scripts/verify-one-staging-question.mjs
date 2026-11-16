@@ -48,7 +48,13 @@ const request={topic,limit:8,mode:'NCE',domain,section,objective,format,item_id:
 // No-cost full-library preflight proves the multi-book path without forcing
 // every generated question to cite books that do not help its particular claim.
 const library=await call('/generation/textbooks');
+if(process.argv.includes('--warmup-only')){
+ console.log('Authenticated read-only staging warm-up completed; no model calls or draft writes');
+ process.exit(0);
+}
 const books=library.textbooks.map(b=>b.id);
+// Match the studio default: search all owned indexed books for generation too.
+request.textbook_ids=books;
 const multi=await call('/generation/preflight',{...request,textbook_ids:books});
 assert.ok(multi.source_textbook_count>1,'Multi-book evidence packet collapsed to one book');
 console.log(JSON.stringify({check:'multi_book_preflight',source_textbook_count:multi.source_textbook_count,passage_count:multi.passage_count,paid_calls:0}));

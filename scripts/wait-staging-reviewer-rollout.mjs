@@ -1,6 +1,14 @@
 // Wrangler returns before container replacement finishes. Do not spend AI tokens
 // while an old image can still be terminated by the asynchronous rollout.
 import {pathToFileURL} from 'node:url';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+export function needsReadOnlyWarmup(app,instances,now,buildCompleted){
+ return Number.isFinite(buildCompleted)&&now-buildCompleted>=90000
+  && Boolean(app.active_rollout_id)&&Array.isArray(app.health?.errors)&&app.health.errors.length===0
+  && Array.isArray(instances)&&instances.length>0
+  && instances.every(i=>['inactive','stopped'].includes(i.status?.state));
+}
 export function completedWorkerBuild(checks,sha){
  if(!/^[a-f0-9]{40}$/.test(sha||'')||!Array.isArray(checks))return null;
  const matching=checks.filter(c=>c.head_sha===sha&&c.app?.slug==='cloudflare-workers-and-pages'
@@ -28,6 +36,7 @@ async function main(){
   const body=await r.json();if(!body.success)throw Error('Container rollout metadata unavailable');return body.result;
  };
  const started=Date.now();
+ let warmups=0,lastWarmup=0;
  const direct=process.env.STAGING_DEPLOYMENT_JUST_COMPLETED==='true';
  const sha=process.env.GITHUB_SHA,githubToken=process.env.GITHUB_TOKEN;
  if(!direct&&(!/^[a-f0-9]{40}$/.test(sha||'')||!githubToken))throw Error('Exact staging build identity required');
@@ -42,6 +51,17 @@ async function main(){
  // errors. Allow ten minutes; never waive image, health or quiet-period checks.
  while(Date.now()-started<600000){
   const [app,instances,completed]=await Promise.all([read(''),read('/instances-v2'),readBuild()]);
+  if(completed!==null&&warmups<3&&Date.now()-lastWarmup>=60000&&needsReadOnlyWarmup(app,instances,Date.now(),completed)){
+   warmups++;lastWarmup=Date.now();
+   // Idle containers can leave a rollout waiting for traffic. Warm only the
+   // authenticated textbook listing after the exact build's quiet period.
+   // The child exits before planning, AI calls or draft persistence.
+   try{
+    await promisify(execFile)(process.execPath,['scripts/verify-one-staging-question.mjs','--warmup-only'],{timeout:45000,maxBuffer:65536});
+    console.log('Read-only staging warm-up completed; rollout checks continue');
+   }catch{console.log('Read-only staging warm-up unavailable; rollout checks continue');}
+   continue;
+  }
   if(completed!==null&&settled(app,instances,Date.now(),started,completed)){console.log('Exact staging build and container rollout settled; authenticated smoke may begin');return;}
   console.log('Waiting for staging container rollout; no AI calls performed');
   await new Promise(resolve=>setTimeout(resolve,10000));

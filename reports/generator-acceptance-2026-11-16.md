@@ -35,6 +35,16 @@ Its single paid MC sample was saved as `needs_revision`: schema, deterministic t
 
 The corrected gate requires the exact dispatched commit's Cloudflare Workers build check to succeed before its quiet period can begin. It also retains current image, instance state and health checks. Transient HTTP 500/502/503/504 responses now trigger only completed-checkpoint recovery; authentication, validation and rate-limit errors do not cause paid retries. Acceptance does not claim that this interrupted attempt passed clinical quality.
 
+## Latest completed acceptance and remaining quality defects
+
+[Run 43946900446](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43946900446) passed the exact-build gate, multi-book preflight, all ten PDF/PPTX format planning cases, unsupported-topic hold and provider/checkpoint readiness. It generated one MC item, used one automatic rewrite, reran review, and saved draft `14520cc3-f42d-4fb9-b340-00de12b04e6e` as `needs_revision`, unpublished.
+
+Schema, deterministic text, indexed evidence and original blind solving passed. Explanation support flagged R-2.4; the changed-case test flagged R-5.3; five shuffled options-only trials flagged R-12.2. Duplicate screening and independent option adjudication remained pending. This is another failed quality sample, not evidence that generation is reliable. No gate was waived and no item was approved.
+
+The original alternatives mixed mechanisms involving different named drugs and patient populations, making the key easy to identify from context. Its alternate case also retained a lead-in about the original-only symptom. Planning and bounded repair instructions now explicitly require competing answers under the same case context and a lead-in meaningful in both cases. The acceptance request now uses the studio's default full owned-library scope for the paid generation itself, not only its preflight probe. These changes require a new live acceptance sample before claiming improvement.
+
+During this run Cloudflare reported an active rollout with idle instances, and authenticated catalog traffic received `instance_allocation_unavailable`. The rollout subsequently cleared and generation ran. The gate now permits bounded authenticated catalog-only warm-up attempts after exact-build quiet time while retaining all rollout/image/health requirements. Warm-up is not a capacity guarantee. A subprocess test proves this path exits before planning or paid generation even if a conflicting paid flag is present.
+
 ## Open acceptance requirements
 
 [Run 43945411972](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43945411972) confirmed the exact-build deployment gate and multi-book preflight (seven books, eight passages), then encountered a TLS connection reset during the first read-only lecture plan. It made no paid generation call and created no draft. The acceptance client now allows at most three attempts for explicitly enumerated read-only planning/readiness operations on transport failures or HTTP 502/503/504. Generation, writes, unknown endpoints, validation/authentication errors, HTTP 429 and HTTP 500 are not retried by this helper.
