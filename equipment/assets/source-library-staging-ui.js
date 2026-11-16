@@ -452,7 +452,7 @@ async function renderDraftCollection(view='drafts'){
   const countLabel=document.createElement('span');countLabel.textContent='0 selected';
   const bulkApprove=document.createElement('button');bulkApprove.type='button';bulkApprove.textContent='Approve selected to bank';bulkApprove.disabled=true;
   const bulkRemove=document.createElement('button');bulkRemove.type='button';bulkRemove.textContent='Remove selected';bulkRemove.disabled=true;
-  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkApprove.disabled=bulkRemove.disabled=!selected.size;selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
+  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkRemove.disabled=!selected.size;bulkApprove.disabled=!selected.size||selectable.some(d=>selected.has(d.draft_id)&&d.status==='needs_revision');selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
   selectAll.onchange=()=>{for(const entry of checkboxes){entry.input.checked=selectAll.checked;if(selectAll.checked)selected.add(entry.id);else selected.delete(entry.id);}sync();};
   const execute=async status=>{
    const ids=[...selected];if(!ids.length)return;
@@ -502,7 +502,7 @@ async function renderDraftCollection(view='drafts'){
   }
   const open=document.createElement('button');open.type='button';open.textContent='Open';open.onclick=()=>openSavedDraft(draft.draft_id,open);actions.append(open);
   if(view!=='bank'&&['pending_review','needs_revision'].includes(draft.status)){
-   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';
+   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';approve.disabled=draft.status==='needs_revision';if(approve.disabled)approve.title='Resolve failed automated checks before approval.';
    approve.onclick=async()=>{
     const notes=window.prompt('Clinical review notes (required). Confirm source evidence and answer accuracy before approval:');
     if(notes===null)return;if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required.';return;}

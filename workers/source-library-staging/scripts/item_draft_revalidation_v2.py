@@ -10,6 +10,7 @@ from item_answer_evidence_v2 import check as check_answers
 from item_special_format_evidence_v2 import check as check_special
 from item_generation_runner_v2 import _complete_nonclinical_schema_fields
 from item_source_reconciliation_v2 import _format_normalized
+from item_draft_review_contract_v2 import approval_issues
 
 MAX_VERIFICATION_PASSAGE_CHARS = 200_000
 
@@ -52,6 +53,7 @@ def revalidate(conn, *, owner_uid, draft_id):
     normalized_fields = [k for k in ("sa", "dd", "hs", "audit", "self_check", "stats")
                          if k not in item and k in normalized]
     issues = validate_complete_item(normalized)
+    issues.extend(approval_issues(draft.get("screening"), normalized.get("format")))
     if not citations:
         issues.append({"rule_id":"R-2.5","message":"Saved question has no citations"})
     for pid in sorted(ids-found):

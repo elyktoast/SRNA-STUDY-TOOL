@@ -4,19 +4,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from item_draft_storage_v2 import save, review, list_drafts, get_draft
+from test_item_draft_review_contract_v2 import passed_screening
 
 OWNER="c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK="2a589498-aaa4-410f-b51a-00d3ab99eafd"
 DRAFT="1c05897c-16e8-4d09-9dc5-cf44ad9a4f9d"
 
 class Cursor:
-    def __init__(self, row=None, rows=None):
+    def __init__(self, row=None, rows=None, records=None):
         self.row,self.rows=row,rows or []
+        self.records = list(records) if records is not None else None
+        self.statements = []
         self.sql,self.params=None,None
     def execute(self, sql, params):
         self.sql,self.params=sql,params
+        self.statements.append(sql)
     def fetchone(self):
-        return self.row
+        return self.records.pop(0) if self.records else self.row
     def fetchall(self):
         return self.rows
     def __enter__(self):
@@ -66,13 +70,24 @@ class StorageTests(unittest.TestCase):
             save(Conn(Cursor(row=None)),payload())
 
     def test_review_requires_owner_and_unreviewed_status(self):
-        cur=Cursor(row=(DRAFT,))
+        cur=Cursor(records=[("MC",passed_screening()),(DRAFT,)])
         result=review(Conn(cur),owner_uid=OWNER,reviewer_uid=OWNER,
                       draft_id=DRAFT,status="approved_for_bank",
                       notes="Evidence reviewed")
         self.assertFalse(result["published"])
         self.assertIn("d.status in ('pending_review','needs_revision')",cur.sql)
         self.assertEqual(cur.params[-2:],(OWNER,OWNER))
+        self.assertIn("for update of d",cur.statements[0])
+
+    def test_direct_storage_cannot_approve_failed_pending_or_missing_screening(self):
+        for value in ({}, None, {"stages":{"explanation_evidence":{"status":"flag"}}},
+                      {"stages":{"duplicates":{"status":"pending"}}}):
+            cur=Cursor(row=("MC",value))
+            with self.assertRaisesRegex(ValueError,"verification must pass"):
+                review(Conn(cur),owner_uid=OWNER,reviewer_uid=OWNER,draft_id=DRAFT,
+                       status="approved_for_bank",notes="Citation structure checked")
+            self.assertEqual(len(cur.statements),1)
+            self.assertFalse(any("update source_library" in sql for sql in cur.statements))
 
     def test_get_draft_returns_full_private_record(self):
         now = datetime(2026,11,2,tzinfo=timezone.utc)
