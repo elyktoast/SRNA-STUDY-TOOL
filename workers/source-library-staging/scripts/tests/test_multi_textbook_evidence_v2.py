@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from uuid import uuid4
 
 from build_question_evidence import build_evidence
@@ -26,6 +26,32 @@ def row(book, index):
 
 
 class MultiBookTests(unittest.TestCase):
+    def test_all_library_planning_cannot_be_monopolized_by_one_book(self):
+        conn=MagicMock()
+        cur=conn.cursor.return_value.__enter__.return_value
+        cur.fetchall.return_value=[(A,),(B,)]
+        def search(conn,query,owner,**kw):
+            return [{**row(kw['textbook_id'],n),'rank':10 if kw['textbook_id']==A else 1} for n in range(5)]
+        with patch('build_question_evidence.search',side_effect=search):
+            packet=build_evidence(conn,OWNER,'local anesthetic',limit=3,balance_books=True)
+        self.assertEqual([p['textbook_id'] for p in packet['sources']],[A,B,A])
+        self.assertEqual(cur.execute.call_args.args[1],(OWNER,))
+        self.assertIn("status='ready'",cur.execute.call_args.args[0])
+
+    def test_pasted_all_library_selection_becomes_owner_scoped_discovery(self):
+        class Conn:
+            def __enter__(self): return self
+            def __exit__(self,*args): return False
+        app=create_app(conn_factory=Conn,resolve_admin=lambda token:OWNER,environment={'STAGING_ONLY':'true'})
+        raw=json.dumps({'lecture_text':'# Local anesthetics','textbook_id':'all','count':1}).encode()
+        status=[]
+        with patch('lecture_to_question_plan.prepare_staging_jobs',return_value={'jobs':[],'count':0}) as plan:
+            b''.join(app({'PATH_INFO':'/generation/lecture-plan','REQUEST_METHOD':'POST',
+                'HTTP_ORIGIN':'https://staging.srnastudytool.com','HTTP_AUTHORIZATION':'Bearer valid',
+                'CONTENT_LENGTH':str(len(raw)),'wsgi.input':io.BytesIO(raw)},lambda s,h:status.append(s)))
+        self.assertEqual(status,['200 OK'])
+        self.assertIsNone(plan.call_args.kwargs['textbook_id'])
+
     def test_fair_packet_retains_each_source_and_physical_page(self):
         def search(conn, query, owner, **kw):
             self.assertEqual(owner, OWNER)

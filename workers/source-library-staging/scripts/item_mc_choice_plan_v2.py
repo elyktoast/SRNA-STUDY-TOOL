@@ -27,8 +27,10 @@ def validate(plan):
                 and all(isinstance(v, str) and v.strip() and len(v) <= bound for v in values))
 
     normalize = lambda value: " ".join(value.split())
-    if (not strings(plan["response_variables"], 2, 80)
-            or len({normalize(v).casefold() for v in plan["response_variables"]}) != 2
+    components = plan['response_variables']
+    count = len(components) if isinstance(components, list) else 0
+    if (count not in (1, 2) or not strings(components, count, 80)
+            or len({normalize(v).casefold() for v in components}) != count
             or not strings([plan["stem_condition"], plan["alternate_condition"]], 2, 200)
             or normalize(plan["stem_condition"]).casefold() == normalize(plan["alternate_condition"]).casefold()
             or not strings(plan["key"], 1, 1) or not strings(plan["alternate_key"], 1, 1)
@@ -48,7 +50,7 @@ def validate(plan):
             or [o["id"] for o in options] != list("ABCD")
             or any(k not in "ABCD" for k in plan["key"] + plan["alternate_key"])):
         raise ValueError("Concept card choice plan choices invalid")
-    if any(not strings(o["states"], 2, 80) for o in options):
+    if any(not strings(o["states"], count, 80) for o in options):
         raise ValueError("Concept card choice plan response invalid")
     signatures = {tuple(normalize(v).casefold() for v in o["states"]) for o in options}
     if len(signatures) != 4:
@@ -64,7 +66,8 @@ def validate(plan):
             repeated = re.match(re.escape(component) + r"(?:\s*:\s*|\s+)(.+)$", state, re.I)
             if repeated:
                 option["states"][index] = repeated[1]
-        text = "; ".join(f"{component}: {state}" for component, state in zip(result["response_variables"], option["states"]))
+        text = (option['states'][0] if count == 1 else
+                "; ".join(f"{component}: {state}" for component, state in zip(result["response_variables"], option["states"])))
         if len(text) > 180:
             raise ValueError("Concept card choice plan response invalid")
         # Checkpoints may contain the previously rendered text. It must match;

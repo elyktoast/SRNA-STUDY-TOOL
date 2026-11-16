@@ -75,6 +75,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
+    if args.format == 'MC':
+        summary['mc_planning_contract'] = '2026-11-16-flexible-v1'
     # Safe, no-cost review readiness: never imply that a configured provider
     # or a requested flag is an independently completed review.
     generator_id = env.get("AI_GENERATOR_MODEL", "").strip()
@@ -136,6 +138,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     request_hash = fingerprint({"authoring_contract": "2026-11-11-v21", "owner_uid": args.owner_uid, "topic": args.topic,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
+        **({'mc_planning_contract': '2026-11-16-flexible-v1'} if args.format == 'MC' else {}),
         "textbook_id": args.textbook_id,
         **({'textbook_ids': books} if books else {}),
         "section_id": args.section_id,

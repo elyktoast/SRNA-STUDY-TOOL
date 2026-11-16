@@ -17,6 +17,37 @@ def plan():
 
 
 class ChoicePlanTests(unittest.TestCase):
+    def test_ordinary_single_component_choices_remain_natural_and_bound_to_both_cases(self):
+        raw=plan()
+        raw['response_variables']=['Clinical response']
+        for option,state in zip(raw['options'],['Response alpha','Response beta','Response gamma','Response delta']):
+            option['states']=[state]
+        p=validate(raw)
+        self.assertEqual([o['text'] for o in p['options']],
+                         ['Response alpha','Response beta','Response gamma','Response delta'])
+        self.assertEqual(validate(p),p)
+        draft={'stem':CONDITION_SLOT+' Which response is appropriate?', 'key':p['key'],
+               'options':[{'id':o['id'],'text':o['text']} for o in p['options']]}
+        proposal=bind(p,render_condition(p,draft))
+        self.assertEqual(proposal['expected_key'],['A'])
+        self.assertNotEqual(proposal['expected_key'],p['key'])
+        bad=copy.deepcopy(p)
+        bad['options'][0]['states'].append('Unrelated second task')
+        with self.assertRaises(ValueError): validate(bad)
+        bad=copy.deepcopy(p)
+        bad['options'][0]['states']=bad['options'][1]['states']
+        bad['options'][0].pop('text')
+        with self.assertRaises(ValueError): validate(bad)
+
+    def test_standard_does_not_require_crossed_pairs_for_every_concept(self):
+        from item_generation_contract_v2 import build_step
+        request=build_step('concept_card',mode='NCE',domain='I',section='C',objective='I.C.5',
+                           evidence=[{'passage_id':'p1','textbook_id':'t1','excerpt':'Synthetic evidence'}],format='MC')
+        text=request['instructions']
+        self.assertIn('ordinary homogeneous single-best-answer',text)
+        self.assertIn('R-6.7',text)
+        self.assertNotIn('exactly two source-supported',text)
+
     def test_condition_slot_preserves_exact_case_and_rejects_duplicate_cases(self):
         p=validate(plan())
         original={"stem":CONDITION_SLOT+" Which response fits?", "key":p["key"],
