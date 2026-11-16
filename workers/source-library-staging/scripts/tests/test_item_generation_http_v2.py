@@ -53,6 +53,28 @@ class DraftRevalidationHttpTests(unittest.TestCase):
         status,_=self.call("/generation/drafts/not-a-uuid/revalidate")
         self.assertEqual(status,"404 Not Found")
 
+    @patch("item_generation_http_v2.review")
+    @patch("item_generation_http_v2.revalidate")
+    def test_approval_returns_422_for_failed_or_pending_automated_reviews(self,validator,reviewer):
+        from item_draft_review_contract_v2 import approval_issues
+        from test_item_draft_review_contract_v2 import passed_screening
+        for name,state in (("explanation_evidence","flag"),("editorial_quality","fail"),
+                           ("duplicates","pending"),("independent_option_evidence","pending")):
+            screening=passed_screening()
+            screening["stages"][name]["status"]=state
+            validator.return_value={"published":False,"clinical_review_required":True,
+                                    "issues":approval_issues(screening,"MC")}
+            raw=json.dumps({"status":"approved_for_bank","notes":"Reviewed citations"}).encode()
+            env={"PATH_INFO":"/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/review",
+                 "REQUEST_METHOD":"POST","HTTP_ORIGIN":"https://staging.srnastudytool.com",
+                 "HTTP_AUTHORIZATION":"Bearer valid","CONTENT_LENGTH":str(len(raw)),
+                 "wsgi.input":io.BytesIO(raw)}
+            statuses=[]
+            result=json.loads(b"".join(self.app(env,lambda status,headers:statuses.append(status))))
+            self.assertEqual(statuses,["422 Unprocessable Entity"])
+            self.assertEqual(result["error"],"draft_validation_required")
+            reviewer.assert_not_called()
+
 class DraftRevisionHttpTests(unittest.TestCase):
     PATH="/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revisions"
     def setUp(self):

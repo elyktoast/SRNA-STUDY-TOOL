@@ -5,7 +5,7 @@ The caller owns the transaction and must verify reviewer identity.
 """
 import json
 from uuid import UUID
-from item_draft_review_contract_v2 import validate_draft, validate_review
+from item_draft_review_contract_v2 import validate_draft, validate_review, approval_issues
 
 # Shared with a read-only PostgreSQL regression: a passage must match the
 # claimed book, and that book must be ready and owned by the primary's owner.
@@ -55,6 +55,21 @@ def review(conn, *, owner_uid, reviewer_uid, draft_id, status, notes):
     owner, reviewer, draft = (str(UUID(str(x))) for x in
                               (owner_uid, reviewer_uid, draft_id))
     with conn.cursor() as cur:
+        if status == "approved_for_bank":
+            # Serialize with any concurrent revision/review. Recheck the saved
+            # automated reports here, even if an HTTP caller omitted validation.
+            cur.execute("""
+              select d.question_format,d.screening_json
+              from source_library_staging.generated_question_drafts_v2 d
+              join source_library_staging.textbooks t on t.id=d.textbook_id
+              where d.id=%s::uuid and d.owner_uid=%s::uuid
+                and t.owner_uid=%s::uuid and t.status='ready'
+                and d.status in ('pending_review','needs_revision')
+              for update of d
+            """, (draft,owner,owner))
+            saved = cur.fetchone()
+            if saved is None or approval_issues(saved[1], saved[0]):
+                raise ValueError("Automated verification must pass before approval")
         cur.execute("""
           update source_library_staging.generated_question_drafts_v2 d
           set status=%s,reviewer_notes=%s,reviewed_by=%s::uuid,

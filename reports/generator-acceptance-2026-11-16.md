@@ -45,6 +45,12 @@ The original alternatives mixed mechanisms involving different named drugs and p
 
 During this run Cloudflare reported an active rollout with idle instances, and authenticated catalog traffic received `instance_allocation_unavailable`. The rollout subsequently cleared and generation ran. The gate now permits bounded authenticated catalog-only warm-up attempts after exact-build quiet time while retaining all rollout/image/health requirements. Warm-up is not a capacity guarantee. A subprocess test proves this path exits before planning or paid generation even if a conflicting paid flag is present.
 
+## Approval-boundary correction
+
+Inspection of the review path found that citation/schema revalidation did not incorporate saved independent-review failures. The corrected revalidator carries forward all required automated stages and rejects missing, pending, flagged, failed or contradictory reports. Human-review pending is expected until the clinician makes the final decision. Numeric items additionally require trusted page-image verification; hotspot items require trusted figure verification. These integrations are still open and are not fabricated by this correction.
+
+The storage review function independently locks the owned draft and rechecks its saved screening before any approval UPDATE, preventing direct callers from omitting the HTTP validation. Revision-needed rows and bulk selections cannot invoke approval from the UI. Tests cover current citation structure passing while saved explanation review fails, missing checks, pending duplicate/independent option reviews, direct storage rejection before mutation and HTTP 422 before review persistence. No real draft was approved to test this boundary.
+
 ## Open acceptance requirements
 
 [Run 43945411972](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43945411972) confirmed the exact-build deployment gate and multi-book preflight (seven books, eight passages), then encountered a TLS connection reset during the first read-only lecture plan. It made no paid generation call and created no draft. The acceptance client now allows at most three attempts for explicitly enumerated read-only planning/readiness operations on transport failures or HTTP 502/503/504. Generation, writes, unknown endpoints, validation/authentication errors, HTTP 429 and HTTP 500 are not retried by this helper.

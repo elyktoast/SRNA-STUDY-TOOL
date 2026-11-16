@@ -2,6 +2,30 @@
 from uuid import UUID
 from item_source_scope_v2 import source_scope
 
+def approval_issues(screening, format):
+    """Saved independent failures cannot be cleared by citation-only validation."""
+    required = {"schema", "deterministic_text", "math", "evidence", "duplicates",
+                "blind_model", "explanation_evidence"}
+    if format in ("MC", "MS"):
+        required.update(("editorial_quality", "options_only", "independent_option_evidence"))
+    elif format == "SA":
+        required.add("page_image_verification")
+    elif format == "HS":
+        required.add("figure_verification")
+    elif format != "DD":
+        return [{"rule_id":"R-7.6", "message":"Unsupported question format cannot be approved"}]
+    stages = screening.get("stages") if isinstance(screening, dict) else None
+    stages = stages if isinstance(stages, dict) else {}
+    names = required | (set(stages) - {"human_review"})
+    issues = []
+    for name in sorted(names):
+        stage = stages.get(name)
+        if (not isinstance(stage, dict) or stage.get("status") != "pass"
+                or stage.get("issues", []) != []):
+            issues.append({"rule_id":"R-12.10", "field":"screening.stages." + name,
+                           "message":"Automated verification must pass before approval: " + name})
+    return issues
+
 def validate_draft(payload):
     if not isinstance(payload, dict):
         raise ValueError("Draft must be an object")
