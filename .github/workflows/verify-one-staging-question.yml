@@ -7,6 +7,11 @@ on:
         type: boolean
         required: true
         default: false
+      format:
+        description: Question format for one paid sample
+        type: choice
+        options: [MC, MS, SA, DD, HS]
+        default: MC
   push:
     branches: [fix/staging-final-acceptance]
     paths:
@@ -19,15 +24,42 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: (github.event_name == 'workflow_dispatch' && inputs.confirm_paid_generation) || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[verify-one-staging-question]'))
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build disposable lecture extraction fixtures
+        run: |
+          python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'python-pptx>=1.0,<2'
+          python - <<'PY'
+          import base64, io, json
+          from pathlib import Path
+          import fitz
+          from pptx import Presentation
+          topics=['Local anesthetic ionization','Local anesthetic onset','Local anesthetic protein binding']
+          pdf=fitz.open()
+          page=pdf.new_page()
+          page.insert_text((50,70),'\n\n'.join('# '+title for title in topics))
+          deck=Presentation()
+          for topic in topics:
+              slide=deck.slides.add_slide(deck.slide_layouts[1])
+              slide.shapes.title.text=topic
+              slide.placeholders[1].text='Learning objective: '+topic
+          pptx=io.BytesIO()
+          deck.save(pptx)
+          fixtures=[{'filename':name,'file_base64':base64.b64encode(data).decode()}
+                    for name,data in [('acceptance-lecture.pdf',pdf.tobytes()),('acceptance-lecture.pptx',pptx.getvalue())]]
+          Path('/tmp/srna-lecture-fixtures.json').write_text(json.dumps(fixtures))
+          pdf.close()
+          PY
       - name: Require settled existing staging deployment without rebuilding
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -39,4 +71,12 @@ jobs:
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-        run: node scripts/verify-one-staging-question.mjs --confirm-paid-generation
+          SRNA_STAGING_ACCEPTANCE_FORMAT: ${{ inputs.format || 'MC' }}
+          SRNA_STAGING_LECTURE_FIXTURES: /tmp/srna-lecture-fixtures.json
+          CONFIRM_PAID_GENERATION: ${{ inputs.confirm_paid_generation }}
+        run: |
+          if [ "$CONFIRM_PAID_GENERATION" = 'true' ]; then
+            node scripts/verify-one-staging-question.mjs --confirm-paid-generation
+          else
+            node scripts/verify-one-staging-question.mjs
+          fi
