@@ -88,7 +88,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(im
     const result = audit(process.cwd(), MANIFESTS, {includeEntries: args.length === 2,
       includeStems: args[0] === '--export-stems'});
     if (!result.ok) {
-      console.error(JSON.stringify({...result, entries: undefined}, null, 2));
+      console.error(JSON.stringify({...result, entries: undefined, stems: undefined}, null, 2));
       process.exitCode = 1;
     } else if (args.length === 2) {
       // Export is a local artifact only; never upload embeddings or alter banks.

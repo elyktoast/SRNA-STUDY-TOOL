@@ -16,7 +16,12 @@
     "AI_EXPLANATION_REVIEW_OPT_IN": "true",
     "AI_AUTHORING_PROVIDER": "cloudflare",
     "STAGING_ACKNOWLEDGMENT_ENABLED": "true",
-    "STAGING_PAGE_APPROVAL_ENABLED": "true"
+    "STAGING_PAGE_APPROVAL_ENABLED": "true",
+    "AI_EMBEDDING_BACKFILL_OPT_IN": "true",
+    "AI_SEMANTIC_EMBEDDING_OPT_IN": "true",
+    "SEMANTIC_INDEX_OWNER_UID": "c003287a-10ce-4cc9-926e-ef7c3a162a26",
+    "SEMANTIC_INDEX_EMBEDDING_MODEL": "@cf/baai/bge-m3",
+    "SEMANTIC_INDEX_INVENTORY_PATH": "/app/canonical-semantic-inventory.json"
   },
   "containers": [
     {
@@ -46,5 +51,8 @@
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
+  },
+  "ai": {
+    "binding": "SEMANTIC_AI"
   }
 }

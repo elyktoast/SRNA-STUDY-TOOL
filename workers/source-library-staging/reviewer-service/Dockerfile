@@ -1,3 +1,11 @@
+FROM node:22-alpine AS canonical-inventory
+WORKDIR /inventory
+COPY scripts/audit-canonical-semantic-inventory.mjs scripts/audit-canonical-semantic-inventory.mjs
+COPY basic-principles/ basic-principles/
+COPY equipment/ equipment/
+COPY pharm/ pharm/
+RUN node scripts/audit-canonical-semantic-inventory.mjs --export /canonical-semantic-inventory.json
+
 FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 STAGING_ONLY=true
 WORKDIR /app
@@ -8,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr t
     && python -c 'import fitz; doc=fitz.open(); page=doc.new_page(); page.get_textpage_ocr(language="eng",dpi=72,full=True); doc.close()' \
     && useradd --system --uid 10001 reviewer
 COPY workers/source-library-staging/scripts/ /app/
+COPY --from=canonical-inventory /canonical-semantic-inventory.json /app/canonical-semantic-inventory.json
 USER reviewer
 # Internal Cloudflare Container listener. No public port mapping or public route.
 # The staging Worker authenticates and forwards only read-only requests.

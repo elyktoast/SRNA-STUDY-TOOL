@@ -11,6 +11,45 @@ const env = {
   AI_BLIND_REVIEW_OPT_IN: 'true', AI_REWRITE_OPT_IN: 'true',
 };
 const endpoint = 'https://example.workers.dev/internal/groq-relay';
+function embeddingRequest(payload,valid=true){
+ const body=JSON.stringify(payload),stamp=String(Math.floor(Date.now()/1000));
+ const signature=valid?createHmac('sha256',secret).update('srna-groq-relay-v1\n'+stamp+'\n'+body).digest('hex'):'0'.repeat(64);
+ return new Request(endpoint,{method:'POST',headers:{'Content-Type':'application/json','X-Relay-Timestamp':stamp,'X-Relay-Signature':signature},body});
+}
+const embeddingPayload={task:'semantic_embeddings',model:'@cf/baai/bge-m3',text:['Synthetic question stem']};
+test('semantic relay requires HMAC and separate opt-in before native model calls',async()=>{
+ let calls=0;const ai={run:async()=>{calls++;throw Error('must not run');}};
+ for(const [request,config,status] of [
+  [embeddingRequest(embeddingPayload,false),{...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:ai},403],
+  [embeddingRequest(embeddingPayload),{...env,SEMANTIC_AI:ai},503],
+  [embeddingRequest(embeddingPayload),{...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true'},503],
+ ])assert.equal((await gateway.fetch(request,config)).status,status);
+ assert.equal(calls,0);
+});
+test('semantic relay bounds input, pins model and returns only validated vectors',async()=>{
+ const vector=[1,...Array(1023).fill(0)],calls=[];
+ const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async(model,body)=>{calls.push({model,body});return {data:[vector],private_provider_field:'never forward'};}}};
+ const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
+ assert.equal(response.status,200);assert.equal(response.headers.get('Cache-Control'),'private, no-store');
+ assert.deepEqual(await response.json(),{model:embeddingPayload.model,shape:[1,1024],data:[vector]});
+ assert.deepEqual(calls,[{model:embeddingPayload.model,body:{text:embeddingPayload.text}}]);
+ for(const body of [{...embeddingPayload,model:'other-model'},{...embeddingPayload,text:['x'.repeat(10001)]},
+  {...embeddingPayload,text:Array(33).fill('x')},{...embeddingPayload,text:Array(32).fill('x'.repeat(5000))},
+  {...embeddingPayload,extra:'forbidden'},{...embeddingPayload,text:['']}]){
+  assert.equal((await gateway.fetch(embeddingRequest(body),config)).status,400);
+ }
+ assert.equal(calls.length,1);
+});
+test('malformed native embedding results and provider failures fail closed without private diagnostics',async()=>{
+ for(const result of [{data:[[1,0]]},{data:[Array(1024).fill(0)]},{data:[[NaN,...Array(1023).fill(0)]]},{data:[]}]){
+  const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async()=>result}};
+  const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
+  assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'provider_failed',rule:'PROVIDER_UPSTREAM'});
+ }
+ const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async()=>{throw Error('private provider response');}}};
+ const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
+ assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:'relay_network'});
+});
 test('429 diagnostics expose only fixed dimensions and bounded numbers; fractional waits round up',async()=>{
  const original=globalThis.fetch;
  globalThis.fetch=async()=>Response.json({error:{message:'Rate limit reached: tokens per day (TPD): Limit 200000, Used 199999, Requested 4000. private token and source text'}},{status:429,headers:{'Retry-After':'2.45','x-ratelimit-remaining-tokens':'8000'}});

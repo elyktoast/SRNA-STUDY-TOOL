@@ -1,5 +1,6 @@
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_draft_review_contract_v2 import validate_draft, validate_review, approval_issues
@@ -10,10 +11,22 @@ BOOK = "2a589498-aaa4-410f-b51a-00d3ab99eafd"
 def passed_screening():
     names = ("schema", "deterministic_text", "math", "evidence", "duplicates", "blind_model",
              "explanation_evidence", "editorial_quality", "options_only", "independent_option_evidence")
-    return {"stages": {**{name:{"status":"pass", "issues":[]} for name in names},
-                       "human_review":{"status":"pending", "issues":[]}}}
+    stages = {**{name:{"status":"pass", "issues":[]} for name in names},
+                       "duplicates":{"status":"pass","issues":[],"search_complete":True,
+                                     "index_id":"question_semantic_index_v2:@cf/baai/bge-m3:"+'a'*64},
+                       "human_review":{"status":"pending", "issues":[]}}
+    return {'stages':stages}
 
 class DraftReviewTests(unittest.TestCase):
+    def test_exact_only_or_stale_semantic_reports_cannot_authorize_approval(self):
+        screening=passed_screening()
+        screening['stages']['duplicates']={'status':'pass','issues':[]}
+        self.assertTrue(approval_issues(screening,'MC'))
+        with patch.dict('os.environ',{'AI_SEMANTIC_EMBEDDING_OPT_IN':'true','SEMANTIC_INDEX_INVENTORY_PATH':'trusted-path'}), patch('item_semantic_inventory_reconcile_v2.load_inventory',return_value=({},'b'*64)):
+            self.assertTrue(any('bank changed' in issue['message'] for issue in approval_issues(passed_screening(),'MC')))
+            screening=passed_screening()
+            screening['stages']['duplicates']['index_id']='question_semantic_index_v2:@cf/baai/bge-m3:'+'b'*64
+            self.assertEqual(approval_issues(screening,'MC'),[])
     def test_approval_requires_all_saved_automated_checks_but_allows_pending_human_review(self):
         self.assertEqual(approval_issues(passed_screening(), "MC"), [])
         for name in passed_screening()["stages"]:

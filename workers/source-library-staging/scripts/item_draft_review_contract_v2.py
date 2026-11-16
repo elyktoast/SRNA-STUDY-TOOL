@@ -1,6 +1,8 @@
 """Validation contract for private staging question drafts; no network or database writes."""
 from uuid import UUID
 from item_source_scope_v2 import source_scope
+import os
+import re
 
 def approval_issues(screening, format):
     """Saved independent failures cannot be cleared by citation-only validation."""
@@ -24,6 +26,20 @@ def approval_issues(screening, format):
                 or stage.get("issues", []) != []):
             issues.append({"rule_id":"R-12.10", "field":"screening.stages." + name,
                            "message":"Automated verification must pass before approval: " + name})
+    duplicate = stages.get('duplicates')
+    identifier = duplicate.get('index_id') if isinstance(duplicate,dict) else None
+    expected_prefix = 'question_semantic_index_v2:@cf/baai/bge-m3:'
+    if (not isinstance(duplicate,dict) or duplicate.get('search_complete') is not True
+            or not isinstance(identifier,str) or not identifier.startswith(expected_prefix)
+            or re.fullmatch('[a-f0-9]{64}',identifier[len(expected_prefix):]) is None):
+        issues.append({'rule_id':'R-12.10','field':'screening.stages.duplicates',
+                       'message':'Complete versioned canonical semantic search required before approval'})
+    elif os.environ.get('AI_SEMANTIC_EMBEDDING_OPT_IN') == 'true':
+        from item_semantic_inventory_reconcile_v2 import load_inventory
+        _,current_digest=load_inventory(os.environ.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
+        if identifier != expected_prefix+current_digest:
+            issues.append({'rule_id':'R-12.10','field':'screening.stages.duplicates',
+                           'message':'Canonical bank changed; semantic review must be repeated'})
     return issues
 
 def validate_draft(payload):
