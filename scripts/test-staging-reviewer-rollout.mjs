@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {settled} from './wait-staging-reviewer-rollout.mjs';
+import {settled,completedWorkerBuild} from './wait-staging-reviewer-rollout.mjs';
 const now=200000,started=0,app={updated_at:new Date(100000).toISOString(),configuration:{image:'new-image'},health:{errors:[]}};
 test('rollout gate rejects the early ready window that interrupted generation',()=>{
  assert.equal(settled(app,[],80000,started),false);
@@ -19,4 +19,17 @@ test('failed state and missing or invalid metadata fail closed',()=>{
  assert.equal(settled({...app,updated_at:'invalid'},[],now,started),false);
  assert.equal(settled({...app,health:{errors:[{}]}},[],now,started),false);
  assert.equal(settled(app,null,now,started),false);
+});
+
+const sha='a'.repeat(40),finished={id:1,head_sha:sha,name:'Workers Builds: srna-source-reviewer-gateway-staging',app:{slug:'cloudflare-workers-and-pages'},status:'completed',conclusion:'success',completed_at:new Date(100000).toISOString()};
+test('old settled container cannot authorize a commit whose build is still running',()=>{
+ assert.equal(completedWorkerBuild([{...finished,status:'in_progress',conclusion:null}],sha),null);
+ assert.equal(completedWorkerBuild([finished],'b'.repeat(40)),null);
+ assert.equal(completedWorkerBuild([{...finished,app:{slug:'untrusted'}}],sha),null);
+ assert.equal(completedWorkerBuild([finished],sha),100000);
+ assert.equal(settled(app,[],now,started,180000),false);
+ assert.equal(settled(app,[],now,started,100000),true);
+});
+test('latest failed build is not hidden behind an older success',()=>{
+ assert.equal(completedWorkerBuild([finished,{...finished,id:2,conclusion:'failure'}],sha),null);
 });
