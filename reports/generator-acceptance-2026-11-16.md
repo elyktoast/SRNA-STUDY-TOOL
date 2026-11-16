@@ -51,6 +51,16 @@ Inspection of the review path found that citation/schema revalidation did not in
 
 The storage review function independently locks the owned draft and rechecks its saved screening before any approval UPDATE, preventing direct callers from omitting the HTTP validation. Revision-needed rows and bulk selections cannot invoke approval from the UI. Tests cover current citation structure passing while saved explanation review fails, missing checks, pending duplicate/independent option reviews, direct storage rejection before mutation and HTTP 422 before review persistence. No real draft was approved to test this boundary.
 
+## Cloudflare canonical duplicate-index integration
+
+The current canonical export contains 9,000 IDs, 8,527 distinct stem hashes and 1,001,691 total stem characters; the longest stem is 3,199 characters. The existing private index migration is now applied to staging, with RLS enabled and no anonymous/authenticated table grants. It is not yet populated by this code change.
+
+The new integration uses only `@cf/baai/bge-m3` through an authenticated, model-pinned native Workers AI binding. Gemini is absent from the active runtime embedding factory. Batches are bounded to 32 stems, 10,000 characters per stem and 128,000 total characters. Only finite nonzero 1,024-dimensional vectors are accepted. The resumable writer checks ownership, hashes, model and dimensions before paid calls, commits validated batches independently, and verifies complete canonical coverage before claiming readiness. It emits counts only and uploads no stem/vector artifacts.
+
+The container builds its own IDs/hash inventory from the exact course manifests; it does not contain canonical stem text in that inventory. Completed generation checkpoints and semantic screening reports bind to its inventory digest. Approval rejects exact-only checks or semantic results from a different canonical bank version. Paid acceptance now requires complete matching runtime/index inventories before authoring and a passed duplicate stage afterward.
+
+Unit verification: 1,027 Python tests (four skipped), 188 Node checks and repository/diff checks passed. Failure injection covers interruption/resume, ownership conflicts, stale hashes/models/dimensions, malformed vectors, unsigned or oversized relay requests, private export error logging and stale approval reports. The live indexing workflow also verifies an exact canonical-stem positive control and an unrelated-text negative control through the same full-bank lookup and cosine scorer. Live population, native binding response shape, complete reconciliation and a real generated candidate still require deployed verification.
+
 ## Open acceptance requirements
 
 [Run 43945411972](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43945411972) confirmed the exact-build deployment gate and multi-book preflight (seven books, eight passages), then encountered a TLS connection reset during the first read-only lecture plan. It made no paid generation call and created no draft. The acceptance client now allows at most three attempts for explicitly enumerated read-only planning/readiness operations on transport failures or HTTP 502/503/504. Generation, writes, unknown endpoints, validation/authentication errors, HTTP 429 and HTTP 500 are not retried by this helper.

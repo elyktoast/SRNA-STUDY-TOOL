@@ -1,7 +1,7 @@
 // Only these operations have an explicit no-write/no-model contract.
 const readOnlyPaths=new Set([
  '/generation/textbooks','/generation/preflight','/generation/lecture-file-plan',
- '/generation/lecture-plan','/generation/checkpoint-readiness','/generation/provider-check'
+ '/generation/lecture-plan','/generation/checkpoint-readiness','/generation/provider-check','/generation/index-readiness'
 ]);
 function transient(error){
  return [502,503,504].includes(error?.status)||

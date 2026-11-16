@@ -81,6 +81,8 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 if (not isinstance(embedding, (list, tuple))
                         or not 2 <= len(embedding) <= 4096):
                     raise ValueError("Invalid indexed embedding")
+                if embedding_model == '@cf/baai/bge-m3' and len(embedding) != 1024:
+                    raise ValueError('Invalid Cloudflare embedding dimensions')
                 # Bound magnitude before cosine: finite float components can
                 # still overflow during squaring and yield a false similarity.
                 if any(type(v) not in (int, float) or not math.isfinite(v)

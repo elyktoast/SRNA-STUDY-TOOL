@@ -128,6 +128,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     neighbors=neighbors)
     result = review["draft_reviews"][0]
     screening = result["screening"]
+    if semantic_lookup is not None and not semantic_lookup_failed:
+        screening["stages"]["duplicates"].update(search_complete=True,index_id=pair["index_id"])
     if semantic_lookup_failed or (semantic_lookup is None and embedding is None):
         # A stem-only or absent-index check is not an exhaustive semantic search.
         screening["stages"]["duplicates"] = {

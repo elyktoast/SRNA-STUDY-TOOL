@@ -81,6 +81,18 @@ class LiveBridgeTests(unittest.TestCase):
         self.conn.cursor.assert_not_called()
         embed.assert_not_called()
 
+    def test_cloudflare_native_index_binds_digest_without_implicit_embedding(self):
+        vector=[1.0]+[0.0]*1023
+        embed=Mock(return_value=vector)
+        self.cur.fetchall.side_effect=[[("prior-1",HASH,vector)],[("prior-1",vector,HASH)]]
+        callback=build_semantic_lookup(self.conn,owner_uid=OWNER,
+            env={**self.env,'SEMANTIC_INDEX_EMBEDDING_MODEL':'@cf/baai/bge-m3'},embed=embed)
+        embed.assert_not_called()
+        result=callback({'item_id':'new-draft','stem':'Synthetic candidate'})
+        self.assertTrue(result['search_complete'])
+        self.assertRegex(result['index_id'],r'^question_semantic_index_v2:@cf/baai/bge-m3:[a-f0-9]{64}$')
+        embed.assert_called_once_with('Synthetic candidate')
+
     def test_incomplete_index_leaves_screening_pending_without_paid_call(self):
         embed = Mock()
         self.cur.fetchall.return_value = []

@@ -2,6 +2,10 @@ name: Explicit staging one-question acceptance
 on:
   workflow_dispatch:
     inputs:
+      backfill_semantic_index:
+        description: Populate the private Cloudflare duplicate index; no question generation
+        type: boolean
+        default: false
       confirm_paid_generation:
         description: Generate and save one unpublished staging question
         type: boolean
@@ -50,6 +54,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Build disposable lecture extraction fixtures
+        if: ${{ !inputs.backfill_semantic_index }}
         run: |
           python -m pip install --disable-pip-version-check 'pymupdf>=1.24,<2' 'python-pptx>=1.0,<2'
           python - <<'PY'
@@ -74,6 +79,7 @@ jobs:
           pdf.close()
           PY
       - name: Require settled existing staging deployment without rebuilding
+        if: ${{ !inputs.backfill_semantic_index }}
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -84,6 +90,7 @@ jobs:
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
         run: node scripts/wait-staging-reviewer-rollout.mjs
       - name: Verify exactly one indexed question and unpublished persistence
+        if: ${{ !inputs.backfill_semantic_index }}
         env:
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
@@ -101,3 +108,19 @@ jobs:
           else
             node scripts/verify-one-staging-question.mjs
           fi
+      - name: Populate and reconcile private Cloudflare semantic index
+        if: ${{ inputs.backfill_semantic_index }}
+        env:
+          STAGING_ONLY: 'true'
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+          SEMANTIC_INDEX_OWNER_UID: c003287a-10ce-4cc9-926e-ef7c3a162a26
+          PYTHONPATH: workers/source-library-staging/scripts
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
+          source_file="$(mktemp /tmp/srna-semantic-source.XXXXXX.json)"
+          rm "$source_file"
+          trap 'rm -f "$source_file"' EXIT
+          node scripts/audit-canonical-semantic-inventory.mjs --export-stems "$source_file"
+          python workers/source-library-staging/scripts/backfill_cloudflare_semantic_index_v2.py "$source_file" --apply --max-new 10000

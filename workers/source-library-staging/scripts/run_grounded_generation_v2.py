@@ -135,7 +135,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
+    semantic_contract = None
+    if env.get('AI_SEMANTIC_EMBEDDING_OPT_IN') == 'true':
+        from item_semantic_inventory_reconcile_v2 import load_inventory
+        _,inventory_digest = load_inventory(env.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
+        semantic_contract = {'model':env.get('SEMANTIC_INDEX_EMBEDDING_MODEL'), 'inventory_digest':inventory_digest}
+        summary['semantic_inventory'] = semantic_contract
     request_hash = fingerprint({"authoring_contract": "2026-11-11-v21", "owner_uid": args.owner_uid, "topic": args.topic,
+        "semantic_contract":semantic_contract,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
         **({'mc_planning_contract': '2026-11-16-flexible-v3'} if args.format == 'MC' else {}),

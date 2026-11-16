@@ -91,6 +91,10 @@ assert.equal(preflight.authoring_contract,'2026-11-11-v21');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 if(!paid){console.log('Read-only generator acceptance passed; no model calls or draft writes');process.exit(0);}
+const semanticReady=await call('/generation/index-readiness');
+assert.equal(semanticReady.ready,true,'Complete canonical semantic index required before paid acceptance');
+assert.equal(semanticReady.inventory_digest,preflight.semantic_inventory?.inventory_digest,'Runtime and indexed canonical inventory differ');
+console.log(JSON.stringify({check:'semantic_index_readiness',expected_count:semanticReady.expected_count,indexed_count:semanticReady.indexed_count,ready:true}));
 const checkpointReady=await call('/generation/checkpoint-readiness');
 assert.equal(checkpointReady.ready,true,'Existing checkpoint storage is unavailable');
 assert.ok(preflight.resume,'Runtime checkpoint recovery is disabled');
@@ -126,6 +130,7 @@ assert.equal(stages.explanation_evidence,'pass','Concept and rationale source re
 assert.equal(stages.schema,'pass','Generated schema did not pass');
 assert.equal(stages.deterministic_text,'pass','Deterministic wording screening did not pass');
 assert.equal(stages.evidence,'pass','Evidence validation did not pass');
+assert.equal(stages.duplicates,'pass','Canonical semantic duplicate screening did not pass');
 assert.equal(stages.blind_model,'pass','Independent blind review did not pass');
 if(['MC','MS'].includes(format)){
 assert.equal(stages.independent_option_evidence,'pass','Independent source-grounded option review did not complete');

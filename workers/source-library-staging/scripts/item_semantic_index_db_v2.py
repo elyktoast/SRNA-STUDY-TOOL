@@ -10,9 +10,11 @@ from item_semantic_duplicates import cosine
 MAX_ROWS = 10000
 PAGE_SIZE = 1000
 
-def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None, expected_stem_hashes=None):
+def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None, expected_stem_hashes=None, inventory_digest=None):
     if index_ready is not True:
         raise ValueError("Semantic index not verified")
+    if inventory_digest is not None and (not isinstance(inventory_digest,str) or re.fullmatch('[a-f0-9]{64}',inventory_digest) is None):
+        raise ValueError("Invalid semantic inventory digest")
     if (not isinstance(expected_item_ids, (set, frozenset)) or not expected_item_ids
             or not all(isinstance(x, str) and x.strip() for x in expected_item_ids)
             or len(expected_item_ids) > MAX_ROWS):
@@ -81,5 +83,5 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
             cosine(vector, neighbor)
             neighbors.append({"item_id": item_id, "embedding": neighbor})
         return {"embedding": vector, "neighbors": neighbors,
-                "search_complete": True, "index_id": "question_semantic_index_v2:" + embedding_model}
+                "search_complete": True, "index_id": "question_semantic_index_v2:" + embedding_model + (":" + inventory_digest if inventory_digest else "")}
     return semantic_lookup

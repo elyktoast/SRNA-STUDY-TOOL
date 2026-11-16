@@ -135,13 +135,14 @@ def build_app():
         if (os.environ.get("AI_GENERATION_OPT_IN") != "true"
                 or os.environ.get("AI_SEMANTIC_EMBEDDING_OPT_IN") != "true"):
             return None
-        from item_semantic_live_bridge_v2 import make_gemini_embed, build_semantic_lookup
-        embed = make_gemini_embed(
-            api_key=os.environ.get("AI_SEMANTIC_GEMINI_API_KEY", ""),
-            model=os.environ.get("SEMANTIC_INDEX_EMBEDDING_MODEL"),
-            enabled=True)
+        from item_semantic_live_bridge_v2 import build_semantic_lookup
+        from item_cloudflare_embeddings_v2 import MODEL, make_embed_many
+        if os.environ.get("SEMANTIC_INDEX_EMBEDDING_MODEL") != MODEL:
+            raise ValueError("Cloudflare semantic embedding model required")
+        embed_many = make_embed_many(enabled=True,
+            relay_secret=os.environ.get("STAGING_RECEIPT_SIGNING_SECRET"))
         return build_semantic_lookup(
-            db_conn, owner_uid=owner, env=os.environ, embed=embed)
+            db_conn, owner_uid=owner, env=os.environ, embed=lambda stem:embed_many([stem])[0])
 
     generation = generation_app(
         conn_factory=lambda: psycopg.connect(os.environ["STAGING_DATABASE_URL"],

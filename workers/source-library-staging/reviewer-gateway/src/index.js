@@ -1,4 +1,23 @@
 // Staging-only gateway for a private reviewer container binding.
+// Called only after the existing private relay's HMAC authentication.
+export const SEMANTIC_MODEL='@cf/baai/bge-m3';
+export async function semanticEmbeddings(payload,env){
+ const reply=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+ if(env.STAGING_ONLY!=='true'||env.AI_EMBEDDING_RELAY_OPT_IN!=='true'||!env.SEMANTIC_AI?.run)return reply(503,{error:'relay_disabled'});
+ if(!payload||Object.keys(payload).sort().join(',')!=='model,task,text'||payload.task!=='semantic_embeddings'||payload.model!==SEMANTIC_MODEL
+  ||!Array.isArray(payload.text)||payload.text.length<1||payload.text.length>32
+  ||payload.text.some(t=>typeof t!=='string'||!t.trim()||t.length>10000)
+  ||payload.text.reduce((n,t)=>n+t.length,0)>128000)return reply(400,{error:'invalid_provider_payload'});
+ try{
+  const result=await env.SEMANTIC_AI.run(SEMANTIC_MODEL,{text:payload.text});
+  const data=result?.data;
+  if(!Array.isArray(data)||data.length!==payload.text.length||data.some(v=>!Array.isArray(v)||v.length!==1024||v.some(x=>typeof x!=='number'||!Number.isFinite(x)||Math.abs(x)>1e100)||!v.some(x=>x!==0)))
+   return reply(502,{error:'provider_failed',rule:'PROVIDER_UPSTREAM'});
+  // Never log question stems, vectors, provider responses or credentials.
+  return reply(200,{model:SEMANTIC_MODEL,shape:[data.length,1024],data});
+ }catch{return reply(503,{error:'relay_network'});}
+}
+
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
@@ -79,6 +98,7 @@ async function relayGroq(request,env){
  let mismatch=0;for(let i=0;i<32;i++)mismatch|=expected[i]^received[i];
  if(mismatch)return respond(403,null,'{"error":"forbidden"}');
  let payload;try{payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{return respond(400,null,'{"error":"invalid_json"}')}
+ if(payload?.task==='semantic_embeddings')return semanticEmbeddings(payload,env);
  if(payload?.diagnostic==='groq_models'&&Object.keys(payload).length===1){
   try{
    const response=await fetch('https://api.groq.com/openai/v1/models',{method:'GET',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY},redirect:'manual',signal:AbortSignal.timeout(8000)});
@@ -373,6 +393,10 @@ export default {
      if(typeof env.AI_EDITORIAL_REVIEWER_MODEL==='string'&&env.AI_EDITORIAL_REVIEWER_MODEL.trim()&&env.AI_EDITORIAL_REVIEWER_MODEL!==env.AI_GENERATOR_MODEL)envVars.AI_EDITORIAL_REVIEWER_MODEL=env.AI_EDITORIAL_REVIEWER_MODEL;
     }
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
+    if(env.AI_SEMANTIC_EMBEDDING_OPT_IN==='true'){
+     envVars.AI_SEMANTIC_EMBEDDING_OPT_IN='true';
+     for(const name of ['SEMANTIC_INDEX_OWNER_UID','SEMANTIC_INDEX_EMBEDDING_MODEL','SEMANTIC_INDEX_INVENTORY_PATH'])envVars[name]=env[name]||'';
+    }
     if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
    }
    await container.startAndWaitForPorts({startOptions:{envVars}});

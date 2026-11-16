@@ -23,6 +23,12 @@ def connection(pages):
 
 
 class ReconcileTests(unittest.TestCase):
+    def test_cloudflare_index_requires_model_specific_dimensions(self):
+        conn,_=connection([[('a',HASH,[1.0,0.0])]])
+        with self.assertRaisesRegex(ValueError,'Cloudflare embedding dimensions'):
+            reconcile(conn,owner_uid=OWNER,embedding_model='@cf/baai/bge-m3',inventory={'a':HASH})
+        conn,_=connection([[('a',HASH,[1.0]+[0.0]*1023)]])
+        self.assertTrue(reconcile(conn,owner_uid=OWNER,embedding_model='@cf/baai/bge-m3',inventory={'a':HASH})['ready'])
     def test_complete_index(self):
         conn, cur = connection([[("a", HASH, [1.0, 0.0]), ("b", HASH, [1.0, 0.0])]])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
