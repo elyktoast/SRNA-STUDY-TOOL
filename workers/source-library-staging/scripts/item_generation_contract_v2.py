@@ -84,6 +84,8 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "and refute every distractor under each case, rather than rely on silence or an invented primary/secondary ranking. "
             "For paired responses, trace determinants of both components; an unchanged determinant cannot cancel a changed shared determinant. "
             "Describe causes/events and necessary qualifiers without putting the expected answer in the condition. "
+            "For increased/decreased responses, state the comparison baseline explicitly and keep it fixed under the changed case. "
+            "Absence of an adverse condition does not establish excellent efficacy, normality or safety; require affirmative support. "
             "Put every condition-dependent finding inside its complete replaceable condition phrase, not elsewhere in the draft. "
             "The original stem must contain only its original case. Quote the exact original and alternate phrases in counterfactual "
             "and identify the changed response. Explain the supported mechanism concisely. Relevance states its direct clinical importance "
