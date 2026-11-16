@@ -1,7 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
 import {settled,completedWorkerBuild,needsReadOnlyWarmup} from './wait-staging-reviewer-rollout.mjs';
 const now=200000,started=0,app={updated_at:new Date(100000).toISOString(),configuration:{image:'new-image'},health:{errors:[]}};
+test('warm-up CLI exits after identity and catalog even when a paid flag is present',()=>{
+ const script=new URL('./verify-one-staging-question.mjs',import.meta.url).href;
+ const source=`
+ process.env.STAGING_SUPABASE_ANON_KEY='synthetic-key';
+ process.env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN='synthetic-session';
+ process.env.STAGING_TEST_ADMIN_EMAIL='';process.env.STAGING_TEST_ADMIN_PASSWORD='';
+ process.argv.push('--warmup-only','--confirm-paid-generation');
+ let calls=0;
+ globalThis.fetch=async url=>{
+  calls++;
+  if(calls===1&&url==='https://xqyasyambwdyhsjkftqu.supabase.co/auth/v1/user')
+   return Response.json({id:'c003287a-10ce-4cc9-926e-ef7c3a162a26'});
+  if(calls===2&&url==='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/textbooks')
+   return Response.json({textbooks:[]});
+  throw Error('Unexpected operation after catalog warm-up');
+ };
+ await import(${JSON.stringify(script)});throw Error('Warm-up failed to exit');`;
+ const output=execFileSync(process.execPath,['--input-type=module','--eval',source],{encoding:'utf8'});
+ assert.match(output,/Authenticated read-only staging warm-up completed/);
+ assert.doesNotMatch(output,/acceptance_item_id|draft_id/);
+});
 test('idle active rollout permits only a read-only warm-up after exact-build quiet period',()=>{
  const idle=[{status:{state:'inactive'}}],active={...app,active_rollout_id:'rollout'};
  assert.equal(needsReadOnlyWarmup(active,idle,now,100000),true);
