@@ -16,8 +16,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends tesseract-ocr t
     && python -c 'import fitz; doc=fitz.open(); page=doc.new_page(); page.get_textpage_ocr(language="eng",dpi=72,full=True); doc.close()' \
     && useradd --system --uid 10001 reviewer
 COPY workers/source-library-staging/scripts/ /app/
-COPY --from=canonical-inventory /canonical-semantic-inventory.json /app/canonical-semantic-inventory.json
+COPY --from=canonical-inventory --chown=10001 /canonical-semantic-inventory.json /app/canonical-semantic-inventory.json
 USER reviewer
+RUN python -c 'from item_semantic_inventory_reconcile_v2 import load_inventory; inventory,digest=load_inventory("/app/canonical-semantic-inventory.json"); assert inventory'
 # Internal Cloudflare Container listener. No public port mapping or public route.
 # The staging Worker authenticates and forwards only read-only requests.
 CMD ["gunicorn","--bind","0.0.0.0:8789","--workers","1","--threads","2","--timeout","120","source_review_wsgi_v2:app"]
