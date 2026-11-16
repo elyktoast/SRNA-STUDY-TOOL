@@ -3,7 +3,7 @@
 export const SEMANTIC_MODEL='@cf/baai/bge-m3';
 export async function semanticEmbeddings(payload,env){
  const reply=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
- if(env.STAGING_ONLY!=='true'||env.AI_EMBEDDING_BACKFILL_OPT_IN!=='true'||!env.SEMANTIC_AI?.run)return reply(503,{error:'relay_disabled'});
+ if(env.STAGING_ONLY!=='true'||env.AI_EMBEDDING_RELAY_OPT_IN!=='true'||!env.SEMANTIC_AI?.run)return reply(503,{error:'relay_disabled'});
  if(!payload||Object.keys(payload).sort().join(',')!=='model,task,text'||payload.task!=='semantic_embeddings'||payload.model!==SEMANTIC_MODEL
   ||!Array.isArray(payload.text)||payload.text.length<1||payload.text.length>32
   ||payload.text.some(t=>typeof t!=='string'||!t.trim()||t.length>10000)

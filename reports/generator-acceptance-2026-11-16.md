@@ -59,7 +59,7 @@ The new integration uses only `@cf/baai/bge-m3` through an authenticated, model-
 
 The container builds its own IDs/hash inventory from the exact course manifests; it does not contain canonical stem text in that inventory. Completed generation checkpoints and semantic screening reports bind to its inventory digest. Approval rejects exact-only checks or semantic results from a different canonical bank version. Paid acceptance now requires complete matching runtime/index inventories before authoring and a passed duplicate stage afterward.
 
-Unit verification: 1,025 Python tests (four skipped), 188 Node checks and repository/diff checks passed. Failure injection covers interruption/resume, ownership conflicts, stale hashes/models/dimensions, malformed vectors, unsigned or oversized relay requests, private export error logging and stale approval reports. Live population, native binding response shape, complete reconciliation and a real generated candidate still require deployed verification.
+Unit verification: 1,027 Python tests (four skipped), 188 Node checks and repository/diff checks passed. Failure injection covers interruption/resume, ownership conflicts, stale hashes/models/dimensions, malformed vectors, unsigned or oversized relay requests, private export error logging and stale approval reports. The live indexing workflow also verifies an exact canonical-stem positive control and an unrelated-text negative control through the same full-bank lookup and cosine scorer. Live population, native binding response shape, complete reconciliation and a real generated candidate still require deployed verification.
 
 ## Open acceptance requirements
 

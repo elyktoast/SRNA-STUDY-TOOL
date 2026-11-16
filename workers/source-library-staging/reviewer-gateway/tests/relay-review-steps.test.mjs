@@ -20,15 +20,15 @@ const embeddingPayload={task:'semantic_embeddings',model:'@cf/baai/bge-m3',text:
 test('semantic relay requires HMAC and separate opt-in before native model calls',async()=>{
  let calls=0;const ai={run:async()=>{calls++;throw Error('must not run');}};
  for(const [request,config,status] of [
-  [embeddingRequest(embeddingPayload,false),{...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:ai},403],
+  [embeddingRequest(embeddingPayload,false),{...env,AI_EMBEDDING_RELAY_OPT_IN:'true',SEMANTIC_AI:ai},403],
   [embeddingRequest(embeddingPayload),{...env,SEMANTIC_AI:ai},503],
-  [embeddingRequest(embeddingPayload),{...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true'},503],
+  [embeddingRequest(embeddingPayload),{...env,AI_EMBEDDING_RELAY_OPT_IN:'true'},503],
  ])assert.equal((await gateway.fetch(request,config)).status,status);
  assert.equal(calls,0);
 });
 test('semantic relay bounds input, pins model and returns only validated vectors',async()=>{
  const vector=[1,...Array(1023).fill(0)],calls=[];
- const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async(model,body)=>{calls.push({model,body});return {data:[vector],private_provider_field:'never forward'};}}};
+ const config={...env,AI_EMBEDDING_RELAY_OPT_IN:'true',SEMANTIC_AI:{run:async(model,body)=>{calls.push({model,body});return {data:[vector],private_provider_field:'never forward'};}}};
  const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
  assert.equal(response.status,200);assert.equal(response.headers.get('Cache-Control'),'private, no-store');
  assert.deepEqual(await response.json(),{model:embeddingPayload.model,shape:[1,1024],data:[vector]});
@@ -42,11 +42,11 @@ test('semantic relay bounds input, pins model and returns only validated vectors
 });
 test('malformed native embedding results and provider failures fail closed without private diagnostics',async()=>{
  for(const result of [{data:[[1,0]]},{data:[Array(1024).fill(0)]},{data:[[NaN,...Array(1023).fill(0)]]},{data:[]}]){
-  const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async()=>result}};
+  const config={...env,AI_EMBEDDING_RELAY_OPT_IN:'true',SEMANTIC_AI:{run:async()=>result}};
   const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
   assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'provider_failed',rule:'PROVIDER_UPSTREAM'});
  }
- const config={...env,AI_EMBEDDING_BACKFILL_OPT_IN:'true',SEMANTIC_AI:{run:async()=>{throw Error('private provider response');}}};
+ const config={...env,AI_EMBEDDING_RELAY_OPT_IN:'true',SEMANTIC_AI:{run:async()=>{throw Error('private provider response');}}};
  const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
  assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:'relay_network'});
 });

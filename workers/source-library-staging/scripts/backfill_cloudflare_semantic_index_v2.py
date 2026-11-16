@@ -11,6 +11,8 @@ from backfill_semantic_embeddings_v2 import load_source
 from import_semantic_index_v2 import validate_staging_db_url
 from item_cloudflare_embeddings_v2 import MODEL, make_embed_many, valid_vector
 from item_semantic_inventory_reconcile_v2 import reconcile
+from item_semantic_live_bridge_v2 import build_semantic_lookup
+from item_semantic_duplicates import screen
 
 def backfill(conn, source_path, *, owner_uid, embed_many, apply=False, max_new=32):
     owner=str(UUID(owner_uid))
@@ -73,6 +75,25 @@ def backfill(conn, source_path, *, owner_uid, embed_many, apply=False, max_new=3
         result['complete']=verified['ready']
     return result
 
+def verify_controls(conn, source_path, *, owner_uid, embed_many):
+    source,stems=load_source(source_path)
+    env={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_SEMANTIC_EMBEDDING_OPT_IN':'true',
+         'SEMANTIC_INDEX_OWNER_UID':owner_uid,'SEMANTIC_INDEX_EMBEDDING_MODEL':MODEL,
+         'SEMANTIC_INDEX_INVENTORY_PATH':str(source_path)}
+    lookup=build_semantic_lookup(conn,owner_uid=owner_uid,env=env,embed=lambda stem:embed_many([stem])[0])
+    if lookup is None:
+        raise ValueError('Complete canonical index required for controls')
+    known_id=source['entries'][0]['item_id']
+    known=lookup({'item_id':'semantic-control-known-duplicate','stem':stems[known_id]})
+    matches=screen(known['embedding'],known['neighbors'])
+    if not any(x['item_id']==known_id and x['similarity']>=0.99 for x in matches):
+        raise ValueError('Known duplicate control failed')
+    unrelated=lookup({'item_id':'semantic-control-unrelated','stem':'A ceramic teapot decorated with geometric stars sits beside a watercolor landscape in an art studio.'})
+    if screen(unrelated['embedding'],unrelated['neighbors']):
+        raise ValueError('Unrelated semantic control failed')
+    return {'check':'semantic_controls','canonical_items':source['item_count'],'known_duplicate_detected':True,
+            'unrelated_control_matches':0,'threshold':0.85,'model':MODEL,'question_generation':False,'draft_writes':False}
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('source')
@@ -89,6 +110,8 @@ def main():
         with psycopg.connect(url,connect_timeout=8,sslmode='require') as conn:
             result=backfill(conn,args.source,owner_uid=os.environ.get('SEMANTIC_INDEX_OWNER_UID',''),
                             embed_many=embed,apply=args.apply,max_new=args.max_new)
+            if args.apply and result['complete']:
+                print(json.dumps(verify_controls(conn,args.source,owner_uid=os.environ.get('SEMANTIC_INDEX_OWNER_UID',''),embed_many=embed)),flush=True)
         print(json.dumps(result,sort_keys=True))
         return 0 if result['complete'] or not args.apply else 1
     except Exception:

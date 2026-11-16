@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from backfill_cloudflare_semantic_index_v2 import backfill
+from backfill_cloudflare_semantic_index_v2 import backfill, verify_controls
 from item_cloudflare_embeddings_v2 import MODEL
 
 OWNER='c003287a-10ce-4cc9-926e-ef7c3a162a26'
@@ -89,3 +89,19 @@ class CloudflareBackfillTests(unittest.TestCase):
             conn=Conn();conn.rows['item-0']=('item-0',OWNER,stem_hash,model,vector)
             result=backfill(conn,self.path,owner_uid=OWNER,embed_many=lambda texts:self.fail('no call'))
             self.assertEqual(result['existing'],0)
+
+    @patch('backfill_cloudflare_semantic_index_v2.build_semantic_lookup')
+    def test_live_controls_require_known_duplicate_and_unrelated_negative(self,builder):
+        orthogonal=[0.0,1.0]+[0.0]*1022
+        def lookup(item):
+            return {'embedding':VECTOR if item['item_id'].endswith('duplicate') else orthogonal,
+                    'neighbors':[{'item_id':'item-0','embedding':VECTOR}]}
+        builder.return_value=lookup
+        result=verify_controls(Conn(),self.path,owner_uid=OWNER,embed_many=lambda texts:self.fail('factory mocked'))
+        self.assertTrue(result['known_duplicate_detected']);self.assertEqual(result['unrelated_control_matches'],0)
+        builder.return_value=lambda item:{'embedding':orthogonal,'neighbors':[{'item_id':'item-0','embedding':VECTOR}]}
+        with self.assertRaisesRegex(ValueError,'Known duplicate control failed'):
+            verify_controls(Conn(),self.path,owner_uid=OWNER,embed_many=lambda texts:[])
+        builder.return_value=lambda item:{'embedding':VECTOR,'neighbors':[{'item_id':'item-0','embedding':VECTOR}]}
+        with self.assertRaisesRegex(ValueError,'Unrelated semantic control failed'):
+            verify_controls(Conn(),self.path,owner_uid=OWNER,embed_many=lambda texts:[])
