@@ -186,7 +186,7 @@ test('checkpoint readiness is a private read-only staging diagnostic, not genera
 
 
 test('generator labels retain canonical five formats and evidence count follows pipeline shape',()=>{
- for(const [code,label] of [['MC','Single best answer'],['MS','Select all that apply'],['SA','Short answer'],['DD','Drag and drop'],['HS','Hotspot']]){
+ for(const [code,label] of [['MC','Single best answer'],['MS','Multiple response (select 2 or 3)'],['SA','Short answer'],['DD','Drag and drop'],['HS','Hotspot']]){
   assert.ok(ui.includes('<option value="'+code+'">'+label+'</option>'),code);
  }
  assert.ok(ui.includes('result.source_evidence.passage_ids.length'));
@@ -254,4 +254,31 @@ test('explicit objective selection sets matching tags and invalidates previous e
  context.checkedEvidence={topic:'previous'};select.value='invalid';select.listeners.change();
  assert.equal(node('sl-gen-objective').value,'');assert.equal(node('sl-gen-domain').value,'');
  assert.equal(context.checkedEvidence,null);
+});
+
+test('generated numeric, matching and hotspot previews preserve their actual formats safely',()=>{
+ class Element{
+  constructor(tag){this.tag=tag;this.children=[];this.textContent='';}
+  append(...children){this.children.push(...children);}
+  replaceChildren(...children){this.children=children;this.textContent='';}
+ }
+ const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function selectedEvidenceScope(',begin);
+ const render=runInNewContext('('+ui.slice(begin,end).trim()+')',{document:{createElement:tag=>new Element(tag)}});
+ const descendants=node=>[node,...node.children.flatMap(descendants)];
+ const text=node=>descendants(node).map(n=>n.textContent).join('\n');
+ let host=new Element('section');
+ render(host,{format:'SA',stem:'A numeric task',sa:{answer:5,unit:'mL',rounding:'whole number',tolerance:0,worked_solution:'100 / 20 = 5'},key:[]});
+ assert.match(text(host),/5 mL/);assert.match(text(host),/100 \/ 20 = 5/);
+ assert.match(text(host),/original source page/);assert.doesNotMatch(text(host),/Answer key: \[\]/);
+ host=new Element('section');
+ render(host,{format:'DD',stem:'Match these',dd:{left:[{id:'L1',text:'Prompt one'}],right:[{id:'R1',text:'Target one'}],pairs:{L1:'R1'}}});
+ assert.equal(descendants(host).filter(n=>n.tag==='table').length,1);
+ assert.match(text(host),/Prompt one/);assert.match(text(host),/Target one/);
+ host=new Element('section');
+ const unsafe='<img src=x onerror=alert(1)>';
+ render(host,{format:'HS',stem:'Click on the target',hs:{figure:{url:'https://untrusted.example/image',alt:unsafe},correct_region:'r1',near_miss_regions:['r2','r3'],license:'Unverified'}});
+ assert.ok(text(host).includes(unsafe),'untrusted authored text remains text');
+ assert.equal(descendants(host).filter(n=>['img','script','iframe'].includes(n.tag)).length,0,'a declared figure does not load an unverified URL');
+ assert.match(text(host),/Correct region: r1/);assert.match(text(host),/Near-miss region: r2/);
+ assert.match(text(host),/Verify the licensed figure/);
 });

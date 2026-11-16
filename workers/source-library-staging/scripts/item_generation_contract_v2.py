@@ -77,6 +77,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "stem_condition and alternate_condition (different complete phrases, each at most 200 characters), "
             "key and alternate_key (different single-ID arrays), and four options A-D each with id and states. "
             "Each states array has exactly one value per response_variable, in that order. All four alternatives must differ. "
+            "Keep each component label to a few words, each state at most 80 characters, and each complete rendered option at most 180 characters. "
             "For one component, each state becomes the complete ordinary option text, with no label prefix. "
             "For two components, the server renders parallel labelled pairs. Return id and states only, not text or error_pattern. "
             "Plan both cases before drafting: the original case must have one source-supported key and a meaningful change "
