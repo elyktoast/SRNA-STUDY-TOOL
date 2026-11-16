@@ -4,6 +4,32 @@ from lecture_file_to_question_plan import prepare_lecture_file_jobs
 
 class LectureFilePlanningTests(unittest.TestCase):
     @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_short_lecture_honors_requested_question_count(self, extract):
+        extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
+                                'pages':[{'page':1,'text':'Local anesthetic ionization'}]}
+        jobs = [{'path':'/generation/preflight','body':{'item_id':str(n)}} for n in range(3)]
+        with patch('lecture_to_question_plan.prepare_staging_jobs', return_value={'jobs':jobs,'count':3}) as planner:
+            result = prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',textbook_id='book',
+                                               item_id_factory=lambda:'id',count=3)
+        self.assertEqual(planner.call_args.kwargs['count'],3)
+        self.assertEqual(result['count'],3)
+        self.assertEqual(result['jobs'],jobs)
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_multiple_chunks_share_the_requested_budget(self, extract):
+        extract.return_value = {'format':'pdf','page_count':2,'review_pages':[],
+            'pages':[{'page':n,'text':'Local anesthetic ionization\n'+'x '*4500} for n in (1,2)]}
+        def plan(*args,**kwargs):
+            chunk = 'first' if 'Page 1:' in args[2] else 'second'
+            return {'jobs':[{'chunk':chunk,'slot':n} for n in range(kwargs['count'])], 'count':kwargs['count']}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',side_effect=plan):
+            result=prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',textbook_id='book',
+                                             item_id_factory=lambda:'id',count=3)
+        self.assertEqual([(j['chunk'],j['slot']) for j in result['jobs']],
+                         [('first',0),('second',0),('first',1)])
+        self.assertEqual(result['count'],3)
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
     def test_image_pages_hold_without_textbook_query(self, extract):
         extract.return_value = {'format':'pptx','page_count':2,
             'review_pages':[2],'requires_ocr_or_visual_review':True,'pages':[]}

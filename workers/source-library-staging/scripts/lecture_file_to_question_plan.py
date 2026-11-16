@@ -9,6 +9,8 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                               item_id_factory, count=1, mode="NCE", format="MC",
                               domain=None, section=None, objective=None,
                               enable_ocr=False, page_start=None, page_end=None):
+    if type(count) is not int or not 1 <= count <= 5:
+        raise ValueError('Question count must be between 1 and 5')
     extracted = extract_lecture(data, filename, enable_ocr=enable_ocr)
     if page_start is not None or page_end is not None:
         if (type(page_start) is not int or type(page_end) is not int
@@ -81,12 +83,16 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     from lecture_to_question_plan import prepare_staging_jobs
     processed = chunks[:5]
     results = [prepare_staging_jobs(conn, owner_uid, chunk, textbook_id=textbook_id,
-                                   item_id_factory=item_id_factory, count=1,
+                                   item_id_factory=item_id_factory, count=count,
                                    mode=mode, format=format, domain=domain,
                                    section=section, objective=objective)
                for chunk in processed]
     result = dict(results[0])
-    result["jobs"] = [job for r in results for job in r.get("jobs", [])][:count]
+    # Honor the requested count even for a lecture that fits one chunk. Spread
+    # slots across processed chunks before taking additional jobs from any one.
+    groups = [r.get('jobs', []) for r in results]
+    result["jobs"] = [group[index] for index in range(count) for group in groups
+                      if index < len(group)][:count]
     result["count"] = len(result["jobs"])
     result["auto_generate"] = False
     result["auto_publish"] = False
