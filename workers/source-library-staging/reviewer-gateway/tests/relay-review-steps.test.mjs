@@ -467,7 +467,7 @@ test('MC planning has a private distinct-response plan while generic concept car
   const body=JSON.parse(options.body),s=body.response_format.json_schema.schema;
   assert.ok(s.required.includes('choice_plan'));
   assert.equal(s.properties.choice_plan.additionalProperties,false);
-  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','key','alternate_key','options']);
+  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options']);
   assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
   assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','states']);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});

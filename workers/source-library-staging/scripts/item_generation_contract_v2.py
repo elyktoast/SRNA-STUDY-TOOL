@@ -83,7 +83,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Use ordinary homogeneous single-best-answer choices by default. Use crossed paired responses only "
             "when the assessed concept actually has two source-supported attributes (R-6.7), never to force an unrelated second task. "
             "choice_plan contains response_variables (one clinical response/category, or two related clinical components), "
-            "stem_condition and alternate_condition (different complete phrases, each at most 200 characters), "
+            "stem_condition and alternate_condition (different complete phrases, each at most 200 characters), lead_in (one shared question ending in ?, at most 200 characters), "
             "key and alternate_key (different single-ID arrays), and four options A-D each with id and states. "
             "Each states array has exactly one value per response_variable, in that order. All four alternatives must differ. "
             "Keep each component label to a few words, each state at most 80 characters, and each complete rendered option at most 180 characters. "
@@ -92,7 +92,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "All options must answer the same lead-in and belong to the same clinical category; do not mix quality, onset and mechanism as alternatives. Keep shared drug, device, patient and exposure context in the stem. When the question asks for a mechanism, offer competing mechanisms under that SAME context; do not make the keyed option the only one naming the case drug while distractors name unrelated drugs, populations or procedures. True trivia about a different agent is not a plausible competing explanation of this case. "
             "For two components, the server renders parallel labelled pairs. Return id and states only, not text or error_pattern. "
             "Choose a response that actually changes with the clinical or device condition. Do not force a counterfactual onto an invariant ranking such as the most reliable indicator or an always-false factual explanation. A change in case findings cannot reverse an instrument-reliability fact. If the topic includes an invariant fact, assess its source-supported condition-dependent mechanism or consequences instead. Both the keyed and alternate-key options must be entirely true in their own planned cases, not partly correct answers containing a false justification. "
-            "Plan both cases before drafting: the original case must have one source-supported key and a meaningful change "
+            "Commit to the exact shared lead_in while planning both cases, not in the later drafting call. It must ask the SAME precise source-supported task, affected compartment, measured variable and timing in both cases. A different diagnosis can retain the same mechanism for a shared global outcome; do not assume changing the diagnosis changes the answer. Test each complete case plus this exact lead-in against ALL four choices. The original case must have one source-supported key and a meaningful change "
             "to its clinical condition must make a different existing choice correct. Evidence must affirm the correct response "
             "and refute every distractor under each case, rather than rely on silence or an invented primary/secondary ranking. "
             "For paired responses, trace determinants of both components; an unchanged determinant cannot cancel a changed shared determinant. "
@@ -115,8 +115,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "
             "Omit states from final options; supply error_pattern as null ONLY for the original key and a specific learner "
             "error for EACH of the other three options, including the option correct under the separate alternative case. "
-            "The alternate case is not the original question. For item_draft, put the literal token {{STEM_CONDITION}} exactly once in stem; the server inserts stem_condition verbatim. For rationale, use the already rendered draft. Omit the alternate "
-            "condition and do not reveal the response states. Outside this complete condition phrase, add only neutral context and a lead-in that remains meaningful in BOTH cases. Do not repeat an original-only symptom, drug, device, exposure or population in the lead-in. Use a neutral reference such as this finding or this effect where appropriate, rather than asking about an original symptom absent in the alternate case. Do not add dependent measurements or physiological findings outside the replaceable phrase; they would be left unchanged in the alternate case. "
+            "The alternate case is not the original question. For item_draft, return stem exactly as {{STEM_CONDITION}} {{LEAD_IN}}. The server inserts the authored case and shared question verbatim. Do not add or revise context, findings or the lead-in. For rationale, use the already rendered draft. "
             "Do not return a new counterfactual in the rationale: the server preserves the exact planned stem edit. "
             "Source and independent blind checks will still test the plan; never assert approval.")
     return {"rules_version": RULES_VERSION, "step": step,
