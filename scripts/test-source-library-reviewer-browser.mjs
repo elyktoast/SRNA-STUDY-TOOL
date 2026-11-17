@@ -273,3 +273,31 @@ test('single and bulk approval require an explicit server-observed automated pas
   assert.equal(buttons.find(node=>node.textContent==='Approve selected to bank').disabled,disabled);
  }
 });
+
+function mcReviewSummary(screening,format='MC'){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(...children){this.children.push(...children)},prepend(...children){this.children.unshift(...children)},setAttribute(){},set innerHTML(value){throw Error('Review results must remain text')}});
+ const host=node('div');
+ const start=ui.indexOf('function renderMCReviewSummary('),end=ui.indexOf('function selectedEvidenceScope(',start);
+ const render=vm.runInNewContext(ui.slice(start,end)+'\nrenderMCReviewSummary',{document:{createElement:node}});
+ render(host,screening,format);
+ const walk=node=>[node,...node.children.flatMap(walk)];
+ return walk(host).map(n=>n.textContent).join('\n');
+}
+const mcStageNames=['schema','deterministic_text','math','evidence','duplicates','blind_model','editorial_quality','explanation_evidence','independent_option_evidence','options_only'];
+const completeMCReview=()=>({stages:Object.fromEntries(mcStageNames.map(name=>[name,{status:'pass',issues:[]}]))});
+test('MC review checklist makes an incomplete trial visible without claiming readiness',()=>{
+ const screening=completeMCReview();screening.stages.options_only={status:'pending',issues:[],completed_trials:3};
+ const text=mcReviewSummary(screening);
+ assert.match(text,/9 of 10 automated checks passed/);
+ assert.match(text,/Answer-choice cue test: Incomplete \(3 of 5 trials completed\)/);
+ assert.match(text,/Approval blocked/);
+});
+test('MC checklist handles missing stages, failed reviews and stale revised drafts conservatively',()=>{
+ assert.match(mcReviewSummary(null),/0 of 10 automated checks passed/);
+ const screening=completeMCReview();screening.stages.evidence={status:'flag',issues:[{message:'<script>private</script>'}]};
+ const text=mcReviewSummary(screening);assert.match(text,/Textbook citations: Needs revision/);
+ assert.match(text,/Approval blocked/);assert.ok(!text.includes('private'));
+ assert.match(mcReviewSummary(completeMCReview()),/Clinical review and current-source revalidation are required/);
+ assert.equal(mcReviewSummary(null,'MS'),'');
+});

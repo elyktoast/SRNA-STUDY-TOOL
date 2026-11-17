@@ -64,7 +64,7 @@ if(process.env.SRNA_STAGING_LECTURE_FIXTURES){
  const {readFile}=await import('node:fs/promises');
  const fixtures=JSON.parse(await readFile(process.env.SRNA_STAGING_LECTURE_FIXTURES,'utf8'));
  for(const fixture of fixtures){
-  for(const fmt of ['MC','MS','SA','DD','HS']){
+  for(const fmt of [format]){
    const plan=await call('/generation/lecture-file-plan',{...fixture,textbook_id:'all',count:3,mode:'NCE',format:fmt,domain:'I',section:'C',objective:'I.C.5'});
    assert.equal(plan.database_writes,false);assert.equal(plan.auto_generate,false);assert.equal(plan.auto_publish,false);
    assert.equal(plan.count,3,'Lecture request did not honor its three-question allocation');
@@ -78,7 +78,7 @@ const unsupported=await call('/generation/lecture-plan',{lecture_text:'# Quantum
 assert.equal(unsupported.count,0,'Unsupported lecture topic reached generation');
 console.log('Unsupported lecture concept held without paid generation');
 
-const preflight=await call('/generation/preflight',request);
+const preflight=multi;
 assert.equal(preflight.dry_run,true);assert.equal(preflight.can_publish,false);
 assert.ok(preflight.passage_count>0,'No indexed evidence');
 assert.equal(preflight.review_readiness?.blind_review,'configured');

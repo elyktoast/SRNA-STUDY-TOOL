@@ -136,3 +136,15 @@ The live draft workspace also exposed a race: two overlapping list requests each
 
 
 The same UI inspection showed that `pending_review` alone enabled approval even when an automated stage was pending. The authenticated list now returns only an `automated_checks_passed` boolean computed by the existing backend approval gate, without exposing screening contents. Single and bulk approval stay disabled unless this flag is explicitly true and the draft has no failed status. Server-side revalidation and clinical notes remain required. Tests cover legacy/missing flags, pending trials, fully passing reviews and failed-status precedence. Validation: 194 Node checks and 1,041 Python tests passed (four Python tests skipped locally). CI initially caught a missing frontend build-ID update; the corrected manifest is included.
+
+## Current scope: usable MC generator first
+
+The owner has explicitly paused development of MS, SA, DD and HS. Their previously documented verification gaps remain open but do not block finishing the MC milestone. No alternative-format feature work is included in this round.
+
+MC acceptance requires: lecture-derived or freely selected topic/objective; ready trusted textbook evidence; a single best answer with relevant, plausible distractors and separately supported explanations; every applicable automated review completed; exactly one bounded automatic rewrite; durable unpublished save/recovery; readable review results; and clinical review before bank approval. The existing 9,000-entry duplicate index is complete and must be reused, not rebuilt. A small varied MC acceptance set is required before calling this usable; one lucky pass is insufficient. Production promotion and bulk publication are not authorized by this scope change.
+
+Run [44006229971](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44006229971) is a fresh single MC request against the deployed PR #207 version, with safe incomplete-review diagnostics enabled. Its result is pending at the time of this checkpoint.
+
+The next reliability batch constrains the options-only review response to exactly the expected JSON shape and current shuffled option IDs. Its schema admits every option and receives no stem or answer key; it cannot manufacture a correct review result. Invalid input is rejected before a provider call, and incomplete or flagged reviews remain blocked. This changes output structure, not the five-trial statistical threshold or one-rewrite limit.
+
+The MC preview and saved editor now show a readable ten-stage checklist, including completed cue-test trials and explicit blocked status. Edited revisions cannot inherit the original question's checklist passes. Dashboard data arriving after navigation no longer replaces the selected AI view. The one-question acceptance client checks lecture plans only for the requested format and reuses its identical preflight response, reducing redundant calls while the other formats are paused. Local validation: 198 Node checks passed; repository validation and diff checks passed. Live structured-response and UI acceptance remain pending deployment.

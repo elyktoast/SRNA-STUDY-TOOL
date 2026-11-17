@@ -167,6 +167,12 @@ async function relayGroq(request,env){
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
   }
   let reviewFormat=rationaleFormat;
+  if(step.step==='options_only_review'){
+   const ids=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const count=step.select_count;
+   if(!['MC','MS'].includes(step.format)||ids.length<4||ids.length>6||new Set(ids).size!==ids.length||!ids.every(id=>typeof id==='string'&&/^[A-F]$/.test(id))||!Number.isInteger(count)||(step.format==='MC'?count!==1:![2,3].includes(count)))return respond(400,null,'{"error":"invalid_step"}');
+   if(groqQwen||groqOss)reviewFormat={type:'json_schema',json_schema:{name:'srna_options_only_v2',strict:true,schema:{type:'object',properties:{key:{type:'array',minItems:count,maxItems:count,items:{type:'string',enum:ids}}},required:['key'],additionalProperties:false}}};
+  }
   if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
    const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
    const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
