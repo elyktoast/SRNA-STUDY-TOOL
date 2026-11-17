@@ -437,9 +437,15 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 };
 genEl('sl-open-draft-id').value='abc90a93-41f8-4d7c-8e27-94a609135572';
 genEl('sl-open-draft-id-button').onclick=()=>openSavedDraft(genEl('sl-open-draft-id').value.trim(),genEl('sl-open-draft-id-button'));
+let draftCollectionRequest=0;
 async function renderDraftCollection(view='drafts'){
- const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
- const result=await storage.listGeneratedDrafts();const all=result.drafts||[];
+ const request=++draftCollectionRequest;
+ const out=genEl('sl-saved-results');out.hidden=false;
+ let result;
+ try{result=await storage.listGeneratedDrafts();}catch(error){if(request!==draftCollectionRequest)return;throw error;}
+ if(request!==draftCollectionRequest)return;
+ out.replaceChildren();delete out._bulkSelection;
+ const all=result.drafts||[];
  if(!Array.isArray(all))throw Error('Unexpected draft list.');
  const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank'&&d.status!=='rejected');
  const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);

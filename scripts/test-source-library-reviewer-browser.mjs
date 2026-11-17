@@ -233,3 +233,32 @@ test('disconnected generation retrieves only the same completed request without 
  assert.equal(result.draft_id,'saved-id');assert.equal(result.published,false);
  assert.equal(calls.length,2);assert.equal(recoveryNotice,1);assert.equal(request.resume_completed_only,undefined);
 });
+
+function draftCollectionHarness(){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]}});
+ const out=node('div');out._bulkSelection={selected:new Set(['old-draft'])};
+ const pending=[];
+ const storage={listGeneratedDrafts:()=>new Promise((resolve,reject)=>pending.push({resolve,reject}))};
+ const code='let draftCollectionRequest=0;\n'+ui.slice(ui.indexOf('async function renderDraftCollection('),ui.indexOf('const bankButton='))+'\nrenderDraftCollection';
+ const render=vm.runInNewContext(code,{document:{createElement:node},genEl:()=>out,storage});
+ return {out,pending,render};
+}
+test('overlapping collection loads render only the latest selected view once',async()=>{
+ const {out,pending,render}=draftCollectionHarness();
+ const older=render('drafts'),latest=render('bank');
+ pending[1].resolve({drafts:[]});await latest;
+ pending[0].resolve({drafts:[]});await older;
+ assert.equal(out.children.length,2);
+ assert.equal(out.children[0].textContent,'Approved Question Bank (staging only)');
+ assert.equal(out._bulkSelection,undefined);
+});
+test('a stale list failure cannot replace a newer successful collection',async()=>{
+ const {out,pending,render}=draftCollectionHarness();
+ const older=render('bank'),latest=render('drafts');
+ pending[1].resolve({drafts:[]});await latest;
+ pending[0].reject(Error('Old request disconnected'));
+ await assert.doesNotReject(older);
+ assert.equal(out.children.length,2);
+ assert.equal(out.children[0].textContent,'Saved question drafts');
+});

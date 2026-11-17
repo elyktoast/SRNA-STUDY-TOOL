@@ -247,8 +247,14 @@ def options_only(item, reviewer, *, shuffle=None):
                 "binomial_tail_probability": probability,
                 "issues": [{"rule_id": "R-12.2", "field": "options",
                     "message": "Options-only reviewer identified the key above chance in five shuffled trials"}] if flagged else []}
-    except Exception:
-        return {**pending, "completed_trials": completed}
+    except Exception as exc:
+        # Preserve fixed diagnostics, never provider messages or option text.
+        allowed = {"PROVIDER_REQUEST_REJECTED", "PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}
+        rule = getattr(exc, "rule", None)
+        error = (rule if isinstance(rule, str) and rule in allowed else "INVALID_OPTIONS_ONLY_RESPONSE"
+                 if type(exc) is ValueError and str(exc) == "Incomplete options-only trial"
+                 else "REVIEW_RESPONSE_INVALID")
+        return {**pending, "completed_trials": completed, "review_error": error}
 
 
 def stamp_checks(item, screening):
