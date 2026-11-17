@@ -7,9 +7,15 @@ Run only on trusted backend infrastructure. Never expose DATABASE_URL to browser
 import argparse
 import json
 import os
+import re
 
 from search_passages import search, UUID_RE
 from item_source_scope_v2 import source_scope
+
+TEACHING_PREFIX = re.compile(
+    r"^(?:explain|describe|discuss|identify|define|summarize|evaluate|analy[sz]e|"
+    r"compare(?:\s+and\s+contrast)?|contrast|recognize|understand)\s+"
+    r"(?:the\s+)?(?:relationship\s+between\s+)?", re.I)
 
 
 def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
@@ -17,6 +23,9 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
                    page_start=None, page_end=None, textbook_ids=None, balance_books=False):
     if not isinstance(topic, str) or not topic.strip() or len(topic) > 500:
         raise ValueError("Topic must be 1..500 characters")
+    # Teaching verbs need not occur in a textbook's explanation. Keep the
+    # complete clinical subject/relation and every scope predicate unchanged.
+    query = TEACHING_PREFIX.sub("", topic.strip(), count=1).strip() or topic.strip()
     books = source_scope(textbook_id, textbook_ids)
     if balance_books:
         if textbook_id is not None or textbook_ids is not None:
@@ -36,7 +45,7 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
             raise ValueError('Passage limit must cover every selected textbook, up to 50')
         # Fair, bounded interleaving prevents one large book monopolizing the
         # packet. Each search independently enforces ownership and ready state.
-        groups = [search(conn, topic.strip(), owner_uid, limit=limit, textbook_id=book)
+        groups = [search(conn, query, owner_uid, limit=limit, textbook_id=book)
                   for book in books]
         if balance_books:
             groups.sort(key=lambda group: -group[0].get('rank',0) if group else 0)
@@ -45,7 +54,7 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
         if textbook_id is not None and rows and not any(row['textbook_id'] == textbook_id for row in rows):
             raise ValueError('No indexed textbook evidence found in primary textbook')
     else:
-        rows = search(conn, topic.strip(), owner_uid, limit=limit, textbook_id=textbook_id,
+        rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id,
                       section_id=section_id, include_subsections=include_subsections,
                       page_start=page_start, page_end=page_end)
     sources = []
