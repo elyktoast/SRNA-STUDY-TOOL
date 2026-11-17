@@ -467,7 +467,7 @@ test('MC planning has a private distinct-response plan while generic concept car
   const body=JSON.parse(options.body),s=body.response_format.json_schema.schema;
   assert.ok(s.required.includes('choice_plan'));
   assert.equal(s.properties.choice_plan.additionalProperties,false);
-  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options']);
+  assert.deepEqual(s.properties.choice_plan.required,['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options','option_grounding']);
   assert.equal(s.properties.choice_plan.properties.options.items.additionalProperties,false);
   assert.deepEqual(s.properties.choice_plan.properties.options.items.required,['id','states']);
   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
@@ -688,4 +688,35 @@ test('cue output settings do not disable the independent clinical reviewers reas
   }
   assert.equal(calls,4);
  }finally{globalThis.fetch=old;}
+});
+
+
+test('MC source-first schema agrees with Python plan fields and locks grounded rationale shape',async()=>{
+ const {readFileSync}=await import('node:fs');
+ const py=readFileSync(new URL('../../scripts/item_mc_choice_plan_v2.py',import.meta.url),'utf8');
+ const fields=[...py.match(/fields = \{([^}]+)\}/)[1].matchAll(/"([a-z_]+)"/g)].map(m=>m[1]).sort();
+ const original=globalThis.fetch;
+ const cf={...env,AI_AUTHORING_PROVIDER:'cloudflare',AI_GENERATOR_MODEL:'zai-org/glm-5.3',AI_CLOUDFLARE_MODEL:'@cf/zai-org/glm-5.3',AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'fixture'};
+ try{
+  for(const step of ['concept_card','rationale']){
+   globalThis.fetch=async(url,options)=>{
+    const schema=JSON.parse(options.body).response_format.json_schema.schema;
+    if(step==='concept_card'){
+     assert.deepEqual([...schema.properties.choice_plan.required].sort(),fields);
+     const grounding=schema.properties.choice_plan.properties.option_grounding;
+     assert.deepEqual(grounding.required,['A','B','C','D']);assert.equal(grounding.additionalProperties,false);
+     assert.deepEqual(grounding.properties.A.required,['passage_id','span_ids','explanation']);
+     assert.deepEqual(grounding.properties.A.properties.passage_id.enum,['p1']);
+     assert.deepEqual(grounding.properties.A.properties.span_ids.items.enum,['q0']);
+    }else{
+     assert.deepEqual(schema.required,['core_concept','why_key_wins','trap']);
+     assert.equal(schema.properties.distractor_breakdown,undefined);
+     assert.equal(schema.properties.counterfactual_test,undefined);
+    }
+    return Response.json({success:true,result:{response:'{}'}});
+   };
+   const extra={format:'MC',evidence:[{passage_id:'p1',quote_spans:[{id:'q0',text:'Synthetic source'}]}],choice_plan:{option_grounding:{}},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}};
+   assert.equal((await gateway.fetch(request(step,'zai-org/glm-5.3',extra),cf)).status,200);
+  }
+ }finally{globalThis.fetch=original;}
 });

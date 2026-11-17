@@ -104,3 +104,20 @@ Fixed live set for this batch (one fresh request per topic, no rerolling or seco
 | Shunt versus dead-space physiology | Lecture objective | Different mechanisms under a shared precise question | Not run yet |
 
 The two previously passing drafts remain unpublished and pending human clinical review. No bank indexing, other-format development, production deployment or main/PR #189 merge is included.
+
+
+### Live result of the first source-first batch: 0/3 accepted
+
+Run [44194077251](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44194077251) completed against staging application commit `a0eb858dd34f08dd0445d1fd96ddfcdb447c85d3`, build `6fc72edc-9ceb-4ffa-aa1a-206609133680`, container image `535982fe6236cd4d83696b690f43e965d11e3f2be7aeda7ff8164f9f6ff65cad`. Workflow completion means results were collected; it is not clinical acceptance.
+
+| Topic | Request item ID | Saved draft | Blocker |
+| --- | --- | --- | --- |
+| Neuromuscular receptor action | `2f7d0b98-e9bc-4441-86a4-747d7268c63e` | None | `CONCEPT_CARD_VALIDATION / PLAN_FIELDS` |
+| Oxygen supply pressure failure | `a45703db-31ca-4e58-bb5d-11b6fc3208a6` | None | `NO_INDEXED_EVIDENCE`; no authoring call |
+| Shunt versus dead-space physiology | `e23bb6fc-adb1-4283-8110-7db849f57605` | None | `CONCEPT_CARD_VALIDATION / PLAN_FIELDS` |
+
+The implementation missed the gateway's constrained response schema: it still prohibited `option_grounding`, while Python required it. This is a product regression, not poor clinical authoring. The correction adds the source-first fields and source/span enums to the gateway schema and omits later rationale breakdown authoring for grounded plans. A regression compares the gateway's required plan fields directly with the Python validator; it also checks the actual GLM planning and rationale requests. The authoring/checkpoint fingerprint is v23. Validation: 1,069 Python tests ran (four skipped), 204 Node checks passed, repository validation passed.
+
+The equipment harness also used an arbitrary first book and an overconstrained search string. A read-only count found zero Equipment passages for the full sentence, versus 84 for `Oxygen pressure failure`. The next bounded equipment control uses the Equipment textbook as primary and that clinical concept title. This does not fix unrestricted natural-language search; overly conjunctive freeform searches remain a known limitation. No reindexing is needed.
+
+The runner and exact first results are retained on `verify/mc-option-grounding-20261117`. Do not rerun that paid job. The next set uses fresh request IDs after the demonstrated schema correction, with the same three clinical targets. No completed clinical judgment is being resampled and no failed draft is repaired a second time.

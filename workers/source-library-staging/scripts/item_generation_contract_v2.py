@@ -128,6 +128,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Source and independent blind checks will still test the plan; never assert approval.")
     if format == "MC" and choice_plan is not None:
         if step == "item_draft":
+            instructions[step] = instructions[step].replace("fields model, distractor_evidence, TOP-LEVEL", "fields model, TOP-LEVEL")
             start = instructions[step].index("For MC/MS, distractor_evidence MUST")
             end = instructions[step].index("Follow NCE/SEE Item Generation Standard", start)
             instructions[step] = (instructions[step][:start]

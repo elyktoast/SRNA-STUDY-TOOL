@@ -70,7 +70,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-11-v22", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-11-v23", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
@@ -141,7 +141,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         _,inventory_digest = load_inventory(env.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
         semantic_contract = {'model':env.get('SEMANTIC_INDEX_EMBEDDING_MODEL'), 'inventory_digest':inventory_digest}
         summary['semantic_inventory'] = semantic_contract
-    request_hash = fingerprint({"authoring_contract": "2026-11-11-v22", "owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-11-v23", "owner_uid": args.owner_uid, "topic": args.topic,
         "semantic_contract":semantic_contract,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,

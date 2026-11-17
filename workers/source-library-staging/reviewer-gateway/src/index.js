@@ -150,7 +150,15 @@ async function relayGroq(request,env){
    properties.choice_plan={type:'object',properties:{response_variables:{type:'array',minItems:1,maxItems:2,items:{type:'string',maxLength:80},description:'One clinical response/category for ordinary single-best-answer choices, or two related clinical components for a genuinely paired concept. Never force an unrelated second variable or use generic type, direction, or value axes.'},stem_condition:{type:'string',maxLength:200},alternate_condition:{type:'string',maxLength:200},lead_in:{type:'string',maxLength:200},
     key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
     options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',minItems:1,maxItems:2,items:{type:'string',maxLength:80}}},required:['id','states'],additionalProperties:false}}},
-    required:['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options'],additionalProperties:false};
+    required:['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options','option_grounding'],additionalProperties:false};
+   const passageIds=(step.evidence||[]).map(p=>p.passage_id);
+   const spanIds=[...new Set((step.evidence||[]).flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
+   const grounding={type:'object',properties:{
+    passage_id:{type:'string',...(passageIds.length?{enum:passageIds}:{})},
+    span_ids:{type:'array',minItems:1,maxItems:3,items:{type:'string',...(spanIds.length?{enum:spanIds}:{})}},
+    explanation:{type:'string',minLength:1,maxLength:700}},
+    required:['passage_id','span_ids','explanation'],additionalProperties:false};
+   properties.choice_plan.properties.option_grounding={type:'object',properties:Object.fromEntries(['A','B','C','D'].map(id=>[id,grounding])),required:['A','B','C','D'],additionalProperties:false};
    conceptFormat.json_schema.schema.required.push('choice_plan');
   }
   const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
@@ -165,6 +173,10 @@ async function relayGroq(request,env){
   if(plannedRationale){
    delete rationaleFormat.json_schema.schema.properties.counterfactual_test;
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
+  }
+  if(plannedRationale&&step.choice_plan.option_grounding&&typeof step.choice_plan.option_grounding==='object'){
+   delete rationaleFormat.json_schema.schema.properties.distractor_breakdown;
+   rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='distractor_breakdown');
   }
   let reviewFormat=rationaleFormat;
   if(step.step==='options_only_review'){
