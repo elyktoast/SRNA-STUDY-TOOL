@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_generation_checkpoint_store_v2 import save_once
+from item_saved_option_review_v2 import complete_option_review, OptionReviewConflict
 from item_draft_revalidation_v2 import revalidate
 from item_draft_revision_storage_v2 import save_revision, list_revisions, RevisionValidationError
 
@@ -41,7 +42,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [data]
 
         path = environ.get("PATH_INFO", "")
-        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions)?", path)
+        draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions|/complete-options)?", path)
         lecture_plan = path == "/generation/lecture-plan"
         lecture_file = path == "/generation/lecture-file-plan"
         textbook_list = path == "/generation/textbooks"
@@ -55,7 +56,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         if environ.get("REQUEST_METHOD") == "OPTIONS":
             requested = environ.get("HTTP_ACCESS_CONTROL_REQUEST_METHOD")
             allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (
-                ("GET",) if diagnostic or readiness or checkpoint_readiness or textbook_list or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
+                ("GET",) if diagnostic or readiness or checkpoint_readiness or textbook_list or (draft_match and draft_match.group(2) not in ("/review", "/revisions", "/complete-options")) else ("POST",))
             headers = {x.strip().lower() for x in environ.get(
                 "HTTP_ACCESS_CONTROL_REQUEST_HEADERS", "").split(",") if x.strip()}
             if requested not in allowed or not headers <= {"authorization", "content-type"}:
@@ -67,7 +68,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [b""]
         method = environ.get("REQUEST_METHOD")
         if path not in ("/generation/preflight", "/generation/one"):
-            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (("GET",) if diagnostic or readiness or checkpoint_readiness or textbook_list or (draft_match and draft_match.group(2) not in ("/review", "/revisions")) else ("POST",))
+            allowed = ("GET", "POST") if path == "/generation/drafts" or (draft_match and draft_match.group(2) == "/revisions") else (("GET",) if diagnostic or readiness or checkpoint_readiness or textbook_list or (draft_match and draft_match.group(2) not in ("/review", "/revisions", "/complete-options")) else ("POST",))
             if method not in allowed:
                 return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         elif method != "POST":
@@ -291,6 +292,13 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     with conn_factory() as conn:
                         result = save(conn, {**payload, "owner_uid": owner})
                     return respond("201 Created", result)
+                if draft_match and draft_match.group(2) == "/complete-options":
+                    if set(payload) != {"confirm_paid_calls", "expected_updated_at"} or payload["confirm_paid_calls"] is not True:
+                        raise ValueError("Explicit review confirmation required")
+                    with conn_factory() as conn:
+                        result = complete_option_review(conn,owner_uid=owner,draft_id=draft_match.group(1),
+                            expected_updated_at=payload["expected_updated_at"],environment=environment)
+                    return respond("200 OK",result)
                 if draft_match and draft_match.group(2) == "/revisions":
                     if set(payload) not in ({"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}, {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes", "question_edits"}):
                         raise ValueError("Invalid revision body")
@@ -321,6 +329,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                                     draft_id=draft_match.group(1),
                                     status=payload["status"], notes=payload["notes"])
                 return respond("200 OK", result)
+            except OptionReviewConflict:
+                return respond("409 Conflict", {"error":"draft_or_review_changed"})
             except RevisionValidationError as exc:
                 return respond("422 Unprocessable Entity", {"error": "revision_validation_failed", "issues": exc.issues})
             except (ValueError, TypeError, KeyError):
@@ -446,6 +456,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 "Generated draft differs from its choice plan: key": "DRAFT_PLAN_KEY",
                 "Generated draft differs from its choice plan: choices": "DRAFT_PLAN_CHOICES",
                 "Generated draft differs from its choice plan: condition": "DRAFT_PLAN_CONDITION",
+                "Generated draft differs from its choice plan: lead-in": "DRAFT_PLAN_LEAD_IN",
+                "Concept card lead-in repeats a clinical condition": "PLAN_LEAD_IN_CONDITION",
                 "Rationale incomplete: counterfactual differs from planned case": "RATIONALE_PLAN_MISMATCH",
             }.get(message)
             return respond("422 Unprocessable Entity", {"error": "generation_or_evidence_unavailable", "rule": rule,

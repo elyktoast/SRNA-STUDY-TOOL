@@ -26,6 +26,7 @@ A usable MC draft generator must handle lecture-derived and freeform requests, r
 | Absorbent exhaustion, trusted citation selectors | `e05468e2-1eab-4cec-9efd-79180852f04a` | 5/10; citation transport fixed; substantive counterfactual, wording and explanation issues remained | Held; no second rewrite |
 | Lecture FRC, before completion fix | `0465c585-a7f4-4d73-b73c-69973ace53c8` | 6/10; repair truncated, cue JSON incomplete | Held; no second rewrite |
 | Lecture FRC, complete repair | `65c2e793-a7af-4746-bfb6-1abf9993085c` | 9/10; final option retrieval used unnormalized lecture instruction | Held; no second rewrite; retrieval bug fixed for new requests |
+| Neuromuscular lecture, shared question plan | `92b781bd-a3cc-4024-a48c-e01ea135102e` | 8/10; revised case and all explanatory evidence passed; cue reviewer guessed key 5/5 | Held; independent option adjudication remains blocked by cue failure |
 | Freeform oxygen pressure failure control | `41c206d6-2520-437c-b626-7f8f8887b304` | 8/10; one complete repair; source review rejected unsupported distractor explanations | Held; no second rewrite |
 | Different lecture: shunt/dead space | `d15912da-15a5-4058-9aad-218993c2076f` | 7/10; searches completed; counterfactual and cue checks flagged after one repair | Held; no second rewrite |
 
@@ -53,3 +54,21 @@ The existing private MC plan committed to case conditions and choice text but om
 Regressions cover missing/malformed questions, embedded case text, exact two-slot rendering, draft-task drift, added clinical context, checkpoint retention and preserved private-plan removal from the canonical item. Counterfactual mismatch feedback now also carries the exact tested edit and expected/observed IDs to the sole repair.
 
 The completed equipment control independently confirmed that source review can reject unsupported explanations even when eight other checks pass. In particular, the source did not establish the authored claim that a supply-pressure alarm would not trigger on complete pressure loss. The source gate remains unchanged. This is a failed clinical/source quality sample, not an infrastructure failure and not acceptance.
+
+## Deployed shared-question result
+
+PR #214 merged as `da23755d8c02a4bb4f5054a96bb74a2e2d7c2d8c`; CI 44162064440 succeeded. Cloudflare build `a97b20b0-1b7b-4726-b5b5-0d65948a7ae2` succeeded. Container image `b483d0adc4b69a41c33052e8c6a6355251a2482bba0746ca6e34ba4237b837dd` settled before the next paid request.
+
+The new neuromuscular lecture request completed planning, exact stem rendering and rationale generation, used one complete repair and saved draft `92b781bd-a3cc-4024-a48c-e01ea135102e`. The changed-case solver independently chose B as expected, explanatory source support passed, and eight checks passed overall. Options-only review correctly held the draft after identifying the keyed option in all five shuffled trials. Its other choices included presynaptic/contractile mechanisms outside the requested receptor-level category. No gate was relaxed and no second rewrite was performed. This verifies the shared question contract in a live pipeline; it does not establish broad MC quality acceptance.
+
+The fresh FRC request stopped before a draft was saved with DRAFT_VALIDATION. Its private plan was retained, and no automatic repair or clinical approval was performed. The failed fresh candidate does not verify or invalidate the earlier saved nine-of-ten question; it is a separate planning/draft failure.
+
+## Complete a missing review on the unchanged saved MC
+
+The new staging-only Complete missing option review action is restricted to an unchanged, unreviewed MC draft whose other nine automated stages already pass. It refuses flagged stages, missing/stale duplicate-index receipts, completed clinical judgments, saved revisions, missing consent and stale versions before requesting a review. It searches the current owned, ready books represented in the saved evidence, then invokes the existing distinct blind option reviewer and existing verbatim-quote adjudicator. No authoring, question rewrite, clinical approval or publication is permitted.
+
+A per-draft transaction advisory lock prevents concurrent paid reviews. Saving uses compare-and-swap checks on the full original question, screening report and update time, rejects concurrent revisions, and verifies the independently retrieved source snapshots still match the index. The stored receipt binds the result to the question/source hashes and original author/reviewer model identities. A completed uncertain or invalid-quote judgment remains blocked and cannot be repeatedly sampled for a better grade. Provider-only incompletion can remain pending.
+
+The action refreshes the clinical editor and keeps human review pending. The gateway enforces authenticated POST and rejects any response claiming question modification, generation, rewriting, publication or clinical approval. The MC planning fingerprint is also versioned for the shared-question contract, and safe validation detail codes reach the admin status without exposing provider text.
+
+Validation: 1,066 Python tests succeeded (four skipped), 203 Node checks passed, repository validation passed. Live completion of the existing nine-of-ten draft remains to be tested after deployment. The near-autonomous quality milestone is still open; these checks are not a claim that varied new questions consistently pass.
