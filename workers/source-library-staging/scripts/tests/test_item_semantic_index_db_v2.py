@@ -47,6 +47,22 @@ class SemanticIndexTests(unittest.TestCase):
         self.assertEqual(cur.execute.call_count, 8)
         self.assertEqual(cur.execute.call_args.args[1][3], ids[-1])
 
+    def test_mixed_case_search_preserves_exhaustive_pagination(self):
+        from unittest.mock import patch
+        ids=['A','B','a','b']
+        conn,cur=self.connection([])
+        def execute(query,params):
+            order=ids if query.count('COLLATE "C"')==2 else ['a','A','b','B']
+            cur.fetchall.return_value=[(i,[1.0,0.0],'a'*64) for i in order if i>params[3]][:params[4]]
+        cur.execute.side_effect=execute
+        callback=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],
+                        index_ready=True,expected_item_ids=set(ids),expected_stem_hashes=self.hashes(ids))
+        with patch('item_semantic_index_db_v2.PAGE_SIZE',2):
+            result=callback({'stem':'Synthetic candidate','item_id':'draft'})
+        self.assertTrue(result['search_complete'])
+        self.assertEqual([n['item_id'] for n in result['neighbors']],ids)
+        self.assertEqual(cur.execute.call_count,3)
+
     def test_multi_page_missing_item_fails_closed(self):
         ids = ["prior-" + str(i).zfill(5) for i in range(PAGE_SIZE)]
         conn, cur = self.connection([])

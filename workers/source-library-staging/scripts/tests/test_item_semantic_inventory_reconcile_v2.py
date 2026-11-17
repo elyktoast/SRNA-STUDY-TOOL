@@ -38,6 +38,21 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual(result["missing_count"], 0)
         self.assertEqual(cur.execute.call_args.args[1], (OWNER, "test", "", 1000))
 
+    def test_mixed_case_identifiers_use_python_order_across_page_boundaries(self):
+        from unittest.mock import patch
+        ids=['A','B','a','b']
+        conn,cur=connection([])
+        def execute(query,params):
+            # en_US puts lower case first; C ordering agrees with Python.
+            order=ids if query.count('COLLATE "C"')==2 else ['a','A','b','B']
+            cur.fetchall.return_value=[(i,HASH,[1.0,0.0]) for i in order if i>params[2]][:params[3]]
+            cur.fetchall.side_effect=None
+        cur.execute.side_effect=execute
+        with patch('item_semantic_inventory_reconcile_v2.PAGE_SIZE',2):
+            result=reconcile(conn,owner_uid=OWNER,embedding_model='test',inventory={i:HASH for i in ids})
+        self.assertTrue(result['ready']);self.assertEqual(result['indexed_count'],4)
+        self.assertEqual(cur.execute.call_count,3)
+
     def test_missing_extra_and_stale_fail_closed(self):
         conn, _ = connection([[("a", "b" * 64, [1.0, 0.0]), ("extra", HASH, [1.0, 0.0])]])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
