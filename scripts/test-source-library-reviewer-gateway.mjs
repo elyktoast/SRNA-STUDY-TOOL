@@ -471,13 +471,13 @@ test('staging admin initializes source workspace config without enabling product
 
 test('lecture file planning bypasses manifest-only upstream approval header guard',()=>{
  const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
- assert.match(gateway,/!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream\.headers\.get\('X-Review-Approval-Enabled'\)!=='false'/);
+ assert.match(gateway,/!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&upstream\.headers\.get\('X-Review-Approval-Enabled'\)!=='false'/);
 });
 
 
 test('lecture file planning bypasses review-manifest source integrity guard',()=>{
  const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
- assert.match(gateway,/if\(upstream\.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList\)/);
+ assert.match(gateway,/if\(upstream\.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList\)/);
  assert.match(gateway,/if\(!\/\^\[a-f0-9\]\{64\}\$\/\.test\(digest\)\)return respond\(502,origin,'\{"error":"missing_source_integrity"\}'\)/);
 });
 
@@ -486,4 +486,49 @@ test('page delivery challenge is forwarded only for verified successful PNG',()=
  assert.match(gateway,/if\(upstream\.ok&&url\.pathname==='\/review\/page\.png'\)/);
  assert.match(gateway,/headers\.set\('X-Page-Delivery-Challenge',upstream\.headers\.get\('X-Page-Delivery-Challenge'\)\)/);
  assert.doesNotMatch(gateway,/for\(const name of \['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256','X-Page-Delivery-Challenge'\]\)/);
+});
+
+
+test('semantic readiness forwards authenticated read-only metadata without PDF headers',async()=>{
+ const url='https://gateway.example/generation/index-readiness';
+ const valid={ready:true,inventory_digest:'a'.repeat(64),expected_count:9000,indexed_count:9000,missing_count:0,unexpected_count:0,stale_count:0};
+ const partial={...valid,ready:false,indexed_count:128,missing_count:8872};
+ for(const value of [valid,partial]){
+  let reads=0;
+  const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+   reads++;assert.equal(req.method,'GET');assert.equal(new URL(req.url).pathname,'/generation/index-readiness');
+   assert.equal(req.headers.get('Authorization'),'Bearer valid');return Response.json(value);
+  }})}};
+  const response=await gateway.fetch(new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),value);assert.equal(reads,1);
+ }
+});
+
+test('semantic readiness rejects inconsistent, private, or malformed success payloads',async()=>{
+ const url='https://gateway.example/generation/index-readiness';
+ const valid={ready:true,inventory_digest:'a'.repeat(64),expected_count:9000,indexed_count:9000,missing_count:0,unexpected_count:0,stale_count:0};
+ const malformed=[null,[],{...valid,extra:'private'},{...valid,inventory_digest:'invalid'},
+  {...valid,expected_count:0},{...valid,indexed_count:9001},{...valid,missing_count:1},
+  {...valid,ready:false},{...valid,ready:'true'},{...valid,stale_count:-1},
+  {...valid,indexed_count:'9000'},{...valid,expected_count:10001,indexed_count:10001},
+  {...valid,ready:false,indexed_count:8000,missing_count:1}];
+ for(const value of malformed){
+  const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json(value)})}};
+  const response=await gateway.fetch(new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+  assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'unsafe_index_readiness_response'});
+ }
+});
+
+test('semantic readiness rejects unsafe requests before starting the container',async()=>{
+ const url='https://gateway.example/generation/index-readiness';let starts=0;
+ const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>{starts++;throw Error('must not start');}}};
+ for(const [target,method,headers,status] of [
+  [url,'GET',{Origin:origin},401],
+  [url,'GET',{Origin:'https://srnastudytool.com',Authorization:'Bearer valid'},403],
+  [url+'?unsafe=1','GET',{Origin:origin,Authorization:'Bearer valid'},400],
+  [url,'POST',{Origin:origin,Authorization:'Bearer valid'},405],
+ ])assert.equal((await gateway.fetch(new Request(target,{method,headers}),isolated)).status,status);
+ const options=await gateway.fetch(new Request(url,{method:'OPTIONS',headers:{Origin:origin,
+  'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}}),isolated);
+ assert.equal(options.status,204);assert.equal(starts,0);
 });
