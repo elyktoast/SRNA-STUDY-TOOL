@@ -8,7 +8,8 @@ from test_item_standard_v2 import sample
 
 def plan():
     return {"response_variables":["Measurement X","Measurement Y"],"stem_condition":"condition X", "alternate_condition":"condition Y", "lead_in":"Which response fits?",
-            "key":["B"],"alternate_key":["A"],"options":[
+            "key":["B"],"alternate_key":["A"],
+            "option_grounding":{oid:{"passage_id":"p1","span_ids":["q0"],"explanation":"Explanation for "+oid} for oid in "ABCD"},"options":[
                 {"id":oid,"states":states}
                 for oid,states in [("A",["reduced","reduced"]),
                     ("B",["unchanged","reduced"]),
@@ -118,7 +119,7 @@ class ChoicePlanTests(unittest.TestCase):
     def test_plan_is_checkpointed_but_not_persisted_in_the_canonical_item(self):
         raw=plan();p=validate(raw);calls=[];checkpoints={}
         concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=raw)
-        draft=sample();draft.update(stem="condition X Which response fits?",key=["B"],
+        draft=sample();draft.pop("distractor_evidence",None);draft.update(stem="condition X Which response fits?",key=["B"],
             options=[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]])
         def adapter(request):
             calls.append(request["step"])
@@ -127,7 +128,7 @@ class ChoicePlanTests(unittest.TestCase):
             self.assertNotIn("choice_plan",request["concept_card"])
             if request["step"]=="item_draft":
                 return {**copy.deepcopy(draft),"stem":draft["stem"].replace(p["stem_condition"],CONDITION_SLOT)}
-            return {"core_concept":"m","why_key_wins":"r","trap":"x", "distractor_breakdown":{o["id"]:"explanation" for o in p["options"]}}
+            return {"core_concept":"m","why_key_wins":"r","trap":"x", "distractor_breakdown":{oid:entry["explanation"] for oid,entry in p["option_grounding"].items()}}
         result=generate_one(adapter,**ARGS,on_checkpoint=lambda stage,value:checkpoints.update({stage:copy.deepcopy(value)}))
         self.assertEqual(calls,["concept_card","item_draft","rationale"])
         self.assertEqual(checkpoints["concept_card"]["choice_plan"],p)
@@ -136,6 +137,20 @@ class ChoicePlanTests(unittest.TestCase):
         self.assertEqual(result["item"]["concept_card"]["counterfactual"],
             'If "condition X" is replaced by "condition Y", the best response changes to option(s) A.')
         self.assertFalse(result["auto_approved"])
+        def rationale_drift(request):
+            response=adapter(request)
+            response['distractor_breakdown']['A']='Unsupported new alarm behavior'
+            return response
+        with self.assertRaisesRegex(ValueError,'option grounding differs'):
+            generate_one(rationale_drift,**ARGS,checkpoint=checkpoints)
+        def concise_rationale(request):
+            response=adapter(request)
+            response.pop('distractor_breakdown')
+            return response
+        carried=generate_one(concise_rationale,**ARGS,checkpoint=checkpoints)
+        self.assertEqual(carried['item']['rationale'],result['item']['rationale'])
+        self.assertEqual(carried['item']['distractor_evidence']['A']['explanation'],
+                         carried['item']['rationale']['distractor_breakdown']['A'])
         calls.clear()
         resumed=generate_one(adapter,**ARGS,checkpoint=checkpoints)
         self.assertEqual(calls,["rationale"])
@@ -177,3 +192,53 @@ class ChoicePlanTests(unittest.TestCase):
                      CONDITION_SLOT+' '+LEAD_IN_SLOT+' Additional finding.'):
             with self.subTest(stem=stem),self.assertRaises(ValueError):
                 bind(p,render_condition(p,{'stem':stem,'key':p['key'],'options':options}))
+
+    def test_grounding_rejects_missing_options_unknown_sources_and_fabricated_quotes(self):
+        from item_mc_choice_plan_v2 import ground_draft, option_explanations
+        evidence=[{"passage_id":"p1","excerpt":"Source with a line\nbreak."}]
+        p=validate(plan(),evidence)
+        p['option_grounding']['A']['span_ids']=['q1']
+        self.assertEqual(validate(p,evidence),p)
+        for change in ('missing','extra','unknown','fabricated','empty','too_long','approval'):
+            bad=copy.deepcopy(p)
+            if change=='missing':bad['option_grounding'].pop('D')
+            if change=='extra':bad['option_grounding']['E']=bad['option_grounding']['A']
+            if change=='unknown':bad['option_grounding']['A']['passage_id']='other'
+            if change=='fabricated':bad['option_grounding']['A']['span_ids']=['invented']
+            if change=='empty':bad['option_grounding']['A']['explanation']=' '
+            if change=='too_long':bad['option_grounding']['A']['span_ids']=['q0']*4
+            if change=='approval':bad['option_grounding']['A']['approved']=True
+            with self.subTest(change=change),self.assertRaises(ValueError):validate(bad,evidence)
+        original={'stem':'unchanged'}
+        grounded=ground_draft(p,original)
+        self.assertNotIn('distractor_evidence',original)
+        self.assertEqual(grounded['distractor_evidence']['B']['verdict'],'supports_key')
+        self.assertEqual(grounded['distractor_evidence']['A']['verdict'],'refutes_distractor')
+        self.assertEqual(ground_draft(p,grounded),grounded)
+        self.assertEqual(option_explanations(p)['A'],grounded['distractor_evidence']['A']['explanation'])
+        bad=copy.deepcopy(grounded);bad['distractor_evidence']['A']['explanation']='Unsupported new alarm behavior'
+        with self.assertRaisesRegex(ValueError,'grounding'):ground_draft(p,bad)
+
+    def test_invalid_grounding_blocks_before_drafting_and_on_checkpoint_replay(self):
+        raw=plan();raw['option_grounding']['D']['span_ids']=['invented']
+        concept=dict(objective='III.H.4',mechanism='m',relevance='r',misconception='x',counterfactual='planned',evidence_ids=['p1'],choice_plan=raw)
+        calls=[];checkpoints=[]
+        def adapter(request):
+            calls.append(request['step']);return copy.deepcopy(concept)
+        with self.assertRaisesRegex(ValueError,'span not in source'):
+            generate_one(adapter,**ARGS,on_checkpoint=lambda *args:checkpoints.append(args))
+        self.assertEqual(calls,['concept_card']);self.assertEqual(checkpoints,[])
+        calls.clear()
+        with self.assertRaisesRegex(ValueError,'span not in source'):
+            generate_one(adapter,**ARGS,checkpoint={'concept_card':concept})
+        self.assertEqual(calls,[])
+
+    def test_grounding_contract_does_not_claim_clinical_support_or_change_other_formats(self):
+        from item_generation_contract_v2 import build_step
+        args=dict(mode='NCE',domain='I',section='C',objective='I.C.5',evidence=[{'passage_id':'p1','textbook_id':'t1','excerpt':'Source'}])
+        mc=build_step('concept_card',format='MC',**args)
+        self.assertIn('option_grounding',mc['instructions'])
+        self.assertIn('same level of specificity to EVERY option',mc['instructions'])
+        self.assertFalse(mc['auto_publish'])
+        other=build_step('concept_card',format='MS',**args)
+        self.assertNotIn('option_grounding',other['instructions'])

@@ -435,6 +435,11 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             # Never echo even part of an arbitrary exception or provider output.
             detail = {
                 "Concept card choice plan incomplete": "PLAN_FIELDS",
+                "Concept card option grounding incomplete": "PLAN_GROUNDING_FIELDS",
+                "Concept card option grounding invalid": "PLAN_GROUNDING_INVALID",
+                "Concept card option grounding span not in source": "PLAN_GROUNDING_SPAN",
+                "Generated draft differs from its choice plan: grounding": "DRAFT_PLAN_GROUNDING",
+                "Rationale incomplete: option grounding differs from planned explanation": "RATIONALE_PLAN_GROUNDING",
                 "Concept card choice plan is MC-only": "PLAN_FORMAT",
                 "Concept card required before drafting": "CONCEPT_DRAFT_CONTEXT",
                 "Concept card choice plan invalid": "PLAN_CONDITIONS_OR_KEYS",

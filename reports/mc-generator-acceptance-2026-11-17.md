@@ -85,3 +85,22 @@ Together with the previously verified freeform local-anesthetic question `8da6a8
 The browser connection became unavailable before the paid completion action was clicked. The authenticated staging runner completed that action instead. Its first two attempts stopped before any paid review because of deployment-metadata checks: a preview build overwrote the same-commit GitHub check, and the CI credential lacked deployment-read access. The successful run used a fresh, five-minute connected-service deployment verification, pinned to the exact successful build, code and image. No CI permissions were expanded. The review-only runner, its three offline safety checks and its exact deployment verification are retained on branch `verify/mc-saved-option-review-20261117`.
 
 **The MC workflow is now demonstrably operational in staging for supervised review. Consistent near-autonomous quality across new topics is not yet established.** The cue/source failures in the other samples remain blocked, and all other question formats remain paused. The next work is broader MC quality validation and the required human clinical pilot, not reindexing the completed bank or rebuilding the finished workflow.
+
+
+## Next quality batch: source-first option explanations
+
+The observed neuromuscular cue failure mixed receptor-level alternatives with presynaptic and contractile mechanisms. The equipment source failure introduced unsupported alarm behavior while explaining a distractor. This batch narrows the requested answer category and moves per-option explanation authoring into the private MC choice plan, before drafting.
+
+Each option must select one supplied passage and one to three existing quote-span IDs, with a bounded explanation of why it is correct or false in the original case. The server validates span membership before any drafting call or checkpoint write; it does not infer support from a real span. It carries the locked explanations into both `distractor_evidence` and `rationale.distractor_breakdown`, rejecting later disagreement. The distinct independent source reviewer still assesses clinical support using the full trusted excerpts. Cue, changed-case, duplicate, explanation, approval and one-rewrite gates are unchanged. Completed saved drafts are unaffected; incomplete older plans fail closed. The authoring/checkpoint fingerprint is v22.
+
+Offline validation: 1,069 Python tests ran, four skipped; 203 Node checks passed; repository validation passed. These results establish implementation behavior, not acceptance of new clinical questions.
+
+Fixed live set for this batch (one fresh request per topic, no rerolling or second repair):
+
+| Sample | Workflow | Purpose | Result |
+| --- | --- | --- | --- |
+| Neuromuscular receptor action | Lecture objective | Same-level mechanisms; observed cue failure | Not run yet |
+| Oxygen supply pressure failure | Freeform | Source-supported device distinctions; observed unsupported explanation | Not run yet |
+| Shunt versus dead-space physiology | Lecture objective | Different mechanisms under a shared precise question | Not run yet |
+
+The two previously passing drafts remain unpublished and pending human clinical review. No bank indexing, other-format development, production deployment or main/PR #189 merge is included.

@@ -17,8 +17,8 @@ def render_condition(plan, draft):
     return {**draft, "stem": plan["stem_condition"] + " " + plan["lead_in"]}
 
 
-def validate(plan):
-    fields = {"response_variables", "stem_condition", "alternate_condition", "lead_in", "key", "alternate_key", "options"}
+def validate(plan, evidence=None):
+    fields = {"response_variables", "stem_condition", "alternate_condition", "lead_in", "key", "alternate_key", "options", "option_grounding"}
     if not isinstance(plan, dict) or set(plan) != fields:
         raise ValueError("Concept card choice plan incomplete")
 
@@ -62,6 +62,25 @@ def validate(plan):
     signatures = {tuple(normalize(v).casefold() for v in o["states"]) for o in options}
     if len(signatures) != 4:
         raise ValueError("Concept card choice plan repeats a response pattern")
+    grounding = plan["option_grounding"]
+    if not isinstance(grounding, dict) or set(grounding) != set("ABCD"):
+        raise ValueError("Concept card option grounding incomplete")
+    sources = None
+    if evidence is not None:
+        from item_source_quote_spans_v2 import prepare
+        _, sources = prepare({"source_passages": evidence})
+    for entry in grounding.values():
+        if (not isinstance(entry, dict) or set(entry) != {"passage_id", "span_ids", "explanation"}
+                or not strings([entry["passage_id"]], 1, 200)
+                or not isinstance(entry["span_ids"], list) or not 1 <= len(entry["span_ids"]) <= 3
+                or not strings(entry["span_ids"], len(entry["span_ids"]), 20)
+                or len(set(entry["span_ids"])) != len(entry["span_ids"])
+                or not strings([entry["explanation"]], 1, 700)):
+            raise ValueError("Concept card option grounding invalid")
+        # A real quote is a transport invariant, never a clinical judgment.
+        if sources is not None and (entry["passage_id"] not in sources or
+                any(sid not in sources[entry["passage_id"]] for sid in entry["span_ids"])):
+            raise ValueError("Concept card option grounding span not in source")
     result = deepcopy(plan)
     result["response_variables"] = [normalize(v) for v in plan["response_variables"]]
     for option in result["options"]:
@@ -105,3 +124,17 @@ def bind(plan, draft):
         raise ValueError("Generated draft differs from its choice plan: lead-in")
     return {"from_text":plan["stem_condition"], "to_text":plan["alternate_condition"],
             "expected_key":deepcopy(plan["alternate_key"])}
+
+
+def option_explanations(plan):
+    return {oid: entry["explanation"] for oid, entry in plan["option_grounding"].items()}
+
+
+def ground_draft(plan, draft):
+    """Carry the author's locked explanations forward; do not adjudicate them."""
+    mapping = {oid: {"verdict": "supports_key" if oid in plan["key"] else "refutes_distractor",
+                     "passage_ids": [entry["passage_id"]], "explanation": entry["explanation"]}
+               for oid, entry in plan["option_grounding"].items()}
+    if "distractor_evidence" in draft and draft["distractor_evidence"] != mapping:
+        raise ValueError("Generated draft differs from its choice plan: grounding")
+    return {**draft, "distractor_evidence": mapping}

@@ -197,7 +197,7 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         from item_mc_choice_plan_v2 import validate as validate_plan
         if format != "MC":
             raise ValueError("Concept card choice plan is MC-only")
-        choice_plan = validate_plan(choice_plan)
+        choice_plan = validate_plan(choice_plan, evidence)
     if any(not isinstance(concept.get(field), str) or not concept[field].strip()
            for field in CONCEPT_FIELDS if field != "evidence_ids") or not concept.get("evidence_ids"):
         raise ValueError("Concept card incomplete; draft generation blocked")
@@ -223,9 +223,10 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
         raise ValueError("Generated draft has wrong format or missing stem")
     planned_proposal = None
     if choice_plan is not None:
-        from item_mc_choice_plan_v2 import bind, render_condition
+        from item_mc_choice_plan_v2 import bind, render_condition, ground_draft, option_explanations
         draft = render_condition(choice_plan, draft)
         planned_proposal = bind(choice_plan, draft)
+        draft = ground_draft(choice_plan, draft)
         concept = {**concept, "counterfactual": _final_counterfactual(draft, planned_proposal)}
     if "draft" not in checkpoint and on_checkpoint is not None:
         on_checkpoint("draft", draft)
@@ -233,6 +234,11 @@ def generate_one(adapter, *, mode, domain, section, objective, evidence,
                                              concept_card=concept, draft=draft, choice_plan=choice_plan))
     if isinstance(rationale, dict) and set(rationale) == {"rationale"} and isinstance(rationale["rationale"], dict):
         rationale = rationale["rationale"]
+    if choice_plan is not None and isinstance(rationale, dict):
+        explanations = option_explanations(choice_plan)
+        if "distractor_breakdown" in rationale and rationale["distractor_breakdown"] != explanations:
+            raise ValueError("Rationale incomplete: option grounding differs from planned explanation")
+        rationale = {**rationale, "distractor_breakdown": explanations}
     if any(not rationale.get(field) for field in RATIONALE_FIELDS):
         raise ValueError("Rationale incomplete")
     if planned_proposal is not None and "counterfactual_test" in rationale and rationale["counterfactual_test"] != planned_proposal:

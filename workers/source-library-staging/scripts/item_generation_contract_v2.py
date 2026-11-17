@@ -57,6 +57,12 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
     compact_evidence = [{key: passage[key] for key in
         ("passage_id", "textbook_id", "excerpt", "pdf_page_start", "pdf_page_end")
         if key in passage} for passage in evidence]
+    if step == "concept_card" and format == "MC":
+        from item_source_quote_spans_v2 import prepare
+        quoted, _ = prepare({"source_passages": compact_evidence})
+        compact_evidence = [{**{k: v for k, v in passage.items() if k != "excerpt"},
+                             "quote_spans": source["quote_spans"]}
+                            for passage, source in zip(compact_evidence, quoted["source_passages"])]
     from item_board_quality_v2 import classification
     target_labels = classification(domain, section, objective)
     quality_instructions = (
@@ -84,7 +90,9 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "when the assessed concept actually has two source-supported attributes (R-6.7), never to force an unrelated second task. "
             "choice_plan contains response_variables (one clinical response/category, or two related clinical components), "
             "stem_condition and alternate_condition (different complete phrases, each at most 200 characters), lead_in (one shared question ending in ?, at most 200 characters), "
-            "key and alternate_key (different single-ID arrays), and four options A-D each with id and states. "
+            "key and alternate_key (different single-ID arrays), four options A-D each with id and states, and option_grounding. "
+            "Build option_grounding BEFORE committing to choices: an object keyed by exactly A, B, C, D. Each entry has exactly passage_id (a supplied ID), span_ids (one to three unique quote_spans IDs belonging to that passage, such as [\"q0\"]), and explanation (one or two original sentences, at most 700 characters). For the original case, explain why this option answers the question or why it is false, using what the selected spans affirmatively establish. Choose an excerpt that actually resolves that option under the stated condition; source silence is not refutation. A citation or selected span alone never proves a claim. Do not transcribe source text; select its span IDs. Keep explanations limited to this clinical distinction; omit speculative claims about other devices, alarms or mechanisms. The server locks these explanations into distractor_evidence and rationale; later calls cannot embellish them. If no excerpt supports the distinction, choose a different evidence-supported distinction within the requested topic; do not invent support. "
+            "For receptor-level questions, all four choices must describe competing actions at the SAME receptor level, rather than mixing presynaptic release, receptor action and muscle contractility. For any narrow task, apply that same level of specificity to EVERY option; category membership must not reveal the key without the case. "
             "Each states array has exactly one value per response_variable, in that order. All four alternatives must differ. "
             "Keep each component label to a few words, each state at most 80 characters, and each complete rendered option at most 180 characters. "
             "For one component, each state becomes the complete ordinary option text, with no label prefix. "
@@ -118,6 +126,20 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "The alternate case is not the original question. For item_draft, return stem exactly as {{STEM_CONDITION}} {{LEAD_IN}}. The server inserts the authored case and shared question verbatim. Do not add or revise context, findings or the lead-in. For rationale, use the already rendered draft. "
             "Do not return a new counterfactual in the rationale: the server preserves the exact planned stem edit. "
             "Source and independent blind checks will still test the plan; never assert approval.")
+    if format == "MC" and choice_plan is not None:
+        if step == "item_draft":
+            start = instructions[step].index("For MC/MS, distractor_evidence MUST")
+            end = instructions[step].index("Follow NCE/SEE Item Generation Standard", start)
+            instructions[step] = (instructions[step][:start]
+                + "The server supplies distractor_evidence from the locked option_grounding; omit distractor_evidence from this response. "
+                + instructions[step][end:])
+            quality_instructions += " Omit distractor_evidence: the server attaches the locked option_grounding map. Do not author new option explanations. Cite every option_grounding passage_id in evidence."
+        elif step == "rationale":
+            instructions[step] = (
+                "Return exactly core_concept, why_key_wins and trap as concise strings. Omit distractor_breakdown: the server attaches the locked option_grounding explanations for all four options. "
+                "Explain only the supported distinction already established in option_grounding. Do not add new device behaviors, receptor mechanisms, alarm behavior, exclusions or absolute claims absent from the supplied excerpts. "
+                "Start trap with the specific incorrect option ID and the learner error that would lead to it. Do not return a counterfactual or modify any draft field. "
+                "The planned span references are author-selected evidence, not a clinical pass; independent checks and human review remain required.")
     return {"rules_version": RULES_VERSION, "step": step,
             **({"choice_plan": choice_plan} if choice_plan is not None else {}),
             **({"topic": topic} if topic is not None else {}),
