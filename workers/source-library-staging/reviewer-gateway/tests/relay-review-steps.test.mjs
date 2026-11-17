@@ -654,6 +654,7 @@ test('options-only schema constrains shape without revealing or forcing the expe
   for(const answer of ['A','B','C','D']){
    globalThis.fetch=async(url,options)=>{
     const body=JSON.parse(options.body),f=body.response_format;
+    assert.equal(body.reasoning_effort,'none');assert.equal(body.reasoning_format,'hidden');
     assert.equal(f.type,'json_schema');assert.equal(f.json_schema.strict,true);
     const s=f.json_schema.schema;assert.deepEqual(s.required,['key']);assert.equal(s.additionalProperties,false);
     assert.deepEqual(s.properties.key.items.enum,['A','B','C','D']);
@@ -669,5 +670,22 @@ test('options-only schema constrains shape without revealing or forcing the expe
    assert.equal((await gateway.fetch(request('options_only_review',cfg.AI_REVIEWER_MODEL,invalid),cfg)).status,400);
   }
   assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});
+
+test('cue output settings do not disable the independent clinical reviewers reasoning',async()=>{
+ const old=globalThis.fetch;
+ const cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EDITORIAL_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EXPLANATION_REVIEW_OPT_IN:'true',AI_OPTION_REVIEW_OPT_IN:'true'};
+ let calls=0;
+ try{
+  globalThis.fetch=async(url,options)=>{
+   calls++;const body=JSON.parse(options.body);
+   assert.equal(body.reasoning_effort,undefined);assert.equal(body.reasoning_format,undefined);
+   return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});
+  };
+  for(const step of ['blind_review','option_review','explanation_review','editorial_review']){
+   assert.equal((await gateway.fetch(request(step,cfg.AI_REVIEWER_MODEL),cfg)).status,200);
+  }
+  assert.equal(calls,4);
  }finally{globalThis.fetch=old;}
 });

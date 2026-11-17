@@ -192,7 +192,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         relay_secret=relay_secret)
     adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                            model=env.get("AI_GENERATOR_MODEL", ""),
-                           transport=transport, owner_opt_in=True, staging=True)
+                           transport=transport, owner_opt_in=True, staging=True,
+                           max_output_tokens=8192)
     reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested or explanation_requested
     reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
     if reviewer_enabled:

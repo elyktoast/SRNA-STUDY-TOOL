@@ -9,6 +9,20 @@ REQUEST = {"step": "concept_card", "rules_version": "2.0",
            "auto_publish": False, "evidence": [{"excerpt": "Private source"}]}
 
 class ProviderTests(unittest.TestCase):
+    def test_complete_mc_rewrite_has_a_bounded_budget_without_increasing_initial_authoring(self):
+        captured=[]
+        def transport(**kw):
+            captured.append(kw['body'])
+            return {'choices':[{'message':{'content':'{}'}}]}
+        adapter=make_adapter(**self.config(transport=transport,max_output_tokens=8192))
+        for format,expected in (('MC',6144),('MS',3500)):
+            adapter({**REQUEST,'step':'rewrite','max_rewrites':1,'requires_human_review':True,
+                     'item':{'format':format},'issues':[{'rule_id':'R-5.3'}]})
+            self.assertEqual(captured[-1]['max_tokens'],expected)
+        for step,expected in (('concept_card',4096),('item_draft',3500),('rationale',2400)):
+            adapter({**REQUEST,'step':step})
+            self.assertEqual(captured[-1]['max_tokens'],expected)
+
     def test_planned_draft_requests_a_literal_condition_slot(self):
         captured=[]
         def transport(**kw):

@@ -226,7 +226,7 @@ class GenerationCliTests(unittest.TestCase):
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
             model="test-model", transport=transport.return_value,
-            owner_opt_in=True, staging=True)
+            owner_opt_in=True, staging=True, max_output_tokens=8192)
         generate.assert_called_once()
         # Exercise the callback actually supplied to the pipeline, not only the helper.
         from item_ai_https_transport_v2 import TransportError
