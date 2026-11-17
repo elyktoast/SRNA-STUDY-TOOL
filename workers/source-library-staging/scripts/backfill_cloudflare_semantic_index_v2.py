@@ -10,7 +10,7 @@ import re
 from uuid import UUID
 from backfill_semantic_embeddings_v2 import load_source
 from import_semantic_index_v2 import validate_staging_db_url
-from item_cloudflare_embeddings_v2 import MODEL, make_embed_many, valid_vector
+from item_cloudflare_embeddings_v2 import MODEL, make_embed_many, valid_vector, batch_fits
 from item_semantic_inventory_reconcile_v2 import reconcile
 from item_semantic_live_bridge_v2 import build_semantic_lookup
 from item_semantic_duplicates import screen
@@ -65,8 +65,9 @@ def backfill(conn, source_path, *, owner_uid, embed_many, apply=False, max_new=3
         print(json.dumps({'check':'semantic_backfill_progress','completed':result['expected']-result['remaining'],
                           'expected':result['expected'],'new_embeddings':result['new_embeddings']}),flush=True)
     for item_id in pending[:max_new]:
-        # Bound each native request by both document count and total characters.
-        if batch and (len(batch)==32 or sum(len(stems[i]) for i in batch)+len(stems[item_id])>128000):
+        # The model's batched context can depend on the longest input, not
+        # just total text. Split batches; never truncate canonical stems.
+        if batch and not batch_fits([stems[i] for i in batch+[item_id]]):
             commit_batch(batch);batch=[]
         batch.append(item_id)
     if batch:

@@ -35,6 +35,7 @@ test('semantic relay bounds input, pins model and returns only validated vectors
  assert.deepEqual(calls,[{model:embeddingPayload.model,body:{text:embeddingPayload.text}}]);
  for(const body of [{...embeddingPayload,model:'other-model'},{...embeddingPayload,text:['x'.repeat(10001)]},
   {...embeddingPayload,text:Array(33).fill('x')},{...embeddingPayload,text:Array(32).fill('x'.repeat(5000))},
+  {...embeddingPayload,text:[...Array(31).fill('x'),'x'.repeat(3200)]},{...embeddingPayload,text:Array(16).fill('λ'.repeat(1600))},
   {...embeddingPayload,extra:'forbidden'},{...embeddingPayload,text:['']}]){
   assert.equal((await gateway.fetch(embeddingRequest(body),config)).status,400);
  }
@@ -49,6 +50,9 @@ test('malformed native embedding results and provider failures fail closed witho
  const config={...env,AI_EMBEDDING_RELAY_OPT_IN:'true',SEMANTIC_AI:{run:async()=>{throw Error('private provider response');}}};
  const response=await gateway.fetch(embeddingRequest(embeddingPayload),config);
  assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:'relay_network'});
+ const context={...config,SEMANTIC_AI:{run:async()=>{throw Error('Max context reached 99488 tokens but model supports only 60000 private details');}}};
+ const rejected=await gateway.fetch(embeddingRequest(embeddingPayload),context);
+ assert.equal(rejected.status,413);assert.deepEqual(await rejected.json(),{error:'provider_failed',rule:'PROVIDER_REQUEST_REJECTED'});
 });
 test('429 diagnostics expose only fixed dimensions and bounded numbers; fractional waits round up',async()=>{
  const original=globalThis.fetch;

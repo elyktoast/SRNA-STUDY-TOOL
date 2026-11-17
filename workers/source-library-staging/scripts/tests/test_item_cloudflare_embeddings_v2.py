@@ -44,7 +44,7 @@ class CloudflareEmbeddingTests(unittest.TestCase):
 
     def test_input_bounds_fail_before_any_provider_call(self):
         embed=make_embed_many(enabled=True,transport=lambda **kw:self.fail('must not call'))
-        for values in ([],[''],['x']*33,['x'*10001],['x'*5000]*32,[None]):
+        for values in ([],[''],['x']*33,['x'*10001],['x'*5000]*32,['x']*31+['x'*3200],['λ'*1600]*16,[None]):
             with self.assertRaises(ValueError):
                 embed(values)
 

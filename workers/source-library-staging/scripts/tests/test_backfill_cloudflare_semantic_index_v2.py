@@ -65,6 +65,22 @@ class CloudflareBackfillTests(unittest.TestCase):
         self.assertNotIn('Private synthetic',logs.getvalue())
         reconcile.assert_called_once()
 
+    @patch('backfill_cloudflare_semantic_index_v2.reconcile',return_value={'ready':True})
+    def test_long_outlier_splits_padded_context_without_truncating_stems(self,reconcile):
+        source=json.loads(self.path.read_text())
+        source['stems'][0]['stem']='x'*3200
+        source['entries'][0]['stem_hash']=hashlib.sha256(('x'*3200).encode()).hexdigest()
+        source['inventory_digest']=hashlib.sha256(json.dumps(source['entries'],separators=(',',':')).encode()).hexdigest()
+        self.path.write_text(json.dumps(source))
+        conn=Conn();calls=[]
+        def embed(texts):
+            calls.append(list(texts));return [VECTOR for _ in texts]
+        with contextlib.redirect_stdout(io.StringIO()):
+            result=backfill(conn,self.path,owner_uid=OWNER,embed_many=embed,apply=True,max_new=10000)
+        self.assertEqual([len(batch) for batch in calls],[14,19])
+        self.assertEqual([stem for batch in calls for stem in batch],[row['stem'] for row in source['stems']])
+        self.assertTrue(result['complete']);self.assertEqual(len(conn.rows),33)
+
     def test_preflight_makes_no_embedding_calls_or_writes(self):
         conn=Conn()
         result=backfill(conn,self.path,owner_uid=OWNER,embed_many=lambda texts:self.fail('no call'))
