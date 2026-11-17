@@ -262,7 +262,7 @@ test('generated numeric, matching and hotspot previews preserve their actual for
   append(...children){this.children.push(...children);}
   replaceChildren(...children){this.children=children;this.textContent='';}
  }
- const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function renderMCReviewSummary(',begin);
+ const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function currentSourceTitles(',begin);
  const render=runInNewContext('('+ui.slice(begin,end).trim()+')',{document:{createElement:tag=>new Element(tag)}});
  const descendants=node=>[node,...node.children.flatMap(descendants)];
  const text=node=>descendants(node).map(n=>n.textContent).join('\n');

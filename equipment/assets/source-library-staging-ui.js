@@ -212,7 +212,7 @@ objectiveSelect.addEventListener('change',()=>{
 });
 generationPanel.querySelector('#sl-gen-book-select').addEventListener('change',event=>{researchBookSelect.value=event.target.value;});
 for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective','sl-multi-source'])for(const eventName of ['input','change'])generationPanel.querySelector('#'+id).addEventListener(eventName,()=>{checkedEvidence=null;evidencePanel.querySelector('#sl-evidence-status').textContent='Textbook changed. Check indexed evidence again.';});evidencePanel.after(generationPanel);
-function renderReadableQuestion(host,question){
+function renderReadableQuestion(host,question,sourceTitles={}){
  host.replaceChildren();
  const q=question?.question&&typeof question.question==='object'?question.question:question;
  if(!q||typeof q!=='object'){host.textContent='Question preview unavailable.';return;}
@@ -257,7 +257,18 @@ function renderReadableQuestion(host,question){
  }
  const pages=[...new Set((Array.isArray(q.evidence)?q.evidence:[]).map(e=>e?.pdf_page).filter(p=>p!=null&&String(p).trim()))];
  if(pages.length)add('p','Indexed source PDF pages: '+pages.join(', ')+'. Printed page numbers remain unverified.').className='sl-muted';
+ if(q.format==='MC'&&Array.isArray(q.evidence)&&q.evidence.length){
+  add('h4','Textbook sources');const sources=add('ol','');
+  for(const citation of q.evidence){
+   if(!citation||typeof citation.textbook_id!=='string')continue;
+   const title=sourceTitles[citation.textbook_id]||'Indexed textbook '+citation.textbook_id;
+   add('li',title+' · PDF page '+(citation.pdf_page??'unavailable'),sources);
+  }
+ }
  add('p','Unpublished · Clinical review required').className='sl-muted';
+}
+function currentSourceTitles(){
+ return Object.fromEntries([...genEl('sl-gen-book-select').options].filter(option=>option.value).map(option=>[option.value,option.textContent]));
 }
 function renderMCReviewSummary(host,screening,format){
  if(format!=='MC')return;
@@ -294,7 +305,7 @@ genEl('sl-generate-one').onclick=async()=>{
   const request={topic,textbook_id,mode:el('sl-mode').value,format:el('sl-format').value,domain,section,objective,item_id:crypto.randomUUID(),...(checkedEvidence.textbook_ids?{textbook_ids:checkedEvidence.textbook_ids}:{})};
   const result=await storage.generateOne(request,{onRecovery:()=>{genEl('sl-gen-status').textContent='Still working. Checking for the saved draft…';}});
   if(result.dry_run!==false||result.can_publish!==false||result.database_writes!==false||result.requires_human_review!==true||!result.item)throw Error('Unsafe or incomplete generated question.');
-  generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);renderMCReviewSummary(genEl('sl-generated-preview'),result.screening,result.item.format);
+  generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item,currentSourceTitles());renderMCReviewSummary(genEl('sl-generated-preview'),result.screening,result.item.format);
   const preview=genEl('sl-generated-preview');
   const evidenceCount=Array.isArray(result.source_evidence?.passage_ids)?result.source_evidence.passage_ids.length:
     (Array.isArray(result.source_evidence)?result.source_evidence.length:
@@ -344,7 +355,7 @@ async function openSavedDraft(draftId,button){
   genEl('sl-revision-status').textContent='';genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();
   genEl('sl-draft-history-output').hidden=true;
   genEl('sl-current-revision').hidden=true;
-  const revision=await storage.listDraftRevisions(draftId);if(revision.published!==false||!revision.current_question||!/^[a-f0-9]{64}$/.test(revision.current_question_sha256||''))throw Error('Latest unpublished revision could not be verified.');currentDraftQuestion=revision.current_question;detail.hidden=false;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);renderMCReviewSummary(genEl('sl-readable-question'),revision.current_question_sha256===revision.original_question_sha256?data.screening:null,currentDraftQuestion.format||data.format);populateQuestionEditor(currentDraftQuestion);if(dialog.classList.contains('sl-workspace-ai'))dialog.querySelector('[data-sl-ai-view="editor"]')?.click();genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=currentDraftQuestion||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:currentDraftQuestion,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+  const revision=await storage.listDraftRevisions(draftId);if(revision.published!==false||!revision.current_question||!/^[a-f0-9]{64}$/.test(revision.current_question_sha256||''))throw Error('Latest unpublished revision could not be verified.');currentDraftQuestion=revision.current_question;detail.hidden=false;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion,currentSourceTitles());renderMCReviewSummary(genEl('sl-readable-question'),revision.current_question_sha256===revision.original_question_sha256?data.screening:null,currentDraftQuestion.format||data.format);populateQuestionEditor(currentDraftQuestion);if(dialog.classList.contains('sl-workspace-ai'))dialog.querySelector('[data-sl-ai-view="editor"]')?.click();genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=currentDraftQuestion||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:currentDraftQuestion,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
   const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;
  }catch(error){currentDraftQuestion=null;detail.hidden=true;genEl('sl-revision-status').textContent='Cannot open draft: '+(error.message||'Unknown error');genEl('sl-gen-status').textContent='Cannot open draft: '+(error.message||'Unknown error');}
  finally{button.disabled=false;}
@@ -425,7 +436,7 @@ genEl('sl-save-revision').onclick=async()=>{
   });
   if(saved.published!==false||saved.can_publish!==false)throw Error('Unexpected revision publication state.');
   status.textContent='Unpublished revision '+saved.revision_number+' saved. Clinical review still required.';
-  try{const updated=await storage.listDraftRevisions(draftId);if(updated.published!==false)throw Error('Unverified draft state.');currentDraftQuestion=updated.current_question;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);populateQuestionEditor(currentDraftQuestion);genEl('sl-draft-history').click();}
+  try{const updated=await storage.listDraftRevisions(draftId);if(updated.published!==false)throw Error('Unverified draft state.');currentDraftQuestion=updated.current_question;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion,currentSourceTitles());populateQuestionEditor(currentDraftQuestion);genEl('sl-draft-history').click();}
   catch(refreshError){status.textContent='Revision '+saved.revision_number+' saved unpublished, but refresh failed: '+(refreshError.message||'Unknown error')+'. Reopen this draft to refresh.';}
  }catch(error){status.textContent='Revision not saved: '+(error.message||'Unknown error');}
  finally{btn.disabled=false;}

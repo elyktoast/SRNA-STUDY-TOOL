@@ -213,5 +213,25 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("unknown",result["distractor_evidence"]["A"]["passage_ids"])
         self.assertEqual(draft["evidence"],[])
 
+    def test_minimal_mc_selector_binds_only_its_trusted_book_page_and_text(self):
+        sources=[{"passage_id":"p1","textbook_id":"book-one","pdf_page_start":7,"excerpt":"First source"},
+                 {"passage_id":"p2","textbook_id":"book-two","pdf_page_start":12,"excerpt":"Second source"}]
+        draft={"format":"MC","evidence":[{"passage_id":"p2"},{"passage_id":"p1"}]}
+        result=_hydrate_indexed_citations(draft,sources)
+        self.assertEqual([(x['textbook_id'],x['pdf_page'],x['excerpt']) for x in result['evidence']],
+                         [('book-two',12,'Second source'),('book-one',7,'First source')])
+        self.assertTrue(all(x['printed_page_verified'] is False for x in result['evidence']))
+        self.assertEqual(draft['evidence'],[{'passage_id':'p2'},{'passage_id':'p1'}])
+
+    def test_mc_selector_never_repairs_explicit_wrong_references_or_unknown_sources(self):
+        source={'passage_id':'p1','textbook_id':'book-one','pdf_page_start':7,'excerpt':'Exact source'}
+        for citation in ({'passage_id':'unknown'},{'passage_id':'p1','textbook_id':'wrong'},
+                         {'passage_id':'p1','pdf_page':99},{'passage_id':'p1','excerpt':'Fabricated quote'}):
+            draft={'format':'MC','evidence':[citation]}
+            self.assertEqual(_hydrate_indexed_citations(draft,[source]),draft)
+        for field,value in (('pdf_page_start',None),('excerpt','')):
+            draft={'format':'MC','evidence':[{'passage_id':'p1'}]}
+            self.assertEqual(_hydrate_indexed_citations(draft,[{**source,field:value}]),draft)
+
 if __name__ == "__main__":
     unittest.main()

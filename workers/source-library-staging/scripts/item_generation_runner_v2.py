@@ -66,7 +66,7 @@ def _complete_nonclinical_schema_fields(draft):
 
 
 def _hydrate_indexed_citations(draft, trusted_passages):
-    """Materialize missing quotations only from exactly bound indexed references.
+    """Bind minimal MC selectors or missing quotes to exact indexed references.
 
     Never replace a supplied quote, repair a wrong source/page, or treat a
     reference as proof of clinical support. All existing validators still run.
@@ -78,8 +78,18 @@ def _hydrate_indexed_citations(draft, trusted_passages):
     if not isinstance(citations, list):
         return item
     for citation in citations:
+        selector = (item.get("format") == "MC" and isinstance(citation, dict)
+                    and set(citation) == {"passage_id"})
         if isinstance(citation, dict):
             citation.pop("numbers_verified_against_page_image", None)
+        if selector:
+            pid = citation["passage_id"]
+            source = sources.get(pid) if isinstance(pid, str) else None
+            if (source and type(source.get("pdf_page_start")) is int
+                    and source["pdf_page_start"] > 0
+                    and isinstance(source.get("excerpt"), str) and source["excerpt"]):
+                citation.update(textbook_id=source["textbook_id"],
+                                pdf_page=source["pdf_page_start"], excerpt=source["excerpt"])
         if not isinstance(citation, dict) or "excerpt" in citation:
             continue
         source = sources.get(citation.get("passage_id"))

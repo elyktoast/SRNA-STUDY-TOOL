@@ -11,12 +11,12 @@ const reviewer='https://reviewer-staging.srnastudytool.com';
 const pdf='123e4567-e89b-42d3-a456-426614174000/book.pdf';
 const sha=async bytes=>Buffer.from(await webcrypto.subtle.digest('SHA-256',bytes)).toString('hex');
 
-function preview(question){
+function preview(question,sourceTitles={}){
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
  const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]},set innerHTML(value){throw Error('Generated content must be text')}});
  const document={createElement:node},host=node('div');
  const render=vm.runInNewContext(ui.slice(ui.indexOf('function renderReadableQuestion('),ui.indexOf('let generatedForReview='))+'\nrenderReadableQuestion',{document});
- render(host,question);
+ render(host,question,sourceTitles);
  const text=n=>[n.textContent,...n.children.map(text)].join('\n');return text(host);
 }
 test('saved v2 question preview exposes the four-part teaching rationale and PDF citations safely',()=>{
@@ -300,4 +300,13 @@ test('MC checklist handles missing stages, failed reviews and stale revised draf
  assert.match(text,/Approval blocked/);assert.ok(!text.includes('private'));
  assert.match(mcReviewSummary(completeMCReview()),/Clinical review and current-source revalidation are required/);
  assert.equal(mcReviewSummary(null,'MS'),'');
+});
+
+test('MC source references keep book names paired with their PDF page locations',()=>{
+ const first='<img src=x onerror=alert(1)>',second='Second textbook.pdf';
+ const text=preview({format:'MC',stem:'Test',evidence:[{textbook_id:'book-a',pdf_page:123},{textbook_id:'book-b',pdf_page:123}]},{'book-a':first,'book-b':second});
+ assert.ok(text.includes(first+' · PDF page 123'));
+ assert.ok(text.includes(second+' · PDF page 123'));
+ assert.ok(text.includes('Printed page numbers remain unverified'));
+ assert.ok(preview({format:'MC',evidence:[{textbook_id:'legacy-book',pdf_page:9}]}).includes('Indexed textbook legacy-book · PDF page 9'));
 });
