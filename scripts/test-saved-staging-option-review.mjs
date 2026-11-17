@@ -22,7 +22,8 @@ function fixture(mode='pass'){
   else data=written?{...before,screening:{...before.screening,stages:{...stages,independent_option_evidence:{status:mode==='pending'?'pending':'pass'}}}}:before;
   return Response.json(data);
  };
- return {calls,logs,run:overrides=>verifySavedReview({env:{...env,...overrides},fetchImpl,emit:v=>logs.push(v),now:()=>time})};
+ const deployment={verification:'connected_cloudflare_deployment_read',verified_at:new Date(mode==='expired'?time-300001:time).toISOString(),build:{build_uuid:env.STAGING_TARGET_BUILD_UUID,status:'stopped',build_outcome:mode==='bad-build'?'failure':'success',commit_hash:sha,stopped_on:new Date(time-180000).toISOString()},app:{updated_at:new Date(time-120000).toISOString(),health:{errors:[]},configuration:{image:'registry/image@sha256:'+image}},instances:[]};
+ return {calls,logs,run:overrides=>verifySavedReview({env:{...env,...overrides},fetchImpl,emit:v=>logs.push(v),now:()=>time,deployment})};
 }
 test('saved review acceptance performs one paid review, preserves question and never invokes authoring or approval',async()=>{
  const f=fixture();const result=await f.run();assert.equal(result.question_unchanged,true);
@@ -32,7 +33,7 @@ test('saved review acceptance performs one paid review, preserves question and n
 });
 test('stale staging code or absent confirmation stops before any paid request',async()=>{
  const unconfirmed=fixture();await assert.rejects(unconfirmed.run({CONFIRM_PAID_OPTION_REVIEW:'false'}));assert.equal(unconfirmed.calls.filter(c=>c.method==='POST').length,0);
- for(const mode of ['stale','bad-build']){const f=fixture(mode);await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.method==='POST').length,0);}
+ for(const mode of ['stale','bad-build','expired']){const f=fixture(mode);await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.method==='POST').length,0);}
 });
 test('transport errors and a blocked clinical review are not retried or reported as acceptance',async()=>{
  for(const mode of ['timeout','pending','unsafe']){

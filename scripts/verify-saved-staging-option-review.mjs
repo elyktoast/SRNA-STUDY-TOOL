@@ -2,6 +2,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
+import {readFileSync} from 'node:fs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
@@ -10,7 +11,7 @@ const owner='c003287a-10ce-4cc9-926e-ef7c3a162a26';
 const canonical=value=>value&&typeof value==='object'?(Array.isArray(value)?value.map(canonical):Object.fromEntries(Object.keys(value).sort().map(k=>[k,canonical(value[k])]))):value;
 const digest=value=>createHash('sha256').update(JSON.stringify(canonical(value))).digest('hex');
 
-export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=value=>console.log(JSON.stringify(value)),now=Date.now}={}){
+export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=value=>console.log(JSON.stringify(value)),now=Date.now,deployment}={}){
  assert.equal(env.CONFIRM_PAID_OPTION_REVIEW,'true','Explicit paid option-review confirmation required');
  const id=env.STAGING_SAVED_DRAFT_ID,sha=env.STAGING_TARGET_SHA,image=env.STAGING_TARGET_IMAGE_SHA256;
  assert.match(id||'',/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
@@ -25,15 +26,17 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const head=await json(repo+'/git/ref/heads/fix/board-question-quality',{headers:gh});
  assert.equal(head.object?.sha,sha,'Staging code changed; do not perform a paid review');
  const buildId=env.STAGING_TARGET_BUILD_UUID;assert.match(buildId||'',/^[a-f0-9-]{36}$/);
- assert.match(env.CLOUDFLARE_ACCOUNT_ID||'',/^[a-f0-9]{32}$/);
- const cf='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/containers/applications/a03bdc12-da09-4e2c-b543-816ebad2e339';
- const cfHeaders={Authorization:'Bearer '+env.CLOUDFLARE_API_TOKEN};
- const [app,instances,build]=await Promise.all([json(cf,{headers:cfHeaders}),json(cf+'/instances-v2',{headers:cfHeaders}),json('https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/builds/builds/'+buildId,{headers:cfHeaders})]);
- assert.equal(app.success,true);assert.equal(instances.success,true);assert.equal(build.success,true);
- assert.equal(build.result.status,'stopped');assert.equal(build.result.build_outcome,'success');assert.equal(build.result.build_trigger_metadata.commit_hash,sha);
- const completed=Date.parse(build.result.stopped_on);assert.ok(Number.isFinite(completed),'Successful build completion time required');
- assert.ok(app.result.configuration.image.endsWith('@sha256:'+image),'Unexpected staging container image');
- assert.ok(settled(app.result,instances.result,now(),now()-90000,completed),'Staging rollout is not settled');
+ // The operator verifies this short-lived snapshot through the connected deployment service.
+ // CI needs no broader deployment-read credential. Preview checks on the same SHA are not deployment evidence.
+ deployment??=JSON.parse(readFileSync(new URL('../.github/staging-saved-option-review-deployment.json',import.meta.url),'utf8'));
+ assert.equal(deployment.verification,'connected_cloudflare_deployment_read');
+ const verified=Date.parse(deployment.verified_at);
+ assert.ok(Number.isFinite(verified)&&now()-verified>=-60000&&now()-verified<=300000,'Deployment verification expired; no paid review permitted');
+ const {build,app,instances}=deployment;
+ assert.equal(build.build_uuid,buildId);assert.equal(build.status,'stopped');assert.equal(build.build_outcome,'success');assert.equal(build.commit_hash,sha);
+ const completed=Date.parse(build.stopped_on);assert.ok(Number.isFinite(completed),'Successful build completion time required');
+ assert.ok(app.configuration.image.endsWith('@sha256:'+image),'Unexpected staging container image');
+ assert.ok(settled(app,instances,now(),now()-90000,completed),'Staging rollout is not settled');
  let token=env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;
  if(env.STAGING_TEST_ADMIN_EMAIL&&env.STAGING_TEST_ADMIN_PASSWORD){
   const login=await json(project+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:env.STAGING_SUPABASE_ANON_KEY,'Content-Type':'application/json'},body:JSON.stringify({email:env.STAGING_TEST_ADMIN_EMAIL,password:env.STAGING_TEST_ADMIN_PASSWORD})});
@@ -62,7 +65,7 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const current=await json(gateway+path+'/revalidate',{headers});
  assert.equal(current.generation_performed,false);assert.equal(current.database_writes,false);assert.equal(current.published,false);
  const stages=Object.fromEntries(Object.entries(after.screening.stages).map(([name,value])=>[name,value.status]));
- emit({draft_id:id,question_sha256:questionHash,question_unchanged:true,rewrite_attempts:rewrites,
+ emit({draft_id:id,deployment_verification_sha256:digest(deployment),question_sha256:questionHash,question_unchanged:true,rewrite_attempts:rewrites,
   review_status:result.option_review_status,automated_checks_passed:result.automated_checks_passed,
   stages,current_index_issue_rules:current.issues.map(i=>i.rule_id),generation_performed:false,rewrite_performed:false,published:false});
  assert.equal(result.automated_checks_passed,true,'Missing review completed but question remains blocked');
