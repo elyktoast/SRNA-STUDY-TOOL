@@ -30,6 +30,7 @@ jobs:
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           CONFIRM_PAID_OPTION_REVIEW: 'true'
           STAGING_SAVED_DRAFT_ID: 65c2e793-a7af-4746-bfb6-1abf9993085c
+          STAGING_TARGET_BUILD_UUID: 409749dd-864f-40a6-8389-e0884d20bcdc
           STAGING_TARGET_SHA: 9c8089cb5eee12fbac12f492670bf1827b9a2efe
           STAGING_TARGET_IMAGE_SHA256: 6ab6d19131ab05bc64d6444c075ebd28940072a569f192e20b6a7fabffb44b16
         run: node scripts/verify-saved-staging-option-review.mjs

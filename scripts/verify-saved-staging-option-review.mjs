@@ -2,7 +2,7 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
-import {settled,completedWorkerBuild} from './wait-staging-reviewer-rollout.mjs';
+import {settled} from './wait-staging-reviewer-rollout.mjs';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const repo='https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL';
@@ -24,13 +24,14 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const gh={Authorization:'Bearer '+env.GITHUB_TOKEN,Accept:'application/vnd.github+json'};
  const head=await json(repo+'/git/ref/heads/fix/board-question-quality',{headers:gh});
  assert.equal(head.object?.sha,sha,'Staging code changed; do not perform a paid review');
- const checks=await json(repo+'/commits/'+sha+'/check-runs?per_page=100',{headers:gh});
- const completed=completedWorkerBuild(checks.check_runs,sha);assert.notEqual(completed,null,'Exact staging Worker build has not completed');
+ const buildId=env.STAGING_TARGET_BUILD_UUID;assert.match(buildId||'',/^[a-f0-9-]{36}$/);
  assert.match(env.CLOUDFLARE_ACCOUNT_ID||'',/^[a-f0-9]{32}$/);
  const cf='https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/containers/applications/a03bdc12-da09-4e2c-b543-816ebad2e339';
  const cfHeaders={Authorization:'Bearer '+env.CLOUDFLARE_API_TOKEN};
- const [app,instances]=await Promise.all([json(cf,{headers:cfHeaders}),json(cf+'/instances-v2',{headers:cfHeaders})]);
- assert.equal(app.success,true);assert.equal(instances.success,true);
+ const [app,instances,build]=await Promise.all([json(cf,{headers:cfHeaders}),json(cf+'/instances-v2',{headers:cfHeaders}),json('https://api.cloudflare.com/client/v4/accounts/'+env.CLOUDFLARE_ACCOUNT_ID+'/builds/builds/'+buildId,{headers:cfHeaders})]);
+ assert.equal(app.success,true);assert.equal(instances.success,true);assert.equal(build.success,true);
+ assert.equal(build.result.status,'stopped');assert.equal(build.result.build_outcome,'success');assert.equal(build.result.build_trigger_metadata.commit_hash,sha);
+ const completed=Date.parse(build.result.stopped_on);assert.ok(Number.isFinite(completed),'Successful build completion time required');
  assert.ok(app.result.configuration.image.endsWith('@sha256:'+image),'Unexpected staging container image');
  assert.ok(settled(app.result,instances.result,now(),now()-90000,completed),'Staging rollout is not settled');
  let token=env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;

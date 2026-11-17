@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {verifySavedReview} from './verify-saved-staging-option-review.mjs';
 const sha='b'.repeat(40),image='a'.repeat(64),time=1800000000000;
-const env={CONFIRM_PAID_OPTION_REVIEW:'true',STAGING_SAVED_DRAFT_ID:'65c2e793-a7af-4746-bfb6-1abf9993085c',STAGING_TARGET_SHA:sha,STAGING_TARGET_IMAGE_SHA256:image,
+const env={CONFIRM_PAID_OPTION_REVIEW:'true',STAGING_SAVED_DRAFT_ID:'65c2e793-a7af-4746-bfb6-1abf9993085c',STAGING_TARGET_SHA:sha,STAGING_TARGET_BUILD_UUID:'409749dd-864f-40a6-8389-e0884d20bcdc',STAGING_TARGET_IMAGE_SHA256:image,
  CLOUDFLARE_ACCOUNT_ID:'a'.repeat(32),CLOUDFLARE_API_TOKEN:'fixture',GITHUB_TOKEN:'fixture',SRNA_STAGING_REVIEWER_ACCESS_TOKEN:'fixture',STAGING_SUPABASE_ANON_KEY:'fixture'};
 function fixture(mode='pass'){
  const calls=[],logs=[];let written=false;
@@ -12,7 +12,7 @@ function fixture(mode='pass'){
  const fetchImpl=async(url,options={})=>{
   calls.push({url,method:options.method||'GET'});let data;
   if(url.includes('/git/ref/'))data={object:{sha:mode==='stale'?'c'.repeat(40):sha}};
-  else if(url.includes('/check-runs'))data={check_runs:[{id:1,head_sha:sha,app:{slug:'cloudflare-workers-and-pages'},name:'Workers Builds: srna-source-reviewer-gateway-staging',status:'completed',conclusion:'success',completed_at:new Date(time-180000).toISOString()}]};
+  else if(url.includes('/builds/builds/'))data={success:true,result:{status:'stopped',build_outcome:mode==='bad-build'?'failure':'success',build_trigger_metadata:{commit_hash:sha},stopped_on:new Date(time-180000).toISOString()}};
   else if(url.includes('api.cloudflare.com'))data={success:true,result:url.endsWith('/instances-v2')?[]:{updated_at:new Date(time-120000).toISOString(),health:{errors:[]},configuration:{image:'registry/image@sha256:'+image}}};
   else if(url.endsWith('/auth/v1/user'))data={id:'c003287a-10ce-4cc9-926e-ef7c3a162a26'};
   else if(url.endsWith('/complete-options')){
@@ -32,7 +32,7 @@ test('saved review acceptance performs one paid review, preserves question and n
 });
 test('stale staging code or absent confirmation stops before any paid request',async()=>{
  const unconfirmed=fixture();await assert.rejects(unconfirmed.run({CONFIRM_PAID_OPTION_REVIEW:'false'}));assert.equal(unconfirmed.calls.filter(c=>c.method==='POST').length,0);
- const stale=fixture('stale');await assert.rejects(stale.run());assert.equal(stale.calls.filter(c=>c.method==='POST').length,0);
+ for(const mode of ['stale','bad-build']){const f=fixture(mode);await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.method==='POST').length,0);}
 });
 test('transport errors and a blocked clinical review are not retried or reported as acceptance',async()=>{
  for(const mode of ['timeout','pending','unsafe']){
