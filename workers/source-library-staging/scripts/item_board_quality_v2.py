@@ -119,7 +119,9 @@ def verify_counterfactual(item, proposal, reviewer):
     except Exception:
         return {"status":"pending", "issues":[]}
     if failed:
-        issue = {**issue, "message": issue["message"] + "; the independent changed-stem answer did not match. Check for original-condition findings left outside the replacement, and repair the complete case without changing the original key."}
+        issue = {**issue, "message": issue["message"] + "; the independent changed-stem answer did not match. Check the exact lead-in as well as the changed condition: a different diagnosis can retain the same mechanism for a shared outcome. Repair the complete case without changing the original key.",
+                 "stem_change": {"from_text": proposal["from_text"], "to_text": proposal["to_text"]},
+                 "expected_key": list(expected), "independent_key": list(response["key"])}
     return {"status":"flag" if failed else "pass", "issues":[issue] if failed else [],
             "stem_change": {"from_text":proposal["from_text"], "to_text":proposal["to_text"]},
             "expected_key": expected, "independent_key": response.get("key") if isinstance(response, dict) else None}

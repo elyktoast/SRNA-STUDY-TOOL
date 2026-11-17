@@ -1,13 +1,13 @@
 import copy
 import unittest
-from item_mc_choice_plan_v2 import validate, bind, render_condition, CONDITION_SLOT
+from item_mc_choice_plan_v2 import validate, bind, render_condition, CONDITION_SLOT, LEAD_IN_SLOT
 from item_generation_runner_v2 import generate_one
 from test_item_generation_runner_v2 import ARGS
 from test_item_standard_v2 import sample
 
 
 def plan():
-    return {"response_variables":["Measurement X","Measurement Y"],"stem_condition":"condition X", "alternate_condition":"condition Y",
+    return {"response_variables":["Measurement X","Measurement Y"],"stem_condition":"condition X", "alternate_condition":"condition Y", "lead_in":"Which response fits?",
             "key":["B"],"alternate_key":["A"],"options":[
                 {"id":oid,"states":states}
                 for oid,states in [("A",["reduced","reduced"]),
@@ -20,6 +20,7 @@ class ChoicePlanTests(unittest.TestCase):
     def test_ordinary_single_component_choices_remain_natural_and_bound_to_both_cases(self):
         raw=plan()
         raw['response_variables']=['Clinical response']
+        raw['lead_in']='Which response is appropriate?'
         for option,state in zip(raw['options'],['Response alpha','Response beta','Response gamma','Response delta']):
             option['states']=[state]
         p=validate(raw)
@@ -64,7 +65,7 @@ class ChoicePlanTests(unittest.TestCase):
 
     def test_distinct_patterns_and_draft_binding_never_prove_clinical_correctness(self):
         p=validate(plan())
-        draft={"stem":"During care, condition X is observed. Which response fits?", "key":["B"],
+        draft={"stem":"condition X Which response fits?", "key":["B"],
                "options":[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]]}
         proposal=bind(p,draft)
         self.assertEqual(proposal,{"from_text":"condition X","to_text":"condition Y","expected_key":["A"]})
@@ -117,7 +118,7 @@ class ChoicePlanTests(unittest.TestCase):
     def test_plan_is_checkpointed_but_not_persisted_in_the_canonical_item(self):
         raw=plan();p=validate(raw);calls=[];checkpoints={}
         concept=dict(objective="III.H.4",mechanism="m",relevance="r",misconception="x",counterfactual="planned",evidence_ids=["p1"],choice_plan=raw)
-        draft=sample();draft.update(stem="During care, condition X is observed. Which response fits?",key=["B"],
+        draft=sample();draft.update(stem="condition X Which response fits?",key=["B"],
             options=[{"id":o["id"],"text":o["text"],"error_pattern":None if o["id"]=="B" else "Confuses component responses"} for o in p["options"]])
         def adapter(request):
             calls.append(request["step"])
@@ -149,3 +150,30 @@ class ChoicePlanTests(unittest.TestCase):
             return response
         with self.assertRaisesRegex(ValueError, "counterfactual differs from planned case"):
             generate_one(drift,**ARGS,checkpoint=checkpoints)
+
+    def test_shared_lead_in_is_required_and_cannot_embed_either_case(self):
+        for value in (None, '', 'A declarative answer', 'condition X Which response fits?'):
+            raw=plan();raw['lead_in']=value
+            with self.subTest(value=value),self.assertRaises(ValueError):validate(raw)
+        raw=plan();raw.pop('lead_in')
+        with self.assertRaises(ValueError):validate(raw)
+
+    def test_two_slots_render_only_the_complete_authored_plan(self):
+        p=validate(plan())
+        original={'stem':CONDITION_SLOT+' '+LEAD_IN_SLOT,'key':p['key'],
+                  'options':[{'id':o['id'],'text':o['text']} for o in p['options']]}
+        rendered=render_condition(p,original)
+        self.assertEqual(rendered['stem'],'condition X Which response fits?')
+        self.assertEqual(bind(p,rendered)['expected_key'],['A'])
+        self.assertEqual(original['stem'],CONDITION_SLOT+' '+LEAD_IN_SLOT)
+        self.assertNotIn('can_publish',rendered)
+
+    def test_later_drafting_cannot_change_the_question_or_add_unplanned_context(self):
+        p=validate(plan())
+        options=[{'id':o['id'],'text':o['text']} for o in p['options']]
+        for stem in ('condition X Which different outcome is responsible?',
+                     'During care, condition X Which response fits?',
+                     CONDITION_SLOT+' Which different outcome is responsible?',
+                     CONDITION_SLOT+' '+LEAD_IN_SLOT+' Additional finding.'):
+            with self.subTest(stem=stem),self.assertRaises(ValueError):
+                bind(p,render_condition(p,{'stem':stem,'key':p['key'],'options':options}))

@@ -240,6 +240,11 @@ class BoardQualityTests(unittest.TestCase):
         for answer in (["B"],["A","C"]):
             result=verify_counterfactual(item(),proposal,lambda p:{"item_id":p["item_id"],"key":answer})
             self.assertEqual(result["status"],"flag")
+            diagnostic=result["issues"][0]
+            self.assertEqual(diagnostic["stem_change"],{k:proposal[k] for k in ("from_text","to_text")})
+            self.assertEqual(diagnostic["expected_key"],["C"])
+            self.assertEqual(diagnostic["independent_key"],answer)
+            self.assertEqual(set(diagnostic),{"rule_id","field","message","stem_change","expected_key","independent_key"})
         def unavailable(p): raise TimeoutError("private")
         self.assertEqual(verify_counterfactual(item(),proposal,unavailable)["status"],"pending")
         self.assertEqual(verify_counterfactual(item(),proposal,lambda p:{"key":["C"]})["status"],"pending")

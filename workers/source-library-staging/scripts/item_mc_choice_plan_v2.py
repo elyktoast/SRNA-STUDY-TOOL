@@ -3,22 +3,22 @@ from copy import deepcopy
 import re
 
 CONDITION_SLOT = "{{STEM_CONDITION}}"
+LEAD_IN_SLOT = "{{LEAD_IN}}"
 
 
 def render_condition(plan, draft):
     """Insert the authored case literally; never infer or repair clinical prose."""
     stem = draft.get("stem")
-    if not isinstance(stem, str) or CONDITION_SLOT not in stem:
+    if not isinstance(stem, str) or (CONDITION_SLOT not in stem and LEAD_IN_SLOT not in stem):
         return draft  # Older literal drafts still have to pass strict bind().
-    if (stem.count(CONDITION_SLOT) != 1
-            or plan["stem_condition"] in stem
-            or plan["alternate_condition"] in stem):
+    if stem not in (CONDITION_SLOT + " " + LEAD_IN_SLOT,
+                    CONDITION_SLOT + " " + plan["lead_in"]):
         raise ValueError("Generated draft differs from its choice plan: condition")
-    return {**draft, "stem": stem.replace(CONDITION_SLOT, plan["stem_condition"])}
+    return {**draft, "stem": plan["stem_condition"] + " " + plan["lead_in"]}
 
 
 def validate(plan):
-    fields = {"response_variables", "stem_condition", "alternate_condition", "key", "alternate_key", "options"}
+    fields = {"response_variables", "stem_condition", "alternate_condition", "lead_in", "key", "alternate_key", "options"}
     if not isinstance(plan, dict) or set(plan) != fields:
         raise ValueError("Concept card choice plan incomplete")
 
@@ -32,10 +32,15 @@ def validate(plan):
     if (count not in (1, 2) or not strings(components, count, 80)
             or len({normalize(v).casefold() for v in components}) != count
             or not strings([plan["stem_condition"], plan["alternate_condition"]], 2, 200)
+            or not strings([plan["lead_in"]], 1, 200)
+            or not plan["lead_in"].rstrip().endswith("?")
             or normalize(plan["stem_condition"]).casefold() == normalize(plan["alternate_condition"]).casefold()
             or not strings(plan["key"], 1, 1) or not strings(plan["alternate_key"], 1, 1)
             or plan["key"] == plan["alternate_key"]):
         raise ValueError("Concept card choice plan invalid")
+    if any(condition in plan["lead_in"] for condition in
+           (plan["stem_condition"], plan["alternate_condition"])):
+        raise ValueError("Concept card lead-in repeats a clinical condition")
     metadata_axes = {"type", "measurement type", "compliance type", "direction", "direction of change",
                      "change direction", "state", "value", "name", "option", "answer", "response"}
     if any(normalize(v).casefold() in metadata_axes for v in plan["response_variables"]):
@@ -96,5 +101,7 @@ def bind(plan, draft):
     if (draft["stem"].count(plan["stem_condition"]) != 1
             or plan["alternate_condition"] in draft["stem"]):
         raise ValueError("Generated draft differs from its choice plan: condition")
+    if draft["stem"] != plan["stem_condition"] + " " + plan["lead_in"]:
+        raise ValueError("Generated draft differs from its choice plan: lead-in")
     return {"from_text":plan["stem_condition"], "to_text":plan["alternate_condition"],
             "expected_key":deepcopy(plan["alternate_key"])}

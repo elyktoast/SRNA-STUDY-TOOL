@@ -33,7 +33,7 @@ class ProviderTests(unittest.TestCase):
             "options":[{"id":x,"text":"planned response "+x} for x in "ABCD"]}}
         make_adapter(**self.config(transport=transport))(request)
         prompt=captured[0]["messages"][0]["content"]
-        self.assertIn("literal token {{STEM_CONDITION}} exactly once",prompt)
+        self.assertIn("stem exactly as {{STEM_CONDITION}} {{LEAD_IN}}",prompt)
         self.assertNotIn("stem must contain this complete condition once",prompt)
 
     def config(self, **overrides):

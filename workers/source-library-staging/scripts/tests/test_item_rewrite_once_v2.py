@@ -112,6 +112,23 @@ class RewriteTests(unittest.TestCase):
         self.assertEqual(result["item"], original)
         self.assertTrue(any(issue["rule_id"] == "R-2.5" for issue in result["issues"]))
 
+    def test_failed_counterfactual_observation_reaches_the_single_repair_unchanged(self):
+        original=draft()
+        issues=[{"rule_id":"R-5.3","field":"concept_card.counterfactual",
+                 "stem_change":{"from_text":"original condition","to_text":"alternate condition"},
+                 "expected_key":["C"],"independent_key":["B"]}]
+        calls=[]
+        def rewrite(request):
+            calls.append(request)
+            request["issues"][0]["independent_key"].append("D")
+            return request["item"]
+        result=attempt_once(original,issues,rewrite,lambda candidate:issues)
+        self.assertEqual(len(calls),1)
+        self.assertEqual(calls[0]["issues"][0]["stem_change"],issues[0]["stem_change"])
+        self.assertEqual(issues[0]["independent_key"],["B"])
+        self.assertEqual(result["rewrite_attempts"],1)
+        self.assertFalse(result["can_publish"])
+
 
 if __name__ == "__main__":
     unittest.main()
