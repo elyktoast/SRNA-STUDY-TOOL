@@ -7,7 +7,8 @@ export async function semanticEmbeddings(payload,env){
  if(!payload||Object.keys(payload).sort().join(',')!=='model,task,text'||payload.task!=='semantic_embeddings'||payload.model!==SEMANTIC_MODEL
   ||!Array.isArray(payload.text)||payload.text.length<1||payload.text.length>32
   ||payload.text.some(t=>typeof t!=='string'||!t.trim()||t.length>10000)
-  ||payload.text.reduce((n,t)=>n+t.length,0)>128000)return reply(400,{error:'invalid_provider_payload'});
+  ||payload.text.reduce((n,t)=>n+t.length,0)>128000
+  ||(Math.max(...payload.text.map(t=>new TextEncoder().encode(t).byteLength))+16)*payload.text.length>48000)return reply(400,{error:'invalid_provider_payload'});
  try{
   const result=await env.SEMANTIC_AI.run(SEMANTIC_MODEL,{text:payload.text});
   const data=result?.data;
@@ -15,7 +16,10 @@ export async function semanticEmbeddings(payload,env){
    return reply(502,{error:'provider_failed',rule:'PROVIDER_UPSTREAM'});
   // Never log question stems, vectors, provider responses or credentials.
   return reply(200,{model:SEMANTIC_MODEL,shape:[data.length,1024],data});
- }catch{return reply(503,{error:'relay_network'});}
+ }catch(error){
+  if(/max context reached|model supports only/i.test(String(error?.message||'')))return reply(413,{error:'provider_failed',rule:'PROVIDER_REQUEST_REJECTED'});
+  return reply(503,{error:'relay_network'});
+ }
 }
 
 // Deliberately no public backend URL, receipt, or approval routes.

@@ -9,6 +9,14 @@ from item_ai_https_transport_v2 import make_transport, TransportError
 MODEL = "@cf/baai/bge-m3"
 RELAY = "https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay"
 
+PADDED_BATCH_BYTES = 48000
+
+def batch_fits(texts):
+    return (isinstance(texts,list) and 1<=len(texts)<=32
+            and all(isinstance(t,str) and t.strip() and len(t)<=10000 for t in texts)
+            and sum(map(len,texts))<=128000
+            and (max(len(t.encode('utf-8')) for t in texts)+16)*len(texts)<=PADDED_BATCH_BYTES)
+
 def valid_vector(vector):
     return (isinstance(vector, list) and len(vector) == 1024
             and all(type(v) in (int,float) and math.isfinite(v) and abs(v)<=1e100 for v in vector)
@@ -23,9 +31,7 @@ def make_embed_many(*, enabled, relay_secret=None, transport=None, wait=time.sle
     if not callable(transport) or not callable(wait):
         raise ValueError("Trusted embedding transport required")
     def embed_many(texts):
-        if (not isinstance(texts,list) or not 1<=len(texts)<=32
-                or any(not isinstance(t,str) or not t.strip() or len(t)>10000 for t in texts)
-                or sum(map(len,texts))>128000):
+        if not batch_fits(texts):
             raise ValueError("Invalid embedding batch")
         # The endpoint identifies the approved provider; transport sends the
         # signed request to RELAY. It never uses a provider bearer credential.
