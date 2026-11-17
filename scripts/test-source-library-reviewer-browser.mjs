@@ -310,3 +310,31 @@ test('MC source references keep book names paired with their PDF page locations'
  assert.ok(text.includes('Printed page numbers remain unverified'));
  assert.ok(preview({format:'MC',evidence:[{textbook_id:'legacy-book',pdf_page:9}]}).includes('Indexed textbook legacy-book · PDF page 9'));
 });
+
+test('completing a saved option review sends only confirmation and expected saved version',async()=>{
+ const {api,calls}=setup({handler:async()=>Response.json({published:false,generation_performed:false})});
+ const id='65c2e793-a7af-4746-bfb6-1abf9993085c',updated='2026-11-17T00:00:00+00:00';
+ await api.completeGeneratedOptionReview(id,updated);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].url,'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/drafts/'+id+'/complete-options');
+ assert.deepEqual(JSON.parse(calls[0].options.body),{confirm_paid_calls:true,expected_updated_at:updated});
+ assert.equal(calls[0].options.method,'POST');
+ assert.equal(calls[0].options.headers.Authorization,'Bearer staging-jwt');
+ await assert.rejects(api.completeGeneratedOptionReview('../other',updated));
+ await assert.rejects(api.completeGeneratedOptionReview(id,''));
+ assert.equal(calls.length,1);
+});
+
+test('option review control requires confirmation, disables while pending, and refreshes the saved draft',async()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const start=ui.indexOf("genEl('sl-complete-option-review').onclick=");
+ const end=ui.indexOf("genEl('sl-open-draft-id').value=",start);
+ const btn={disabled:false,dataset:{draftId:'saved-id',updatedAt:'saved-version'}},out={};let accepted=false,calls=0,refreshed=0;
+ const context={genEl:id=>id==='sl-complete-option-review'?btn:out,confirm:()=>accepted,
+  storage:{completeGeneratedOptionReview:async(id,version)=>{assert.equal(btn.disabled,true);assert.equal(id,'saved-id');assert.equal(version,'saved-version');calls++;return {published:false};}},
+  openSavedDraft:async(id,button)=>{if(button.disabled)return;assert.equal(id,'saved-id');refreshed++;}};
+ vm.runInNewContext(ui.slice(start,end),context);
+ await btn.onclick();assert.equal(calls,0);
+ accepted=true;await btn.onclick();assert.equal(calls,1);assert.equal(refreshed,1);assert.equal(btn.disabled,false);
+ assert.equal(JSON.parse(out.textContent).published,false);
+});

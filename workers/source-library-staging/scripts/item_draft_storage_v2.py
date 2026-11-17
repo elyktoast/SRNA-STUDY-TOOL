@@ -137,4 +137,6 @@ def get_draft(conn, *, owner_uid, draft_id):
         if result[key] is not None:
             result[key] = result[key].isoformat()
     result["published"] = False
+    from item_saved_option_review_v2 import eligible
+    result["can_complete_option_review"] = eligible(result)
     return result

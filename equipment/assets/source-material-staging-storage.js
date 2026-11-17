@@ -174,7 +174,7 @@ async function generationRequest(path,request){
  if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash||u.pathname!=='/'||u.hostname!=='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev')throw Error('Invalid staging generation backend.');
  const response=await fetch(u.origin+path,{method:'POST',headers:{Authorization:'Bearer '+token(),'Content-Type':'application/json'},credentials:'omit',cache:'no-store',redirect:'error',body:JSON.stringify(request)});
  const data=await response.json().catch(()=>({}));
- if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';const error=Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule);error.status=response.status;error.rule=data.rule;throw error;}
+ if(!response.ok){const safeRule=typeof data.rule==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.rule)?' ['+data.rule+']':'';const safeDetail=typeof data.validation_detail==='string'&&/^[A-Z][A-Z0-9_]{2,64}$/.test(data.validation_detail)?' ['+data.validation_detail+']':'';const error=Error((data.error||'Staging generation request failed ('+response.status+').')+safeRule+safeDetail);error.status=response.status;error.rule=data.rule;throw error;}
  return data;
 }
 async function planLectureQuestions(request){return generationRequest('/generation/lecture-plan',request);}
@@ -201,6 +201,10 @@ async function generateOne(request,{onRecovery=()=>{}}={}){
  catch(error){const recovery=await import('./generation-completion-recovery.js');if(!recovery.isGenerationDisconnect(error))throw error;return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}
 }
 async function saveGeneratedDraft(request){return generationRequest('/generation/drafts',request);}
+async function completeGeneratedOptionReview(draftId,expectedUpdatedAt){
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(draftId)||typeof expectedUpdatedAt!=='string'||!expectedUpdatedAt)throw Error('Reopen the saved draft before completing its review.');
+ return generationRequest('/generation/drafts/'+draftId+'/complete-options',{confirm_paid_calls:true,expected_updated_at:expectedUpdatedAt});
+}
 async function listGeneratedDrafts(){
  const cfg=window.MBU_SOURCE_LIBRARY_STAGING||{};
  if(location.hostname!=='staging.srnastudytool.com'||!cfg.enabled)throw Error('Staging only.');
@@ -266,5 +270,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,completeGeneratedOptionReview,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
 })();

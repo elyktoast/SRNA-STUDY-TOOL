@@ -532,3 +532,22 @@ test('semantic readiness rejects unsafe requests before starting the container',
   'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}}),isolated);
  assert.equal(options.status,204);assert.equal(starts,0);
 });
+
+test('missing option review is authenticated POST only and rejects question generation or publication claims',async()=>{
+ const endpoint=draftListUrl+'/'+draftId+'/complete-options';let forwarded=0;
+ const result={draft_id:draftId,published:false,can_publish:false,question_modified:false,generation_performed:false,rewrite_performed:false,
+  clinical_review_required:true,database_writes:true,paid_review_performed:true,automated_checks_passed:true,option_review_status:'pass'};
+ const configured=value=>({...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{forwarded++;assert.equal(req.method,'POST');return Response.json(value);}})}});
+ const make=(method='POST',headers={})=>new Request(endpoint,{method,headers:{Origin:origin,Authorization:'Bearer valid',...(method==='POST'?{'Content-Type':'application/json'}:{}),...headers},...(method==='POST'?{body:JSON.stringify({confirm_paid_calls:true,expected_updated_at:'version'})}:{})});
+ assert.equal((await gateway.fetch(make(),configured(result))).status,200);
+ for(const change of [{published:true},{generation_performed:true},{rewrite_performed:true},{question_modified:true},{clinical_review_required:false},{automated_checks_passed:true,option_review_status:'pending'}]){
+  assert.equal((await gateway.fetch(make(),configured({...result,...change}))).status,502);
+ }
+ const before=forwarded;
+ assert.equal((await gateway.fetch(make('GET'),configured(result))).status,405);
+ assert.equal((await gateway.fetch(make('POST',{Origin:'https://srnastudytool.com'}),configured(result))).status,403);
+ assert.equal((await gateway.fetch(make('POST',{Authorization:''}),configured(result))).status,401);
+ assert.equal(forwarded,before);
+ const preflight=await gateway.fetch(new Request(endpoint,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Authorization, Content-Type'}}),configured(result));
+ assert.equal(preflight.status,204);assert.equal(preflight.headers.get('Access-Control-Allow-Methods'),'POST');
+});

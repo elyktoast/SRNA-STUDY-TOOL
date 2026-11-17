@@ -26,7 +26,7 @@ export async function semanticEmbeddings(payload,env){
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
 const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/review/approve', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/index-readiness', '/generation/checkpoint-readiness', '/generation/textbooks']);
-const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
+const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions|\/complete-options)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
  const headers={...common,'Content-Type':'application/json'};
@@ -287,9 +287,10 @@ export default {
   const indexCheck=url.pathname==='/generation/index-readiness';
   const textbookList=url.pathname==='/generation/textbooks';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
-  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
-  const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+  const completeOptions=url.pathname.endsWith('/complete-options');
+  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions')||completeOptions;
+  const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review')&&!completeOptions;
+    const allowedMethods=(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?((url.pathname.endsWith('/review')||completeOptions)?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
@@ -555,6 +556,10 @@ export default {
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_draft_type"}');
     const data=await upstream.clone().json().catch(()=>null);
     if(!data||typeof data!=='object'||data.published!==false&&!(Array.isArray(data.drafts)&&data.drafts.every(x=>x&&typeof x==='object'&&typeof x.draft_id==='string')))return respond(502,origin,'{"error":"unsafe_draft_response"}');
+   }
+   if(upstream.ok&&completeOptions){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!data||data.published!==false||data.can_publish!==false||data.question_modified!==false||data.generation_performed!==false||data.rewrite_performed!==false||data.clinical_review_required!==true||data.database_writes!==true||typeof data.paid_review_performed!=='boolean'||typeof data.automated_checks_passed!=='boolean'||!['pass','pending'].includes(data.option_review_status)||(data.automated_checks_passed&&data.option_review_status!=='pass'))return respond(502,origin,'{"error":"unsafe_option_review_response"}');
    }
    if(upstream.ok&&draftWrite){
     const data=await upstream.clone().json().catch(()=>null);
