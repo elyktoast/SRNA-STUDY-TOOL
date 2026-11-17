@@ -81,6 +81,19 @@ class CloudflareBackfillTests(unittest.TestCase):
         self.assertEqual([stem for batch in calls for stem in batch],[row['stem'] for row in source['stems']])
         self.assertTrue(result['complete']);self.assertEqual(len(conn.rows),33)
 
+    @patch('backfill_cloudflare_semantic_index_v2.reconcile',return_value={'ready':True})
+    def test_native_integer_zeros_are_normalized_before_database_adaptation(self,reconcile):
+        mixed=[0,0.125]+[0]*1022
+        conn=Conn()
+        with contextlib.redirect_stdout(io.StringIO()):
+            result=backfill(conn,self.path,owner_uid=OWNER,
+                            embed_many=lambda texts:[list(mixed) for _ in texts],apply=True,max_new=10000)
+        self.assertTrue(result['complete'])
+        for row in conn.rows.values():
+            self.assertEqual(row[4],mixed)
+            self.assertTrue(all(type(value) is float for value in row[4]))
+        self.assertEqual(type(mixed[0]),int,'Do not mutate provider responses')
+
     def test_preflight_makes_no_embedding_calls_or_writes(self):
         conn=Conn()
         result=backfill(conn,self.path,owner_uid=OWNER,embed_many=lambda texts:self.fail('no call'))
