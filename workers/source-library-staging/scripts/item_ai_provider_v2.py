@@ -165,7 +165,8 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 if not isinstance(figure, (str, dict)) or (isinstance(figure, dict) and (not figure or set(figure) - {"url", "alt", "width", "height"})):
                     raise ValueError("Blind hotspot figure contains unsupported fields")
         # Step-specific ceilings reduce oversized generations without changing validation.
-        step_caps = {"concept_card": 4096, "item_draft": 3500, "rationale": 2400, "rewrite": 3500, "blind_review": 1000, "option_review": 1000, "explanation_review": 1000, "editorial_review": 1800, "options_only_review": 256}
+        rewrite_cap = 6144 if request["step"] == "rewrite" and request["item"].get("format") == "MC" else 3500
+        step_caps = {"concept_card": 4096, "item_draft": 3500, "rationale": 2400, "rewrite": rewrite_cap, "blind_review": 1000, "option_review": 1000, "explanation_review": 1000, "editorial_review": 1800, "options_only_review": 512}
         output_budget = min(max_output_tokens, step_caps[request["step"]])
         if request["step"] == "editorial_review" and model == "qwen/qwen3.8-27b":
             output_budget = min(output_budget, 1000)

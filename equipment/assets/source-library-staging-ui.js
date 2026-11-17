@@ -160,6 +160,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
        genEl('sl-gen-domain').value=body.domain;
        genEl('sl-gen-section').value=body.section;
        genEl('sl-gen-objective').value=body.objective;
+       const objectivePicker=genEl('sl-objective-select');if([...objectivePicker.options].some(option=>option.value===body.objective))objectivePicker.value=body.objective;
        checkedEvidence={topic:body.topic,mode:body.mode,format:body.format,
         textbook_id:body.textbook_id,...(body.textbook_ids?{textbook_ids:body.textbook_ids}:{}),domain:body.domain,section:body.section,objective:body.objective};
        genEl('sl-gen-status').textContent='Lecture topic loaded and evidence checked. Review the blueprint and use Generate 1 question to confirm a paid AI call. The resulting draft remains unpublished.';
