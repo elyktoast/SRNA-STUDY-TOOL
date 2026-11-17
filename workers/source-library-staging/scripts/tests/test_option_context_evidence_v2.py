@@ -43,3 +43,32 @@ class OptionContextEvidenceTests(unittest.TestCase):
         self.assertEqual(calls,[('context',2),('specific pair',1)])
         self.assertEqual(report['option_audits'][0]['retrieved_passage_ids'],['direct','context-x','context-y'])
         self.assertFalse(report['clinical_verification_complete'])
+
+    def test_mc_lecture_context_uses_same_clinical_query_as_evidence_preflight(self):
+        topic='Explain the relationship between functional residual capacity and oxygen reserve during apnea.'
+        clinical='functional residual capacity and oxygen reserve during apnea.'
+        item={'format':'MC','stem':'Which response?', 'options':[{'id':'A','text':'decreased oxygen reserve'}],'key':['A']}
+        calls=[]
+        def search(conn,query,owner,*,limit,textbook_id):
+            calls.append((query,owner,textbook_id,limit))
+            return [{'passage_id':'independently-found'}] if query==clinical else []
+        with patch('item_option_retrieval_audit_v2.search',side_effect=search):
+            report=audit(None,'owner',item,textbook_id='book',limit=3,context_query=topic)
+        self.assertEqual(calls,[(clinical,'owner','book',2),('decreased oxygen reserve','owner','book',1)])
+        self.assertTrue(report['all_options_have_matches'])
+        self.assertEqual(report['option_audits'][0]['search_queries'],['decreased oxygen reserve',clinical])
+        self.assertFalse(report['clinical_verification_complete'])
+        self.assertFalse(report['can_publish'])
+
+    def test_normalized_mc_context_with_no_passages_stays_incomplete(self):
+        item={'format':'MC','stem':'Which response?', 'options':[{'id':'A','text':'unsupported response'}],'key':['A']}
+        with patch('item_option_retrieval_audit_v2.search',return_value=[]):
+            report=audit(None,'owner',item,textbook_id='book',limit=3,context_query='Explain oxygen reserve')
+        self.assertFalse(report['all_options_have_matches'])
+        self.assertFalse(report['clinical_verification_complete'])
+
+    def test_mc_context_normalization_does_not_change_ms_contract(self):
+        item={'format':'MS','stem':'Which responses?', 'options':[{'id':'A','text':'response'}],'key':['A']}
+        with patch('item_option_retrieval_audit_v2.search',return_value=[]) as search:
+            audit(None,'owner',item,textbook_id='book',limit=3,context_query='Explain oxygen reserve')
+        self.assertEqual(search.call_args_list[0].args[1],'Explain oxygen reserve')
