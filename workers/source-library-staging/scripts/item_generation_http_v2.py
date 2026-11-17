@@ -384,7 +384,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         try:
             with conn_factory() as conn:
                 semantic_lookup = (semantic_lookup_factory(conn, owner, args.textbook_id)
-                                   if live and semantic_lookup_factory is not None else None)
+                                   if live and not getattr(args, "resume_completed_only", False)
+                                   and semantic_lookup_factory is not None else None)
                 result = execute(conn, args, environment, semantic_lookup=semantic_lookup)
                 if live:
                     # Persist the same generated item in the private, owner-scoped
