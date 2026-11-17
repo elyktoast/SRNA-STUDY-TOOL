@@ -26,5 +26,14 @@ class ClassifierTests(unittest.TestCase):
         self.assertEqual(sum(result["question_shortfalls"].values()), 100)
         self.assertFalse(result["passage_classifications_are_verified"])
 
+    def test_respiratory_objective_is_only_a_candidate_and_mixed_topics_still_abstain(self):
+        result=suggest('Functional residual capacity and oxygen reserve during apnea')
+        self.assertEqual(result['status'],'suggested')
+        self.assertEqual(result['candidates'][0]['domain'],'basic_sciences')
+        self.assertEqual(result['candidates'][0]['section'],'A')
+        self.assertEqual(result['candidates'][0]['objective'],'Respiratory')
+        self.assertTrue(result['requires_review'])
+        self.assertEqual(suggest('Functional residual capacity and capnography waveform')['status'],'ambiguous')
+
 if __name__ == "__main__":
     unittest.main()
