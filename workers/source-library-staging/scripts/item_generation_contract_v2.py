@@ -96,6 +96,10 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "refuted by the evidence, without invented prevalence claims. evidence_ids are exact supplied passage IDs. "
             "Do not add equations or quantitative claims that require original-page image verification. Never claim approval.")
         quality_instructions = ""
+    if step == "concept_card":
+        quality_instructions += (
+            " Write every planned clinical condition and response state in original wording. R-2.8 prohibits eight consecutive source words in the eventual stem or options, including text inserted verbatim from a choice_plan. "
+            "Paraphrase source facts before locking stem_condition, alternate_condition and planned option text; do not use a textbook sentence as a case template.")
     if choice_plan is not None:
         quality_instructions += (
             " Use the supplied private choice_plan. Copy key and all planned option id/text fields EXACTLY. "

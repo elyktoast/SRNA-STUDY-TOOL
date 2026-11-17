@@ -35,6 +35,23 @@ class EditorialTests(unittest.TestCase):
                 "options": [{"id": k, "text": t} for k,t in zip("ABCD", ["Alpha", "Beta", "Gamma", "Delta"])]}
         self.assertIn("R-2.8", {e["rule_id"] for e in check(item,
                       ["one two three four five six seven eight nine ten"])})
+    def test_overlap_diagnostic_locates_stem_words_without_echoing_source(self):
+        source='one two three four five six seven eight'
+        item={'format':'MC','key':['A'],'stem':'Prefix: ONE, two three four five six seven eight?',
+              'options':[{'id':'A','text':'Different result'}]}
+        issue=next(i for i in check(item,[source]) if i['rule_id']=='R-2.8')
+        self.assertEqual((issue['field'],issue['word_start'],issue['word_count']),('stem',1,8))
+        self.assertNotIn(source,str(issue))
+
+    def test_overlap_diagnostic_locates_option_without_scanning_cited_quotations(self):
+        source='one two three four five six seven eight'
+        item={'format':'MC','key':['A'],'stem':'Which response?',
+              'options':[{'id':'A','text':'Different response'}, {'id':'B','text':source}]}
+        issue=next(i for i in check(item,[source]) if i['rule_id']=='R-2.8')
+        self.assertEqual((issue['field'],issue['word_start']),('options.1.text',0))
+        item['options'][1]['text']='Another result';item['evidence']=[{'excerpt':source}]
+        self.assertNotIn('R-2.8',{i['rule_id'] for i in check(item,[source])})
+
     def test_no_overlap(self):
         item = {"format": "MC", "key": ["A"], "stem": "Which value?",
                 "options": [{"id": k, "text": t} for k,t in zip("ABCD", ["One", "Two", "Three", "Four"])]}

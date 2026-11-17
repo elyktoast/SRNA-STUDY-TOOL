@@ -323,6 +323,30 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertEqual(calls, [(UID, textbook)])
         self.assertIs(execute.call_args.kwargs["semantic_lookup"], callback)
 
+    @patch("item_generation_http_v2.save", return_value={
+        "draft_id":"00000000-0000-4000-8000-000000000003","status":"pending_review"})
+    @patch("item_generation_http_v2.execute")
+    def test_completed_only_recovery_skips_semantic_index_factory(self,execute,saver):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        textbook="00000000-0000-4000-8000-000000000002"
+        completed={"item":{"stem":"Synthetic"},"save_payload":{"textbook_id":textbook}}
+        execute.side_effect=[CompletedGenerationUnavailable(),completed]
+        def forbidden_factory(*args):
+            raise AssertionError("Recovery must not scan or embed a new candidate")
+        app=create_app(conn_factory=Connection,resolve_admin=lambda token:UID,
+                       environment={"STAGING_ONLY":"true","AI_GENERATION_OPT_IN":"true"},
+                       semantic_lookup_factory=forbidden_factory)
+        for expected in ("409 Conflict","200 OK"):
+            raw=json.dumps({**PAYLOAD,"textbook_id":textbook,"resume_completed_only":True}).encode()
+            environ={"PATH_INFO":"/generation/one","REQUEST_METHOD":"POST",
+                     "HTTP_ORIGIN":"https://staging.srnastudytool.com","HTTP_AUTHORIZATION":"Bearer valid",
+                     "CONTENT_LENGTH":str(len(raw)),"wsgi.input":io.BytesIO(raw)}
+            seen=[];app(environ,lambda status,headers:seen.append(status))
+            self.assertEqual(seen[0],expected)
+            self.assertIsNone(execute.call_args.kwargs['semantic_lookup'])
+            self.assertTrue(execute.call_args.args[1].resume_completed_only)
+        saver.assert_called_once()
+
     @patch("item_generation_http_v2.execute", return_value={
         "dry_run": True, "passage_count": 1, "can_publish": False,
         "database_writes": False})

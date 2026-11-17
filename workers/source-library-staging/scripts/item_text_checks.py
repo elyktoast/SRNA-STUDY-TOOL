@@ -53,12 +53,15 @@ def check(item, source_texts=()):
            )
            for o in options):
         issues.append({"rule_id":"R-6.9", "field":"options", "message":"An answer choice contains its own explanatory rationale"})
-    candidates = [item.get("stem", "")] + [o["text"] for o in options]
+    candidates = [("stem", item.get("stem", ""))] + [
+        ("options." + str(index) + ".text", option["text"]) for index, option in enumerate(options)]
     sources = [WORDS.findall(source.casefold()) for source in source_texts if isinstance(source, str)]
-    for candidate in candidates:
+    source_ngrams = {tuple(src[j:j+8]) for src in sources for j in range(len(src)-7)}
+    for field, candidate in candidates:
         tokens = WORDS.findall(candidate.casefold())
-        if any(tuple(tokens[i:i+8]) in {tuple(src[j:j+8]) for j in range(len(src)-7)}
-               for i in range(max(0, len(tokens)-7)) for src in sources):
-            issues.append({"rule_id": "R-2.8", "message": "Eight-word source overlap detected"})
+        match = next((i for i in range(max(0, len(tokens)-7)) if tuple(tokens[i:i+8]) in source_ngrams), None)
+        if match is not None:
+            issues.append({"rule_id": "R-2.8", "field": field, "word_start": match,
+                           "word_count": 8, "message": "Eight-word source overlap detected"})
             break
     return issues
