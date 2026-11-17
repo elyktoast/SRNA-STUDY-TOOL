@@ -122,9 +122,23 @@ def main():
         safe_rule=rule if isinstance(rule,str) and re.fullmatch('[A-Z0-9_]{1,80}',rule) else None
         state=getattr(error,'sqlstate',None)
         safe_state=state if isinstance(state,str) and re.fullmatch('[A-Z0-9]{5}',state) else None
+        validation_codes={
+            'Known duplicate control failed':'KNOWN_DUPLICATE_CONTROL',
+            'Unrelated semantic control failed':'UNRELATED_CONTROL',
+            'Complete canonical index required for controls':'INCOMPLETE_CANONICAL_INDEX',
+            'Invalid semantic index pagination':'INDEX_PAGINATION',
+            'Semantic index pagination order invalid':'LOOKUP_PAGINATION',
+            'Canonical inventory digest mismatch':'INVENTORY_DIGEST',
+            'Invalid indexed embedding':'INVALID_INDEXED_EMBEDDING',
+            'Invalid Cloudflare embedding dimensions':'EMBEDDING_DIMENSIONS',
+            'Semantic index coverage does not match canonical item inventory':'INDEX_COVERAGE',
+            'Stale semantic index stem hash':'STALE_STEM_HASH',
+        }
+        validation_detail=validation_codes.get(str(error)) if isinstance(error,ValueError) else None
         print(json.dumps({'ok':False,'error':'SEMANTIC_BACKFILL_UNAVAILABLE',
                           'provider_rule':safe_rule,'sqlstate':safe_state,
                           'exception_type':type(error).__name__ if re.fullmatch('[A-Za-z_]{1,80}',type(error).__name__) else 'OTHER',
+                          'validation_detail':validation_detail,
                           'category':'validation' if isinstance(error,ValueError) else 'database' if safe_state else 'provider' if safe_rule else 'unclassified'}))
         return 2
 

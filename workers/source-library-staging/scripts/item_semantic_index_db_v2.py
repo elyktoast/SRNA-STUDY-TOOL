@@ -51,8 +51,8 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
                 cur.execute(
                     """select item_id, embedding, stem_hash from source_library_staging.question_semantic_index_v2
                        where owner_uid=%s and embedding_model=%s and item_id<>%s
-                         and item_id>%s
-                       order by item_id limit %s""",
+                         and item_id COLLATE "C">%s
+                       order by item_id COLLATE "C" limit %s""",
                     (owner, embedding_model, candidate_id, last_id, PAGE_SIZE))
                 page = cur.fetchall()
                 if len(page) > PAGE_SIZE:
