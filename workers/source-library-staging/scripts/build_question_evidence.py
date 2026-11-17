@@ -18,14 +18,19 @@ TEACHING_PREFIX = re.compile(
     r"(?:the\s+)?(?:relationship\s+between\s+)?", re.I)
 
 
-def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
-                   section_id=None, include_subsections=False,
-                   page_start=None, page_end=None, textbook_ids=None, balance_books=False):
+def topic_search_query(topic):
+    """Remove instructional wording without dropping clinical search terms."""
     if not isinstance(topic, str) or not topic.strip() or len(topic) > 500:
         raise ValueError("Topic must be 1..500 characters")
     # Teaching verbs need not occur in a textbook's explanation. Keep the
     # complete clinical subject/relation and every scope predicate unchanged.
-    query = TEACHING_PREFIX.sub("", topic.strip(), count=1).strip() or topic.strip()
+    return TEACHING_PREFIX.sub("", topic.strip(), count=1).strip() or topic.strip()
+
+
+def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
+                   section_id=None, include_subsections=False,
+                   page_start=None, page_end=None, textbook_ids=None, balance_books=False):
+    query = topic_search_query(topic)
     books = source_scope(textbook_id, textbook_ids)
     if balance_books:
         if textbook_id is not None or textbook_ids is not None:

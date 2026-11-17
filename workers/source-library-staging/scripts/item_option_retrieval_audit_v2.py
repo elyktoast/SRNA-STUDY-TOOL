@@ -24,6 +24,9 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, te
         raise ValueError("Invalid independent retrieval context")
     if context_query and limit < 2:
         raise ValueError("Context-aware retrieval requires at least two candidates")
+    if context_query and item["format"] == "MC":
+        from build_question_evidence import topic_search_query
+        context_query = topic_search_query(context_query)
     from item_source_scope_v2 import source_scope
     books = source_scope(textbook_id, textbook_ids) or [textbook_id]
     def retrieve(query, count):
