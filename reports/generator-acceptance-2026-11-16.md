@@ -95,3 +95,17 @@ The writer now converts already validated numeric components to Python floats be
 [Index run 43993044367](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43993044367) reused the 3,709 saved entries and completed all 9,000 canonical embeddings after homogeneous-float adaptation. All rows have 1,024 dimensions and no null components. Its final validation failed closed before declaring readiness.
 
 The staging database uses `en_US.UTF-8`, while the Python completeness checks compare Unicode identifier order. A read-only full-bank query measured one ordering inversion with the database default and zero with explicit `COLLATE "C"`. Both reconciliation and exhaustive candidate lookup now use C collation for the keyset boundary and ordering. Mixed-case, multi-page regressions exercise complete traversal. This correction reuses every saved embedding; it requires no re-embedding of the bank. Known-duplicate and unrelated-text controls remain required before claiming duplicate screening is ready.
+
+
+## Live canonical duplicate screening verified
+
+[Run 43993956728](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43993956728) passed complete reconciliation and both real controls against all 9,000 saved entries. It reused every entry (`new_embeddings: 0`, `remaining: 0`, `complete: true`). The exact canonical-stem control was detected; the unrelated-text control returned zero matches at the provisional 0.85 threshold. Both controls used the same exhaustive lookup and cosine scorer as generated candidates. No questions were generated and no drafts were written by that run.
+
+Canonical inventory digest: `44e9be2173cac71a71f51e3cfe48b3712d3ad301e8d076f01796a3aee50497a5`. PR #203 merged as `c0f9c6433d62487325aab6748acf6875690cb508` after its staging checks passed. A fresh one-question, all-indexed-textbooks MC acceptance was submitted as [run 43994253848](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43994253848). Its result is still pending; index controls alone do not prove generator quality or calibrate semantic similarity against expert-labeled near-duplicates.
+
+
+## Authenticated readiness route integration
+
+[Acceptance run 43994253848](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43994253848) passed its settled-deployment gate, seven-book/eight-passage preflight and all ten PDF/PPTX format plans, then stopped before any paid question generation because the gateway had not exposed `/generation/index-readiness`. The backend and acceptance client already supported this read-only route.
+
+The gateway now authenticates and forwards GET-only readiness, rejects query parameters, and validates an exact metadata-only JSON response with a canonical inventory digest, bounded counts and internally consistent readiness. Missing credentials, production origins, POST, contradictory counts and extra response fields fail closed. No individual question identifiers, stems or vectors are exposed by this endpoint. A fresh acceptance run is required after deployment; the previous run produced no draft.

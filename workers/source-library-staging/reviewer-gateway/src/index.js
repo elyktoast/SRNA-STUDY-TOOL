@@ -25,7 +25,7 @@ export async function semanticEmbeddings(payload,env){
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/review/approve', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
+const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/review/approve', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/index-readiness', '/generation/checkpoint-readiness', '/generation/textbooks']);
 const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
@@ -278,6 +278,7 @@ export default {
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
+  const indexCheck=url.pathname==='/generation/index-readiness';
   const textbookList=url.pathname==='/generation/textbooks';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
   const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
@@ -295,13 +296,13 @@ export default {
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
-  if((acknowledgment||approval||generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
+  if((acknowledgment||approval||generation||draftRead||providerCheck||checkpointCheck||indexCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
   if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
   if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
   if(url.search.length>2048||(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -481,7 +482,21 @@ export default {
    }
    // A challenge is visible only with a successfully verified page response.
    // Never copy it from errors, manifests, generation responses, or acknowledgments.
-   if(!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(upstream.ok&&indexCheck){
+    const data=await upstream.clone().json().catch(()=>null);
+    const counts=['expected_count','indexed_count','missing_count','unexpected_count','stale_count'];
+    const keys=['ready','inventory_digest',...counts];
+    if(!(upstream.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')||
+       !data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==keys.length||
+       Object.keys(data).some(k=>!keys.includes(k))||typeof data.ready!=='boolean'||
+       typeof data.inventory_digest!=='string'||!/^[a-f0-9]{64}$/.test(data.inventory_digest)||
+       counts.some(k=>!Number.isSafeInteger(data[k])||data[k]<0||data[k]>10000)||data.expected_count<1||
+       data.missing_count+data.stale_count>data.expected_count||data.unexpected_count>data.indexed_count||
+       data.expected_count+data.unexpected_count!==data.indexed_count+data.missing_count||
+       data.ready!==(data.missing_count===0&&data.unexpected_count===0&&data.stale_count===0&&data.expected_count===data.indexed_count))
+     return respond(502,origin,'{"error":"unsafe_index_readiness_response"}');
+   }
    if(upstream.ok&&checkpointCheck){
     const data=await upstream.clone().json().catch(()=>null);
     const allowed=['ready','check','generation_performed','database_writes'];
@@ -539,7 +554,7 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList){
+   if(upstream.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
