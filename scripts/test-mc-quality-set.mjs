@@ -14,6 +14,7 @@ function fixture(mode){
   else if(url.endsWith('/preflight'))value={authoring_contract:'2026-11-11-v23',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
   else if(url.endsWith('/one')){
    if(mode==='timeout')throw Error('transport failure');
+   if(mode==='server')return Response.json({error:'runtime'}, {status:500});
    item=body.item_id;value={published:false,can_publish:false,draft_id:item};
   }else if(url.endsWith('/revalidate'))value={database_writes:false,generation_performed:false,published:false,issues:mode==='blocked'?[{rule_id:'R-12.2'}]:[]};
   else value={published:false,question:{stem:'synthetic',options:[],key:['A'],rationale:{}},screening:{rewrite_attempts_used:1,stages:{...Object.fromEntries(Array.from({length:10},(_,i)=>['stage'+i,{status:mode==='blocked'&&i===9?'flag':'pass'}])),human_review:{status:'pending'}}}};
@@ -29,9 +30,10 @@ test('fixed acceptance requests each new MC once, retains results, and never app
  assert.ok(f.calls.every(c=>!c.url.endsWith('/review')&&!c.url.endsWith('/complete-options')));
 });
 test('transport and clinical failures remain failures without rerolls',async()=>{
- for(const mode of ['timeout','blocked']){
+ for(const mode of ['timeout','server','blocked']){
   const f=fixture(mode),result=await f.run();assert.ok(result.every(r=>!r.accepted));
-  assert.equal(f.calls.filter(c=>c.url.endsWith('/generation/one')).length,3);
+  assert.equal(f.calls.filter(c=>c.url.endsWith('/generation/one')).length,mode==='blocked'?3:1);
+  if(mode!=='blocked')assert.ok(result.slice(1).every(r=>r.not_run));
   if(mode==='blocked')assert.ok(result.every(r=>r.draft_id&&r.blockers.stage9&&r.current_source_issues.length));
  }
 });

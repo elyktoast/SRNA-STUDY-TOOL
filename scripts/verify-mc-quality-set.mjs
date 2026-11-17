@@ -42,7 +42,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
  const library=await call('/generation/textbooks');const books=library.textbooks.map(b=>b.id);assert.ok(books.length>=7);
  const rows=[];
  for(const sample of samples){
-  const row={...sample,accepted:false,draft_id:null,published:false};rows.push(row);
+  const row={...sample,accepted:false,draft_id:null,published:false};rows.push(row);let stopAfterFailure=false;
   try{
    // Recheck the branch before EACH paid item; never regenerate a used checkpoint.
    const currentHead=await json('https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/git/ref/heads/fix/board-question-quality',{headers:{Authorization:'Bearer '+env.GITHUB_TOKEN,Accept:'application/vnd.github+json'}});
@@ -76,8 +76,12 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const automated=Object.entries(row.stages).filter(([k])=>k!=='human_review');
    row.passing_checks=automated.filter(([,v])=>v==='pass').length;
    row.accepted=automated.length===10&&row.passing_checks===10&&current.issues.length===0;
-  }catch(error){row.failure=error.details||{reason:error.message};}
+  }catch(error){row.failure=error.details||{reason:error.message,cause_code:safe(error.cause?.code)};stopAfterFailure=!error.details?.http_status||error.details.http_status>=500;}
   save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,failure:row.failure,published:false});
+  if(stopAfterFailure){
+   for(const pending of samples.slice(rows.length))rows.push({...pending,accepted:false,draft_id:null,published:false,not_run:'Prior ambiguous runtime failure; do not overlap backend work'});
+   save(rows);break;
+  }
  }
  return rows;
 }
