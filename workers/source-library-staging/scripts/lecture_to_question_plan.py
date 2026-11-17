@@ -8,9 +8,11 @@ from build_question_evidence import build_evidence
 
 
 def prepare(conn, owner_uid, lecture_text, *, textbook_id=None, count=20,
-            max_concepts=30, passage_limit=6):
+            max_concepts=30, passage_limit=6, prefer_learning_objectives=False):
     extracted = extract(lecture_text, max_concepts=max_concepts)
     concepts = extracted["concepts"]
+    if prefer_learning_objectives:
+        concepts = sorted(concepts, key=lambda topic: topic.get("importance") != "learning_objective")
     evidence = {}
     for topic in concepts:
         result = build_evidence(conn, owner_uid, topic["title"],
@@ -46,7 +48,7 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
         raise ValueError("Question count must be between 1 and 5")
     from lecture_generation_requests import requests, staging_http_jobs
     planned = prepare(conn, owner_uid, lecture_text, textbook_id=textbook_id,
-                      count=count)
+                      count=count, prefer_learning_objectives=format == "MC")
     selected = requests(planned, mode=mode, domain=domain,
                         section=section, objective=objective, format=format)
     handoff = staging_http_jobs(selected, textbook_id=textbook_id,

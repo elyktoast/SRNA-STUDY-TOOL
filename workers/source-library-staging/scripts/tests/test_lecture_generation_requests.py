@@ -32,6 +32,19 @@ class LectureRequestTests(unittest.TestCase):
                      section="III.H", objective="III.H.4")
 
 class LectureHandoffTests(unittest.TestCase):
+    def test_mc_single_question_prefers_the_specific_learning_objective_to_the_heading(self):
+        title='Explain the relationship between functional residual capacity and oxygen reserve during apnea.'
+        with patch('lecture_to_question_plan.build_evidence',return_value={'sources':[
+                {'passage_id':'p1','textbook_id':'t1','excerpt':'Grounded physiology evidence'}]}):
+            result=prepare_staging_jobs(None,'owner','# Respiratory physiology\nLearning objective: '+title,
+                textbook_id='t1',item_id_factory=lambda:str(uuid4()),format='MC',count=1)
+        self.assertEqual(len(result['jobs']),1)
+        self.assertEqual(result['jobs'][0]['body']['topic'],title)
+        self.assertEqual(result['jobs'][0]['body']['objective'],'I.A.2')
+        self.assertEqual(result['classification']['held_count'],0)
+        self.assertFalse(result['auto_generate'])
+        self.assertFalse(result['auto_publish'])
+
     def sample(self, title="malignant hyperthermia", count=1):
         return {"topics": [{"title": title, "question_count": count,
             "evidence": [{"passage_id": "p1", "textbook_id": "t1",

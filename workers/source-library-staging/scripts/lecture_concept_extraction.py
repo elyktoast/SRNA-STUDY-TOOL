@@ -56,7 +56,8 @@ def extract(text, *, max_concepts=60):
             continue
         seen.add(key)
         candidates.append({"title": line, "lecture_locator": locator or ("line " + str(line_no)),
-                           "objective": None, "importance": "standard"})
+                           "objective": None,
+                           "importance": "learning_objective" if in_objectives else "standard"})
         if len(candidates) >= max_concepts:
             break
     return {"concepts": candidates, "requires_review": True,
