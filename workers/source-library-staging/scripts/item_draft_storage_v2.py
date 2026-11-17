@@ -92,7 +92,7 @@ def list_drafts(conn, *, owner_uid, limit=50):
     with conn.cursor() as cur:
         cur.execute("""
           select d.id::text,d.topic,d.exam_mode,d.question_format,
-                 d.status,d.created_at,d.textbook_id::text
+                 d.status,d.created_at,d.textbook_id::text,d.screening_json
           from source_library_staging.generated_question_drafts_v2 d
           join source_library_staging.textbooks t on t.id=d.textbook_id
           where d.owner_uid=%s::uuid and t.owner_uid=%s::uuid
@@ -101,7 +101,8 @@ def list_drafts(conn, *, owner_uid, limit=50):
         rows = cur.fetchall()
     return [{"draft_id":x[0],"topic":x[1],"mode":x[2],
              "format":x[3],"status":x[4],"created_at":x[5].isoformat(),
-             "textbook_id":x[6]} for x in rows]
+             "textbook_id":x[6],
+             "automated_checks_passed":not approval_issues(x[7],x[3])} for x in rows]
 
 
 def get_draft(conn, *, owner_uid, draft_id):

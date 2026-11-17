@@ -236,12 +236,12 @@ test('disconnected generation retrieves only the same completed request without 
 
 function draftCollectionHarness(){
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
- const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]}});
+ const node=tag=>({tag,children:[],textContent:'',append(...children){this.children.push(...children)},prepend(...children){this.children.unshift(...children)},setAttribute(){},replaceChildren(){this.children=[]}});
  const out=node('div');out._bulkSelection={selected:new Set(['old-draft'])};
  const pending=[];
  const storage={listGeneratedDrafts:()=>new Promise((resolve,reject)=>pending.push({resolve,reject}))};
  const code='let draftCollectionRequest=0;\n'+ui.slice(ui.indexOf('async function renderDraftCollection('),ui.indexOf('const bankButton='))+'\nrenderDraftCollection';
- const render=vm.runInNewContext(code,{document:{createElement:node},genEl:()=>out,storage});
+ const render=vm.runInNewContext(code,{document:{createElement:node,createTextNode:text=>({textContent:text})},genEl:()=>out,storage});
  return {out,pending,render};
 }
 test('overlapping collection loads render only the latest selected view once',async()=>{
@@ -261,4 +261,15 @@ test('a stale list failure cannot replace a newer successful collection',async()
  await assert.doesNotReject(older);
  assert.equal(out.children.length,2);
  assert.equal(out.children[0].textContent,'Saved question drafts');
+});
+test('single and bulk approval require an explicit server-observed automated pass',async()=>{
+ for(const [status,passed,disabled] of [['pending_review',undefined,true],['pending_review',false,true],['pending_review',true,false],['needs_revision',true,true]]){
+  const {out,pending,render}=draftCollectionHarness();
+  const loading=render('drafts');pending[0].resolve({drafts:[{draft_id:'one',status,automated_checks_passed:passed}]});await loading;
+  const walk=node=>[node,...(node.children||[]).flatMap(walk)];
+  const buttons=walk(out).filter(node=>node.tag==='button');
+  assert.equal(buttons.find(node=>node.textContent==='Approve to bank').disabled,disabled);
+  const selection=out._bulkSelection.checkboxes[0].input;selection.checked=true;selection.onchange();
+  assert.equal(buttons.find(node=>node.textContent==='Approve selected to bank').disabled,disabled);
+ }
 });
