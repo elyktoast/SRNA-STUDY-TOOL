@@ -25,7 +25,7 @@ A usable MC draft generator must handle lecture-derived and freeform requests, r
 | Absorbent exhaustion, initial | `71238ca0-21ed-481d-bd88-eb0a519796df` | 7/10; citation transcription consumed repair; ambiguous options/rationales remained | Held; no second rewrite |
 | Absorbent exhaustion, trusted citation selectors | `e05468e2-1eab-4cec-9efd-79180852f04a` | 5/10; citation transport fixed; substantive counterfactual, wording and explanation issues remained | Held; no second rewrite |
 | Lecture FRC, before completion fix | `0465c585-a7f4-4d73-b73c-69973ace53c8` | 6/10; repair truncated, cue JSON incomplete | Held; no second rewrite |
-| Lecture FRC, complete repair | `65c2e793-a7af-4746-bfb6-1abf9993085c` | 9/10; final option retrieval used unnormalized lecture instruction | Held; no second rewrite; retrieval bug fixed for new requests |
+| Lecture FRC, completed missing review | `65c2e793-a7af-4746-bfb6-1abf9993085c` | 10/10; current-source revalidation has zero issues | Unchanged question, still one rewrite; ready for human clinical review |
 | Neuromuscular lecture, shared question plan | `92b781bd-a3cc-4024-a48c-e01ea135102e` | 8/10; revised case and all explanatory evidence passed; cue reviewer guessed key 5/5 | Held; independent option adjudication remains blocked by cue failure |
 | Freeform oxygen pressure failure control | `41c206d6-2520-437c-b626-7f8f8887b304` | 8/10; one complete repair; source review rejected unsupported distractor explanations | Held; no second rewrite |
 | Different lecture: shunt/dead space | `d15912da-15a5-4058-9aad-218993c2076f` | 7/10; searches completed; counterfactual and cue checks flagged after one repair | Held; no second rewrite |
@@ -40,7 +40,7 @@ The shunt sample changed the case to pulmonary embolism but retained a lead-in a
 
 ## Remaining work
 
-1. Deploy and verify a fresh MC request using the complete shared-lead-in planning contract.
+1. Continue varied new-question quality validation; the shared-lead-in contract and saved-review completion now have live verification.
 2. Complete varied-topic MC acceptance; distinguish retrieval/transport failures from clinical or writing failures.
 3. Require zero current-index issues for every accepted sample. Keep failed drafts blocked and never give them a second automatic rewrite.
 4. Present only genuinely passing drafts for the required human clinical pilot before scaling. Do not call the near-autonomous quality goal complete on the strength of unit tests or one passing question.
@@ -72,3 +72,16 @@ A per-draft transaction advisory lock prevents concurrent paid reviews. Saving u
 The action refreshes the clinical editor and keeps human review pending. The gateway enforces authenticated POST and rejects any response claiming question modification, generation, rewriting, publication or clinical approval. The MC planning fingerprint is also versioned for the shared-question contract, and safe validation detail codes reach the admin status without exposing provider text.
 
 Validation: 1,066 Python tests succeeded (four skipped), 203 Node checks passed, repository validation passed. Live completion of the existing nine-of-ten draft remains to be tested after deployment. The near-autonomous quality milestone is still open; these checks are not a claim that varied new questions consistently pass.
+
+
+## Verified milestone: lecture and freeform MC workflows
+
+[Acceptance run 44173067107](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44173067107) succeeded against deployed staging commit `9c8089cb5eee12fbac12f492670bf1827b9a2efe` (PR #215; CI 44169325269 passed). Its exact Cloudflare build was `409749dd-864f-40a6-8389-e0884d20bcdc`; the deployed image was `6ab6d19131ab05bc64d6444c075ebd28940072a569f192e20b6a7fabffb44b16`.
+
+The original FRC lecture draft `65c2e793-a7af-4746-bfb6-1abf9993085c` now passes all ten automated stages. Its authenticated current-index revalidation returned zero issues, no generation, no database writes and unpublished status. The review-completion action itself wrote only its screening result and receipt. It made no authoring call, performed no rewrite and did not modify the saved question. The original rewrite count remains one. Question SHA-256 before/after: `fb501022535deea529decdc3b25afc1d0908af900d1c6bee467ac1e4a6d10e58`. The independently queried stored-question checksum also remained unchanged.
+
+Together with the previously verified freeform local-anesthetic question `8da6a89a-26b3-44dd-ad42-a70405dc6e23`, there are now two unpublished MC drafts from different workflows/objectives with all automated checks passing. Both remain pending human clinical review; neither has been approved or published.
+
+The browser connection became unavailable before the paid completion action was clicked. The authenticated staging runner completed that action instead. Its first two attempts stopped before any paid review because of deployment-metadata checks: a preview build overwrote the same-commit GitHub check, and the CI credential lacked deployment-read access. The successful run used a fresh, five-minute connected-service deployment verification, pinned to the exact successful build, code and image. No CI permissions were expanded. The review-only runner, its three offline safety checks and its exact deployment verification are retained on branch `verify/mc-saved-option-review-20261117`.
+
+**The MC workflow is now demonstrably operational in staging for supervised review. Consistent near-autonomous quality across new topics is not yet established.** The cue/source failures in the other samples remain blocked, and all other question formats remain paused. The next work is broader MC quality validation and the required human clinical pilot, not reindexing the completed bank or rebuilding the finished workflow.
