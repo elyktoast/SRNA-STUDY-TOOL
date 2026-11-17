@@ -255,8 +255,10 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     adapter, mode=mode, domain=domain, section=section,
                     objective=objective, evidence=evidence, format=format,
                     item_id=item_id, known_stems=known_stems,
-                    calculation=calculation, embedding=embedding,
-                    neighbors=neighbors, blind_reviewer=blind_reviewer,
+                    # Revised text requires new candidate-dependent vectors.
+                    # Without a live lookup, leave duplicate review pending.
+                    calculation=calculation, embedding=None,
+                    neighbors=None, blind_reviewer=blind_reviewer,
                     generator_model_id=generator_model_id,
                     reviewer_model_id=reviewer_model_id,
                     semantic_lookup=semantic_lookup,
