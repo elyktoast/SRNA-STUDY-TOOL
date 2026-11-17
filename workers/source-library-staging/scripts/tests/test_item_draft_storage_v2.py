@@ -109,12 +109,23 @@ class StorageTests(unittest.TestCase):
 
     def test_list_is_owner_scoped_and_bounded(self):
         cur=Cursor(rows=[(DRAFT,"airway","NCE","MC","pending_review",
-                         datetime(2026,11,2,tzinfo=timezone.utc),BOOK)])
+                         datetime(2026,11,2,tzinfo=timezone.utc),BOOK,{})])
         rows=list_drafts(Conn(cur),owner_uid=OWNER)
         self.assertEqual(rows[0]["draft_id"],DRAFT)
+        self.assertFalse(rows[0]["automated_checks_passed"])
+        self.assertNotIn("screening",rows[0])
         self.assertEqual(cur.params,(OWNER,OWNER,50))
         with self.assertRaises(ValueError):
             list_drafts(Conn(cur),owner_uid=OWNER,limit=101)
+
+    def test_list_readiness_uses_the_same_gate_as_approval(self):
+        for pending in (False,True):
+            screening=passed_screening()
+            if pending: screening['stages']['options_only']['status']='pending'
+            cur=Cursor(rows=[(DRAFT,'airway','NCE','MC','pending_review',
+                             datetime(2026,11,2,tzinfo=timezone.utc),BOOK,screening)])
+            result=list_drafts(Conn(cur),owner_uid=OWNER)[0]
+            self.assertEqual(result['automated_checks_passed'],not pending)
 
 if __name__=="__main__":
     unittest.main()

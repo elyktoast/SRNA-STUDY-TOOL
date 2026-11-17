@@ -437,9 +437,15 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 };
 genEl('sl-open-draft-id').value='abc90a93-41f8-4d7c-8e27-94a609135572';
 genEl('sl-open-draft-id-button').onclick=()=>openSavedDraft(genEl('sl-open-draft-id').value.trim(),genEl('sl-open-draft-id-button'));
+let draftCollectionRequest=0;
 async function renderDraftCollection(view='drafts'){
- const out=genEl('sl-saved-results');out.hidden=false;out.replaceChildren();
- const result=await storage.listGeneratedDrafts();const all=result.drafts||[];
+ const request=++draftCollectionRequest;
+ const out=genEl('sl-saved-results');out.hidden=false;
+ let result;
+ try{result=await storage.listGeneratedDrafts();}catch(error){if(request!==draftCollectionRequest)return;throw error;}
+ if(request!==draftCollectionRequest)return;
+ out.replaceChildren();delete out._bulkSelection;
+ const all=result.drafts||[];
  if(!Array.isArray(all))throw Error('Unexpected draft list.');
  const drafts=all.filter(d=>view==='bank'?d.status==='approved_for_bank':d.status!=='approved_for_bank'&&d.status!=='rejected');
  const heading=document.createElement('h3');heading.textContent=view==='bank'?'Approved Question Bank (staging only)':'Saved question drafts';out.append(heading);
@@ -452,7 +458,7 @@ async function renderDraftCollection(view='drafts'){
   const countLabel=document.createElement('span');countLabel.textContent='0 selected';
   const bulkApprove=document.createElement('button');bulkApprove.type='button';bulkApprove.textContent='Approve selected to bank';bulkApprove.disabled=true;
   const bulkRemove=document.createElement('button');bulkRemove.type='button';bulkRemove.textContent='Remove selected';bulkRemove.disabled=true;
-  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkRemove.disabled=!selected.size;bulkApprove.disabled=!selected.size||selectable.some(d=>selected.has(d.draft_id)&&d.status==='needs_revision');selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
+  const sync=()=>{countLabel.textContent=selected.size+' selected';bulkRemove.disabled=!selected.size;bulkApprove.disabled=!selected.size||selectable.some(d=>selected.has(d.draft_id)&&(d.status==='needs_revision'||d.automated_checks_passed!==true));selectAll.checked=selected.size===selectable.length;selectAll.indeterminate=selected.size>0&&selected.size<selectable.length;};
   selectAll.onchange=()=>{for(const entry of checkboxes){entry.input.checked=selectAll.checked;if(selectAll.checked)selected.add(entry.id);else selected.delete(entry.id);}sync();};
   const execute=async status=>{
    const ids=[...selected];if(!ids.length)return;
@@ -502,7 +508,7 @@ async function renderDraftCollection(view='drafts'){
   }
   const open=document.createElement('button');open.type='button';open.textContent='Open';open.onclick=()=>openSavedDraft(draft.draft_id,open);actions.append(open);
   if(view!=='bank'&&['pending_review','needs_revision'].includes(draft.status)){
-   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';approve.disabled=draft.status==='needs_revision';if(approve.disabled)approve.title='Resolve failed automated checks before approval.';
+   const approve=document.createElement('button');approve.type='button';approve.textContent='Approve to bank';approve.disabled=draft.status==='needs_revision'||draft.automated_checks_passed!==true;if(approve.disabled)approve.title='Complete all automated checks before approval.';
    approve.onclick=async()=>{
     const notes=window.prompt('Clinical review notes (required). Confirm source evidence and answer accuracy before approval:');
     if(notes===null)return;if(!notes.trim()){genEl('sl-gen-status').textContent='Clinical review notes required.';return;}

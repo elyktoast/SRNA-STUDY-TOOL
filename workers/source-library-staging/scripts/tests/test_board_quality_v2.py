@@ -123,6 +123,31 @@ class BoardQualityTests(unittest.TestCase):
             with self.subTest(extra=extra),self.assertRaises(ValueError): adapter({**request,**extra})
         self.assertEqual(calls,[])
 
+    def test_incomplete_options_review_records_safe_diagnostic_without_retry(self):
+        calls=[]
+        def reviewer(payload):
+            calls.append(payload)
+            return {"key":["A"]} if len(calls) <= 3 else {"key":["Z"], "private":"source text"}
+        result=options_only(item(),reviewer,shuffle=lambda x:None)
+        self.assertEqual(len(calls),4)
+        self.assertEqual(result["status"],"pending")
+        self.assertEqual(result["completed_trials"],3)
+        self.assertEqual(result["review_error"],"INVALID_OPTIONS_ONLY_RESPONSE")
+        self.assertNotIn("source text",json.dumps(result))
+
+    def test_options_review_error_categories_do_not_echo_exception_messages(self):
+        class Failure(RuntimeError): pass
+        for rule, expected in (("PROVIDER_RATE_LIMIT","PROVIDER_RATE_LIMIT"),
+                               ("private provider content","REVIEW_RESPONSE_INVALID")):
+            error=Failure("secret response text");error.rule=rule
+            def reviewer(payload): raise error
+            result=options_only(item(),reviewer,shuffle=lambda x:None)
+            self.assertEqual(result["review_error"],expected)
+            self.assertEqual(result["completed_trials"],0)
+            self.assertEqual(result["status"],"pending")
+            self.assertNotIn("secret",json.dumps(result))
+            self.assertNotIn("private provider",json.dumps(result))
+
     def test_restated_counterfactual_and_generic_trap_cannot_receive_a_pass(self):
         q=item();q["concept_card"]["counterfactual"]="The original correct answer remains appropriate."
         q["rationale"]["trap"]="A learner may select the wrong intervention."
