@@ -92,6 +92,7 @@ function request(step, model, options={}) {
         step, rules_version:'2.0', auto_publish:false,
         ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
         ...(['explanation_review','editorial_review','options_only_review'].includes(step)?{independent:true}:{}),
+        ...(step==='options_only_review'?{format:'MC',select_count:1,options:['A','B','C','D'].map(id=>({id,text:'Choice '+id}))}:{}),
         ...options,
       })}],
   });
@@ -645,4 +646,28 @@ test('opted-in acknowledgment authenticates, forwards only expected body and rej
    const unsafe=await gateway.fetch(make(payload),reviewer);
    assert.equal(unsafe.status,502);
  }finally{globalThis.fetch=oldFetch;}
+});
+
+test('options-only schema constrains shape without revealing or forcing the expected key',async()=>{
+ const old=globalThis.fetch,cfg={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b'};
+ try{
+  for(const answer of ['A','B','C','D']){
+   globalThis.fetch=async(url,options)=>{
+    const body=JSON.parse(options.body),f=body.response_format;
+    assert.equal(f.type,'json_schema');assert.equal(f.json_schema.strict,true);
+    const s=f.json_schema.schema;assert.deepEqual(s.required,['key']);assert.equal(s.additionalProperties,false);
+    assert.deepEqual(s.properties.key.items.enum,['A','B','C','D']);
+    assert.equal(s.properties.key.minItems,1);assert.equal(s.properties.key.maxItems,1);
+    const step=JSON.parse(body.messages[1].content);assert.equal(step.key,undefined);assert.equal(step.stem,undefined);
+    return Response.json({choices:[{message:{content:JSON.stringify({key:[answer]})},finish_reason:'stop'}]});
+   };
+   const result=await gateway.fetch(request('options_only_review',cfg.AI_REVIEWER_MODEL),cfg);
+   assert.equal(result.status,200);assert.deepEqual(JSON.parse((await result.json()).choices[0].message.content),{key:[answer]});
+  }
+  let calls=0;globalThis.fetch=async()=>{calls++;throw Error('Unexpected provider request')};
+  for(const invalid of [{select_count:2},{options:[{id:'A',text:'one'}]},{options:['A','A','C','D'].map(id=>({id,text:id}))}]){
+   assert.equal((await gateway.fetch(request('options_only_review',cfg.AI_REVIEWER_MODEL,invalid),cfg)).status,400);
+  }
+  assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
 });

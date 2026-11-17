@@ -262,7 +262,7 @@ test('generated numeric, matching and hotspot previews preserve their actual for
   append(...children){this.children.push(...children);}
   replaceChildren(...children){this.children=children;this.textContent='';}
  }
- const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function selectedEvidenceScope(',begin);
+ const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function renderMCReviewSummary(',begin);
  const render=runInNewContext('('+ui.slice(begin,end).trim()+')',{document:{createElement:tag=>new Element(tag)}});
  const descendants=node=>[node,...node.children.flatMap(descendants)];
  const text=node=>descendants(node).map(n=>n.textContent).join('\n');
@@ -281,4 +281,15 @@ test('generated numeric, matching and hotspot previews preserve their actual for
  assert.equal(descendants(host).filter(n=>['img','script','iframe'].includes(n.tag)).length,0,'a declared figure does not load an unverified URL');
  assert.match(text(host),/Correct region: r1/);assert.match(text(host),/Near-miss region: r2/);
  assert.match(text(host),/Verify the licensed figure/);
+});
+
+test('late dashboard initialization preserves the AI view selected while data loads',async()=>{
+ const start=admin.indexOf('async function refresh('),end=admin.indexOf('async function mount(',start);
+ const host={dataset:{},innerHTML:''},root={querySelector:()=>host};
+ let release;const loading=new Promise(resolve=>{release=resolve}),shown=[];
+ const context={cache:null,reportStates:new Map(),rpc:async()=>{await loading;return []},show:(host,view)=>shown.push(view),shell:()=>host,reportCurrentQuestion:async()=>({})};
+ const refresh=runInNewContext(admin.slice(start,end)+'\nrefresh',context);
+ const pending=refresh(root,null,true);host.dataset.view='ai-generation';release();await pending;
+ assert.deepEqual(shown,[],'background overview load must not replace the active generator');
+ host.dataset.view='overview';await refresh(root,null,false);assert.deepEqual(shown,['overview']);
 });

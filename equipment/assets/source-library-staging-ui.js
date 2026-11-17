@@ -259,6 +259,23 @@ function renderReadableQuestion(host,question){
  if(pages.length)add('p','Indexed source PDF pages: '+pages.join(', ')+'. Printed page numbers remain unverified.').className='sl-muted';
  add('p','Unpublished · Clinical review required').className='sl-muted';
 }
+function renderMCReviewSummary(host,screening,format){
+ if(format!=='MC')return;
+ const labels=[['schema','Question structure'],['deterministic_text','Original wording'],['math','Numeric rules'],['evidence','Textbook citations'],['duplicates','Duplicate screening'],['blind_model','Independent answer check'],['editorial_quality','Question quality and classification'],['explanation_evidence','Rationale source support'],['independent_option_evidence','Evidence for every answer choice'],['options_only','Answer-choice cue test']];
+ const section=document.createElement('section');section.setAttribute('aria-label','MC automated review results');
+ const heading=document.createElement('h4');heading.textContent='Automated review results';section.append(heading);
+ let passed=0;const list=document.createElement('ul');
+ for(const [name,label] of labels){
+  const stage=screening?.stages?.[name];
+  const pass=stage?.status==='pass'&&Array.isArray(stage.issues)&&!stage.issues.length;
+  if(pass)passed++;
+  const row=document.createElement('li');row.textContent=label+': '+(pass?'Passed':['flag','fail'].includes(stage?.status)?'Needs revision':'Incomplete');
+  if(name==='options_only'&&!pass&&Number.isInteger(stage?.completed_trials)&&stage.completed_trials>=0&&stage.completed_trials<=5)row.textContent+=' ('+stage.completed_trials+' of 5 trials completed)';
+  list.append(row);
+ }
+ const status=document.createElement('p');status.textContent=passed+' of '+labels.length+' automated checks passed. '+(passed===labels.length?'Clinical review and current-source revalidation are required before approval.':'Approval blocked until every automated check passes.');
+ section.append(status,list);host.prepend(section);
+}
 function selectedEvidenceScope(primary){
  if(!genEl('sl-multi-source').checked)return {};
  const ids=[...new Set([primary,...[...genEl('sl-gen-book-select').options].map(o=>o.value).filter(Boolean)])];
@@ -271,13 +288,13 @@ genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
  if(!topic||!textbook_id){genEl('sl-gen-status').textContent='Choose a question subject or enter a specific topic, then select an indexed textbook. Advanced textbook ID entry is available if needed.';return;}if(!checkedEvidence||checkedEvidence.topic!==topic||checkedEvidence.mode!==el('sl-mode').value||checkedEvidence.format!==el('sl-format').value||checkedEvidence.textbook_id!==textbook_id||checkedEvidence.domain!==genEl('sl-gen-domain').value||checkedEvidence.section!==genEl('sl-gen-section').value.trim().toUpperCase()||checkedEvidence.objective!==genEl('sl-gen-objective').value.trim()){genEl('sl-gen-status').textContent='Run Check indexed evidence for the current topic and exam format before making a paid AI generation call.';return;}
  if(!confirm('Generate one staging AI question? Provider charges may apply. It will be saved as an unpublished draft.'))return;
- const btn=genEl('sl-generate-one');btn.disabled=true;generatedForReview=null;genEl('sl-save-generated').disabled=true;genEl('sl-gen-result').hidden=true;genEl('sl-generated-preview').hidden=true;genEl('sl-gen-technical').hidden=true;genEl('sl-gen-status').textContent='Generating one question…';
+ const btn=genEl('sl-generate-one');btn.disabled=true;generatedForReview=null;genEl('sl-save-generated').disabled=true;genEl('sl-gen-result').hidden=true;genEl('sl-generated-preview').hidden=true;genEl('sl-gen-technical').hidden=true;genEl('sl-gen-status').textContent='Generating one question and running independent reviews. This can take several minutes; keep this tab open.';
  try{
   const domain=genEl('sl-gen-domain').value,section=genEl('sl-gen-section').value.trim().toUpperCase(),objective=genEl('sl-gen-objective').value.trim();
   const request={topic,textbook_id,mode:el('sl-mode').value,format:el('sl-format').value,domain,section,objective,item_id:crypto.randomUUID(),...(checkedEvidence.textbook_ids?{textbook_ids:checkedEvidence.textbook_ids}:{})};
   const result=await storage.generateOne(request,{onRecovery:()=>{genEl('sl-gen-status').textContent='Still working. Checking for the saved draft…';}});
   if(result.dry_run!==false||result.can_publish!==false||result.database_writes!==false||result.requires_human_review!==true||!result.item)throw Error('Unsafe or incomplete generated question.');
-  generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);
+  generatedForReview={request,result};renderReadableQuestion(genEl('sl-generated-preview'),result.item);renderMCReviewSummary(genEl('sl-generated-preview'),result.screening,result.item.format);
   const preview=genEl('sl-generated-preview');
   const evidenceCount=Array.isArray(result.source_evidence?.passage_ids)?result.source_evidence.passage_ids.length:
     (Array.isArray(result.source_evidence)?result.source_evidence.length:
@@ -327,7 +344,7 @@ async function openSavedDraft(draftId,button){
   genEl('sl-revision-status').textContent='';genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();
   genEl('sl-draft-history-output').hidden=true;
   genEl('sl-current-revision').hidden=true;
-  const revision=await storage.listDraftRevisions(draftId);if(revision.published!==false||!revision.current_question||!/^[a-f0-9]{64}$/.test(revision.current_question_sha256||''))throw Error('Latest unpublished revision could not be verified.');currentDraftQuestion=revision.current_question;detail.hidden=false;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);populateQuestionEditor(currentDraftQuestion);if(dialog.classList.contains('sl-workspace-ai'))dialog.querySelector('[data-sl-ai-view="editor"]')?.click();genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=currentDraftQuestion||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:currentDraftQuestion,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
+  const revision=await storage.listDraftRevisions(draftId);if(revision.published!==false||!revision.current_question||!/^[a-f0-9]{64}$/.test(revision.current_question_sha256||''))throw Error('Latest unpublished revision could not be verified.');currentDraftQuestion=revision.current_question;detail.hidden=false;renderReadableQuestion(genEl('sl-readable-question'),currentDraftQuestion);renderMCReviewSummary(genEl('sl-readable-question'),revision.current_question_sha256===revision.original_question_sha256?data.screening:null,currentDraftQuestion.format||data.format);populateQuestionEditor(currentDraftQuestion);if(dialog.classList.contains('sl-workspace-ai'))dialog.querySelector('[data-sl-ai-view="editor"]')?.click();genEl('sl-citation-rows').replaceChildren();genEl('sl-option-rows').replaceChildren();const q=currentDraftQuestion||{};const opts=Array.isArray(q.options)?q.options:[];const keys=Array.isArray(q.key)?q.key:[];for(const option of opts){if(!option||typeof option.id!=='string')continue;const evidence=q.distractor_evidence?.[option.id]||{};addEvidenceRow('option',{id:option.id,verdict:keys.includes(option.id)?'supports_key':'refutes_distractor',passage_ids:evidence.passage_ids||[],explanation:evidence.explanation||''});}json.textContent=JSON.stringify({question:currentDraftQuestion,screening:data.screening,evidence:data.evidence,metadata:{topic:data.topic,mode:data.mode,format:data.format,domain:data.domain,section:data.section,objective:data.objective,provider:data.provider,model:data.model}},null,2);
   const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;
  }catch(error){currentDraftQuestion=null;detail.hidden=true;genEl('sl-revision-status').textContent='Cannot open draft: '+(error.message||'Unknown error');genEl('sl-gen-status').textContent='Cannot open draft: '+(error.message||'Unknown error');}
  finally{button.disabled=false;}
