@@ -56,7 +56,7 @@ def backfill(conn, source_path, *, owner_uid, embed_many, apply=False, max_new=3
               on conflict (item_id) do update set embedding_model=excluded.embedding_model,
                 embedding=excluded.embedding,stem_hash=excluded.stem_hash,updated_at=now()
               where question_semantic_index_v2.owner_uid=excluded.owner_uid""",
-              [(item_id,owner,MODEL,vector,inventory[item_id]) for item_id,vector in zip(ids,vectors)])
+              [(item_id,owner,MODEL,[float(value) for value in vector],inventory[item_id]) for item_id,vector in zip(ids,vectors)])
             if cur.rowcount!=len(ids):
                 raise ValueError("Canonical item ownership conflict")
         conn.commit()
@@ -124,6 +124,7 @@ def main():
         safe_state=state if isinstance(state,str) and re.fullmatch('[A-Z0-9]{5}',state) else None
         print(json.dumps({'ok':False,'error':'SEMANTIC_BACKFILL_UNAVAILABLE',
                           'provider_rule':safe_rule,'sqlstate':safe_state,
+                          'exception_type':type(error).__name__ if re.fullmatch('[A-Za-z_]{1,80}',type(error).__name__) else 'OTHER',
                           'category':'validation' if isinstance(error,ValueError) else 'database' if safe_state else 'provider' if safe_rule else 'unclassified'}))
         return 2
 

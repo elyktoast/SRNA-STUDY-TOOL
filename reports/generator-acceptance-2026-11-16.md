@@ -79,3 +79,12 @@ The deployed approval UI and backend were also checked against draft `14520cc3-f
 4. Full format-specific preview, scoring and accessibility acceptance before alternative formats reach learners.
 5. Broader source-layout validation, Nagelhout symbol interpretation and OR-guide provenance recovery before index replacement.
 6. Human clinical approval remains required by Standard v2.0; automated checks never publish.
+
+
+## Canonical index batch and database adaptation fixes
+
+PR #201 split embedding requests by padded UTF-8 context rather than total characters alone. Canonical text is preserved; the signed relay enforces the same input bound and reports permanent context rejection without private provider details. CI passed 1,030 Python tests (five skipped on that runner), Worker tests, the container build and repository validation. Staging build `6a7bc399-b7d2-4dc3-b1e9-cab39b7e0311` deployed merge `f294e415fdc25b65a844bfb92474716bc740da6d` successfully. The separate feature-branch preview failed because this container project has no isolated preview configuration; it did not deploy.
+
+Index-only run [43991889373](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43991889373) resumed from 128 and saved 1,501 entries before an unclassified interruption. A metadata-only exception-class diagnostic in [43992404491](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/43992404491) identified `DataError` after progress reached 3,709. Native request telemetry returned HTTP 200. An offline reproduction with psycopg 3.3.9 confirmed that a list containing both integer zero and a float raises this exact exception during array adaptation, whereas a homogeneous float list succeeds.
+
+The writer now converts already validated numeric components to Python floats before database adaptation, preserving all numeric values and leaving provider responses unchanged. A regression verifies mixed native integer/float vectors are stored as homogeneous floats. Errors expose only an exception class, fixed provider rule and SQLSTATE; no private messages, questions or vectors are logged. Complete 9,000-entry reconciliation and positive/negative live controls still need a successful resumed run. No questions were generated, approved or published during these index jobs.
