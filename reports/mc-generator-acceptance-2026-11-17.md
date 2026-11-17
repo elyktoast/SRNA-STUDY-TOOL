@@ -121,3 +121,26 @@ The implementation missed the gateway's constrained response schema: it still pr
 The equipment harness also used an arbitrary first book and an overconstrained search string. A read-only count found zero Equipment passages for the full sentence, versus 84 for `Oxygen pressure failure`. The next bounded equipment control uses the Equipment textbook as primary and that clinical concept title. This does not fix unrestricted natural-language search; overly conjunctive freeform searches remain a known limitation. No reindexing is needed.
 
 The runner and exact first results are retained on `verify/mc-option-grounding-20261117`. Do not rerun that paid job. The next set uses fresh request IDs after the demonstrated schema correction, with the same three clinical targets. No completed clinical judgment is being resampled and no failed draft is repaired a second time.
+
+
+### Corrected-schema live set: still 0/3 accepted
+
+Run [44195586659](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44195586659) used staging application commit `14f0e0799dc1d1d9cbe540df9b1a1f9620efc629` (CI [44195059494](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44195059494) passed). Actual successful build: `8417b976-2a7c-4ddd-8609-0b1ccad46559`; settled container image: `cda921d628f0334ac033113e297a58f52fbd972f5f1727769ec1c8c422288e8c`.
+
+| Topic | Request item ID | Saved draft | Actual result/blocker |
+| --- | --- | --- | --- |
+| Neuromuscular receptor action | `afda08fb-1c15-4142-b987-39b84c2b9d92` | None | `CONCEPT_CARD_VALIDATION / PLAN_GIVEN_RESPONSE`; plan blocked before drafting |
+| Oxygen pressure failure | `8881f83d-42c3-4f35-95b5-84619a906657` | None | Source-first plan validated and draft checkpoint persisted; client reported `fetch failed` after about five minutes; no completed result or saved draft |
+| Shunt versus dead-space physiology | `05c89209-3ca5-42fe-b172-adf4d7d648df` | None | HTTP 500; Worker logs identify a non-JSON upstream backend 500, without a safe diagnostic rule |
+
+A direct read-only draft query confirmed that none of these request IDs had a saved draft. The run's green status means the failure ledger was collected, not that any candidate passed. No new automated acceptance is claimed.
+
+Connected runtime logs show successful equipment concept, draft and rationale authoring, independent review calls, two explicit Groq 429 responses with bounded waits, and one completed rewrite. **Do not manually resume the equipment partial checkpoint:** that rewrite was already spent even though the older partial checkpoint does not durably record its budget. The supported UI's fresh-item and completed-only recovery boundaries remain necessary. No second rewrite or completed-judgment resampling was performed.
+
+The subsequent respiratory authoring calls also returned HTTP 200 from the model, but the backend ultimately returned a non-JSON 500. Its root cause is not established. Do not label it a clinical quality failure or claim that a timeout fix has been verified. The equipment disconnect occurred at approximately the common Node fetch header deadline, but the client cause code was not captured; that is a hypothesis, not a diagnosis.
+
+The acceptance harness continued to the next topic after the ambiguous equipment disconnect, so backend work could have overlapped despite sequential client calls. The retained runner now stops the entire set after an ambiguous transport/server failure, records remaining topics as not run, and captures a fixed transport cause code without printing provider output. Three offline runner checks verify single requests, clinical holds, stop-after-disconnect/500 behavior and replay prevention. This reporting/safety correction has not been used for another paid run.
+
+**Current outcome:** the source-first contract is implemented, schema-aligned and live-verified through equipment drafting, but it has yielded no newly accepted questions. The two previously passing unpublished drafts remain the only passing MC examples. Near-autonomous quality remains open, with plan leakage, runtime reliability/latency, and varied clinical acceptance still unresolved. No more paid samples were launched after this diagnosis.
+
+Next work should diagnose the non-JSON backend failure and five-minute client disconnect using bounded read-only diagnostics, harden durable rewrite-budget accounting before any partial replay, and obtain a safe failed-plan diagnostic for `PLAN_GIVEN_RESPONSE` without relaxing that gate. Then run a bounded fixed acceptance set against a demonstrated correction. Keep all other formats paused, retain the complete duplicate index, and preserve both passing drafts for human clinical review.
