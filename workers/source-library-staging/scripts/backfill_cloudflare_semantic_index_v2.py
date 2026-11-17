@@ -124,6 +124,7 @@ def main():
         safe_state=state if isinstance(state,str) and re.fullmatch('[A-Z0-9]{5}',state) else None
         print(json.dumps({'ok':False,'error':'SEMANTIC_BACKFILL_UNAVAILABLE',
                           'provider_rule':safe_rule,'sqlstate':safe_state,
+                          'exception_type':type(error).__name__ if re.fullmatch('[A-Za-z_]{1,80}',type(error).__name__) else 'OTHER',
                           'category':'validation' if isinstance(error,ValueError) else 'database' if safe_state else 'provider' if safe_rule else 'unclassified'}))
         return 2
 
