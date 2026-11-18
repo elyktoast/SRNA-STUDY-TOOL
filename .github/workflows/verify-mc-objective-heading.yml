@@ -9,16 +9,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: contains(github.event.head_commit.message, '[verify-mc-quality-v24]')
+    if: contains(github.event.head_commit.message, '[verify-mc-equipment-scope]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 20
+    timeout-minutes: 16
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify one lecture and one freeform MC
+      - name: Verify one fresh equipment MC
         env:
           CONFIRM_PAID_MC_SET: 'true'
           GITHUB_TOKEN: ${{ github.token }}

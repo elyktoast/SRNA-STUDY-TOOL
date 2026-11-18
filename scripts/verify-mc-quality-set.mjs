@@ -7,12 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',recover_only:true,item_id:'9a2cede0-3d0a-41c8-832a-d17221f78c99',topic:'Compare shunt and dead space'},
- {name:'Oxygen supply pressure failure',objective:'II.A.6',workflow:'freeform',item_id:'f0cab967-bdb1-48d2-96b0-4bce290aed45',textbook_id:'8343459f-0595-4375-8ac6-7700e6792abe',topic:'Oxygen pressure failure'}
+ {name:'Oxygen supply pressure failure',objective:'II.A.6',workflow:'freeform',item_id:'e9d22951-4a57-463e-993f-6117635aaa94',textbook_id:'8343459f-0595-4375-8ac6-7700e6792abe',topic:'Oxygen pressure failure'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='78f68d4fed158293dabbe2e02335c0783a9970bb';
+const sha='f5a826025e4ede2edaa542e61820a5217456388f';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -72,8 +71,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
    let generated;
-   if(sample.recover_only)generated=await completed();
-   else try{generated=await call('/generation/one',request);}
+   try{generated=await call('/generation/one',request);}
    catch(error){if(!isGenerationDisconnect(error))throw error;generated=await completed();}
    assert.equal(generated.published,false);assert.equal(generated.can_publish,false);assert.ok(generated.draft_id);
    row.draft_id=generated.draft_id;
