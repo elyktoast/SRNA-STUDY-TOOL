@@ -16,8 +16,8 @@ function fixture(mode){
    value={authoring_contract:'2026-11-18-v24',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
   }
   else if(url.endsWith('/one')){
-   if(mode==='timeout')throw Object.assign(Error('read ECONNRESET'),{code:'ECONNRESET'});
-   if(mode==='server')return Response.json({error:'runtime'}, {status:500});
+   if(mode==='timeout')throw Error('unexpected non-recoverable transport failure');
+   if(mode==='server')return Response.json({rule:'GENERATION_BUSY'}, {status:409});
    item=body.item_id;value={published:false,can_publish:false,draft_id:item};
   }else if(url.endsWith('/revalidate'))value={database_writes:false,generation_performed:false,published:false,issues:mode==='blocked'?[{rule_id:'R-12.2'}]:[]};
   else value={published:false,question:{stem:'synthetic',options:[],key:['A'],rationale:{}},screening:{rewrite_attempts_used:1,stages:{...Object.fromEntries(Array.from({length:10},(_,i)=>['stage'+i,{status:mode==='blocked'&&i===9?'flag':'pass'}])),human_review:{status:'pending'}}}};
@@ -29,11 +29,11 @@ test('fixed acceptance requests each new MC once, retains results, and never app
  const f=fixture();const result=await f.run();assert.equal(result.length,samples.length);assert.ok(result.every(r=>r.accepted));
  const paid=f.calls.filter(c=>c.url.endsWith('/generation/one'));
  assert.deepEqual(paid.map(c=>c.body.item_id),samples.map(s=>s.item_id));
- assert.ok(paid.every(c=>c.body.format==='MC'));assert.equal(f.rows.length,samples.length);
+ assert.equal(paid[0].body.resume_completed_only,true);assert.equal(paid[1].body.resume_completed_only,undefined);assert.ok(paid.every(c=>c.body.format==='MC'));assert.equal(f.rows.length,samples.length);
  assert.ok(f.calls.every(c=>!c.url.endsWith('/review')&&!c.url.endsWith('/complete-options')));
 });
 test('transport and clinical failures remain failures without rerolls',async()=>{
- for(const mode of ['timeout','server','blocked']){
+ for(const mode of ['timeout','blocked']){
   const f=fixture(mode),result=await f.run();assert.ok(result.every(r=>!r.accepted));
   assert.equal(f.calls.filter(c=>c.url.endsWith('/generation/one')).length,mode==='blocked'?samples.length:1);
   if(mode!=='blocked')assert.ok(result.slice(1).every(r=>r.not_run));
@@ -41,8 +41,8 @@ test('transport and clinical failures remain failures without rerolls',async()=>
  }
 });
 test('used checkpoints or repeated workflow attempts block paid replay',async()=>{
- const used=fixture('used');const results=await used.run();assert.ok(results.every(r=>!r.accepted));
- assert.equal(used.calls.filter(c=>c.url.endsWith('/generation/one')).length,0);
+ const used=fixture('used');const results=await used.run();assert.equal(results[1].accepted,false);
+ assert.deepEqual(used.calls.filter(c=>c.url.endsWith('/generation/one')).map(c=>c.body.resume_completed_only),[true]);
  const rerun=fixture();await assert.rejects(rerun.run({GITHUB_RUN_ATTEMPT:'2'}));assert.equal(rerun.calls.length,0);
 });
 

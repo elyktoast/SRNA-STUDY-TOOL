@@ -4,9 +4,10 @@ import {stagingFetch as fetch} from './staging-http-request.mjs';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
+import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',item_id:'9a2cede0-3d0a-41c8-832a-d17221f78c99',topic:'Compare shunt and dead space'},
+ {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',recover_only:true,item_id:'9a2cede0-3d0a-41c8-832a-d17221f78c99',topic:'Compare shunt and dead space'},
  {name:'Oxygen supply pressure failure',objective:'II.A.6',workflow:'freeform',item_id:'f0cab967-bdb1-48d2-96b0-4bce290aed45',textbook_id:'8343459f-0595-4375-8ac6-7700e6792abe',topic:'Oxygen pressure failure'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
@@ -25,7 +26,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
  const json=async(url,options={})=>{
   const response=await fetchImpl(url,{...options,redirect:'error',signal:AbortSignal.timeout(480000)});
   const body=await response.json().catch(()=>null);
-  if(!response.ok||!body){const e=Error('Staging request blocked');e.status=response.status;e.details={http_status:response.status,rule:safe(body?.rule),validation_detail:safe(body?.validation_detail),failed_step:safe(body?.failed_step)};throw e;}
+  if(!response.ok||!body){const e=Error('Staging request blocked');e.status=response.status;e.rule=safe(body?.rule);e.details={http_status:response.status,rule:safe(body?.rule),validation_detail:safe(body?.validation_detail),failed_step:safe(body?.failed_step)};throw e;}
   return body;
  };
  const head=await json('https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/git/ref/heads/fix/board-question-quality',{headers:{Authorization:'Bearer '+env.GITHUB_TOKEN,Accept:'application/vnd.github+json'}});
@@ -68,8 +69,12 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const preflight=await call('/generation/preflight',request);
    assert.equal(preflight.authoring_contract,'2026-11-18-v24');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
-   assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
-   const generated=await call('/generation/one',request); // Exactly once; no transport/provider retry.
+   if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
+   const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
+   let generated;
+   if(sample.recover_only)generated=await completed();
+   else try{generated=await call('/generation/one',request);}
+   catch(error){if(!isGenerationDisconnect(error))throw error;generated=await completed();}
    assert.equal(generated.published,false);assert.equal(generated.can_publish,false);assert.ok(generated.draft_id);
    row.draft_id=generated.draft_id;
    const saved=await call('/generation/drafts/'+row.draft_id);
