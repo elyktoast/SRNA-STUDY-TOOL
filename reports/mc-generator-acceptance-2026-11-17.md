@@ -146,3 +146,10 @@ The acceptance harness continued to the next topic after the ambiguous equipment
 **Current outcome:** the source-first contract is implemented, schema-aligned and live-verified through equipment drafting, but it has yielded no newly accepted questions. The two previously passing unpublished drafts remain the only passing MC examples. Near-autonomous quality remains open, with plan leakage, runtime reliability/latency, and varied clinical acceptance still unresolved. No more paid samples were launched after this diagnosis.
 
 Next work should diagnose the non-JSON backend failure and five-minute client disconnect using bounded read-only diagnostics, harden durable rewrite-budget accounting before any partial replay, and obtain a safe failed-plan diagnostic for `PLAN_GIVEN_RESPONSE` without relaxing that gate. Then run a bounded fixed acceptance set against a demonstrated correction. Keep all other formats paused, retain the complete duplicate index, and preserve both passing drafts for human clinical review.
+
+
+## 18 November runtime result and next clinical control
+
+See the [runtime reliability record](mc-runtime-reliability-2026-11-18.md). The two formerly failing runtime paths now complete and save; the ledger protects interrupted rewrite budgets and the live container peaked near 372 MiB. Both new drafts remain blocked (7/10 and 8/10), with zero new accepted questions. The apparent respiratory 8/10 was actually a generic objective-heading routing failure that produced simulation content; it is not respiratory quality acceptance.
+
+A targeted parser correction now excludes the generic Markdown objective heading and preserves its clinical bullet. The next bounded control must prove the exact intended topic in a read-only plan before spending on one fresh clinical MC. Do not rerun or regrade either saved failed draft.

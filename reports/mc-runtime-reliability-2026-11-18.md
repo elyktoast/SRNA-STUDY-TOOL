@@ -38,3 +38,26 @@ The Node acceptance client uses a bounded HTTPS request with the caller's explic
 - A disposable real-PostgreSQL concurrency/interruption test is prepared; it makes zero AI calls and writes no questions. Live outcome is pending.
 
 No new clinical question has been accepted by this batch yet. The two prior 10/10 unpublished drafts remain the accepted automated examples, pending human clinical review. Live validation will first confirm the database safety boundary and exact deployed container, then use bounded fresh MC requests against the demonstrated runtime correction. Existing failed requests will not be resumed.
+
+## Live runtime verification
+
+Run [44288292292](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44288292292) passed the disposable real-PostgreSQL admission/budget checks, then generated exactly two fresh candidates against application `cb7cac08963165953f9d002c299e9b39cdcfd510`. Build `579e4c8d-e021-447a-af10-b002d29e0e09` succeeded; image `b852b5f94726d571cd51ce5b6210ba612a13017a74058608f6774964c1b110a8` was verified settled before generation.
+
+Both requests completed and saved without disconnect or backend 500. Their durable ledger rows are `completed`, with one rewrite reserved each. Backend generation durations were 329 and 410 seconds, both beyond the old approximately five-minute client failure. Cloudflare container metrics peaked at 389,763,072 bytes (~372 MiB) during the run, compared with 1,187,041,280 bytes (~1,132 MiB) immediately before the prior SIGKILL. Metrics are operational observations, not clinical acceptance.
+
+| Requested target | Saved draft | Checks | Disposition |
+| --- | --- | --- | --- |
+| Oxygen pressure failure | `76e7c70b-1f52-40f9-bff6-76832dd40407` | 7/10 | Held: R-6.10 absolute wording, R-2.4 explanatory support; option review correctly pending |
+| Shunt/dead-space lecture | `ffe53be0-88e1-4831-84ef-4aa4e7212f53` | 8/10 | Held: R-1.3 wrong topic and R-5.3 counterfactual; actual topic was simulation education, so this is NOT respiratory clinical acceptance |
+
+Neither draft is approved or published. No second rewrite or judgment resampling was performed. The equipment source issue concerns the scope/wording of the oxygen-analyzer explanation. Its cited excerpt contains downstream-monitor language; do not assume the source is absent or override the independent hold. Diagnose the precise claim/quote interpretation before changing that gate.
+
+### Demonstrated lecture routing defect
+
+The saved respiratory request actually had `topic='Learning objectives'`: the parser treated `# Learning objectives` as a clinical heading and ignored its following objective bullet. Its generic search found simulation-training content, which the author followed. Independent blueprint review correctly rejected the resulting question. The earlier ordered-objective work did not cover a Markdown heading with no colon.
+
+The correction recognizes objective headers after removing Markdown heading syntax, handles a blank separator before bullets, excludes the generic header from retrieval/allocation, and closes objective scope when narrative text or the next section begins. Regression tests cover the exact failed input. No question/source/approval checks are relaxed.
+
+The long comparison sentence also matches zero indexed passages under the current conjunctive lexical search, whereas `shunt and dead space` matches 47 owned, ready trusted passages. The bounded clinical control will therefore use `Compare shunt and dead space`, verify the exact planned topic before any paid call, and keep I.A.2 explicit. This fixes the demonstrated header-routing defect; broad natural-language retrieval remains a separate limitation.
+
+Validation for the header correction: 1,082 Python tests ran (four skipped), 207 Node checks passed, repository validation passed. A fresh read-only lecture-plan verification and at most one new respiratory candidate are pending deployment. Previous failed drafts remain unchanged.

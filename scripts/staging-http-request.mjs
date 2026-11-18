@@ -8,9 +8,11 @@ export function stagingFetch(url,options={},requestImpl=httpsRequest){
  const method=options.method||'GET';if(!['GET','POST'].includes(method))throw Error('Staging method rejected');
  return new Promise((resolve,reject)=>{
   const signal=options.signal||AbortSignal.timeout(480000);
-  const req=requestImpl(target,{method,headers:options.headers,signal},res=>{
+  const headers={'User-Agent':'SRNAStudyToolStagingAcceptance/1.0',Accept:'application/json',...options.headers};
+  if(options.body!==undefined)headers['Content-Length']=String(Buffer.byteLength(options.body));
+  const req=requestImpl(target,{method,headers,signal},res=>{
    let size=0;const chunks=[];
-   res.on('data',chunk=>{size+=chunk.length;if(size>4194304){req.destroy(Error('Staging response exceeds limit'));return;}chunks.push(chunk);});
+   res.on('data',chunk=>{size+=chunk.length;if(size>4194304){const error=Error('Staging response exceeds limit');reject(error);req.destroy(error);return;}chunks.push(chunk);});
    res.on('error',reject);
    res.on('aborted',()=>reject(Error('Staging response interrupted')));
    res.on('end',()=>{

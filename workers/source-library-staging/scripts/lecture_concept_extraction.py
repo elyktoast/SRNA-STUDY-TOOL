@@ -6,7 +6,7 @@ not verified clinical concepts. No AI, network, storage or textbook citations.
 import re
 
 HEADING = re.compile(r"^(?:#{1,4}\s+|(?:topic|section|unit|module)\s*\d*\s*[:.-]\s*)", re.I)
-OBJECTIVE = re.compile(r"^(?:learning\s+)?objectives?\s*[:.-]\s*(.*)$", re.I)
+OBJECTIVE = re.compile(r"^(?:learning\s+)?objectives?(?:\s*[:.-]\s*(.*)|\s*)$", re.I)
 BULLET = re.compile(r"^(?:[-*•]\s+|\d+[.)]\s+)")
 PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
 
@@ -24,7 +24,7 @@ def extract(text, *, max_concepts=60):
     for line_no, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
         if not line:
-            in_objectives = False
+            # Markdown commonly separates a heading from its bullet list.
             continue
         page = PAGE.fullmatch(line)
         if page:
@@ -32,14 +32,16 @@ def extract(text, *, max_concepts=60):
             at_page_start = True
             in_objectives = False
             continue
-        objective = OBJECTIVE.match(line)
+        heading = bool(HEADING.match(line))
+        if heading:
+            line = HEADING.sub("", line).strip()
+        objective = OBJECTIVE.fullmatch(line)
         if objective:
             in_objectives = True
-            line = objective.group(1).strip()
+            line = (objective.group(1) or "").strip()
             if not line:
                 continue
-        elif HEADING.match(line):
-            line = HEADING.sub("", line).strip()
+        elif heading:
             in_objectives = False
         elif in_objectives and BULLET.match(line):
             line = BULLET.sub("", line).strip()
@@ -47,6 +49,7 @@ def extract(text, *, max_concepts=60):
             # Slide title candidate, not a verified clinical fact.
             at_page_start = False
         else:
+            in_objectives = False
             continue
         at_page_start = False
         if not 5 <= len(line) <= 180 or len(line.split()) > 24:

@@ -35,5 +35,25 @@ class LectureExtractionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             extract("")
 
+    def test_markdown_and_plain_objective_headers_never_become_clinical_topics(self):
+        title='Compare intrapulmonary shunt and alveolar dead space in terms of alveolar ventilation and pulmonary perfusion.'
+        for heading in ('# Learning objectives','## Learning Objectives:','Learning objectives','Objectives:'):
+            for gap in ('\n','\n\n'):
+                with self.subTest(heading=heading,gap=gap):
+                    result=extract(heading+gap+'- '+title)
+                    self.assertEqual([c['title'] for c in result['concepts']],[title])
+                    self.assertEqual(result['concepts'][0]['importance'],'learning_objective')
+        result=extract('# Learning objectives\n- Identify aspiration risks\n\nNarrative explanation.\n- Unrelated later bullet\n# Respiratory mechanics')
+        self.assertEqual([c['title'] for c in result['concepts']],['Identify aspiration risks','Respiratory mechanics'])
+
+    def test_generic_objective_heading_is_not_retrieved_or_allocated(self):
+        title='Compare shunt and dead space'
+        with patch('lecture_to_question_plan.build_evidence') as lookup:
+            lookup.return_value={'sources':[{'passage_id':'p','textbook_id':'t','excerpt':'Respiratory source'}]}
+            result=prepare(None,'owner','# Learning objectives\n\n- '+title,count=1,prefer_learning_objectives=True)
+        self.assertEqual([c.args[2] for c in lookup.call_args_list],[title])
+        self.assertEqual(result['topics'][0]['title'],title)
+        self.assertEqual(result['topics'][0]['question_count'],1)
+
 if __name__ == "__main__":
     unittest.main()
