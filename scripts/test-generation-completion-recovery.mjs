@@ -38,3 +38,18 @@ test('transient server failures recover only the existing completed checkpoint',
  }
  assert.equal(isGenerationDisconnect(Object.assign(Error('rate limited'),{status:429})),false);
 });
+
+test('generation receipt conflicts poll only for the original completed item',async()=>{
+ for(const rule of ['GENERATION_BUSY','GENERATION_ALREADY_STARTED']){
+  const conflict=Object.assign(Error('generation conflict'),{status:409,rule});
+  assert.equal(isGenerationDisconnect(conflict),true);
+  let calls=0;
+  const result=await recoverCompletedGeneration(request,async body=>{
+   assert.deepEqual(body,{...request,resume_completed_only:true});
+   if(++calls===1)throw conflict;
+   return {draft_id:'existing'};
+  },{attempts:2,intervalMs:0,wait:async()=>{}});
+  assert.equal(result.draft_id,'existing');
+ }
+ assert.equal(isGenerationDisconnect(Object.assign(Error('other conflict'),{status:409,rule:'other'})),false);
+});

@@ -185,6 +185,27 @@ async function relayGroq(request,env){
    if(!['MC','MS'].includes(step.format)||ids.length<4||ids.length>6||new Set(ids).size!==ids.length||!ids.every(id=>typeof id==='string'&&/^[A-F]$/.test(id))||!Number.isInteger(count)||(step.format==='MC'?count!==1:![2,3].includes(count)))return respond(400,null,'{"error":"invalid_step"}');
    if(groqQwen||groqOss)reviewFormat={type:'json_schema',json_schema:{name:'srna_options_only_v2',strict:true,schema:{type:'object',properties:{key:{type:'array',minItems:count,maxItems:count,items:{type:'string',enum:ids}}},required:['key'],additionalProperties:false}}};
   }
+  if(groqQwen&&step.step==='option_review'&&step.format==='MC'){
+   const optionIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const passages=Array.isArray(step.source_passages)?step.source_passages:[];
+   const passageIds=passages.map(p=>p?.passage_id);
+   const spanIds=[...new Set(passages.flatMap(p=>Array.isArray(p?.quote_spans)?p.quote_spans.map(s=>s?.id):[]))];
+   if(optionIds.length===4&&optionIds.every((id,index)=>id==='ABCD'[index])&&
+      passageIds.length&&passageIds.every(id=>typeof id==='string')&&spanIds.length&&spanIds.every(id=>typeof id==='string')){
+    const required=['option_id','verdict','passage_ids','quote_refs','explanation','source_conflict_found'];
+    reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_option_review_v2',strict:true,schema:{type:'object',properties:{
+     judgments:{type:'array',minItems:4,maxItems:4,items:{type:'object',properties:{
+      option_id:{type:'string',enum:optionIds},
+      verdict:{type:'string',enum:['supports_key','refutes_distractor','uncertain']},
+      passage_ids:{type:'array',items:{type:'string',enum:passageIds}},
+      quote_refs:{type:'array',maxItems:8,items:{type:'object',properties:{
+       passage_id:{type:'string',enum:passageIds},span_id:{type:'string',enum:spanIds}
+      },required:['passage_id','span_id'],additionalProperties:false}},
+      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
+     },required,additionalProperties:false}}
+    },required:['judgments'],additionalProperties:false}}};
+   }
+  }
   if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
    const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
    const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];

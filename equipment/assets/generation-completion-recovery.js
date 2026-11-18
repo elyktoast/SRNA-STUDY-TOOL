@@ -1,5 +1,8 @@
 // Recover an existing completed generation; never retry its paid authoring call.
 export function isGenerationDisconnect(error){
+ // A platform retry may see the original request still holding its receipt.
+ // Look up only that item's completed result, even when the retry got a 409.
+ if(error?.status===409&&['GENERATION_BUSY','GENERATION_ALREADY_STARTED'].includes(error.rule))return true;
  return [500,502,503,504].includes(error?.status)||(error?.name==='TypeError'&&/fetch|network|load failed/i.test(error.message||''))||['AbortError','TimeoutError'].includes(error?.name);
 }
 export async function recoverCompletedGeneration(request,completedRequest,{attempts=24,intervalMs=15000,wait=ms=>new Promise(resolve=>setTimeout(resolve,ms)),onProgress=()=>{}}={}){

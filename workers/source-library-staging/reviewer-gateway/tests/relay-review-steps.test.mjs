@@ -587,6 +587,31 @@ test('source explanation schema requires references for support but permits ever
  }finally{globalThis.fetch=old;}
 });
 
+test('MC option review constrains the response shape and allows uncertain judgments',async()=>{
+ const old=globalThis.fetch;
+ const model='qwen/qwen3.8-27b',ids=[...'ABCD'];
+ const cfg={...env,AI_REVIEWER_MODEL:model,AI_OPTION_REVIEW_OPT_IN:'true'};
+ try{
+  globalThis.fetch=async(_url,options)=>{
+   const {json_schema}=JSON.parse(options.body).response_format;
+   assert.equal(json_schema.strict,true);
+   const judgments=json_schema.schema.properties.judgments;
+   assert.equal(judgments.minItems,4);assert.equal(judgments.maxItems,4);
+   assert.deepEqual(judgments.items.properties.option_id.enum,ids);
+   assert.ok(judgments.items.properties.verdict.enum.includes('uncertain'));
+   assert.deepEqual(judgments.items.properties.passage_ids.items.enum,['s0']);
+   assert.deepEqual(judgments.items.properties.quote_refs.items.properties.span_id.enum,['q0']);
+   assert.ok(judgments.items.required.includes('source_conflict_found'));
+   const output={judgments:ids.map(option_id=>({option_id,verdict:'uncertain',passage_ids:[],
+    quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}))};
+   return Response.json({choices:[{message:{content:JSON.stringify(output)},finish_reason:'stop'}]});
+  };
+  const result=await gateway.fetch(request('option_review',model,{format:'MC',options:ids.map(id=>({id,text:id})),
+   source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
+  assert.equal(result.status,200);
+ }finally{globalThis.fetch=old;}
+});
+
 test('review approval and acknowledgment remain blocked at public gateway',async()=>{
  const reviewer={...env,SUPABASE_URL:'https://xqyasyambwdyhsjkftqu.supabase.co',
    SUPABASE_ANON_KEY:'test-anon',REVIEWER_CONTAINER:{fetch:async()=>{throw Error('private endpoint reached')}}};

@@ -54,6 +54,25 @@ class ExplanationReviewTests(unittest.TestCase):
         self.response = {"supported_groups":[{"field_ids":self.ids,
                          "quote_refs":[{"passage_id":"p1","span_id":"q1"}]}],"unsupported":[]}
 
+    def test_matching_mc_option_explanations_share_one_source_verdict(self):
+        self.item["format"] = "MC"
+        text = self.item["rationale"]["distractor_breakdown"]["A"]
+        self.item["distractor_evidence"] = {"A": {"passage_ids": ["p1"], "explanation": text}}
+        def reviewer(payload):
+            fields = payload["fields"]
+            self.assertNotIn("distractor_evidence.A", [f["label"] for f in fields])
+            flagged = [f["id"] for f in fields if f["label"] == "rationale.distractor_breakdown.A"]
+            supported = [f["id"] for f in fields if f["id"] not in flagged]
+            return {"supported_groups": [{"field_ids": supported, "quote_refs": [
+                {"passage_id": "p1", "span_id": "q1"}]}] if supported else [],
+                "unsupported": [{"field_id": fid, "reason": "Unsupported claim"} for fid in flagged]}
+        report = review(self.item, self.sources, reviewer, batch_size=4)
+        self.assertEqual(report["status"], "flag")
+        self.assertEqual(report["batch_count"], 2)
+        self.assertEqual(len(report["checked_fields"]), 9)
+        self.assertEqual({issue["field"] for issue in report["issues"]},
+                         {"rationale.distractor_breakdown.A", "distractor_evidence.A"})
+
     def test_assertion_and_false_belief_polarities_are_explicit(self):
         fields={f["label"]:f for f in fields_for(self.item)}
         self.assertEqual(fields["concept_card.mechanism"]["assessment"],"clinical_fact")

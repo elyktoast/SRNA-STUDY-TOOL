@@ -85,6 +85,23 @@ def review(item, sources, reviewer, *, batch_size=None):
             allowed[field["id"]] = set(ids)
         for field in fields:
             field["passage_ids"] = sorted(allowed[field["id"]] & cited)
+        # The locked MC plan stores the same option explanation in the
+        # rationale and the evidence map. Review an exact matching pair once
+        # and carry its verdict back to both fields for the audit.
+        submitted = []
+        represented = {}
+        rationale_prefix = "rationale.distractor_breakdown."
+        evidence_prefix = "distractor_evidence."
+        rationale_fields = {f["label"]: f for f in fields}
+        for field in fields:
+            label = field["label"]
+            paired = (rationale_fields.get(rationale_prefix + label[len(evidence_prefix):])
+                      if item.get("format") == "MC" and label.startswith(evidence_prefix) else None)
+            if paired and all(paired[k] == field[k] for k in ("text", "assessment", "passage_ids")):
+                represented[paired["id"]].append(field["id"])
+            else:
+                submitted.append(field)
+                represented[field["id"]] = [field["id"]]
         size = len(fields) if batch_size is None else batch_size
         if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
             raise ValueError("Invalid explanatory batch size")
@@ -92,7 +109,7 @@ def review(item, sources, reviewer, *, batch_size=None):
         # A grouped answer may cite only sources allowed by every field in it.
         # Partition before calling the model; never broaden field citations.
         by_sources = {}
-        for field in fields:
+        for field in submitted:
             by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
         batches = [group[i:i+size] for group in by_sources.values()
                    for i in range(0, len(group), size)]
@@ -108,8 +125,12 @@ def review(item, sources, reviewer, *, batch_size=None):
             returned = [fid for g in part["supported_groups"] for fid in g["field_ids"]] + [f["field_id"] for f in part["unsupported"]]
             if len(returned) != len(batch_ids) or set(returned) != batch_ids:
                 raise ValueError("Every explanatory field must be reviewed")
-            result["supported_groups"].extend(part["supported_groups"])
-            result["unsupported"].extend(part["unsupported"])
+            result["supported_groups"].extend(
+                {**group, "field_ids": [alias for fid in group["field_ids"] for alias in represented[fid]]}
+                for group in part["supported_groups"])
+            result["unsupported"].extend(
+                {**finding, "field_id": alias}
+                for finding in part["unsupported"] for alias in represented[finding["field_id"]])
         if not isinstance(result, dict) or set(result) != {"supported_groups", "unsupported"}:
             raise ValueError("Incomplete explanatory review")
         if not isinstance(result["supported_groups"], list) or not isinstance(result["unsupported"], list):
