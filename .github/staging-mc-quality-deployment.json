@@ -1,0 +1,29 @@
+{
+  "verification": "connected_cloudflare_deployment_read",
+  "verified_at": "2026-11-18T10:44:34.063Z",
+  "build": {
+    "build_uuid": "579e4c8d-e021-447a-af10-b002d29e0e09",
+    "status": "stopped",
+    "build_outcome": "success",
+    "commit_hash": "cb7cac08963165953f9d002c299e9b39cdcfd510",
+    "stopped_on": "2026-11-18T10:43:07.478Z"
+  },
+  "app": {
+    "updated_at": "2026-11-18T10:43:48.496999936Z",
+    "health": {
+      "errors": []
+    },
+    "configuration": {
+      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:b852b5f94726d571cd51ce5b6210ba612a13017a74058608f6774964c1b110a8"
+    }
+  },
+  "instances": [
+    {
+      "status": {
+        "state": "inactive",
+        "updated_at": "2026-11-17T23:20:53Z"
+      },
+      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:b852b5f94726d571cd51ce5b6210ba612a13017a74058608f6774964c1b110a8"
+    }
+  ]
+}

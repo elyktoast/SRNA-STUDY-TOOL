@@ -1,0 +1,47 @@
+name: MC runtime safety and fixed acceptance
+on:
+  push:
+    branches: [verify/mc-runtime-safety-20261118]
+permissions:
+  contents: read
+concurrency:
+  group: source-reviewer-staging-deployment
+  cancel-in-progress: false
+jobs:
+  verify:
+    if: contains(github.event.head_commit.message, '[verify-mc-runtime]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install database test dependency
+        run: python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
+      - name: Verify real interrupted budgets and concurrent admission without AI
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          PYTHONPATH: workers/source-library-staging/scripts
+        run: python scripts/verify-generation-attempts-staging.py
+      - name: Run exactly two fresh MC candidates
+        env:
+          CONFIRM_PAID_MC_SET: 'true'
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: node scripts/verify-mc-quality-set.mjs
+      - name: Retain exact results and blockers
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-runtime-results
+          path: /tmp/srna-mc-quality-results.json
+          retention-days: 14
+          if-no-files-found: ignore

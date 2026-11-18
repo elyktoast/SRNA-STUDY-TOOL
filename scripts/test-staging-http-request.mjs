@@ -5,7 +5,7 @@ import {stagingFetch} from './staging-http-request.mjs';
 const url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/one';
 function transport({status=200,chunks=['{"ok":true}'],delay=0}={}){
  let count=0;const impl=(_url,options,callback)=>{
-  count++;const req=new EventEmitter();req.write=()=>{};
+  count++;if(options.method==='POST')assert.equal(options.headers['Content-Length'],'2');assert.ok(options.headers['User-Agent']);const req=new EventEmitter();req.write=()=>{};
   req.destroy=error=>req.emit('error',error);
   req.end=()=>setTimeout(()=>{
    if(options.signal.aborted){req.emit('error',Error('Aborted'));return;}
