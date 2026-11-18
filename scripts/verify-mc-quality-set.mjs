@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {stagingFetch as fetch} from './staging-http-request.mjs';
 import {readFileSync,writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
+import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
  {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',item_id:'9a2cede0-3d0a-41c8-832a-d17221f78c99',topic:'Compare shunt and dead space'},
@@ -24,7 +25,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
  const json=async(url,options={})=>{
   const response=await fetchImpl(url,{...options,redirect:'error',signal:AbortSignal.timeout(480000)});
   const body=await response.json().catch(()=>null);
-  if(!response.ok||!body){const e=Error('Staging request blocked');e.details={http_status:response.status,rule:safe(body?.rule),validation_detail:safe(body?.validation_detail),failed_step:safe(body?.failed_step)};throw e;}
+  if(!response.ok||!body){const e=Error('Staging request blocked');e.status=response.status;e.details={http_status:response.status,rule:safe(body?.rule),validation_detail:safe(body?.validation_detail),failed_step:safe(body?.failed_step)};throw e;}
   return body;
  };
  const head=await json('https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/git/ref/heads/fix/board-question-quality',{headers:{Authorization:'Bearer '+env.GITHUB_TOKEN,Accept:'application/vnd.github+json'}});
@@ -38,7 +39,13 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
  const identity=await json(project+'/auth/v1/user',{headers:{apikey:key,Authorization:'Bearer '+token}});
  assert.equal(identity.id,'c003287a-10ce-4cc9-926e-ef7c3a162a26');
  const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer '+token,'Content-Type':'application/json'};
- const call=(path,body)=>json(gateway+path,{headers,...(body?{method:'POST',body:JSON.stringify(body)}:{})});
+ const call=(path,body)=>stagingReadOnlyRetry(path,async()=>{
+  try{return await json(gateway+path,{headers,...(body?{method:'POST',body:JSON.stringify(body)}:{})});}
+  catch(error){
+   if(error.code==='ECONNRESET')throw new TypeError('Network connection reset',{cause:error});
+   throw error;
+  }
+ });
  const library=await call('/generation/textbooks');const books=library.textbooks.map(b=>b.id);assert.ok(books.length>=7);
  const rows=[];
  for(const sample of samples){
