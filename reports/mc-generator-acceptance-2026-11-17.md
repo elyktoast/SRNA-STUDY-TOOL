@@ -1,5 +1,7 @@
 # MC generator acceptance — 17 November 2026
 
+Latest runtime work: [18 November reliability record](mc-runtime-reliability-2026-11-18.md). The two passing drafts remain pending clinical review; no new quality acceptance is claimed before live verification.
+
 Scope: staging MC generation only. MS, SA, DD and HS development is paused. No clinical approval, bank publication or production promotion has been performed.
 
 ## Fixed finish line

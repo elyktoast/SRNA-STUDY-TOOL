@@ -11,14 +11,21 @@ test('warm-up CLI exits after identity and catalog even when a paid flag is pres
  process.env.STAGING_TEST_ADMIN_EMAIL='';process.env.STAGING_TEST_ADMIN_PASSWORD='';
  process.argv.push('--warmup-only','--confirm-paid-generation');
  let calls=0;
- globalThis.fetch=async url=>{
-  calls++;
-  if(calls===1&&url==='https://xqyasyambwdyhsjkftqu.supabase.co/auth/v1/user')
-   return Response.json({id:'c003287a-10ce-4cc9-926e-ef7c3a162a26'});
-  if(calls===2&&url==='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/textbooks')
-   return Response.json({textbooks:[]});
-  throw Error('Unexpected operation after catalog warm-up');
+ const {default:https}=await import('node:https');
+ const {syncBuiltinESMExports}=await import('node:module');
+ const {EventEmitter}=await import('node:events');
+ const {Readable}=await import('node:stream');
+ https.request=(target,options,callback)=>{
+  const url=String(target);calls++;let body;
+  if(calls===1&&url==='https://xqyasyambwdyhsjkftqu.supabase.co/auth/v1/user')body={id:'c003287a-10ce-4cc9-926e-ef7c3a162a26'};
+  else if(calls===2&&url==='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/textbooks')body={textbooks:[]};
+  else throw Error('Unexpected operation after catalog warm-up');
+  const req=new EventEmitter();req.write=()=>{};req.end=()=>{
+   const res=Readable.from([Buffer.from(JSON.stringify(body))]);res.statusCode=200;res.headers={'content-type':'application/json'};callback(res);
+  };return req;
  };
+ syncBuiltinESMExports();
+ globalThis.fetch=()=>{throw Error('Unexpected fetch network call')};
  await import(${JSON.stringify(script)});throw Error('Warm-up failed to exit');`;
  const output=execFileSync(process.execPath,['--input-type=module','--eval',source],{encoding:'utf8'});
  assert.match(output,/Authenticated read-only staging warm-up completed/);

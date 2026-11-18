@@ -380,3 +380,31 @@ class GenerationCliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class DurableAttemptWiringTests(unittest.TestCase):
+    def test_claim_and_rewrite_reservation_precede_provider_and_completion(self):
+        from contextlib import contextmanager
+        from unittest.mock import Mock
+        events=[]
+        args=SimpleNamespace(**{**vars(ARGS),'owner_uid':'00000000-0000-4000-8000-000000000001',
+            'item_id':'00000000-0000-4000-8000-000000000003','textbook_id':'00000000-0000-4000-8000-000000000002',
+            'execute':True,'confirm_paid_calls':True})
+        env={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_GENERATION_CHECKPOINTS_ENABLED':'true',
+             'AI_REWRITE_OPT_IN':'true','AI_GENERATOR_MODEL':'generator','AI_PROVIDER_ENDPOINT':'https://provider.example/v1/chat/completions',
+             'AI_ALLOWED_HOSTS':'provider.example','STAGING_RECEIPT_SIGNING_SECRET':'x'*48}
+        @contextmanager
+        def admission(*args,**kwargs):
+            events.append('claim');yield;events.append('released')
+        def provider(request):events.append('provider');return {'format':'MC','evidence':[]}
+        def generation(*args,**kwargs):
+            kwargs['rewrite']({'item':{'format':'MC','evidence':[],'distractor_evidence':{}}})
+            return {'item_id':'id','item':{'stem':'Synthetic'},'screening':{},'next_state':'needs_editorial_review','source_evidence':{},'generator_issues':[]}
+        with patch('run_grounded_generation_v2.build_evidence',return_value=EVIDENCE),patch('run_grounded_generation_v2.recover_completed',return_value=None),\
+             patch('run_grounded_generation_v2.load',return_value=None),patch('run_grounded_generation_v2.attempt',side_effect=admission),\
+             patch('run_grounded_generation_v2.make_transport'),patch('run_grounded_generation_v2.make_adapter',return_value=provider),\
+             patch('run_grounded_generation_v2.reserve_rewrite',side_effect=lambda *a,**k:events.append('reserve')),\
+             patch('run_grounded_generation_v2.generate_from_index',side_effect=generation),\
+             patch('run_grounded_generation_v2.complete',side_effect=lambda *a,**k:events.append('checkpoint_completed')),\
+             patch('run_grounded_generation_v2.finish',side_effect=lambda *a,**k:events.append('attempt_completed')):
+            execute(object(),args,env)
+        self.assertEqual(events,['claim','reserve','provider','checkpoint_completed','attempt_completed','released'])

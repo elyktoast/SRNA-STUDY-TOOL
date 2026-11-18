@@ -1,5 +1,6 @@
 // Explicit one-question acceptance run. Never retry paid generation or publish.
 import assert from 'node:assert/strict';
+import {stagingFetch as fetch} from './staging-http-request.mjs';
 import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 const paid=process.argv.includes('--confirm-paid-generation');

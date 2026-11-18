@@ -3,11 +3,12 @@
 Embeddings must be computed in a trusted backend and supplied by caller.
 Similarity is a review flag, not a clinical equivalence determination.
 """
+from array import array
 import math
 
 
 def cosine(a, b):
-    if not isinstance(a, (list, tuple)) or not isinstance(b, (list, tuple)) or not a or len(a) != len(b):
+    if not isinstance(a, (list, tuple, array)) or not isinstance(b, (list, tuple, array)) or not a or len(a) != len(b):
         raise ValueError("Embedding vectors must have equal nonzero dimensions")
     if any(type(v) not in (int, float) or not math.isfinite(v) for v in (*a, *b)):
         raise ValueError("Embedding vectors must be finite")

@@ -186,5 +186,26 @@ class SemanticIndexTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "page size"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
 
+    def test_compact_vectors_preserve_every_similarity_without_float32_rounding(self):
+        from array import array
+        from item_semantic_duplicates import screen, cosine
+        vectors=sorted([('near',[0.850000000001,0.52678268764]),('far',[-1.0,0.0]),('exact',[1.0,0.0])])
+        conn,_=self.connection(vectors)
+        fn=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],index_ready=True,
+                  expected_item_ids={k for k,_ in vectors},expected_stem_hashes=self.hashes(k for k,_ in vectors))
+        packed=fn({'stem':'Synthetic','item_id':'new'})['neighbors']
+        ordinary=[{'item_id':k,'embedding':v} for k,v in vectors]
+        self.assertTrue(all(isinstance(n['embedding'],array) and n['embedding'].typecode=='d' for n in packed))
+        self.assertEqual(screen([1.0,0.0],packed),screen([1.0,0.0],ordinary))
+        for packed_neighbor,ordinary_neighbor in zip(packed,ordinary):
+            self.assertEqual(cosine([1.0,0.0],packed_neighbor['embedding']),cosine([1.0,0.0],ordinary_neighbor['embedding']))
+
+    def test_packing_never_coerces_invalid_source_values(self):
+        for vector in ([True,0.0],['1.0',0.0],[float('nan'),0.0],[1.0]):
+            conn,_=self.connection([('prior',vector)])
+            fn=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],index_ready=True,
+                      expected_item_ids={'prior'},expected_stem_hashes=self.hashes(['prior']))
+            with self.subTest(vector=vector),self.assertRaises(ValueError):fn({'stem':'Synthetic','item_id':'new'})
+
 if __name__ == "__main__":
     unittest.main()

@@ -535,3 +535,17 @@ class LecturePlanningHttpTests(unittest.TestCase):
         self.assertEqual(self.call({"lecture_text": "Airway", "textbook_id": "book-1"},
                                    method="GET")[0], "405 Method Not Allowed")
         planner.assert_not_called()
+
+
+class AttemptBoundaryHttpTests(unittest.TestCase):
+    def test_busy_or_started_attempt_is_409_and_never_saves(self):
+        from item_generation_attempt_v2 import GenerationBusy,GenerationAlreadyStarted
+        for error,rule in [(GenerationBusy(),'GENERATION_BUSY'),(GenerationAlreadyStarted(),'GENERATION_ALREADY_STARTED')]:
+            app=create_app(conn_factory=Connection,resolve_admin=lambda token:UID,
+                           environment={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true'})
+            payload=json.dumps({**PAYLOAD,'textbook_id':'book'}).encode();seen=[]
+            env={'PATH_INFO':'/generation/one','REQUEST_METHOD':'POST','HTTP_ORIGIN':'https://staging.srnastudytool.com',
+                 'HTTP_AUTHORIZATION':'Bearer valid','CONTENT_LENGTH':str(len(payload)),'wsgi.input':io.BytesIO(payload)}
+            with patch('item_generation_http_v2.execute',side_effect=error),patch('item_generation_http_v2.save') as save:
+                result=json.loads(b''.join(app(env,lambda status,headers:seen.append(status))))
+            self.assertEqual(seen,['409 Conflict']);self.assertEqual(result['rule'],rule);save.assert_not_called()

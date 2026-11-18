@@ -20,6 +20,9 @@ on:
       - 'scripts/test-source-library-reviewer-live.mjs'
       - 'scripts/test-generation-completion-recovery.mjs'
       - 'scripts/staging-read-only-retry.mjs'
+      - 'scripts/staging-http-request.mjs'
+      - 'scripts/test-staging-http-request.mjs'
+      - 'scripts/verify-generation-attempts-staging.py'
       - 'scripts/audit-canonical-semantic-inventory.mjs'
       - 'scripts/test-audit-canonical-semantic-inventory.mjs'
       - 'scripts/test-staging-read-only-retry.mjs'
@@ -46,6 +49,9 @@ on:
       - 'scripts/test-source-library-staging-live.mjs'
       - 'scripts/test-generation-completion-recovery.mjs'
       - 'scripts/staging-read-only-retry.mjs'
+      - 'scripts/staging-http-request.mjs'
+      - 'scripts/test-staging-http-request.mjs'
+      - 'scripts/verify-generation-attempts-staging.py'
       - 'scripts/audit-canonical-semantic-inventory.mjs'
       - 'scripts/test-audit-canonical-semantic-inventory.mjs'
       - 'scripts/test-staging-read-only-retry.mjs'
@@ -93,7 +99,7 @@ jobs:
           node --check workers/source-library-staging/reviewer-gateway/src/entry.js
           node --check scripts/test-source-library-reviewer-live.mjs
       - name: Staging Worker tests
-        run: node --test scripts/test-audit-canonical-semantic-inventory.mjs scripts/test-staging-read-only-retry.mjs scripts/test-staging-reviewer-rollout.mjs scripts/test-generation-completion-recovery.mjs scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
+        run: node --test scripts/test-staging-http-request.mjs scripts/test-audit-canonical-semantic-inventory.mjs scripts/test-staging-read-only-retry.mjs scripts/test-staging-reviewer-rollout.mjs scripts/test-generation-completion-recovery.mjs scripts/test-source-library-staging.mjs scripts/test-hybrid-admin-workspaces.mjs scripts/test-source-library-reviewer-browser.mjs scripts/test-source-library-reviewer-gateway.mjs workers/source-library-staging/reviewer-gateway/tests/relay-review-steps.test.mjs
       - name: Python staging pipeline tests
         run: |
           # Unit tests must not depend on Ubuntu apt mirror availability.

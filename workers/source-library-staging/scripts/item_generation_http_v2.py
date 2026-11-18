@@ -10,6 +10,7 @@ from uuid import UUID, uuid4
 from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
 from item_generation_checkpoint_store_v2 import save_once
+from item_generation_attempt_v2 import GenerationAlreadyStarted, GenerationBusy
 from item_saved_option_review_v2 import complete_option_review, OptionReviewConflict
 from item_draft_revalidation_v2 import revalidate
 from item_draft_revision_storage_v2 import save_revision, list_revisions, RevisionValidationError
@@ -178,10 +179,11 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                             has_table_privilege(current_user,
                               'source_library_staging.generation_checkpoints_v2', 'SELECT'),
                             has_table_privilege(current_user,
-                              'source_library_staging.generation_checkpoints_v2', 'INSERT')
+                              'source_library_staging.generation_checkpoints_v2', 'INSERT'),
+                            has_table_privilege(current_user,'source_library_staging.generation_attempts_v2','SELECT,INSERT,UPDATE')
                         """)
                         row = cur.fetchone()
-                ready = bool(row and len(row) == 4 and all(v is True for v in row))
+                ready = bool(row and len(row) == 5 and all(v is True for v in row))
                 return respond("200 OK" if ready else "503 Service Unavailable",
                                {"ready": ready, "check": "checkpoint_database_readiness",
                                 "generation_performed": False, "database_writes": False})
@@ -411,6 +413,10 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                               "draft_status": saved["status"], "published": False,
                               "requires_human_review": True}
             return respond("200 OK", result)
+        except GenerationBusy:
+            return respond("409 Conflict", {"error":"generation_already_active", "rule":"GENERATION_BUSY"})
+        except GenerationAlreadyStarted:
+            return respond("409 Conflict", {"error":"generation_already_started", "rule":"GENERATION_ALREADY_STARTED"})
         except CompletedGenerationUnavailable:
             return respond("409 Conflict", {"error":"completed_generation_unavailable", "rule":"CHECKPOINT_NOT_COMPLETE"})
         except ValueError as exc:
