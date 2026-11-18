@@ -1,4 +1,4 @@
-name: MC source and distractor acceptance
+name: MC uploaded lecture acceptance
 on:
   push:
     branches: [verify/mc-objective-heading-20261118]
@@ -9,16 +9,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: contains(github.event.head_commit.message, '[recover-mc-equipment-scope]')
+    if: contains(github.event.head_commit.message, '[verify-mc-uploaded-lecture]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 7
+    timeout-minutes: 21
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Collect the existing equipment MC
+      - name: Generate one MC from a disposable lecture PDF
         env:
           CONFIRM_PAID_MC_SET: 'true'
           GITHUB_TOKEN: ${{ github.token }}

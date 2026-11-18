@@ -1,46 +1,29 @@
 {
   "verification": "connected_cloudflare_deployment_read",
-  "verified_at": "2026-11-18T21:01:40.932Z",
+  "verified_at": "2026-11-18T23:58:26.606Z",
   "build": {
-    "build_uuid": "9bb497a7-b80a-4e5c-b9c3-fa7650a3b061",
+    "build_uuid": "7ec7d703-3671-40dd-a1d8-0f910f8f461c",
     "status": "stopped",
     "build_outcome": "success",
-    "commit_hash": "f5a826025e4ede2edaa542e61820a5217456388f",
-    "stopped_on": "2026-11-18T20:48:37.999Z"
+    "commit_hash": "d3e7dfa01bb7eae236a5dcbd7e986b0734d1af84",
+    "stopped_on": "2026-11-18T23:56:33.512Z"
   },
   "app": {
-    "updated_at": "2026-11-18T20:49:19.696Z",
+    "updated_at": "2026-11-18T23:57:15.500999936Z",
     "health": {
-      "errors": [],
-      "instances": {
-        "active": 1,
-        "assigned": 0,
-        "healthy": 0,
-        "stopped": 0,
-        "failed": 0,
-        "scheduling": 0,
-        "starting": 0
-      }
+      "errors": []
     },
     "configuration": {
-      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:3e9a8a74f61c8a1ff9115ab69936f472a38224a32519530049d04fcc265e24b4"
+      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:c0f5d6da95788cc18e6bdd403ca118a3c52892c455fa8e79db992b55aab0bb4d"
     }
   },
   "instances": [
     {
-      "id": "fb8dc203af0643e5208c9f2b7269b393b16ac4f67b6e7719fe7b3ad8753641eb",
-      "application_id": "a03bdc12-da09-4e2c-b543-816ebad2e339",
-      "started_at": "2026-11-18T20:48:39.715000064Z",
       "status": {
-        "state": "running",
-        "updated_at": "2026-11-18T20:50:41.766000128Z"
+        "state": "inactive",
+        "updated_at": "2026-11-18T21:12:21Z"
       },
-      "location": {
-        "name": "sea06",
-        "region": "WNAM"
-      },
-      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:3e9a8a74f61c8a1ff9115ab69936f472a38224a32519530049d04fcc265e24b4",
-      "name": "staging-reviewer"
+      "image": "registry.cloudflare.com/5a84e0fe00e430d25e901b260861381e/srna-source-reviewer-gateway-staging-reviewercontainer@sha256:c0f5d6da95788cc18e6bdd403ca118a3c52892c455fa8e79db992b55aab0bb4d"
     }
   ]
 }
