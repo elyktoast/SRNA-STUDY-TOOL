@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: contains(github.event.head_commit.message, '[complete-staging-option-review]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[complete-respiratory-option-review]')
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 5
@@ -27,8 +27,8 @@ jobs:
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
           CONFIRM_PAID_OPTION_REVIEW: 'true'
-          STAGING_SAVED_DRAFT_ID: 65c2e793-a7af-4746-bfb6-1abf9993085c
-          STAGING_TARGET_BUILD_UUID: 409749dd-864f-40a6-8389-e0884d20bcdc
-          STAGING_TARGET_SHA: 9c8089cb5eee12fbac12f492670bf1827b9a2efe
-          STAGING_TARGET_IMAGE_SHA256: 6ab6d19131ab05bc64d6444c075ebd28940072a569f192e20b6a7fabffb44b16
+          STAGING_SAVED_DRAFT_ID: f6440562-8a49-4293-8d67-d78e8773b811
+          STAGING_TARGET_BUILD_UUID: d075d085-8c4b-4251-ab41-9cae2324fe19
+          STAGING_TARGET_SHA: 78f68d4fed158293dabbe2e02335c0783a9970bb
+          STAGING_TARGET_IMAGE_SHA256: 3f75b3b3aecce9359620d32efaafabefaed5f122f1c1b2be1c77932ffd41a430
         run: node scripts/verify-saved-staging-option-review.mjs

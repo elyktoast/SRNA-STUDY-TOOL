@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 import {readFileSync} from 'node:fs';
+import {stagingFetch as fetch} from './staging-http-request.mjs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
