@@ -61,3 +61,28 @@ The correction recognizes objective headers after removing Markdown heading synt
 The long comparison sentence also matches zero indexed passages under the current conjunctive lexical search, whereas `shunt and dead space` matches 47 owned, ready trusted passages. The bounded clinical control will therefore use `Compare shunt and dead space`, verify the exact planned topic before any paid call, and keep I.A.2 explicit. This fixes the demonstrated header-routing defect; broad natural-language retrieval remains a separate limitation.
 
 Validation for the header correction: 1,082 Python tests ran (four skipped), 207 Node checks passed, repository validation passed. A fresh read-only lecture-plan verification and at most one new respiratory candidate are pending deployment. Previous failed drafts remain unchanged.
+
+## Live objective-heading control — correct routing, quality still held
+
+Application `e820adb81b9ae1bcf96853d592e5045f62bd35d7` passed staging CI [44291217814](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44291217814). Build `1ea57ec0-7fc6-4083-ba42-0a74dcabfd1d` succeeded and image `2f0d26afa0a4c3772d9e1324bb07dc89d17f519c722dc895d9fa5b5ee9583998` settled before the next request.
+
+Run [44291780922](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44291780922) first verified the exact read-only topic `Compare shunt and dead space` and I.A.2, with zero paid calls. The acceptance runner now refuses any generic-heading/topic substitution before generation, with a dedicated offline negative control. It then made exactly one fresh paid request, `b2aa3478-b24e-4aca-bdfd-1ab24921cba1`.
+
+Draft `5b7dfe6e-bcfd-4d7c-96a1-f5f30d68daba` completed and saved as `needs_revision`, with one rewrite used and **6/10** automated checks passing. Its actual topic is the requested respiratory comparison, not simulation pedagogy. The item and all held judgments remain unchanged after this result.
+
+Exact blockers:
+
+- R-12.2: options-only key identification above chance across five shuffled trials.
+- R-5.3: replacing the perfused/unventilated mainstem-intubation region with a ventilated/unperfused embolic region was planned to yield B, but the independent changed-stem solver selected A. The question asks about a regional gas-exchange effect while options describe systemic oxygen/CO2 consequences, including a preserved-oxygenation assertion. Do not force the solver to select B or weaken the changed-case gate.
+- R-2.4: the D explanation's absent-exchange claim was held because the cited classification distinguished silent units from dead-space units. Both `rationale.distractor_breakdown.D` and `distractor_evidence.D` remain flagged. This completed judgment must not be resampled for a better grade.
+- Independent option adjudication remains pending because the prerequisite quality checks failed; the missing-review completion action is not eligible.
+
+The sole repair received these failures but did not resolve them. No second repair was attempted. This is now a demonstrated clinical/writing quality failure, not a lost runtime result or wrong-topic retrieval.
+
+## Current status / handoff
+
+Three fresh requests completed and saved in this work, including two requests longer than five minutes, with no observed backend crash or client disconnect. Durable budget/admission checks passed against real staging PostgreSQL. The Markdown objective-heading bug is verified fixed through an actual read-only plan and a correctly routed saved respiratory draft.
+
+**Zero new questions passed acceptance.** The original local-anesthetic and FRC drafts still have all ten automated checks passing, with human review pending. They were not modified, approved or published. All three new drafts are held (7/10, off-topic 8/10, correctly routed respiratory 6/10).
+
+The next quality change should address the demonstrated mismatch between regional case/lead-in and systemic response options, same-category distractor plausibility, and narrowly scoped source claims. When source evidence supplies a classification of regional states, do not expand it into unsupported whole-patient gas outcomes or infer normal oxygenation. Use a bounded new acceptance control after a concrete correction; do not reroll or regrade these completed failed drafts. Natural-language retrieval, actual personal PDF/PPTX upload in the browser, and the human clinical pilot remain open. No duplicate-index rebuild is needed; other question formats stay paused.

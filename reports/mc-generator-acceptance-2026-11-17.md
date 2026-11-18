@@ -153,3 +153,9 @@ Next work should diagnose the non-JSON backend failure and five-minute client di
 See the [runtime reliability record](mc-runtime-reliability-2026-11-18.md). The two formerly failing runtime paths now complete and save; the ledger protects interrupted rewrite budgets and the live container peaked near 372 MiB. Both new drafts remain blocked (7/10 and 8/10), with zero new accepted questions. The apparent respiratory 8/10 was actually a generic objective-heading routing failure that produced simulation content; it is not respiratory quality acceptance.
 
 A targeted parser correction now excludes the generic Markdown objective heading and preserves its clinical bullet. The next bounded control must prove the exact intended topic in a read-only plan before spending on one fresh clinical MC. Do not rerun or regrade either saved failed draft.
+
+### Correctly routed respiratory control
+
+The [18 November record](mc-runtime-reliability-2026-11-18.md) includes the exact deployment and [live run 44291780922](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44291780922). A zero-paid-call assertion verified the exact clinical lecture topic before one new request. Draft `5b7dfe6e-bcfd-4d7c-96a1-f5f30d68daba` was correctly routed and saved, but remains held at 6/10 after one repair: R-12.2 cues, R-5.3 regional/systemic task mismatch, and R-2.4 D-explanation support. Independent option review correctly stays pending. No second rewrite or judgment resampling was performed.
+
+Runtime/admission/rewrite-budget and objective-heading corrections now have live verification. The near-autonomous MC quality milestone remains open: **zero new accepted questions**, with the original two 10/10 drafts preserved for human review. Next work is precise question/option scope and source-grounded distractor quality, not indexing or repeating completed infrastructure checks.
