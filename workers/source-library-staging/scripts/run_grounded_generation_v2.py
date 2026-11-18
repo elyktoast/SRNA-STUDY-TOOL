@@ -71,7 +71,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-11-v23", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-18-v24", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
@@ -142,7 +142,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         _,inventory_digest = load_inventory(env.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
         semantic_contract = {'model':env.get('SEMANTIC_INDEX_EMBEDDING_MODEL'), 'inventory_digest':inventory_digest}
         summary['semantic_inventory'] = semantic_contract
-    request_hash = fingerprint({"authoring_contract": "2026-11-11-v23", "owner_uid": args.owner_uid, "topic": args.topic,
+    request_hash = fingerprint({"authoring_contract": "2026-11-18-v24", "owner_uid": args.owner_uid, "topic": args.topic,
         "semantic_contract":semantic_contract,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
@@ -261,6 +261,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
                     references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
             trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
+            # A source-held distractor may need replacement evidence. Keep
+            # author-selected passages first and offer a bounded set from the
+            # same trusted retrieval that was available for initial drafting.
+            source_rules = {"R-2.4", "R-12.4"}
+            if (request.get("item", {}).get("format") == "MC"
+                    and any(issue.get("rule_id") in source_rules for issue in request.get("issues", []))):
+                alternatives = [p for p in evidence["sources"] if p["passage_id"] not in references]
+                trusted.extend(alternatives[:4])
             compact = copy.deepcopy(request)
             for citation in compact.get("item", {}).get("evidence", []):
                 if isinstance(citation, dict):

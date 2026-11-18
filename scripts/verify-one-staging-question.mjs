@@ -88,7 +88,7 @@ assert.equal(preflight.review_readiness?.independent_option_review,'configured')
 assert.equal(preflight.review_readiness?.explanation_review,'configured');
 assert.equal(preflight.review_readiness?.board_quality_review,'configured');
 assert.equal(preflight.quality_contract,'2026-11-10-v2');
-assert.equal(preflight.authoring_contract,'2026-11-11-v23');
+assert.equal(preflight.authoring_contract,'2026-11-18-v24');
 assert.equal(preflight.authoring_provider,'cloudflare');
 assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
 if(!paid){console.log('Read-only generator acceptance passed; no model calls or draft writes');process.exit(0);}

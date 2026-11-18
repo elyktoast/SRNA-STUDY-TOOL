@@ -327,6 +327,15 @@ class GenerationCliTests(unittest.TestCase):
         self.assertNotIn('excerpt',sent['item']['evidence'][0])
         self.assertEqual(sent['trusted_evidence'][0]['passage_id'],'p1')
         self.assertEqual(request['item']['evidence'][0]['excerpt'],'Original quote')
+        with patch.dict(EVIDENCE, {"sources": EVIDENCE["sources"] + [
+                {**EVIDENCE["sources"][0], "passage_id": f"p{i}"} for i in range(2, 8)]}):
+            adapter.return_value.side_effect = None
+            adapter.return_value.return_value = {"evidence": []}
+            rewrite({**request, "item": {**request["item"], "format": "MC"},
+                     "issues": [{"rule_id": "R-2.4"}]})
+        sent = adapter.return_value.call_args.args[0]
+        self.assertEqual([p["passage_id"] for p in sent["trusted_evidence"]],
+                         ["p1", "p2", "p3", "p4", "p5"])
         for error in (TransportError('PROVIDER_TIMEOUT'),TransportError('PROVIDER_RATE_LIMIT'),
                       TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=61)):
             adapter.return_value.reset_mock()
