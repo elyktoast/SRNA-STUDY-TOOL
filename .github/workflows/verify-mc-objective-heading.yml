@@ -1,4 +1,4 @@
-name: MC objective heading acceptance
+name: MC source and distractor acceptance
 on:
   push:
     branches: [verify/mc-objective-heading-20261118]
@@ -9,16 +9,16 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: contains(github.event.head_commit.message, '[verify-mc-heading]')
+    if: contains(github.event.head_commit.message, '[verify-mc-quality-v24]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Require exact read-only lecture topic then one fresh MC
+      - name: Verify one lecture and one freeform MC
         env:
           CONFIRM_PAID_MC_SET: 'true'
           GITHUB_TOKEN: ${{ github.token }}
@@ -31,7 +31,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: mc-objective-heading-result
+          name: mc-source-distractor-results
           path: /tmp/srna-mc-quality-results.json
           retention-days: 14
           if-no-files-found: ignore

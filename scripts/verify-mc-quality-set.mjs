@@ -5,11 +5,12 @@ import {readFileSync,writeFileSync} from 'node:fs';
 import {pathToFileURL} from 'node:url';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',item_id:'b2aa3478-b24e-4aca-bdfd-1ab24921cba1',topic:'Compare shunt and dead space'}
+ {name:'Shunt versus dead-space — corrected objective heading',objective:'I.A.2',workflow:'lecture',item_id:'9a2cede0-3d0a-41c8-832a-d17221f78c99',topic:'Compare shunt and dead space'},
+ {name:'Oxygen supply pressure failure',objective:'II.A.6',workflow:'freeform',item_id:'f0cab967-bdb1-48d2-96b0-4bce290aed45',textbook_id:'8343459f-0595-4375-8ac6-7700e6792abe',topic:'Oxygen pressure failure'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='e820adb81b9ae1bcf96853d592e5045f62bd35d7';
+const sha='78f68d4fed158293dabbe2e02335c0783a9970bb';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -58,7 +59,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-11-v23');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-18-v24');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const generated=await call('/generation/one',request); // Exactly once; no transport/provider retry.
@@ -80,7 +81,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    row.passing_checks=automated.filter(([,v])=>v==='pass').length;
    row.accepted=automated.length===10&&row.passing_checks===10&&current.issues.length===0;
   }catch(error){row.failure=error.details||{reason:error.message,cause_code:safe(error.cause?.code)};stopAfterFailure=!error.details?.http_status||error.details.http_status>=500||error.details.rule==='GENERATION_BUSY';}
-  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,failure:row.failure,published:false});
+  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,rewrite_attempts:row.rewrite_attempts,source_issue_count:row.current_source_issues?.length,blocker_rules:Object.fromEntries(Object.entries(row.blockers||{}).map(([stage,value])=>[stage,(value.issues||[]).map(issue=>({rule_id:issue.rule_id,field:issue.field}))])),failure:row.failure,published:false});
   if(stopAfterFailure){
    for(const pending of samples.slice(rows.length))rows.push({...pending,accepted:false,draft_id:null,published:false,not_run:'Prior ambiguous runtime failure; do not overlap backend work'});
    save(rows);break;

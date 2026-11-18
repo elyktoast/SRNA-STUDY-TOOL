@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {runSet,samples} from './verify-mc-quality-set.mjs';
-const time=1800000000000,sha='e820adb81b9ae1bcf96853d592e5045f62bd35d7';
+const time=1800000000000,sha='78f68d4fed158293dabbe2e02335c0783a9970bb';
 const deployment={verification:'connected_cloudflare_deployment_read',verified_at:new Date(time).toISOString(),build:{commit_hash:sha,status:'stopped',build_outcome:'success',stopped_on:new Date(time-180000).toISOString()},app:{updated_at:new Date(time-120000).toISOString(),configuration:{image:'fixture'},health:{errors:[]}},instances:[]};
 function fixture(mode){
  const calls=[],rows=[];let item;
@@ -11,7 +11,7 @@ function fixture(mode){
   else if(url.endsWith('/auth/v1/user'))value={id:'c003287a-10ce-4cc9-926e-ef7c3a162a26'};
   else if(url.endsWith('/textbooks'))value={textbooks:Array.from({length:7},(_,i)=>({id:'book'+i}))};
   else if(url.endsWith('/lecture-plan'))value={auto_generate:false,auto_publish:false,count:1,jobs:[{path:'/generation/preflight',body:{...body,topic:mode==='topic-drift'?'Learning objectives':samples.find(s=>s.objective===body.objective).topic,textbook_id:'book0',textbook_ids:['book0']}}]};
-  else if(url.endsWith('/preflight'))value={authoring_contract:'2026-11-11-v23',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
+  else if(url.endsWith('/preflight'))value={authoring_contract:'2026-11-18-v24',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
   else if(url.endsWith('/one')){
    if(mode==='timeout')throw Error('transport failure');
    if(mode==='server')return Response.json({error:'runtime'}, {status:500});
@@ -47,5 +47,5 @@ test('generic objective-heading substitution stops before paid generation',async
  const f=fixture('topic-drift');const result=await f.run();
  assert.ok(result.every(r=>!r.accepted));
  assert.equal(f.calls.filter(c=>c.url.endsWith('/generation/one')).length,0);
- assert.ok(result.every(r=>r.failure));
+ assert.ok(result[0].failure);assert.ok(result.slice(1).every(r=>r.not_run));
 });
