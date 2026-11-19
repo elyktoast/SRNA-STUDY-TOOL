@@ -115,6 +115,16 @@ class SourceQuoteSpanTests(unittest.TestCase):
             self.assertEqual(report['status'],'pending')
             self.assertFalse(report['can_publish'])
 
+        for rule in ('PROVIDER_REQUEST_REJECTED','PROVIDER_MODEL_UNAVAILABLE','RELAY_PAYLOAD'):
+            def rejected(payload):
+                error = RuntimeError('private provider message')
+                error.rule = rule
+                raise error
+            report = run({**self.request,'key':['A']},retrieval,rejected,
+                source_passages=self.request['source_passages'],generator_model_id='author',reviewer_model_id='reviewer')
+            self.assertEqual(report['provider_rule'],rule)
+            self.assertNotIn('private provider message',json.dumps(report))
+
     def test_every_bounded_span_is_an_actual_contiguous_source_substring(self):
         self.request["source_passages"][0]["excerpt"] = "word " * 500
         packet, _ = prepare(self.request)
@@ -148,7 +158,7 @@ class SourceQuoteSpanTests(unittest.TestCase):
 
     def test_scoped_mc_map_restores_only_identity_and_keeps_uncertain_verdict(self):
         response = {'judgments': {
-            'A': {'verdict':'refutes_distractor', 'quote_refs':[{'passage_id':'s0','span_id':'q1'}],
+            'A': {'verdict':'refutes_distractor', 'quote_refs':['s0:q1'],
                   'explanation':'Independent verdict remains unchanged.', 'source_conflict_found':False},
             'B': {'verdict':'uncertain', 'quote_refs':[], 'explanation':'Evidence insufficient.', 'source_conflict_found':False}}}
         sent = []
@@ -165,15 +175,17 @@ class SourceQuoteSpanTests(unittest.TestCase):
         self.assertEqual(result['judgments'][1]['quotes'],[])
         self.assertNotIn('key',sent[0]);self.assertNotIn('expected_verdict',str(sent[0]))
         original = copy.deepcopy(response)
-        for change in ('missing','extra','forged_id','forged_citations','cross_option','wrong_span'):
+        for change in ('missing','extra','forged_id','forged_citations','cross_option','wrong_span','unknown_token','malformed_token'):
             response = copy.deepcopy(original)
             a = response['judgments']['A']
             if change=='missing': del response['judgments']['B']
             if change=='extra': response['judgments']['C'] = response['judgments']['B']
             if change=='forged_id': a['option_id']='B'
             if change=='forged_citations': a['passage_ids']=['s1']
-            if change=='cross_option': a['quote_refs']=[{'passage_id':'s1','span_id':'q1'}]
-            if change=='wrong_span': a['quote_refs']=[{'passage_id':'s0','span_id':'unknown'}]
+            if change=='cross_option': a['quote_refs']=['s1:q1']
+            if change=='wrong_span': a['quote_refs']=['s0:q99']
+            if change=='unknown_token': a['quote_refs']=['s99:q1']
+            if change=='malformed_token': a['quote_refs']=['s0:q1:extra']
             with self.subTest(change=change),self.assertRaises(ValueError): adapter(self.request)
 
     def test_adapter_uses_bounded_span_protocol_without_answer_leakage(self):

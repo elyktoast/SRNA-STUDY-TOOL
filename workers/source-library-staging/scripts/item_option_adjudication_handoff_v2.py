@@ -93,7 +93,7 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
             for j in response]
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
-        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_RESPONSE", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN", "PROVIDER_NETWORK", "REVIEW_RESPONSE_INVALID"}
+        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_RESPONSE", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN", "PROVIDER_NETWORK", "PROVIDER_REQUEST_REJECTED", "PROVIDER_MODEL_UNAVAILABLE", "RELAY_PAYLOAD", "REVIEW_RESPONSE_INVALID"}
         rule = rule if rule in allowed else "REVIEW_RESPONSE_INVALID"
         # Only fixed local validation categories are retained. Never expose model
         # content, credentials, excerpts, or arbitrary exception messages.

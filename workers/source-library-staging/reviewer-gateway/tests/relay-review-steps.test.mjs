@@ -608,11 +608,9 @@ test('MC option review binds every option to its own passage and each passage to
     assert.equal(entry.additionalProperties,false);
     assert.ok(entry.properties.verdict.enum.includes('uncertain'));
     assert.equal(entry.properties.option_id,undefined);assert.equal(entry.properties.passage_ids,undefined);
-    const refs=entry.properties.quote_refs.items.anyOf;
-    assert.equal(refs.length,1);
-    assert.deepEqual(refs[0].properties.passage_id.enum,[i%2?'s1':'s0']);
-    assert.deepEqual(refs[0].properties.span_id.enum,[i%2?'q1':'q0']);
-    assert.equal(refs[0].additionalProperties,false);
+    const refs=entry.properties.quote_refs.items;
+    assert.equal(refs.type,'string');
+    assert.deepEqual(refs.enum,[i%2?'s1:q1':'s0:q0']);
     assert.ok(entry.required.includes('source_conflict_found'));
    }
    const output={judgments:Object.fromEntries(ids.map(id=>[id,{verdict:'uncertain',quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}]))};

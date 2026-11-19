@@ -217,7 +217,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "option_review" and request.get("format") == "MC":
             body["messages"][0]["content"] += (
                 " For MC return judgments as an OBJECT keyed by EVERY supplied option ID, not an array. "
-                "Each value contains exactly verdict, quote_refs, explanation, source_conflict_found. "
+                "Each value contains exactly verdict, quote_refs, explanation, source_conflict_found. For MC quote_refs is an array of strings combining the supplied short passage ID and span ID with a colon, such as s0:q1. "
                 "Omit option_id and passage_ids: the server restores those identities only from the map key and selected quote references. "
                 "Each option may select only its own retrieved passage IDs and quote spans belonging to that passage. "
                 "If its evidence is insufficient, return uncertain and empty quote_refs; never borrow another option's evidence.")
@@ -340,6 +340,17 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 judgments = []
                 for oid in option_ids:
                     value = mapping[oid]
+                    if isinstance(value, dict) and isinstance(value.get("quote_refs"), list):
+                        converted = []
+                        for ref in value["quote_refs"]:
+                            if isinstance(ref, str):
+                                import re
+                                if not re.fullmatch(r"s[0-9]+:q[0-9]+", ref):
+                                    raise ValueError("Invalid independent judgment map")
+                                pid, sid = ref.split(":")
+                                ref = {"passage_id": pid, "span_id": sid}
+                            converted.append(ref)
+                        value = {**value, "quote_refs": converted}
                     if (not isinstance(value, dict) or set(value) != fields
                             or not isinstance(value.get("quote_refs"), list)
                             or any(not isinstance(ref, dict) or set(ref) != {"passage_id", "span_id"}

@@ -203,11 +203,11 @@ async function relayGroq(request,env){
     for(const pid of allowed){
      const spans=byId.get(pid)?.quote_spans?.map(q=>q?.id);
      if(typeof pid!=='string'||!Array.isArray(spans)||!spans.length||spans.some(q=>typeof q!=='string')||new Set(spans).size!==spans.length)return respond(400,null,'{"error":"invalid_step"}');
-     references.push({type:'object',properties:{passage_id:{type:'string',enum:[pid]},span_id:{type:'string',enum:spans}},required:['passage_id','span_id'],additionalProperties:false});
+     references.push(...spans.map(sid=>pid+':'+sid));
     }
     properties[id]={type:'object',properties:{
      verdict:{type:'string',enum:['supports_key','refutes_distractor','uncertain']},
-     quote_refs:{type:'array',maxItems:8,items:{anyOf:references}},
+     quote_refs:{type:'array',maxItems:8,items:{type:'string',enum:references}},
      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
     },required:['verdict','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
    }
