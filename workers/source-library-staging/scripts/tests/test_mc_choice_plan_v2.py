@@ -18,6 +18,26 @@ def plan():
 
 
 class ChoicePlanTests(unittest.TestCase):
+    def test_case_sources_extend_comparison_context_without_changing_claims(self):
+        from item_mc_choice_plan_v2 import with_case_sources
+        item = {"format": "MC", "key": ["A"], "evidence": [
+                    {"passage_id": "case"}, {"passage_id": "definition"}, {"passage_id": "unrelated"}],
+                "distractor_evidence": {
+                    "A": {"passage_ids": ["case"], "explanation": "Case criterion.", "verdict": "supports_key"},
+                    "B": {"passage_ids": ["definition"], "explanation": "Alternative differs.", "verdict": "refutes_distractor"}}}
+        original = copy.deepcopy(item)
+        result = with_case_sources(item)
+        self.assertEqual(item, original)
+        self.assertEqual(result["distractor_evidence"]["B"]["passage_ids"], ["definition", "case"])
+        self.assertEqual(result["distractor_evidence"]["B"]["explanation"], "Alternative differs.")
+        self.assertEqual(result["distractor_evidence"]["B"]["verdict"], "refutes_distractor")
+        self.assertEqual(result["distractor_evidence"]["A"], item["distractor_evidence"]["A"])
+        self.assertEqual(with_case_sources(result), result)
+        item["distractor_evidence"]["A"]["passage_ids"] = ["uncited"]
+        self.assertEqual(with_case_sources(item), item)
+        item["format"] = "MS"
+        self.assertEqual(with_case_sources(item), item)
+
     def test_option_comparison_can_cite_case_criterion_and_alternative_definition(self):
         from item_mc_choice_plan_v2 import ground_draft
         raw = plan()

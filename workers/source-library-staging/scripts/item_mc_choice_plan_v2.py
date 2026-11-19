@@ -148,12 +148,39 @@ def option_explanations(plan):
     return {oid: entry["explanation"] for oid, entry in plan["option_grounding"].items()}
 
 
+def with_case_sources(item):
+    """Include the key's cited case evidence when reviewing option comparisons.
+
+    This supplies context only. It changes no explanation or clinical verdict.
+    """
+    if item.get("format") != "MC":
+        return item
+    key = item.get("key")
+    mapping = item.get("distractor_evidence")
+    if not isinstance(key, list) or len(key) != 1 or not isinstance(mapping, dict):
+        return item
+    primary = mapping.get(key[0])
+    refs = primary.get("passage_ids") if isinstance(primary, dict) else None
+    cited = {entry.get("passage_id") for entry in item.get("evidence", []) if isinstance(entry, dict)}
+    if (not isinstance(refs, list) or not refs
+            or any(not isinstance(pid, str) or pid not in cited for pid in refs)):
+        return item  # Existing source validation must still reject an invalid map.
+    enriched = deepcopy(mapping)
+    for option_id, entry in enriched.items():
+        own = entry.get("passage_ids") if isinstance(entry, dict) else None
+        if (option_id != key[0] and isinstance(own, list)
+                and all(isinstance(pid, str) for pid in own)):
+            entry["passage_ids"] = list(dict.fromkeys(own + refs))
+    return {**item, "distractor_evidence": enriched}
+
+
 def ground_draft(plan, draft):
     """Carry the author's locked explanations forward; do not adjudicate them."""
     mapping = {oid: {"verdict": "supports_key" if oid in plan["key"] else "refutes_distractor",
                      "passage_ids": [ref["passage_id"] for ref in source_refs(entry)],
                      "explanation": entry["explanation"]}
                for oid, entry in plan["option_grounding"].items()}
-    if "distractor_evidence" in draft and draft["distractor_evidence"] != mapping:
+    result = with_case_sources({**draft, "distractor_evidence": mapping})
+    if "distractor_evidence" in draft and draft["distractor_evidence"] != result["distractor_evidence"]:
         raise ValueError("Generated draft differs from its choice plan: grounding")
-    return {**draft, "distractor_evidence": mapping}
+    return result

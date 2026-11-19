@@ -71,7 +71,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-19-v26", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-19-v27", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
@@ -292,7 +292,9 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             if checkpoint_enabled:
                 reserve_rewrite(conn, **attempt_key)
             candidate = _call_with_bounded_rate_wait(adapter, payload)
-            return _hydrate_indexed_citations(candidate, evidence["sources"])
+            hydrated = _hydrate_indexed_citations(candidate, evidence["sources"])
+            from item_mc_choice_plan_v2 import with_case_sources
+            return with_case_sources(hydrated)
         def author(payload):
             value = _call_with_bounded_rate_wait(adapter, payload)
             if authoring_provider == "cloudflare" and payload.get("step") == "concept_card" and payload.get("format") == "MC":
