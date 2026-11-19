@@ -587,28 +587,45 @@ test('source explanation schema requires references for support but permits ever
  }finally{globalThis.fetch=old;}
 });
 
-test('MC option review constrains the response shape and allows uncertain judgments',async()=>{
+test('MC option review binds every option to its own passage and each passage to its own spans',async()=>{
  const old=globalThis.fetch;
  const model='qwen/qwen3.8-27b',ids=[...'ABCD'];
  const cfg={...env,AI_REVIEWER_MODEL:model,AI_OPTION_REVIEW_OPT_IN:'true'};
+ const sources=[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]},
+  {passage_id:'s1',quote_spans:[{id:'q1',text:'Another definition'}]}];
+ const audits=ids.map((id,i)=>({option_id:id,retrieved_passage_ids:[i%2?'s1':'s0']}));
+ let calls=0;
  try{
   globalThis.fetch=async(_url,options)=>{
+   calls++;
    const {json_schema}=JSON.parse(options.body).response_format;
    assert.equal(json_schema.strict,true);
    const judgments=json_schema.schema.properties.judgments;
-   assert.equal(judgments.minItems,4);assert.equal(judgments.maxItems,4);
-   assert.deepEqual(judgments.items.properties.option_id.enum,ids);
-   assert.ok(judgments.items.properties.verdict.enum.includes('uncertain'));
-   assert.deepEqual(judgments.items.properties.passage_ids.items.enum,['s0']);
-   assert.deepEqual(judgments.items.properties.quote_refs.items.properties.span_id.enum,['q0']);
-   assert.ok(judgments.items.required.includes('source_conflict_found'));
-   const output={judgments:ids.map(option_id=>({option_id,verdict:'uncertain',passage_ids:[],
-    quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}))};
+   assert.equal(judgments.type,'object');assert.equal(judgments.additionalProperties,false);
+   assert.deepEqual(judgments.required,ids);
+   for(const [i,id] of ids.entries()){
+    const entry=judgments.properties[id];
+    assert.equal(entry.additionalProperties,false);
+    assert.ok(entry.properties.verdict.enum.includes('uncertain'));
+    assert.equal(entry.properties.option_id,undefined);assert.equal(entry.properties.passage_ids,undefined);
+    const refs=entry.properties.quote_refs.items.anyOf;
+    assert.equal(refs.length,1);
+    assert.deepEqual(refs[0].properties.passage_id.enum,[i%2?'s1':'s0']);
+    assert.deepEqual(refs[0].properties.span_id.enum,[i%2?'q1':'q0']);
+    assert.equal(refs[0].additionalProperties,false);
+    assert.ok(entry.required.includes('source_conflict_found'));
+   }
+   const output={judgments:Object.fromEntries(ids.map(id=>[id,{verdict:'uncertain',quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}]))};
    return Response.json({choices:[{message:{content:JSON.stringify(output)},finish_reason:'stop'}]});
   };
-  const result=await gateway.fetch(request('option_review',model,{format:'MC',options:ids.map(id=>({id,text:id})),
-   source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
-  assert.equal(result.status,200);
+  const step={format:'MC',options:ids.map(id=>({id,text:id})),source_passages:sources,retrieval:{option_audits:audits}};
+  assert.equal((await gateway.fetch(request('option_review',model,step),cfg)).status,200);
+  // Incomplete, duplicate or out-of-packet mappings must fail before provider use.
+  for(const broken of [audits.slice(1),[audits[0],audits[0],audits[2],audits[3]],
+    audits.map((a,i)=>i===0?{...a,retrieved_passage_ids:['unknown']}:a)]){
+   assert.equal((await gateway.fetch(request('option_review',model,{...step,retrieval:{option_audits:broken}}),cfg)).status,400);
+  }
+  assert.equal(calls,1);
  }finally{globalThis.fetch=old;}
 });
 

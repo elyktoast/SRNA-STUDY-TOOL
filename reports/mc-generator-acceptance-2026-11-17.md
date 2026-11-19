@@ -242,3 +242,12 @@ Inspection identified an independent response-handling defect: the strict MC res
 The handoff now records only allowlisted validation-detail codes for malformed JSON, missing/duplicate option judgments, source aliases and invalid/unauthorized quote references. Arbitrary exception text is excluded. The next bounded review can diagnose any remaining invalid response without logging model output or source text. Authoring contract: `2026-11-19-v28`. Fresh live verification remains pending.
 
 Offline validation: 1,094 Python tests ran (four skipped); 104 gateway/relay Node checks passed; repository validation and diff checks passed.
+
+
+### Scoped independent option response
+
+The diagnostic-only follow-up [44638590506](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44638590506) verified application `7d28177a3326815a127014a1aa8c3512d134c21f` after successful CI and build `8167821b-3f20-4e6d-bb37-5f45134cc1b7`. Its sole review again left the unchanged saved question at **9/10**, now with the fixed detail `option_quote_ref_scope_invalid`. No clinical judgment was returned; the source-reference hydration failed. This localizes the failure to an unauthorized, uncited, or passage-mismatched quote reference; the generic detail does not distinguish those subcases. No new question passed acceptance.
+
+The previous strict response schema used global passage and span enums and allowed repeated option IDs. The correction defines a response object keyed by every option ID, with each option's quote references restricted to its own retrieved passages. Each passage has its own span-ID enum. The trusted adapter restores option IDs from those map keys and passage IDs from the selected quote references; it never invents or changes clinical verdicts, explanations or source text. Legacy array responses retain all existing validation. Missing/extra options, injected identities, cross-option citations and wrong spans remain blocked. Explicit uncertainty remains a retained blocking judgment.
+
+This uses the documented JSON Schema `anyOf` subset in [Groq structured outputs](https://console.groq.com/docs/structured-outputs). The evaluator, blind-answer boundary, contradiction review, verbatim-quote checks, one-rewrite limit and human review remain mandatory. Authoring contract: `2026-11-19-v29`. Local checks: 1,095 Python tests ran (four skipped), 104 gateway/relay Node checks passed, repository validation and diff checks passed. Deployed acceptance of the scoped format is pending.

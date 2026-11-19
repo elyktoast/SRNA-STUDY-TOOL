@@ -214,6 +214,13 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "source_conflict_found means unresolved disagreement WITHIN THE SOURCES or evidence against your proposed judgment. It must be false when consistent evidence refutes a false distractor; that refutation is not a source conflict. "
                 "For a negative stem, judge whether each option answers that negative question. Each option must cite ONLY IDs retrieved for that option. "
                 "Source silence is not disproof. Report uncertainty or contradiction honestly. Do not claim clinical or human approval.")
+        if request["step"] == "option_review" and request.get("format") == "MC":
+            body["messages"][0]["content"] += (
+                " For MC return judgments as an OBJECT keyed by EVERY supplied option ID, not an array. "
+                "Each value contains exactly verdict, quote_refs, explanation, source_conflict_found. "
+                "Omit option_id and passage_ids: the server restores those identities only from the map key and selected quote references. "
+                "Each option may select only its own retrieved passage IDs and quote spans belonging to that passage. "
+                "If its evidence is insufficient, return uncertain and empty quote_refs; never borrow another option's evidence.")
         if request["step"] == "option_review":
             from item_source_quote_spans_v2 import prepare
             review_request, quote_lookup = prepare(request)
@@ -324,6 +331,23 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 if pid in source_aliases.values():
                     return pid
                 raise ValueError("Unknown option source alias")
+            if request.get("format") == "MC" and isinstance(parsed.get("judgments"), dict):
+                mapping = parsed["judgments"]
+                option_ids = [option["id"] for option in request["options"]]
+                fields = {"verdict", "quote_refs", "explanation", "source_conflict_found"}
+                if set(mapping) != set(option_ids):
+                    raise ValueError("Invalid independent judgment map")
+                judgments = []
+                for oid in option_ids:
+                    value = mapping[oid]
+                    if (not isinstance(value, dict) or set(value) != fields
+                            or not isinstance(value.get("quote_refs"), list)
+                            or any(not isinstance(ref, dict) or set(ref) != {"passage_id", "span_id"}
+                                   or not isinstance(ref["passage_id"], str) for ref in value["quote_refs"])):
+                        raise ValueError("Invalid independent judgment map")
+                    judgments.append({**value, "option_id": oid,
+                        "passage_ids": list(dict.fromkeys(ref["passage_id"] for ref in value["quote_refs"]))})
+                parsed = {**parsed, "judgments": judgments}
             if not isinstance(parsed.get("judgments"), list):
                 raise ValueError("Independent judgments required")
             for judgment in parsed["judgments"]:

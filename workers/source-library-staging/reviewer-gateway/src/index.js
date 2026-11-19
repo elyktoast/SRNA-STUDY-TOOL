@@ -190,23 +190,30 @@ async function relayGroq(request,env){
   if(groqQwen&&step.step==='option_review'&&step.format==='MC'){
    const optionIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
    const passages=Array.isArray(step.source_passages)?step.source_passages:[];
-   const passageIds=passages.map(p=>p?.passage_id);
-   const spanIds=[...new Set(passages.flatMap(p=>Array.isArray(p?.quote_spans)?p.quote_spans.map(s=>s?.id):[]))];
-   if(optionIds.length===4&&optionIds.every((id,index)=>id==='ABCD'[index])&&
-      passageIds.length&&passageIds.every(id=>typeof id==='string')&&spanIds.length&&spanIds.every(id=>typeof id==='string')){
-    const required=['option_id','verdict','passage_ids','quote_refs','explanation','source_conflict_found'];
-    reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_option_review_v2',strict:true,schema:{type:'object',properties:{
-     judgments:{type:'array',minItems:4,maxItems:4,items:{type:'object',properties:{
-      option_id:{type:'string',enum:optionIds},
-      verdict:{type:'string',enum:['supports_key','refutes_distractor','uncertain']},
-      passage_ids:{type:'array',items:{type:'string',enum:passageIds}},
-      quote_refs:{type:'array',maxItems:8,items:{type:'object',properties:{
-       passage_id:{type:'string',enum:passageIds},span_id:{type:'string',enum:spanIds}
-      },required:['passage_id','span_id'],additionalProperties:false}},
-      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
-     },required,additionalProperties:false}}
-    },required:['judgments'],additionalProperties:false}}};
+   const byId=new Map(passages.map(p=>[p?.passage_id,p]));
+   const audits=step.retrieval?.option_audits;
+   if(optionIds.length!==4||optionIds.some((id,index)=>id!=='ABCD'[index])||
+      !Array.isArray(audits)||audits.length!==4||new Set(audits.map(a=>a.option_id)).size!==4||
+      byId.size!==passages.length||!passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const properties={};
+   for(const id of optionIds){
+    const allowed=audits.find(a=>a.option_id===id)?.retrieved_passage_ids;
+    if(!Array.isArray(allowed)||!allowed.length||new Set(allowed).size!==allowed.length)return respond(400,null,'{"error":"invalid_step"}');
+    const references=[];
+    for(const pid of allowed){
+     const spans=byId.get(pid)?.quote_spans?.map(q=>q?.id);
+     if(typeof pid!=='string'||!Array.isArray(spans)||!spans.length||spans.some(q=>typeof q!=='string')||new Set(spans).size!==spans.length)return respond(400,null,'{"error":"invalid_step"}');
+     references.push({type:'object',properties:{passage_id:{type:'string',enum:[pid]},span_id:{type:'string',enum:spans}},required:['passage_id','span_id'],additionalProperties:false});
+    }
+    properties[id]={type:'object',properties:{
+     verdict:{type:'string',enum:['supports_key','refutes_distractor','uncertain']},
+     quote_refs:{type:'array',maxItems:8,items:{anyOf:references}},
+     explanation:{type:'string'},source_conflict_found:{type:'boolean'}
+    },required:['verdict','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
    }
+   reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_scoped_option_review_v2',strict:true,schema:{type:'object',properties:{
+    judgments:{type:'object',properties,required:optionIds,additionalProperties:false}
+   },required:['judgments'],additionalProperties:false}}};
   }
   if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
    const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);

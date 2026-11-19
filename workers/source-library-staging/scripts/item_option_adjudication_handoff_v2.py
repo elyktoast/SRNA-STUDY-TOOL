@@ -102,6 +102,7 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
             "Provider output must be a JSON object": "option_response_shape_invalid",
             "Independent judgments required": "option_judgments_missing",
             "Invalid independent judgments": "option_judgments_invalid",
+            "Invalid independent judgment map": "option_judgment_map_invalid",
             "One independent judgment per option required": "option_judgment_coverage_invalid",
             "Invalid independent judgment": "option_judgment_shape_invalid",
             "Unknown option source alias": "option_source_alias_invalid",

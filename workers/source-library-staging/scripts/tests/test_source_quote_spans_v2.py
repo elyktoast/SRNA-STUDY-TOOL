@@ -146,6 +146,36 @@ class SourceQuoteSpanTests(unittest.TestCase):
             response["judgments"][0]["quote_refs"]=[{"passage_id":alias,"span_id":"q1"}]
             with self.subTest(alias=alias),self.assertRaises(ValueError):adapter(self.request)
 
+    def test_scoped_mc_map_restores_only_identity_and_keeps_uncertain_verdict(self):
+        response = {'judgments': {
+            'A': {'verdict':'refutes_distractor', 'quote_refs':[{'passage_id':'s0','span_id':'q1'}],
+                  'explanation':'Independent verdict remains unchanged.', 'source_conflict_found':False},
+            'B': {'verdict':'uncertain', 'quote_refs':[], 'explanation':'Evidence insufficient.', 'source_conflict_found':False}}}
+        sent = []
+        def transport(**kwargs):
+            sent.append(json.loads(kwargs['body']['messages'][1]['content']))
+            return {'choices':[{'message':{'content':json.dumps(response)}}]}
+        adapter = make_adapter(endpoint='https://provider.example/v1',api_key='test',model='reviewer',transport=transport,owner_opt_in=True)
+        result = adapter(self.request)
+        self.assertEqual([j['option_id'] for j in result['judgments']],['A','B'])
+        self.assertEqual(result['judgments'][0]['passage_ids'],['p1'])
+        self.assertEqual(result['judgments'][0]['quotes'],['Sevoﬂurane is listed.'])
+        self.assertEqual(result['judgments'][0]['verdict'],'refutes_distractor')
+        self.assertEqual(result['judgments'][1]['verdict'],'uncertain')
+        self.assertEqual(result['judgments'][1]['quotes'],[])
+        self.assertNotIn('key',sent[0]);self.assertNotIn('expected_verdict',str(sent[0]))
+        original = copy.deepcopy(response)
+        for change in ('missing','extra','forged_id','forged_citations','cross_option','wrong_span'):
+            response = copy.deepcopy(original)
+            a = response['judgments']['A']
+            if change=='missing': del response['judgments']['B']
+            if change=='extra': response['judgments']['C'] = response['judgments']['B']
+            if change=='forged_id': a['option_id']='B'
+            if change=='forged_citations': a['passage_ids']=['s1']
+            if change=='cross_option': a['quote_refs']=[{'passage_id':'s1','span_id':'q1'}]
+            if change=='wrong_span': a['quote_refs']=[{'passage_id':'s0','span_id':'unknown'}]
+            with self.subTest(change=change),self.assertRaises(ValueError): adapter(self.request)
+
     def test_adapter_uses_bounded_span_protocol_without_answer_leakage(self):
         calls = []
         def transport(**kwargs):
