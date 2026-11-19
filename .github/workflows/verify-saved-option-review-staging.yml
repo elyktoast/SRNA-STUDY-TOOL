@@ -10,10 +10,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-scoped-pns-option-review]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-compact-pns-option-review]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 9
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -34,5 +34,5 @@ jobs:
           STAGING_DEPLOYMENT_FILE: /tmp/pn-deployment.json
           CONFIRM_PAID_OPTION_REVIEW: 'true'
           STAGING_SAVED_DRAFT_ID: 0db56e8d-41ec-4f99-9276-e88c31aaee1c
-          STAGING_TARGET_SHA: 9490ca82a7cdf034c8d49ba184f0ed4bd65d5737
+          STAGING_TARGET_SHA: b790a5387c699a80cf543be49b5bd27151375fb8
         run: node scripts/verify-saved-staging-option-review.mjs
