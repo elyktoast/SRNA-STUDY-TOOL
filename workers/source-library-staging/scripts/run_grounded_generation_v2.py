@@ -71,7 +71,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-19-v25", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-19-v26", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
@@ -252,6 +252,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         # A rewrite is an additional paid provider call. It is disabled by default
         # and requires a separate explicit staging opt-in.
         rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
+        repair_sources = []
         def rewrite(request):
             import copy
             from item_generation_runner_v2 import _hydrate_indexed_citations
@@ -261,14 +262,27 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
                     references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
             trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
-            # A source-held distractor may need replacement evidence. Keep
-            # author-selected passages first and offer a bounded set from the
-            # same trusted retrieval that was available for initial drafting.
             source_rules = {"R-2.4", "R-12.4"}
             if (request.get("item", {}).get("format") == "MC"
                     and any(issue.get("rule_id") in source_rules for issue in request.get("issues", []))):
-                alternatives = [p for p in evidence["sources"] if p["passage_id"] not in references]
-                trusted.extend(alternatives[:4])
+                from item_mc_repair_evidence_v2 import supplement
+                additions = supplement(conn, args, request["item"], request["issues"])
+                existing = {p["passage_id"] for p in evidence["sources"]}
+                for passage in additions:
+                    if passage["passage_id"] not in existing:
+                        evidence["sources"].append(passage)
+                        repair_sources.append(passage)
+                        existing.add(passage["passage_id"])
+                # Prefer newly retrieved option definitions, then unused initial
+                # evidence. The original author-selected citations remain first.
+                offered = {p["passage_id"] for p in trusted}
+                alternatives = repair_sources + [p for p in evidence["sources"] if p["passage_id"] not in references]
+                for passage in alternatives:
+                    if passage["passage_id"] not in offered:
+                        trusted.append(passage)
+                        offered.add(passage["passage_id"])
+                    if len(offered - references) >= 4:
+                        break
             compact = copy.deepcopy(request)
             for citation in compact.get("item", {}).get("evidence", []):
                 if isinstance(citation, dict):
@@ -308,6 +322,15 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                      option_reviewer_model_id=reviewer_model_id if option_requested else None,
                                      explanation_review=explanation_review if explanation_requested else None,
                                      quality_review=quality_review if quality_requested else None)
+        if repair_sources:
+            # The receipt's evidence hash identifies initial preflight retrieval.
+            # Capture supplemental source identity/content separately in the
+            # completed screening record and revalidate all citations on approval.
+            result["screening"]["source_repair_retrieval"] = {
+                "passage_ids": [p["passage_id"] for p in repair_sources],
+                "source_packet_sha256": fingerprint(repair_sources),
+                "initial_evidence_hash": evidence_hash,
+                "model_calls": 0, "database_writes": False}
         from item_board_quality_v2 import stamp_checks
         result["item"] = stamp_checks(result["item"], result["screening"])
         save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
