@@ -77,6 +77,16 @@ def teaching_specificity_issues(item):
     return issues
 
 
+def canonical_counterfactual(text):
+    if not isinstance(text, str):
+        return None
+    match = re.fullmatch(
+        r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option\(s\) ([A-F](?:, [A-F])*)\.',
+        text)
+    return ({"from_text": match[1], "to_text": match[2], "expected_key": match[3].split(", ")}
+            if match else None)
+
+
 def verify_counterfactual(item, proposal, reviewer):
     """Apply one explicit stem edit, then independently solve with the same options.
 
@@ -182,10 +192,8 @@ def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=No
         # exact complete form. Do not ask a second model to transcribe the same
         # punctuation again. This supplies a TEST, never its clinical verdict:
         # the independent editorial grade and fresh blind solve remain required.
-        canonical = re.fullmatch(r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option\(s\) ([A-F](?:, [A-F])*)\.',
-                                 item["concept_card"]["counterfactual"])
-        proposal = ({"from_text":canonical[1], "to_text":canonical[2], "expected_key":canonical[3].split(", ")}
-                    if canonical else response["counterfactual_test"])
+        canonical = canonical_counterfactual(item["concept_card"]["counterfactual"])
+        proposal = canonical or response["counterfactual_test"]
         proof = {"status":"flag", "issues":[]} if checks["counterfactual"] == "flag" else verify_counterfactual(
             item, proposal, counterfactual_reviewer)
         proof["proposal_source"] = "canonical_teaching_edit" if canonical else "editorial_proposal"

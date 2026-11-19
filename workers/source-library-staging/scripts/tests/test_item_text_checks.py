@@ -59,3 +59,18 @@ class EditorialTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CaseBoundaryTests(unittest.TestCase):
+    def test_incomplete_case_cannot_run_into_standalone_question(self):
+        condition = "The problem is traced to a leak downstream from"
+        def item_with_case(condition):
+            return {"format": "MC", "options": [], "stem": condition + " Which device detects it?",
+                    "concept_card": {"counterfactual":
+                        f'If "{condition}" is replaced by "The supply pressure falls.", '
+                        'the best response changes to option(s) B.'}}
+
+        item = item_with_case(condition)
+        self.assertIn("R-4.2", [issue["rule_id"] for issue in check(item)])
+        item = item_with_case("The low-pressure circuit leaks.")
+        self.assertNotIn("R-4.2", [issue["rule_id"] for issue in check(item)])

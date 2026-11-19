@@ -6,7 +6,7 @@ WORDS = re.compile(r"[A-Za-z0-9]+")
 
 
 def check(item, source_texts=()):
-    from item_board_quality_v2 import obsolete_issues
+    from item_board_quality_v2 import canonical_counterfactual, obsolete_issues
     issues = obsolete_issues(item)
     if item.get("format") not in ("MC", "MS"):
         return issues
@@ -16,6 +16,21 @@ def check(item, source_texts=()):
     if re.search(r"\b(?:described|stated|mentioned|shown)\s+in\s+(?:the\s+)?(?:source|passage|excerpt|textbook)\b|\baccording to (?:the )?(?:source|passage|excerpt|textbook)\b",
                  str(item.get("stem", "")), re.I):
         issues.append({"rule_id":"R-4.2", "field":"stem", "message":"Question must stand alone without referring the learner to an unspecified source passage"})
+    if item.get("format") == "MC":
+        stem = item.get("stem", "")
+        rationale = item.get("rationale") or {}
+        proposal = rationale.get("counterfactual_test") if isinstance(rationale, dict) else None
+        concept = item.get("concept_card")
+        if isinstance(concept, dict):
+            proposal = canonical_counterfactual(concept.get("counterfactual")) or proposal
+        condition = proposal.get("from_text") if isinstance(proposal, dict) else None
+        if isinstance(stem, str) and isinstance(condition, str) and condition.strip():
+            condition = condition.rstrip()
+            if (stem.startswith(condition + " ")
+                    and not condition.endswith((".", "!", "?"))
+                    and re.match(r"(?:Which|What|How|Why|When|Where|Who)\b", stem[len(condition):].lstrip())):
+                issues.append({"rule_id": "R-4.2", "field": "stem",
+                               "message": "Complete the clinical case as a sentence before the standalone question"})
     import json
     authored = json.dumps([item.get("stem", ""), options, item.get("concept_card", {}), item.get("rationale", {})], ensure_ascii=False)
     if item.get("numbers_verified_against_page_image") is not True and re.search(
