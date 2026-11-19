@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture highlight: mechanomyography, case and definition citations',page:13,objective:'II.C.4',workflow:'lecture',item_id:'72d82c2a-b6ef-49fc-9764-362988c85a7b',topic:'Mechanomyography'}
+ {name:'Lecture highlight: acceleromyography, scoped independent citations',page:14,objective:'II.C.4',workflow:'lecture',item_id:'275c4289-e2e2-4756-ac33-7d7d165e2fb5',topic:'Acceleromyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='54d8d69bb00fa1f515fa42dac6340a99c86dac2d';
+const sha='9490ca82a7cdf034c8d49ba184f0ed4bd65d5737';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -46,6 +46,10 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    throw error;
   }
  });
+ const control=await call('/generation/drafts/0db56e8d-41ec-4f99-9276-e88c31aaee1c');
+ const report=control.screening?.independent_option_adjudication;
+ assert.ok(Array.isArray(report?.judgments)&&report.judgments.length===4&&!report.provider_rule,'Scoped option transport control has not completed; no fresh generation');
+ emit({check:'scoped_option_transport_control',status:report.status,judgments:report.judgments.length,paid_calls:0});
  const library=await call('/generation/textbooks');const books=library.textbooks.map(b=>b.id);assert.ok(books.length>=7);
  const rows=[];
  for(const sample of samples){
@@ -66,7 +70,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-19-v27');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-19-v29');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
-const target='54d8d69bb00fa1f515fa42dac6340a99c86dac2d';
+const target='9490ca82a7cdf034c8d49ba184f0ed4bd65d5737';
 const token=process.env.CLOUDFLARE_API_TOKEN;
 assert.ok(token,'Staging deployment credential unavailable');
 const base='https://api.cloudflare.com/client/v4/accounts/5a84e0fe00e430d25e901b260861381e';
@@ -16,6 +16,9 @@ for(let i=0;i<12;i++){
  const checksResponse=await fetch('https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/commits/'+target+'/check-runs?per_page=100',{headers:{Authorization:'Bearer '+process.env.GITHUB_TOKEN,Accept:'application/vnd.github+json'},redirect:'error',signal:AbortSignal.timeout(15000)});
  assert.ok(checksResponse.ok,'Staging build check unavailable');
  const checks=(await checksResponse.json()).check_runs;
+ const ci=checks.find(c=>c.head_sha===target&&c.name==='staging-unit-tests');
+ if(ci?.status==='completed'&&ci.conclusion!=='success')throw Error('Staging CI did not pass');
+ if(ci?.status!=='completed'){if(i<11){await new Promise(resolve=>setTimeout(resolve,20000));continue;}throw Error('Staging CI incomplete');}
  const check=checks.filter(c=>c.head_sha===target&&c.app?.slug==='cloudflare-workers-and-pages'&&c.name==='Workers Builds: srna-source-reviewer-gateway-staging').sort((a,b)=>b.id-a.id)[0];
  if(check?.status!=='completed'||check?.conclusion!=='success'){
   if(i<11){await new Promise(resolve=>setTimeout(resolve,20000));continue;}
