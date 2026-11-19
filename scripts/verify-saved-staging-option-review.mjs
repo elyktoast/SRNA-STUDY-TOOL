@@ -29,7 +29,7 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const buildId=env.STAGING_TARGET_BUILD_UUID;assert.match(buildId||'',/^[a-f0-9-]{36}$/);
  // The operator verifies this short-lived snapshot through the connected deployment service.
  // CI needs no broader deployment-read credential. Preview checks on the same SHA are not deployment evidence.
- deployment??=JSON.parse(readFileSync(new URL('../.github/staging-saved-option-review-deployment.json',import.meta.url),'utf8'));
+ deployment??=JSON.parse(readFileSync(env.STAGING_DEPLOYMENT_FILE || new URL('../.github/staging-saved-option-review-deployment.json',import.meta.url),'utf8'));
  assert.equal(deployment.verification,'connected_cloudflare_deployment_read');
  const verified=Date.parse(deployment.verified_at);
  assert.ok(Number.isFinite(verified)&&now()-verified>=-60000&&now()-verified<=300000,'Deployment verification expired; no paid review permitted');
@@ -51,6 +51,7 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const before=await json(gateway+path,{headers});
  assert.equal(before.published,false);assert.equal(before.status,'pending_review');assert.equal(before.format,'MC');
  assert.equal(before.can_complete_option_review,true,'Saved question is not eligible for a missing review');
+ emit({check:'missing_option_review_before',draft_id:id,provider_rule:before.screening.independent_option_adjudication?.provider_rule||null,stages:Object.fromEntries(Object.entries(before.screening.stages).map(([k,v])=>[k,v.status]))});
  const baseline=await json(gateway+path+'/revalidate',{headers});
  assert.ok(Array.isArray(baseline.issues)&&baseline.issues.length>0&&baseline.issues.every(i=>i.field==='screening.stages.independent_option_evidence'),'Saved question has other unresolved issues');
  const questionHash=digest(before.question),rewrites=before.screening.rewrite_attempts_used;
@@ -68,6 +69,8 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const stages=Object.fromEntries(Object.entries(after.screening.stages).map(([name,value])=>[name,value.status]));
  emit({draft_id:id,deployment_verification_sha256:digest(deployment),question_sha256:questionHash,question_unchanged:true,rewrite_attempts:rewrites,
   review_status:result.option_review_status,automated_checks_passed:result.automated_checks_passed,
+  option_provider_rule:after.screening.independent_option_adjudication?.provider_rule||null,
+  option_issues:after.screening.independent_option_adjudication?.issues,
   stages,current_index_issue_rules:current.issues.map(i=>i.rule_id),generation_performed:false,rewrite_performed:false,published:false});
  assert.equal(result.automated_checks_passed,true,'Missing review completed but question remains blocked');
  assert.equal(current.issues.length,0,'Current-source approval revalidation has unresolved issues');

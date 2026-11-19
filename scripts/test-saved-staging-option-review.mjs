@@ -29,7 +29,7 @@ test('saved review acceptance performs one paid review, preserves question and n
  const f=fixture();const result=await f.run();assert.equal(result.question_unchanged,true);
  const posts=f.calls.filter(c=>c.method==='POST');assert.equal(posts.length,1);assert.ok(posts[0].url.endsWith('/complete-options'));
  assert.ok(f.calls.every(c=>!c.url.endsWith('/generation/one')&&!c.url.endsWith('/review')));
- assert.equal(f.logs[0].published,false);assert.equal(f.logs[0].rewrite_attempts,1);
+ assert.equal(f.logs.at(-1).published,false);assert.equal(f.logs.at(-1).rewrite_attempts,1);
 });
 test('stale staging code or absent confirmation stops before any paid request',async()=>{
  const unconfirmed=fixture();await assert.rejects(unconfirmed.run({CONFIRM_PAID_OPTION_REVIEW:'false'}));assert.equal(unconfirmed.calls.filter(c=>c.method==='POST').length,0);
@@ -38,6 +38,6 @@ test('stale staging code or absent confirmation stops before any paid request',a
 test('transport errors and a blocked clinical review are not retried or reported as acceptance',async()=>{
  for(const mode of ['timeout','pending','unsafe']){
   const f=fixture(mode);await assert.rejects(f.run());assert.equal(f.calls.filter(c=>c.method==='POST').length,1);
-  if(mode==='pending')assert.equal(f.logs[0].automated_checks_passed,false);
+  if(mode==='pending')assert.equal(f.logs.at(-1).automated_checks_passed,false);
  }
 });

@@ -10,15 +10,20 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[complete-respiratory-option-review]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[complete-pns-option-review]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 5
+    timeout-minutes: 9
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Verify current staging deployment without rebuilding
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-pns-deployment.mjs
       - name: Complete only the missing saved MC review
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -26,9 +31,10 @@ jobs:
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+          STAGING_DEPLOYMENT_FILE: /tmp/pn-deployment.json
           CONFIRM_PAID_OPTION_REVIEW: 'true'
-          STAGING_SAVED_DRAFT_ID: f6440562-8a49-4293-8d67-d78e8773b811
-          STAGING_TARGET_BUILD_UUID: 9bb497a7-b80a-4e5c-b9c3-fa7650a3b061
-          STAGING_TARGET_SHA: f5a826025e4ede2edaa542e61820a5217456388f
-          STAGING_TARGET_IMAGE_SHA256: 3e9a8a74f61c8a1ff9115ab69936f472a38224a32519530049d04fcc265e24b4
+          STAGING_SAVED_DRAFT_ID: 0db56e8d-41ec-4f99-9276-e88c31aaee1c
+          STAGING_TARGET_BUILD_UUID: 0a99007a-9e60-4d7a-afd5-eef39e715470
+          STAGING_TARGET_SHA: 54d8d69bb00fa1f515fa42dac6340a99c86dac2d
+          STAGING_TARGET_IMAGE_SHA256: acea403bd3ccf9dcdd301eb764d131088cf3b38bc6d3fa7c014c40a18a1da1b0
         run: node scripts/verify-saved-staging-option-review.mjs
