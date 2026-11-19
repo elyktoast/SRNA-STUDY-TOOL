@@ -7,14 +7,19 @@ assert.ok(token,'Staging deployment credential unavailable');
 const base='https://api.cloudflare.com/client/v4/accounts/5a84e0fe00e430d25e901b260861381e';
 async function read(path){
  const r=await fetch(base+path,{headers:{Authorization:'Bearer '+token},redirect:'error',signal:AbortSignal.timeout(15000)});
- assert.ok(r.ok,'Staging deployment metadata unavailable: HTTP '+r.status);
+ assert.ok(r.ok,'Staging deployment metadata unavailable: '+path+' HTTP '+r.status);
  const v=await r.json();assert.equal(v.success,true);return v.result;
 }
 const application='/containers/applications/a03bdc12-da09-4e2c-b543-816ebad2e339';
 let verified=false;
 for(let i=0;i<6;i++){
- const [builds,app,instances]=await Promise.all([read('/builds/workers/d2335d1893bf45a396c690f63a045835/builds'),read(application),read(application+'/instances-v2')]);
- const build=builds.find(b=>b.build_trigger_metadata?.commit_hash===target&&b.build_trigger_metadata?.branch==='fix/board-question-quality');
+ const checksResponse=await fetch('https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/commits/'+target+'/check-runs?per_page=100',{headers:{Authorization:'Bearer '+process.env.GITHUB_TOKEN,Accept:'application/vnd.github+json'},redirect:'error',signal:AbortSignal.timeout(15000)});
+ assert.ok(checksResponse.ok,'Staging build check unavailable');
+ const checks=(await checksResponse.json()).check_runs;
+ const check=checks.filter(c=>c.head_sha===target&&c.app?.slug==='cloudflare-workers-and-pages'&&c.name==='Workers Builds: srna-source-reviewer-gateway-staging').sort((a,b)=>b.id-a.id)[0];
+ assert.equal(check?.status,'completed');assert.equal(check?.conclusion,'success');
+ const build={build_uuid:check.details_url.split('/').pop(),status:'stopped',build_outcome:'success',stopped_on:check.completed_at};
+ const [app,instances]=await Promise.all([read(application),read(application+'/instances-v2')]);
  const now=Date.now();
  if(build?.status==='stopped'&&build.build_outcome==='success'&&settled(app,instances,now,now-90000,Date.parse(build.stopped_on))){
   const snapshot={verification:'connected_cloudflare_deployment_read',verified_at:new Date(now).toISOString(),

@@ -25,6 +25,7 @@ jobs:
       - name: Verify deployed staging code and container
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-pns-deployment.mjs
       - name: Generate two highlighted lecture topic controls
         env:
