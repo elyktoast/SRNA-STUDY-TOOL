@@ -38,6 +38,21 @@ class ChoicePlanTests(unittest.TestCase):
         item["format"] = "MS"
         self.assertEqual(with_case_sources(item), item)
 
+    def test_explicit_locked_map_remains_valid_before_case_citations_are_added(self):
+        from item_mc_choice_plan_v2 import ground_draft
+        raw = plan()
+        raw["option_grounding"]["A"]["passage_id"] = "p2"
+        checked = validate(raw)
+        mapping = {oid: {"verdict": "supports_key" if oid in checked["key"] else "refutes_distractor",
+                          "passage_ids": [entry["passage_id"]], "explanation": entry["explanation"]}
+                   for oid, entry in checked["option_grounding"].items()}
+        draft = {"format": "MC", "key": checked["key"],
+                 "evidence": [{"passage_id": "p1"}, {"passage_id": "p2"}],
+                 "distractor_evidence": mapping}
+        result = ground_draft(checked, draft)
+        self.assertEqual(result["distractor_evidence"]["A"]["passage_ids"], ["p2", "p1"])
+        self.assertEqual(draft["distractor_evidence"]["A"]["passage_ids"], ["p2"])
+
     def test_option_comparison_can_cite_case_criterion_and_alternative_definition(self):
         from item_mc_choice_plan_v2 import ground_draft
         raw = plan()

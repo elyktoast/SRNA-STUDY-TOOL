@@ -180,7 +180,6 @@ def ground_draft(plan, draft):
                      "passage_ids": [ref["passage_id"] for ref in source_refs(entry)],
                      "explanation": entry["explanation"]}
                for oid, entry in plan["option_grounding"].items()}
-    result = with_case_sources({**draft, "distractor_evidence": mapping})
-    if "distractor_evidence" in draft and draft["distractor_evidence"] != result["distractor_evidence"]:
+    if "distractor_evidence" in draft and draft["distractor_evidence"] != mapping:
         raise ValueError("Generated draft differs from its choice plan: grounding")
-    return result
+    return with_case_sources({**draft, "distractor_evidence": mapping})
