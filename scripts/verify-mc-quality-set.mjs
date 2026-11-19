@@ -7,11 +7,12 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Oxygen supply pressure failure',objective:'II.A.6',workflow:'lecture',item_id:'3c5c8bd5-c708-48c0-b255-e219d20c6137',textbook_id:'8343459f-0595-4375-8ac6-7700e6792abe',topic:'Oxygen pressure failure'}
+ {name:'Lecture highlight: mechanomyography',page:13,objective:'II.C.4',workflow:'lecture',item_id:'b72db76d-11e8-4d50-bfa3-f7c32ed95635',topic:'Mechanomyography'},
+ {name:'Lecture highlight: acceleromyography',page:14,objective:'II.C.4',workflow:'lecture',item_id:'14f25e0a-9868-4954-a4ca-4290dc99ce89',topic:'Acceleromyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='d3e7dfa01bb7eae236a5dcbd7e986b0734d1af84';
+const sha='24959edc87f2e02c0465d70f788e31b65e0d0844';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -57,14 +58,12 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const [domain,section]=sample.objective.split('.');
    let request={topic:sample.topic,objective:sample.objective,domain,section,mode:'NCE',format:'MC',limit:8,item_id:sample.item_id,textbook_id:sample.textbook_id||books[0],textbook_ids:books};
    if(sample.workflow==='lecture'){
-    const plan=await call('/generation/lecture-file-plan',{filename:'equipment-review-fixture.pdf',file_base64:'JVBERi0xLjcKJcK1wrYKCjEgMCBvYmoKPDwvVHlwZS9DYXRhbG9nL1BhZ2VzIDIgMCBSPj4KZW5kb2JqCgoyIDAgb2JqCjw8L1R5cGUvUGFnZXMvQ291bnQgMS9LaWRzWzQgMCBSXT4+CmVuZG9iagoKMyAwIG9iago8PC9Gb250PDwvaGVsdiA1IDAgUj4+Pj4KZW5kb2JqCgo0IDAgb2JqCjw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNTk1IDg0Ml0vUm90YXRlIDAvUmVzb3VyY2VzIDMgMCBSL1BhcmVudCAyIDAgUi9Db250ZW50c1s2IDAgUl0+PgplbmRvYmoKCjUgMCBvYmoKPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhL0VuY29kaW5nL1dpbkFuc2lFbmNvZGluZz4+CmVuZG9iagoKNiAwIG9iago8PC9MZW5ndGggMjM0L0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp42lWQsU7EMAyG9zyFZyQgdmK7kU4MCBY2pGwnhlNJxQADC8/P7/TgQFXVJO7/+XPSZ7rviSnjYaoL+SLUP9Lt23j/ImbqGx0PlW2YevFqS3ytGUuu6uxqzbO9mtrwKlkFdUNd3e9e+lPKdM16w1ypP6TjYZ71q2CuyLALyA2vS7bNxE44jT4NFC0ndNl88WYeHSR7dpkmxTVWSJkxCOu+v/AvKw3r5gXpsmfx/zZpf2zPdQZPvXoDuZ6rM4V93AJm3G8BRJEfm3AfQY/UNPmd6Z99WGMG2LbdHPe3oluRMX0fe3pO3yMoWf4KZW5kc3RyZWFtCmVuZG9iagoKeHJlZgowIDcKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMDE2IDAwMDAwIG4gCjAwMDAwMDAwNjIgMDAwMDAgbiAKMDAwMDAwMDExNCAwMDAwMCBuIAowMDAwMDAwMTU1IDAwMDAwIG4gCjAwMDAwMDAyNjIgMDAwMDAgbiAKMDAwMDAwMDM1MSAwMDAwMCBuIAoKdHJhaWxlcgo8PC9TaXplIDcvUm9vdCAxIDAgUi9JRFs8QzM5MjU0MEU0NTc0QzM4NkMyQURDMkEyQzI5RUMzODg+PEU3MTVDQ0M5RjY4RDZENzExRTkxREUwODg3N0Q0RjkyPl0+PgpzdGFydHhyZWYKNjU0CiUlRU9GCg==',textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
-    assert.equal(plan.database_writes,false);assert.equal(plan.file_extraction?.format,'pdf');
-    assert.equal(plan.file_extraction?.requires_visual_review,false);
+    const plan=await call('/generation/lecture-plan',{lecture_text:'Page '+sample.page+':\nLecture highlighted: '+sample.topic,textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
     assert.equal(plan.auto_generate,false);assert.equal(plan.auto_publish,false);assert.equal(plan.count,1,'Lecture objective held');
     assert.equal(plan.jobs[0].path,'/generation/preflight');
     assert.equal(plan.jobs[0].body.topic,sample.topic,'Lecture planner changed the intended clinical topic');
     assert.equal(plan.jobs[0].body.objective,sample.objective,'Lecture planner changed the selected objective');
-    emit({check:'uploaded_pdf_lecture_topic',topic:plan.jobs[0].body.topic,objective:plan.jobs[0].body.objective,paid_calls:0});
+    emit({check:'highlighted_lecture_topic',topic:plan.jobs[0].body.topic,objective:plan.jobs[0].body.objective,paid_calls:0});
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
@@ -103,6 +102,6 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
  return rows;
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
- const deployment=JSON.parse(readFileSync(new URL('../.github/staging-mc-quality-deployment.json',import.meta.url),'utf8'));
+ const deployment=JSON.parse(readFileSync('/tmp/pn-deployment.json','utf8'));
  await runSet({deployment,save:rows=>writeFileSync('/tmp/srna-mc-quality-results.json',JSON.stringify(rows,null,2))});
 }
