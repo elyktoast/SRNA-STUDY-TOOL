@@ -1,38 +1,24 @@
-name: Explicit saved MC option-review acceptance
+name: Read saved MC adjudication
 on:
   push:
     branches: [verify/mc-saved-option-review-20261117]
 permissions:
   contents: read
-  checks: read
-concurrency:
-  group: source-reviewer-staging-deployment
-  cancel-in-progress: false
 jobs:
-  verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-compact-pns-option-review]')
+  inspect:
+    if: contains(github.event.head_commit.message, '[inspect-saved-mc-review]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 12
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Verify current staging deployment without rebuilding
+      - name: Read existing judgments without model calls or writes
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          GITHUB_TOKEN: ${{ github.token }}
-        run: node scripts/verify-pns-deployment.mjs
-      - name: Complete only the missing saved MC review
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-          STAGING_DEPLOYMENT_FILE: /tmp/pn-deployment.json
-          CONFIRM_PAID_OPTION_REVIEW: 'true'
-          STAGING_SAVED_DRAFT_ID: 0db56e8d-41ec-4f99-9276-e88c31aaee1c
-          STAGING_TARGET_SHA: b790a5387c699a80cf543be49b5bd27151375fb8
-        run: node scripts/verify-saved-staging-option-review.mjs
+        run: node scripts/inspect-saved-mc-adjudication.mjs
