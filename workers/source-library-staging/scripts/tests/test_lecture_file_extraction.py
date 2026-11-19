@@ -26,6 +26,29 @@ class LectureFileExtractionTests(unittest.TestCase):
         self.assertFalse(result['extraction_complete'])
         self.assertFalse(result['database_writes'])
 
+    def test_pdf_detects_bold_annotation_and_flattened_yellow_highlight(self):
+        try:
+            import fitz
+        except ImportError:
+            self.skipTest("PyMuPDF not installed")
+        from lecture_concept_extraction import extract
+        with fitz.open() as doc:
+            page = doc.new_page()
+            page.insert_text((60, 65), "Ordinary lecture title")
+            page.insert_text((60, 90), "Evoked response", fontname="hebo")
+            page.draw_rect(fitz.Rect(57, 109, 230, 127), color=None, fill=(1, 1, 0))
+            page.insert_text((60, 123), "Response monitoring")
+            page.insert_text((60, 150), "Signal baseline")
+            page.add_highlight_annot(page.search_for("Signal baseline"))
+            marks = extract_lecture(doc.tobytes(), "lecture.pdf")["pages"][0]["emphasis"]
+        self.assertEqual(set(marks["highlighted"]), {"Response monitoring", "Signal baseline"})
+        self.assertEqual(marks["bold"], ["Evoked response"])
+        candidates = extract("Page 1:\nOrdinary lecture title\nLecture bold: Evoked response\n"
+                             "Lecture highlighted: Signal baseline", max_concepts=2)["concepts"]
+        self.assertEqual([(c["title"], c["importance"], c["lecture_locator"]) for c in candidates],
+                         [("Signal baseline", "highlighted", "slide/page 1"),
+                          ("Evoked response", "bold", "slide/page 1")])
+
     def test_pptx_text_table_and_empty_slide(self):
         try:
             from pptx import Presentation

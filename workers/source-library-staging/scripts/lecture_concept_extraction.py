@@ -8,6 +8,8 @@ import re
 HEADING = re.compile(r"^(?:#{1,4}\s+|(?:topic|section|unit|module)\s*\d*\s*[:.-]\s*)", re.I)
 OBJECTIVE = re.compile(r"^(?:learning\s+)?objectives?(?:\s*[:.-]\s*(.*)|\s*)$", re.I)
 BULLET = re.compile(r"^(?:[-*•]\s+|\d+[.)]\s+)")
+EMPHASIS = re.compile(r"^Lecture (highlighted|bold):\s*(.+)$")
+PRIORITY = {"learning_objective": 0, "highlighted": 1, "bold": 2, "standard": 3}
 PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
 
 
@@ -16,8 +18,7 @@ def extract(text, *, max_concepts=60):
         raise ValueError("Lecture text must be 1..1,000,000 characters")
     if type(max_concepts) is not int or not 1 <= max_concepts <= 100:
         raise ValueError("Invalid concept limit")
-    candidates = []
-    seen = set()
+    candidates = {}
     locator = None
     in_objectives = False
     at_page_start = False
@@ -32,11 +33,17 @@ def extract(text, *, max_concepts=60):
             at_page_start = True
             in_objectives = False
             continue
+        emphasized = EMPHASIS.fullmatch(line)
+        if emphasized:
+            importance, title = emphasized.groups()
+            line = BULLET.sub("", title).strip(" *•")
         heading = bool(HEADING.match(line))
         if heading:
             line = HEADING.sub("", line).strip()
         objective = OBJECTIVE.fullmatch(line)
-        if objective:
+        if emphasized:
+            in_objectives = False
+        elif objective:
             in_objectives = True
             line = (objective.group(1) or "").strip()
             if not line:
@@ -55,14 +62,14 @@ def extract(text, *, max_concepts=60):
         if not 5 <= len(line) <= 180 or len(line.split()) > 24:
             continue
         key = re.sub(r"\s+", " ", line.casefold())
-        if key in seen:
-            continue
-        seen.add(key)
-        candidates.append({"title": line, "lecture_locator": locator or ("line " + str(line_no)),
-                           "objective": None,
-                           "importance": "learning_objective" if in_objectives else "standard"})
-        if len(candidates) >= max_concepts:
-            break
-    return {"concepts": candidates, "requires_review": True,
+        importance = importance if emphasized else "learning_objective" if in_objectives else "standard"
+        previous = candidates.get(key)
+        if previous is None or PRIORITY[importance] < PRIORITY[previous["importance"]]:
+            candidates[key] = {"title": line, "lecture_locator": locator or ("line " + str(line_no)),
+                               "objective": None, "importance": importance}
+    ordered = list(candidates.values())
+    if any(c["importance"] in ("highlighted", "bold") for c in ordered):
+        ordered.sort(key=lambda c: PRIORITY[c["importance"]])
+    return {"concepts": ordered[:max_concepts], "requires_review": True,
             "extraction_method": "deterministic_heading_objective",
             "lecture_text_stored": False, "auto_generate": False}

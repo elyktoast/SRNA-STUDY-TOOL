@@ -55,6 +55,18 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         if not value:
             continue
         prefix = "Page " + str(p["page"]) + ":\n"
+        marked = []
+        emphasis = p.get("emphasis", {})
+        for kind in ("highlighted", "bold"):
+            phrases = emphasis.get(kind, [])
+            if kind == "highlighted":
+                phrases = emphasis.get("highlighted_topics", []) + phrases
+            for phrase in phrases:
+                phrase = " ".join(phrase.split())
+                if 5 <= len(phrase) <= 180 and len(phrase.split()) <= 24:
+                    marked.append(f"Lecture {kind}: {phrase}")
+        if marked:
+            value += "\n\n" + "\n".join(marked)
         remaining = value
         while remaining:
             room = 12000 - len(prefix)
@@ -91,8 +103,18 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
     # Honor the requested count even for a lecture that fits one chunk. Spread
     # slots across processed chunks before taking additional jobs from any one.
     groups = [r.get('jobs', []) for r in results]
-    result["jobs"] = [group[index] for index in range(count) for group in groups
-                      if index < len(group)][:count]
+    jobs = [group[index] for index in range(count) for group in groups
+            if index < len(group)]
+    if format == "MC":
+        from lecture_concept_extraction import PRIORITY
+        priorities = {}
+        for chunk in results:
+            for topic in chunk.get("lecture_plan", {}).get("topics", []):
+                title = topic["title"]
+                rank = PRIORITY.get(topic.get("importance"), PRIORITY["standard"])
+                priorities[title] = min(priorities.get(title, rank), rank)
+        jobs.sort(key=lambda job: priorities.get(job.get("body", {}).get("topic"), PRIORITY["standard"]))
+    result["jobs"] = jobs[:count]
     result["count"] = len(result["jobs"])
     result["auto_generate"] = False
     result["auto_publish"] = False

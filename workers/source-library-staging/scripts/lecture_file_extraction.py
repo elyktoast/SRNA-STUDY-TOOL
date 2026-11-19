@@ -9,6 +9,65 @@ from zipfile import ZipFile, BadZipFile
 MAX_LECTURE_BYTES = 25 * 1024 * 1024
 MAX_LECTURE_PAGES = 500
 
+def _pdf_emphasis(page, drawings):
+    """Read text-backed markup, including yellow highlights flattened into PDF drawings."""
+    import fitz
+
+    def overlaid(word, rect):
+        # Word centers tolerate marker shapes smaller than the font box.
+        x0, y0, x1, y1 = word[:4]
+        return rect.contains(fitz.Point((x0 + x1) / 2, (y0 + y1) / 2))
+
+    regions = []
+    for annot in page.annots(types=[fitz.PDF_ANNOT_HIGHLIGHT]):
+        vertices = annot.vertices or []
+        for i in range(0, len(vertices) - 3, 4):
+            quad = fitz.Quad(vertices[i:i + 4])
+            regions.append(quad.rect)
+    for drawing in drawings:
+        fill = drawing.get("fill")
+        rect = drawing["rect"]
+        if (fill and fill[0] >= .9 and fill[1] >= .8 and fill[2] <= .25
+                and 5 <= rect.height <= 36 and rect.width >= 12):
+            regions.append(rect)
+
+    headings = []
+    bold = []
+    # TEXTFLAGS_TEXT avoids decoding embedded images to identify font styling.
+    for block in page.get_text("dict", flags=fitz.TEXTFLAGS_TEXT, sort=True)["blocks"]:
+        for line in block.get("lines", []):
+            spans = []
+            heading = "".join(span["text"] for span in line["spans"]).strip()
+            if (":" in heading and any(span["flags"] & fitz.TEXT_FONT_BOLD and span["size"] >= 15
+                                      for span in line["spans"])):
+                subject = heading.split(":", 1)[1].strip()
+                if 5 <= len(subject) <= 60:
+                    headings.append((line["bbox"][3], line["bbox"][0], subject))
+            for span in line["spans"]:
+                if span["flags"] & fitz.TEXT_FONT_BOLD:
+                    spans.append(span["text"])
+                elif spans:
+                    bold.append(" ".join(spans))
+                    spans = []
+            if spans:
+                bold.append(" ".join(spans))
+    highlighted = []
+    contextual_topics = []
+    if regions:
+        words = page.get_text("words", sort=True)
+        for rect in regions:
+            phrase = " ".join(w[4] for w in words if overlaid(w, rect))
+            if not phrase:
+                continue
+            highlighted.append(phrase)
+            if len(phrase.strip(" •*").split()) <= 3:
+                nearby = [h for h in headings if 0 <= rect.y0 - h[0] <= 180 and abs(rect.x0 - h[1]) <= 100]
+                if nearby:
+                    contextual_topics.append(max(nearby)[2])
+    return {"highlighted": highlighted[:30], "bold": bold[:30],
+            "highlighted_topics": contextual_topics[:30]}
+
+
 def extract_lecture(data, filename, *, enable_ocr=False):
     if not isinstance(data, bytes) or not 0 < len(data) <= MAX_LECTURE_BYTES:
         raise ValueError("Lecture file is empty or exceeds 25 MB")
@@ -32,7 +91,8 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                 value = page.get_text("text", sort=True).strip()
                 images = len(page.get_images(full=True))
                 # PDF charts and diagrams can be vector drawings, not raster images.
-                vectors = len(page.get_drawings())
+                drawings = page.get_drawings()
+                vectors = len(drawings)
                 if enable_ocr and (not value or (images and len(value) < 100)):
                     try:
                         ocr_page = page.get_textpage_ocr(language="eng", dpi=180, full=False)
@@ -43,7 +103,8 @@ def extract_lecture(data, filename, *, enable_ocr=False):
                         pass  # Missing Tesseract or failed OCR remains flagged for review.
                 pages.append({"page": i + 1, "text": value,
                               "needs_visual_review": not bool(value) or images > 0 or vectors > 0,
-                              "image_count": images, "vector_count": vectors})
+                              "image_count": images, "vector_count": vectors,
+                              "emphasis": _pdf_emphasis(page, drawings)})
         finally:
             doc.close()
         kind = "pdf"

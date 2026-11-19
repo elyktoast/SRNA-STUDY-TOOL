@@ -2,7 +2,7 @@
 
 Read-only. Never sends lecture or textbook material to public services.
 """
-from lecture_concept_extraction import extract
+from lecture_concept_extraction import PRIORITY, extract
 from lecture_question_plan import plan
 from build_question_evidence import build_evidence
 
@@ -12,7 +12,7 @@ def prepare(conn, owner_uid, lecture_text, *, textbook_id=None, count=20,
     extracted = extract(lecture_text, max_concepts=max_concepts)
     concepts = extracted["concepts"]
     if prefer_learning_objectives:
-        concepts = sorted(concepts, key=lambda topic: topic.get("importance") != "learning_objective")
+        concepts = sorted(concepts, key=lambda topic: PRIORITY[topic["importance"]])
     evidence = {}
     for topic in concepts:
         result = build_evidence(conn, owner_uid, topic["title"],
@@ -64,6 +64,7 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
         "topics": [
             {"title": topic["title"],
              "question_count": topic["question_count"],
+             "importance": topic.get("importance", "standard"),
              "lecture_locator": topic.get("lecture_locator")}
             for topic in planned["topics"]
         ],
