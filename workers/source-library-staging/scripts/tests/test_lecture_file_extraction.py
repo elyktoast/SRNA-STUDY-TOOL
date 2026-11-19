@@ -43,11 +43,27 @@ class LectureFileExtractionTests(unittest.TestCase):
             marks = extract_lecture(doc.tobytes(), "lecture.pdf")["pages"][0]["emphasis"]
         self.assertEqual(set(marks["highlighted"]), {"Response monitoring", "Signal baseline"})
         self.assertEqual(marks["bold"], ["Evoked response"])
+        self.assertEqual(marks["planning_highlights"], marks["highlighted"])
+
         candidates = extract("Page 1:\nOrdinary lecture title\nLecture bold: Evoked response\n"
                              "Lecture highlighted: Signal baseline", max_concepts=2)["concepts"]
         self.assertEqual([(c["title"], c["importance"], c["lecture_locator"]) for c in candidates],
                          [("Signal baseline", "highlighted", "slide/page 1"),
                           ("Evoked response", "bold", "slide/page 1")])
+
+    def test_short_flattened_highlight_uses_its_section_subject_for_planning(self):
+        try:
+            import fitz
+        except ImportError:
+            self.skipTest("PyMuPDF not installed")
+        with fitz.open() as doc:
+            page = doc.new_page()
+            page.insert_text((60, 65), "Quantitative monitoring: Mechanomyography", fontname="hebo", fontsize=18)
+            page.draw_rect(fitz.Rect(57, 90, 180, 110), color=None, fill=(1, 1, 0))
+            page.insert_text((60, 105), "Gold standard")
+            marks = extract_lecture(doc.tobytes(), "lecture.pdf")["pages"][0]["emphasis"]
+        self.assertEqual(marks["highlighted"], ["Gold standard"])
+        self.assertEqual(marks["planning_highlights"], ["Mechanomyography"])
 
     def test_pptx_text_table_and_empty_slide(self):
         try:

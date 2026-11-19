@@ -60,7 +60,7 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         for kind in ("highlighted", "bold"):
             phrases = emphasis.get(kind, [])
             if kind == "highlighted":
-                phrases = emphasis.get("highlighted_topics", []) + phrases
+                phrases = emphasis.get("planning_highlights", phrases)
             for phrase in phrases:
                 phrase = " ".join(phrase.split())
                 if 5 <= len(phrase) <= 180 and len(phrase.split()) <= 24:

@@ -53,6 +53,7 @@ def _pdf_emphasis(page, drawings):
                 bold.append(" ".join(spans))
     highlighted = []
     contextual_topics = []
+    planning_highlights = []
     if regions:
         words = page.get_text("words", sort=True)
         for rect in regions:
@@ -60,12 +61,16 @@ def _pdf_emphasis(page, drawings):
             if not phrase:
                 continue
             highlighted.append(phrase)
+            topic = phrase
             if len(phrase.strip(" •*").split()) <= 3:
                 nearby = [h for h in headings if 0 <= rect.y0 - h[0] <= 180 and abs(rect.x0 - h[1]) <= 100]
                 if nearby:
-                    contextual_topics.append(max(nearby)[2])
+                    topic = max(nearby)[2]
+                    contextual_topics.append(topic)
+            planning_highlights.append(topic)
     return {"highlighted": highlighted[:30], "bold": bold[:30],
-            "highlighted_topics": contextual_topics[:30]}
+            "highlighted_topics": contextual_topics[:30],
+            "planning_highlights": planning_highlights[:30]}
 
 
 def extract_lecture(data, filename, *, enable_ocr=False):
