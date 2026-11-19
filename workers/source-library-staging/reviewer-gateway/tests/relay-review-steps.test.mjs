@@ -730,9 +730,12 @@ test('MC source-first schema agrees with Python plan fields and locks grounded r
      assert.deepEqual([...schema.properties.choice_plan.required].sort(),fields);
      const grounding=schema.properties.choice_plan.properties.option_grounding;
      assert.deepEqual(grounding.required,['A','B','C','D']);assert.equal(grounding.additionalProperties,false);
-     assert.deepEqual(grounding.properties.A.required,['passage_id','span_ids','explanation']);
-     assert.deepEqual(grounding.properties.A.properties.passage_id.enum,['p1']);
-     assert.deepEqual(grounding.properties.A.properties.span_ids.items.enum,['q0']);
+     assert.deepEqual(grounding.properties.A.required,['source_refs','explanation']);
+     const refs=grounding.properties.A.properties.source_refs;
+     assert.equal(refs.minItems,1);assert.equal(refs.maxItems,3);
+     assert.deepEqual(refs.items.required,['passage_id','span_ids']);
+     assert.deepEqual(refs.items.properties.passage_id.enum,['p1']);
+     assert.deepEqual(refs.items.properties.span_ids.items.enum,['q0']);
     }else{
      assert.deepEqual(schema.required,['core_concept','why_key_wins','trap']);
      assert.equal(schema.properties.distractor_breakdown,undefined);

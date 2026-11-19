@@ -197,3 +197,21 @@ Requested sizes of 25, 50 and 100 follow the lecture-to-question quality milesto
 The live service extracted the sample PDF, selected its oxygen pressure failure objective (II.A.6), and generated one unpublished draft, `72bc2fa2-8b69-4ccd-8a01-984629599bfe`. The draft scored **8/10** after one rewrite. It passed the options-only cue check, the blind answer check and the editorial check. R-2.4 held the option C explanation in both fields because the citation established the alarm trigger but did not establish the broader claim about what the device does not measure. Independent option review remained pending. The uploaded bytes went through the same file endpoint used by Studio. This was an authenticated service verification with a sample PDF; browser interaction with a personal lecture file remains unverified.
 
 The saved stem also ended its case mid-phrase before the standalone question. A deterministic regression check now holds that construction using the existing authored counterfactual boundary, even when the editorial model misses it. The one-rewrite guidance calls for a shorter, complete condition and an explanation grounded in the explicit trigger described by the citation. The failed draft remains held with its original result and one rewrite.
+
+
+### November 19 highlighted personal lecture controls
+
+The attached Peripheral Nerve Stimulation PDF was inspected locally. Its four yellow highlights are flattened drawings, with bold text on all 19 pages. PDF extraction now carries both forms of emphasis into MC topic priority. Short marks such as "Gold standard" use a nearby bold section subject when available. The correction avoids allocating a separate question to that generic phrase. The lecture regression suite passed 53 tests before this correction was committed.
+
+The browser reached the authenticated staging AI workspace. A read-only plan from the extracted page 13-14 text initially allocated Mechanomyography and Gold standard. The file chooser then failed and the workspace connection was lost. Actual upload of this personal file through the browser remains unverified. The next service verification used the two extracted emphasized subject names and an explicitly selected II.C.4 objective. It did not upload the PDF or establish full-lecture coverage.
+
+[Run 44534610580](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44534610580) verified application 24959edc87f2e02c0465d70f788e31b65e0d0844, staging build ed8c42ea-0e05-4255-9e2c-9af93a928f8f, and settled image b85c2c467d22c66bb1520e5d88e9902173bc48848156e3b54362b5a0f4b2f02f before the two requests. Each used one rewrite.
+
+| Highlighted subject | Saved draft | Automated checks | Exact blocker |
+|---|---|---:|---|
+| Mechanomyography | 983b392e-1348-4e53-83a3-501ab348a1f1 | 8/10 | R-2.4 on B, C and D rationale/evidence explanations. Their cited passages did not establish the complete comparison with the case. Independent option review remained pending. |
+| Acceleromyography | bc29d368-58c1-40a6-a72c-5e48804a6def | 8/10 | R-2.4 on D rationale/evidence explanation. Its passage did not define kinemyography as distinct from the acceleration technique. Independent option review remained pending. |
+
+Both passed schema, math, evidence traceability, duplicate, blind-answer, cue, deterministic writing and editorial checks. Neither passed acceptance. Neither received a second rewrite or repeated grading.
+
+The private MC plan previously allowed exactly one passage per option explanation. The next correction allows one to three source references per option, each with validated passage and span IDs, so a comparison can cite both the case-defining criterion and the alternative's definition. Existing single-passage plans remain readable. Independent explanation and option review still adjudicate the claims. The author must replace a distractor when no retrieved source establishes the necessary distinction. The new schema uses authoring contract 2026-11-19-v25. Regression and live verification of this change are pending below.

@@ -6,6 +6,13 @@ CONDITION_SLOT = "{{STEM_CONDITION}}"
 LEAD_IN_SLOT = "{{LEAD_IN}}"
 
 
+def source_refs(entry):
+    """Read bounded multi-passage grounding or a saved single-passage plan."""
+    if "source_refs" in entry:
+        return entry["source_refs"]
+    return [{"passage_id": entry["passage_id"], "span_ids": entry["span_ids"]}]
+
+
 def render_condition(plan, draft):
     """Insert the authored case literally; never infer or repair clinical prose."""
     stem = draft.get("stem")
@@ -70,17 +77,28 @@ def validate(plan, evidence=None):
         from item_source_quote_spans_v2 import prepare
         _, sources = prepare({"source_passages": evidence})
     for entry in grounding.values():
-        if (not isinstance(entry, dict) or set(entry) != {"passage_id", "span_ids", "explanation"}
-                or not strings([entry["passage_id"]], 1, 200)
-                or not isinstance(entry["span_ids"], list) or not 1 <= len(entry["span_ids"]) <= 3
-                or not strings(entry["span_ids"], len(entry["span_ids"]), 20)
-                or len(set(entry["span_ids"])) != len(entry["span_ids"])
+        if (not isinstance(entry, dict)
+                or set(entry) not in ({"passage_id", "span_ids", "explanation"},
+                                      {"source_refs", "explanation"})
                 or not strings([entry["explanation"]], 1, 700)):
             raise ValueError("Concept card option grounding invalid")
-        # A real quote is a transport invariant, never a clinical judgment.
-        if sources is not None and (entry["passage_id"] not in sources or
-                any(sid not in sources[entry["passage_id"]] for sid in entry["span_ids"])):
-            raise ValueError("Concept card option grounding span not in source")
+        refs = source_refs(entry)
+        if not isinstance(refs, list) or not 1 <= len(refs) <= 3:
+            raise ValueError("Concept card option grounding invalid")
+        seen_passages = set()
+        for ref in refs:
+            if (not isinstance(ref, dict) or set(ref) != {"passage_id", "span_ids"}
+                    or not strings([ref["passage_id"]], 1, 200)
+                    or not isinstance(ref["span_ids"], list) or not 1 <= len(ref["span_ids"]) <= 3
+                    or not strings(ref["span_ids"], len(ref["span_ids"]), 20)
+                    or len(set(ref["span_ids"])) != len(ref["span_ids"])
+                    or ref["passage_id"] in seen_passages):
+                raise ValueError("Concept card option grounding invalid")
+            seen_passages.add(ref["passage_id"])
+            # Referencing a real span is a transport check, never a clinical verdict.
+            if sources is not None and (ref["passage_id"] not in sources or
+                    any(sid not in sources[ref["passage_id"]] for sid in ref["span_ids"])):
+                raise ValueError("Concept card option grounding span not in source")
     result = deepcopy(plan)
     result["response_variables"] = [normalize(v) for v in plan["response_variables"]]
     for option in result["options"]:
@@ -133,7 +151,8 @@ def option_explanations(plan):
 def ground_draft(plan, draft):
     """Carry the author's locked explanations forward; do not adjudicate them."""
     mapping = {oid: {"verdict": "supports_key" if oid in plan["key"] else "refutes_distractor",
-                     "passage_ids": [entry["passage_id"]], "explanation": entry["explanation"]}
+                     "passage_ids": [ref["passage_id"] for ref in source_refs(entry)],
+                     "explanation": entry["explanation"]}
                for oid, entry in plan["option_grounding"].items()}
     if "distractor_evidence" in draft and draft["distractor_evidence"] != mapping:
         raise ValueError("Generated draft differs from its choice plan: grounding")

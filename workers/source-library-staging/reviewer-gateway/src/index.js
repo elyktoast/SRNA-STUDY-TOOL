@@ -154,10 +154,12 @@ async function relayGroq(request,env){
    const passageIds=(step.evidence||[]).map(p=>p.passage_id);
    const spanIds=[...new Set((step.evidence||[]).flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
    const grounding={type:'object',properties:{
-    passage_id:{type:'string',...(passageIds.length?{enum:passageIds}:{})},
-    span_ids:{type:'array',minItems:1,maxItems:3,items:{type:'string',...(spanIds.length?{enum:spanIds}:{})}},
+    source_refs:{type:'array',minItems:1,maxItems:3,items:{type:'object',properties:{
+     passage_id:{type:'string',...(passageIds.length?{enum:passageIds}:{})},
+     span_ids:{type:'array',minItems:1,maxItems:3,items:{type:'string',...(spanIds.length?{enum:spanIds}:{})}}
+    },required:['passage_id','span_ids'],additionalProperties:false}},
     explanation:{type:'string',minLength:1,maxLength:700}},
-    required:['passage_id','span_ids','explanation'],additionalProperties:false};
+    required:['source_refs','explanation'],additionalProperties:false};
    properties.choice_plan.properties.option_grounding={type:'object',properties:Object.fromEntries(['A','B','C','D'].map(id=>[id,grounding])),required:['A','B','C','D'],additionalProperties:false};
    conceptFormat.json_schema.schema.required.push('choice_plan');
   }

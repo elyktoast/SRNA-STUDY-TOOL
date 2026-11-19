@@ -18,6 +18,29 @@ def plan():
 
 
 class ChoicePlanTests(unittest.TestCase):
+    def test_option_comparison_can_cite_case_criterion_and_alternative_definition(self):
+        from item_mc_choice_plan_v2 import ground_draft
+        raw = plan()
+        raw["option_grounding"]["A"] = {
+            "source_refs": [{"passage_id": "p1", "span_ids": ["q0"]},
+                            {"passage_id": "p2", "span_ids": ["q0"]}],
+            "explanation": "The case measures force; the competing modality measures acceleration."}
+        evidence = [{"passage_id": "p1", "excerpt": "Modality X measures contraction force."},
+                    {"passage_id": "p2", "excerpt": "Modality Y measures acceleration."}]
+        checked = validate(raw, evidence)
+        grounded = ground_draft(checked, {})
+        self.assertEqual(grounded["distractor_evidence"]["A"]["passage_ids"], ["p1", "p2"])
+        self.assertEqual(grounded["distractor_evidence"]["B"]["passage_ids"], ["p1"])
+        self.assertEqual(validate(checked, evidence), checked)
+        for refs in ([], raw["option_grounding"]["A"]["source_refs"] * 2,
+                     [{"passage_id": "p1", "span_ids": ["q0"]}] * 2,
+                     [{"passage_id": "missing", "span_ids": ["q0"]}],
+                     [{"passage_id": "p2", "span_ids": ["invented"]}]):
+            bad = copy.deepcopy(raw)
+            bad["option_grounding"]["A"]["source_refs"] = refs
+            with self.assertRaises(ValueError):
+                validate(bad, evidence)
+
     def test_ordinary_single_component_choices_remain_natural_and_bound_to_both_cases(self):
         raw=plan()
         raw['response_variables']=['Clinical response']
