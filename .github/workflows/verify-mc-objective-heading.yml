@@ -9,10 +9,10 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-highlights]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-multisource]')
     runs-on: ubuntu-latest
     environment: source-library-staging
-    timeout-minutes: 40
+    timeout-minutes: 23
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -27,7 +27,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-pns-deployment.mjs
-      - name: Generate two highlighted lecture topic controls
+      - name: Generate one highlighted lecture control
         env:
           CONFIRM_PAID_MC_SET: 'true'
           GITHUB_TOKEN: ${{ github.token }}

@@ -7,12 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture highlight: mechanomyography',page:13,objective:'II.C.4',workflow:'lecture',item_id:'b72db76d-11e8-4d50-bfa3-f7c32ed95635',topic:'Mechanomyography'},
- {name:'Lecture highlight: acceleromyography',page:14,objective:'II.C.4',workflow:'lecture',item_id:'14f25e0a-9868-4954-a4ca-4290dc99ce89',topic:'Acceleromyography'}
+ {name:'Lecture highlight: mechanomyography, multi-passage grounding',page:13,objective:'II.C.4',workflow:'lecture',item_id:'296bd545-0f21-43b8-9672-f087c3e98346',topic:'Mechanomyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='24959edc87f2e02c0465d70f788e31b65e0d0844';
+const sha='3f6d0ca1f39d4db1df7da6470c01db6bbc622d24';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -67,7 +66,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-18-v24');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-19-v25');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
@@ -86,6 +85,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    // Preserve exact reviewer blockers privately, excluding full textbook excerpts.
    const question=saved.question||generated.item;
    row.question={stem:question.stem,options:question.options,key:question.key,rationale:question.rationale};
+   row.option_citation_counts=Object.fromEntries(Object.entries(question.distractor_evidence||{}).map(([id,value])=>[id,value.passage_ids?.length]));
    const current=await call('/generation/drafts/'+row.draft_id+'/revalidate');
    assert.equal(current.database_writes,false);assert.equal(current.generation_performed,false);assert.equal(current.published,false);
    row.current_source_issues=current.issues;
@@ -93,7 +93,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    row.passing_checks=automated.filter(([,v])=>v==='pass').length;
    row.accepted=automated.length===10&&row.passing_checks===10&&current.issues.length===0;
   }catch(error){row.failure=error.details||{reason:error.message,cause_code:safe(error.cause?.code)};stopAfterFailure=!error.details?.http_status||error.details.http_status>=500||error.details.rule==='GENERATION_BUSY';}
-  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,rewrite_attempts:row.rewrite_attempts,source_issue_count:row.current_source_issues?.length,blocker_rules:Object.fromEntries(Object.entries(row.blockers||{}).map(([stage,value])=>[stage,(value.issues||[]).map(issue=>({rule_id:issue.rule_id,field:issue.field}))])),failure:row.failure,published:false});
+  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,rewrite_attempts:row.rewrite_attempts,source_issue_count:row.current_source_issues?.length,option_citation_counts:row.option_citation_counts,blocker_rules:Object.fromEntries(Object.entries(row.blockers||{}).map(([stage,value])=>[stage,(value.issues||[]).map(issue=>({rule_id:issue.rule_id,field:issue.field}))])),failure:row.failure,published:false});
   if(stopAfterFailure){
    for(const pending of samples.slice(rows.length))rows.push({...pending,accepted:false,draft_id:null,published:false,not_run:'Prior ambiguous runtime failure; do not overlap backend work'});
    save(rows);break;

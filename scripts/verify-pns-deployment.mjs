@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
-const target='24959edc87f2e02c0465d70f788e31b65e0d0844';
+const target='3f6d0ca1f39d4db1df7da6470c01db6bbc622d24';
 const token=process.env.CLOUDFLARE_API_TOKEN;
 assert.ok(token,'Staging deployment credential unavailable');
 const base='https://api.cloudflare.com/client/v4/accounts/5a84e0fe00e430d25e901b260861381e';
@@ -17,7 +17,10 @@ for(let i=0;i<6;i++){
  assert.ok(checksResponse.ok,'Staging build check unavailable');
  const checks=(await checksResponse.json()).check_runs;
  const check=checks.filter(c=>c.head_sha===target&&c.app?.slug==='cloudflare-workers-and-pages'&&c.name==='Workers Builds: srna-source-reviewer-gateway-staging').sort((a,b)=>b.id-a.id)[0];
- assert.equal(check?.status,'completed');assert.equal(check?.conclusion,'success');
+ if(check?.status!=='completed'||check?.conclusion!=='success'){
+  if(i<5){await new Promise(resolve=>setTimeout(resolve,20000));continue;}
+  throw Error('Staging build not successful');
+ }
  const build={build_uuid:check.details_url.split('/').pop(),status:'stopped',build_outcome:'success',stopped_on:check.completed_at};
  const [app,instances]=await Promise.all([read(application),read(application+'/instances-v2')]);
  const now=Date.now();
