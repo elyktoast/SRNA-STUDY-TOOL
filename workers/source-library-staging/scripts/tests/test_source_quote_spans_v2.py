@@ -63,6 +63,58 @@ class SourceQuoteSpanTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             hydrate(response, self.request, lookup)
 
+    def test_uncertain_without_quotes_is_retained_as_a_blocking_judgment(self):
+        from item_option_adjudication_handoff_v2 import run
+        from item_option_audit_screening_v2 import attach
+        from item_saved_option_review_v2 import eligible
+        from test_item_draft_review_contract_v2 import passed_screening
+        request = copy.deepcopy(self.request)
+        response = copy.deepcopy(self.response)
+        response['judgments'] = [
+            {'option_id':'A','verdict':'supports_key','passage_ids':['s0'],
+             'quote_refs':[{'passage_id':'s0','span_id':'q1'}],
+             'explanation':'The supplied passage lists this agent.', 'source_conflict_found':False},
+            {'option_id':'B','verdict':'uncertain','passage_ids':[], 'quote_refs':[],
+             'explanation':'The supplied evidence does not establish this option.', 'source_conflict_found':False}]
+        adapter = make_adapter(endpoint='https://provider.example/v1',api_key='test',model='reviewer',
+            transport=lambda **kwargs: {'choices':[{'message':{'content':json.dumps(response)}}]},owner_opt_in=True)
+        def reviewer(payload):
+            result = adapter({**payload,'step':'option_review','rules_version':'2.0','auto_publish':False,'blind':True})
+            return [{**j,'contradiction_found':j['source_conflict_found']} for j in result['judgments']]
+        retrieval = {**request['retrieval'], 'all_options_searched':True,'all_options_have_matches':True}
+        report = run({**request,'key':['A']},retrieval,reviewer,source_passages=request['source_passages'],
+            generator_model_id='author',reviewer_model_id='reviewer',require_quotes=True)
+        self.assertEqual(report['status'],'pending')
+        self.assertNotIn('provider_rule',report)
+        self.assertEqual(report['judgments'][1]['verdict'],'uncertain')
+        self.assertEqual(report['judgments'][1]['quotes'],[])
+        self.assertTrue(any(i.get('option_id')=='B' for i in report['issues']))
+        screening = passed_screening()
+        result = attach({'screening':screening},retrieval,report)
+        self.assertEqual(result['screening']['stages']['independent_option_evidence']['status'],'pending')
+        self.assertFalse(eligible({'format':'MC','status':'pending_review','published':False,'screening':result['screening']}))
+        # Empty references never pass as source support or refutation.
+        _, lookup = prepare(request)
+        for verdict in ('supports_key','refutes_distractor'):
+            invalid = {'judgments':[{**response['judgments'][1], 'verdict':verdict}]}
+            with self.subTest(verdict=verdict), self.assertRaises(ValueError):
+                hydrate(invalid,request,lookup)
+
+    def test_failure_diagnostics_use_only_fixed_codes(self):
+        from item_option_adjudication_handoff_v2 import run
+        retrieval = {**self.request['retrieval'],'all_options_searched':True}
+        for message, detail in [
+                ('Unknown or unauthorized source quote reference','option_quote_ref_scope_invalid'),
+                ('private model text and credentials','option_response_unavailable')]:
+            def broken(payload):
+                raise ValueError(message)
+            report = run({**self.request,'key':['A']},retrieval,broken,
+                source_passages=self.request['source_passages'],generator_model_id='author',reviewer_model_id='reviewer')
+            self.assertEqual(report['validation_detail'],detail)
+            self.assertNotIn(message,json.dumps(report))
+            self.assertEqual(report['status'],'pending')
+            self.assertFalse(report['can_publish'])
+
     def test_every_bounded_span_is_an_actual_contiguous_source_substring(self):
         self.request["source_passages"][0]["excerpt"] = "word " * 500
         packet, _ = prepare(self.request)

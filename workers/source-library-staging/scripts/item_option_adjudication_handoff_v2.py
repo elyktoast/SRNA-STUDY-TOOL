@@ -95,7 +95,22 @@ def run(item, retrieval, reviewer, *, source_passages, generator_model_id, revie
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_RESPONSE", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN", "PROVIDER_NETWORK", "REVIEW_RESPONSE_INVALID"}
         rule = rule if rule in allowed else "REVIEW_RESPONSE_INVALID"
-        return {"status": "pending", "provider_rule": rule, "issues": [{"rule_id": "R-12.4",
+        # Only fixed local validation categories are retained. Never expose model
+        # content, credentials, excerpts, or arbitrary exception messages.
+        details = {
+            "Provider did not return a valid JSON object": "option_response_json_invalid",
+            "Provider output must be a JSON object": "option_response_shape_invalid",
+            "Independent judgments required": "option_judgments_missing",
+            "Invalid independent judgments": "option_judgments_invalid",
+            "One independent judgment per option required": "option_judgment_coverage_invalid",
+            "Invalid independent judgment": "option_judgment_shape_invalid",
+            "Unknown option source alias": "option_source_alias_invalid",
+            "Invalid source quote references": "option_quote_refs_invalid",
+            "Invalid source quote reference": "option_quote_ref_shape_invalid",
+            "Unknown or unauthorized source quote reference": "option_quote_ref_scope_invalid",
+        }
+        detail = details.get(str(exc), "option_response_unavailable")
+        return {"status": "pending", "provider_rule": rule, "validation_detail": detail, "issues": [{"rule_id": "R-12.4",
                 "message": "Independent option adjudication unavailable or invalid"}],
                 "clinical_truth_verified": False, "can_publish": False}
     return {**report, "generator_model_id": generator_model_id,
