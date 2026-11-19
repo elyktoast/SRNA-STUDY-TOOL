@@ -14,7 +14,8 @@ const digest=value=>createHash('sha256').update(JSON.stringify(canonical(value))
 
 export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=value=>console.log(JSON.stringify(value)),now=Date.now,deployment}={}){
  assert.equal(env.CONFIRM_PAID_OPTION_REVIEW,'true','Explicit paid option-review confirmation required');
- const id=env.STAGING_SAVED_DRAFT_ID,sha=env.STAGING_TARGET_SHA,image=env.STAGING_TARGET_IMAGE_SHA256;
+ deployment??=JSON.parse(readFileSync(env.STAGING_DEPLOYMENT_FILE || new URL('../.github/staging-saved-option-review-deployment.json',import.meta.url),'utf8'));
+ const id=env.STAGING_SAVED_DRAFT_ID,sha=env.STAGING_TARGET_SHA,image=env.STAGING_TARGET_IMAGE_SHA256 || deployment.app.configuration.image.split('@sha256:')[1];
  assert.match(id||'',/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/);
  assert.match(sha||'',/^[a-f0-9]{40}$/);assert.match(image||'',/^[a-f0-9]{64}$/);
  const json=async(url,options={})=>{
@@ -26,7 +27,7 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  const gh={Authorization:'Bearer '+env.GITHUB_TOKEN,Accept:'application/vnd.github+json'};
  const head=await json(repo+'/git/ref/heads/fix/board-question-quality',{headers:gh});
  assert.equal(head.object?.sha,sha,'Staging code changed; do not perform a paid review');
- const buildId=env.STAGING_TARGET_BUILD_UUID;assert.match(buildId||'',/^[a-f0-9-]{36}$/);
+ const buildId=env.STAGING_TARGET_BUILD_UUID || deployment.build.build_uuid;assert.match(buildId||'',/^[a-f0-9-]{36}$/);
  // The operator verifies this short-lived snapshot through the connected deployment service.
  // CI needs no broader deployment-read credential. Preview checks on the same SHA are not deployment evidence.
  deployment??=JSON.parse(readFileSync(env.STAGING_DEPLOYMENT_FILE || new URL('../.github/staging-saved-option-review-deployment.json',import.meta.url),'utf8'));
@@ -70,6 +71,7 @@ export async function verifySavedReview({env=process.env,fetchImpl=fetch,emit=va
  emit({draft_id:id,deployment_verification_sha256:digest(deployment),question_sha256:questionHash,question_unchanged:true,rewrite_attempts:rewrites,
   review_status:result.option_review_status,automated_checks_passed:result.automated_checks_passed,
   option_provider_rule:after.screening.independent_option_adjudication?.provider_rule||null,
+  option_validation_detail:after.screening.independent_option_adjudication?.validation_detail||null,
   option_issues:after.screening.independent_option_adjudication?.issues,
   stages,current_index_issue_rules:current.issues.map(i=>i.rule_id),generation_performed:false,rewrite_performed:false,published:false});
  assert.equal(result.automated_checks_passed,true,'Missing review completed but question remains blocked');

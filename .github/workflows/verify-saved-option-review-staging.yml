@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[complete-pns-option-review]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[diagnose-pns-option-review]')
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 9
@@ -34,7 +34,5 @@ jobs:
           STAGING_DEPLOYMENT_FILE: /tmp/pn-deployment.json
           CONFIRM_PAID_OPTION_REVIEW: 'true'
           STAGING_SAVED_DRAFT_ID: 0db56e8d-41ec-4f99-9276-e88c31aaee1c
-          STAGING_TARGET_BUILD_UUID: 0a99007a-9e60-4d7a-afd5-eef39e715470
-          STAGING_TARGET_SHA: 54d8d69bb00fa1f515fa42dac6340a99c86dac2d
-          STAGING_TARGET_IMAGE_SHA256: acea403bd3ccf9dcdd301eb764d131088cf3b38bc6d3fa7c014c40a18a1da1b0
+          STAGING_TARGET_SHA: 7d28177a3326815a127014a1aa8c3512d134c21f
         run: node scripts/verify-saved-staging-option-review.mjs
