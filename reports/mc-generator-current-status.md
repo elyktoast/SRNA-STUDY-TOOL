@@ -5,7 +5,7 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current version
 
 - Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
-- Current source `49af49128db56d218939b27262787677f0cef877`, contract `2026-11-20-v38`. CI and connected Worker/container rollout are pending. v37 had passed CI/deployment and its restored upload controls were verified in the live browser.
+- Current source `d285b1da4a83a74472c9e9db9824d10f0b46bc64`, contract `2026-11-20-v39`. CI and connected Worker/container rollout are pending. v37 had passed CI/deployment and its restored upload controls were verified in the live browser.
 - Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
 - Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
 
@@ -20,6 +20,8 @@ The provider schema permitted definite true/false judgments without quote refere
 ## Provider schema correction
 
 The first option protocol run [44837125871](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44837125871) returned `PROVIDER_REQUEST_REJECTED`, parameter `response_format`, before any judgments. No question was authored. v38 removes the zero-length-array schema branch: explicit uncertain judgments use `answers_stem:null, quote_refs:null` on the wire, normalized only for that uncertain case to an empty internal list. Definite judgments still require source citations. Fixed schema-keyword diagnostics never expose raw provider messages. Local Python and gateway/relay suites pass again. The changed schema must pass the fixed option controls before generation.
+
+The changed v38 nested schema was rejected again in [44838045602](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44838045602), before any judgments. Safe diagnostics named anyOf and required. v39 therefore removes nested anyOf and uses flat nullable fields: non-null reference arrays require 1–8 scoped references. The trusted backend still enforces the cross-field rule and rejects definite true/false answers with null, absent or empty citations. Only explicit null uncertainty normalizes to no citations and remains held. Local 1,107 Python and 109 gateway/relay checks pass.
 
 ## Next bounded check
 
