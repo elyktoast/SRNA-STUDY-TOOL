@@ -5,7 +5,7 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current version
 
 - Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
-- Current source `5c14476e9c13c2a540ee50de6e5390607dbba918`, contract `2026-11-20-v37`. CI, Pages and connected Worker build `8c19b272-9873-4d68-a7e6-d2434f99e037` passed. Settled image: `3cced8234b1a3c86518b90c24879424c65560db0535d466b5558e00b730430a8`.
+- Current source `49af49128db56d218939b27262787677f0cef877`, contract `2026-11-20-v38`. CI and connected Worker/container rollout are pending. v37 had passed CI/deployment and its restored upload controls were verified in the live browser.
 - Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
 - Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
 
@@ -16,6 +16,10 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 Fresh KMG request `8de61099-af11-418d-9119-b6f7ee5d0b2c` saved draft `1e621288-c8e9-4ca9-8961-ee38c906e028` at **9/10 automated checks**, zero rewrites, one current-source issue, unpublished. Blind answers, editorial, schema, evidence, duplicates, deterministic text, options-only and explanation support passed. Independent option review was pending with `REVIEW_RESPONSE_INVALID / option_quote_refs_invalid`. The workflow correctly failed after retaining artifact `14679045857`. No new passing draft is claimed. Do not regrade this completed held draft to chase a pass.
 
 The provider schema permitted definite true/false judgments without quote references, which downstream validation correctly rejected. v37 now expresses the actual contract: a definite answer requires 1–8 option-scoped source references; null uncertainty requires none and stays blocked. The prompt makes the requirement explicit for both correct and incorrect options. The backend still refuses uncited definite responses and does not fill or correct clinical verdicts.
+
+## Provider schema correction
+
+The first option protocol run [44837125871](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44837125871) returned `PROVIDER_REQUEST_REJECTED`, parameter `response_format`, before any judgments. No question was authored. v38 removes the zero-length-array schema branch: explicit uncertain judgments use `answers_stem:null, quote_refs:null` on the wire, normalized only for that uncertain case to an empty internal list. Definite judgments still require source citations. Fixed schema-keyword diagnostics never expose raw provider messages. Local Python and gateway/relay suites pass again. The changed schema must pass the fixed option controls before generation.
 
 ## Next bounded check
 

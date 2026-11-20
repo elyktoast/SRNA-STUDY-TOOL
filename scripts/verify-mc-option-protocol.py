@@ -9,10 +9,10 @@ from run_grounded_generation_v2 import _call_with_bounded_rate_wait
 
 
 DEFINITIONS = {
-    "A": "The fictional Aster sensor measures contraction force against a load cell.",
-    "B": "The fictional Birch sensor measures acceleration of a moving mass.",
-    "C": "The fictional Cedar sensor measures bending of a flexible film.",
-    "D": "The fictional Dove sensor records the electrical action potential of muscle.",
+    "A": "The fictional Aster sensor measures contraction force against a load cell; it does not record film bending or muscle electrical action potentials.",
+    "B": "The fictional Birch sensor measures acceleration of a moving mass; it does not record film bending or muscle electrical action potentials.",
+    "C": "The fictional Cedar sensor measures bending of a flexible film; it does not record muscle electrical action potentials.",
+    "D": "The fictional Dove sensor records the electrical action potential of muscle; it does not record film bending.",
 }
 
 
