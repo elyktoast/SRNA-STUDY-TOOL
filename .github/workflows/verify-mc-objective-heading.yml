@@ -59,3 +59,32 @@ jobs:
           }
           console.log('All ten automated checks passed; human clinical review is still required.');
           JS
+  reviewer-controls:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-reviewer-controls]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 605b3f4dd16f42524ec68fb89c773453169f52b0
+          path: reviewer-source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run fixed positive and negative reviewer controls without drafts
+        env:
+          CONFIRM_PAID_REVIEWER_CONTROLS: 'true'
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+          REVIEWER_SOURCE_ROOT: ${{ github.workspace }}/reviewer-source
+          PYTHONPATH: ${{ github.workspace }}/reviewer-source/workers/source-library-staging/scripts
+        run: python scripts/verify-mc-reviewer-controls.py
+      - name: Retain reviewer calibration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-reviewer-controls
+          path: /tmp/mc-reviewer-controls.json
+          if-no-files-found: ignore
+          retention-days: 14

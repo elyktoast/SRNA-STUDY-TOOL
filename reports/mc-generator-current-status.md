@@ -6,7 +6,7 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 
 - Branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189); main and production are unchanged.
 - Application `605b3f4dd16f42524ec68fb89c773453169f52b0`; authoring contract `2026-11-20-v35`.
-- v35 deployment pending. Previous build `ae9c84fa-800c-4185-bbab-405ca6582eaa` / image `0265ca4dcf97e6ce9b4f470d3ad46c8b2fd8f1711bd2d1bb23ac3ba7ba8ee89e` succeeded for the preceding source.
+- v35 build `f89c91ba-eb11-4d85-87a2-b34ed3a99d7c` and settled image `f6bc32d571b62c1187c651c2aa665da3db7289962341bb3d9bb5ea906ecd93ef` succeeded. CI and Pages also passed.
 - Local validation: 1,107 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
 - Gemini disabled. Cloudflare GLM authors; distinct Groq Qwen reviews. Human clinical review is mandatory before bank approval.
 
@@ -34,7 +34,9 @@ A signed-in Chrome staging session reached Study Studio and the Source Library b
 
 The next preselected distinct concept is **Kinemyography**, bolded on lecture page 15, objective II.C.4. Its verification source is pinned to the current deployed application above. Run [44724391907](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44724391907) correctly failed at **7/10**, draft `367b1b3a-2ca2-4b41-8f21-0de793cbea13`, unpublished. The original cases were truncated mid-clause and the alternate-case lock then blocked their grammar repair. A keyed mechanism explanation was also flagged because it omitted a separate correlation caveat. Do not regrade this completed held draft.
 
-v35 exempts reported R-4.2 grammar and R-12.1 ambiguity from the alternate lock, requests short complete case sentences, and tells explanatory review to distinguish an actually false claim from an omitted unclaimed caveat. It preserves every source check and recorded verdict. A regression reproduces the overbroad lock and verifies the legitimate complete-case repair remains unpublished. A fresh v35 control is pending deployment; its run ID will be recorded below.
+v35 exempts reported R-4.2 grammar and R-12.1 ambiguity from the alternate lock, requests short complete case sentences, and tells explanatory review to distinguish an actually false claim from an omitted unclaimed caveat. It preserves every source check and recorded verdict. A regression reproduces the overbroad lock and verifies the legitimate complete-case repair remains unpublished. The v35 control [44726466131](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44726466131) saved draft `b15983b0-90b5-46c6-9d77-fb5a64e90d46` at **7/10**, unpublished. Grammar and the counterfactual passed. The blind reviewer selected MMG for the KMG sensor description, and explanatory review alleged a does-not-correlate claim absent from the submitted explanation. The one rewrite left the blind question unchanged; the anti-resampling guard correctly held it before another clinical review. No new accepted question is claimed. Do not reroll this draft.
+
+**Next action has changed: reviewer calibration before more generation.** A fixed eight-control harness tests four counterbalanced monitor definitions plus two supported and two explicitly false synthetic source claims. It reads no drafts, writes no database data, hides expected results from the model, and cannot approve anything. It uses the existing signed staging relay and current reviewer only. A failed control run records all completed cases; do not interpret passing controls as full MC generator acceptance. The fixed harness is not an acceptance regrade of any held draft.
 
 Remaining goal: demonstrate consistency across representative concepts, verify actual lecture upload, and implement dependable bounded resumable throughput before enabling 25/50/100. Multiple response, short answer, drag and drop and hotspot remain paused. No question has been approved or published.
 
