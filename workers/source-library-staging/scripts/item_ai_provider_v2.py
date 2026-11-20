@@ -220,6 +220,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Each value contains exactly answers_stem, quote_refs, explanation, source_conflict_found. answers_stem is true if this option correctly answers the literal stem, false if it does not, or null when the evidence cannot decide. Evaluate the exact measured quantity and distinction asked in the stem; source examples must not replace that task. More than one true answer is permitted when the question is ambiguous. Do not force one answer. For MC quote_refs is an array of strings combining the supplied short passage ID and span ID with a colon, such as s0:q1. "
                 "Omit option_id and passage_ids: the server restores those identities only from the map key and selected quote references. "
                 "Each option may select only its own retrieved passage IDs and quote spans belonging to that passage. "
+                "A true OR false answer requires 1-8 quote_refs that establish that judgment. A false answer still needs affirmative evidence of a different measurement or mechanism; an empty citation list cannot establish refutation. "
                 "If its evidence is insufficient, return answers_stem null and empty quote_refs; never borrow another option's evidence.")
         if request["step"] == "option_review":
             from item_source_quote_spans_v2 import prepare

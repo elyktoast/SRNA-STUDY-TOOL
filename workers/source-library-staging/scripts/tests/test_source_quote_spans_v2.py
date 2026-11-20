@@ -201,6 +201,11 @@ class SourceQuoteSpanTests(unittest.TestCase):
         self.assertEqual([j['verdict'] for j in adapter(self.request)['judgments']],['supports_key','uncertain'])
         response['judgments']['A']['answers_stem']=False
         self.assertEqual(adapter(self.request)['judgments'][0]['verdict'],'refutes_distractor')
+        response['judgments']['A']['quote_refs']=[]
+        for definite in (True,False):
+            response['judgments']['A']['answers_stem']=definite
+            with self.subTest(uncited_answer=definite),self.assertRaises(ValueError):adapter(self.request)
+        response['judgments']['A']['quote_refs']=['s0:q1']
         for invalid in (1,'true',[],{}):
             response['judgments']['A']['answers_stem']=invalid
             with self.subTest(invalid=invalid),self.assertRaises(ValueError):adapter(self.request)
