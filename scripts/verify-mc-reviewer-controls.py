@@ -1,6 +1,7 @@
 """Fixed reviewer calibration, never a question-bank acceptance or draft regrade."""
 import json
 import os
+import hashlib
 from pathlib import Path
 
 from item_ai_provider_v2 import make_adapter
@@ -119,7 +120,7 @@ def run_clinical(adapter, sources, rows):
 
 def clinical_sources():
     import psycopg
-    with psycopg.connect(os.environ["STAGING_DATABASE_URL"],options="-c default_transaction_read_only=on") as conn:
+    with psycopg.connect(os.environ["STAGING_DATABASE_URL"],connect_timeout=20,options="-c default_transaction_read_only=on -c statement_timeout=15000") as conn:
         with conn.cursor() as cur:
             cur.execute("""select p.id::text,p.content from source_library_staging.passages p
                 join source_library_staging.textbooks t on t.id=p.textbook_id
@@ -136,30 +137,36 @@ def main():
         raise SystemExit("One explicitly authorized control run is required")
     root=Path(os.environ["REVIEWER_SOURCE_ROOT"])
     config=json.loads((root/"workers/source-library-staging/reviewer-gateway/wrangler.json").read_text())["vars"]
-    model=config["AI_REVIEWER_MODEL"]
-    if model != "qwen/qwen3.8-27b":
-        raise SystemExit("Reference suite is pinned to the current reviewer")
-    transport=make_transport(allowed_hosts=["api.groq.com"],
+    candidate=os.environ.get("REVIEWER_CONTROL_CANDIDATE")=="true"
+    model=config.get("AI_REVIEWER_CALIBRATION_MODEL") if candidate else config["AI_REVIEWER_MODEL"]
+    if (candidate and (config.get("AI_REVIEWER_CALIBRATION_OPT_IN")!="true" or model!="openai/gpt-oss-120b")) or (not candidate and model!="qwen/qwen3.8-27b"):
+        raise SystemExit("Reference suite model must match the pinned configuration")
+    base_transport=make_transport(allowed_hosts=["api.groq.com"],
         relay_url="https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay",
         relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
+    def transport(**kwargs):
+        if candidate:
+            kwargs={**kwargs,"body":{**kwargs["body"],"srna_reviewer_calibration":"fixed-controls-v1"}}
+        return base_transport(**kwargs)
     adapter=make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",api_key="relay-authenticated",
                          model=model,transport=transport,owner_opt_in=True,staging=True)
     suite=os.environ.get("REVIEWER_CONTROL_SUITE","basic")
-    if suite not in ("basic","clinical"):
+    if suite not in ("basic","clinical","all") or (candidate and suite!="all"):
         raise SystemExit("Unknown fixed control suite")
-    result={"suite":suite,"reviewer_model":model,"controls":[],"database_writes":False,"drafts_read":False,
-            "question_generation_performed":False,"max_logical_reviews":5 if suite=="clinical" else 8,"published":False,"clinical_acceptance":False,"source_passages_read":0}
+    result={"suite":suite,"calibration_candidate":candidate,"reviewer_model":model,"controls":[],"database_writes":False,"drafts_read":False,
+            "question_generation_performed":False,"max_logical_reviews":13 if suite=="all" else 5 if suite=="clinical" else 8,"published":False,"clinical_acceptance":False,"source_passages_read":0}
     try:
-        if suite=="clinical":
+        if suite in ("basic","all"):
+            run(adapter,result["controls"])
+        if suite in ("clinical","all"):
             sources=clinical_sources()
             result["source_passages_read"]=len(sources)
+            result["source_packet_sha256"]=hashlib.sha256(json.dumps(sorted(sources,key=lambda s:s["passage_id"]),sort_keys=True).encode()).hexdigest()
             run_clinical(adapter,sources,result["controls"])
-        else:
-            run(adapter,result["controls"])
     except Exception as error:
         rule=getattr(error,"rule",None)
         result["control_error"]=rule if rule in {"PROVIDER_RATE_LIMIT","PROVIDER_AUTH","PROVIDER_FORBIDDEN","PROVIDER_REQUEST_REJECTED","PROVIDER_UPSTREAM","PROVIDER_TIMEOUT","PROVIDER_NETWORK","PROVIDER_INVALID_JSON","PROVIDER_MODEL_UNAVAILABLE","RELAY_AUTH","RELAY_NETWORK","RELAY_DISABLED","RELAY_UPSTREAM"} else "CONTROL_RESPONSE_INVALID"
-    result["pass"]=len(result["controls"])==8 and all(row["pass"] for row in result["controls"])
+    result["pass"]=len(result["controls"])==(16 if suite=="all" else 8) and all(row["pass"] for row in result["controls"])
     Path("/tmp/mc-reviewer-controls.json").write_text(json.dumps(result,indent=2))
     print(json.dumps(result))
     if not result["pass"]:

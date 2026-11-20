@@ -5,7 +5,7 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current source and deployment
 
 - Branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189); main and production are unchanged.
-- Application `605b3f4dd16f42524ec68fb89c773453169f52b0`; authoring contract `2026-11-20-v35`.
+- Application `a39a0ed2020600bb6d54d10bbaf0fdeda29b82d4`; authoring contract `2026-11-20-v35`.
 - v35 build `f89c91ba-eb11-4d85-87a2-b34ed3a99d7c` and settled image `f6bc32d571b62c1187c651c2aa665da3db7289962341bb3d9bb5ea906ecd93ef` succeeded. CI and Pages also passed.
 - Local validation: 1,107 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
 - Gemini disabled. Cloudflare GLM authors; distinct Groq Qwen reviews. Human clinical review is mandatory before bank approval.
@@ -58,3 +58,10 @@ Completed-run telemetry for the mechanomyography control recorded 37 relay event
 The fixed basic controls [44728635341](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44728635341) passed **8/8**: four counterbalanced named-monitor definitions and two supported/two false synthetic source claims. No drafts were read, no questions generated and no database data written. This confirms basic protocol health; it does not resolve the production clinical-review disagreements.
 
 A separate clinical suite now tests four new recognition controls and four balanced clinical assertions against three owner-scoped trusted textbook passages, using five logical reviewer calls. It does not rerun the eight basic controls or read held drafts. The source connection is read-only. Its result is pending. Preserve all source/answer holds and select any future reviewer model against the whole fixed positive/negative suite, never by finding a model that passes a held draft.
+
+
+### Isolated candidate comparison
+
+Qwen scored 15/16 across the fixed basic and clinical suites, with the bending-film recognition control selecting MMG. The owner-scoped source comparison controls all passed. Source `a39a0ed2020600bb6d54d10bbaf0fdeda29b82d4` adds an isolated, signed, bounded GPT-OSS 120B calibration path; normal question grading still uses Qwen. CI and connected Worker build `bd7dca44-ccfe-4c99-bc7e-a770a0218c38` passed. Local tests: 1,107 Python (four skipped) and 109 gateway/relay Node checks.
+
+The candidate comparison runs all 16 unchanged reference cases, including positive and false source claims, in at most 13 logical reviews. It cannot read drafts, create questions, approve, or publish. Source reads have explicit connection and statement timeouts. Candidate comparison is pending; do not promote a model or regrade a held draft based on an unfinished run.

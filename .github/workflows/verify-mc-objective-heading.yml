@@ -60,7 +60,7 @@ jobs:
           console.log('All ten automated checks passed; human clinical review is still required.');
           JS
   reviewer-controls:
-    if: github.run_attempt == '1' && (contains(github.event.head_commit.message, '[verify-mc-reviewer-controls]') || contains(github.event.head_commit.message, '[verify-mc-clinical-controls]'))
+    if: github.run_attempt == '1' && (contains(github.event.head_commit.message, '[verify-mc-reviewer-controls]') || contains(github.event.head_commit.message, '[verify-mc-clinical-controls]') || contains(github.event.head_commit.message, '[verify-mc-candidate-controls]'))
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 10
@@ -68,18 +68,19 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: 605b3f4dd16f42524ec68fb89c773453169f52b0
+          ref: a39a0ed2020600bb6d54d10bbaf0fdeda29b82d4
           path: reviewer-source
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install read-only source database adapter
-        if: contains(github.event.head_commit.message, '[verify-mc-clinical-controls]')
+        if: contains(github.event.head_commit.message, '[verify-mc-clinical-controls]') || contains(github.event.head_commit.message, '[verify-mc-candidate-controls]')
         run: python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
       - name: Run fixed positive and negative reviewer controls without drafts
         env:
           CONFIRM_PAID_REVIEWER_CONTROLS: 'true'
-          REVIEWER_CONTROL_SUITE: ${{ contains(github.event.head_commit.message, '[verify-mc-clinical-controls]') && 'clinical' || 'basic' }}
+          REVIEWER_CONTROL_SUITE: ${{ contains(github.event.head_commit.message, '[verify-mc-candidate-controls]') && 'all' || contains(github.event.head_commit.message, '[verify-mc-clinical-controls]') && 'clinical' || 'basic' }}
+          REVIEWER_CONTROL_CANDIDATE: ${{ contains(github.event.head_commit.message, '[verify-mc-candidate-controls]') && 'true' || 'false' }}
           STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
           REVIEWER_SOURCE_ROOT: ${{ github.workspace }}/reviewer-source
