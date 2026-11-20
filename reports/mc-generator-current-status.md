@@ -5,10 +5,14 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current source and deployment
 
 - Branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189); main and production are unchanged.
-- Application `a39a0ed2020600bb6d54d10bbaf0fdeda29b82d4`; authoring contract `2026-11-20-v35`.
+- Application `049e5de27b78e9559b1ffd261ef7a80258bdf8f8`; authoring contract `2026-11-20-v36`.
 - v35 build `f89c91ba-eb11-4d85-87a2-b34ed3a99d7c` and settled image `f6bc32d571b62c1187c651c2aa665da3db7289962341bb3d9bb5ea906ecd93ef` succeeded. CI and Pages also passed.
 - Local validation: 1,107 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
-- Gemini disabled. Cloudflare GLM authors; distinct Groq Qwen reviews. Human clinical review is mandatory before bank approval.
+- Gemini disabled. Cloudflare GLM authors; GPT-OSS 120B performs blind, source and option review in a limited staging trial; Qwen remains the editorial reviewer. Human clinical review is mandatory before bank approval.
+
+## Pending fresh reviewer trial
+
+GPT-OSS 120B passed all 16 fixed controls in [44731081223](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44731081223), compared with Qwen 15/16. No held drafts were regraded. Exact v36 source CI, Pages and connected Worker build `27c6fe21-3be1-4ff6-8e34-d3f20b38a897` passed; container image `e419c286155d45ac3cef7eaf594c6396be52b9383d9934b4f312a305b7039f4e` is settled. The next single fresh kinemyography request is `8de61099-af11-418d-9119-b6f7ee5d0b2c`. Its result is pending; controls alone do not establish generator acceptance. The runner verifies recorded reviewer identities and all ten checks.
 
 ## Latest actual quality result
 
