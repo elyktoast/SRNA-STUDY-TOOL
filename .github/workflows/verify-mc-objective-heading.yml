@@ -94,3 +94,41 @@ jobs:
           path: /tmp/mc-reviewer-controls.json
           if-no-files-found: ignore
           retention-days: 14
+
+  option-protocol-controls:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-option-protocol]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 5c14476e9c13c2a540ee50de6e5390607dbba918
+          path: reviewer-source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact staging deployment before fixed controls
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-pns-deployment.mjs
+      - name: Exercise cited decisions and uncited uncertainty without drafts
+        env:
+          CONFIRM_PAID_OPTION_CONTROLS: 'true'
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+          REVIEWER_SOURCE_ROOT: ${{ github.workspace }}/reviewer-source
+          PYTHONPATH: ${{ github.workspace }}/reviewer-source/workers/source-library-staging/scripts
+        run: python scripts/verify-mc-option-protocol.py
+      - name: Retain fixed option protocol results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-option-protocol-controls
+          path: /tmp/mc-option-protocol-controls.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -2,70 +2,58 @@
 
 Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 
-## Current source and deployment
+## Current version
 
-- Branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189); main and production are unchanged.
-- Application `049e5de27b78e9559b1ffd261ef7a80258bdf8f8`; authoring contract `2026-11-20-v36`.
-- v35 build `f89c91ba-eb11-4d85-87a2-b34ed3a99d7c` and settled image `f6bc32d571b62c1187c651c2aa665da3db7289962341bb3d9bb5ea906ecd93ef` succeeded. CI and Pages also passed.
-- Local validation: 1,107 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
-- Gemini disabled. Cloudflare GLM authors; GPT-OSS 120B performs blind, source and option review in a limited staging trial; Qwen remains the editorial reviewer. Human clinical review is mandatory before bank approval.
+- Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
+- Current source `5c14476e9c13c2a540ee50de6e5390607dbba918`, contract `2026-11-20-v37`. CI, Pages and connected Worker build `8c19b272-9873-4d68-a7e6-d2434f99e037` passed. Settled image: `3cced8234b1a3c86518b90c24879424c65560db0535d466b5558e00b730430a8`.
+- Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
+- Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
 
-## Pending fresh reviewer trial
+## Latest full pipeline result
 
-GPT-OSS 120B passed all 16 fixed controls in [44731081223](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44731081223), compared with Qwen 15/16. No held drafts were regraded. Exact v36 source CI, Pages and connected Worker build `27c6fe21-3be1-4ff6-8e34-d3f20b38a897` passed; container image `e419c286155d45ac3cef7eaf594c6396be52b9383d9934b4f312a305b7039f4e` is settled. The next single fresh kinemyography request is `8de61099-af11-418d-9119-b6f7ee5d0b2c`. Its result is pending; controls alone do not establish generator acceptance. The runner verifies recorded reviewer identities and all ten checks.
+[Run 44835251027](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44835251027) tested exact v36 source `049e5de27b78e9559b1ffd261ef7a80258bdf8f8`, build `27c6fe21-3be1-4ff6-8e34-d3f20b38a897`, settled image `e419c286155d45ac3cef7eaf594c6396be52b9383d9934b4f312a305b7039f4e`.
 
-## Latest actual quality result
+Fresh KMG request `8de61099-af11-418d-9119-b6f7ee5d0b2c` saved draft `1e621288-c8e9-4ca9-8961-ee38c906e028` at **9/10 automated checks**, zero rewrites, one current-source issue, unpublished. Blind answers, editorial, schema, evidence, duplicates, deterministic text, options-only and explanation support passed. Independent option review was pending with `REVIEW_RESPONSE_INVALID / option_quote_refs_invalid`. The workflow correctly failed after retaining artifact `14679045857`. No new passing draft is claimed. Do not regrade this completed held draft to chase a pass.
 
-[44721919856](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44721919856) generated fresh mechanomyography draft `3daf8077-4a7d-44da-a9e9-3ab9d52b011e`: **10/10 automated checks, zero current-source issues, one rewrite, unpublished, human review pending**. Exact tested source was `37ab875b00df21b795b8042d779186d9841564df`, image `77d3546d366afecb0aa123e48a94d0e5104fbc2d1fb96d15b669e735dfe5dbeb`. Both blind solves, all explanatory-source checks and independent option review passed. Collection took about twelve minutes; large-batch throughput is not demonstrated.
+The provider schema permitted definite true/false judgments without quote references, which downstream validation correctly rejected. v37 now expresses the actual contract: a definite answer requires 1–8 option-scoped source references; null uncertainty requires none and stays blocked. The prompt makes the requirement explicit for both correct and incorrect options. The backend still refuses uncited definite responses and does not fill or correct clinical verdicts.
 
-Three earlier automated passing drafts also await human clinical review:
+## Next bounded check
 
+A fixed protocol harness in `scripts/verify-mc-option-protocol.py` uses two logical reviewer calls with fictional sensors and eight option judgments. One packet supplies complete definitions; the other deliberately withholds a necessary definition. Expected outcomes never reach the model. This checks grounded definite judgments and honest uncited uncertainty through the real adapter/relay, without drafts, authoring, database access or approval.
+
+The workflow marker is `[verify-mc-option-protocol]`. The separate job is pinned to current v37 source and checks exact CI/build/container readiness before model calls. Do not trigger a replacement fresh generation until these controls pass. Never rerun a paid workflow attempt.
+
+## Calibration and previous evidence
+
+GPT-OSS passed all 16 fixed blind/source controls in [44731081223](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44731081223), compared with Qwen 15/16. The controls read no held drafts and cannot approve anything. That suite did not exercise the production option-citation protocol, which is why the new controls are necessary.
+
+There are four recorded automated passing drafts, all pending clinical human review:
+
+- Mechanomyography: `3daf8077-4a7d-44da-a9e9-3ab9d52b011e`, [44721919856](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44721919856), 10/10, zero current-source issues, one rewrite. Tested source `37ab875b00df21b795b8042d779186d9841564df`.
 - Local anesthetic ionization/onset: `8da6a89a-26b3-44dd-ad42-a70405dc6e23`.
 - Lecture FRC: `65c2e793-a7af-4746-bfb6-1abf9993085c`.
-- Lecture shunt/dead space: `f6440562-8a49-4293-8d67-d78e8773b811`; a sentence-boundary wording caveat still needs review.
+- Lecture shunt/dead space: `f6440562-8a49-4293-8d67-d78e8773b811`; sentence-boundary wording caveat remains for human review.
 
-This is four recorded automated passing drafts, not overall generator acceptance. Never regrade completed held drafts to obtain a different verdict. Future acceptance workflows now retain artifacts first and fail when accepted=false; a result-collection job alone must not be treated as quality success.
+Earlier held KMG drafts `367b1b3a-2ca2-4b41-8f21-0de793cbea13` (44724391907) and `b15983b0-90b5-46c6-9d77-fb5a64e90d46` (44726466131) remain held. Their failures drove complete-case grammar repairs, protection of valid counterfactual cases, and reviewer calibration. The one-rewrite limit and unchanged-blind-question anti-resampling guard remain enforced.
 
-## What changed
+## Lecture upload status
 
-A failed rewrite expanded a counterfactual condition beyond 200 characters. v33 added literal-edit integrity checks and specific field/count diagnostics. A later rewrite moved research-laboratory context outside the replaceable condition and dropped the alternate operating-room setting. v34 now protects an actual independently passing alternate case during an unrelated repair. Invalid candidates remain held after their one rewrite; full clinical screening reruns after valid repair. The adapter/relay does not cache the previous blind answer.
+Extraction reports selected page numbers containing detected highlights/bold; formatting prioritizes concepts only when supported by textbooks. The supplied 19-page Peripheral Nerve Stimulation PDF was locally processed: highlights on pages 2, 8, 13 and 14; bold on all 19 pages. That check used zero model calls and no DB writes.
 
-The upload planner and staging UI now report selected page numbers containing detected highlighted and bold text. Formatting does not establish clinical truth or source support. The original 19-page Peripheral Nerve Stimulation PDF was locally processed: highlights on pages 2, 8, 13 and 14; bold text on all 19 pages. That local check used zero model calls and no database writes.
+A resumed signed-in browser inspection opened Source Library and found that the Study Studio dialog omitted the lecture panel because it was only attached in the admin command center. v37 attaches the panel in the initial dialog too, improves upload instructions and bumps the frontend build marker. The deployed signed-in browser dialog was verified to expose the lecture file chooser, page-range fields, evidence-source selector and planning button. A review tab was retained.
 
-A signed-in Chrome staging session reached Study Studio and the Source Library button, but control stalled on opening that interface and again during recovery. No file chooser or actual upload result was observed. Browser upload remains unverified; do not assume the observed session was signed out. Text-bearing slides supply text only; diagrams, image-only pages and numeric/image certification remain separate constraints. Citations identify physical PDF pages, not verified printed pages.
+Actual browser file upload remains unverified. The browser security policy denied retrieving the supplied PDF; no bypass was attempted. A real file selection is needed for end-to-end upload evidence. Diagrams/image-only pages and numeric/image certification remain separate constraints. Citations identify physical PDF pages, not verified printed pages.
 
-## Current bounded pilot and next work
+## Validation and throughput
 
-The next preselected distinct concept is **Kinemyography**, bolded on lecture page 15, objective II.C.4. Its verification source is pinned to the current deployed application above. Run [44724391907](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44724391907) correctly failed at **7/10**, draft `367b1b3a-2ca2-4b41-8f21-0de793cbea13`, unpublished. The original cases were truncated mid-clause and the alternate-case lock then blocked their grammar repair. A keyed mechanism explanation was also flagged because it omitted a separate correlation caveat. Do not regrade this completed held draft.
+v37 local validation passed: **1,107 Python tests, four skipped; 109 gateway/relay Node checks; 57 UI/browser-adapter checks**. The restarted workspace initially lacked boto3; restoring the declared dependency resolved the nine environment-only checkpoint-test errors. A synthetic 9,000-by-1,024 comparison benchmark took 2.355 seconds locally, with no provider calls or database writes; deployed DB latency and container CPU allocation were not measured.
 
-v35 exempts reported R-4.2 grammar and R-12.1 ambiguity from the alternate lock, requests short complete case sentences, and tells explanatory review to distinguish an actually false claim from an omitted unclaimed caveat. It preserves every source check and recorded verdict. A regression reproduces the overbroad lock and verifies the legitimate complete-case repair remains unpublished. The v35 control [44726466131](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44726466131) saved draft `b15983b0-90b5-46c6-9d77-fb5a64e90d46` at **7/10**, unpublished. Grammar and the counterfactual passed. The blind reviewer selected MMG for the KMG sensor description, and explanatory review alleged a does-not-correlate claim absent from the submitted explanation. The one rewrite left the blind question unchanged; the anti-resampling guard correctly held it before another clinical review. No new accepted question is claimed. Do not reroll this draft.
+The earlier 12-minute MMG run had six explicit provider 429 waits accounting for about six minutes. Do not shorten waits or add retries to chase passes. Large-batch throughput is not demonstrated. 25/50/100 generation still needs dependable bounded background execution, resumable status and duplication checks across queued drafts. The current lecture UI supports 1–5 planning jobs and generates one question at a time.
 
-**Next action has changed: reviewer calibration before more generation.** A fixed eight-control harness tests four counterbalanced monitor definitions plus two supported and two explicitly false synthetic source claims. It reads no drafts, writes no database data, hides expected results from the model, and cannot approve anything. It uses the existing signed staging relay and current reviewer only. A failed control run records all completed cases; do not interpret passing controls as full MC generator acceptance. The fixed harness is not an acceptance regrade of any held draft.
+## Resume rules
 
-Remaining goal: demonstrate consistency across representative concepts, verify actual lecture upload, and implement dependable bounded resumable throughput before enabling 25/50/100. Multiple response, short answer, drag and drop and hotspot remain paused. No question has been approved or published.
-
-## Measured throughput blocker
-
-Completed-run telemetry for the mechanomyography control recorded 37 relay events and six explicit provider 429 responses. The six existing bounded waits account for about six minutes. Successful review calls were generally under one second; Cloudflare authoring calls were roughly 7–20 seconds. The reported Groq TPM ceiling was 7,000 (one response reported a separate 1,000-token dimension). Provider retry suggestions ranged from 2–13 seconds, but the existing full-minute wait was deliberately introduced after request estimates varied between identical attempts. Do not just shorten that wait or add retries to chase a pass. Next performance work should measure quota-aware scheduling or source-preserving request packing, preserving all field coverage, source scoping and one-retry limits.
-
-## Resume without repeating work
-
-- Verification runner: `verify/mc-objective-heading-20261118`; saved read-only inspection runner: `verify/mc-saved-option-review-20261117`. Existing staging credentials are already configured in Actions.
-- Canonical semantic index is complete at 9,000/9,000; seven trusted textbooks are indexed. Do not redo that work. OR Guide remains held for provenance.
-- Check exact source CI, successful connected Worker build and settled image before paid calls. One fresh request per planned topic; completion recovery never restarts generation.
-- Fix a demonstrated failure before replacement tests; if a question passes, broaden the fixed pilot to distinct concepts.
-- Report-only Worker builds are excluded. Save result notes on this verification branch or in PR metadata so source HEAD remains the deployed SHA.
-
-
-### Reviewer control results and current next step
-
-The fixed basic controls [44728635341](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44728635341) passed **8/8**: four counterbalanced named-monitor definitions and two supported/two false synthetic source claims. No drafts were read, no questions generated and no database data written. This confirms basic protocol health; it does not resolve the production clinical-review disagreements.
-
-A separate clinical suite now tests four new recognition controls and four balanced clinical assertions against three owner-scoped trusted textbook passages, using five logical reviewer calls. It does not rerun the eight basic controls or read held drafts. The source connection is read-only. Its result is pending. Preserve all source/answer holds and select any future reviewer model against the whole fixed positive/negative suite, never by finding a model that passes a held draft.
-
-
-### Isolated candidate comparison
-
-Qwen scored 15/16 across the fixed basic and clinical suites, with the bending-film recognition control selecting MMG. The owner-scoped source comparison controls all passed. Source `a39a0ed2020600bb6d54d10bbaf0fdeda29b82d4` adds an isolated, signed, bounded GPT-OSS 120B calibration path; normal question grading still uses Qwen. CI and connected Worker build `bd7dca44-ccfe-4c99-bc7e-a770a0218c38` passed. Local tests: 1,107 Python (four skipped) and 109 gateway/relay Node checks.
-
-The candidate comparison runs all 16 unchanged reference cases, including positive and false source claims, in at most 13 logical reviews. It cannot read drafts, create questions, approve, or publish. Source reads have explicit connection and statement timeouts. Candidate comparison is pending; do not promote a model or regrade a held draft based on an unfinished run.
+- Check the exact source CI, successful connected Worker build and settled container before paid calls. Wait outside Actions where possible to conserve minutes.
+- One fresh request per planned topic. Completion recovery retrieves only the same completed request and never restarts generation. Fix a demonstrated failure before a replacement test.
+- Canonical semantic index is complete at 9,000/9,000; seven trusted textbooks are indexed. Do not redo this. OR Guide remains held for provenance.
+- Save result-only notes here or in PR metadata. Report-only Worker builds are excluded, so advancing application HEAD with report-only commits breaks exact-deployment acceptance identity.
+- No bank approval, publication, merge to main or production deployment is authorized by these acceptance checks.
