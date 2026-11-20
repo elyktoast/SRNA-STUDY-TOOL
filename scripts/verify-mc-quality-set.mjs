@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture bold: kinemyography, distinct concept pilot',page:15,objective:'II.C.4',workflow:'lecture',item_id:'226711b9-ad7d-4022-9e99-26afdc5269da',topic:'Kinemyography'}
+ {name:'Lecture bold: kinemyography, complete case repair',page:15,objective:'II.C.4',workflow:'lecture',item_id:'ba6798b3-f3cb-4c04-b304-fc4d734aaf36',topic:'Kinemyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='048ec81248e61960c66da7078d45e8e68752f56d';
+const sha='605b3f4dd16f42524ec68fb89c773453169f52b0';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -70,7 +70,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-20-v34');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-20-v35');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
@@ -86,6 +86,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    row.blockers=Object.fromEntries(Object.entries(screening.stages).filter(([k,v])=>k!=='human_review'&&v.status!=='pass'));
    row.rewrite_attempts=screening.rewrite_attempts_used;
    row.rewrite_original_issues=screening.rewrite_original_issues;
+   row.rewrite_revised_issues=screening.rewrite_revised_issues;
    row.source_repair_retrieval=screening.source_repair_retrieval;
    assert.ok(row.rewrite_attempts<=1);assert.equal(saved.published,false);
    // Preserve exact reviewer blockers privately, excluding full textbook excerpts.

@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-distinct-concept]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-complete-case]')
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 23

@@ -5,9 +5,9 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current source and deployment
 
 - Branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189); main and production are unchanged.
-- Application `048ec81248e61960c66da7078d45e8e68752f56d`; authoring contract `2026-11-20-v34`.
-- Connected staging build `ae9c84fa-800c-4185-bbab-405ca6582eaa` succeeded. Container image `0265ca4dcf97e6ce9b4f470d3ad46c8b2fd8f1711bd2d1bb23ac3ba7ba8ee89e`.
-- Local validation: 1,106 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
+- Application `605b3f4dd16f42524ec68fb89c773453169f52b0`; authoring contract `2026-11-20-v35`.
+- v35 deployment pending. Previous build `ae9c84fa-800c-4185-bbab-405ca6582eaa` / image `0265ca4dcf97e6ce9b4f470d3ad46c8b2fd8f1711bd2d1bb23ac3ba7ba8ee89e` succeeded for the preceding source.
+- Local validation: 1,107 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed. CI passed.
 - Gemini disabled. Cloudflare GLM authors; distinct Groq Qwen reviews. Human clinical review is mandatory before bank approval.
 
 ## Latest actual quality result
@@ -32,9 +32,15 @@ A signed-in Chrome staging session reached Study Studio and the Source Library b
 
 ## Current bounded pilot and next work
 
-The next preselected distinct concept is **Kinemyography**, bolded on lecture page 15, objective II.C.4. Its verification source is pinned to the current deployed application above. Current run: [44724391907](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44724391907). **In progress; no acceptance claimed.** Do not rerun its request.
+The next preselected distinct concept is **Kinemyography**, bolded on lecture page 15, objective II.C.4. Its verification source is pinned to the current deployed application above. Run [44724391907](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44724391907) correctly failed at **7/10**, draft `367b1b3a-2ca2-4b41-8f21-0de793cbea13`, unpublished. The original cases were truncated mid-clause and the alternate-case lock then blocked their grammar repair. A keyed mechanism explanation was also flagged because it omitted a separate correlation caveat. Do not regrade this completed held draft.
+
+v35 exempts reported R-4.2 grammar and R-12.1 ambiguity from the alternate lock, requests short complete case sentences, and tells explanatory review to distinguish an actually false claim from an omitted unclaimed caveat. It preserves every source check and recorded verdict. A regression reproduces the overbroad lock and verifies the legitimate complete-case repair remains unpublished. A fresh v35 control is pending deployment; its run ID will be recorded below.
 
 Remaining goal: demonstrate consistency across representative concepts, verify actual lecture upload, and implement dependable bounded resumable throughput before enabling 25/50/100. Multiple response, short answer, drag and drop and hotspot remain paused. No question has been approved or published.
+
+## Measured throughput blocker
+
+Completed-run telemetry for the mechanomyography control recorded 37 relay events and six explicit provider 429 responses. The six existing bounded waits account for about six minutes. Successful review calls were generally under one second; Cloudflare authoring calls were roughly 7–20 seconds. The reported Groq TPM ceiling was 7,000 (one response reported a separate 1,000-token dimension). Provider retry suggestions ranged from 2–13 seconds, but the existing full-minute wait was deliberately introduced after request estimates varied between identical attempts. Do not just shorten that wait or add retries to chase a pass. Next performance work should measure quota-aware scheduling or source-preserving request packing, preserving all field coverage, source scoping and one-retry limits.
 
 ## Resume without repeating work
 
@@ -43,4 +49,3 @@ Remaining goal: demonstrate consistency across representative concepts, verify a
 - Check exact source CI, successful connected Worker build and settled image before paid calls. One fresh request per planned topic; completion recovery never restarts generation.
 - Fix a demonstrated failure before replacement tests; if a question passes, broaden the fixed pilot to distinct concepts.
 - Report-only Worker builds are excluded. Save result notes on this verification branch or in PR metadata so source HEAD remains the deployed SHA.
-
