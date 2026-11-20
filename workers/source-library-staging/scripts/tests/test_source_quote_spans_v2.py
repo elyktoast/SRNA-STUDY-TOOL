@@ -199,12 +199,16 @@ class SourceQuoteSpanTests(unittest.TestCase):
             return {'choices':[{'message':{'content':json.dumps(response)}}]}
         adapter=make_adapter(endpoint='https://provider.example/v1',api_key='test',model='reviewer',transport=transport,owner_opt_in=True)
         self.assertEqual([j['verdict'] for j in adapter(self.request)['judgments']],['supports_key','uncertain'])
+        response['judgments']['B']['quote_refs']=None
+        self.assertEqual(adapter(self.request)['judgments'][1]['quotes'],[])
         response['judgments']['A']['answers_stem']=False
         self.assertEqual(adapter(self.request)['judgments'][0]['verdict'],'refutes_distractor')
         response['judgments']['A']['quote_refs']=[]
         for definite in (True,False):
             response['judgments']['A']['answers_stem']=definite
-            with self.subTest(uncited_answer=definite),self.assertRaises(ValueError):adapter(self.request)
+            for missing in ([],None):
+                response['judgments']['A']['quote_refs']=missing
+                with self.subTest(uncited_answer=definite,refs=missing),self.assertRaises(ValueError):adapter(self.request)
         response['judgments']['A']['quote_refs']=['s0:q1']
         for invalid in (1,'true',[],{}):
             response['judgments']['A']['answers_stem']=invalid

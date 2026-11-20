@@ -221,7 +221,7 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 "Omit option_id and passage_ids: the server restores those identities only from the map key and selected quote references. "
                 "Each option may select only its own retrieved passage IDs and quote spans belonging to that passage. "
                 "A true OR false answer requires 1-8 quote_refs that establish that judgment. A false answer still needs affirmative evidence of a different measurement or mechanism; an empty citation list cannot establish refutation. "
-                "If its evidence is insufficient, return answers_stem null and empty quote_refs; never borrow another option's evidence.")
+                "If its evidence is insufficient, return answers_stem null and quote_refs null; never borrow another option's evidence.")
         if request["step"] == "option_review":
             from item_source_quote_spans_v2 import prepare
             review_request, quote_lookup = prepare(request)
@@ -351,6 +351,11 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                         # generator key or expected clinical verdict is available.
                         value = {k: v for k, v in value.items() if k != "answers_stem"}
                         value["verdict"] = "supports_key" if answer is True else "refutes_distractor" if answer is False else "uncertain"
+                        # Null is the wire representation of no selected quote
+                        # for an explicitly uncertain judgment. Never repair a
+                        # definite answer's missing citations.
+                        if answer is None and value.get("quote_refs") is None:
+                            value["quote_refs"] = []
                     if isinstance(value, dict) and isinstance(value.get("quote_refs"), list):
                         converted = []
                         for ref in value["quote_refs"]:

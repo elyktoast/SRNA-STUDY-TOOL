@@ -57,7 +57,7 @@ async function safeRequestDiagnostic(response){
   while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536)return {};chunks.push(value);}
   const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
   const error=JSON.parse(new TextDecoder().decode(bytes))?.error;
-  const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','model_not_found'];
+  const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','invalid_json_schema','model_not_found'];
   const params=['reasoning_effort','max_tokens','max_completion_tokens','response_format'];
   const shape={};
   if(error?.code==='json_validate_failed'&&typeof error.failed_generation==='string'){
@@ -70,6 +70,11 @@ async function safeRequestDiagnostic(response){
     }
    }
    catch{shape.failed_json_shape='invalid_json';}
+  }
+  if(error?.param==='response_format'&&typeof error.message==='string'){
+   // Fixed vocabulary only; never log a provider message or failed generation.
+   shape.schema_keywords=['anyOf','minItems','maxItems','additionalProperties','required','type','enum','null']
+    .filter(word=>error.message.includes(word));
   }
   return {...shape,...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
@@ -220,7 +225,7 @@ async function relayGroq(request,env){
     // Nested anyOf is supported by Groq strict structured outputs.
     properties[id]={anyOf:[true,false].map(definite=>({type:'object',properties:{
      answers_stem:{type:definite?'boolean':'null'},
-     quote_refs:{type:'array',minItems:definite?1:0,maxItems:definite?8:0,items:{type:'string',enum:references}},
+     quote_refs:definite?{type:'array',minItems:1,maxItems:8,items:{type:'string',enum:references}}:{type:'null'},
      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
     },required:['answers_stem','quote_refs','explanation','source_conflict_found'],additionalProperties:false}))};
    }
