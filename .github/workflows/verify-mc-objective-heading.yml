@@ -1,4 +1,4 @@
-name: Highlighted lecture MC acceptance
+name: Lecture MC acceptance
 on:
   push:
     branches: [verify/mc-objective-heading-20261118]
@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   verify:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-case-preservation]')
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-pns-distinct-concept]')
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 23
@@ -27,7 +27,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node scripts/verify-pns-deployment.mjs
-      - name: Generate one highlighted lecture control
+      - name: Generate one emphasized lecture control
         env:
           CONFIRM_PAID_MC_SET: 'true'
           GITHUB_TOKEN: ${{ github.token }}
@@ -44,3 +44,18 @@ jobs:
           path: /tmp/srna-mc-quality-results.json
           retention-days: 14
           if-no-files-found: ignore
+      - name: Require automated acceptance after retaining results
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFileSync} from 'node:fs';
+          const rows=JSON.parse(readFileSync('/tmp/srna-mc-quality-results.json','utf8'));
+          assert.equal(rows.length,1,'Expected the single bounded control result');
+          for(const row of rows){
+            assert.equal(row.accepted,true,'Question remains held; see the retained blockers');
+            assert.equal(row.published,false);
+            assert.equal(row.passing_checks,10);
+            assert.equal(row.current_source_issues?.length,0);
+          }
+          console.log('All ten automated checks passed; human clinical review is still required.');
+          JS

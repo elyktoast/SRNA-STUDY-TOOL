@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture highlight: mechanomyography, preserved alternate case',page:13,objective:'II.C.4',workflow:'lecture',item_id:'c7aebdf2-7177-420d-8d9e-5b5f1d323ee3',topic:'Mechanomyography'}
+ {name:'Lecture bold: kinemyography, distinct concept pilot',page:15,objective:'II.C.4',workflow:'lecture',item_id:'226711b9-ad7d-4022-9e99-26afdc5269da',topic:'Kinemyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='37ab875b00df21b795b8042d779186d9841564df';
+const sha='048ec81248e61960c66da7078d45e8e68752f56d';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -61,12 +61,12 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const [domain,section]=sample.objective.split('.');
    let request={topic:sample.topic,objective:sample.objective,domain,section,mode:'NCE',format:'MC',limit:8,item_id:sample.item_id,textbook_id:sample.textbook_id||books[0],textbook_ids:books};
    if(sample.workflow==='lecture'){
-    const plan=await call('/generation/lecture-plan',{lecture_text:'Page '+sample.page+':\nLecture highlighted: '+sample.topic,textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
+    const plan=await call('/generation/lecture-plan',{lecture_text:'Page '+sample.page+':\nLecture bold: '+sample.topic,textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
     assert.equal(plan.auto_generate,false);assert.equal(plan.auto_publish,false);assert.equal(plan.count,1,'Lecture objective held');
     assert.equal(plan.jobs[0].path,'/generation/preflight');
     assert.equal(plan.jobs[0].body.topic,sample.topic,'Lecture planner changed the intended clinical topic');
     assert.equal(plan.jobs[0].body.objective,sample.objective,'Lecture planner changed the selected objective');
-    emit({check:'highlighted_lecture_topic',topic:plan.jobs[0].body.topic,objective:plan.jobs[0].body.objective,paid_calls:0});
+    emit({check:'emphasized_lecture_topic',topic:plan.jobs[0].body.topic,objective:plan.jobs[0].body.objective,paid_calls:0});
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
