@@ -5,7 +5,7 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current version
 
 - Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
-- Current source `d285b1da4a83a74472c9e9db9824d10f0b46bc64`, contract `2026-11-20-v39`. CI and connected Worker/container rollout are pending. v37 had passed CI/deployment and its restored upload controls were verified in the live browser.
+- Current source `d285b1da4a83a74472c9e9db9824d10f0b46bc64`, contract `2026-11-20-v39`. CI, Pages and connected Worker build `1bf93a5b-da5b-4308-8717-cbf61fc36894` passed. Settled image `db7be9128ad359a8e4de98ee1c90674d485a6addda88d88af04c8de700d83787`. v37 had passed CI/deployment and its restored upload controls were verified in the live browser.
 - Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
 - Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
 
@@ -23,11 +23,13 @@ The first option protocol run [44837125871](https://github.com/elyktoast/SRNA-ST
 
 The changed v38 nested schema was rejected again in [44838045602](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44838045602), before any judgments. Safe diagnostics named anyOf and required. v39 therefore removes nested anyOf and uses flat nullable fields: non-null reference arrays require 1–8 scoped references. The trusted backend still enforces the cross-field rule and rejects definite true/false answers with null, absent or empty citations. Only explicit null uncertainty normalizes to no citations and remains held. Local 1,107 Python and 109 gateway/relay checks pass.
 
-## Next bounded check
+## Fixed option protocol result and next full trial
 
 A fixed protocol harness in `scripts/verify-mc-option-protocol.py` uses two logical reviewer calls with fictional sensors and eight option judgments. One packet supplies complete definitions; the other deliberately withholds a necessary definition. Expected outcomes never reach the model. This checks grounded definite judgments and honest uncited uncertainty through the real adapter/relay, without drafts, authoring, database access or approval.
 
-The workflow marker is `[verify-mc-option-protocol]`. The separate job is pinned to current v37 source and checks exact CI/build/container readiness before model calls. Do not trigger a replacement fresh generation until these controls pass. Never rerun a paid workflow attempt.
+[Run 44838658015](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44838658015) passed **8/8 option judgments** in two logical reviewer calls on exact deployed v39. Definite decisions cited their own supplied evidence; the missing-definition control returned uncertain with no citations. Artifact `14678979583` retains results. No drafts were read or generated and no DB access or approval occurred. The fresh next full-pipeline request is `bf60f65d-d535-499c-88dc-68b8aaaf32c1`, Electromyography, lecture physical page 14, objective II.C.4. Its outcome is pending.
+
+The protocol workflow marker is `[verify-mc-option-protocol]`. The separate job is pinned to current v37 source and checks exact CI/build/container readiness before model calls. Do not trigger a replacement fresh generation until these controls pass. Never rerun a paid workflow attempt.
 
 ## Calibration and previous evidence
 
