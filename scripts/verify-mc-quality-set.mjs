@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture highlight: mechanomyography, bounded counterfactual repair',page:13,objective:'II.C.4',workflow:'lecture',item_id:'dbc8d0bb-f484-4f4c-811f-c84ccb623030',topic:'Mechanomyography'}
+ {name:'Lecture highlight: mechanomyography, preserved alternate case',page:13,objective:'II.C.4',workflow:'lecture',item_id:'c7aebdf2-7177-420d-8d9e-5b5f1d323ee3',topic:'Mechanomyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='5ed3157f3a6a7f95ba986964e43a8a3710021103';
+const sha='37ab875b00df21b795b8042d779186d9841564df';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -70,7 +70,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-19-v33');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-20-v34');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
