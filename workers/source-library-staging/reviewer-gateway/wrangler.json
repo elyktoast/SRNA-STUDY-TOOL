@@ -21,7 +21,9 @@
     "AI_SEMANTIC_EMBEDDING_OPT_IN": "true",
     "SEMANTIC_INDEX_OWNER_UID": "c003287a-10ce-4cc9-926e-ef7c3a162a26",
     "SEMANTIC_INDEX_EMBEDDING_MODEL": "@cf/baai/bge-m3",
-    "SEMANTIC_INDEX_INVENTORY_PATH": "/app/canonical-semantic-inventory.json"
+    "SEMANTIC_INDEX_INVENTORY_PATH": "/app/canonical-semantic-inventory.json",
+    "AI_REVIEWER_CALIBRATION_OPT_IN": "true",
+    "AI_REVIEWER_CALIBRATION_MODEL": "openai/gpt-oss-120b"
   },
   "containers": [
     {

@@ -112,9 +112,20 @@ async function relayGroq(request,env){
  }
  // Gemini remains disabled, including signed metadata diagnostics.
  if(payload?.diagnostic==='hybrid_models')return respond(503,null,'{"error":"relay_disabled"}');
- if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[]),...(env.AI_EXPLANATION_REVIEW_OPT_IN==='true'?[env.AI_EDITORIAL_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
+ // A separately opted-in, signed calibration caller may compare one fixed
+ // candidate for read-only review steps. Normal generation keeps its reviewer.
+ const calibrationTag=payload?.srna_reviewer_calibration;
+ const candidateCalibration=env.AI_REVIEWER_CALIBRATION_OPT_IN==='true'
+  &&env.AI_REVIEWER_CALIBRATION_MODEL==='openai/gpt-oss-120b'
+  &&payload?.model===env.AI_REVIEWER_CALIBRATION_MODEL&&calibrationTag==='fixed-controls-v1';
+ if(calibrationTag!==undefined&&!candidateCalibration)return respond(400,null,'{"error":"invalid_calibration"}');
+ if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[]),...(env.AI_EXPLANATION_REVIEW_OPT_IN==='true'?[env.AI_EDITORIAL_REVIEWER_MODEL]:[]),...(candidateCalibration?[env.AI_REVIEWER_CALIBRATION_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
- if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(candidateCalibration&&(!['blind_review','explanation_review'].includes(step?.step)
+  ||payload.max_tokens>1800||payload.messages[1].content.length>20000))return respond(400,null,'{"error":"invalid_calibration"}');
+ const activeReviewerModel=candidateCalibration?env.AI_REVIEWER_CALIBRATION_MODEL:env.AI_REVIEWER_MODEL;
+ delete payload.srna_reviewer_calibration;
+ if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
@@ -187,7 +198,7 @@ async function relayGroq(request,env){
    if(!['MC','MS'].includes(step.format)||ids.length<4||ids.length>6||new Set(ids).size!==ids.length||!ids.every(id=>typeof id==='string'&&/^[A-F]$/.test(id))||!Number.isInteger(count)||(step.format==='MC'?count!==1:![2,3].includes(count)))return respond(400,null,'{"error":"invalid_step"}');
    if(groqQwen||groqOss)reviewFormat={type:'json_schema',json_schema:{name:'srna_options_only_v2',strict:true,schema:{type:'object',properties:{key:{type:'array',minItems:count,maxItems:count,items:{type:'string',enum:ids}}},required:['key'],additionalProperties:false}}};
   }
-  if(groqQwen&&step.step==='option_review'&&step.format==='MC'){
+  if((groqQwen||groqOss)&&step.step==='option_review'&&step.format==='MC'){
    const optionIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
    const passages=Array.isArray(step.source_passages)?step.source_passages:[];
    const byId=new Map(passages.map(p=>[p?.passage_id,p]));
@@ -215,7 +226,7 @@ async function relayGroq(request,env){
     judgments:{type:'object',properties,required:optionIds,additionalProperties:false}
    },required:['judgments'],additionalProperties:false}}};
   }
-  if(groqQwen&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
+  if((groqQwen||groqOss)&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
    const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
    const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
    if(fieldIds.every(x=>typeof x==='string')&&passageIds.every(x=>typeof x==='string')&&spanIds.length){

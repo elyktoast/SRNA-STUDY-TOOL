@@ -764,3 +764,63 @@ test('MC source-first schema agrees with Python plan fields and locks grounded r
   }
  }finally{globalThis.fetch=original;}
 });
+
+const calibrationModel='openai/gpt-oss-120b';
+const calibrationEnv={...env,AI_REVIEWER_MODEL:'qwen/qwen3.8-27b',AI_EXPLANATION_REVIEW_OPT_IN:'true',
+ AI_REVIEWER_CALIBRATION_OPT_IN:'true',AI_REVIEWER_CALIBRATION_MODEL:calibrationModel};
+async function calibrationRequest(step='blind_review',patch={},stepFields={}){
+ const payload=await request(step,calibrationModel,stepFields).json();
+ return embeddingRequest({...payload,srna_reviewer_calibration:'fixed-controls-v1',...patch});
+}
+test('signed candidate calibration is separate from the configured generator reviewer',async()=>{
+ const old=globalThis.fetch,seen=[];
+ globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{"key":["B"]}'},finish_reason:'stop'}]});};
+ try{
+  assert.equal((await gateway.fetch(await calibrationRequest(),calibrationEnv)).status,200);
+  assert.equal(seen[0].model,calibrationModel);
+  assert.ok(!Object.hasOwn(seen[0],'srna_reviewer_calibration'),'Private marker must not reach Groq');
+  assert.equal((await gateway.fetch(request('blind_review','qwen/qwen3.8-27b'),calibrationEnv)).status,200);
+  assert.equal(seen[1].model,'qwen/qwen3.8-27b');
+  assert.equal(calibrationEnv.AI_REVIEWER_MODEL,'qwen/qwen3.8-27b');
+ }finally{globalThis.fetch=old;}
+});
+test('candidate access requires its opt-in and signed explicit marker',async()=>{
+ const old=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;throw Error('No upstream call allowed');};
+ try{
+  assert.equal((await gateway.fetch(request('blind_review',calibrationModel),calibrationEnv)).status,400);
+  assert.equal((await gateway.fetch(await calibrationRequest(),{...calibrationEnv,AI_REVIEWER_CALIBRATION_OPT_IN:'false'})).status,400);
+  assert.equal((await gateway.fetch(await calibrationRequest('blind_review',{srna_reviewer_calibration:'wrong'}),calibrationEnv)).status,400);
+  assert.equal((await gateway.fetch(embeddingRequest({model:calibrationModel,srna_reviewer_calibration:'fixed-controls-v1'},false),calibrationEnv)).status,403);
+  assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});
+test('candidate calibration cannot author, revise, publish, or expand review budgets',async()=>{
+ const old=globalThis.fetch;let calls=0;
+ globalThis.fetch=async()=>{calls++;throw Error('No upstream call allowed');};
+ try{
+  for(const step of ['concept_card','item_draft','rationale','rewrite','option_review','editorial_review','options_only_review']){
+   assert.equal((await gateway.fetch(await calibrationRequest(step),calibrationEnv)).status,400,step);
+  }
+  assert.equal((await gateway.fetch(await calibrationRequest('blind_review',{max_tokens:1801}),calibrationEnv)).status,400);
+  const payload=await request('blind_review',calibrationModel).json();payload.messages[1].content=JSON.stringify({step:'blind_review',rules_version:'2.0',auto_publish:false,blind:true,stem:'x'.repeat(20001)});
+  assert.equal((await gateway.fetch(embeddingRequest({...payload,srna_reviewer_calibration:'fixed-controls-v1'}),calibrationEnv)).status,400);
+  assert.equal(calls,0);
+ }finally{globalThis.fetch=old;}
+});
+test('candidate source calibration uses strict scoped source identities',async()=>{
+ const old=globalThis.fetch,seen=[];
+ globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
+ try{
+  const fields=[{id:'e0'}],source_passages=[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source fact'}]}];
+  assert.equal((await gateway.fetch(await calibrationRequest('explanation_review',{}, {fields,source_passages}),calibrationEnv)).status,200);
+  const schema=seen[0].response_format;
+  assert.equal(schema.type,'json_schema');assert.equal(schema.json_schema.strict,true);
+  const groups=schema.json_schema.schema.properties.supported_groups.items.properties;
+  assert.deepEqual(groups.field_ids.items.enum,['e0']);
+  assert.deepEqual(groups.quote_refs.items.properties.passage_id.enum,['s0']);
+  assert.deepEqual(groups.quote_refs.items.properties.span_id.enum,['q0']);
+  assert.equal(seen[0].model,calibrationModel);
+  assert.ok(!Object.hasOwn(seen[0],'srna_reviewer_calibration'));
+ }finally{globalThis.fetch=old;}
+});
