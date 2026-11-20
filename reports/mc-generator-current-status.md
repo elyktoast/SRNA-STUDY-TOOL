@@ -51,3 +51,10 @@ Completed-run telemetry for the mechanomyography control recorded 37 relay event
 - Check exact source CI, successful connected Worker build and settled image before paid calls. One fresh request per planned topic; completion recovery never restarts generation.
 - Fix a demonstrated failure before replacement tests; if a question passes, broaden the fixed pilot to distinct concepts.
 - Report-only Worker builds are excluded. Save result notes on this verification branch or in PR metadata so source HEAD remains the deployed SHA.
+
+
+### Reviewer control results and current next step
+
+The fixed basic controls [44728635341](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44728635341) passed **8/8**: four counterbalanced named-monitor definitions and two supported/two false synthetic source claims. No drafts were read, no questions generated and no database data written. This confirms basic protocol health; it does not resolve the production clinical-review disagreements.
+
+A separate clinical suite now tests four new recognition controls and four balanced clinical assertions against three owner-scoped trusted textbook passages, using five logical reviewer calls. It does not rerun the eight basic controls or read held drafts. The source connection is read-only. Its result is pending. Preserve all source/answer holds and select any future reviewer model against the whole fixed positive/negative suite, never by finding a model that passes a held draft.

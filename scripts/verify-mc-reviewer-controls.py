@@ -64,6 +64,73 @@ def run(adapter, rows=None):
     return rows
 
 
+RECOGNITION = (
+    ("recognition_force", "Isometric tension from an evoked adductor pollicis contraction is read from a force transducer under preload. Which method records that force?",
+     ("Electromyography", "Mechanomyography", "Acceleromyography", "Kinemyography"), "B"),
+    ("recognition_acceleration", "A sensor attached to a freely moving thumb reports its acceleration after nerve stimulation. Which method uses that measurement?",
+     ("Kinemyography", "Mechanomyography", "Electromyography", "Acceleromyography"), "D"),
+    ("recognition_electrical", "A monitor evaluates the evoked compound muscle action potential detected by surface electrodes. Which method uses that muscle signal?",
+     ("Electromyography", "Acceleromyography", "Kinemyography", "Mechanomyography"), "A"),
+    ("recognition_bending", "A piezoelectric film deforms with thumb movement and develops a bending-related electrical signal. Which method uses that film principle?",
+     ("Acceleromyography", "Mechanomyography", "Kinemyography", "Electromyography"), "C"),
+)
+CLINICAL_CLAIMS = (
+    ("supported_distinct_measurements", "Mechanomyography measures muscle contraction force, whereas kinemyography records a bending-dependent electrical signal from a polymer strip.", "supported"),
+    ("supported_strip_mechanism", "A kinemyography strip produces an electrical signal when it bends during thumb movement.", "supported"),
+    ("false_force_interchangeability", "Kinemyography and mechanomyography are interchangeable measurements of muscle force.", "unsupported"),
+    ("false_mmg_electrical", "Mechanomyography directly records the muscle electrical response and does not measure contraction force.", "unsupported"),
+)
+SOURCE_IDS = ("15a11b47-866d-4f18-9f02-c7bb58eec091", "af4bdfb9-63ec-4ce2-a06d-cc1b89dc9ff2", "fa3536f9-f5b1-4e1b-92b9-814408b3c371")
+
+
+def run_clinical(adapter, sources, rows):
+    # Independent fixed controls, not readings of any generated or held draft.
+    for name, stem, texts, expected in RECOGNITION:
+        response=_call_with_bounded_rate_wait(adapter,{"step":"blind_review","rules_version":"2.0",
+            "auto_publish":False,"blind":True,"item_id":"reviewer-control-"+name,"format":"MC",
+            "stem":stem,"options":[{"id":oid,"text":text} for oid,text in zip("ABCD",texts)]})
+        actual=response.get("key")
+        rows.append({"case":name,"kind":"blind_reference","expected":[expected],"observed":actual,"pass":actual==[expected]})
+    packet,lookup=prepare({"source_passages":sources})
+    fields=[{"id":"e"+str(i),"label":"rationale.distractor_breakdown."+"ABCD"[i],"text":text,
+        "passage_ids":list(SOURCE_IDS),"assessment":"clinical_fact"} for i,(_,text,_) in enumerate(CLINICAL_CLAIMS)]
+    response=_call_with_bounded_rate_wait(adapter,{"step":"explanation_review","rules_version":"2.0",
+        "auto_publish":False,"independent":True,"fields":fields,"source_passages":packet["source_passages"]})
+    actual={}
+    groups=response.get("supported_groups");unsupported=response.get("unsupported")
+    valid=isinstance(groups,list) and isinstance(unsupported,list)
+    if valid:
+        for group in groups:
+            refs=group.get("quote_refs",[])
+            if not refs or any(not isinstance(r,dict) or r.get("passage_id") not in lookup
+                    or r.get("span_id") not in lookup[r["passage_id"]] for r in refs):valid=False;break
+            for fid in group.get("field_ids",[]):
+                if fid in actual:valid=False
+                actual[fid]="supported"
+        for field in unsupported:
+            fid=field.get("field_id")
+            if fid in actual:valid=False
+            actual[fid]="unsupported"
+        valid=valid and set(actual)=={f["id"] for f in fields}
+    for i,(name,_,expected) in enumerate(CLINICAL_CLAIMS):
+        observed=actual.get("e"+str(i)) if valid else "invalid"
+        rows.append({"case":name,"kind":"clinical_source_reference","expected":expected,"observed":observed,"pass":observed==expected})
+
+
+def clinical_sources():
+    import psycopg
+    with psycopg.connect(os.environ["STAGING_DATABASE_URL"],options="-c default_transaction_read_only=on") as conn:
+        with conn.cursor() as cur:
+            cur.execute("""select p.id::text,p.content from source_library_staging.passages p
+                join source_library_staging.textbooks t on t.id=p.textbook_id
+                where p.id::text=any(%s::text[]) and t.owner_uid=%s::uuid and t.status='ready'""",
+                (list(SOURCE_IDS),"c003287a-10ce-4cc9-926e-ef7c3a162a26"))
+            rows=cur.fetchall()
+    if len(rows)!=3 or {r[0] for r in rows}!=set(SOURCE_IDS):
+        raise ValueError("Reference passages unavailable")
+    return [{"passage_id":pid,"excerpt":text} for pid,text in rows]
+
+
 def main():
     if os.environ.get("CONFIRM_PAID_REVIEWER_CONTROLS") != "true" or os.environ.get("GITHUB_RUN_ATTEMPT") != "1":
         raise SystemExit("One explicitly authorized control run is required")
@@ -77,10 +144,18 @@ def main():
         relay_secret=os.environ["STAGING_RECEIPT_SIGNING_SECRET"])
     adapter=make_adapter(endpoint="https://api.groq.com/openai/v1/chat/completions",api_key="relay-authenticated",
                          model=model,transport=transport,owner_opt_in=True,staging=True)
-    result={"reviewer_model":model,"controls":[],"database_writes":False,"drafts_read":False,
-            "question_generation_performed":False,"max_logical_reviews":8,"published":False,"clinical_acceptance":False}
+    suite=os.environ.get("REVIEWER_CONTROL_SUITE","basic")
+    if suite not in ("basic","clinical"):
+        raise SystemExit("Unknown fixed control suite")
+    result={"suite":suite,"reviewer_model":model,"controls":[],"database_writes":False,"drafts_read":False,
+            "question_generation_performed":False,"max_logical_reviews":5 if suite=="clinical" else 8,"published":False,"clinical_acceptance":False,"source_passages_read":0}
     try:
-        run(adapter,result["controls"])
+        if suite=="clinical":
+            sources=clinical_sources()
+            result["source_passages_read"]=len(sources)
+            run_clinical(adapter,sources,result["controls"])
+        else:
+            run(adapter,result["controls"])
     except Exception as error:
         rule=getattr(error,"rule",None)
         result["control_error"]=rule if rule in {"PROVIDER_RATE_LIMIT","PROVIDER_AUTH","PROVIDER_FORBIDDEN","PROVIDER_REQUEST_REJECTED","PROVIDER_UPSTREAM","PROVIDER_TIMEOUT","PROVIDER_NETWORK","PROVIDER_INVALID_JSON","PROVIDER_MODEL_UNAVAILABLE","RELAY_AUTH","RELAY_NETWORK","RELAY_DISABLED","RELAY_UPSTREAM"} else "CONTROL_RESPONSE_INVALID"

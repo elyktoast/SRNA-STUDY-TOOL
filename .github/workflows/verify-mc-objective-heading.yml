@@ -60,7 +60,7 @@ jobs:
           console.log('All ten automated checks passed; human clinical review is still required.');
           JS
   reviewer-controls:
-    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-reviewer-controls]')
+    if: github.run_attempt == '1' && (contains(github.event.head_commit.message, '[verify-mc-reviewer-controls]') || contains(github.event.head_commit.message, '[verify-mc-clinical-controls]'))
     runs-on: ubuntu-latest
     environment: source-library-staging
     timeout-minutes: 10
@@ -73,9 +73,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Install read-only source database adapter
+        if: contains(github.event.head_commit.message, '[verify-mc-clinical-controls]')
+        run: python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
       - name: Run fixed positive and negative reviewer controls without drafts
         env:
           CONFIRM_PAID_REVIEWER_CONTROLS: 'true'
+          REVIEWER_CONTROL_SUITE: ${{ contains(github.event.head_commit.message, '[verify-mc-clinical-controls]') && 'clinical' || 'basic' }}
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
           STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
           REVIEWER_SOURCE_ROOT: ${{ github.workspace }}/reviewer-source
           PYTHONPATH: ${{ github.workspace }}/reviewer-source/workers/source-library-staging/scripts
