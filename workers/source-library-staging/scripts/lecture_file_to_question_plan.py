@@ -21,6 +21,11 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         selected = extracted["pages"]
     if not selected and extracted["pages"]:
         raise ValueError("No lecture pages selected")
+    # Report detection, never importance or clinical support inferred from formatting.
+    emphasis_pages = {kind: [p["page"] for p in selected
+                             if any(isinstance(v, str) and v.strip()
+                                    for v in p.get("emphasis", {}).get(kind, []))]
+                      for kind in ("highlighted", "bold")}
     # A truly empty page is not a visual concept. Skip it rather than blocking
     # the entire lecture; image-only pages and diagrams remain held for review.
     blank_pages = [p["page"] for p in selected
@@ -43,6 +48,7 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                                     "page_count": extracted["page_count"], "selected_pages": [p["page"] for p in selected],
                                     "skipped_blank_pages": blank_pages,
                                     "text_only_visual_pages": text_only_visual_pages,
+                                    "emphasis_pages": emphasis_pages,
                                     "review_pages": selected_review,
                                     "requires_visual_review": True},
                 "held_reason": "visual_review_required"}
@@ -142,5 +148,6 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                                  "selected_pages": [p["page"] for p in selected],
                                  "skipped_blank_pages": blank_pages,
                                  "text_only_visual_pages": text_only_visual_pages,
+                                 "emphasis_pages": emphasis_pages,
                                  "review_pages": [], "requires_visual_review": False}
     return result

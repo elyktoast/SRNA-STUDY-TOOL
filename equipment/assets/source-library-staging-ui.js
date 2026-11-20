@@ -103,7 +103,13 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
    }
    throw error;
   }
-  if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.';return;}
+  const emphasis=data.file_extraction?.emphasis_pages;
+  const emphasisParts=emphasis?['highlighted','bold'].flatMap(kind=>{
+   const pages=Array.isArray(emphasis[kind])?emphasis[kind].filter(n=>Number.isSafeInteger(n)&&n>0):[];
+   return pages.length?[kind+' text on page(s) '+pages.slice(0,20).join(', ')+(pages.length>20?' and '+(pages.length-20)+' more':'')]:[];
+  }):[];
+  const emphasisNote=emphasis?(emphasisParts.length?' Detected '+emphasisParts.join('; ')+'. Emphasized concepts are prioritized when textbook support is available.':' No text-backed highlighted or bold text was detected.') : '';
+  if(data.file_extraction?.requires_visual_review){out.textContent='File extracted, but pages/slides '+data.file_extraction.review_pages.join(', ')+' need image/OCR review before generating questions.'+emphasisNote;return;}
   const jobs=Array.isArray(data.jobs)?data.jobs:[];
   const held=data.classification?.held_count||0;
   const skipped=data.file_extraction?.skipped_blank_pages;
@@ -116,6 +122,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   }else{
    out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
   }
+  out.textContent+=emphasisNote;
   const ul=document.createElement('ul');
   for(const job of jobs){
    const li=document.createElement('li');

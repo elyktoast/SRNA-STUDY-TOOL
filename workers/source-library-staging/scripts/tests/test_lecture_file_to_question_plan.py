@@ -4,6 +4,20 @@ from lecture_file_to_question_plan import prepare_lecture_file_jobs
 
 class LectureFilePlanningTests(unittest.TestCase):
     @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_emphasis_summary_only_reports_selected_pages_without_exposing_lecture_text(self, extract):
+        extract.return_value={'format':'pdf','page_count':3,'review_pages':[], 'pages':[
+            {'page':1,'text':'First topic','emphasis':{'highlighted':['Highlighted private phrase'],'bold':[]}},
+            {'page':2,'text':'Second topic','emphasis':{'highlighted':[],'bold':['Bold private phrase']}},
+            {'page':3,'text':'Third topic','emphasis':{'highlighted':['Unselected private phrase'],'bold':['Another phrase']}}]}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',return_value={'jobs':[],'count':0}):
+            result=prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',textbook_id='book',
+                item_id_factory=lambda:'id',page_start=1,page_end=2)
+        self.assertEqual(result['file_extraction']['emphasis_pages'],{'highlighted':[1],'bold':[2]})
+        self.assertNotIn('private phrase',str(result['file_extraction']))
+        self.assertFalse(result['auto_generate'])
+        self.assertFalse(result['auto_publish'])
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
     def test_short_lecture_honors_requested_question_count(self, extract):
         extract.return_value = {'format':'pdf','page_count':1,'review_pages':[],
                                 'pages':[{'page':1,'text':'Local anesthetic ionization'}]}

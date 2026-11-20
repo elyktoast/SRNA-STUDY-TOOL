@@ -316,3 +316,14 @@ Contract `2026-11-20-v34` passes the actual independent counterfactual proof int
 Regression covers the demonstrated context migration, valid original-case paraphrasing with unchanged alternate, pending/failed/mismatched proof, explicit counterfactual repair, and the orchestrator-to-repair proof handoff. Live v34 acceptance is pending; no additional accepted question is claimed.
 
 Local v34 validation: 1,105 Python tests ran, four skipped; diff checks passed.
+
+
+### November 20: one fresh lecture MC passed all ten checks
+
+Control [44721919856](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44721919856) verified application `37ab875b00df21b795b8042d779186d9841564df`, connected build `a244e060-aa90-421d-ab73-de215149fb7b`, and settled image `77d3546d366afecb0aa123e48a94d0e5104fbc2d1fb96d15b669e735dfe5dbeb`. Fresh request `c7aebdf2-7177-420d-8d9e-5b5f1d323ee3` saved draft `3daf8077-4a7d-44da-a9e9-3ab9d52b011e`: **10/10 automated checks, zero current-source issues**, one rewrite. Both original-stem and alternate-stem blind solves, explanatory-source checks and independent option evidence passed. The draft remains unpublished and human clinical review is pending. This raises the recorded automated passing drafts from three to four, not a claim of overall generator completion. Collection took about twelve minutes; large-batch throughput remains unresolved.
+
+The lecture planner now reports only selected page numbers containing detected highlighted and bold text, and the staging upload UI displays that summary. Formatting never establishes clinical truth or source support. A local run on the original 19-page Peripheral Nerve Stimulation PDF detected highlights on pages 2, 8, 13 and 14, and bold text on all 19 pages, with zero model calls or database writes. New regression confirms selected ranges exclude other pages and the summary does not expose lecture phrases. Local validation: 1,106 Python tests ran, four skipped; 27 browser-adapter and 30 workspace Node tests passed; UI syntax and diff checks passed.
+
+The connected Chrome session was signed in to staging and exposed the Source Library entry point. Browser control stalled while opening that interface and again during recovery; both calls were stopped. No file chooser or upload result was observed. The original signed-in browser upload path therefore remains unverified. Do not ask for login on the assumption that the observed session was signed out.
+
+Next bounded quality check is a preselected distinct lecture concept, Kinemyography (page 15, II.C.4), rather than another grade of a completed draft. Keep 25/50/100 and non-MC formats paused.
