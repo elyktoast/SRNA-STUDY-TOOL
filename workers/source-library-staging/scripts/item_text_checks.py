@@ -6,7 +6,7 @@ WORDS = re.compile(r"[A-Za-z0-9]+")
 
 
 def check(item, source_texts=()):
-    from item_board_quality_v2 import canonical_counterfactual, obsolete_issues
+    from item_board_quality_v2 import canonical_counterfactual, counterfactual_parts, counterfactual_edit_issues, obsolete_issues
     issues = obsolete_issues(item)
     if item.get("format") not in ("MC", "MS"):
         return issues
@@ -22,6 +22,9 @@ def check(item, source_texts=()):
         proposal = rationale.get("counterfactual_test") if isinstance(rationale, dict) else None
         concept = item.get("concept_card")
         if isinstance(concept, dict):
+            parsed = counterfactual_parts(concept.get("counterfactual"))
+            if parsed is not None:
+                issues.extend(counterfactual_edit_issues(item, parsed))
             proposal = canonical_counterfactual(concept.get("counterfactual")) or proposal
         condition = proposal.get("from_text") if isinstance(proposal, dict) else None
         if isinstance(stem, str) and isinstance(condition, str) and condition.strip():

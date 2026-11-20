@@ -77,14 +77,38 @@ def teaching_specificity_issues(item):
     return issues
 
 
-def canonical_counterfactual(text):
+def counterfactual_parts(text):
+    """Parse the author's exact edit for diagnostics, without certifying it."""
     if not isinstance(text, str):
         return None
     match = re.fullmatch(
-        r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option\(s\) ([A-F](?:, [A-F])*)\.',
+        r'If "(.+)" is replaced by "(.+)", the best response changes to option\(s\) ([A-F](?:, [A-F])*)\.',
         text)
     return ({"from_text": match[1], "to_text": match[2], "expected_key": match[3].split(", ")}
             if match else None)
+
+
+def canonical_counterfactual(text):
+    proposal = counterfactual_parts(text)
+    return proposal if proposal and all(len(proposal[k]) <= 200 for k in ("from_text", "to_text")) else None
+
+
+def counterfactual_edit_issues(item, proposal):
+    """Check literal edit integrity; a clinical blind solve is still required."""
+    issue = {"rule_id":"R-5.3", "field":"concept_card.counterfactual"}
+    if not isinstance(proposal, dict) or set(proposal) != {"from_text", "to_text", "expected_key"}:
+        return [{**issue, "message":"Counterfactual requires from_text, to_text and expected_key"}]
+    for field in ("from_text", "to_text"):
+        value = proposal[field]
+        if not isinstance(value, str) or not 1 <= len(value) <= 200:
+            return [{**issue, "message":f"Counterfactual {field} must contain 1–200 characters; shorten the complete condition without cutting its sentence",
+                     "edit_field":field, "character_count":len(value) if isinstance(value, str) else None}]
+    stem = item.get("stem")
+    if (proposal["from_text"] == proposal["to_text"] or not isinstance(stem, str)
+            or stem.count(proposal["from_text"]) != 1
+            or proposal["from_text"].strip() == stem.strip()):
+        return [{**issue, "message":"Counterfactual must replace one unique condition substring, not the entire question; update its exact phrase after every stem rewrite"}]
+    return []
 
 
 def verify_counterfactual(item, proposal, reviewer):
@@ -95,12 +119,9 @@ def verify_counterfactual(item, proposal, reviewer):
     """
     issue = {"rule_id":"R-5.3", "field":"concept_card.counterfactual",
              "message":"Counterfactual must change a unique stem condition and independently yield a different correct answer"}
-    if (not isinstance(proposal, dict) or set(proposal) != {"from_text", "to_text", "expected_key"}
-            or any(not isinstance(proposal[k], str) or not 1 <= len(proposal[k]) <= 200 for k in ("from_text", "to_text"))
-            or proposal["from_text"] == proposal["to_text"]
-            or not isinstance(item.get("stem"), str) or item["stem"].count(proposal["from_text"]) != 1
-            or proposal["from_text"].strip() == item["stem"].strip()):
-        return {"status":"flag", "issues":[issue]}
+    structural = counterfactual_edit_issues(item, proposal)
+    if structural:
+        return {"status":"flag", "issues":structural}
     expected = proposal["expected_key"]
     normalize = lambda text: " ".join(text.casefold().split())
     statement = normalize(item.get("concept_card", {}).get("counterfactual", ""))
