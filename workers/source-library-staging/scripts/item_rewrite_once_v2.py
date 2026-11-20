@@ -6,7 +6,7 @@ A failed rewrite remains flagged for human review; never auto-approves.
 from copy import deepcopy
 
 
-def attempt_once(original, issues, rewrite, validate):
+def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=None):
     if not isinstance(original, dict) or not isinstance(issues, list):
         raise ValueError("Original draft and diagnostic list required")
     if not callable(rewrite) or not callable(validate):
@@ -17,6 +17,19 @@ def attempt_once(original, issues, rewrite, validate):
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
                  "objective", "format", "model", "status",
                  "numbers_verified_against_page_image")
+    protected_alternate = None
+    if (original.get("format") == "MC" and isinstance(counterfactual_proof, dict)
+            and counterfactual_proof.get("status") == "pass"
+            and not any(isinstance(i, dict) and (i.get("rule_id") == "R-5.3"
+                        or str(i.get("field", "")).startswith("concept_card.counterfactual")) for i in issues)):
+        from item_board_quality_v2 import canonical_counterfactual, counterfactual_edit_issues
+        proposal = canonical_counterfactual((original.get("concept_card") or {}).get("counterfactual"))
+        if (proposal and not counterfactual_edit_issues(original, proposal)
+                and counterfactual_proof.get("stem_change") == {k:proposal[k] for k in ("from_text", "to_text")}
+                and counterfactual_proof.get("expected_key") == proposal["expected_key"]
+                and counterfactual_proof.get("independent_key") == proposal["expected_key"]):
+            protected_alternate = {"stem":original["stem"].replace(proposal["from_text"], proposal["to_text"], 1),
+                                   "key":deepcopy(proposal["expected_key"])}
     request = {"item": deepcopy(original), "issues": deepcopy(issues),
                "protected_metadata": {field: deepcopy(original.get(field)) for field in immutable},
                "required_output_keys": list(original),
@@ -38,6 +51,15 @@ def attempt_once(original, issues, rewrite, validate):
                    "a repair. Return the complete revised item as a JSON object. "
                    "The result remains unpublished and requires clinical review."
                )}
+    if protected_alternate is not None:
+        request["protected_alternate_case"] = deepcopy(protected_alternate)
+        request["repair_instructions"] += (
+            " The protected_alternate_case already passed an independent blind solve. This repair has no counterfactual defect to fix. "
+            "After applying your final counterfactual edit to your final stem, the COMPLETE changed stem must equal protected_alternate_case.stem "
+            "and its proposed alternate key must equal protected_alternate_case.key. Keep the alternate case and shared question unchanged. "
+            "Paraphrase the original condition as a complete sentence including its setting; do not move research/operating-room context, findings "
+            "or qualifiers outside the replaceable phrase. Do not weaken a precise alternate measurement into vague movement. "
+            "All checks will run again; the previous pass grants no approval.")
     try:
         candidate = rewrite(request)
     except Exception:
@@ -89,6 +111,16 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
+    if protected_alternate is not None:
+        proposal = canonical_counterfactual((candidate.get("concept_card") or {}).get("counterfactual"))
+        changed_stem = (candidate["stem"].replace(proposal["from_text"], proposal["to_text"], 1)
+                        if proposal and not counterfactual_edit_issues(candidate, proposal) else None)
+        if (changed_stem != protected_alternate["stem"]
+                or proposal["expected_key"] != protected_alternate["key"]):
+            return {"item":deepcopy(original), "issues":deepcopy(issues) + [
+                {"rule_id":"R-5.3", "field":"concept_card.counterfactual",
+                 "message":"Repair changed an already verified alternate case; preserve its complete setting, findings and shared question"}],
+                "rewrite_attempts":1, "rewrite_failed":True, "can_publish":False}
     if original.get("format") == "MC" and any(
             isinstance(issue, dict) and issue.get("rule_id") == "R-12.1" for issue in issues):
         def blind_content(item):

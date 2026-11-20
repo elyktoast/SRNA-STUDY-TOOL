@@ -249,7 +249,9 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                                 if format in ("MC", "MS")
                                 else special_evidence_check(candidate, evidence))
                 return problems
-            repaired = attempt_once(generated["item"], failed, review_repair, verify)
+            proof = screening.get("stages", {}).get("editorial_quality", {}).get("counterfactual_verification")
+            repaired = attempt_once(generated["item"], failed, review_repair, verify,
+                                    counterfactual_proof=proof)
             if not repaired["issues"] and repaired["rewrite_attempts"] == 1:
                 rerun = generate_and_screen(
                     adapter, mode=mode, domain=domain, section=section,

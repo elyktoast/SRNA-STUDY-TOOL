@@ -82,10 +82,13 @@ class ScreenedGenerationTests(unittest.TestCase):
         revised = {"item_id": "new-1", "status": "draft", "stem": "repaired"}
         generate.return_value = {"item": original, "schema_issues": []}
         failure = {"rule_id": "R-12.4", "message": "Ambiguous distractor"}
+        proof = {"status":"pass", "stem_change":{"from_text":"Original condition.", "to_text":"Alternate condition."},
+                 "expected_key":["B"], "independent_key":["B"]}
         intake.side_effect = [
             {"draft_reviews": [{"status": "needs_editorial_review",
                                 "screening": {"stages": {
                                     "evidence": {"status": "fail", "issues": [failure]},
+                                    "editorial_quality": {"status":"pass", "issues":[], "counterfactual_verification":proof},
                                     "duplicates": {"status": "pending", "issues": []},
                                     "blind_model": {"status": "pending", "issues": []}}}}]},
             {"draft_reviews": [{"status": "draft", "screening": {"stages": {
@@ -101,6 +104,7 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertEqual(intake.call_count, 2)
         generate.assert_called_once()
         repair.assert_called_once()
+        self.assertEqual(repair.call_args.kwargs["counterfactual_proof"],proof)
         self.assertFalse(result["can_publish"])
 
     @patch("item_generation_screened_v2.attempt_once")

@@ -13,6 +13,69 @@ def draft():
 
 
 class RewriteTests(unittest.TestCase):
+    def alternate_case_fixture(self):
+        condition='In a research laboratory, the gauge records contraction force.'
+        alternate='In an operating room, the sensor records thumb acceleration.'
+        question='Which monitoring modality is used?'
+        proposal={'from_text':condition,'to_text':alternate,'expected_key':['B']}
+        original={**draft(),'stem':condition+' '+question,'key':['A'],
+                  'options':[{'id':'A','text':'Mechanomyography'},{'id':'B','text':'Acceleromyography'}],
+                  'concept_card':{'evidence_ids':['p1'], 'counterfactual':
+                    f'If "{condition}" is replaced by "{alternate}", the best response changes to option(s) B.'}}
+        proof={'status':'pass','stem_change':{k:proposal[k] for k in ('from_text','to_text')},
+               'expected_key':['B'],'independent_key':['B']}
+        return original, proof, alternate+' '+question
+
+    def test_unrelated_repair_cannot_move_setting_outside_verified_alternate_edit(self):
+        original,proof,changed=self.alternate_case_fixture()
+        calls=[]
+        def rewrite(request):
+            calls.append(request)
+            self.assertEqual(request['protected_alternate_case'],{'stem':changed,'key':['B']})
+            result=request['item']
+            result['stem']='In a research laboratory, the gauge senses contraction force. Which monitoring modality is used?'
+            result['concept_card']['counterfactual']='If "the gauge senses contraction force." is replaced by "the sensor records thumb acceleration.", the best response changes to option(s) B.'
+            return result
+        result=attempt_once(original,[{'rule_id':'R-2.8','field':'stem'}],rewrite,
+                            lambda _:self.fail('No rescreening a changed protected scenario'),counterfactual_proof=proof)
+        self.assertEqual(len(calls),1)
+        self.assertEqual(result['item'],original)
+        self.assertTrue(result['rewrite_failed'])
+        self.assertEqual(result['rewrite_attempts'],1)
+        self.assertFalse(result['can_publish'])
+        self.assertIn('already verified',result['issues'][-1]['message'])
+
+    def test_original_case_can_be_paraphrased_while_complete_alternate_stays_locked(self):
+        original,proof,changed=self.alternate_case_fixture()
+        checked=[]
+        def rewrite(request):
+            result=request['item']
+            condition='In a research laboratory, the gauge senses contraction force.'
+            result['stem']=condition+' Which monitoring modality is used?'
+            result['concept_card']['counterfactual']=f'If "{condition}" is replaced by "In an operating room, the sensor records thumb acceleration.", the best response changes to option(s) B.'
+            return result
+        result=attempt_once(original,[{'rule_id':'R-2.8','field':'stem'}],rewrite,
+                            lambda item:checked.append(item) or [],counterfactual_proof=proof)
+        self.assertEqual(len(checked),1)
+        self.assertEqual(result['issues'],[])
+        self.assertNotEqual(result['item']['stem'],original['stem'])
+        self.assertEqual(result['item']['key'],['A'])
+        self.assertFalse(result['can_publish'])
+
+    def test_pending_failed_or_unmatched_proof_cannot_lock_a_case(self):
+        original,proof,_=self.alternate_case_fixture()
+        for change in ({'status':'pending'},{'status':'flag'},{'independent_key':['A']},{'stem_change':{}}):
+            seen=[]
+            def rewrite(request):
+                seen.append(request)
+                return request['item']
+            attempt_once(original,[{'rule_id':'R-2.4'}],rewrite,lambda item:[],counterfactual_proof={**proof,**change})
+            self.assertNotIn('protected_alternate_case',seen[0])
+        for issue in ({'rule_id':'R-5.3'}, {'rule_id':'R-2.4','field':'concept_card.counterfactual'}):
+            seen=[]
+            attempt_once(original,[issue],lambda request:seen.append(request) or request['item'],lambda item:[],counterfactual_proof=proof)
+            self.assertNotIn('protected_alternate_case',seen[0])
+
     def test_no_issues_no_rewrite(self):
         def forbidden(_):
             self.fail("Rewrite must not run")
