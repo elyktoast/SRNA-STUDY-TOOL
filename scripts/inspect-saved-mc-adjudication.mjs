@@ -7,9 +7,11 @@ let token=env.SRNA_STAGING_REVIEWER_ACCESS_TOKEN;
 if(env.STAGING_TEST_ADMIN_EMAIL&&env.STAGING_TEST_ADMIN_PASSWORD){const r=await read(base+'/auth/v1/token?grant_type=password',{method:'POST',headers:{apikey:key,'Content-Type':'application/json'},body:JSON.stringify({email:env.STAGING_TEST_ADMIN_EMAIL,password:env.STAGING_TEST_ADMIN_PASSWORD})});token=r.access_token;}
 const identity=await read(base+'/auth/v1/user',{headers:{apikey:key,Authorization:'Bearer '+token}});
 assert.equal(identity.id,'c003287a-10ce-4cc9-926e-ef7c3a162a26');
-const id='0db56e8d-41ec-4f99-9276-e88c31aaee1c';
+const id='e5a8c51d-7054-44f9-9fac-f1903acc1b35';
 const draft=await read('https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/drafts/'+id,{headers:{Authorization:'Bearer '+token,Origin:'https://staging.srnastudytool.com'}});
 assert.equal(draft.published,false);
-const report=draft.screening.independent_option_adjudication;
-console.log(JSON.stringify({draft_id:id,published:false,model_calls:0,database_writes:false,report_status:report.status,
- judgments:report.judgments?.map(j=>({option_id:j.option_id,verdict:j.verdict,explanation:j.explanation,source_conflict_found:j.source_conflict_found,passage_ids:j.passage_ids,quote_count:j.quotes?.length})),issues:report.issues}));
+console.log(JSON.stringify({draft_id:id,published:false,model_calls:0,database_writes:false,
+ concept_card:draft.item?.concept_card ?? draft.question?.concept_card,
+ counterfactual_test:draft.item?.rationale?.counterfactual_test ?? draft.question?.rationale?.counterfactual_test,
+ editorial:draft.screening.editorial_quality, rewrite_original_issues:draft.rewrite_original_issues,
+ keys:Object.keys(draft)}));
