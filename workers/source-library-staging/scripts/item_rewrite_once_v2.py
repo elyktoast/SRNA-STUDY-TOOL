@@ -20,7 +20,7 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
     protected_alternate = None
     if (original.get("format") == "MC" and isinstance(counterfactual_proof, dict)
             and counterfactual_proof.get("status") == "pass"
-            and not any(isinstance(i, dict) and (i.get("rule_id") == "R-5.3"
+            and not any(isinstance(i, dict) and (i.get("rule_id") in ("R-5.3", "R-4.2", "R-12.1")
                         or str(i.get("field", "")).startswith("concept_card.counterfactual")) for i in issues)):
         from item_board_quality_v2 import canonical_counterfactual, counterfactual_edit_issues
         proposal = canonical_counterfactual((original.get("concept_card") or {}).get("counterfactual"))

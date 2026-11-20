@@ -71,10 +71,39 @@ class RewriteTests(unittest.TestCase):
                 return request['item']
             attempt_once(original,[{'rule_id':'R-2.4'}],rewrite,lambda item:[],counterfactual_proof={**proof,**change})
             self.assertNotIn('protected_alternate_case',seen[0])
-        for issue in ({'rule_id':'R-5.3'}, {'rule_id':'R-2.4','field':'concept_card.counterfactual'}):
+        for issue in ({'rule_id':'R-5.3'}, {'rule_id':'R-4.2','field':'stem'},
+                      {'rule_id':'R-12.1','field':'stem'}, {'rule_id':'R-2.4','field':'concept_card.counterfactual'}):
             seen=[]
             attempt_once(original,[issue],lambda request:seen.append(request) or request['item'],lambda item:[],counterfactual_proof=proof)
             self.assertNotIn('protected_alternate_case',seen[0])
+
+    def test_blind_pass_does_not_lock_truncated_cases_against_a_reported_grammar_repair(self):
+        from item_text_checks import check
+        original,proof,_=self.alternate_case_fixture()
+        source='A flexible sensor produces an electrical signal that is'
+        alternate='An accelerometer measures thumb acceleration and'
+        original['stem']=source+' Which monitoring modality is used?'
+        original['concept_card']['counterfactual']=f'If "{source}" is replaced by "{alternate}", the best response changes to option(s) B.'
+        proof['stem_change']={'from_text':source,'to_text':alternate}
+        self.assertIn('R-4.2',{i['rule_id'] for i in check(original)})
+        seen=[]
+        def rewrite(request):
+            self.assertNotIn('protected_alternate_case',request)
+            result=request['item']
+            source='A flexible sensor produces a bending-dependent electrical signal.'
+            alternate='An accelerometer measures thumb acceleration.'
+            result['stem']=source+' Which monitoring modality is used?'
+            result['concept_card']['counterfactual']=f'If "{source}" is replaced by "{alternate}", the best response changes to option(s) B.'
+            return result
+        def validate(item):
+            seen.append(item)
+            return check(item)
+        result=attempt_once(original,[{'rule_id':'R-4.2','field':'stem'}],rewrite,validate,counterfactual_proof=proof)
+        self.assertEqual(len(seen),1)
+        self.assertEqual(result['issues'],[])
+        self.assertEqual(result['rewrite_attempts'],1)
+        self.assertEqual(result['item']['key'],original['key'])
+        self.assertFalse(result['can_publish'])
 
     def test_no_issues_no_rewrite(self):
         def forbidden(_):
