@@ -606,14 +606,15 @@ test('MC option review binds every option to its own passage and each passage to
    for(const [i,id] of ids.entries()){
     const entry=judgments.properties[id];
     assert.equal(entry.additionalProperties,false);
-    assert.ok(entry.properties.verdict.enum.includes('uncertain'));
+    assert.deepEqual(entry.properties.answers_stem.type,['boolean','null']);
+    assert.equal(entry.properties.verdict,undefined);
     assert.equal(entry.properties.option_id,undefined);assert.equal(entry.properties.passage_ids,undefined);
     const refs=entry.properties.quote_refs.items;
     assert.equal(refs.type,'string');
     assert.deepEqual(refs.enum,[i%2?'s1:q1':'s0:q0']);
     assert.ok(entry.required.includes('source_conflict_found'));
    }
-   const output={judgments:Object.fromEntries(ids.map(id=>[id,{verdict:'uncertain',quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}]))};
+   const output={judgments:Object.fromEntries(ids.map(id=>[id,{answers_stem:null,quote_refs:[],explanation:'Evidence insufficient',source_conflict_found:false}]))};
    return Response.json({choices:[{message:{content:JSON.stringify(output)},finish_reason:'stop'}]});
   };
   const step={format:'MC',options:ids.map(id=>({id,text:id})),source_passages:sources,retrieval:{option_audits:audits}};

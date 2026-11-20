@@ -206,10 +206,10 @@ async function relayGroq(request,env){
      references.push(...spans.map(sid=>pid+':'+sid));
     }
     properties[id]={type:'object',properties:{
-     verdict:{type:'string',enum:['supports_key','refutes_distractor','uncertain']},
+     answers_stem:{type:['boolean','null']},
      quote_refs:{type:'array',maxItems:8,items:{type:'string',enum:references}},
      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
-    },required:['verdict','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
+    },required:['answers_stem','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
    }
    reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_scoped_option_review_v2',strict:true,schema:{type:'object',properties:{
     judgments:{type:'object',properties,required:optionIds,additionalProperties:false}

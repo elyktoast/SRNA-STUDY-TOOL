@@ -260,3 +260,24 @@ Run [44639577965](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/4463
 The dependent fresh acceleromyography control [44639798984](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44639798984) correctly stopped before generation because the scoped transport prerequisite did not complete. It made zero question-generation calls.
 
 The compact correction replaces nested quote-reference alternatives with one string enum of valid `passage:span` tokens for each option. The server expands only syntactically valid identities and still applies the existing ownership, per-option authorization and exact-span validation. Model verdicts and uncertainty remain untouched. Known provider request/model rejection and relay-payload categories are now retained instead of being mislabeled as an invalid clinical response. Contract: `2026-11-19-v30`. Local validation remains 1,095 Python tests (four skipped), 104 gateway Node checks and repository validation, all passing. Fresh transport acceptance remains required.
+
+
+### Compact protocol live result and fresh lecture control
+
+Run [44640393834](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44640393834) verified application `b790a5387c699a80cf543be49b5bd27151375fb8` and image `d6b6a79a27d5e1d166a6834dcf8d3c3e876e508602b9e9a572e27808ee2b7a0a`. The compact schema was accepted and returned four valid source-linked judgments. The existing mechanomyography draft remains **9/10**: the independent reviewer marked A as refuted while its explanation correctly described mechanomyography as direct force measurement. The source-reference transport completed; this is a completed inconsistent clinical judgment, not an unavailable review. The question hash and rewrite count remain unchanged. It is no longer eligible for missing-review resampling.
+
+A separate read-only inspection [44641052645](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44641052645) confirmed the stored judgments with zero model calls and database writes. No existing clinical grade was changed.
+
+Fresh acceleromyography control [44640617784](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44640617784) used request `275c4289-e2e2-4756-ac33-7d7d165e2fb5`. Draft `8dfa7266-c0e9-4aa8-ad2b-7743ecd40c43` saved at **9/10**, with one rewrite. All explanatory-source and independent option-evidence checks passed, verifying the scoped compact protocol during full new generation. The independent blind answer disagreed (R-12.1). Current-source revalidation held only that failed blind check. Completed-only recovery collected the same result after the initial polling deadline, without restarting generation. No new question passed all ten checks; the original three passing drafts remain pending human clinical review.
+
+Live telemetry showed token-per-minute limits (7,000) during explanatory/option review, with the existing single bounded wait. No replacement generation, additional rewrite, quota bypass or change to review requirements was performed.
+
+The original Peripheral Nerve Stimulation PDF was also exercised with the current local extractor: 19/19 text-bearing pages, four highlighted regions, bold text on all 19 pages, and contextual subject resolution for the short highlights on pages 13–14. This does not establish actual browser upload or image-content interpretation.
+
+### Literal-stem judgments and actionable blind feedback
+
+The next MC response asks `answers_stem` (true, false or null) rather than requiring the source reviewer to apply author-key terminology. The server translates only those independent meanings to existing verdict labels; it has no authority to correct a wrong answer. Multiple true answers and explicit uncertainty remain possible and block an ambiguous item. Existing saved judgments remain unchanged.
+
+Valid MC blind disagreements now retain the expected and independent option IDs in trusted repair feedback. Malformed/unknown IDs and arbitrary provider text are never echoed, and no expected answer is sent to the blind reviewer. The sole repair must resolve a source-supported question/option ambiguity, including clinical measurement versus transducer physics, while preserving the author key and keyed text; it must not force a reviewer to agree. No second rewrite is permitted. Contract: `2026-11-19-v31`.
+
+Local checks: 1,097 Python tests ran (four skipped), 104 gateway Node checks, repository validation and diff checks passed. Fresh deployed verification of this change remains required. Other formats, production/main and the existing canonical duplicate index remain unchanged. Larger batches are still deferred until MC quality is dependable.

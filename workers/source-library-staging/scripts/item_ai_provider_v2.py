@@ -217,10 +217,10 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
         if request["step"] == "option_review" and request.get("format") == "MC":
             body["messages"][0]["content"] += (
                 " For MC return judgments as an OBJECT keyed by EVERY supplied option ID, not an array. "
-                "Each value contains exactly verdict, quote_refs, explanation, source_conflict_found. For MC quote_refs is an array of strings combining the supplied short passage ID and span ID with a colon, such as s0:q1. "
+                "Each value contains exactly answers_stem, quote_refs, explanation, source_conflict_found. answers_stem is true if this option correctly answers the literal stem, false if it does not, or null when the evidence cannot decide. Evaluate the exact measured quantity and distinction asked in the stem; source examples must not replace that task. More than one true answer is permitted when the question is ambiguous. Do not force one answer. For MC quote_refs is an array of strings combining the supplied short passage ID and span ID with a colon, such as s0:q1. "
                 "Omit option_id and passage_ids: the server restores those identities only from the map key and selected quote references. "
                 "Each option may select only its own retrieved passage IDs and quote spans belonging to that passage. "
-                "If its evidence is insufficient, return uncertain and empty quote_refs; never borrow another option's evidence.")
+                "If its evidence is insufficient, return answers_stem null and empty quote_refs; never borrow another option's evidence.")
         if request["step"] == "option_review":
             from item_source_quote_spans_v2 import prepare
             review_request, quote_lookup = prepare(request)
@@ -340,6 +340,15 @@ def make_adapter(*, endpoint, api_key, model, transport, owner_opt_in=False,
                 judgments = []
                 for oid in option_ids:
                     value = mapping[oid]
+                    if isinstance(value, dict) and "answers_stem" in value:
+                        expected_fields = {"answers_stem", "quote_refs", "explanation", "source_conflict_found"}
+                        answer = value["answers_stem"]
+                        if set(value) != expected_fields or (answer is not None and type(answer) is not bool):
+                            raise ValueError("Invalid independent judgment map")
+                        # Translate the independent answer's meaning only. No
+                        # generator key or expected clinical verdict is available.
+                        value = {k: v for k, v in value.items() if k != "answers_stem"}
+                        value["verdict"] = "supports_key" if answer is True else "refutes_distractor" if answer is False else "uncertain"
                     if isinstance(value, dict) and isinstance(value.get("quote_refs"), list):
                         converted = []
                         for ref in value["quote_refs"]:

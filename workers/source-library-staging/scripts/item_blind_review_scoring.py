@@ -16,7 +16,17 @@ def compare(item, response):
         if (not isinstance(key, list) or not isinstance(chosen, list)
                 or not all(isinstance(x, str) for x in key + chosen)
                 or len(chosen) != len(set(chosen)) or set(chosen) != set(key)):
-            return [{"rule_id": "R-12.1", "message": "Blind selection disagrees"}]
+            issue = {"rule_id": "R-12.1", "message": "Blind selection disagrees"}
+            # Diagnostics go only to trusted screening/repair, never the blind
+            # request. Do not echo malformed or arbitrary provider content.
+            options = item.get("options")
+            ids = {o["id"] for o in options if isinstance(o, dict) and isinstance(o.get("id"), str)} if isinstance(options, list) else set()
+            if (kind == "MC" and isinstance(key, list) and isinstance(chosen, list)
+                    and len(key) == 1 and len(chosen) <= 4
+                    and all(isinstance(v, str) and v in ids and v in "ABCD" and len(v) == 1 for v in key + chosen)
+                    and len(key) == len(set(key)) and len(chosen) == len(set(chosen))):
+                issue.update(expected_key=list(key), independent_key=list(chosen))
+            return [issue]
     elif kind == "SA":
         sa = item.get("sa") or {}
         value = response.get("numeric_answer")

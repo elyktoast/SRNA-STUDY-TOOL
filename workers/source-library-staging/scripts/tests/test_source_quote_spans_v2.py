@@ -188,6 +188,26 @@ class SourceQuoteSpanTests(unittest.TestCase):
             if change=='malformed_token': a['quote_refs']=['s0:q1:extra']
             with self.subTest(change=change),self.assertRaises(ValueError): adapter(self.request)
 
+    def test_literal_stem_answers_map_without_using_or_correcting_the_author_key(self):
+        response = {'judgments':{
+            'A':{'answers_stem':True,'quote_refs':['s0:q1'],'explanation':'This option answers the exact question.','source_conflict_found':False},
+            'B':{'answers_stem':None,'quote_refs':[],'explanation':'Evidence insufficient.','source_conflict_found':False}}}
+        def transport(**kwargs):
+            sent = json.loads(kwargs['body']['messages'][1]['content'])
+            self.assertNotIn('key',sent)
+            self.assertNotIn('expected_verdict',str(sent))
+            return {'choices':[{'message':{'content':json.dumps(response)}}]}
+        adapter=make_adapter(endpoint='https://provider.example/v1',api_key='test',model='reviewer',transport=transport,owner_opt_in=True)
+        self.assertEqual([j['verdict'] for j in adapter(self.request)['judgments']],['supports_key','uncertain'])
+        response['judgments']['A']['answers_stem']=False
+        self.assertEqual(adapter(self.request)['judgments'][0]['verdict'],'refutes_distractor')
+        for invalid in (1,'true',[],{}):
+            response['judgments']['A']['answers_stem']=invalid
+            with self.subTest(invalid=invalid),self.assertRaises(ValueError):adapter(self.request)
+        response['judgments']['A']['answers_stem']=True
+        response['judgments']['A']['verdict']='refutes_distractor'
+        with self.assertRaises(ValueError):adapter(self.request)
+
     def test_adapter_uses_bounded_span_protocol_without_answer_leakage(self):
         calls = []
         def transport(**kwargs):
