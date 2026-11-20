@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture highlight: mechanomyography, bounded blind repair',page:13,objective:'II.C.4',workflow:'lecture',item_id:'b4f80121-33d4-491e-9ed4-90947b8c1ecb',topic:'Mechanomyography'}
+ {name:'Lecture highlight: mechanomyography, bounded counterfactual repair',page:13,objective:'II.C.4',workflow:'lecture',item_id:'dbc8d0bb-f484-4f4c-811f-c84ccb623030',topic:'Mechanomyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='dfa444cdeaf93b419acd2facb61c17fd18fc33a9';
+const sha='5ed3157f3a6a7f95ba986964e43a8a3710021103';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -70,7 +70,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-19-v32');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-19-v33');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
@@ -85,11 +85,12 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    row.stages=Object.fromEntries(Object.entries(screening.stages).map(([k,v])=>[k,v.status]));
    row.blockers=Object.fromEntries(Object.entries(screening.stages).filter(([k,v])=>k!=='human_review'&&v.status!=='pass'));
    row.rewrite_attempts=screening.rewrite_attempts_used;
+   row.rewrite_original_issues=screening.rewrite_original_issues;
    row.source_repair_retrieval=screening.source_repair_retrieval;
    assert.ok(row.rewrite_attempts<=1);assert.equal(saved.published,false);
    // Preserve exact reviewer blockers privately, excluding full textbook excerpts.
    const question=saved.question||generated.item;
-   row.question={stem:question.stem,options:question.options,key:question.key,rationale:question.rationale};
+   row.question={stem:question.stem,options:question.options,key:question.key,rationale:question.rationale,counterfactual:question.concept_card?.counterfactual};
    row.option_citation_counts=Object.fromEntries(Object.entries(question.distractor_evidence||{}).map(([id,value])=>[id,value.passage_ids?.length]));
    const current=await call('/generation/drafts/'+row.draft_id+'/revalidate');
    assert.equal(current.database_writes,false);assert.equal(current.generation_performed,false);assert.equal(current.published,false);
