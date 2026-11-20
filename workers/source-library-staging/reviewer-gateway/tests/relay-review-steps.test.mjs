@@ -604,24 +604,19 @@ test('MC option review binds every option to its own passage and each passage to
    assert.equal(judgments.type,'object');assert.equal(judgments.additionalProperties,false);
    assert.deepEqual(judgments.required,ids);
    for(const [i,id] of ids.entries()){
-    const alternatives=judgments.properties[id].anyOf;
-    assert.equal(alternatives.length,2);
-    for(const [index,entry] of alternatives.entries()){
+    const entry=judgments.properties[id];
      assert.equal(entry.additionalProperties,false);
-     assert.equal(entry.properties.answers_stem.type,index===0?'boolean':'null');
-     if(index===0){
-      assert.equal(entry.properties.quote_refs.minItems,1);
-      assert.equal(entry.properties.quote_refs.maxItems,8);
-     }else assert.equal(entry.properties.quote_refs.type,'null');
+     assert.equal(entry.anyOf,undefined);
+     assert.deepEqual(entry.properties.answers_stem.type,['boolean','null']);
+     assert.deepEqual(entry.properties.quote_refs.type,['array','null']);
+     assert.equal(entry.properties.quote_refs.minItems,1);
+     assert.equal(entry.properties.quote_refs.maxItems,8);
      assert.equal(entry.properties.verdict,undefined);
      assert.equal(entry.properties.option_id,undefined);assert.equal(entry.properties.passage_ids,undefined);
-     if(index===0){
       const refs=entry.properties.quote_refs.items;
       assert.equal(refs.type,'string');
       assert.deepEqual(refs.enum,[i%2?'s1:q1':'s0:q0']);
-     }
      assert.ok(entry.required.includes('source_conflict_found'));
-    }
    }
    const output={judgments:Object.fromEntries(ids.map(id=>[id,{answers_stem:null,quote_refs:null,explanation:'Evidence insufficient',source_conflict_found:false}]))};
    return Response.json({choices:[{message:{content:JSON.stringify(output)},finish_reason:'stop'}]});

@@ -221,13 +221,13 @@ async function relayGroq(request,env){
      if(typeof pid!=='string'||!Array.isArray(spans)||!spans.length||spans.some(q=>typeof q!=='string')||new Set(spans).size!==spans.length)return respond(400,null,'{"error":"invalid_step"}');
      references.push(...spans.map(sid=>pid+':'+sid));
     }
-    // A definite judgment needs evidence; uncertainty must remain representable.
-    // Nested anyOf is supported by Groq strict structured outputs.
-    properties[id]={anyOf:[true,false].map(definite=>({type:'object',properties:{
-     answers_stem:{type:definite?'boolean':'null'},
-     quote_refs:definite?{type:'array',minItems:1,maxItems:8,items:{type:'string',enum:references}}:{type:'null'},
+    // The live provider rejected nested anyOf. Use nullable fields and keep
+    // definite-answer citation requirements in the trusted backend validator.
+    properties[id]={type:'object',properties:{
+     answers_stem:{type:['boolean','null']},
+     quote_refs:{type:['array','null'],minItems:1,maxItems:8,items:{type:'string',enum:references}},
      explanation:{type:'string'},source_conflict_found:{type:'boolean'}
-    },required:['answers_stem','quote_refs','explanation','source_conflict_found'],additionalProperties:false}))};
+    },required:['answers_stem','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
    }
    reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_scoped_option_review_v2',strict:true,schema:{type:'object',properties:{
     judgments:{type:'object',properties,required:optionIds,additionalProperties:false}
