@@ -20,6 +20,43 @@ class RewriteTests(unittest.TestCase):
         self.assertEqual(result["rewrite_attempts"], 0)
         self.assertFalse(result["can_publish"])
 
+    def test_blind_disagreement_cannot_resample_an_unchanged_question(self):
+        original={**draft(),'key':['A'],'options':[{'id':'A','text':'Alpha','error_pattern':None},{'id':'B','text':'Beta','error_pattern':'mistake'}], 'rationale':{'core_concept':'Original claim'}}
+        issue={'rule_id':'R-12.1','expected_key':['A'],'independent_key':['B']}
+        for change in ('none','whitespace','rationale','error_pattern'):
+            calls=[]
+            def rewrite(request):
+                calls.append(request)
+                result=request['item']
+                if change=='whitespace':result['stem']='  ORIGINAL  '
+                if change=='rationale':result['rationale']['core_concept']='Different claim'
+                if change=='error_pattern':result['options'][1]['error_pattern']='different explanation'
+                return result
+            result=attempt_once(original,[issue],rewrite,lambda item:self.fail('No new screening of an unchanged blind question'))
+            self.assertEqual(len(calls),1)
+            self.assertEqual(result['item'],original)
+            self.assertEqual(result['rewrite_attempts'],1)
+            self.assertTrue(result['rewrite_failed'])
+            self.assertTrue(any('unchanged' in i.get('message','') for i in result['issues']))
+            self.assertFalse(result['can_publish'])
+
+    def test_blind_disagreement_can_repair_the_actual_question_without_changing_key(self):
+        original={**draft(),'key':['A'],'options':[{'id':'A','text':'Alpha'},{'id':'B','text':'Beta'}]}
+        for field in ('stem','options'):
+            calls=[]
+            def rewrite(request):
+                result=request['item']
+                if field=='stem':result['stem']='Revised question specifying the reported measurement'
+                else:result['options'][1]['text']='Distinct false alternative'
+                return result
+            result=attempt_once(original,[{'rule_id':'R-12.1'}],rewrite,lambda item:calls.append(item) or [])
+            self.assertEqual(len(calls),1)
+            self.assertEqual(result['item']['key'],['A'])
+            self.assertEqual(result['item']['options'][0]['text'],'Alpha')
+            self.assertEqual(result['issues'],[])
+            self.assertEqual(result['rewrite_attempts'],1)
+            self.assertFalse(result['can_publish'])
+
     def test_single_rewrite_and_revalidation(self):
         calls = []
         def rewrite(request):

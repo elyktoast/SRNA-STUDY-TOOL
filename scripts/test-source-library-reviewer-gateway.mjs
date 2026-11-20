@@ -551,3 +551,31 @@ test('missing option review is authenticated POST only and rejects question gene
  const preflight=await gateway.fetch(new Request(endpoint,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Authorization, Content-Type'}}),configured(result));
  assert.equal(preflight.status,204);assert.equal(preflight.headers.get('Access-Control-Allow-Methods'),'POST');
 });
+
+
+// The deployment workaround must retry only the same read, with a finite budget.
+test('Wrangler uploaded-version retry is bounded, read-only and idempotent',async()=>{
+ const {patchVersionReadback}=await import('../workers/source-library-staging/reviewer-gateway/scripts/patch-wrangler-version-readback.mjs');
+ const source=`async function fetchUploadedVersion(config, accountId, scriptName, versionId) {
+\tfor (let attempt = 0; attempt < 5; attempt++) try {
+\t\treturn await fetchResult$1(config, \`/accounts/\${accountId}/workers/scripts/\${scriptName}/versions/\${versionId}\`);
+\t} catch (error) {
+\t\tif (!isUploadedVersionNotReadyError(error) || attempt === 4) throw error;
+\t\tawait (0, node_timers_promises.setTimeout)(500);
+\t}
+\tthrow new Error("Unable to fetch uploaded Worker version");
+}`;
+ const patched=patchVersionReadback(source);
+ assert.equal(patchVersionReadback(patched),patched);
+ assert.throws(()=>patchVersionReadback('new unknown upstream implementation'));
+ for(const mode of ['becomes-visible','not-ready','forbidden']){
+  const paths=[],delays=[],failure=Object.assign(new Error('Unavailable'),{code:mode==='forbidden'?10000:100146});
+  const read=async(_config,path)=>{paths.push(path);if(mode==='becomes-visible'&&paths.length===3)return {id:'same-version'};throw failure;};
+  const fn=new Function('fetchResult$1','node_timers_promises','isUploadedVersionNotReadyError',patched+'; return fetchUploadedVersion;')(read,{setTimeout:async ms=>delays.push(ms)},e=>e.code===100146);
+  if(mode==='becomes-visible')assert.deepEqual(await fn({},'account','staging-worker','same-version'),{id:'same-version'});
+  else await assert.rejects(fn({},'account','staging-worker','same-version'),e=>e===failure);
+  assert.equal(paths.length,mode==='forbidden'?1:mode==='not-ready'?4:3);
+  assert.deepEqual(delays,mode==='forbidden'?[]:mode==='not-ready'?[10000,20000,30000]:[10000,20000]);
+  assert.ok(paths.every(path=>path==='/accounts/account/workers/scripts/staging-worker/versions/same-version'));
+ }
+});

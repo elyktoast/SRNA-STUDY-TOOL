@@ -88,6 +88,21 @@ def attempt_once(original, issues, rewrite, validate):
         return {"item": deepcopy(original), "issues": [
             {"rule_id": "R-13", "message": "Rewrite cannot change draft review state"}] + deepcopy(issues),
             "rewrite_attempts": 1, "can_publish": False}
+    if original.get("format") == "MC" and any(
+            isinstance(issue, dict) and issue.get("rule_id") == "R-12.1" for issue in issues):
+        def blind_content(item):
+            def normalized(value):
+                return " ".join(value.split()).casefold() if isinstance(value, str) else None
+            options = item.get("options")
+            choices = sorted((o["id"], normalized(o["text"])) for o in options) if (
+                isinstance(options, list) and all(isinstance(o, dict)
+                    and isinstance(o.get("id"), str) and isinstance(o.get("text"), str) for o in options)) else None
+            return normalized(item.get("stem")), choices
+        if blind_content(candidate) == blind_content(original):
+            return {"item": deepcopy(original), "issues": deepcopy(issues) + [
+                {"rule_id": "R-12.1", "field": "stem",
+                 "message": "Blind-disagreement repair left the blind question unchanged"}],
+                "rewrite_attempts": 1, "rewrite_failed": True, "can_publish": False}
     try:
         checked = validate(deepcopy(candidate))
     except Exception:
