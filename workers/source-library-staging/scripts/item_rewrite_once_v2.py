@@ -64,6 +64,17 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
                    "a repair. Return the complete revised item as a JSON object. "
                    "The result remains unpublished and requires clinical review."
                )}
+    if original.get("format") == "MC" and any(
+            isinstance(issue, dict) and issue.get("rule_id") == "R-2.4"
+            and str(issue.get("field", "")).startswith(("rationale.distractor_breakdown.", "distractor_evidence."))
+            for issue in issues):
+        request["repair_instructions"] = (
+            "Repair the flagged option explanations first. For each flagged choice use a single positively cited fact about that choice and connect it to the original question. "
+            "Remove any claim about being the correct answer in a different case; the counterfactual is assessed independently. "
+            "For a measurement method, state the quantity or signal established in the source rather than an unsupported exclusion about what the method cannot measure. "
+            "If a comparison asserts two clinical facts, cite passages for both in that same choice's passage_ids. "
+            "Use identical corrected text in rationale.distractor_breakdown and distractor_evidence.explanation. "
+            + request["repair_instructions"])
     if concept_source_repair:
         request["allow_concept_evidence_additions"] = True
         request["repair_instructions"] += (
