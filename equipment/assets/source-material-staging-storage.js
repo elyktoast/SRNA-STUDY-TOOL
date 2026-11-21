@@ -196,6 +196,7 @@ async function checkGroqConnection(){
  if(!response.ok)throw Error((typeof data.rule==='string'?data.rule+': ':'')+(data.error||'Groq diagnostic failed')+' ('+response.status+').');
  return data;
 }
+const manageMcBatch = request => generationRequest('/generation/mc-batch',request);
 async function generateOne(request,{onRecovery=()=>{}}={}){
  try{return await generationRequest('/generation/one',request);}
  catch(error){const recovery=await import('./generation-completion-recovery.js');if(!recovery.isGenerationDisconnect(error))throw error;return recovery.recoverCompletedGeneration(request,cached=>generationRequest('/generation/one',cached),{onProgress:onRecovery});}
@@ -270,5 +271,5 @@ async function saveDraftRevision(draftId,payload){
   throw Error('Revision requires a parent fingerprint, source corrections and reviewer notes.');
  return draftRevisionRequest(draftId,'POST',payload);
 }
-window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,completeGeneratedOptionReview,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
+window.MBUSourceMaterialStagingStorage=Object.freeze({save,list,file,download,reviewPdf,reviewQueue,verifiedReviewManifest,verifiedReviewPage,mobileReviewerAcceptance,remove,saveReviewDraft,loadReviewDraft,deleteReviewDraft,listIndexedTextbooks,generationPreflight,planLectureQuestions,planLectureFile,checkGroqConnection,manageMcBatch,generateOne,saveGeneratedDraft,listGeneratedDrafts,getGeneratedDraft,revalidateGeneratedDraft,completeGeneratedOptionReview,listDraftRevisions,saveDraftRevision,reviewGeneratedDraft});
 })();

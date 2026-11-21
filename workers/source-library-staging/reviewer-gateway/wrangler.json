@@ -24,7 +24,8 @@
     "SEMANTIC_INDEX_EMBEDDING_MODEL": "@cf/baai/bge-m3",
     "SEMANTIC_INDEX_INVENTORY_PATH": "/app/canonical-semantic-inventory.json",
     "AI_REVIEWER_CALIBRATION_OPT_IN": "true",
-    "AI_REVIEWER_CALIBRATION_MODEL": "openai/gpt-oss-120b"
+    "AI_REVIEWER_CALIBRATION_MODEL": "openai/gpt-oss-120b",
+    "AI_MC_BATCH_ENABLED": "true"
   },
   "containers": [
     {
@@ -40,6 +41,10 @@
       {
         "name": "REVIEWER_CONTAINER",
         "class_name": "ReviewerContainer"
+      },
+      {
+        "name": "MC_BATCH",
+        "class_name": "McBatch"
       }
     ]
   },
@@ -48,6 +53,12 @@
       "tag": "v1",
       "new_sqlite_classes": [
         "ReviewerContainer"
+      ]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": [
+        "McBatch"
       ]
     }
   ],

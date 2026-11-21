@@ -4,13 +4,14 @@ Does not save lecture bytes, generate AI questions, or write to the database.
 Text-bearing visual slides can plan from extracted text only; image-only slides remain held.
 """
 from lecture_file_extraction import extract_lecture
+from lecture_to_question_plan import valid_staging_count
 
 def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                               item_id_factory, count=1, mode="NCE", format="MC",
                               domain=None, section=None, objective=None,
                               enable_ocr=False, page_start=None, page_end=None):
-    if type(count) is not int or not 1 <= count <= 5:
-        raise ValueError('Question count must be between 1 and 5')
+    if not valid_staging_count(count, format):
+        raise ValueError('Unsupported staging question count')
     extracted = extract_lecture(data, filename, enable_ocr=enable_ocr)
     if page_start is not None or page_end is not None:
         if (type(page_start) is not int or type(page_end) is not int

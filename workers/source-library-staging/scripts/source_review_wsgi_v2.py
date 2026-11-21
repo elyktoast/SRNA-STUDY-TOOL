@@ -153,7 +153,7 @@ def build_app():
     return lambda environ, start_response: (
         generation(environ, start_response)
         if (environ.get("PATH_INFO") in ("/generation/preflight", "/generation/one", "/generation/provider-check", "/generation/index-readiness", "/generation/checkpoint-readiness", "/generation/textbooks", "/generation/lecture-plan", "/generation/lecture-file-plan") or
-            environ.get("PATH_INFO", "").startswith("/generation/drafts"))
+            environ.get("PATH_INFO", "").startswith(("/generation/drafts", "/internal/mc-batch/")))
         else reviewer_app(environ, start_response))
 
 

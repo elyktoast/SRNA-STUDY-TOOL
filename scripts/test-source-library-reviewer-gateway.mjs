@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 const source=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
-const gateway=(await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'))).default;
+import gateway from '../workers/source-library-staging/reviewer-gateway/src/index.js';
 const origin='https://staging.srnastudytool.com';
 const base='https://gateway.example/review/manifest?path=owner%2Fbook.pdf';
 const calls={auth:0,container:0};
@@ -312,7 +312,7 @@ test('lecture planning rejects unauthenticated requests before contacting review
 
 test('lecture panel is mounted in the AI create workspace, not after a detached node',()=>{
  const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
- assert.match(ui,/create\.append\(evidencePanel,lecturePanel\)/);
+ assert.match(ui,/create\.append\(evidencePanel,batchPanel,lecturePanel\)/);
  assert.doesNotMatch(ui,/evidencePanel\.after\(lecturePanel\)/);
  assert.match(ui,/storage\.planLectureQuestions\(/);
 });

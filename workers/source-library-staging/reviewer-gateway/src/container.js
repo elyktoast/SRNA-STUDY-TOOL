@@ -9,6 +9,7 @@ export class ReviewerContainer extends Container {
    if(!this.env[name])throw new Error('Missing staging secret: '+name);
    result[name]=this.env[name];
   }
+  if(this.env.AI_MC_BATCH_ENABLED==='true')result.AI_MC_BATCH_ENABLED='true';
   // Checkpoint access is private to this staging container; never expose it to browser configuration.
   if (this.env.AI_GENERATION_CHECKPOINTS_ENABLED === 'true') {
    if (this.env.AI_GENERATION_OPT_IN !== 'true') throw new Error('Checkpointing requires staging AI opt-in');

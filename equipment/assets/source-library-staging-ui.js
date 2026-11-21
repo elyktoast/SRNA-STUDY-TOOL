@@ -39,7 +39,7 @@ for(const id of ['sl-topic','sl-mode','sl-format'])for(const eventName of ['inpu
 const evidenceHint=document.createElement('p');evidenceHint.className='sl-muted';evidenceHint.id='sl-evidence-next-step';evidenceHint.textContent='Choose a topic and check indexed evidence before generating. Your selected topic and exam format carry into question creation.';evidencePanel.append(evidenceHint);
 const lecturePanel=document.createElement('section');
 lecturePanel.setAttribute('aria-label','Lecture question planning');
-lecturePanel.innerHTML='<h3>Lecture upload → question plan (staging)</h3><p class="sl-muted">Upload your lecture PDF or PowerPoint, or paste lecture notes. Highlighted and bold text helps prioritize concepts; planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 25 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><div class="sl-row"><label>Start page/slide <input id="sl-lecture-page-start" type="number" min="1" placeholder="All" style="width:75px"></label><label>End page/slide <input id="sl-lecture-page-end" type="number" min="1" placeholder="All" style="width:75px"></label></div><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture evidence sources <select id="sl-lecture-book"><option value="all">All indexed textbooks (recommended)</option></select></label><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <input id="sl-lecture-count" type="number" min="1" max="5" value="1" style="width:65px"></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
+lecturePanel.innerHTML='<h3>Lecture upload → question plan (staging)</h3><p class="sl-muted">Upload your lecture PDF or PowerPoint, or paste lecture notes. Highlighted and bold text helps prioritize concepts; planning checks indexed textbook evidence and suggests NCE/SEE classification. No AI generation or drafts are created.</p><label>Upload lecture PDF or PowerPoint (.pptx, max 25 MB) <input type="file" id="sl-lecture-file" accept=".pdf,.pptx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation"></label><div class="sl-row"><label>Start page/slide <input id="sl-lecture-page-start" type="number" min="1" placeholder="All" style="width:75px"></label><label>End page/slide <input id="sl-lecture-page-end" type="number" min="1" placeholder="All" style="width:75px"></label></div><p class="sl-muted">Uploaded files are processed in staging; pages with unresolved diagrams or images are held for visual review. Paste text below as an alternative.</p><label>Lecture evidence sources <select id="sl-lecture-book"><option value="all">All indexed textbooks (recommended)</option></select></label><label>Lecture content <textarea id="sl-lecture-text" rows="6" maxlength="12000" style="display:block;width:100%;box-sizing:border-box" placeholder="Paste lecture objectives, headings, or notes"></textarea></label><div class="sl-row"><label>Questions <select id="sl-lecture-count"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>25</option><option>50</option><option>100</option></select></label><label><input id="sl-lecture-use-objective" type="checkbox"> Use selected learning objective (otherwise suggest automatically)</label><button type="button" id="sl-lecture-plan">Prepare lecture questions</button></div><p id="sl-lecture-status" role="status" aria-live="polite"></p><div id="sl-lecture-results"></div>';
 // Local-only lecture preview. Blob URLs are never sent to the generation service.
 const lectureInput=lecturePanel.querySelector('#sl-lecture-file');
 const lecturePreview=document.createElement('div');lecturePreview.id='sl-lecture-preview';
@@ -74,7 +74,7 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
  results.replaceChildren();
  if(!textbook_id){out.textContent='Choose a textbook evidence scope.';return;}
  if(!lectureFile&&(!lecture_text||lecture_text.length>12000)){out.textContent='Upload a PDF/PPTX or enter up to 12,000 characters.';return;}
- if(!Number.isInteger(count)||count<1||count>5){out.textContent='Choose 1–5 questions.';return;}
+ if(count>5&&el('sl-format').value!=='MC'){out.textContent='Large batches require Single best answer.';return;}
  btn.disabled=true;out.textContent='Preparing grounded lecture plan…';
  try{
   const mode=evidencePanel.querySelector('#sl-mode').value,format=evidencePanel.querySelector('#sl-format').value;
@@ -123,6 +123,13 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
    out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
   }
   out.textContent+=emphasisNote;
+  if (count > 5 && jobs.length) {
+   const queue = document.createElement('button');
+   queue.type = 'button';
+   queue.textContent = 'Queue ' + jobs.length + ' grounded questions';
+   queue.onclick = () => submitBatch(count, jobs.map(job => job.body), queue);
+   results.append(queue);
+  }
   const ul=document.createElement('ul');
   for(const job of jobs){
    const li=document.createElement('li');
@@ -305,6 +312,82 @@ function selectedEvidenceScope(primary){
  return ids.length>1?{textbook_ids:[primary,...ids.filter(id=>id!==primary).sort()]}:{};
 }
 let generatedForReview=null,currentDraftQuestion=null;
+
+const batchPanel = document.createElement('section');
+batchPanel.innerHTML = '<h3>MC batch generation</h3><div class="sl-row"><label>Questions <select><option>25</option><option>50</option><option>100</option></select></label><button type="button">Queue current topic</button><button type="button" hidden>Resume</button><button type="button" hidden>Cancel</button></div><p role="status"></p><details hidden><summary>Question results</summary><ol></ol></details>';
+evidencePanel.after(batchPanel);
+const [batchStart,batchResume,batchCancel] = batchPanel.querySelectorAll('button');
+const batchStatus = batchPanel.querySelector('[role="status"]');
+const batchResults = batchPanel.querySelector('details');
+let batchTimer, batchId, batchVersion = 0;
+function renderBatch({batch}) {
+ clearTimeout(batchTimer);
+ batchId = batch?.id;
+ batchResume.hidden = batch?.status !== 'paused';
+ batchCancel.hidden = !['running','paused'].includes(batch?.status);
+ batchStart.disabled = ['running','paused','cancelling'].includes(batch?.status);
+ batchResults.hidden = !batch;
+ if (!batch) return;
+ const counts = {};
+ const rows = batch.items.map(item => {
+  counts[item.status] = (counts[item.status] || 0) + 1;
+  const row = document.createElement('li');
+  const status = item.status === 'queued' && batch.status === 'cancelled' ? 'cancelled' : item.status;
+  row.textContent = item.topic + ' — ' + ({ready:'Ready for clinical review',held:'Held for revision',unknown:'Completion unverified',started:'In progress'}[status] || status);
+  return row;
+ });
+ batchResults.querySelector('ol').replaceChildren(...rows);
+ batchStatus.textContent = 'Batch ' + batch.status + ' · ' + batch.items.length + '/' + batch.requested + ' queued in plan · ' +
+  (counts.ready || 0) + ' ready for clinical review · ' + (counts.held || 0) + ' held · ' +
+  ((counts.failed || 0) + (counts.unknown || 0)) + ' failed or unverified' +
+  (batch.reason ? ' · ' + batch.reason.replaceAll('_',' ') : '');
+ if (['running','cancelling'].includes(batch.status)) batchTimer = setTimeout(refreshBatch,15000);
+}
+async function refreshBatch() {
+ const version = ++batchVersion;
+ try {
+  const data = await storage.manageMcBatch({action:'status'});
+  if (version === batchVersion) renderBatch(data);
+ } catch {
+  if (version === batchVersion && batchId) batchTimer = setTimeout(refreshBatch,30000);
+ }
+}
+async function batchAction(request) {
+ clearTimeout(batchTimer);
+ const version = ++batchVersion;
+ try {
+  const result = await storage.manageMcBatch(request);
+  if (version === batchVersion) renderBatch(result);
+ } catch (error) {
+  if (version !== batchVersion) return;
+  batchStatus.textContent = error.message;
+  batchTimer = setTimeout(refreshBatch,5000);
+ }
+}
+async function submitBatch(count, jobs, button) {
+ if (!confirm('Queue ' + jobs.length + ' staging MC generation attempts? Provider charges may apply. Drafts require clinical review.')) return;
+ button.disabled = true;
+ await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,confirm:true});
+ if (button !== batchStart || !batchId) button.disabled = false;
+}
+batchStart.onclick = () => {
+ const current = {
+  topic:el('sl-topic').value.trim(), format:el('sl-format').value, mode:el('sl-mode').value,
+  textbook_id:genEl('sl-gen-book-select').value || genEl('sl-gen-book').value.trim(),
+  domain:genEl('sl-gen-domain').value, section:genEl('sl-gen-section').value.trim().toUpperCase(),
+  objective:genEl('sl-gen-objective').value.trim(),
+ };
+ if (!checkedEvidence || current.format !== 'MC' || Object.keys(current).some(key => current[key] !== checkedEvidence[key])) {
+  batchStatus.textContent = 'Select Single best answer and check indexed evidence for the current topic first.';
+  return;
+ }
+ const count = Number(batchPanel.querySelector('select').value);
+ submitBatch(count, Array.from({length:count}, () => checkedEvidence), batchStart);
+};
+batchResume.onclick = () => batchAction({action:'resume',id:batchId});
+batchCancel.onclick = () => batchAction({action:'cancel',id:batchId});
+void refreshBatch();
+
 
 genEl('sl-generate-one').onclick=async()=>{
  const topic=el('sl-topic').value.trim(),textbook_id=genEl('sl-gen-book-select').value||genEl('sl-gen-book').value.trim();
@@ -662,7 +745,7 @@ function ensureAICommandCenter(){
  const editor=document.createElement('section');editor.id='sl-clinical-editor';editor.className='sl-clinical-editor';editor.hidden=true;editor.innerHTML='<div class="sl-clinical-head"><div><span>CLINICAL REVIEW · UNPUBLISHED</span><h3>Question Editor</h3><p>Review the question, correct its wording, verify source evidence, and save a versioned draft.</p></div><button type="button" id="sl-editor-back">Back to drafts</button></div><div id="sl-clinical-editor-body"></div>';
  const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','bank','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;if(view==='bank'||view==='drafts')renderDraftCollection(view).catch(error=>{genEl('sl-gen-status').textContent=error.message||'Question list unavailable.';});editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||(name==='drafts'?(view!=='drafts'&&view!=='bank'):view!==name);for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
  center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('drafts');
- create.append(evidencePanel,lecturePanel);
+ create.append(evidencePanel,batchPanel,lecturePanel);
  const draftControls=generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');

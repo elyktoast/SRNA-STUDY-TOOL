@@ -3,6 +3,7 @@
 Mount in a trusted Python service with staging PostgreSQL; never in the
 Cloudflare upload Worker. Defaults to evidence-only preflight, no model calls.
 """
+import io
 import json
 import re
 from uuid import UUID, uuid4
@@ -13,6 +14,7 @@ from item_generation_checkpoint_store_v2 import save_once
 from item_generation_attempt_v2 import GenerationAlreadyStarted, GenerationBusy
 from item_saved_option_review_v2 import complete_option_review, OptionReviewConflict
 from item_draft_revalidation_v2 import revalidate
+from lecture_to_question_plan import valid_staging_count
 from item_draft_revision_storage_v2 import save_revision, list_revisions, RevisionValidationError
 
 MAX_BODY = 8192
@@ -43,6 +45,30 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
             return [data]
 
         path = environ.get("PATH_INFO", "")
+        batch_owner = None
+        previous_drafts = []
+        if path in ("/internal/mc-batch/access", "/internal/mc-batch/run"):
+            from item_mc_batch_v2 import authenticate, prior_ids
+            if environment.get("AI_MC_BATCH_ENABLED") != "true":
+                return respond("404 Not Found", {"error": "not_found"})
+            action = path.rsplit("/", 1)[-1]
+            secret = environment.get("STAGING_RECEIPT_SIGNING_SECRET")
+            try:
+                batch_owner, payload = authenticate(environ, action, secret, conn_factory)
+            except Exception:
+                return respond("403 Forbidden", {"error": "forbidden"})
+            if action == "access":
+                return respond("200 OK", {"authorized": True})
+            try:
+                if set(payload) != {"request", "prior"} or payload["request"].get("format") != "MC":
+                    raise ValueError()
+                previous_drafts = prior_ids(payload["prior"])
+                raw = json.dumps(payload["request"]).encode()
+            except (ValueError, TypeError, AttributeError, KeyError):
+                return respond("400 Bad Request", {"error": "invalid_batch_slot"})
+            path = "/generation/one"
+            environ = {**environ, "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+
         draft_match = re.fullmatch(r"/generation/drafts/([0-9a-fA-F-]{36})(/review|/revalidate|/revisions|/complete-options)?", path)
         lecture_plan = path == "/generation/lecture-plan"
         lecture_file = path == "/generation/lecture-file-plan"
@@ -75,10 +101,10 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         elif method != "POST":
             return respond("405 Method Not Allowed", {"error": "method_not_allowed"})
         bearer = environ.get("HTTP_AUTHORIZATION", "")
-        if not bearer.startswith("Bearer ") or len(bearer) > 8192:
+        if batch_owner is None and (not bearer.startswith("Bearer ") or len(bearer) > 8192):
             return respond("401 Unauthorized", {"error": "authentication_required"})
         try:
-            owner = resolve_admin(bearer[7:])
+            owner = batch_owner if batch_owner is not None else resolve_admin(bearer[7:])
             if str(UUID(owner)) != owner.lower():
                 raise ValueError('Invalid identity')
         except Exception:
@@ -95,7 +121,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if not isinstance(payload, dict) or not {"filename", "file_base64", "textbook_id"} <= payload.keys() or not payload.keys() <= {"filename", "file_base64", "textbook_id", "count", "mode", "format", "domain", "section", "objective", "page_start", "page_end"}:
                     raise ValueError("Invalid lecture file payload")
                 raw = base64.b64decode(payload["file_base64"], validate=True)
-                if len(raw) > 25 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not 1 <= payload.get("count", 1) <= 5:
+                if len(raw) > 25 * 1024 * 1024 or type(payload.get("count", 1)) is not int or not valid_staging_count(payload.get("count", 1), payload.get("format", "MC")):
                     raise ValueError("Invalid lecture file")
                 start, end = payload.get("page_start"), payload.get("page_end")
                 if (start is None) != (end is None) or (
@@ -136,7 +162,7 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 if (not isinstance(lecture_text, str) or not 1 <= len(lecture_text.strip()) <= 12000
                         or not isinstance(book, str) or not 1 <= len(book) <= 200
                         or type(data.get("count", 1)) is not int
-                        or not 1 <= data.get("count", 1) <= 5):
+                        or not valid_staging_count(data.get("count", 1), data.get("format", "MC"))):
                     raise ValueError("Invalid lecture input")
                 from lecture_to_question_plan import prepare_staging_jobs
                 with conn_factory() as conn:
@@ -398,6 +424,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                 semantic_lookup = (semantic_lookup_factory(conn, owner, args.textbook_id)
                                    if live and not getattr(args, "resume_completed_only", False)
                                    and semantic_lookup_factory is not None else None)
+                if batch_owner is not None and not getattr(args, "resume_completed_only", False):
+                    from item_mc_batch_v2 import with_draft_neighbors
+                    semantic_lookup = with_draft_neighbors(semantic_lookup, conn, owner, previous_drafts, secret)
                 result = execute(conn, args, environment, semantic_lookup=semantic_lookup)
                 if live:
                     # Persist the same generated item in the private, owner-scoped

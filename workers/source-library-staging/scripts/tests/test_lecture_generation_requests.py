@@ -125,9 +125,9 @@ class LectureHandoffTests(unittest.TestCase):
             prepare_staging_jobs(object(), "owner", "lecture",
                                  textbook_id="", item_id_factory=lambda: str(uuid4()))
 
-    def test_composed_lecture_rejects_over_five_before_retrieval(self):
+    def test_composed_lecture_rejects_unsupported_count_before_retrieval(self):
         with patch("lecture_to_question_plan.prepare") as mock_prepare:
-            with self.assertRaisesRegex(ValueError, "between 1 and 5"):
+            with self.assertRaisesRegex(ValueError, "Unsupported staging question count"):
                 prepare_staging_jobs(object(), "owner", "lecture",
                                      textbook_id="t1", item_id_factory=lambda: str(uuid4()),
                                      count=6)

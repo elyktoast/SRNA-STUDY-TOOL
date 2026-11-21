@@ -1,3 +1,5 @@
+import {startReviewer} from './container-start.js';
+import {batchRoute, isBatchPath} from './mc-batch.js';
 // Staging-only gateway for a private reviewer container binding.
 // Called only after the existing private relay's HMAC authentication.
 export const SEMANTIC_MODEL='@cf/baai/bge-m3';
@@ -352,7 +354,9 @@ export default {
    console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'required_binding_unavailable'}));
    return respond(503,null,'{"error":"staging_not_configured"}');
   }
-  if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
+  if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)&&!isBatchPath(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
+  if(isBatchPath(url.pathname)&&request.method==='OPTIONS')return batchRoute(request,env,null);
+  const batch=isBatchPath(url.pathname);
   const acknowledgment=url.pathname==='/review/acknowledge';
   const approval=url.pathname==='/review/approve';
   if(approval&&env.STAGING_PAGE_APPROVAL_ENABLED!=='true')return respond(403,origin,'{"error":"approval_disabled"}');
@@ -381,14 +385,14 @@ export default {
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
-  if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
+  if(!batch&&!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
   if((acknowledgment||approval||generation||draftRead||providerCheck||checkpointCheck||indexCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
   if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
   if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if(url.search.length>2048||(!batch&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!batch&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -438,60 +442,12 @@ export default {
    return respond(503,origin,'{"error":"identity_unavailable"}');
   }
   if(!identity?.id||identity.is_anonymous===true)return respond(403,origin,'{"error":"forbidden"}');
+  if(batch)return batchRoute(request,env,identity.id);
   // Application-side role and source ownership checks remain mandatory.
   let containerStage='binding';
   try{
-   const container=env.REVIEWER_CONTAINER.getByName('staging-reviewer');
    containerStage='startup';
-   const required=['STAGING_DATABASE_URL','STAGING_R2_ACCOUNT_ID','STAGING_R2_ACCESS_KEY_ID','STAGING_R2_SECRET_ACCESS_KEY','SUPABASE_ANON_KEY','STAGING_RECEIPT_SIGNING_SECRET'];
-   for(const key of required){
-    if(!env[key]){
-     console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'container_secret_missing',name:key}));
-     return respond(503,origin,'{"error":"staging_not_configured"}');
-    }
-   }
-   if(env.AI_HYBRID_ENABLED==='true'){
-    const keys=['AI_CLOUDFLARE_ACCOUNT_ID','AI_CLOUDFLARE_API_TOKEN','AI_CLOUDFLARE_MODEL'];
-    if(env.AI_GENERATION_OPT_IN!=='true'||!keys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
-     return respond(503,origin,'{"error":"staging_not_configured"}');
-    }
-   }
-   const envVars={STAGING_ONLY:'true',SUPABASE_URL:PROJECT};
-   for(const key of required)envVars[key]=env[key];
-   // Model credentials remain server-side. Incomplete configuration disables generation.
-   const aiKeys=['AI_PROVIDER_ENDPOINT','AI_ALLOWED_HOSTS','AI_PROVIDER_API_KEY','AI_GENERATOR_MODEL'];
-   // Never silently disable requested checkpointing because model configuration is incomplete.
-   if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true'&&
-      (env.AI_GENERATION_OPT_IN!=='true'||!aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0))){
-    console.error('staging_reviewer_failure',JSON.stringify({stage:'configuration',reason:'checkpoint_ai_config_incomplete'}));
-    return respond(503,origin,'{"error":"staging_not_configured"}');
-   }
-   if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
-    envVars.AI_GENERATION_OPT_IN='true';
-    for(const key of aiKeys)envVars[key]=env[key];
-    if(env.AI_AUTHORING_PROVIDER!==undefined){
-     envVars.AI_AUTHORING_PROVIDER=env.AI_AUTHORING_PROVIDER;
-     if(env.AI_AUTHORING_PROVIDER==='cloudflare')envVars.AI_CLOUDFLARE_MODEL=env.AI_CLOUDFLARE_MODEL||'';
-    }
-    if(env.AI_SOURCE_DISCOVERY_OPT_IN==='true')envVars.AI_SOURCE_DISCOVERY_OPT_IN='true';
-    if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
-    if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true'){
-     if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
-      return respond(503,origin,'{"error":"staging_not_configured"}');
-     if(env.AI_BLIND_REVIEW_OPT_IN==='true')envVars.AI_BLIND_REVIEW_OPT_IN='true';
-     if(env.AI_OPTION_REVIEW_OPT_IN==='true')envVars.AI_OPTION_REVIEW_OPT_IN='true';
-     if(env.AI_EXPLANATION_REVIEW_OPT_IN==='true')envVars.AI_EXPLANATION_REVIEW_OPT_IN='true';
-     envVars.AI_REVIEWER_MODEL=env.AI_REVIEWER_MODEL;
-     if(typeof env.AI_EDITORIAL_REVIEWER_MODEL==='string'&&env.AI_EDITORIAL_REVIEWER_MODEL.trim()&&env.AI_EDITORIAL_REVIEWER_MODEL!==env.AI_GENERATOR_MODEL)envVars.AI_EDITORIAL_REVIEWER_MODEL=env.AI_EDITORIAL_REVIEWER_MODEL;
-    }
-    if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
-    if(env.AI_SEMANTIC_EMBEDDING_OPT_IN==='true'){
-     envVars.AI_SEMANTIC_EMBEDDING_OPT_IN='true';
-     for(const name of ['SEMANTIC_INDEX_OWNER_UID','SEMANTIC_INDEX_EMBEDDING_MODEL','SEMANTIC_INDEX_INVENTORY_PATH'])envVars[name]=env[name]||'';
-    }
-    if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
-   }
-   await container.startAndWaitForPorts({startOptions:{envVars}});
+   const container=await startReviewer(env);
    containerStage='upstream_request';
    let body;
    if(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite){
@@ -709,6 +665,7 @@ export default {
    }
    return new Response(upstream.body,{status:upstream.status,headers});
   }catch(error){
+   if(error?.message==='staging_not_configured')return respond(503,origin,'{"error":"staging_not_configured"}');
    // Container runtime exceptions may contain sensitive details. Only emit fixed categories.
    const detail=String(error?.message||'').toLowerCase();
    const category=/no container instance.*provided|no container instance.*available|cannot.*provide.*container instance/.test(detail)?'instance_allocation_unavailable':
