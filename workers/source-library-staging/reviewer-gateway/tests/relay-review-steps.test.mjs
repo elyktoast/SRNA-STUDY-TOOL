@@ -859,3 +859,31 @@ test('bounded source search planning is MC-only, separately enabled and delivere
   assert.equal(seen[0].body.response_format.json_schema.schema.properties.alternative_queries.maxItems,3);
  }finally{globalThis.fetch=old;}
 });
+
+test('Groq size rejection is distinguishable and per-option fallback keeps all choices visible',async()=>{
+ const old=globalThis.fetch;
+ const model='openai/gpt-oss-120b';
+ const cfg={...env,AI_REVIEWER_MODEL:model,AI_OPTION_REVIEW_OPT_IN:'true'};
+ const options=[...'ABCD'].map(id=>({id,text:'Choice '+id}));
+ const step={format:'MC',stem:'Example?',options,source_passages:[
+  {passage_id:'s0',quote_spans:[{id:'q0',text:'A source statement'}]},
+ ],retrieval:{option_audits:options.map(({id})=>({option_id:id,retrieved_passage_ids:['s0']}))}};
+ try{
+  globalThis.fetch=async()=>new Response(null,{status:413});
+  const rejected=await gateway.fetch(request('option_review',model,step),cfg);
+  assert.equal((await rejected.json()).rule,'PROVIDER_REQUEST_SIZE');
+  const targeted={...step,target_option:'B',retrieval:{option_audits:[step.retrieval.option_audits[1]]}};
+  globalThis.fetch=async(_url,options)=>{
+   const body=JSON.parse(options.body);
+   assert.deepEqual(JSON.parse(body.messages[1].content).options,step.options);
+   const judgments=body.response_format.json_schema.schema.properties.judgments;
+   assert.deepEqual(judgments.required,['B']);
+   assert.deepEqual(judgments.properties.B.properties.quote_refs.items.enum,['s0:q0']);
+   return Response.json({choices:[{message:{content:JSON.stringify({
+    judgments:{B:{answers_stem:null,quote_refs:null,explanation:'Insufficient support',source_conflict_found:false}}
+   })},finish_reason:'stop'}]});
+  };
+  assert.equal((await gateway.fetch(request('option_review',model,targeted),cfg)).status,200);
+  assert.equal((await gateway.fetch(request('option_review',model,{...targeted,target_option:'C'}),cfg)).status,400);
+ }finally{globalThis.fetch=old;}
+});

@@ -71,7 +71,7 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-21-v46", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-21-v47", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
@@ -236,8 +236,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 request_hash=request_hash, evidence_hash=evidence_hash,
                 stage=stage, value=value)
         def option_reviewer(payload):
-            response = _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "option_review", "blind": True,
-                                         "rules_version": "2.0", "auto_publish": False})
+            from item_option_review_transport_v2 import request_judgments
+            response = request_judgments(payload, lambda request: _call_with_bounded_rate_wait(reviewer_adapter, request))
             if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
                 raise ValueError("Independent option reviewer returned invalid judgments")
             judgments = response["judgments"]

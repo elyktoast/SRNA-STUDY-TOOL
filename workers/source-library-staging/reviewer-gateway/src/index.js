@@ -213,12 +213,15 @@ async function relayGroq(request,env){
    if(groqQwen||groqOss)reviewFormat={type:'json_schema',json_schema:{name:'srna_options_only_v2',strict:true,schema:{type:'object',properties:{key:{type:'array',minItems:count,maxItems:count,items:{type:'string',enum:ids}}},required:['key'],additionalProperties:false}}};
   }
   if((groqQwen||groqOss)&&step.step==='option_review'&&step.format==='MC'){
-   const optionIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const allIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const target=step.target_option;
+   const optionIds=target===undefined?allIds:[target];
    const passages=Array.isArray(step.source_passages)?step.source_passages:[];
    const byId=new Map(passages.map(p=>[p?.passage_id,p]));
    const audits=step.retrieval?.option_audits;
-   if(optionIds.length!==4||optionIds.some((id,index)=>id!=='ABCD'[index])||
-      !Array.isArray(audits)||audits.length!==4||new Set(audits.map(a=>a.option_id)).size!==4||
+   if(allIds.length!==4||allIds.some((id,index)=>id!=='ABCD'[index])||
+      (target!==undefined&&!allIds.includes(target))||
+      !Array.isArray(audits)||audits.length!==optionIds.length||new Set(audits.map(a=>a.option_id)).size!==optionIds.length||
       byId.size!==passages.length||!passages.length)return respond(400,null,'{"error":"invalid_step"}');
    const properties={};
    for(const id of optionIds){
@@ -295,7 +298,7 @@ async function relayGroq(request,env){
   }
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
-  if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
+  if(!upstream.ok){const rule=upstream.status===413?'PROVIDER_REQUEST_SIZE':upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
    const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,20})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
    const remainingTokens=upstream.headers.get('x-ratelimit-remaining-tokens');
