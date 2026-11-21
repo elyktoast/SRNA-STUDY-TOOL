@@ -7,6 +7,15 @@ from lecture_concept_extraction import extract
 from lecture_to_question_plan import prepare
 
 class LectureExtractionTests(unittest.TestCase):
+    def test_exported_pdf_date_and_page_counter_do_not_replace_the_full_topic(self):
+        text = "Page 14:\n9/19/25\n14\nQuantitative Monitoring: Electromyography\n• Measures the evoked response"
+        result = extract(text)
+        self.assertEqual([c["title"] for c in result["concepts"]],
+                         ["Quantitative Monitoring: Electromyography"])
+        self.assertEqual(result["concepts"][0]["lecture_locator"],"slide/page 14")
+        ratio = extract("Page 2:\n1/4 Train-of-four response")
+        self.assertEqual(ratio["concepts"][0]["title"],"1/4 Train-of-four response")
+
     def test_headings_and_objectives(self):
         text = "Slide 2\n# Airway management\nObjectives:\n- Describe airway assessment\n- Identify aspiration risks\n\n# Airway management"
         result = extract(text)

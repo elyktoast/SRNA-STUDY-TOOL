@@ -63,6 +63,13 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
             "Use a positive definition for the alternate method and a precise distinguishing variable, not generic movement. "
             "Keep educational relevance tied to this question's concept. Remove flagged background clinical claims that "
             "are unnecessary to answer it; do not carry an unsupported claim into a longer replacement sentence.")
+    if original.get("format") == "MC" and any(i.get("rule_id") == "R-12.2" for i in issues if isinstance(i, dict)):
+        request["repair_instructions"] += (
+            " For this answer-cue repair, keep ALL incorrect options on the protected key's decision axis. "
+            "If the key is a medication strategy, do not offer abandoning or replacing the requested monitor as a peer; "
+            "use plausible, distinct medication strategies refuted by affirmative sources. Do not invent preferred, "
+            "most-established or recommended source rankings to dismiss another modality. If the sources cannot "
+            "support distinct peers and a unique original and alternate answer, leave the item held.")
     if protected_alternate is not None:
         request["protected_alternate_case"] = deepcopy(protected_alternate)
         request["repair_instructions"] += (

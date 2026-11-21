@@ -11,6 +11,7 @@ BULLET = re.compile(r"^(?:[-*•]\s+|\d+[.)]\s+)")
 EMPHASIS = re.compile(r"^Lecture (highlighted|bold):\s*(.+)$")
 PRIORITY = {"learning_objective": 0, "highlighted": 1, "bold": 2, "standard": 3}
 PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
+DATE_HEADER = re.compile(r"^(?:(?:0?[1-9]|1[0-2])/(?:0?[1-9]|[12]\d|3[01])/(?:\d{2}|\d{4})|\d{4}-\d{2}-\d{2})$")
 
 
 def extract(text, *, max_concepts=60):
@@ -32,6 +33,10 @@ def extract(text, *, max_concepts=60):
             locator = "slide/page " + page.group(1)
             at_page_start = True
             in_objectives = False
+            continue
+        if at_page_start and (DATE_HEADER.fullmatch(line) or re.fullmatch(r"\d{1,4}", line)):
+            # PDF exports often put a date and page counter before the title.
+            # Keep looking for the actual heading instead of planning a date.
             continue
         emphasized = EMPHASIS.fullmatch(line)
         if emphasized:
