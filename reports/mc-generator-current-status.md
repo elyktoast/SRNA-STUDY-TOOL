@@ -4,17 +4,19 @@ Updated November 21, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 
 ## Current version
 
-- Source `f539ba7fca76949977bb68e649705c1d086faeb4`, contract `2026-11-21-v42`, staging branch `fix/board-question-quality`, PR #189. Deployment verification and fresh acceptance pending.
-- Lecture bullet teaching points now stay with their parent heading and flow into focused question requests. Highlight/bold priority and parent classification are retained. Focused search fallback remains within identical authorized source scope. Lecture wording is an untrusted scope cue, never evidence.
-- Authoring avoids unrequested product-brand recognition. Rationale-only or expected-key-only edits cannot resample an unchanged failed alternate blind question. Source failures return bounded diagnostics without arbitrary private error content.
-- Offline: 1,119 Python tests passed, four skipped; eight root answer-integrity regressions passed. Actual provided PDF page 14 correctly separates AMG/EMG points, including the muscle action-potential measurement. Zero model calls or DB writes in that file check.
-- Main/production unchanged; all drafts unpublished, human clinical review required. Other formats paused. Browser file upload and 25/50/100 background batches remain unfinished.
+Source `270f631a7adcad74b58f56895d9744bdf3a69601`, contract `2026-11-21-v43`, staging only, PR #189. Deployment and fixed teaching/source controls pending. Relevance authoring now states only the supported distinction; source review applies assessment mode before judging clinical claims. Supported instructional framing and unsupported accuracy/outcome/interchangeability assertions are tested separately with fictional references, never held drafts. Local Python: 1119 passed, four skipped.
 
-## Latest completed result: v41 held
+## Latest completed result: v42 lecture focus works; source gate held
 
-[Run 44843428029](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44843428029) saved draft `7e411bbc-13d5-48a4-8bb6-560533671f6b`, item `56e2394d-9052-437a-bffb-6990e7410a51`, artifact `14681724177`, at 7/10 with one rewrite. Parallel options passed the answer-cue check. A product-brand alternate case failed the independent blind solve; its attempted repair left the changed-stem question unchanged. Source review remained pending with REVIEW_RESPONSE_INVALID and no specific diagnostic; this is not a source pass. Independent option review was not invoked. Draft remains held; no reroll/regrade.
+[Run 44913276868](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44913276868) tested exact source f539ba7fca76949977bb68e649705c1d086faeb4 / v42, settled image fdd7647eb96ae5198b8476600b5314a58235ed86994809979b698bd7fc172679, build 58044f57-a7be-41de-bd37-82b594f0ee0b. The synthetic lecture heading + bullet + bold marker reached the focused topic before paid authoring; actual provided PDF page 14 also passed offline extraction. This is not an actual browser file-upload test.
 
-The next v42 pilot uses a synthetic focused lecture fixture (heading + bullet + bold marker), not a claimed browser upload. Four previously passing automated drafts remain the total, all awaiting clinical human review.
+Item a6fb8441-9491-4b06-92ef-53c295870208 saved draft 72474f74-3f7a-49db-b002-dba83e920d6b, held and unpublished at 8/10 with one rewrite. All checks except explanatory source support and not-yet-invoked independent option review passed. One relevance statement was flagged with 'no source on teaching relevance'; all other explanatory fields passed. Relevance was identical to its initially passing version. Do not inherit that earlier pass or regrade this held draft. Current-index revalidation reported two issues; no acceptance claimed. Four source-review 429s recovered with existing bounded waits.
+
+Four earlier automated passing drafts remain the total, all requiring human clinical review. Main/production unchanged, other question formats paused. Actual browser upload and durable 25/50/100 generation remain unfinished.
+
+## Previous v41 result
+
+Run 44843428029 saved draft 7e411bbc-13d5-48a4-8bb6-560533671f6b at 7/10, held for a product-brand alternate blind disagreement and pending source review. v42 carries slide teaching points, avoids unrequested product trivia, and prevents resampling an unchanged failed alternate question. The held draft was not regraded.
 
 ## Prior EMG result and source-repair fix
 
