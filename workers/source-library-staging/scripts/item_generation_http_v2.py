@@ -49,7 +49,8 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
         previous_drafts = []
         if path in ("/internal/mc-batch/access", "/internal/mc-batch/run"):
             from item_mc_batch_v2 import authenticate, prior_ids
-            if environment.get("AI_MC_BATCH_ENABLED") != "true":
+            if (environment.get("AI_MC_BATCH_ENABLED") != "true"
+                    or environment.get("AI_GENERATION_CHECKPOINTS_ENABLED") != "true"):
                 return respond("404 Not Found", {"error": "not_found"})
             action = path.rsplit("/", 1)[-1]
             secret = environment.get("STAGING_RECEIPT_SIGNING_SECRET")

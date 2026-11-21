@@ -334,6 +334,13 @@ function renderBatch({batch}) {
   const row = document.createElement('li');
   const status = item.status === 'queued' && batch.status === 'cancelled' ? 'cancelled' : item.status;
   row.textContent = item.topic + ' — ' + ({ready:'Ready for clinical review',held:'Held for revision',unknown:'Completion unverified',started:'In progress'}[status] || status);
+  if (item.draftId) {
+   const open = document.createElement('button');
+   open.type = 'button';
+   open.textContent = 'Open draft';
+   open.onclick = () => openSavedDraft(item.draftId,open);
+   row.append(' ',open);
+  }
   return row;
  });
  batchResults.querySelector('ol').replaceChildren(...rows);

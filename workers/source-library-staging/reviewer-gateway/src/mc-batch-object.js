@@ -2,6 +2,8 @@ import {DurableObject} from 'cloudflare:workers';
 import {executeSlot, prepare, snapshot} from './mc-batch.js';
 
 const recoveryDelay = 15 * 60_000;
+const recoveryChecks = 3;
+const recoveryInterval = 60_000;
 export class McBatch extends DurableObject {
  async control(owner,data) {
   const storage = this.ctx.storage;
@@ -48,8 +50,9 @@ export class McBatch extends DurableObject {
    const slot = started || (batch.status === 'running' && batch.items.find(item => item.status === 'queued'));
    if (!slot) return null;
    slot.status = 'started';
+   if (started) slot.recoveryChecks = (slot.recoveryChecks || 0) + 1;
    await txn.put('batch',batch);
-   await txn.setAlarm(Date.now()+recoveryDelay);
+   await txn.setAlarm(Date.now()+(started ? recoveryInterval : recoveryDelay));
    return {batch,slot,recover:!!started};
   });
   if (!work) return;
@@ -57,7 +60,7 @@ export class McBatch extends DurableObject {
   try {
    result = await executeSlot(this.env,work.batch,work.slot,work.recover);
   } catch {
-   if (!work.recover) return; // The scheduled alarm reads the completed checkpoint only.
+   if (!work.recover || work.slot.recoveryChecks < recoveryChecks) return;
    result = {status:'unknown',reason:'completion_unverified'};
   }
   await storage.transaction(async txn => {

@@ -76,13 +76,14 @@ export async function executeSlot(env, batch, slot, recover) {
  });
  if (!response.ok) {
   if (response.status >= 500 || response.status === 429 || response.status === 409) throw Error('generation_interrupted');
-  return {status:'failed',reason:'generation_rejected'};
+  return {status:'failed',reason:response.status === 403 ? 'batch_access_denied' : 'generation_rejected'};
  }
  const result = await response.json();
  if (!uuid.test(result.draft_id) || result.published !== false || result.requires_human_review !== true) throw Error('invalid_generation_result');
  const names = ['schema','deterministic_text','math','evidence','duplicates','blind_model','editorial_quality','explanation_evidence','independent_option_evidence','options_only'];
  const stages = names.map(name => result.screening?.stages?.[name]);
  const ready = result.draft_status === 'pending_review' && stages.every(stage => stage?.status === 'pass' && stage.issues?.length === 0);
- const unavailable = stages.some(stage => /^PROVIDER_|^RELAY_/.test(stage?.provider_rule || ''));
+ const reviewReports = [...stages, result.screening?.independent_option_adjudication];
+ const unavailable = reviewReports.some(report => /^(PROVIDER_|RELAY_)/.test(report?.provider_rule || ''));
  return {status:ready?'ready':'held',draftId:result.draft_id,...(unavailable?{reason:'review_provider_unavailable'}:{})};
 }

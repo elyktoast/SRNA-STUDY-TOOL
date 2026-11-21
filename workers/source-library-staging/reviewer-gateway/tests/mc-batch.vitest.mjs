@@ -52,3 +52,13 @@ it('after eviction reads completion for the same ID without another paid attempt
  await runDurableObjectAlarm(stub);
  expect((await control('status')).batch.items[0]).toMatchObject({status:'ready',draftId:initial.items[0].id});
 });
+
+it('bounds completed-only reads and leaves the next item queued when completion is unknown', async () => {
+ const {stub,start,control} = fixture(25,['unconfirmed','next']);
+ await start();
+ for (let index=0;index<4;index++) expect(await runDurableObjectAlarm(stub)).toBe(true);
+ const {batch} = await control('status');
+ expect(batch.status).toBe('paused');
+ expect(batch.items.map(item => item.status)).toEqual(['unknown','queued']);
+ expect(await runDurableObjectAlarm(stub)).toBe(false);
+});
