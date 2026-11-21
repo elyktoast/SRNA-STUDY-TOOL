@@ -5,11 +5,17 @@ Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 ## Current version
 
 - Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
-- Current source `67d91fe1d85a9885b98590b4fa54524bafbd99d1`, contract `2026-11-20-v40`. CI, Pages and connected Worker build `e085bb70-eb3d-46a4-9848-40ca486338ca` passed. Settled image `9955721f46df91f21f04d6299ce188184a1b2016767dc033f8e0a955176770cb`.
+- Current source `e220836da5d5a09487e925855f11d67befc7ba52`, contract `2026-11-20-v41`. CI, Pages and connected Worker build `99a00fc2-77f6-48b0-9914-e3f762b158bb` passed. Settled image `c7ef3cd377f95c8125e93e9319d9dfa1a032d67c28ea495fa3f12ea9f3aff6d2`.
 - Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
 - Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
 
-## Latest EMG result and source-repair fix
+## Latest result: source check cleared, answer cue remains
+
+[Run 44841715222](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44841715222) saved unpublished draft `84f4c019-1f57-4885-8678-5b057a5e7c8d` (request `031390ad-1c03-4bf7-b4dc-644ba1cd3f98`, artifact `14680908298`) at **8/10**. Every explanatory-source field passed. The options-only check guessed the key five times across five shuffled trials. Choices mixed giving/avoiding blockers with abandoning or replacing a requested monitor, a real cue. The sole repair was rejected for an unsupported source-ranking claim. The original source-valid draft stayed held, and independent option adjudication was correctly not invoked. Do not regrade or reroll it.
+
+v41 keeps all options on one decision axis and preserves the complete selected lecture context. A zero-model-call check of the real PDF found the full bold title is Quantitative Monitoring: Electromyography, while the short service-control topic omitted that qualifier. Plain-text extraction also consumed the exported date before the heading; the new regression skips date/page-counter headers without stripping ratio-based clinical titles. The next pilot uses the full real lecture title. All checks, the cue threshold and the one-rewrite limit remain unchanged. Local Python tests: 1,112, four skipped.
+
+## Prior EMG result and source-repair fix
 
 [Run 44838771926](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44838771926) saved unpublished draft `eab3e3a2-39de-44b1-b158-ba6649002971` at **8/10** after one rewrite (request `bf60f65d-d535-499c-88dc-68b8aaaf32c1`, artifact `14679789118`). Source explanation claims stayed flagged, so independent option adjudication was correctly not invoked. Blind, editorial, options-only and all other checks passed. The saved original distractor explanations were unchanged; a repeated review judged them differently. Do not inherit old clinical passes or regrade this held draft.
 
