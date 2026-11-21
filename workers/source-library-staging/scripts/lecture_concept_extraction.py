@@ -1,6 +1,6 @@
 """Lecture text -> candidate concept extraction for private staging workflows.
 
-Deterministic fallback only: headings and learning-objective lines are candidates,
+Deterministic fallback only: headings, objectives and nearby teaching points are candidates,
 not verified clinical concepts. No AI, network, storage or textbook citations.
 """
 import re
@@ -12,6 +12,50 @@ EMPHASIS = re.compile(r"^Lecture (highlighted|bold):\s*(.+)$")
 PRIORITY = {"learning_objective": 0, "highlighted": 1, "bold": 2, "standard": 3}
 PAGE = re.compile(r"^\s*(?:page|slide)\s+(\d+)\s*:?\s*$", re.I)
 DATE_HEADER = re.compile(r"^(?:(?:0?[1-9]|1[0-2])/(?:0?[1-9]|[12]\d|3[01])/(?:\d{2}|\d{4})|\d{4}-\d{2}-\d{2})$")
+
+
+def _attach_learning_points(text, concepts):
+    """Keep bounded slide-local scope cues, never treat them as evidence."""
+    normalize = lambda value: re.sub(r"\s+", " ", value.strip().casefold())
+    known = {normalize(c["title"]): c for c in concepts}
+    points = {}
+    active, pending = None, []
+    def flush():
+        if active and pending:
+            point = " ".join(pending).strip()
+            group = points.setdefault(active, [])
+            if (12 <= len(point) <= 180 and 3 <= len(point.split()) <= 24
+                    and point not in group and len(group) < 6):
+                group.append(point)
+        pending.clear()
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
+            flush()
+            continue
+        if PAGE.fullmatch(line) or DATE_HEADER.fullmatch(line) or re.fullmatch(r"\d{1,4}", line):
+            flush(); active = None
+            continue
+        if EMPHASIS.fullmatch(line) or OBJECTIVE.fullmatch(line):
+            flush(); active = None
+            continue
+        title = normalize(HEADING.sub("", line).strip())
+        if not BULLET.match(line) and title in known:
+            flush(); active = title
+            continue
+        if BULLET.match(line):
+            flush()
+            if active:
+                pending.append(BULLET.sub("", line).strip())
+            continue
+        if re.match(r"(?:image\s+via|figure\b|copyright\b|https?://)", line, re.I):
+            flush(); active = None
+            continue
+        if pending:
+            pending.append(line)
+    flush()
+    for key, group in points.items():
+        known[key]["learning_points"] = group
 
 
 def extract(text, *, max_concepts=60):
@@ -75,6 +119,7 @@ def extract(text, *, max_concepts=60):
     ordered = list(candidates.values())
     if any(c["importance"] in ("highlighted", "bold") for c in ordered):
         ordered.sort(key=lambda c: PRIORITY[c["importance"]])
+    _attach_learning_points(text, ordered)
     return {"concepts": ordered[:max_concepts], "requires_review": True,
             "extraction_method": "deterministic_heading_objective",
             "lecture_text_stored": False, "auto_generate": False}

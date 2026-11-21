@@ -53,8 +53,8 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
                         section=section, objective=objective, format=format)
     handoff = staging_http_jobs(selected, textbook_id=textbook_id,
                                 item_id_factory=item_id_factory, execute=False)
-    # Return planning metadata only. Never echo retrieved textbook passages or
-    # lecture text into an HTTP response or client-side diagnostics.
+    # Return derived question topics/focus only, never textbook excerpts or the
+    # full lecture text. Unselected bullet collections stay internal.
     public_plan = {
         "requested": planned["requested"],
         "planned": planned["planned"],
@@ -68,7 +68,8 @@ def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
              "lecture_locator": topic.get("lecture_locator")}
             for topic in planned["topics"]
         ],
-        "missing_textbook_support": planned["missing_textbook_support"],
+        "missing_textbook_support": [{k:v for k,v in t.items() if k != "learning_points"}
+                                     for t in planned["missing_textbook_support"]],
     }
     return {"lecture_plan": public_plan, "classification": {
                 "held_for_classification": selected["held_for_classification"],

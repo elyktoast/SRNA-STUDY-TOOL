@@ -6,6 +6,18 @@ from item_generation_screened_v2 import generate_and_screen
 
 
 class ExplanationReviewTests(unittest.TestCase):
+    def test_failure_diagnostics_are_bounded_and_never_grant_a_pass(self):
+        for message, expected in (("Unknown explanatory source alias", "Unknown explanatory source alias"),
+                                  ("private token=secret clinical passage", None)):
+            def failed(_):
+                raise ValueError(message)
+            report=review(self.item,self.sources,failed)
+            self.assertEqual(report['status'],'pending')
+            self.assertFalse(report['can_publish'])
+            self.assertEqual(report['review_error'],expected)
+            self.assertEqual(report['exception_type'],'ValueError')
+            self.assertNotIn('secret',str(report))
+
     def test_counterfactual_source_review_checks_clinical_premises_not_answer_letters(self):
         self.item["concept_card"]["counterfactual"]='If "condition X" is replaced by "condition Y", the best response changes to option(s) A.'
         text=next(f["text"] for f in fields_for(self.item) if f["label"]=="concept_card.counterfactual")

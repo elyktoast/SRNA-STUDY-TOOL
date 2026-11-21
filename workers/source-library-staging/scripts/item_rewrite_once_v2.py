@@ -6,6 +6,16 @@ A failed rewrite remains flagged for human review; never auto-approves.
 from copy import deepcopy
 
 
+def _blind_content(item, stem=None):
+    def normalized(value):
+        return " ".join(value.split()).casefold() if isinstance(value, str) else None
+    options = item.get("options")
+    choices = sorted((o["id"], normalized(o["text"])) for o in options) if (
+        isinstance(options, list) and all(isinstance(o, dict)
+            and isinstance(o.get("id"), str) and isinstance(o.get("text"), str) for o in options)) else None
+    return normalized(item.get("stem") if stem is None else stem), choices
+
+
 def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=None, trusted_passages=None):
     if not isinstance(original, dict) or not isinstance(issues, list):
         raise ValueError("Original draft and diagnostic list required")
@@ -70,6 +80,13 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
             "use plausible, distinct medication strategies refuted by affirmative sources. Do not invent preferred, "
             "most-established or recommended source rankings to dismiss another modality. If the sources cannot "
             "support distinct peers and a unique original and alternate answer, leave the item held.")
+    if original.get("format") == "MC" and any(
+            isinstance(i, dict) and i.get("rule_id") == "R-5.3" and i.get("independent_key") is not None
+            for i in issues):
+        request["repair_instructions"] += (
+            " The changed-stem blind solve failed. Repair the actual alternate clinical case or its shared question/options "
+            "using affirmative source support. Editing only a rationale or the proposed expected answer leaves the failed "
+            "blind question unchanged and will be rejected before another solve. Never guess a new answer label to match a reviewer.")
     if protected_alternate is not None:
         request["protected_alternate_case"] = deepcopy(protected_alternate)
         request["repair_instructions"] += (
@@ -154,19 +171,29 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
                 "rewrite_attempts":1, "rewrite_failed":True, "can_publish":False}
     if original.get("format") == "MC" and any(
             isinstance(issue, dict) and issue.get("rule_id") == "R-12.1" for issue in issues):
-        def blind_content(item):
-            def normalized(value):
-                return " ".join(value.split()).casefold() if isinstance(value, str) else None
-            options = item.get("options")
-            choices = sorted((o["id"], normalized(o["text"])) for o in options) if (
-                isinstance(options, list) and all(isinstance(o, dict)
-                    and isinstance(o.get("id"), str) and isinstance(o.get("text"), str) for o in options)) else None
-            return normalized(item.get("stem")), choices
-        if blind_content(candidate) == blind_content(original):
+        if _blind_content(candidate) == _blind_content(original):
             return {"item": deepcopy(original), "issues": deepcopy(issues) + [
                 {"rule_id": "R-12.1", "field": "stem",
                  "message": "Blind-disagreement repair left the blind question unchanged"}],
                 "rewrite_attempts": 1, "rewrite_failed": True, "can_publish": False}
+    if original.get("format") == "MC":
+        from item_board_quality_v2 import canonical_counterfactual, counterfactual_edit_issues
+        proposal = canonical_counterfactual((candidate.get("concept_card") or {}).get("counterfactual"))
+        if proposal and not counterfactual_edit_issues(candidate, proposal):
+            revised_stem = candidate["stem"].replace(proposal["from_text"], proposal["to_text"], 1)
+            for issue in issues:
+                change = issue.get("stem_change") if isinstance(issue, dict) else None
+                if (isinstance(issue, dict) and issue.get("rule_id") == "R-5.3" and issue.get("independent_key") is not None
+                        and isinstance(change, dict) and isinstance(change.get("from_text"), str)
+                        and change["from_text"] and isinstance(change.get("to_text"), str)
+                        and isinstance(original.get("stem"), str)
+                        and original["stem"].count(change["from_text"]) == 1):
+                    failed_stem = original["stem"].replace(change["from_text"],change["to_text"],1)
+                    if _blind_content(candidate,revised_stem) == _blind_content(original,failed_stem):
+                        return {"item":deepcopy(original),"issues":deepcopy(issues)+[
+                            {"rule_id":"R-5.3","field":"concept_card.counterfactual",
+                             "message":"Counterfactual-disagreement repair left the blind changed-stem question unchanged"}],
+                            "rewrite_attempts":1,"rewrite_failed":True,"can_publish":False}
     try:
         checked = validate(deepcopy(candidate))
     except Exception:

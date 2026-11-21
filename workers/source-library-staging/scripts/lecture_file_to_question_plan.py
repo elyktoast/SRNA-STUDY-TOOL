@@ -119,7 +119,7 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                 title = topic["title"]
                 rank = PRIORITY.get(topic.get("importance"), PRIORITY["standard"])
                 priorities[title] = min(priorities.get(title, rank), rank)
-        jobs.sort(key=lambda job: priorities.get(job.get("body", {}).get("topic"), PRIORITY["standard"]))
+        jobs.sort(key=lambda job: priorities.get(job.get("lecture_topic") or job.get("body", {}).get("topic"), PRIORITY["standard"]))
     result["jobs"] = jobs[:count]
     result["count"] = len(result["jobs"])
     result["auto_generate"] = False

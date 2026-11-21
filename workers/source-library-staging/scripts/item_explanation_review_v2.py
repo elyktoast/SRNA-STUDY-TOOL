@@ -187,13 +187,22 @@ def review(item, sources, reviewer, *, batch_size=None):
                 "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":len(batches)}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
-        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}
+        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN",
+                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
         # Only fixed local validation messages may become diagnostics.
         messages = {"Incomplete explanatory review", "Invalid explanatory judgments",
                     "Invalid supported fields", "Missing source support", "Invalid source span",
                     "Unknown source span", "Source quote outside bounds",
                     "Missing, repeated or unknown explanatory field",
                     "Support not cited for this explanatory field", "Invalid unsupported finding",
-                    "Invalid unsupported field", "Every explanatory field must be reviewed"}
+                    "Invalid unsupported field", "Every explanatory field must be reviewed",
+                    "Complete explanatory text required", "Complete option explanations required",
+                    "Complete option evidence explanations required", "Cited indexed explanatory evidence unavailable",
+                    "Invalid explanatory batch size", "Invalid independent explanatory review request",
+                    "Invalid explanatory source alias", "Unknown explanatory source alias",
+                    "Provider response must be an object", "Provider did not return a valid JSON object",
+                    "Provider output must be a JSON object"}
         return {**pending, "provider_rule": rule if rule in allowed else "REVIEW_RESPONSE_INVALID",
-                "review_error": str(exc) if type(exc) is ValueError and str(exc) in messages else None}
+                "review_error": str(exc) if str(exc) in messages else None,
+                "exception_type": type(exc).__name__ if type(exc).__name__ in
+                    ("ValueError","TypeError","KeyError","ProviderError","TransportError","RuntimeError") else "Other"}

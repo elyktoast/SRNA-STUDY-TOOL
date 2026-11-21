@@ -65,10 +65,15 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
                          "question_count": count, "reason": status})
             continue
         for index in range(count):
+            points = topic.get("learning_points", [])
+            if (not isinstance(points, list) or len(points) > 6
+                    or any(not isinstance(p, str) or not 12 <= len(p) <= 180 for p in points)):
+                raise ValueError("Invalid lecture learning points")
+            scoped_topic = topic["title"] + (" — " + points[index % len(points)] if points else "")
             step = build_step("concept_card", mode=mode, **target,
-                              evidence=topic["evidence"], topic=topic["title"],
+                              evidence=topic["evidence"], topic=scoped_topic,
                               format=format)
-            result.append({"topic": topic["title"],
+            result.append({"topic": scoped_topic,
                            "lecture_locator": topic.get("lecture_locator"),
                            "question_slot": index + 1,
                            "requested_format": format,
@@ -76,6 +81,8 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
                                               "verified": False},
                            "concept_request": step,
                            "status": "awaiting_concept_generation"})
+            if points:
+                result[-1]["lecture_topic"] = topic["title"]
     return {"requests": result, "count": len(result),
             "held_for_classification": held,
             "held_count": sum(item["question_count"] for item in held),
@@ -140,6 +147,8 @@ def staging_http_jobs(prepared, *, textbook_id, item_id_factory, execute=False):
                      "body": {"topic": entry["topic"], "mode": request["mode"],
                               **target, "format": fmt, "item_id": normalized_id,
                               "textbook_id": chosen_book}})
+        if entry.get("lecture_topic"):
+            jobs[-1]["lecture_topic"] = entry["lecture_topic"]
         if textbook_id is None:
             # Preserve the books found during all-library planning in the
             # executable request, rather than silently collapsing to one book.

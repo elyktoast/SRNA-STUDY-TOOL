@@ -31,6 +31,22 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
                    section_id=None, include_subsections=False,
                    page_start=None, page_end=None, textbook_ids=None, balance_books=False):
     query = topic_search_query(topic)
+    queries = [query]
+    if " — " in query:
+        heading, focus = query.split(" — ", 1)
+        # A derived slide focus can contain teaching verbs or a synonym absent
+        # from a particular book. Fall back within the SAME authorized scope;
+        # the full focused topic still governs authoring and source validation.
+        for value in (focus, heading.rsplit(":", 1)[-1].strip()):
+            candidate = topic_search_query(value)
+            if len(candidate) >= 5 and candidate not in queries:
+                queries.append(candidate)
+    def scoped_search(**scope):
+        for candidate in queries:
+            rows = search(conn, candidate, owner_uid, limit=limit, **scope)
+            if rows:
+                return rows
+        return []
     books = source_scope(textbook_id, textbook_ids)
     if balance_books:
         if textbook_id is not None or textbook_ids is not None:
@@ -50,7 +66,7 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
             raise ValueError('Passage limit must cover every selected textbook, up to 50')
         # Fair, bounded interleaving prevents one large book monopolizing the
         # packet. Each search independently enforces ownership and ready state.
-        groups = [search(conn, query, owner_uid, limit=limit, textbook_id=book)
+        groups = [scoped_search(textbook_id=book)
                   for book in books]
         if balance_books:
             groups.sort(key=lambda group: -group[0].get('rank',0) if group else 0)
@@ -59,7 +75,7 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
         if textbook_id is not None and rows and not any(row['textbook_id'] == textbook_id for row in rows):
             raise ValueError('No indexed textbook evidence found in primary textbook')
     else:
-        rows = search(conn, query, owner_uid, limit=limit, textbook_id=textbook_id,
+        rows = scoped_search(textbook_id=textbook_id,
                       section_id=section_id, include_subsections=include_subsections,
                       page_start=page_start, page_end=page_end)
     sources = []

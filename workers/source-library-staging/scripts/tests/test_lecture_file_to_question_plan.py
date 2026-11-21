@@ -4,6 +4,20 @@ from lecture_file_to_question_plan import prepare_lecture_file_jobs
 
 class LectureFilePlanningTests(unittest.TestCase):
     @patch('lecture_file_to_question_plan.extract_lecture')
+    def test_focused_jobs_keep_parent_emphasis_priority(self, extract):
+        extract.return_value={'format':'pdf','page_count':1,'review_pages':[],
+                              'pages':[{'page':1,'text':'Slide text'}]}
+        jobs=[{'body':{'topic':name+' — Specific teaching point'},'lecture_topic':name}
+              for name in ('Standard topic','Highlighted topic')]
+        plan={'jobs':jobs,'count':2,'lecture_plan':{'topics':[
+            {'title':'Standard topic','importance':'standard'},
+            {'title':'Highlighted topic','importance':'highlighted'}]}}
+        with patch('lecture_to_question_plan.prepare_staging_jobs',return_value=plan):
+            result=prepare_lecture_file_jobs(None,'owner',b'data','lecture.pdf',
+                       textbook_id='book',item_id_factory=lambda:'id',count=2)
+        self.assertEqual(result['jobs'][0]['lecture_topic'],'Highlighted topic')
+
+    @patch('lecture_file_to_question_plan.extract_lecture')
     def test_emphasis_summary_only_reports_selected_pages_without_exposing_lecture_text(self, extract):
         extract.return_value={'format':'pdf','page_count':3,'review_pages':[], 'pages':[
             {'page':1,'text':'First topic','emphasis':{'highlighted':['Highlighted private phrase'],'bold':[]}},
