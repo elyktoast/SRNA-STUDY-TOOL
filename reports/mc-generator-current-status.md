@@ -4,7 +4,7 @@ Updated November 21, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 
 ## Current version
 
-Source `270f631a7adcad74b58f56895d9744bdf3a69601`, contract `2026-11-21-v43`, staging only, PR #189. Deployment and fixed teaching/source controls pending. Relevance authoring now states only the supported distinction; source review applies assessment mode before judging clinical claims. Supported instructional framing and unsupported accuracy/outcome/interchangeability assertions are tested separately with fictional references, never held drafts. Local Python: 1119 passed, four skipped.
+Source `270f631a7adcad74b58f56895d9744bdf3a69601`, contract `2026-11-21-v43`, staging only, PR #189. CI, Pages and Worker build 180c6c30-25ee-473b-8531-e4fb798e7691 passed; settled image f4ecbfc16731d569454f3cc43f99a81e27cfe61c1065b943f7532fd2ff8ecbaf. Fixed teaching/source run 44914744284 passed all eight controls in one logical review, without reading drafts, generating questions or DB writes. Fresh full v43 acceptance pending. Relevance authoring now states only the supported distinction; source review applies assessment mode before judging clinical claims. Supported instructional framing and unsupported accuracy/outcome/interchangeability assertions are tested separately with fictional references, never held drafts. Local Python: 1119 passed, four skipped.
 
 ## Latest completed result: v42 lecture focus works; source gate held
 

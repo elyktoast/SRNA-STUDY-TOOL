@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture bold: quantitative electromyography context',page:14,objective:'II.C.4',workflow:'lecture',item_id:'a6fb8441-9491-4b06-92ef-53c295870208',topic:'Quantitative Monitoring: Electromyography',focus:'Record the evoked muscle action potential'}
+ {name:'Lecture bold: quantitative electromyography context',page:14,objective:'II.C.4',workflow:'lecture',item_id:'40dda26e-d62e-440a-856c-ee29609f6d21',topic:'Quantitative Monitoring: Electromyography',focus:'Record the evoked muscle action potential'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='f539ba7fca76949977bb68e649705c1d086faeb4';
+const sha='270f631a7adcad74b58f56895d9744bdf3a69601';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -71,7 +71,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-21-v42');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-21-v43');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});

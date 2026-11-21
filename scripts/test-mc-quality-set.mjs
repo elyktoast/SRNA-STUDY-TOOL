@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {test} from 'node:test';
 import {runSet,samples} from './verify-mc-quality-set.mjs';
-const time=1800000000000,sha='f539ba7fca76949977bb68e649705c1d086faeb4';
+const time=1800000000000,sha='270f631a7adcad74b58f56895d9744bdf3a69601';
 const deployment={verification:'connected_cloudflare_deployment_read',verified_at:new Date(time).toISOString(),build:{commit_hash:sha,status:'stopped',build_outcome:'success',stopped_on:new Date(time-180000).toISOString()},app:{updated_at:new Date(time-120000).toISOString(),configuration:{image:'fixture'},health:{errors:[]}},instances:[]};
 function fixture(mode){
  const calls=[],rows=[];let item,preflights=0;
@@ -14,7 +14,7 @@ function fixture(mode){
   else if(url.endsWith('/lecture-plan'))value={auto_generate:false,auto_publish:false,count:1,jobs:[{path:'/generation/preflight',lecture_topic:samples[0].topic,body:{...body,topic:mode==='topic-drift'?'Learning objectives':samples[0].topic+' — '+samples[0].focus,textbook_id:'book0',textbook_ids:['book0']}}]};
   else if(url.endsWith('/preflight')){
    if(mode==='preflight-reset'&&preflights++===0)throw Object.assign(Error('read ECONNRESET'),{code:'ECONNRESET'});
-   value={authoring_contract:'2026-11-21-v42',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
+   value={authoring_contract:'2026-11-21-v43',authoring_provider:'cloudflare',authoring_delivery_model:'@cf/zai-org/glm-5.3',resume:{resumable:mode==='used'}};
   }
   else if(url.endsWith('/one')){
    if(mode==='timeout')throw Error('unexpected non-recoverable transport failure');
