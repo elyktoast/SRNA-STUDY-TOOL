@@ -83,6 +83,10 @@ def main():
                     'unknown_spans':unknown,'explanation_chars':len(text) if isinstance(text,str) else None,
                     'explanation_nonempty':isinstance(text,str) and bool(text.strip())}
             result['grounding_shape']=shapes
+            raw_ids=card.get('evidence_ids')
+            ids=[pid for pid in raw_ids if isinstance(pid,str)] if isinstance(raw_ids,list) else []
+            result['concept_evidence_shape']={'count':len(raw_ids) if isinstance(raw_ids,list) else None,
+                'unique_strings':len(set(ids)),'unknown_strings':sum(pid not in lookup for pid in ids)}
             validate(card.get('choice_plan'),packet['sources'])
             if (card.get('objective')!='II.C.4' or not isinstance(card.get('evidence_ids'),list)
                     or not card['evidence_ids'] or len(set(card['evidence_ids'])) != len(card['evidence_ids'])

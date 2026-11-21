@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
-const target='2ebd562f6c5a495a8b40e54abc106489adb52d8c';
+const target='29e4894d5fe18d4b97436f3b6aa49c418573a606';
 const token=process.env.CLOUDFLARE_API_TOKEN;
 assert.ok(token,'Staging deployment credential unavailable');
 const base='https://api.cloudflare.com/client/v4/accounts/5a84e0fe00e430d25e901b260861381e';

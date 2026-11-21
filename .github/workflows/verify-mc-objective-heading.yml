@@ -180,7 +180,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
         with:
-          ref: 2ebd562f6c5a495a8b40e54abc106489adb52d8c
+          ref: 29e4894d5fe18d4b97436f3b6aa49c418573a606
           path: reviewer-source
       - uses: actions/setup-node@v4
         with:
