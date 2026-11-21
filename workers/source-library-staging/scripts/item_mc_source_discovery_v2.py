@@ -6,13 +6,17 @@ from item_generation_checkpoint_store_v2 import fingerprint
 def discover(conn, args, packet, planner):
     response = planner({'step':'retrieval_plan','rules_version':'2.0','auto_publish':False,
                         'format':'MC','topic':args.topic})
-    if not isinstance(response,dict) or set(response) != {'queries'}:
+    if not isinstance(response,dict) or set(response) != {'focus_query','alternative_queries'}:
         raise ValueError('Invalid source search plan')
-    queries=response['queries']
+    alternatives=response['alternative_queries']
+    if not isinstance(alternatives,list) or not 1 <= len(alternatives) <= 3:
+        raise ValueError('Invalid source search plan')
+    queries=[response['focus_query'],*alternatives]
     if (not isinstance(queries,list) or not 1 <= len(queries) <= 4
             or any(not isinstance(q,str) or not 2 <= len(q.strip()) <= 100 for q in queries)):
         raise ValueError('Invalid source search plan')
     queries=list(dict.fromkeys(' '.join(q.split()) for q in queries))
+    if len(queries)<2: raise ValueError('Invalid source search plan')
     books=getattr(args,'textbook_ids',None) or [args.textbook_id]
     groups=[]
     for query in queries:

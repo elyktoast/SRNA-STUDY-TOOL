@@ -751,6 +751,9 @@ test('MC source-first schema agrees with Python plan fields and locks grounded r
     const schema=JSON.parse(options.body).response_format.json_schema.schema;
     if(step==='concept_card'){
      assert.deepEqual([...schema.properties.choice_plan.required].sort(),fields);
+     assert.deepEqual(schema.properties.evidence_ids.items.enum,['p1']);
+     assert.equal(schema.properties.evidence_ids.minItems,1);
+     assert.deepEqual(schema.properties.objective.enum,['II.C.4']);
      const grounding=schema.properties.choice_plan.properties.option_grounding;
      assert.deepEqual(grounding.required,['A','B','C','D']);assert.equal(grounding.additionalProperties,false);
      assert.deepEqual(grounding.properties.A.required,['source_refs','explanation']);
@@ -766,7 +769,7 @@ test('MC source-first schema agrees with Python plan fields and locks grounded r
     }
     return Response.json({success:true,result:{response:'{}'}});
    };
-   const extra={format:'MC',evidence:[{passage_id:'p1',quote_spans:[{id:'q0',text:'Synthetic source'}]}],choice_plan:{option_grounding:{}},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}};
+   const extra={format:'MC',objective:'II.C.4',evidence:[{passage_id:'p1',quote_spans:[{id:'q0',text:'Synthetic source'}]}],choice_plan:{option_grounding:{}},draft:{options:['A','B','C','D'].map(id=>({id,text:id}))}};
    assert.equal((await gateway.fetch(request(step,'zai-org/glm-5.3',extra),cf)).status,200);
   }
  }finally{globalThis.fetch=original;}
@@ -839,7 +842,7 @@ test('bounded source search planning is MC-only, separately enabled and delivere
  base.max_tokens=512;
  globalThis.fetch=async(url,options)=>{
   seen.push({url,body:JSON.parse(options.body)});
-  return Response.json({success:true,result:{choices:[{message:{content:'{"queries":["Aster measurement"]}'},finish_reason:'stop'}]}});
+  return Response.json({success:true,result:{choices:[{message:{content:'{"focus_query":"Aster measurement","alternative_queries":["Birch measurement"]}'},finish_reason:'stop'}]}});
  };
  try{
   assert.equal((await gateway.fetch(embeddingRequest(base),cfg)).status,400);
@@ -853,6 +856,6 @@ test('bounded source search planning is MC-only, separately enabled and delivere
   assert.equal(seen.length,1);assert.ok(seen[0].url.endsWith('/ai/run/@cf/zai-org/glm-5.3'));
   assert.equal(seen[0].body.max_tokens,512);
   assert.equal(seen[0].body.response_format.json_schema.name,'srna_source_search_plan_v1');
-  assert.equal(seen[0].body.response_format.json_schema.schema.properties.queries.maxItems,4);
+  assert.equal(seen[0].body.response_format.json_schema.schema.properties.alternative_queries.maxItems,3);
  }finally{globalThis.fetch=old;}
 });

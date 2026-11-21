@@ -16,7 +16,7 @@ class SourceDiscoveryTests(unittest.TestCase):
         before=deepcopy(packet)
         requests=[]
         def planner(p):
-            requests.append(p);return {'queries':['Concept A','Concept B','Concept C','Concept D']}
+            requests.append(p);return {'focus_query':'Concept A','alternative_queries':['Concept B','Concept C','Concept D']}
         def retrieve(conn,owner,q,**scope):
             return {'sources':[{'passage_id':q+scope['textbook_id']+str(i),'textbook_id':scope['textbook_id']}
                                for i in range(2)]}
@@ -36,8 +36,10 @@ class SourceDiscoveryTests(unittest.TestCase):
         self.assertFalse(metadata['database_writes'])
 
     def test_bad_search_plan_fails_before_database_or_draft_calls(self):
-        for response in ({}, {'queries':[]}, {'queries':['x']}, {'queries':['word']*5},
-                         {'queries':['valid'],'answer_key':'A'}):
+        for response in ({}, {'focus_query':'Valid','alternative_queries':[]},
+                         {'focus_query':'x','alternative_queries':['Another']},
+                         {'focus_query':'Valid','alternative_queries':['Another']*4},
+                         {'focus_query':'Valid','alternative_queries':['Another'],'answer_key':'A'}):
             with self.subTest(response=response),patch('item_mc_source_discovery_v2.build_evidence') as search:
                 with self.assertRaises(ValueError): discover(None,self.args(),{'sources':[]},lambda _:response)
                 search.assert_not_called()
@@ -46,12 +48,12 @@ class SourceDiscoveryTests(unittest.TestCase):
         with patch('item_mc_source_discovery_v2.build_evidence',return_value={
                 'sources':[{'passage_id':'foreign','textbook_id':'not-selected'}]}):
             with self.assertRaises(ValueError):
-                discover(None,self.args(),{'sources':[]},lambda _:{'queries':['Concept A']})
+                discover(None,self.args(),{'sources':[]},lambda _:{'focus_query':'Concept A','alternative_queries':['Concept B']})
 
     def test_search_planner_has_a_small_separate_budget_and_no_authority(self):
         captured=[]
         def transport(**kw):
-            captured.append(kw['body']);return {'choices':[{'message':{'content':'{"queries":["Concept A"]}'}}]}
+            captured.append(kw['body']);return {'choices':[{'message':{'content':'{"focus_query":"Concept A","alternative_queries":["Concept B"]}'}}]}
         adapter=make_adapter(endpoint='https://api.groq.com/openai/v1/chat/completions',api_key='fixture',
             model='author',transport=transport,owner_opt_in=True,staging=True,max_output_tokens=8192)
         adapter({'step':'retrieval_plan','rules_version':'2.0','auto_publish':False,'format':'MC','topic':'Topic'})

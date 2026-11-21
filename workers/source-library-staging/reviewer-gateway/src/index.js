@@ -169,6 +169,8 @@ async function relayGroq(request,env){
     options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',minItems:1,maxItems:2,items:{type:'string',maxLength:80}}},required:['id','states'],additionalProperties:false}}},
     required:['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options','option_grounding'],additionalProperties:false};
    const passageIds=(step.evidence||[]).map(p=>p.passage_id);
+   if(typeof step.objective==='string')properties.objective={type:'string',enum:[step.objective]};
+   if(passageIds.length)properties.evidence_ids={type:'array',minItems:1,maxItems:passageIds.length,items:{type:'string',enum:passageIds}};
    const spanIds=[...new Set((step.evidence||[]).flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
    const grounding={type:'object',properties:{
     source_refs:{type:'array',minItems:1,maxItems:3,items:{type:'object',properties:{
@@ -199,8 +201,9 @@ async function relayGroq(request,env){
   }
   let reviewFormat=rationaleFormat;
   if(step.step==='retrieval_plan')reviewFormat={type:'json_schema',json_schema:{name:'srna_source_search_plan_v1',strict:true,
-   schema:{type:'object',properties:{queries:{type:'array',minItems:1,maxItems:4,items:{type:'string',minLength:2,maxLength:100}}},
-    required:['queries'],additionalProperties:false}}};
+   schema:{type:'object',properties:{focus_query:{type:'string',minLength:2,maxLength:100},
+    alternative_queries:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:2,maxLength:100}}},
+    required:['focus_query','alternative_queries'],additionalProperties:false}}};
   if(step.step==='options_only_review'){
    const ids=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
    const count=step.select_count;
