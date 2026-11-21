@@ -42,7 +42,7 @@ assert.equal(plan.count,25);
 assert.equal(plan.paid_calls_requested,false);
 const job = plan.jobs[0].body;
 const preflight = await call('/generation/preflight',job);
-assert.equal(preflight.authoring_contract,'2026-11-21-v47');
+assert.equal(preflight.authoring_contract,'2026-11-21-v48');
 assert.ok(preflight.passage_count > 0);
 console.log(JSON.stringify({check:'grounded_batch_plan',planned:plan.count,paid_calls:0}));
 const id = randomUUID();
