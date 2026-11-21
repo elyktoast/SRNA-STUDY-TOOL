@@ -170,3 +170,44 @@ jobs:
           path: /tmp/mc-teaching-controls.json
           if-no-files-found: ignore
           retention-days: 14
+
+  source-preparation:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-source-preparation]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: 2ebd562f6c5a495a8b40e54abc106489adb52d8c
+          path: reviewer-source
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install read-only source adapter
+        run: python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4'
+      - name: Verify exact staging deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/verify-pns-deployment.mjs
+      - name: Verify source discovery and concept grounding without drafts
+        env:
+          CONFIRM_PAID_SOURCE_PREPARATION: 'true'
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          STAGING_RECEIPT_SIGNING_SECRET: ${{ secrets.STAGING_RECEIPT_SIGNING_SECRET }}
+          REVIEWER_SOURCE_ROOT: ${{ github.workspace }}/reviewer-source
+          PYTHONPATH: ${{ github.workspace }}/reviewer-source/workers/source-library-staging/scripts
+        run: python scripts/verify-mc-source-preparation.py
+      - name: Retain bounded preparation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mc-source-preparation
+          path: /tmp/mc-source-preparation.json
+          if-no-files-found: ignore
+          retention-days: 14
