@@ -6,7 +6,7 @@ A failed rewrite remains flagged for human review; never auto-approves.
 from copy import deepcopy
 
 
-def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=None):
+def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=None, trusted_passages=None):
     if not isinstance(original, dict) or not isinstance(issues, list):
         raise ValueError("Original draft and diagnostic list required")
     if not callable(rewrite) or not callable(validate):
@@ -17,6 +17,9 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
     immutable = ("item_id", "rules_version", "mode", "domain", "section",
                  "objective", "format", "model", "status",
                  "numbers_verified_against_page_image")
+    concept_source_repair = (original.get("format") == "MC" and isinstance(trusted_passages, list)
+        and any(isinstance(i, dict) and i.get("rule_id") == "R-2.4"
+                and str(i.get("field", "")).startswith("concept_card.") for i in issues))
     protected_alternate = None
     if (original.get("format") == "MC" and isinstance(counterfactual_proof, dict)
             and counterfactual_proof.get("status") == "pass"
@@ -51,6 +54,15 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
                    "a repair. Return the complete revised item as a JSON object. "
                    "The result remains unpublished and requires clinical review."
                )}
+    if concept_source_repair:
+        request["allow_concept_evidence_additions"] = True
+        request["repair_instructions"] += (
+            " This source repair may APPEND concept_card.evidence_ids from supplied trusted_evidence only. "
+            "Keep every original ID in its original order and include each added source in the item evidence array. "
+            "An acronym key, index or table that merely names a method does not establish its measurement or mechanism. "
+            "Use a positive definition for the alternate method and a precise distinguishing variable, not generic movement. "
+            "Keep educational relevance tied to this question's concept. Remove flagged background clinical claims that "
+            "are unnecessary to answer it; do not carry an unsupported claim into a longer replacement sentence.")
     if protected_alternate is not None:
         request["protected_alternate_case"] = deepcopy(protected_alternate)
         request["repair_instructions"] += (
@@ -101,9 +113,21 @@ def attempt_once(original, issues, rewrite, validate, *, counterfactual_proof=No
                     "rewrite_attempts": 1, "can_publish": False}
     prior = original.get("concept_card")
     revised = candidate.get("concept_card")
-    if isinstance(prior, dict) and (
-            not isinstance(revised, dict) or
-            prior.get("evidence_ids") != revised.get("evidence_ids")):
+    references_changed = isinstance(prior, dict) and (
+        not isinstance(revised, dict) or prior.get("evidence_ids") != revised.get("evidence_ids"))
+    permitted_addition = False
+    if references_changed and concept_source_repair and isinstance(revised, dict):
+        before, after = prior.get("evidence_ids"), revised.get("evidence_ids")
+        trusted = {p["passage_id"] for p in trusted_passages
+                   if isinstance(p, dict) and isinstance(p.get("passage_id"), str)}
+        entries = candidate.get("evidence")
+        cited = {p["passage_id"] for p in (entries if isinstance(entries, list) else [])
+                 if isinstance(p, dict) and isinstance(p.get("passage_id"), str)}
+        permitted_addition = (isinstance(before, list) and isinstance(after, list)
+            and all(isinstance(pid, str) for pid in after)
+            and len(after) == len(set(after)) and after[:len(before)] == before
+            and set(after).issubset(trusted & cited))
+    if references_changed and not permitted_addition:
         return {"item": deepcopy(original), "issues": deepcopy(issues) + [
             {"rule_id": "R-2.5", "message": "Rewrite changed concept evidence references"}],
             "rewrite_attempts": 1, "can_publish": False}

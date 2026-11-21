@@ -44,6 +44,20 @@ class RepairEvidenceTests(unittest.TestCase):
                           "include_subsections": True, "page_start": 3, "page_end": 8})
 
     @patch("item_mc_repair_evidence_v2.build_evidence")
+    def test_counterfactual_source_failure_fetches_positive_peer_definitions(self, search):
+        self.item["key"] = ["A"]
+        search.side_effect = lambda conn, owner, query, **scope: {"sources": [
+            {"passage_id": query + scope["textbook_id"], "textbook_id": scope["textbook_id"]}]}
+        result = supplement(object(), self.args, self.item,
+            [{"rule_id":"R-2.4", "field":"concept_card.counterfactual"}])
+        self.assertEqual({call.args[2] for call in search.call_args_list},
+                         {"Method beta", "Method gamma", "Method delta"})
+        self.assertEqual(len(result),4)
+        self.assertEqual([p["passage_id"] for p in result[:3]],
+                         ["Method betabook1", "Method gammabook1", "Method deltabook1"])
+        self.assertTrue(all(call.args[1] == "owner" for call in search.call_args_list))
+
+    @patch("item_mc_repair_evidence_v2.build_evidence")
     def test_non_source_or_non_option_issues_do_not_search(self, search):
         for issues in ([], [{"rule_id": "R-12.2", "field": "options"}],
                        [{"rule_id": "R-2.4", "field": "concept_card.mechanism"}]):

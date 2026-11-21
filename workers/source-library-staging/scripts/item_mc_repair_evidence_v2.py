@@ -1,4 +1,4 @@
-"""Bounded source lookups for a held MC option before its sole rewrite.
+"""Bounded source lookups for an MC source repair before its sole rewrite.
 
 Uses the original owner, book and page/section scope. No model calls or writes.
 """
@@ -16,6 +16,14 @@ def supplement(conn, args, item, issues):
         option_id = match[1] if match else issue.get("option_id")
         if option_id in ("A", "B", "C", "D"):
             flagged.add(option_id)
+        if (issue.get("rule_id") == "R-2.4"
+                and issue.get("field") == "concept_card.counterfactual"
+                and isinstance(item.get("key"), list)):
+            # A named alternate method needs its own positive definition. A
+            # table listing its acronym cannot establish its measured quantity.
+            flagged.update(o["id"] for o in item.get("options", [])
+                           if isinstance(o, dict) and o.get("id") in ("A", "B", "C", "D")
+                           and o["id"] not in item["key"])
     books = getattr(args, "textbook_ids", None) or [args.textbook_id]
     if not flagged or not all(books):
         return []

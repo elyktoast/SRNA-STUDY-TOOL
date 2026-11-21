@@ -251,7 +251,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                 return problems
             proof = screening.get("stages", {}).get("editorial_quality", {}).get("counterfactual_verification")
             repaired = attempt_once(generated["item"], failed, review_repair, verify,
-                                    counterfactual_proof=proof)
+                                    counterfactual_proof=proof, trusted_passages=evidence)
             if not repaired["issues"] and repaired["rewrite_attempts"] == 1:
                 rerun = generate_and_screen(
                     adapter, mode=mode, domain=domain, section=section,
