@@ -21,6 +21,7 @@ export class ReviewerContainer extends Container {
     result[key] = this.env[key];
    }
    result.AI_GENERATION_OPT_IN = 'true';
+   if(this.env.AI_SOURCE_DISCOVERY_OPT_IN==='true')result.AI_SOURCE_DISCOVERY_OPT_IN='true';
    if (this.env.AI_AUTHORING_PROVIDER !== undefined) {
     result.AI_AUTHORING_PROVIDER = this.env.AI_AUTHORING_PROVIDER;
     if (this.env.AI_AUTHORING_PROVIDER === 'cloudflare') result.AI_CLOUDFLARE_MODEL = this.env.AI_CLOUDFLARE_MODEL || '';

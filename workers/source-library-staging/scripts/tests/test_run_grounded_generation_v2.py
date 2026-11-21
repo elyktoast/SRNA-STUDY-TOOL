@@ -14,6 +14,41 @@ EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
+    @patch('item_mc_source_discovery_v2.discover')
+    @patch('run_grounded_generation_v2.make_transport')
+    @patch('run_grounded_generation_v2.build_evidence', return_value=EVIDENCE)
+    def test_source_discovery_opt_in_never_spends_during_preflight(self, evidence, transport, discover):
+        result=execute(object(),ARGS,{'STAGING_ONLY':'true','AI_SOURCE_DISCOVERY_OPT_IN':'true'})
+        self.assertTrue(result['dry_run'])
+        self.assertEqual(result['authoring_preparation']['max_added_passages'],4)
+        transport.assert_not_called();discover.assert_not_called()
+
+    @patch('item_mc_source_discovery_v2.discover')
+    @patch('run_grounded_generation_v2.generate_from_index')
+    @patch('run_grounded_generation_v2.make_adapter')
+    @patch('run_grounded_generation_v2.make_transport')
+    @patch('run_grounded_generation_v2.build_evidence', return_value=EVIDENCE)
+    def test_paid_discovery_passes_bounded_sources_to_full_screening(self,evidence,transport,adapter,generate,discover):
+        args=SimpleNamespace(**{**vars(ARGS),'execute':True,'confirm_paid_calls':True,
+                              'textbook_id':'00000000-0000-4000-8000-000000000002'})
+        extra={**EVIDENCE['sources'][0],'passage_id':'p2'}
+        augmented={**EVIDENCE,'sources':EVIDENCE['sources']+[extra],'evidence_count':2}
+        discover.return_value=(augmented,{'model_calls':1,'passage_ids':['p2']})
+        generate.return_value={'item_id':'draft-1','next_state':'needs_source_review',
+            'source_evidence':{},'item':{'stem':'Synthetic'},'generator_issues':[],
+            'screening':{'can_publish':False}}
+        env={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_SOURCE_DISCOVERY_OPT_IN':'true',
+             'AI_PROVIDER_ENDPOINT':'https://provider.example/v1/chat/completions',
+             'AI_ALLOWED_HOSTS':'provider.example','AI_PROVIDER_API_KEY':'fixture',
+             'AI_GENERATOR_MODEL':'author','STAGING_RECEIPT_SIGNING_SECRET':'x'*48}
+        result=execute(object(),args,env)
+        discover.assert_called_once()
+        self.assertEqual(len(generate.call_args.kwargs['evidence_packet']['sources']),2)
+        self.assertEqual(result['screening']['source_discovery']['model_calls'],1)
+        self.assertEqual(result['passage_count'],2)
+        self.assertEqual(len(EVIDENCE['sources']),1)
+        self.assertFalse(result['can_publish'])
+
     @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
     def test_choice_quality_checks_do_not_replace_special_format_validation(self, evidence):
         args = SimpleNamespace(**{**vars(ARGS), "format":"SA"})

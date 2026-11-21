@@ -81,19 +81,22 @@ def validate(plan, evidence=None):
                 or set(entry) not in ({"passage_id", "span_ids", "explanation"},
                                       {"source_refs", "explanation"})
                 or not strings([entry["explanation"]], 1, 700)):
-            raise ValueError("Concept card option grounding invalid")
+            raise ValueError("Concept card option grounding entry invalid")
         refs = source_refs(entry)
         if not isinstance(refs, list) or not 1 <= len(refs) <= 3:
-            raise ValueError("Concept card option grounding invalid")
+            raise ValueError("Concept card option grounding reference count invalid")
         seen_passages = set()
         for ref in refs:
             if (not isinstance(ref, dict) or set(ref) != {"passage_id", "span_ids"}
                     or not strings([ref["passage_id"]], 1, 200)
                     or not isinstance(ref["span_ids"], list) or not 1 <= len(ref["span_ids"]) <= 3
                     or not strings(ref["span_ids"], len(ref["span_ids"]), 20)
-                    or len(set(ref["span_ids"])) != len(ref["span_ids"])
-                    or ref["passage_id"] in seen_passages):
-                raise ValueError("Concept card option grounding invalid")
+                    ):
+                raise ValueError("Concept card option grounding reference invalid")
+            if len(set(ref["span_ids"])) != len(ref["span_ids"]):
+                raise ValueError("Concept card option grounding repeats span")
+            if ref["passage_id"] in seen_passages:
+                raise ValueError("Concept card option grounding repeats passage")
             seen_passages.add(ref["passage_id"])
             # Referencing a real span is a transport check, never a clinical verdict.
             if sources is not None and (ref["passage_id"] not in sources or

@@ -71,13 +71,16 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"authoring_contract": "2026-11-21-v44", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-21-v45", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
                "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
     if args.format == 'MC':
         summary['mc_planning_contract'] = '2026-11-17-shared-question-v4'
+        if env.get('AI_SOURCE_DISCOVERY_OPT_IN') == 'true':
+            summary['authoring_preparation'] = {'source_discovery':'configured','max_search_queries':4,
+                'max_added_passages':4,'clinical_authority':'indexed_textbooks_only'}
     # Safe, no-cost review readiness: never imply that a configured provider
     # or a requested flag is an independently completed review.
     generator_id = env.get("AI_GENERATOR_MODEL", "").strip()
@@ -220,6 +223,14 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         if checkpoint is not None:
             from item_generation_attempt_v2 import GenerationAlreadyStarted
             raise GenerationAlreadyStarted('Partial generation replay is blocked')
+        discovery = None
+        if args.format == "MC" and env.get("AI_SOURCE_DISCOVERY_OPT_IN") == "true":
+            from item_mc_source_discovery_v2 import discover
+            evidence, discovery = discover(conn,args,evidence,
+                lambda payload:_call_with_bounded_rate_wait(adapter,payload))
+            discovery["initial_evidence_hash"] = evidence_hash
+            summary["passage_count"] = evidence["evidence_count"]
+            summary["source_textbook_count"] = len({p["textbook_id"] for p in evidence["sources"]})
         def checkpoint_writer(stage, value):
             record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
                 request_hash=request_hash, evidence_hash=evidence_hash,
@@ -324,6 +335,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                      option_reviewer_model_id=reviewer_model_id if option_requested else None,
                                      explanation_review=explanation_review if explanation_requested else None,
                                      quality_review=quality_review if quality_requested else None)
+        if discovery is not None:
+            result["screening"]["source_discovery"] = discovery
         if repair_sources:
             # The receipt's evidence hash identifies initial preflight retrieval.
             # Capture supplemental source identity/content separately in the

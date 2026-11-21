@@ -18,6 +18,21 @@ def plan():
 
 
 class ChoicePlanTests(unittest.TestCase):
+    def test_grounding_diagnostics_identify_structural_failure_without_repairing_it(self):
+        cases = (
+            ({'source_refs':[], 'explanation':'A source-linked distinction'}, 'reference count invalid'),
+            ({'source_refs':[{'passage_id':'p1','span_ids':['q0','q0']}],
+              'explanation':'A source-linked distinction'}, 'repeats span'),
+            ({'source_refs':[{'passage_id':'p1','span_ids':['q0']}] * 2,
+              'explanation':'A source-linked distinction'}, 'repeats passage'),
+            ({'source_refs':[{'passage_id':'p1','span_ids':['q0']}],
+              'explanation':' '}, 'entry invalid'),
+        )
+        for entry, message in cases:
+            value=plan();value['option_grounding']['A']=entry
+            with self.subTest(message=message),self.assertRaisesRegex(ValueError,message):
+                validate(value)
+
     def test_case_sources_extend_comparison_context_without_changing_claims(self):
         from item_mc_choice_plan_v2 import with_case_sources
         item = {"format": "MC", "key": ["A"], "evidence": [

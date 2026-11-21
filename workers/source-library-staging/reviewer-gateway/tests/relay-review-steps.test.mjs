@@ -830,3 +830,29 @@ test('candidate source calibration uses strict scoped source identities',async()
   assert.ok(!Object.hasOwn(seen[0],'srna_reviewer_calibration'));
  }finally{globalThis.fetch=old;}
 });
+
+test('bounded source search planning is MC-only, separately enabled and delivered only to the author',async()=>{
+ const old=globalThis.fetch,seen=[];
+ const cfg={...env,AI_AUTHORING_PROVIDER:'cloudflare',AI_GENERATOR_MODEL:'zai-org/glm-5.3',
+  AI_CLOUDFLARE_MODEL:'@cf/zai-org/glm-5.3',AI_CLOUDFLARE_ACCOUNT_ID:'account',AI_CLOUDFLARE_API_TOKEN:'fixture'};
+ const base=await request('retrieval_plan','zai-org/glm-5.3',{format:'MC',topic:'Selected measurement'}).json();
+ base.max_tokens=512;
+ globalThis.fetch=async(url,options)=>{
+  seen.push({url,body:JSON.parse(options.body)});
+  return Response.json({success:true,result:{choices:[{message:{content:'{"queries":["Aster measurement"]}'},finish_reason:'stop'}]}});
+ };
+ try{
+  assert.equal((await gateway.fetch(embeddingRequest(base),cfg)).status,400);
+  const enabled={...cfg,AI_SOURCE_DISCOVERY_OPT_IN:'true'};
+  const changed=modify=>{const value=structuredClone(base);modify(value);return embeddingRequest(value);};
+  assert.equal((await gateway.fetch(changed(v=>v.max_tokens=1024),enabled)).status,400);
+  assert.equal((await gateway.fetch(changed(v=>v.model='reviewer-model'),enabled)).status,400);
+  assert.equal((await gateway.fetch(changed(v=>{const p=JSON.parse(v.messages[1].content);p.format='MS';v.messages[1].content=JSON.stringify(p);}),enabled)).status,400);
+  assert.equal(seen.length,0);
+  assert.equal((await gateway.fetch(embeddingRequest(base),enabled)).status,200);
+  assert.equal(seen.length,1);assert.ok(seen[0].url.endsWith('/ai/run/@cf/zai-org/glm-5.3'));
+  assert.equal(seen[0].body.max_tokens,512);
+  assert.equal(seen[0].body.response_format.json_schema.name,'srna_source_search_plan_v1');
+  assert.equal(seen[0].body.response_format.json_schema.schema.properties.queries.maxItems,4);
+ }finally{globalThis.fetch=old;}
+});

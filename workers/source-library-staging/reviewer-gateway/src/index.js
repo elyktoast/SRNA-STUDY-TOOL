@@ -130,13 +130,14 @@ async function relayGroq(request,env){
   ||payload.max_tokens>1800||payload.messages[1].content.length>20000))return respond(400,null,'{"error":"invalid_calibration"}');
  const activeReviewerModel=candidateCalibration?env.AI_REVIEWER_CALIBRATION_MODEL:env.AI_REVIEWER_MODEL;
  delete payload.srna_reviewer_calibration;
- if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(!['retrieval_plan','concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(step.step==='retrieval_plan'&&(env.AI_SOURCE_DISCOVERY_OPT_IN!=='true'||step.format!=='MC'||typeof step.topic!=='string'||(!step.topic.trim()||step.topic.length>500)||payload.max_tokens>512||Object.keys(step).sort().join(',')!=='auto_publish,format,rules_version,step,topic'))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
   if(env.AI_AUTHORING_PROVIDER!==undefined&&!['groq','cloudflare'].includes(env.AI_AUTHORING_PROVIDER))return respond(503,null,'{"error":"relay_disabled"}');
-  const authoring=['concept_card','item_draft','rationale','rewrite'].includes(step.step);
+  const authoring=['retrieval_plan','concept_card','item_draft','rationale','rewrite'].includes(step.step);
   const cloudflareAuthoring=env.AI_AUTHORING_PROVIDER==='cloudflare'&&authoring;
   if(cloudflareAuthoring&&env.AI_CLOUDFLARE_MODEL!=='@cf/'+env.AI_GENERATOR_MODEL)return respond(503,null,'{"error":"relay_disabled"}');
   const provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
@@ -197,6 +198,9 @@ async function relayGroq(request,env){
    rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='distractor_breakdown');
   }
   let reviewFormat=rationaleFormat;
+  if(step.step==='retrieval_plan')reviewFormat={type:'json_schema',json_schema:{name:'srna_source_search_plan_v1',strict:true,
+   schema:{type:'object',properties:{queries:{type:'array',minItems:1,maxItems:4,items:{type:'string',minLength:2,maxLength:100}}},
+    required:['queries'],additionalProperties:false}}};
   if(step.step==='options_only_review'){
    const ids=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
    const count=step.select_count;
@@ -260,7 +264,7 @@ async function relayGroq(request,env){
      required:['judgments'],additionalProperties:false}}};
   }
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):bytes;
-  const cloudflareFormat=cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
+  const cloudflareFormat=step.step==='retrieval_plan'?reviewFormat:cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
@@ -466,6 +470,7 @@ export default {
      envVars.AI_AUTHORING_PROVIDER=env.AI_AUTHORING_PROVIDER;
      if(env.AI_AUTHORING_PROVIDER==='cloudflare')envVars.AI_CLOUDFLARE_MODEL=env.AI_CLOUDFLARE_MODEL||'';
     }
+    if(env.AI_SOURCE_DISCOVERY_OPT_IN==='true')envVars.AI_SOURCE_DISCOVERY_OPT_IN='true';
     if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
     if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true'){
      if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
