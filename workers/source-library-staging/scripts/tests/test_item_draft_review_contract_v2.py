@@ -57,7 +57,7 @@ class DraftReviewTests(unittest.TestCase):
             screening["stages"][name] = {"status":"pass", "issues":[]}
             self.assertEqual(approval_issues(screening, fmt), [])
     def test_automated_quality_flags_require_revision_without_approving_content(self):
-        for status in ('flag', 'fail'):
+        for status in ('flag', 'fail', 'pending'):
             with self.subTest(status=status):
                 data = dict(owner_uid=OWNER, textbook_id=BOOK, mode='NCE', format='MC',
                             question={'stem': 'Preserve this draft'},
@@ -70,13 +70,15 @@ class DraftReviewTests(unittest.TestCase):
                 self.assertFalse(outcome['published'])
                 self.assertEqual(repr(data), original)
 
-    def test_pending_duplicate_or_human_checks_do_not_claim_automated_failure(self):
+    def test_pending_automated_checks_are_held_but_pending_human_review_is_allowed(self):
         data = dict(owner_uid=OWNER, textbook_id=BOOK, mode='NCE', format='MC',
                     question={}, screening={'stages': {
                         'schema': {'status': 'pass'},
                         'duplicates': {'status': 'pending'},
                         'human_review': {'status': 'pending'}}},
                     evidence=[{'passage_id': 'passage', 'textbook_id': BOOK}])
+        self.assertEqual(validate_draft(data)['status'], 'needs_revision')
+        data['screening']['stages']['duplicates']['status']='pass'
         self.assertEqual(validate_draft(data)['status'], 'pending_review')
 
     def test_valid_draft_requires_human_review(self):

@@ -70,8 +70,8 @@ def validate_draft(payload):
         raise ValueError('Primary textbook must supply indexed evidence')
     stages = payload["screening"].get("stages", {})
     needs_revision = isinstance(stages, dict) and any(
-        isinstance(stage, dict) and stage.get("status") in ("flag", "fail")
-        for stage in stages.values())
+        isinstance(stage, dict) and stage.get("status") != "pass"
+        for name, stage in stages.items() if name != "human_review")
     return {"status": "needs_revision" if needs_revision else "pending_review", "requires_human_review": True,
             "published": False}
 

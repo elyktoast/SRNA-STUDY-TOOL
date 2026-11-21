@@ -92,6 +92,7 @@ function request(step, model, options={}) {
         step, rules_version:'2.0', auto_publish:false,
         ...(['blind_review','option_review'].includes(step)?{blind:true}:{}),
         ...(['explanation_review','editorial_review','options_only_review'].includes(step)?{independent:true}:{}),
+        ...(step==='explanation_review'?{fields:[{id:'e0',passage_ids:['s0']}],source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source fact'}]}]}:{}),
         ...(step==='options_only_review'?{format:'MC',select_count:1,options:['A','B','C','D'].map(id=>({id,text:'Choice '+id}))}:{}),
         ...options,
       })}],
@@ -574,16 +575,18 @@ test('source explanation schema requires references for support but permits ever
    assert.equal(url,'https://api.groq.com/openai/v1/chat/completions');
    const f=JSON.parse(options.body).response_format;
    assert.equal(f.type,'json_schema');assert.equal(f.json_schema.strict,true);
-   const p=f.json_schema.schema.properties;
-   assert.equal(p.supported_groups.minItems,undefined,'No supported judgment is required');
-   assert.equal(p.supported_groups.items.properties.quote_refs.minItems,1);
-   assert.equal(p.supported_groups.items.properties.quote_refs.maxItems,8);
-   assert.deepEqual(p.supported_groups.items.properties.field_ids.items.enum,['e0','e1']);
-   assert.deepEqual(p.unsupported.items.properties.field_id.enum,['e0','e1']);
-   return Response.json({choices:[{message:{content:JSON.stringify({supported_groups:[],unsupported:[{field_id:'e0',reason:'Not established'},{field_id:'e1',reason:'Contradicted'}]})},finish_reason:'stop'}]});
+   const p=f.json_schema.schema.properties.judgments;
+   assert.deepEqual(p.required,['e0','e1']);
+   for(const field of Object.values(p.properties)){
+    assert.deepEqual(field.properties.supported.type,['boolean','null']);
+    assert.deepEqual(field.properties.quote_refs.type,['array','null']);
+    assert.equal(field.properties.quote_refs.minItems,1);
+    assert.deepEqual(field.properties.quote_refs.items.enum,['s0:q0']);
+   }
+   return Response.json({choices:[{message:{content:JSON.stringify({judgments:{e0:{supported:false,quote_refs:null,reason:'Not established'},e1:{supported:null,quote_refs:null,reason:'Uncertain'}}})},finish_reason:'stop'}]});
   };
-  const r=await gateway.fetch(request('explanation_review','qwen/qwen3.8-27b',{fields:[{id:'e0'},{id:'e1'}],source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
-  assert.equal(r.status,200);assert.deepEqual(JSON.parse((await r.json()).choices[0].message.content).supported_groups,[]);
+  const r=await gateway.fetch(request('explanation_review','qwen/qwen3.8-27b',{fields:[{id:'e0',passage_ids:['s0']},{id:'e1',passage_ids:['s0']}],source_passages:[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source statement'}]}]}),cfg);
+  assert.equal(r.status,200);assert.deepEqual(JSON.parse((await r.json()).choices[0].message.content).judgments.e0.supported,false);
  }finally{globalThis.fetch=old;}
 });
 
@@ -816,14 +819,13 @@ test('candidate source calibration uses strict scoped source identities',async()
  const old=globalThis.fetch,seen=[];
  globalThis.fetch=async(url,options)=>{seen.push(JSON.parse(options.body));return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]});};
  try{
-  const fields=[{id:'e0'}],source_passages=[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source fact'}]}];
+  const fields=[{id:'e0',passage_ids:['s0']}],source_passages=[{passage_id:'s0',quote_spans:[{id:'q0',text:'Source fact'}]}];
   assert.equal((await gateway.fetch(await calibrationRequest('explanation_review',{}, {fields,source_passages}),calibrationEnv)).status,200);
   const schema=seen[0].response_format;
   assert.equal(schema.type,'json_schema');assert.equal(schema.json_schema.strict,true);
-  const groups=schema.json_schema.schema.properties.supported_groups.items.properties;
-  assert.deepEqual(groups.field_ids.items.enum,['e0']);
-  assert.deepEqual(groups.quote_refs.items.properties.passage_id.enum,['s0']);
-  assert.deepEqual(groups.quote_refs.items.properties.span_id.enum,['q0']);
+  const fieldsSchema=schema.json_schema.schema.properties.judgments;
+  assert.deepEqual(fieldsSchema.required,['e0']);
+  assert.deepEqual(fieldsSchema.properties.e0.properties.quote_refs.items.enum,['s0:q0']);
   assert.equal(seen[0].model,calibrationModel);
   assert.ok(!Object.hasOwn(seen[0],'srna_reviewer_calibration'));
  }finally{globalThis.fetch=old;}

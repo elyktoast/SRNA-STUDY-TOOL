@@ -233,19 +233,31 @@ async function relayGroq(request,env){
     judgments:{type:'object',properties,required:optionIds,additionalProperties:false}
    },required:['judgments'],additionalProperties:false}}};
   }
-  if((groqQwen||groqOss)&&step.step==='explanation_review'&&Array.isArray(step.fields)&&step.fields.length&&Array.isArray(step.source_passages)&&step.source_passages.length){
-   const fieldIds=step.fields.map(f=>f.id),passageIds=step.source_passages.map(p=>p.passage_id);
-   const spanIds=[...new Set(step.source_passages.flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
-   if(fieldIds.every(x=>typeof x==='string')&&passageIds.every(x=>typeof x==='string')&&spanIds.length){
-    // A valid judgment can support OR reject any field. The schema guarantees
-    // references exist structurally; source identity, coverage and truth remain
-    // independently validated by the server, never inferred from JSON shape.
-    reviewFormat={type:'json_schema',json_schema:{name:'srna_explanation_review_v2',strict:true,schema:{type:'object',properties:{
-     supported_groups:{type:'array',items:{type:'object',properties:{field_ids:{type:'array',minItems:1,items:{type:'string',enum:fieldIds}},
-      quote_refs:{type:'array',minItems:1,maxItems:8,items:{type:'object',properties:{passage_id:{type:'string',enum:passageIds},span_id:{type:'string',enum:spanIds}},required:['passage_id','span_id'],additionalProperties:false}}},required:['field_ids','quote_refs'],additionalProperties:false}},
-     unsupported:{type:'array',items:{type:'object',properties:{field_id:{type:'string',enum:fieldIds},reason:{type:'string'}},required:['field_id','reason'],additionalProperties:false}}
-    },required:['supported_groups','unsupported'],additionalProperties:false}}};
+  if((groqQwen||groqOss)&&step.step==='explanation_review'){
+   const fields=step.fields,passages=step.source_passages;
+   if(!Array.isArray(fields)||!fields.length||fields.length>20||new Set(fields.map(f=>f.id)).size!==fields.length||
+      !Array.isArray(passages)||!passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const byId=new Map(passages.map(p=>[p.passage_id,p]));
+   if(byId.size!==passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const properties={};
+   for(const field of fields){
+    if(typeof field.id!=='string'||!Array.isArray(field.passage_ids)||!field.passage_ids.length)
+     return respond(400,null,'{"error":"invalid_step"}');
+    const refs=[];
+    for(const pid of field.passage_ids){
+     const spans=byId.get(pid)?.quote_spans;
+     if(!Array.isArray(spans)||!spans.length)return respond(400,null,'{"error":"invalid_step"}');
+     for(const span of spans){if(typeof span.id!=='string')return respond(400,null,'{"error":"invalid_step"}');refs.push(pid+':'+span.id);}
+    }
+    properties[field.id]={type:'object',properties:{supported:{type:['boolean','null']},
+     quote_refs:{type:['array','null'],minItems:1,maxItems:8,items:{type:'string',enum:[...new Set(refs)]}},
+     reason:{type:'string'}},required:['supported','quote_refs','reason'],additionalProperties:false};
    }
+   // Flat nullable fields match the live-compatible option protocol. The
+   // backend still rejects definite support without valid field-scoped quotes.
+   reviewFormat={type:'json_schema',json_schema:{name:'srna_scoped_explanation_review_v3',strict:true,
+    schema:{type:'object',properties:{judgments:{type:'object',properties,required:fields.map(f=>f.id),additionalProperties:false}},
+     required:['judgments'],additionalProperties:false}}};
   }
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):bytes;
   const cloudflareFormat=cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};

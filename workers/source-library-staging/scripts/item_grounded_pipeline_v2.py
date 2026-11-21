@@ -83,9 +83,15 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                             "can_publish": False,
                             "error": "option_retrieval_unavailable"}
     option_adjudication = None
+    prior_stages = result.get("screening", {}).get("stages", {})
     if (option_reviewer is not None and format in ("MC", "MS")
             and isinstance(result.get("item"), dict) and isinstance(option_audit, dict)
             and not result.get("generator_issues")
+            and isinstance(prior_stages, dict)
+            and all(isinstance(stage, dict) and stage.get("status") == "pass"
+                    for name, stage in prior_stages.items() if name != "human_review")
+            and (explanation_review is None or result.get("screening", {}).get("stages", {}).get(
+                "explanation_evidence", {}).get("status") == "pass")
             and result.get("screening", {}).get("stages", {}).get("schema", {}).get("status") == "pass"):
         from item_option_adjudication_handoff_v2 import run as review_options
         from search_passages import search

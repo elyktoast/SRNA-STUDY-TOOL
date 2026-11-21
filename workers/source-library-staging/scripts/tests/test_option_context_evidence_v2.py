@@ -54,7 +54,7 @@ class OptionContextEvidenceTests(unittest.TestCase):
             return [{'passage_id':'independently-found'}] if query==clinical else []
         with patch('item_option_retrieval_audit_v2.search',side_effect=search):
             report=audit(None,'owner',item,textbook_id='book',limit=3,context_query=topic)
-        self.assertEqual(calls,[(clinical,'owner','book',2),('decreased oxygen reserve','owner','book',1)])
+        self.assertEqual(calls,[(clinical,'owner','book',2),('decreased oxygen reserve','owner','book',2)])
         self.assertTrue(report['all_options_have_matches'])
         self.assertEqual(report['option_audits'][0]['search_queries'],['decreased oxygen reserve',clinical])
         self.assertFalse(report['clinical_verification_complete'])
