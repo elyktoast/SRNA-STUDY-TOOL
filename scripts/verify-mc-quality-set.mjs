@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture bold: electromyography, cited option trial',page:14,objective:'II.C.4',workflow:'lecture',item_id:'bf60f65d-d535-499c-88dc-68b8aaaf32c1',topic:'Electromyography'}
+ {name:'Lecture bold: electromyography, positive definition repair trial',page:14,objective:'II.C.4',workflow:'lecture',item_id:'031390ad-1c03-4bf7-b4dc-644ba1cd3f98',topic:'Electromyography'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='d285b1da4a83a74472c9e9db9824d10f0b46bc64';
+const sha='67d91fe1d85a9885b98590b4fa54524bafbd99d1';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -70,7 +70,7 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-20-v39');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-20-v40');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
@@ -84,7 +84,8 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const screening=saved.screening||generated.screening;
    row.stages=Object.fromEntries(Object.entries(screening.stages).map(([k,v])=>[k,v.status]));
    row.reviewer_models={explanation:screening.stages.explanation_evidence?.reviewer_model_id,option:screening.independent_option_adjudication?.reviewer_model_id,editorial:screening.stages.editorial_quality?.reviewer_model_id};
-   row.reviewer_identity_matches=row.reviewer_models.explanation==='openai/gpt-oss-120b'&&row.reviewer_models.option==='openai/gpt-oss-120b'&&row.reviewer_models.editorial==='qwen/qwen3.8-27b';
+   row.option_review_attempted=Boolean(screening.independent_option_adjudication);
+   row.reviewer_identity_matches=row.option_review_attempted?row.reviewer_models.explanation==='openai/gpt-oss-120b'&&row.reviewer_models.option==='openai/gpt-oss-120b'&&row.reviewer_models.editorial==='qwen/qwen3.8-27b':null;
    row.blockers=Object.fromEntries(Object.entries(screening.stages).filter(([k,v])=>k!=='human_review'&&v.status!=='pass'));
    row.rewrite_attempts=screening.rewrite_attempts_used;
    row.rewrite_original_issues=screening.rewrite_original_issues;
@@ -100,9 +101,9 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    row.current_source_issues=current.issues;
    const automated=Object.entries(row.stages).filter(([k])=>k!=='human_review');
    row.passing_checks=automated.filter(([,v])=>v==='pass').length;
-   row.accepted=automated.length===10&&row.passing_checks===10&&current.issues.length===0&&row.reviewer_identity_matches;
+   row.accepted=Boolean(automated.length===10&&row.passing_checks===10&&current.issues.length===0&&row.reviewer_identity_matches);
   }catch(error){row.failure=error.details||{reason:error.message,cause_code:safe(error.cause?.code)};stopAfterFailure=!error.details?.http_status||error.details.http_status>=500||error.details.rule==='GENERATION_BUSY';}
-  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,reviewer_models:row.reviewer_models,reviewer_identity_matches:row.reviewer_identity_matches,rewrite_attempts:row.rewrite_attempts,source_issue_count:row.current_source_issues?.length,option_citation_counts:row.option_citation_counts,source_repair_retrieval:row.source_repair_retrieval,blocker_rules:Object.fromEntries(Object.entries(row.blockers||{}).map(([stage,value])=>[stage,(value.issues||[]).map(issue=>({rule_id:issue.rule_id,field:issue.field}))])),failure:row.failure,published:false});
+  save(rows);emit({topic:row.name,item_id:row.item_id,draft_id:row.draft_id,accepted:row.accepted,passing_checks:row.passing_checks,stages:row.stages,reviewer_models:row.reviewer_models,option_review_attempted:row.option_review_attempted,reviewer_identity_matches:row.reviewer_identity_matches,rewrite_attempts:row.rewrite_attempts,source_issue_count:row.current_source_issues?.length,option_citation_counts:row.option_citation_counts,source_repair_retrieval:row.source_repair_retrieval,blocker_rules:Object.fromEntries(Object.entries(row.blockers||{}).map(([stage,value])=>[stage,(value.issues||[]).map(issue=>({rule_id:issue.rule_id,field:issue.field}))])),failure:row.failure,published:false});
   if(stopAfterFailure){
    for(const pending of samples.slice(rows.length))rows.push({...pending,accepted:false,draft_id:null,published:false,not_run:'Prior ambiguous runtime failure; do not overlap backend work'});
    save(rows);break;
