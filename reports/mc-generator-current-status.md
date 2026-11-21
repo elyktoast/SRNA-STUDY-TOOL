@@ -1,19 +1,20 @@
 # MC generator: current staging status
 
-Updated November 20, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
+Updated November 21, 2026. Repository: `elyktoast/SRNA-STUDY-TOOL`, not CMS.
 
 ## Current version
 
-- Staging branch `fix/board-question-quality`, [PR #189](https://github.com/elyktoast/SRNA-STUDY-TOOL/pull/189).
-- Current source `e220836da5d5a09487e925855f11d67befc7ba52`, contract `2026-11-20-v41`. CI, Pages and connected Worker build `99a00fc2-77f6-48b0-9914-e3f762b158bb` passed. Settled image `c7ef3cd377f95c8125e93e9319d9dfa1a032d67c28ea495fa3f12ea9f3aff6d2`.
-- Cloudflare GLM authors. GPT-OSS 120B is in a limited trial for blind, explanatory-source and independent option review. Qwen remains the editorial reviewer. Gemini is disabled.
-- Main and production are unchanged. All generated drafts remain unpublished and require clinical human review before bank approval. Other question formats remain paused.
+- Source `f539ba7fca76949977bb68e649705c1d086faeb4`, contract `2026-11-21-v42`, staging branch `fix/board-question-quality`, PR #189. Deployment verification and fresh acceptance pending.
+- Lecture bullet teaching points now stay with their parent heading and flow into focused question requests. Highlight/bold priority and parent classification are retained. Focused search fallback remains within identical authorized source scope. Lecture wording is an untrusted scope cue, never evidence.
+- Authoring avoids unrequested product-brand recognition. Rationale-only or expected-key-only edits cannot resample an unchanged failed alternate blind question. Source failures return bounded diagnostics without arbitrary private error content.
+- Offline: 1,119 Python tests passed, four skipped; eight root answer-integrity regressions passed. Actual provided PDF page 14 correctly separates AMG/EMG points, including the muscle action-potential measurement. Zero model calls or DB writes in that file check.
+- Main/production unchanged; all drafts unpublished, human clinical review required. Other formats paused. Browser file upload and 25/50/100 background batches remain unfinished.
 
-## Latest result: source check cleared, answer cue remains
+## Latest completed result: v41 held
 
-[Run 44841715222](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44841715222) saved unpublished draft `84f4c019-1f57-4885-8678-5b057a5e7c8d` (request `031390ad-1c03-4bf7-b4dc-644ba1cd3f98`, artifact `14680908298`) at **8/10**. Every explanatory-source field passed. The options-only check guessed the key five times across five shuffled trials. Choices mixed giving/avoiding blockers with abandoning or replacing a requested monitor, a real cue. The sole repair was rejected for an unsupported source-ranking claim. The original source-valid draft stayed held, and independent option adjudication was correctly not invoked. Do not regrade or reroll it.
+[Run 44843428029](https://github.com/elyktoast/SRNA-STUDY-TOOL/actions/runs/44843428029) saved draft `7e411bbc-13d5-48a4-8bb6-560533671f6b`, item `56e2394d-9052-437a-bffb-6990e7410a51`, artifact `14681724177`, at 7/10 with one rewrite. Parallel options passed the answer-cue check. A product-brand alternate case failed the independent blind solve; its attempted repair left the changed-stem question unchanged. Source review remained pending with REVIEW_RESPONSE_INVALID and no specific diagnostic; this is not a source pass. Independent option review was not invoked. Draft remains held; no reroll/regrade.
 
-v41 keeps all options on one decision axis and preserves the complete selected lecture context. A zero-model-call check of the real PDF found the full bold title is Quantitative Monitoring: Electromyography, while the short service-control topic omitted that qualifier. Plain-text extraction also consumed the exported date before the heading; the new regression skips date/page-counter headers without stripping ratio-based clinical titles. The next pilot uses the full real lecture title. All checks, the cue threshold and the one-rewrite limit remain unchanged. Local Python tests: 1,112, four skipped.
+The next v42 pilot uses a synthetic focused lecture fixture (heading + bullet + bold marker), not a claimed browser upload. Four previously passing automated drafts remain the total, all awaiting clinical human review.
 
 ## Prior EMG result and source-repair fix
 

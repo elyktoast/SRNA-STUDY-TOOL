@@ -7,11 +7,11 @@ import {stagingReadOnlyRetry} from './staging-read-only-retry.mjs';
 import {isGenerationDisconnect,recoverCompletedGeneration} from '../equipment/assets/generation-completion-recovery.js';
 import {settled} from './wait-staging-reviewer-rollout.mjs';
 export const samples=[
- {name:'Lecture bold: quantitative electromyography context',page:14,objective:'II.C.4',workflow:'lecture',item_id:'56e2394d-9052-437a-bffb-6990e7410a51',topic:'Quantitative Monitoring: Electromyography'}
+ {name:'Lecture bold: quantitative electromyography context',page:14,objective:'II.C.4',workflow:'lecture',item_id:'a6fb8441-9491-4b06-92ef-53c295870208',topic:'Quantitative Monitoring: Electromyography',focus:'Record the evoked muscle action potential'}
 ];
 const gateway='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
 const project='https://xqyasyambwdyhsjkftqu.supabase.co';
-const sha='e220836da5d5a09487e925855f11d67befc7ba52';
+const sha='f539ba7fca76949977bb68e649705c1d086faeb4';
 const safe=v=>typeof v==='string'&&/^[A-Za-z0-9_.-]{1,120}$/.test(v)?v:undefined;
 export function verifyDeployment(d,now=Date.now()){
  assert.equal(d.verification,'connected_cloudflare_deployment_read');
@@ -61,16 +61,17 @@ export async function runSet({env=process.env,fetchImpl=fetch,deployment,emit=v=
    const [domain,section]=sample.objective.split('.');
    let request={topic:sample.topic,objective:sample.objective,domain,section,mode:'NCE',format:'MC',limit:8,item_id:sample.item_id,textbook_id:sample.textbook_id||books[0],textbook_ids:books};
    if(sample.workflow==='lecture'){
-    const plan=await call('/generation/lecture-plan',{lecture_text:'Page '+sample.page+':\nLecture bold: '+sample.topic,textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
+    const plan=await call('/generation/lecture-plan',{lecture_text:'Page '+sample.page+':\n# '+sample.topic+'\n• '+sample.focus+'\nLecture bold: '+sample.topic,textbook_id:'all',count:1,mode:'NCE',format:'MC',domain,section,objective:sample.objective});
     assert.equal(plan.auto_generate,false);assert.equal(plan.auto_publish,false);assert.equal(plan.count,1,'Lecture objective held');
     assert.equal(plan.jobs[0].path,'/generation/preflight');
-    assert.equal(plan.jobs[0].body.topic,sample.topic,'Lecture planner changed the intended clinical topic');
+    assert.equal(plan.jobs[0].body.topic,sample.topic+' — '+sample.focus,'Lecture planner dropped the selected teaching point');
+    assert.equal(plan.jobs[0].lecture_topic,sample.topic,'Lecture parent heading changed');
     assert.equal(plan.jobs[0].body.objective,sample.objective,'Lecture planner changed the selected objective');
     emit({check:'emphasized_lecture_topic',topic:plan.jobs[0].body.topic,objective:plan.jobs[0].body.objective,paid_calls:0});
     request={...plan.jobs[0].body,item_id:sample.item_id};
    }
    const preflight=await call('/generation/preflight',request);
-   assert.equal(preflight.authoring_contract,'2026-11-20-v41');assert.equal(preflight.authoring_provider,'cloudflare');
+   assert.equal(preflight.authoring_contract,'2026-11-21-v42');assert.equal(preflight.authoring_provider,'cloudflare');
    assert.equal(preflight.authoring_delivery_model,'@cf/zai-org/glm-5.3');
    if(!sample.recover_only)assert.equal(preflight.resume?.resumable,false,'Existing checkpoint: no paid replay');
    const completed=()=>recoverCompletedGeneration(request,cached=>call('/generation/one',cached),{onProgress:()=>emit({check:'completed_only_recovery',item_id:request.item_id})});
