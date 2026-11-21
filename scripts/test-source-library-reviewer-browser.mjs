@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
 import vm from 'node:vm';
+import {fileURLToPath} from 'node:url';
 import {webcrypto} from 'node:crypto';
 
 const source=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
@@ -10,7 +11,26 @@ const reviewer='https://reviewer-staging.srnastudytool.com';
 const pdf='123e4567-e89b-42d3-a456-426614174000/book.pdf';
 const sha=async bytes=>Buffer.from(await webcrypto.subtle.digest('SHA-256',bytes)).toString('hex');
 
-function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,handler}={}){
+function preview(question,sourceTitles={}){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(child){this.children.push(child)},replaceChildren(){this.children=[]},set innerHTML(value){throw Error('Generated content must be text')}});
+ const document={createElement:node},host=node('div');
+ const render=vm.runInNewContext(ui.slice(ui.indexOf('function renderReadableQuestion('),ui.indexOf('let generatedForReview='))+'\nrenderReadableQuestion',{document});
+ render(host,question,sourceTitles);
+ const text=n=>[n.textContent,...n.children.map(text)].join('\n');return text(host);
+}
+test('saved v2 question preview exposes the four-part teaching rationale and PDF citations safely',()=>{
+ const html='<img src=x onerror=alert(1)>';
+ const text=preview({stem:'Clinical case',mode:'NCE',objective:'I.A.2',reasoning_level:'application',key:['B'],options:[{id:'A',text:'First response'},{id:'B',text:'Second response'}],
+  rationale:{core_concept:'Core teaching',why_key_wins:'Key mechanism',trap:html,distractor_breakdown:{A:'Specific wrong mechanism',B:'Duplicate keyed breakdown'}},evidence:[{pdf_page:731},{pdf_page:732}]});
+ for(const value of ['Core teaching','Key mechanism',html,'Specific wrong mechanism','I.A.2','731, 732','Clinical review required'])assert.ok(text.includes(value),value);
+ assert.ok(!text.includes('Duplicate keyed breakdown'));
+});
+test('legacy string rationale remains readable',()=>{
+ assert.ok(preview({stem:'Legacy case',explanation:'Legacy teaching'}).includes('Legacy teaching'));
+});
+
+function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,omitReviewerConfig=false,handler}={}){
  const calls=[];
  const context={
   window:{MBU_SOURCE_LIBRARY_STAGING:{enabled:true,apiUrl:'https://source-library-staging.srnastudytool.com',reviewerApiUrl}},
@@ -18,8 +38,9 @@ function setup({hostname='staging.srnastudytool.com',reviewerApiUrl=reviewer,han
   localStorage:{getItem:()=>JSON.stringify({access_token:'staging-jwt'})},
   fetch:async(url,options)=>{calls.push({url:String(url),options});return handler(url,options)}
  };
+ if(omitReviewerConfig)delete context.window.MBU_SOURCE_LIBRARY_STAGING.reviewerApiUrl;
  context.globalThis=context;
- vm.runInNewContext(source,context);
+ vm.runInNewContext(source,context,{filename:fileURLToPath(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url)),importModuleDynamically:vm.constants.USE_MAIN_CONTEXT_DEFAULT_LOADER});
  return {api:context.window.MBUSourceMaterialStagingStorage,calls};
 }
 function response(bytes,sourceSha,imageSha,{mime='image/png',approval='false'}={}){
@@ -48,6 +69,16 @@ test('browser rejects a forged PNG fingerprint',async()=>{
  const {api}=setup({handler:()=>response(png,'a'.repeat(64),'0'.repeat(64))});
  await assert.rejects(api.verifiedReviewPage(pdf,1),/fingerprint mismatch/);
 });
+test('chapter review without an override uses the pinned deployed staging gateway',async()=>{
+ const digest=await sha(png);
+ for(const settings of [{omitReviewerConfig:true},{reviewerApiUrl:'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/'}]){
+  const {api,calls}=setup({...settings,handler:()=>response(png,'a'.repeat(64),digest)});
+  const result=await api.verifiedReviewPage(pdf,731);
+  assert.equal(result.imageSha256,digest);
+  assert.equal(calls[0].url,'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/review/page.png?path='+encodeURIComponent(pdf)+'&page=731');
+  assert.equal(calls[0].options.redirect,'error');
+ }
+});
 test('browser rejects missing approval guard and non-PNG payload',async()=>{
  for(const options of [{approval:'true'},{mime:'text/plain'}]){
   const {api}=setup({handler:()=>response(png,'a'.repeat(64),'0'.repeat(64),options)});
@@ -56,6 +87,9 @@ test('browser rejects missing approval guard and non-PNG payload',async()=>{
 });
 test('browser refuses production, lookalike, and insecure reviewer URLs',async()=>{
  for(const reviewerApiUrl of [
+  '',null,
+  'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev.evil.test/',
+  'https://another-staging-worker.workers.dev/',
   'http://reviewer-staging.srnastudytool.com',
   'https://srnastudytool.com',
   'https://staging.srnastudytool.com',
@@ -184,4 +218,123 @@ test('saved draft detail rejects invalid IDs and non-staging origin before fetch
 test('saved draft detail surfaces backend failures',async()=>{
  const {api}=setup({handler:()=>new Response(JSON.stringify({error:'Draft not found'}),{status:404,headers:{'Content-Type':'application/json'}})});
  await assert.rejects(api.getGeneratedDraft('abc90a93-41f8-4d7c-8e27-94a609135572'),/Draft not found/);
+});
+
+
+test('disconnected generation retrieves only the same completed request without new authoring',async()=>{
+ const request={item_id:'stable-id',topic:'original topic',textbook_id:'owned-book'};let networkCalls=0,recoveryNotice=0;
+ const {api,calls}=setup({handler:async(url,options)=>{
+  const body=JSON.parse(options.body);
+  if(++networkCalls===1){assert.equal(body.resume_completed_only,undefined);throw TypeError('fetch failed');}
+  assert.deepEqual(body,{...request,resume_completed_only:true});
+  return {ok:true,json:async()=>({draft_id:'saved-id',published:false,can_publish:false})};
+ }});
+ const result=await api.generateOne(request,{onRecovery:()=>recoveryNotice++});
+ assert.equal(result.draft_id,'saved-id');assert.equal(result.published,false);
+ assert.equal(calls.length,2);assert.equal(recoveryNotice,1);assert.equal(request.resume_completed_only,undefined);
+});
+
+function draftCollectionHarness(){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(...children){this.children.push(...children)},prepend(...children){this.children.unshift(...children)},setAttribute(){},replaceChildren(){this.children=[]}});
+ const out=node('div');out._bulkSelection={selected:new Set(['old-draft'])};
+ const pending=[];
+ const storage={listGeneratedDrafts:()=>new Promise((resolve,reject)=>pending.push({resolve,reject}))};
+ const code='let draftCollectionRequest=0;\n'+ui.slice(ui.indexOf('async function renderDraftCollection('),ui.indexOf('const bankButton='))+'\nrenderDraftCollection';
+ const render=vm.runInNewContext(code,{document:{createElement:node,createTextNode:text=>({textContent:text})},genEl:()=>out,storage});
+ return {out,pending,render};
+}
+test('overlapping collection loads render only the latest selected view once',async()=>{
+ const {out,pending,render}=draftCollectionHarness();
+ const older=render('drafts'),latest=render('bank');
+ pending[1].resolve({drafts:[]});await latest;
+ pending[0].resolve({drafts:[]});await older;
+ assert.equal(out.children.length,2);
+ assert.equal(out.children[0].textContent,'Approved Question Bank (staging only)');
+ assert.equal(out._bulkSelection,undefined);
+});
+test('a stale list failure cannot replace a newer successful collection',async()=>{
+ const {out,pending,render}=draftCollectionHarness();
+ const older=render('bank'),latest=render('drafts');
+ pending[1].resolve({drafts:[]});await latest;
+ pending[0].reject(Error('Old request disconnected'));
+ await assert.doesNotReject(older);
+ assert.equal(out.children.length,2);
+ assert.equal(out.children[0].textContent,'Saved question drafts');
+});
+test('single and bulk approval require an explicit server-observed automated pass',async()=>{
+ for(const [status,passed,disabled] of [['pending_review',undefined,true],['pending_review',false,true],['pending_review',true,false],['needs_revision',true,true]]){
+  const {out,pending,render}=draftCollectionHarness();
+  const loading=render('drafts');pending[0].resolve({drafts:[{draft_id:'one',status,automated_checks_passed:passed}]});await loading;
+  const walk=node=>[node,...(node.children||[]).flatMap(walk)];
+  const buttons=walk(out).filter(node=>node.tag==='button');
+  assert.equal(buttons.find(node=>node.textContent==='Approve to bank').disabled,disabled);
+  const selection=out._bulkSelection.checkboxes[0].input;selection.checked=true;selection.onchange();
+  assert.equal(buttons.find(node=>node.textContent==='Approve selected to bank').disabled,disabled);
+ }
+});
+
+function mcReviewSummary(screening,format='MC'){
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const node=tag=>({tag,children:[],textContent:'',append(...children){this.children.push(...children)},prepend(...children){this.children.unshift(...children)},setAttribute(){},set innerHTML(value){throw Error('Review results must remain text')}});
+ const host=node('div');
+ const start=ui.indexOf('function renderMCReviewSummary('),end=ui.indexOf('function selectedEvidenceScope(',start);
+ const render=vm.runInNewContext(ui.slice(start,end)+'\nrenderMCReviewSummary',{document:{createElement:node}});
+ render(host,screening,format);
+ const walk=node=>[node,...node.children.flatMap(walk)];
+ return walk(host).map(n=>n.textContent).join('\n');
+}
+const mcStageNames=['schema','deterministic_text','math','evidence','duplicates','blind_model','editorial_quality','explanation_evidence','independent_option_evidence','options_only'];
+const completeMCReview=()=>({stages:Object.fromEntries(mcStageNames.map(name=>[name,{status:'pass',issues:[]}]))});
+test('MC review checklist makes an incomplete trial visible without claiming readiness',()=>{
+ const screening=completeMCReview();screening.stages.options_only={status:'pending',issues:[],completed_trials:3};
+ const text=mcReviewSummary(screening);
+ assert.match(text,/9 of 10 automated checks passed/);
+ assert.match(text,/Answer-choice cue test: Incomplete \(3 of 5 trials completed\)/);
+ assert.match(text,/Approval blocked/);
+});
+test('MC checklist handles missing stages, failed reviews and stale revised drafts conservatively',()=>{
+ assert.match(mcReviewSummary(null),/0 of 10 automated checks passed/);
+ const screening=completeMCReview();screening.stages.evidence={status:'flag',issues:[{message:'<script>private</script>'}]};
+ const text=mcReviewSummary(screening);assert.match(text,/Textbook citations: Needs revision/);
+ assert.match(text,/Approval blocked/);assert.ok(!text.includes('private'));
+ assert.match(mcReviewSummary(completeMCReview()),/Clinical review and current-source revalidation are required/);
+ assert.equal(mcReviewSummary(null,'MS'),'');
+});
+
+test('MC source references keep book names paired with their PDF page locations',()=>{
+ const first='<img src=x onerror=alert(1)>',second='Second textbook.pdf';
+ const text=preview({format:'MC',stem:'Test',evidence:[{textbook_id:'book-a',pdf_page:123},{textbook_id:'book-b',pdf_page:123}]},{'book-a':first,'book-b':second});
+ assert.ok(text.includes(first+' · PDF page 123'));
+ assert.ok(text.includes(second+' · PDF page 123'));
+ assert.ok(text.includes('Printed page numbers remain unverified'));
+ assert.ok(preview({format:'MC',evidence:[{textbook_id:'legacy-book',pdf_page:9}]}).includes('Indexed textbook legacy-book · PDF page 9'));
+});
+
+test('completing a saved option review sends only confirmation and expected saved version',async()=>{
+ const {api,calls}=setup({handler:async()=>Response.json({published:false,generation_performed:false})});
+ const id='65c2e793-a7af-4746-bfb6-1abf9993085c',updated='2026-11-17T00:00:00+00:00';
+ await api.completeGeneratedOptionReview(id,updated);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].url,'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/generation/drafts/'+id+'/complete-options');
+ assert.deepEqual(JSON.parse(calls[0].options.body),{confirm_paid_calls:true,expected_updated_at:updated});
+ assert.equal(calls[0].options.method,'POST');
+ assert.equal(calls[0].options.headers.Authorization,'Bearer staging-jwt');
+ await assert.rejects(api.completeGeneratedOptionReview('../other',updated));
+ await assert.rejects(api.completeGeneratedOptionReview(id,''));
+ assert.equal(calls.length,1);
+});
+
+test('option review control requires confirmation, disables while pending, and refreshes the saved draft',async()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const start=ui.indexOf("genEl('sl-complete-option-review').onclick=");
+ const end=ui.indexOf("genEl('sl-open-draft-id').value=",start);
+ const btn={disabled:false,dataset:{draftId:'saved-id',updatedAt:'saved-version'}},out={};let accepted=false,calls=0,refreshed=0;
+ const context={genEl:id=>id==='sl-complete-option-review'?btn:out,confirm:()=>accepted,
+  storage:{completeGeneratedOptionReview:async(id,version)=>{assert.equal(btn.disabled,true);assert.equal(id,'saved-id');assert.equal(version,'saved-version');calls++;return {published:false};}},
+  openSavedDraft:async(id,button)=>{if(button.disabled)return;assert.equal(id,'saved-id');refreshed++;}};
+ vm.runInNewContext(ui.slice(start,end),context);
+ await btn.onclick();assert.equal(calls,0);
+ accepted=true;await btn.onclick();assert.equal(calls,1);assert.equal(refreshed,1);assert.equal(btn.disabled,false);
+ assert.equal(JSON.parse(out.textContent).published,false);
 });

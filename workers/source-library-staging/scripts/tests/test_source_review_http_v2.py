@@ -3,7 +3,8 @@ import hashlib
 import json
 import io
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
+from contextlib import contextmanager
 
 from source_review_http_v2 import create_app
 from source_review_runtime_v2 import StagingReviewRuntime
@@ -30,18 +31,26 @@ class HttpTests(unittest.TestCase):
             conn=object(), r2_client=object(), supabase_url="unused",
             supabase_api_key="unused", signing_secret="x" * 64,
             auth_provider=Auth(), role_store=Roles())
+        self.runtime.delivery_challenge = Mock(return_value='signed-fixture-challenge')
         self.app = create_app(self.runtime)
         self.manifest = {"owner_uid": UID, "r2_key": KEY,
                          "sha256": "a" * 64, "pdf_page_count": 2}
 
-    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None, preflight_headers="Authorization"):
+    def call(self, path="/review/page.png", query=None, token="valid", method="GET", origin=None, preflight_method=None, preflight_headers="Authorization", post_body=None, content_type=None, content_length=None):
         headers = []
         status = []
         def start(s, h):
             status.append(s)
             headers.extend(h)
         env = {"REQUEST_METHOD": method, "PATH_INFO": path,
-               "QUERY_STRING": query if query is not None else "path=" + KEY + "&page=1"}
+               "QUERY_STRING": query if query is not None else ("path=" + KEY + "&page=1" if method == "GET" else "")}
+        if post_body is not None:
+            env["wsgi.input"] = io.BytesIO(post_body)
+            env["CONTENT_LENGTH"] = str(len(post_body)) if content_length is None else content_length
+        elif content_length is not None:
+            env["CONTENT_LENGTH"] = content_length
+        if content_type is not None:
+            env["CONTENT_TYPE"] = content_type
         if origin is not None:
             env["HTTP_ORIGIN"] = origin
         if preflight_method is not None:
@@ -58,7 +67,7 @@ class HttpTests(unittest.TestCase):
                              ("/missing", "GET")):
             with self.subTest(path=path, method=method):
                 status, headers, _ = self.call(path, method=method, token=None)
-                self.assertIn(status, (200, 404, 405))
+                self.assertIn(status, (200, 401, 403, 404, 405))
                 self.assertEqual(headers["X-Frame-Options"], "DENY")
                 self.assertEqual(headers["Referrer-Policy"], "no-referrer")
                 self.assertIn("frame-ancestors 'none'", headers["Content-Security-Policy"])
@@ -104,15 +113,14 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(headers["X-Verified-Source-SHA256"], "a" * 64)
         self.assertEqual(headers["X-Review-Approval-Enabled"], "false")
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_image_is_verified_and_never_issues_receipt(self, manifest, fetch, render):
         manifest.return_value = self.manifest
-        fetch.return_value = b"%PDF-fixture"
+        fetch.return_value.__enter__.return_value = "/tmp/verified-fixture.pdf"
         png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
-        render.return_value = {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(),
-                               "source_sha256": "a" * 64}
+        render.return_value = (png, hashlib.sha256(png).hexdigest())
         status, headers, body = self.call()
         self.assertEqual(status, 200)
         self.assertEqual(body, png)
@@ -123,7 +131,7 @@ class HttpTests(unittest.TestCase):
         fetch.assert_called_once()
         render.assert_called_once()
 
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_out_of_range_page_rejected_before_pdf_download(self, manifest, fetch):
         manifest.return_value = self.manifest
@@ -135,27 +143,26 @@ class HttpTests(unittest.TestCase):
     def test_attestation_failure_is_conflict(self, loader):
         self.assertEqual(self.call()[0], 409)
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_image_or_source_digest_mismatch_never_served(self, manifest, fetch, render):
         manifest.return_value = self.manifest
         png = bytes([137, 80, 78, 71, 13, 10, 26, 10]) + b"fixture"
         cases = (
             {"png": png, "image_sha256": "0" * 64, "source_sha256": "a" * 64},
-            {"png": png, "image_sha256": hashlib.sha256(png).hexdigest(), "source_sha256": "b" * 64},
             {"png": b"not-a-png", "image_sha256": hashlib.sha256(b"not-a-png").hexdigest(), "source_sha256": "a" * 64},
         )
         for page in cases:
             with self.subTest(page=page):
-                render.return_value = page
+                render.return_value = (page["png"], page["image_sha256"])
                 status, headers, body = self.call()
                 self.assertEqual(status, 409)
                 self.assertNotEqual(headers["Content-Type"], "image/png")
                 self.assertNotIn("X-Inspection-Receipt", headers)
 
-    @patch("source_review_http_v2.load_verified_review_page")
-    @patch("source_review_http_v2.fetch_verified_staging_pdf", return_value=b"%PDF")
+    @patch("source_review_http_v2.render_verified_pdf_file_page")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_page_renderer_failure_never_returns_unverified_bytes(self, manifest, fetch, render):
         manifest.return_value = self.manifest
@@ -166,7 +173,7 @@ class HttpTests(unittest.TestCase):
         self.assertNotIn("X-Page-Image-SHA256", headers)
         self.assertNotIn("X-Inspection-Receipt", headers)
 
-    @patch("source_review_http_v2.fetch_verified_staging_pdf")
+    @patch("source_review_http_v2.verified_staging_pdf_file")
     @patch("source_review_http_v2.load_staging_review_manifest")
     def test_mismatched_manifest_identity_fails_before_source_fetch(self, manifest, fetch):
         for changed in (
@@ -291,8 +298,105 @@ class HttpTests(unittest.TestCase):
         status, _, _ = self.call(query="path=" + KEY + "&page=2")
         self.assertEqual(status, 409)
 
+
+    def test_acknowledgment_strict_validation(self):
+        self.runtime.acknowledge = Mock(return_value="receipt")
+        origin = "https://staging.srnastudytool.com"
+        for body in (b'{}', b'{"path":"x","page":1,"challenge":"c","acknowledged":false}',
+                     b'{"path":"x","page":1,"challenge":"c","acknowledged":true,"acknowledged":true}',
+                     b'{"path":"x","page":true,"challenge":"c","acknowledged":true}'):
+            with self.subTest(body=body):
+                status, _, _ = self.call("/review/acknowledge", method="POST",
+                    origin=origin, post_body=body, content_type="application/json")
+                self.assertEqual(status, 400)
+        self.runtime.acknowledge.assert_not_called()
+
+    def test_acknowledgment_returns_receipt_without_approval(self):
+        self.runtime.acknowledge = Mock(return_value="signed-receipt")
+        body = json.dumps({"path": KEY, "page": 1, "challenge": "challenge",
+                           "acknowledged": True}).encode()
+        status, _, result = self.call("/review/acknowledge", method="POST",
+            origin="https://staging.srnastudytool.com",
+            post_body=body, content_type="application/json")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(result), {"receipt": "signed-receipt", "approved": False})
+        self.runtime.acknowledge.assert_called_once_with(
+            token="valid", r2_key=KEY, pdf_page=1,
+            challenge="challenge", acknowledged=True)
+
+    def test_approval_route_rejects_untrusted_origins_and_invalid_transport(self):
+        # The private route remains unreachable from the public Worker allowlist.
+        self.assertEqual(self.call("/review/approve", method="POST", origin=None)[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://srnastudytool.com")[0], 403)
+        self.assertEqual(self.call("/review/approve", method="POST",
+                                   origin="https://staging.srnastudytool.com")[0], 415)
+
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_invalid_reviewer_before_body(self, approve):
+        for token in ("invalid", " "):
+            with self.subTest(token=token):
+                status, _, body = self.call(
+                    "/review/approve", method="POST",
+                    origin="https://staging.srnastudytool.com",
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertIn(status, (401, 403))
+                self.assertNotIn(b"Invalid token", body)
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request")
+    def test_private_approval_rejects_whitespace_tokens_and_query_fields(self, approve):
+        origin = "https://staging.srnastudytool.com"
+        for token in (" valid", "valid ", " valid "):
+            with self.subTest(token=token):
+                status, _, _ = self.call(
+                    "/review/approve", method="POST", origin=origin,
+                    token=token, post_body=b"{}", content_type="application/json")
+                self.assertEqual(status, 401)
+        status, _, _ = self.call(
+            "/review/approve", query="approved=true", method="POST",
+            origin=origin, post_body=b"{}", content_type="application/json")
+        self.assertEqual(status, 400)
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request", return_value=1)
+    def test_private_approval_requires_bounded_json_and_exact_origin(self, approve):
+        origin = "https://staging.srnastudytool.com"
+        body = b'{"example":"placeholder"}'
+        status, headers, result = self.call(
+            "/review/approve", method="POST", origin=origin,
+            post_body=body, content_type="application/json")
+        self.assertEqual(status, 200)
+        self.assertIn(b'"approved":true', result)
+        approve.assert_called_once_with(self.runtime, access_token="valid", body=body)
+        approve.reset_mock()
+        cases = [
+            {"content_type": "text/plain"},
+            {"content_type": "application/json", "content_length": "0"},
+            {"content_type": "application/json", "content_length": "8193"},
+            {"content_type": "application/json", "content_length": "NaN"},
+            {"content_type": "application/json", "content_length": str(len(body) + 1)},
+        ]
+        for options in cases:
+            with self.subTest(options=options):
+                status, _, _ = self.call(
+                    "/review/approve", method="POST", origin=origin,
+                    post_body=body, **options)
+                self.assertIn(status, (400, 413, 415))
+        approve.assert_not_called()
+
+    @patch("source_review_http_v2.approve_verified_request", side_effect=ValueError("secret internal detail"))
+    def test_approval_validation_failure_does_not_expose_private_details(self, approve):
+        status, _, result = self.call(
+            "/review/approve", method="POST",
+            origin="https://staging.srnastudytool.com",
+            post_body=b"{}", content_type="application/json")
+        self.assertEqual(status, 409)
+        self.assertNotIn(b"secret", result)
+        approve.assert_called_once()
+
     def test_approval_routes_are_not_exposed(self):
-        self.assertEqual(self.call("/review/approve", method="POST")[0], 405)
+        self.assertEqual(self.call("/review/approve", method="POST")[0], 403)
         self.assertEqual(self.call("/review/approve")[0], 404)
 
 

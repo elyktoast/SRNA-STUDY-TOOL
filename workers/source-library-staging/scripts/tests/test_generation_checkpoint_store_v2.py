@@ -42,7 +42,7 @@ class FingerprintTests(unittest.TestCase):
         value = status(conn, owner_uid="11111111-1111-4111-8111-111111111111",
                        textbook_id="22222222-2222-4222-8222-222222222222",
                        request_hash="a" * 64, evidence_hash="b" * 64)
-        self.assertEqual(value, {"resumable": True, "next_stage": "rationale",
+        self.assertEqual(value, {"resumable": False, "next_stage": "blocked", "partial_replay_blocked": True,
                                  "expires_in_seconds": 120})
         self.assertNotIn("draft", value)
         cursor.fetchone.return_value = ("draft", 75, "completed")
@@ -144,7 +144,7 @@ class FingerprintTests(unittest.TestCase):
                stage="concept_card", value={"objective": "III.H.4"})
         conn.commit.assert_called_once()
 
-    def test_feature_enabled_resumes_saved_stages(self):
+    def test_feature_enabled_refuses_partial_replay_before_generation(self):
         args = SimpleNamespace(owner_uid="11111111-1111-4111-8111-111111111111",
             topic="airway", mode="NCE", domain="III", section="H", objective="III.H.4",
             format="MC", item_id="q1", textbook_id="22222222-2222-4222-8222-222222222222",
@@ -163,7 +163,10 @@ class FingerprintTests(unittest.TestCase):
                "AI_ALLOWED_HOSTS": "api.groq.com", "AI_GENERATOR_MODEL": "openai/gpt-oss-120b",
                "STAGING_RECEIPT_SIGNING_SECRET": "x" * 40}
         saved = {"concept_card": {"objective": "III.H.4"}, "draft": {"stem": "Saved draft"}}
-        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
+        from contextlib import nullcontext
+        from item_generation_attempt_v2 import GenerationAlreadyStarted
+        with patch("run_grounded_generation_v2.attempt", return_value=nullcontext()), \
+             patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
              patch("run_grounded_generation_v2.make_transport", return_value=lambda **k: {}), \
              patch("run_grounded_generation_v2.make_adapter", return_value=lambda x: {}), \
              patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \
@@ -171,12 +174,11 @@ class FingerprintTests(unittest.TestCase):
              patch("run_grounded_generation_v2.record") as checkpoint_record, \
              patch("run_grounded_generation_v2.complete") as checkpoint_complete, \
              patch("run_grounded_generation_v2.recover_completed", return_value=None):
-            execute(object(), args, env)
+            with self.assertRaises(GenerationAlreadyStarted):execute(object(), args, env)
             checkpoint_load.assert_called_once()
-            self.assertEqual(generate.call_args.kwargs["checkpoint"], saved)
-            generate.call_args.kwargs["on_checkpoint"]("draft", {"stem": "Another draft"})
-            checkpoint_record.assert_called_once()
-            checkpoint_complete.assert_called_once()
+            generate.assert_not_called()
+            checkpoint_record.assert_not_called()
+            checkpoint_complete.assert_not_called()
 
     def test_preflight_resume_metadata_no_provider_call(self):
         args = SimpleNamespace(owner_uid="11111111-1111-4111-8111-111111111111",
@@ -256,7 +258,10 @@ class FingerprintTests(unittest.TestCase):
                "AI_PROVIDER_ENDPOINT": "https://api.groq.com/openai/v1/chat/completions",
                "AI_ALLOWED_HOSTS": "api.groq.com", "AI_GENERATOR_MODEL": "openai/gpt-oss-120b",
                "STAGING_RECEIPT_SIGNING_SECRET": "x" * 40}
-        with patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
+        from contextlib import nullcontext
+        from item_generation_attempt_v2 import GenerationAlreadyStarted
+        with patch("run_grounded_generation_v2.attempt", return_value=nullcontext()), \
+             patch("run_grounded_generation_v2.build_evidence", return_value=evidence), \
              patch("run_grounded_generation_v2.make_transport", return_value=lambda **k: {}), \
              patch("run_grounded_generation_v2.make_adapter", return_value=lambda x: {}), \
              patch("run_grounded_generation_v2.generate_from_index", return_value=result) as generate, \

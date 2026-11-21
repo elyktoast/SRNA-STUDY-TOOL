@@ -80,6 +80,32 @@ class ReceiptApprovalContractTests(unittest.TestCase):
                 self.approve(receipt)
             decision.assert_called_once()
 
+    def test_manual_review_note_cannot_replace_inspection_receipt(self):
+        # A reviewer may have inspected a page outside the application, but
+        # that statement must not become a fabricated server inspection receipt.
+        with patch("source_review_approval_service_v2.consume_inspection_nonce") as consume, \
+             patch("source_review_approval_service_v2.record_page_decision") as decision:
+            with self.assertRaises(ValueError):
+                self.approve("manually-reviewed-divider")
+            consume.assert_not_called()
+            decision.assert_not_called()
+
+    def test_other_page_receipt_cannot_approve_divider(self):
+        with patch("source_review_receipt_service_v2.register_inspection_nonce"), \
+             patch("source_review_approval_service_v2.consume_inspection_nonce") as consume, \
+             patch("source_review_approval_service_v2.record_page_decision") as decision:
+            receipt = self.issue()
+            with self.assertRaises(ValueError):
+                approve_inspected_page(
+                    self.conn, {**MANIFEST, "pdf_page_count": 3011},
+                    pdf_page=2882, review_note="Reviewed non-content divider",
+                    receipt=receipt, image_sha256=PAGE["image_sha256"],
+                    receipt_secret=SECRET, access_token="valid",
+                    auth_provider=self.auth, protected_role_store=self.roles,
+                    now=1001)
+            consume.assert_not_called()
+            decision.assert_not_called()
+
     def test_tampered_image_never_consumes(self):
         with patch("source_review_receipt_service_v2.register_inspection_nonce") as register, \
              patch("source_review_approval_service_v2.consume_inspection_nonce") as consume:

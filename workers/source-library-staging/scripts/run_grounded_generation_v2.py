@@ -15,6 +15,11 @@ from item_ai_https_transport_v2 import make_transport
 from item_ai_provider_v2 import make_adapter
 from item_grounded_pipeline_v2 import generate_from_index
 from item_generation_checkpoint_store_v2 import fingerprint, load, record, complete, recover_completed
+from item_generation_attempt_v2 import attempt, reserve_rewrite, finish
+
+
+class CompletedGenerationUnavailable(ValueError):
+    """A recovery-only request may never fall through into paid generation."""
 
 
 def _call_with_bounded_rate_wait(adapter, payload):
@@ -27,8 +32,9 @@ def _call_with_bounded_rate_wait(adapter, payload):
         delay = exc.retry_after_seconds
         if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
             raise
-        # The observed provider delay can leave a few tokens short at the boundary.
-        time.sleep(min(60, delay + 3))
+        # The provider can increase its token estimate between identical attempts.
+        # Let one full TPM window drain, still with exactly one bounded retry.
+        time.sleep(60)
         return adapter(payload)
 
 
@@ -38,6 +44,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Trusted semantic lookup callback required")
     if env.get("STAGING_ONLY") != "true":
         raise ValueError("Staging-only execution required")
+    from item_source_scope_v2 import source_scope
+    books = source_scope(args.textbook_id, getattr(args, 'textbook_ids', None))
     if (args.mode not in ("NCE", "SEE") or args.domain not in ("I", "II", "III", "IV")
             or not isinstance(args.section, str) or not re.fullmatch(r"[A-Z]", args.section)
             or not isinstance(args.objective, str)
@@ -45,6 +53,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             or args.objective.split(".")[:2] != [args.domain, args.section]
             or args.format not in ("MC", "MS", "SA", "DD", "HS")):
         raise ValueError("Invalid NCE/SEE blueprint classification")
+    from item_board_quality_v2 import classification
+    classification(args.domain, args.section, args.objective)
     if args.execute and (env.get("AI_GENERATION_OPT_IN") != "true" or not args.confirm_paid_calls):
         raise ValueError("Paid model calls require explicit opt-in and confirmation")
     if args.execute and env.get("AI_BLIND_REVIEW_OPT_IN") == "true" and not (args.confirm_paid_calls and env.get("AI_GENERATION_OPT_IN") == "true"):
@@ -57,13 +67,20 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                               textbook_id=args.textbook_id, limit=args.limit,
                               section_id=args.section_id,
                               include_subsections=args.include_subsections,
-                              page_start=args.page_start, page_end=args.page_end)
+                              page_start=args.page_start, page_end=args.page_end,
+                              **({'textbook_ids': books} if books else {}))
     if not evidence["can_generate_grounded_questions"]:
         raise ValueError("No indexed textbook evidence found")
-    summary = {"topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+    summary = {"authoring_contract": "2026-11-21-v46", "topic": evidence["topic"], "passage_count": evidence["evidence_count"],
+               "source_textbook_count": len({p['textbook_id'] for p in evidence['sources']}),
                "mode": args.mode, "format": args.format,
                "dry_run": not args.execute, "can_publish": False,
                "database_writes": False}
+    if args.format == 'MC':
+        summary['mc_planning_contract'] = '2026-11-17-shared-question-v4'
+        if env.get('AI_SOURCE_DISCOVERY_OPT_IN') == 'true':
+            summary['authoring_preparation'] = {'source_discovery':'configured','max_search_queries':4,
+                'max_added_passages':4,'clinical_authority':'indexed_textbooks_only'}
     # Safe, no-cost review readiness: never imply that a configured provider
     # or a requested flag is an independently completed review.
     generator_id = env.get("AI_GENERATOR_MODEL", "").strip()
@@ -72,7 +89,19 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
     option_requested = env.get("AI_OPTION_REVIEW_OPT_IN") == "true"
     rewrite_requested = env.get("AI_REWRITE_OPT_IN") == "true"
     explanation_requested = env.get("AI_EXPLANATION_REVIEW_OPT_IN") == "true"
+    quality_requested = blind_requested and explanation_requested and args.format in ("MC", "MS")
+    editorial_model = env.get("AI_EDITORIAL_REVIEWER_MODEL", "").strip()
+    authoring_provider = env.get("AI_AUTHORING_PROVIDER", "groq")
+    if authoring_provider not in ("groq", "cloudflare"):
+        raise ValueError("Invalid provider delivery configuration")
+    delivery_model = env.get("AI_CLOUDFLARE_MODEL", "") if authoring_provider == "cloudflare" else generator_id
+    if authoring_provider == "cloudflare" and delivery_model != "@cf/" + generator_id:
+        raise ValueError("Cloudflare provider model must match the generator identity")
+    summary["authoring_provider"] = authoring_provider
+    summary["authoring_delivery_model"] = delivery_model
+    summary["quality_contract"] = "2026-11-10-v2" if quality_requested else None
     summary["review_readiness"] = {
+        "board_quality_review": "configured" if quality_requested and generator_id and reviewer_id and generator_id != reviewer_id and editorial_model and editorial_model != generator_id else "unavailable" if quality_requested else "disabled",
         "rewrite": "configured" if rewrite_requested and generator_id else
                    "missing_generator_model" if rewrite_requested else "disabled",
         "blind_review": (
@@ -104,21 +133,36 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         raise ValueError("Blind review requires distinct configured generator and reviewer models")
     if args.execute and explanation_requested and summary["review_readiness"]["explanation_review"] != "configured":
         raise ValueError("Explanatory review requires distinct configured models")
+    if args.execute and quality_requested and summary["review_readiness"]["board_quality_review"] != "configured":
+        raise ValueError("Editorial review requires a distinct configured model")
     if args.execute and rewrite_requested and not generator_id:
         raise ValueError("Rewrite requires a configured generator model")
     # The resume key binds owner, textbook, request parameters, and indexed
     # evidence. Any evidence change invalidates the previous checkpoint.
-    request_hash = fingerprint({"owner_uid": args.owner_uid, "topic": args.topic,
+    semantic_contract = None
+    if env.get('AI_SEMANTIC_EMBEDDING_OPT_IN') == 'true':
+        from item_semantic_inventory_reconcile_v2 import load_inventory
+        _,inventory_digest = load_inventory(env.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
+        semantic_contract = {'model':env.get('SEMANTIC_INDEX_EMBEDDING_MODEL'), 'inventory_digest':inventory_digest}
+        summary['semantic_inventory'] = semantic_contract
+    request_hash = fingerprint({"authoring_contract": "2026-11-19-v25", "owner_uid": args.owner_uid, "topic": args.topic,
+        "semantic_contract":semantic_contract,
         "mode": args.mode, "domain": args.domain, "section": args.section,
         "objective": args.objective, "format": args.format, "item_id": args.item_id,
-        "textbook_id": args.textbook_id, "section_id": args.section_id,
+        **({'mc_planning_contract': '2026-11-17-shared-question-v4'} if args.format == 'MC' else {}),
+        "textbook_id": args.textbook_id,
+        **({'textbook_ids': books} if books else {}),
+        "section_id": args.section_id,
         "include_subsections": args.include_subsections, "page_start": args.page_start,
         "page_end": args.page_end, "limit": args.limit,
         "generator_model": env.get("AI_GENERATOR_MODEL", ""),
+        "authoring_provider": authoring_provider, "authoring_delivery_model": delivery_model,
         "provider_endpoint": env.get("AI_PROVIDER_ENDPOINT", ""),
         "rewrite_enabled": env.get("AI_REWRITE_OPT_IN") == "true",
         "blind_review_enabled": env.get("AI_BLIND_REVIEW_OPT_IN") == "true",
         "explanation_review_enabled": explanation_requested,
+        "board_quality_contract": "2026-11-10-v2" if quality_requested else None,
+        "editorial_reviewer_model": editorial_model if quality_requested else None,
         "explanation_reviewer_model": reviewer_id if explanation_requested else None,
         "reviewer_model": env.get("AI_REVIEWER_MODEL", "") if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None})
     evidence_hash = fingerprint(evidence["sources"])
@@ -138,120 +182,200 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
         if recovered is not None:
             return {**recovered, "_checkpoint_key": {"textbook_id": args.textbook_id,
                 "request_hash": request_hash, "evidence_hash": evidence_hash}}
-    endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
-    host = urlsplit(endpoint).hostname
-    if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
-        raise ValueError("Provider endpoint must match explicit host allowlist")
-    relay_secret = env.get('STAGING_RECEIPT_SIGNING_SECRET', '')
-    if not relay_secret:
-        raise ValueError('Staging relay signing secret required')
-    transport = make_transport(allowed_hosts=[host], timeout_seconds=50,
-        relay_url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay',
-        relay_secret=relay_secret)
-    adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
-                           model=env.get("AI_GENERATOR_MODEL", ""),
-                           transport=transport, owner_opt_in=True, staging=True)
-    reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested or explanation_requested
-    reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
-    if reviewer_enabled:
-        if not reviewer_model_id or reviewer_model_id == env.get("AI_GENERATOR_MODEL", "").strip():
-            raise ValueError("Blind review requires a distinct configured model")
-        reviewer_adapter = make_adapter(
-            endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
-            model=reviewer_model_id, transport=transport,
-            owner_opt_in=True, staging=True)
-        def blind_reviewer(payload):
-            return _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "blind_review",
-                                     "blind": True, "rules_version": "2.0",
-                                     "auto_publish": False})
-    else:
-        blind_reviewer = None
-    checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-        request_hash=request_hash, evidence_hash=evidence_hash)
-        if checkpoint_enabled else None)
-    def checkpoint_writer(stage, value):
-        record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-            request_hash=request_hash, evidence_hash=evidence_hash,
-            stage=stage, value=value)
-    def option_reviewer(payload):
-        response = _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "option_review", "blind": True,
-                                     "rules_version": "2.0", "auto_publish": False})
-        if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
-            raise ValueError("Independent option reviewer returned invalid judgments")
-        judgments = response["judgments"]
-        if any(not isinstance(j, dict) or type(j.get("source_conflict_found")) is not bool for j in judgments):
-            raise ValueError("Independent source conflict state required")
-        # Adapt the unambiguous provider field to the existing evaluator contract.
-        return [{**j, "contradiction_found": j["source_conflict_found"]} for j in judgments]
-    def explanation_review(item):
-        from item_explanation_review_v2 import review
-        report = review(item, evidence["sources"],
-                        lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))
-        return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
-    # A rewrite is an additional paid provider call. It is disabled by default
-    # and requires a separate explicit staging opt-in.
-    rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
-    def rewrite(request):
-        import copy
-        from item_generation_runner_v2 import _hydrate_indexed_citations
-        references = {c.get("passage_id") for c in request.get("item", {}).get("evidence", [])
-                      if isinstance(c, dict)}
-        for entry in request.get("item", {}).get("distractor_evidence", {}).values():
-            if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
-                references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
-        trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
-        compact = copy.deepcopy(request)
-        for citation in compact.get("item", {}).get("evidence", []):
-            if isinstance(citation, dict):
-                citation.pop("excerpt", None)
-        payload = {**compact, "trusted_evidence": trusted, "step": "rewrite",
-                   "rules_version": "2.0", "auto_publish": False}
-        candidate = _call_with_bounded_rate_wait(adapter, payload)
-        return _hydrate_indexed_citations(candidate, evidence["sources"])
-    result = generate_from_index(conn, args.owner_uid, args.topic, adapter,
-                                 mode=args.mode, domain=args.domain,
-                                 section=args.section, objective=args.objective,
-                                 item_id=args.item_id, format=args.format,
-                                 textbook_id=args.textbook_id, limit=args.limit,
-                                 section_id=args.section_id,
-                                 include_subsections=args.include_subsections,
-                                 page_start=args.page_start, page_end=args.page_end,
-                                 checkpoint=checkpoint,
-                                 generator_model_id=env["AI_GENERATOR_MODEL"],
-                                 on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
-                                 evidence_packet=evidence,
-                                 rewrite=rewrite if rewrite_enabled else None,
-                                 review_repair=rewrite if rewrite_enabled else None,
-                                 blind_reviewer=blind_reviewer if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None,
-                                 reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
-                                 semantic_lookup=semantic_lookup,
-                                 option_reviewer=option_reviewer if option_requested else None,
-                                 option_reviewer_model_id=reviewer_model_id if option_requested else None,
-                                 explanation_review=explanation_review if explanation_requested else None)
-    save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
-                    "mode": args.mode, "format": args.format,
-                    "domain": args.domain, "section": args.section,
-                    "objective": args.objective, "provider": host,
-                    "model": env["AI_GENERATOR_MODEL"], "question": result["item"],
-                    "screening": result["screening"] or {"next_state": result["next_state"],
-                        "generator_issues": result["generator_issues"]},
-                    "evidence": [{"passage_id": p["passage_id"],
-                                  "textbook_id": p["textbook_id"]}
-                                 for p in evidence["sources"]]}
-    response = {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
-            "next_state": result["next_state"],
-            "item": result["item"], "requires_human_review": True,
-            "source_evidence": result["source_evidence"],
-            "generator_issues": result["generator_issues"],
-            "screening": result["screening"]}
-    if checkpoint_enabled:
-        complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
-                 request_hash=request_hash, evidence_hash=evidence_hash,
-                 result=response)
-    if checkpoint_enabled:
-        response["_checkpoint_key"] = {"textbook_id": args.textbook_id,
-            "request_hash": request_hash, "evidence_hash": evidence_hash}
-    return response
+    if getattr(args, "resume_completed_only", False):
+        raise CompletedGenerationUnavailable()
+    from contextlib import nullcontext
+    attempt_key = dict(owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                       item_id=args.item_id, request_hash=request_hash, evidence_hash=evidence_hash)
+    with attempt(conn, **attempt_key) if checkpoint_enabled else nullcontext():
+        endpoint = env.get("AI_PROVIDER_ENDPOINT", "")
+        host = urlsplit(endpoint).hostname
+        if not host or host not in set(filter(None, env.get("AI_ALLOWED_HOSTS", "").split(","))):
+            raise ValueError("Provider endpoint must match explicit host allowlist")
+        relay_secret = env.get('STAGING_RECEIPT_SIGNING_SECRET', '')
+        if not relay_secret:
+            raise ValueError('Staging relay signing secret required')
+        transport = make_transport(allowed_hosts=[host], timeout_seconds=50,
+            relay_url='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev/internal/groq-relay',
+            relay_secret=relay_secret)
+        adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+                               model=env.get("AI_GENERATOR_MODEL", ""),
+                               transport=transport, owner_opt_in=True, staging=True,
+                               max_output_tokens=8192)
+        reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested or explanation_requested
+        reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
+        if reviewer_enabled:
+            if not reviewer_model_id or reviewer_model_id == env.get("AI_GENERATOR_MODEL", "").strip():
+                raise ValueError("Blind review requires a distinct configured model")
+            reviewer_adapter = make_adapter(
+                endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+                model=reviewer_model_id, transport=transport,
+                owner_opt_in=True, staging=True)
+            def blind_reviewer(payload):
+                return _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "blind_review",
+                                         "blind": True, "rules_version": "2.0",
+                                         "auto_publish": False})
+        else:
+            blind_reviewer = None
+        checkpoint = (load(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+            request_hash=request_hash, evidence_hash=evidence_hash)
+            if checkpoint_enabled else None)
+        if checkpoint is not None:
+            from item_generation_attempt_v2 import GenerationAlreadyStarted
+            raise GenerationAlreadyStarted('Partial generation replay is blocked')
+        discovery = None
+        if args.format == "MC" and env.get("AI_SOURCE_DISCOVERY_OPT_IN") == "true":
+            from item_mc_source_discovery_v2 import discover
+            evidence, discovery = discover(conn,args,evidence,
+                lambda payload:_call_with_bounded_rate_wait(adapter,payload))
+            discovery["initial_evidence_hash"] = evidence_hash
+            summary["passage_count"] = evidence["evidence_count"]
+            summary["source_textbook_count"] = len({p["textbook_id"] for p in evidence["sources"]})
+        def checkpoint_writer(stage, value):
+            record(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                request_hash=request_hash, evidence_hash=evidence_hash,
+                stage=stage, value=value)
+        def option_reviewer(payload):
+            response = _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "option_review", "blind": True,
+                                         "rules_version": "2.0", "auto_publish": False})
+            if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
+                raise ValueError("Independent option reviewer returned invalid judgments")
+            judgments = response["judgments"]
+            if any(not isinstance(j, dict) or type(j.get("source_conflict_found")) is not bool for j in judgments):
+                raise ValueError("Independent source conflict state required")
+            # Adapt the unambiguous provider field to the existing evaluator contract.
+            return [{**j, "contradiction_found": j["source_conflict_found"]} for j in judgments]
+        def explanation_review(item):
+            from item_explanation_review_v2 import review
+            report = review(item, evidence["sources"],
+                            lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload), batch_size=6)
+            return {**report, "generator_model_id": generator_id, "reviewer_model_id": reviewer_model_id}
+        def quality_review(item):
+            from item_board_quality_v2 import editorial, options_only
+            editorial_adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
+                model=editorial_model, transport=transport, owner_opt_in=True, staging=True)
+            reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload),
+                    counterfactual_reviewer=blind_reviewer, selected_topic=args.topic),
+                       "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))}
+            return {name: {**report, "generator_model_id": generator_id,
+                          "reviewer_model_id": editorial_model if name == "editorial_quality" else reviewer_model_id}
+                    for name, report in reports.items()}
+        # A rewrite is an additional paid provider call. It is disabled by default
+        # and requires a separate explicit staging opt-in.
+        rewrite_enabled = env.get("AI_REWRITE_OPT_IN") == "true"
+        repair_sources = []
+        def rewrite(request):
+            import copy
+            from item_generation_runner_v2 import _hydrate_indexed_citations
+            references = {c.get("passage_id") for c in request.get("item", {}).get("evidence", [])
+                          if isinstance(c, dict)}
+            for entry in request.get("item", {}).get("distractor_evidence", {}).values():
+                if isinstance(entry, dict) and isinstance(entry.get("passage_ids"), list):
+                    references.update(pid for pid in entry["passage_ids"] if isinstance(pid, str))
+            trusted = [p for p in evidence["sources"] if p["passage_id"] in references]
+            source_rules = {"R-2.4", "R-12.4"}
+            if (request.get("item", {}).get("format") == "MC"
+                    and any(issue.get("rule_id") in source_rules for issue in request.get("issues", []))):
+                from item_mc_repair_evidence_v2 import supplement
+                additions = supplement(conn, args, request["item"], request["issues"])
+                existing = {p["passage_id"] for p in evidence["sources"]}
+                for passage in additions:
+                    if passage["passage_id"] not in existing:
+                        evidence["sources"].append(passage)
+                        repair_sources.append(passage)
+                        existing.add(passage["passage_id"])
+                # Prefer newly retrieved option definitions, then unused initial
+                # evidence. The original author-selected citations remain first.
+                offered = {p["passage_id"] for p in trusted}
+                alternatives = repair_sources + [p for p in evidence["sources"] if p["passage_id"] not in references]
+                for passage in alternatives:
+                    if passage["passage_id"] not in offered:
+                        trusted.append(passage)
+                        offered.add(passage["passage_id"])
+                    if len(offered - references) >= 4:
+                        break
+            compact = copy.deepcopy(request)
+            for citation in compact.get("item", {}).get("evidence", []):
+                if isinstance(citation, dict):
+                    citation.pop("excerpt", None)
+            payload = {**compact, "trusted_evidence": trusted, "step": "rewrite",
+                       "rules_version": "2.0", "auto_publish": False}
+            if checkpoint_enabled:
+                reserve_rewrite(conn, **attempt_key)
+            candidate = _call_with_bounded_rate_wait(adapter, payload)
+            hydrated = _hydrate_indexed_citations(candidate, evidence["sources"])
+            from item_mc_choice_plan_v2 import with_case_sources
+            return with_case_sources(hydrated)
+        def author(payload):
+            value = _call_with_bounded_rate_wait(adapter, payload)
+            if authoring_provider == "cloudflare" and payload.get("step") == "concept_card" and payload.get("format") == "MC":
+                concept = value.get("concept_card") if isinstance(value, dict) and set(value) == {"concept_card"} else value
+                if not isinstance(concept, dict) or not isinstance(concept.get("choice_plan"), dict):
+                    raise ValueError("Concept card choice plan incomplete")
+            return value
+        result = generate_from_index(conn, args.owner_uid, args.topic, author,
+                                     mode=args.mode, domain=args.domain,
+                                     section=args.section, objective=args.objective,
+                                     item_id=args.item_id, format=args.format,
+                                     textbook_id=args.textbook_id, limit=args.limit,
+                                     textbook_ids=books,
+                                     section_id=args.section_id,
+                                     include_subsections=args.include_subsections,
+                                     page_start=args.page_start, page_end=args.page_end,
+                                     checkpoint=checkpoint,
+                                     generator_model_id=env["AI_GENERATOR_MODEL"],
+                                     on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
+                                     evidence_packet=evidence,
+                                     rewrite=rewrite if rewrite_enabled else None,
+                                     review_repair=rewrite if rewrite_enabled else None,
+                                     blind_reviewer=blind_reviewer if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None,
+                                     reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
+                                     semantic_lookup=semantic_lookup,
+                                     option_reviewer=option_reviewer if option_requested else None,
+                                     option_reviewer_model_id=reviewer_model_id if option_requested else None,
+                                     explanation_review=explanation_review if explanation_requested else None,
+                                     quality_review=quality_review if quality_requested else None)
+        if discovery is not None:
+            result["screening"]["source_discovery"] = discovery
+        if repair_sources:
+            # The receipt's evidence hash identifies initial preflight retrieval.
+            # Capture supplemental source identity/content separately in the
+            # completed screening record and revalidate all citations on approval.
+            result["screening"]["source_repair_retrieval"] = {
+                "passage_ids": [p["passage_id"] for p in repair_sources],
+                "source_packet_sha256": fingerprint(repair_sources),
+                "initial_evidence_hash": evidence_hash,
+                "model_calls": 0, "database_writes": False}
+        from item_board_quality_v2 import stamp_checks
+        result["item"] = stamp_checks(result["item"], result["screening"])
+        save_payload = {"textbook_id": args.textbook_id, "topic": args.topic,
+                        "mode": args.mode, "format": args.format,
+                        "domain": args.domain, "section": args.section,
+                        "objective": args.objective, "provider": "api.cloudflare.com" if authoring_provider == "cloudflare" else host,
+                        "model": env["AI_GENERATOR_MODEL"], "question": result["item"],
+                        "screening": result["screening"] or {"next_state": result["next_state"],
+                            "generator_issues": result["generator_issues"]},
+                        "evidence": [{"passage_id": p["passage_id"],
+                                      "textbook_id": p["textbook_id"]}
+                                     for p in evidence["sources"]]}
+        if books:
+            save_payload['textbook_ids'] = books
+        response = {**summary, "dry_run": False, "save_payload": save_payload, "item_id": result["item_id"],
+                "next_state": result["next_state"],
+                "item": result["item"], "requires_human_review": True,
+                "source_evidence": result["source_evidence"],
+                "generator_issues": result["generator_issues"],
+                "screening": result["screening"]}
+        if checkpoint_enabled:
+            complete(conn, owner_uid=args.owner_uid, textbook_id=args.textbook_id,
+                     request_hash=request_hash, evidence_hash=evidence_hash,
+                     result=response)
+            finish(conn, owner_uid=args.owner_uid, item_id=args.item_id)
+        if checkpoint_enabled:
+            response["_checkpoint_key"] = {"textbook_id": args.textbook_id,
+                "request_hash": request_hash, "evidence_hash": evidence_hash}
+        return response
+
 
 
 

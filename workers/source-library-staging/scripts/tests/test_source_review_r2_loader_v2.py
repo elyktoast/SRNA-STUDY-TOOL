@@ -1,7 +1,8 @@
 import hashlib
+import os
 import unittest
 
-from source_review_r2_loader_v2 import fetch_verified_staging_pdf
+from source_review_r2_loader_v2 import fetch_verified_staging_pdf, verified_staging_pdf_file, MAX_BYTES
 
 UID = "d7c8ad4c-673d-4d87-a122-7d9bff4451bb"
 KEY = UID + "/synthetic.pdf"
@@ -93,6 +94,49 @@ class R2LoaderTests(unittest.TestCase):
             fetch_verified_staging_pdf(
                 client, owner_uid=UID, r2_key=KEY, expected_sha256="")
         self.assertEqual(client.head_calls, 0)
+
+
+    def test_verified_file_streams_and_cleans_up(self):
+        client = R2(chunks=[PDF[:5], PDF[5:]])
+        with verified_staging_pdf_file(client, owner_uid=UID, r2_key=KEY,
+                                       expected_sha256=hashlib.sha256(PDF).hexdigest()) as path:
+            self.assertEqual(open(path, "rb").read(), PDF)
+            self.assertTrue(os.path.isfile(path))
+        self.assertFalse(os.path.exists(path))
+        self.assertTrue(client.body.closed)
+
+    def test_verified_file_rejects_corruption_and_cleans_up(self):
+        client = R2(chunks=[b"%PDF-modified"])
+        with self.assertRaisesRegex(ValueError, "fingerprint"):
+            with verified_staging_pdf_file(client, owner_uid=UID, r2_key=KEY,
+                                           expected_sha256=hashlib.sha256(PDF).hexdigest()):
+                self.fail("Unverified PDF exposed")
+        self.assertTrue(client.body.closed)
+
+    def test_verified_file_rejects_oversize_before_download(self):
+        client = R2(head_size=MAX_BYTES + 1)
+        with self.assertRaisesRegex(ValueError, "Invalid source size"):
+            with verified_staging_pdf_file(client, owner_uid=UID, r2_key=KEY,
+                                           expected_sha256=hashlib.sha256(PDF).hexdigest()):
+                self.fail("Oversize PDF exposed")
+        self.assertEqual(client.get_calls, 0)
+
+    def test_verified_file_rejects_replacement(self):
+        client = R2(final_etag="replaced")
+        with self.assertRaisesRegex(ValueError, "replaced"):
+            with verified_staging_pdf_file(client, owner_uid=UID, r2_key=KEY,
+                                           expected_sha256=hashlib.sha256(PDF).hexdigest()):
+                self.fail("Replaced PDF exposed")
+
+    def test_verified_file_cleans_up_when_consumer_fails(self):
+        client = R2()
+        path = None
+        with self.assertRaisesRegex(RuntimeError, "render failed"):
+            with verified_staging_pdf_file(client, owner_uid=UID, r2_key=KEY,
+                                           expected_sha256=hashlib.sha256(PDF).hexdigest()) as name:
+                path = name
+                raise RuntimeError("render failed")
+        self.assertFalse(os.path.exists(path))
 
 
 if __name__ == "__main__":

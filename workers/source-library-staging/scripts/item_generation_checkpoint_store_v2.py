@@ -126,8 +126,8 @@ def status(conn, *, owner_uid, textbook_id, request_hash, evidence_hash):
                 "expires_in_seconds": max(0, int(seconds))}
     if stage not in ("concept_card", "draft"):
         raise ValueError("Invalid checkpoint stage")
-    return {"resumable": True, "next_stage": "item_draft" if stage == "concept_card"
-            else "rationale", "expires_in_seconds": max(0, int(seconds))}
+    return {"resumable": False, "next_stage": "blocked", "partial_replay_blocked": True,
+            "expires_in_seconds": max(0, int(seconds))}
 
 
 def complete(conn, *, owner_uid, textbook_id, request_hash, evidence_hash, result):

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {audit} from './audit-canonical-semantic-inventory.mjs';
+import {audit,MANIFESTS} from './audit-canonical-semantic-inventory.mjs';
+import {spawnSync} from 'node:child_process';
 
 function fixture(sources, questions) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'srna-inventory-'));
@@ -14,6 +15,20 @@ function fixture(sources, questions) {
 }
 const source = (key, count, setFilter) => ({key, data: 'data.json', count, ...(setFilter == null ? {} : {setFilter})});
 const question = (id, set = 1) => ({id, set, stem: 'Clinical question ' + id});
+test('failed private-stem export emits metadata without question text or an output file',t=>{
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'srna-private-export-'));
+ t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ for(const manifest of MANIFESTS){
+  const dir=path.join(root,path.dirname(manifest));fs.mkdirSync(dir,{recursive:true});
+  fs.writeFileSync(path.join(root,manifest),JSON.stringify({studioSources:[source('one',2)]}));
+  fs.writeFileSync(path.join(dir,'data.json'),JSON.stringify({questions:[{id:'1',stem:'PRIVATE_SYNTHETIC_STEM_MUST_NOT_APPEAR'}]}));
+ }
+ const output=path.join(root,'private.json');
+ const result=spawnSync(process.execPath,[new URL('./audit-canonical-semantic-inventory.mjs',import.meta.url).pathname,'--export-stems',output],{cwd:root,encoding:'utf8'});
+ assert.equal(result.status,1);assert.ok(!fs.existsSync(output));
+ assert.ok(!result.stderr.includes('PRIVATE_SYNTHETIC_STEM_MUST_NOT_APPEAR'));
+ assert.ok(!result.stdout.includes('PRIVATE_SYNTHETIC_STEM_MUST_NOT_APPEAR'));
+});
 
 test('namespaces IDs shared across different sources and audits filtered sets', t => {
   const root = fixture([source('one', 1, 1), source('two', 1, 2)], [question('1', 1), question('1', 2)]);

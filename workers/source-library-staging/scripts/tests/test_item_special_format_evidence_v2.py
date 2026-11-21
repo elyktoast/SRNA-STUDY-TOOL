@@ -10,16 +10,26 @@ def mapped(*keys):
             for k in keys}
 
 class SpecialFormatEvidenceTests(unittest.TestCase):
+    def test_retrieved_but_uncited_component_evidence_is_rejected(self):
+        for fmt, extra, keys in (
+            ("SA", {}, ["solution"]),
+            ("DD", {"dd": {"pairs": dict(zip("ABCD", "1234"))}}, ["pair:" + k for k in "ABCD"]),
+            ("HS", {"hs": {"correct_region": "r1", "near_miss_regions": ["r2", "r3"]}}, ["correct_region", "near_miss:0", "near_miss:1"]),
+        ):
+            item = {"format": fmt, **extra, "evidence": [{"passage_id": "other"}], "distractor_evidence": mapped(*keys)}
+            self.assertTrue(any("absent from item citations" in e["message"] for e in check(item, SOURCES)))
+            item["evidence"] = [{"passage_id": "p1"}]
+            self.assertEqual(check(item, SOURCES), [])
     def test_numeric_solution_evidence(self):
-        self.assertEqual(check({"format": "SA", "distractor_evidence": mapped("solution")}, SOURCES), [])
+        self.assertEqual(check({"format": "SA", "evidence": [{"passage_id": "p1"}], "distractor_evidence": mapped("solution")}, SOURCES), [])
     def test_matching_four_pairs(self):
-        item = {"format": "DD", "dd": {"pairs": {"A": "1", "B": "2", "C": "3", "D": "4"}},
+        item = {"format": "DD", "evidence": [{"passage_id": "p1"}], "dd": {"pairs": {"A": "1", "B": "2", "C": "3", "D": "4"}},
                 "distractor_evidence": mapped("pair:A", "pair:B", "pair:C", "pair:D")}
         self.assertEqual(check(item, SOURCES), [])
         del item["distractor_evidence"]["pair:D"]
         self.assertTrue(check(item, SOURCES))
     def test_hotspot_regions(self):
-        item = {"format": "HS", "hs": {"correct_region": "r1", "near_miss_regions": ["r2", "r3"]},
+        item = {"format": "HS", "evidence": [{"passage_id": "p1"}], "hs": {"correct_region": "r1", "near_miss_regions": ["r2", "r3"]},
                 "distractor_evidence": mapped("correct_region", "near_miss:0", "near_miss:1")}
         self.assertEqual(check(item, SOURCES), [])
         item["distractor_evidence"]["near_miss:1"]["passage_ids"] = ["invented"]

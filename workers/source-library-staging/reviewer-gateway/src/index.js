@@ -1,9 +1,32 @@
 // Staging-only gateway for a private reviewer container binding.
+// Called only after the existing private relay's HMAC authentication.
+export const SEMANTIC_MODEL='@cf/baai/bge-m3';
+export async function semanticEmbeddings(payload,env){
+ const reply=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
+ if(env.STAGING_ONLY!=='true'||env.AI_EMBEDDING_RELAY_OPT_IN!=='true'||!env.SEMANTIC_AI?.run)return reply(503,{error:'relay_disabled'});
+ if(!payload||Object.keys(payload).sort().join(',')!=='model,task,text'||payload.task!=='semantic_embeddings'||payload.model!==SEMANTIC_MODEL
+  ||!Array.isArray(payload.text)||payload.text.length<1||payload.text.length>32
+  ||payload.text.some(t=>typeof t!=='string'||!t.trim()||t.length>10000)
+  ||payload.text.reduce((n,t)=>n+t.length,0)>128000
+  ||(Math.max(...payload.text.map(t=>new TextEncoder().encode(t).byteLength))+16)*payload.text.length>48000)return reply(400,{error:'invalid_provider_payload'});
+ try{
+  const result=await env.SEMANTIC_AI.run(SEMANTIC_MODEL,{text:payload.text});
+  const data=result?.data;
+  if(!Array.isArray(data)||data.length!==payload.text.length||data.some(v=>!Array.isArray(v)||v.length!==1024||v.some(x=>typeof x!=='number'||!Number.isFinite(x)||Math.abs(x)>1e100)||!v.some(x=>x!==0)))
+   return reply(502,{error:'provider_failed',rule:'PROVIDER_UPSTREAM'});
+  // Never log question stems, vectors, provider responses or credentials.
+  return reply(200,{model:SEMANTIC_MODEL,shape:[data.length,1024],data});
+ }catch(error){
+  if(/max context reached|model supports only/i.test(String(error?.message||'')))return reply(413,{error:'provider_failed',rule:'PROVIDER_REQUEST_REJECTED'});
+  return reply(503,{error:'relay_network'});
+ }
+}
+
 // Deliberately no public backend URL, receipt, or approval routes.
 const ORIGIN = 'https://staging.srnastudytool.com';
 const PROJECT = 'https://xqyasyambwdyhsjkftqu.supabase.co';
-const paths = new Set(['/review/manifest', '/review/page.png', '/generation/preflight', '/generation/one', '/generation/provider-check', '/generation/checkpoint-readiness', '/generation/textbooks']);
-const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions)?)?$/;
+const paths = new Set(['/review/manifest', '/review/page.png', '/review/acknowledge', '/review/approve', '/generation/preflight', '/generation/lecture-plan', '/generation/lecture-file-plan', '/generation/one', '/generation/provider-check', '/generation/index-readiness', '/generation/checkpoint-readiness', '/generation/textbooks']);
+const draftPath = /^\/generation\/drafts(?:\/[0-9a-fA-F-]{36}(?:\/review|\/revalidate|\/revisions|\/complete-options)?)?$/;
 const common = {'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','X-Review-Approval-Enabled':'false'};
 function respond(status,origin,body=''){
  const headers={...common,'Content-Type':'application/json'};
@@ -21,7 +44,39 @@ async function safeRateDiagnostic(response){
   if(typeof message!=='string')return {};
   const dimension=/tokens per minute|\bTPM\b/i.test(message)?'tokens_per_minute':/tokens per day|\bTPD\b/i.test(message)?'tokens_per_day':/requests per minute|\bRPM\b/i.test(message)?'requests_per_minute':/requests per day|\bRPD\b/i.test(message)?'requests_per_day':'unknown';
   const counts={};for(const label of ['limit','used','requested']){const match=message.match(new RegExp('\\b'+label+'\\s*:?\\s*(\\d{1,10})(?!\\d|\\.\\d)','i'));if(match&&Number(match[1])<=1e9)counts[label]=Number(match[1]);}
-  return {rate_limit_dimension:dimension,...counts};
+  const retry=message.match(/\btry again in\s+(\d{1,4}(?:\.\d{1,20})?)(ms|s)\b/i);
+  const retrySeconds=retry?Math.ceil(Number(retry[1])/(retry[2].toLowerCase()==='ms'?1000:1)):null;
+  return {rate_limit_dimension:dimension,...counts,...(retrySeconds!==null&&retrySeconds>=1&&retrySeconds<=3600?{retry_after_seconds:retrySeconds}:{})};
+ }catch{return {};}finally{await reader.cancel().catch(()=>{});}
+}
+async function safeRequestDiagnostic(response){
+ // Read a bounded private response, return only known machine categories.
+ const reader=response.body?.getReader();if(!reader)return {};
+ let size=0;const chunks=[];
+ try{
+  while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>65536)return {};chunks.push(value);}
+  const bytes=new Uint8Array(size);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  const error=JSON.parse(new TextDecoder().decode(bytes))?.error;
+  const codes=['json_validate_failed','context_length_exceeded','invalid_request_error','invalid_json_schema','model_not_found'];
+  const params=['reasoning_effort','max_tokens','max_completion_tokens','response_format'];
+  const shape={};
+  if(error?.code==='json_validate_failed'&&typeof error.failed_generation==='string'){
+   shape.failed_generation_chars=error.failed_generation.length;
+   try{const value=JSON.parse(error.failed_generation);shape.failed_json_shape=value&&typeof value==='object'&&!Array.isArray(value)?'object':'other_json';
+    if(shape.failed_json_shape==='object'){
+     const known=['objective','mechanism','relevance','misconception','counterfactual','evidence_ids','choice_plan','core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test','rationale','draft','item','concept_card'];
+     shape.failed_known_fields=known.filter(k=>Object.hasOwn(value,k));
+     shape.failed_unknown_field_count=Object.keys(value).filter(k=>!known.includes(k)).length;
+    }
+   }
+   catch{shape.failed_json_shape='invalid_json';}
+  }
+  if(error?.param==='response_format'&&typeof error.message==='string'){
+   // Fixed vocabulary only; never log a provider message or failed generation.
+   shape.schema_keywords=['anyOf','minItems','maxItems','additionalProperties','required','type','enum','null']
+    .filter(word=>error.message.includes(word));
+  }
+  return {...shape,...(codes.includes(error?.code)?{provider_error_code:error.code}:{}),...(params.includes(error?.param)?{provider_error_param:error.param}:{})};
  }catch{return {};}finally{await reader.cancel().catch(()=>{});}
 }
 // Signed server-to-server relay: no browser bearer, no provider key in the container request.
@@ -52,6 +107,7 @@ async function relayGroq(request,env){
  let mismatch=0;for(let i=0;i<32;i++)mismatch|=expected[i]^received[i];
  if(mismatch)return respond(403,null,'{"error":"forbidden"}');
  let payload;try{payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes))}catch{return respond(400,null,'{"error":"invalid_json"}')}
+ if(payload?.task==='semantic_embeddings')return semanticEmbeddings(payload,env);
  if(payload?.diagnostic==='groq_models'&&Object.keys(payload).length===1){
   try{
    const response=await fetch('https://api.groq.com/openai/v1/models',{method:'GET',headers:{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY},redirect:'manual',signal:AbortSignal.timeout(8000)});
@@ -61,14 +117,30 @@ async function relayGroq(request,env){
  }
  // Gemini remains disabled, including signed metadata diagnostics.
  if(payload?.diagnostic==='hybrid_models')return respond(503,null,'{"error":"relay_disabled"}');
- if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
+ // A separately opted-in, signed calibration caller may compare one fixed
+ // candidate for read-only review steps. Normal generation keeps its reviewer.
+ const calibrationTag=payload?.srna_reviewer_calibration;
+ const candidateCalibration=env.AI_REVIEWER_CALIBRATION_OPT_IN==='true'
+  &&env.AI_REVIEWER_CALIBRATION_MODEL==='openai/gpt-oss-120b'
+  &&payload?.model===env.AI_REVIEWER_CALIBRATION_MODEL&&calibrationTag==='fixed-controls-v1';
+ if(calibrationTag!==undefined&&!candidateCalibration)return respond(400,null,'{"error":"invalid_calibration"}');
+ if(!([env.AI_GENERATOR_MODEL, ...((env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true')?[env.AI_REVIEWER_MODEL]:[]),...(env.AI_EXPLANATION_REVIEW_OPT_IN==='true'?[env.AI_EDITORIAL_REVIEWER_MODEL]:[]),...(candidateCalibration?[env.AI_REVIEWER_CALIBRATION_MODEL]:[])].includes(payload?.model))||!Array.isArray(payload.messages)||payload.messages.length!==2||payload.messages[0]?.role!=='system'||payload.messages[1]?.role!=='user'||typeof payload.messages[1]?.content!=='string'||payload.messages[1].content.length>300000||!Number.isInteger(payload.max_tokens)||payload.max_tokens<256||payload.max_tokens>8192||payload.temperature!==0.2)return respond(400,null,'{"error":"invalid_provider_payload"}');
  let step;try{step=JSON.parse(payload.messages[1].content)}catch{return respond(400,null,'{"error":"invalid_step"}')}
- if(!['concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(step.step==='blind_review'&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review'].includes(step.step)&&(payload.model!==env.AI_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL||step.blind!==true))||(!['blind_review','option_review','explanation_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(candidateCalibration&&(!['blind_review','explanation_review'].includes(step?.step)
+  ||payload.max_tokens>1800||payload.messages[1].content.length>20000))return respond(400,null,'{"error":"invalid_calibration"}');
+ const activeReviewerModel=candidateCalibration?env.AI_REVIEWER_CALIBRATION_MODEL:env.AI_REVIEWER_MODEL;
+ delete payload.srna_reviewer_calibration;
+ if(!['retrieval_plan','concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
+ if(step.step==='retrieval_plan'&&(env.AI_SOURCE_DISCOVERY_OPT_IN!=='true'||step.format!=='MC'||typeof step.topic!=='string'||(!step.topic.trim()||step.topic.length>500)||payload.max_tokens>512||Object.keys(step).sort().join(',')!=='auto_publish,format,rules_version,step,topic'))return respond(400,null,'{"error":"invalid_step"}');
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
   const hybrid=env.AI_HYBRID_ENABLED==='true';
-  const provider=hybrid&&step.step==='concept_card'?'cloudflare':'groq';
+  if(env.AI_AUTHORING_PROVIDER!==undefined&&!['groq','cloudflare'].includes(env.AI_AUTHORING_PROVIDER))return respond(503,null,'{"error":"relay_disabled"}');
+  const authoring=['retrieval_plan','concept_card','item_draft','rationale','rewrite'].includes(step.step);
+  const cloudflareAuthoring=env.AI_AUTHORING_PROVIDER==='cloudflare'&&authoring;
+  if(cloudflareAuthoring&&env.AI_CLOUDFLARE_MODEL!=='@cf/'+env.AI_GENERATOR_MODEL)return respond(503,null,'{"error":"relay_disabled"}');
+  const provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
   activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
@@ -81,8 +153,122 @@ async function relayGroq(request,env){
   const qwenJson=provider==='cloudflare'&&env.AI_CLOUDFLARE_MODEL==='@cf/qwen/qwen3.8-27b';
   const groqOss=provider==='groq'&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
   const groqQwen=provider==='groq'&&payload.model==='qwen/qwen3.8-27b';
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:{type:'json_object'},...(groqOss?{reasoning_effort:'low'}:{})}):bytes;
-  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...(qwenJson?{chat_template_kwargs:{enable_thinking:false},response_format:{type:'json_object'}}:{})}):groqBody;
+  const cloudflareOss=cloudflareAuthoring&&/^openai\/gpt-oss-(?:120b|20b)$/.test(payload.model);
+  const cloudflareGlm=cloudflareAuthoring&&payload.model==='zai-org/glm-5.3';
+  const schemaOss=groqOss||cloudflareOss||cloudflareGlm;
+  // Constrain the existing six-field planning object; this does not grade facts.
+  const conceptFormat=schemaOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='concept_card'
+   ?{type:'json_schema',json_schema:{name:'srna_concept_card_v2',strict:true,schema:{type:'object',
+     properties:{...Object.fromEntries(['objective','mechanism','relevance','misconception','counterfactual'].map(k=>[k,{type:'string'}])),evidence_ids:{type:'array',items:{type:'string'}}},
+     required:['objective','mechanism','relevance','misconception','counterfactual','evidence_ids'],additionalProperties:false}}}
+   :{type:'json_object'};
+  if(conceptFormat.type==='json_schema'&&step.format==='MC'){
+   const properties=conceptFormat.json_schema.schema.properties;
+   properties.choice_plan={type:'object',properties:{response_variables:{type:'array',minItems:1,maxItems:2,items:{type:'string',maxLength:80},description:'One clinical response/category for ordinary single-best-answer choices, or two related clinical components for a genuinely paired concept. Never force an unrelated second variable or use generic type, direction, or value axes.'},stem_condition:{type:'string',maxLength:200},alternate_condition:{type:'string',maxLength:200},lead_in:{type:'string',maxLength:200},
+    key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},alternate_key:{type:'array',items:{type:'string',enum:['A','B','C','D']}},
+    options:{type:'array',items:{type:'object',properties:{id:{type:'string',enum:['A','B','C','D']},states:{type:'array',minItems:1,maxItems:2,items:{type:'string',maxLength:80}}},required:['id','states'],additionalProperties:false}}},
+    required:['response_variables','stem_condition','alternate_condition','lead_in','key','alternate_key','options','option_grounding'],additionalProperties:false};
+   const passageIds=(step.evidence||[]).map(p=>p.passage_id);
+   if(typeof step.objective==='string')properties.objective={type:'string',enum:[step.objective]};
+   if(passageIds.length)properties.evidence_ids={type:'array',minItems:1,maxItems:passageIds.length,items:{type:'string',enum:passageIds}};
+   const spanIds=[...new Set((step.evidence||[]).flatMap(p=>(p.quote_spans||[]).map(s=>s.id)))];
+   const grounding={type:'object',properties:{
+    source_refs:{type:'array',minItems:1,maxItems:3,items:{type:'object',properties:{
+     passage_id:{type:'string',...(passageIds.length?{enum:passageIds}:{})},
+     span_ids:{type:'array',minItems:1,maxItems:3,items:{type:'string',...(spanIds.length?{enum:spanIds}:{})}}
+    },required:['passage_id','span_ids'],additionalProperties:false}},
+    explanation:{type:'string',minLength:1,maxLength:700}},
+    required:['source_refs','explanation'],additionalProperties:false};
+   properties.choice_plan.properties.option_grounding={type:'object',properties:Object.fromEntries(['A','B','C','D'].map(id=>[id,grounding])),required:['A','B','C','D'],additionalProperties:false};
+   conceptFormat.json_schema.schema.required.push('choice_plan');
+  }
+  const rationaleIds=Array.isArray(step.draft?.options)?step.draft.options.map(o=>o?.id):[];
+  const strictRationale=schemaOss&&payload.model===env.AI_GENERATOR_MODEL&&step.step==='rationale'&&['MC','MS'].includes(step.format)
+   &&rationaleIds.length>=4&&rationaleIds.length<=6&&new Set(rationaleIds).size===rationaleIds.length&&rationaleIds.every(id=>/^[A-F]$/.test(id));
+  const plannedRationale=strictRationale&&step.format==='MC'&&step.choice_plan&&typeof step.choice_plan==='object';
+  const rationaleFormat=strictRationale?{type:'json_schema',json_schema:{name:'srna_rationale_with_counterfactual_v2',strict:true,schema:{type:'object',
+   properties:{...Object.fromEntries(['core_concept','why_key_wins','trap'].map(k=>[k,{type:'string'}])),
+    distractor_breakdown:{type:'object',properties:Object.fromEntries(rationaleIds.map(id=>[id,{type:'string'}])),required:rationaleIds,additionalProperties:false},
+    counterfactual_test:{type:'object',properties:{from_text:{type:'string'},to_text:{type:'string'},expected_key:{type:'array',items:{type:'string',enum:rationaleIds}}},required:['from_text','to_text','expected_key'],additionalProperties:false}},
+   required:['core_concept','why_key_wins','trap','distractor_breakdown','counterfactual_test'],additionalProperties:false}}}:conceptFormat;
+  if(plannedRationale){
+   delete rationaleFormat.json_schema.schema.properties.counterfactual_test;
+   rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='counterfactual_test');
+  }
+  if(plannedRationale&&step.choice_plan.option_grounding&&typeof step.choice_plan.option_grounding==='object'){
+   delete rationaleFormat.json_schema.schema.properties.distractor_breakdown;
+   rationaleFormat.json_schema.schema.required=rationaleFormat.json_schema.schema.required.filter(k=>k!=='distractor_breakdown');
+  }
+  let reviewFormat=rationaleFormat;
+  if(step.step==='retrieval_plan')reviewFormat={type:'json_schema',json_schema:{name:'srna_source_search_plan_v1',strict:true,
+   schema:{type:'object',properties:{focus_query:{type:'string',minLength:2,maxLength:100},
+    alternative_queries:{type:'array',minItems:1,maxItems:3,items:{type:'string',minLength:2,maxLength:100}}},
+    required:['focus_query','alternative_queries'],additionalProperties:false}}};
+  if(step.step==='options_only_review'){
+   const ids=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const count=step.select_count;
+   if(!['MC','MS'].includes(step.format)||ids.length<4||ids.length>6||new Set(ids).size!==ids.length||!ids.every(id=>typeof id==='string'&&/^[A-F]$/.test(id))||!Number.isInteger(count)||(step.format==='MC'?count!==1:![2,3].includes(count)))return respond(400,null,'{"error":"invalid_step"}');
+   if(groqQwen||groqOss)reviewFormat={type:'json_schema',json_schema:{name:'srna_options_only_v2',strict:true,schema:{type:'object',properties:{key:{type:'array',minItems:count,maxItems:count,items:{type:'string',enum:ids}}},required:['key'],additionalProperties:false}}};
+  }
+  if((groqQwen||groqOss)&&step.step==='option_review'&&step.format==='MC'){
+   const optionIds=Array.isArray(step.options)?step.options.map(o=>o?.id):[];
+   const passages=Array.isArray(step.source_passages)?step.source_passages:[];
+   const byId=new Map(passages.map(p=>[p?.passage_id,p]));
+   const audits=step.retrieval?.option_audits;
+   if(optionIds.length!==4||optionIds.some((id,index)=>id!=='ABCD'[index])||
+      !Array.isArray(audits)||audits.length!==4||new Set(audits.map(a=>a.option_id)).size!==4||
+      byId.size!==passages.length||!passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const properties={};
+   for(const id of optionIds){
+    const allowed=audits.find(a=>a.option_id===id)?.retrieved_passage_ids;
+    if(!Array.isArray(allowed)||!allowed.length||new Set(allowed).size!==allowed.length)return respond(400,null,'{"error":"invalid_step"}');
+    const references=[];
+    for(const pid of allowed){
+     const spans=byId.get(pid)?.quote_spans?.map(q=>q?.id);
+     if(typeof pid!=='string'||!Array.isArray(spans)||!spans.length||spans.some(q=>typeof q!=='string')||new Set(spans).size!==spans.length)return respond(400,null,'{"error":"invalid_step"}');
+     references.push(...spans.map(sid=>pid+':'+sid));
+    }
+    // The live provider rejected nested anyOf. Use nullable fields and keep
+    // definite-answer citation requirements in the trusted backend validator.
+    properties[id]={type:'object',properties:{
+     answers_stem:{type:['boolean','null']},
+     quote_refs:{type:['array','null'],minItems:1,maxItems:8,items:{type:'string',enum:references}},
+     explanation:{type:'string'},source_conflict_found:{type:'boolean'}
+    },required:['answers_stem','quote_refs','explanation','source_conflict_found'],additionalProperties:false};
+   }
+   reviewFormat={type:'json_schema',json_schema:{name:'srna_mc_scoped_option_review_v2',strict:true,schema:{type:'object',properties:{
+    judgments:{type:'object',properties,required:optionIds,additionalProperties:false}
+   },required:['judgments'],additionalProperties:false}}};
+  }
+  if((groqQwen||groqOss)&&step.step==='explanation_review'){
+   const fields=step.fields,passages=step.source_passages;
+   if(!Array.isArray(fields)||!fields.length||fields.length>20||new Set(fields.map(f=>f.id)).size!==fields.length||
+      !Array.isArray(passages)||!passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const byId=new Map(passages.map(p=>[p.passage_id,p]));
+   if(byId.size!==passages.length)return respond(400,null,'{"error":"invalid_step"}');
+   const properties={};
+   for(const field of fields){
+    if(typeof field.id!=='string'||!Array.isArray(field.passage_ids)||!field.passage_ids.length)
+     return respond(400,null,'{"error":"invalid_step"}');
+    const refs=[];
+    for(const pid of field.passage_ids){
+     const spans=byId.get(pid)?.quote_spans;
+     if(!Array.isArray(spans)||!spans.length)return respond(400,null,'{"error":"invalid_step"}');
+     for(const span of spans){if(typeof span.id!=='string')return respond(400,null,'{"error":"invalid_step"}');refs.push(pid+':'+span.id);}
+    }
+    properties[field.id]={type:'object',properties:{supported:{type:['boolean','null']},
+     quote_refs:{type:['array','null'],minItems:1,maxItems:8,items:{type:'string',enum:[...new Set(refs)]}},
+     reason:{type:'string'}},required:['supported','quote_refs','reason'],additionalProperties:false};
+   }
+   // Flat nullable fields match the live-compatible option protocol. The
+   // backend still rejects definite support without valid field-scoped quotes.
+   reviewFormat={type:'json_schema',json_schema:{name:'srna_scoped_explanation_review_v3',strict:true,
+    schema:{type:'object',properties:{judgments:{type:'object',properties,required:fields.map(f=>f.id),additionalProperties:false}},
+     required:['judgments'],additionalProperties:false}}};
+  }
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):bytes;
+  const cloudflareFormat=step.step==='retrieval_plan'?reviewFormat:cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
+  const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   let upstream;
   if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
@@ -108,7 +294,7 @@ async function relayGroq(request,env){
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
   if(!upstream.ok){const rule=upstream.status===400||upstream.status===422?'PROVIDER_REQUEST_REJECTED':upstream.status===404?'PROVIDER_MODEL_UNAVAILABLE':upstream.status===401?'PROVIDER_AUTH':upstream.status===403?'PROVIDER_FORBIDDEN':upstream.status===429?'PROVIDER_RATE_LIMIT':'PROVIDER_UPSTREAM';const rawRetry=upstream.headers.get('Retry-After');
-   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,6})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
+   const seconds=rawRetry!==null&&/^\d{1,5}(?:\.\d{1,20})?$/.test(rawRetry)?Math.min(3600,Math.max(1,Math.ceil(Number(rawRetry)))):null;
    const remainingRequests=upstream.headers.get('x-ratelimit-remaining-requests');
    const remainingTokens=upstream.headers.get('x-ratelimit-remaining-tokens');
    const safeCount=v=>v!==null&&/^\d{1,10}$/.test(v)?Number(v):null;
@@ -120,7 +306,9 @@ async function relayGroq(request,env){
     Object.assign(rateLimit,await safeRateDiagnostic(upstream));
     console.error('staging_rate_limit',JSON.stringify({provider,step:step.step,model:activeModel,...rateLimit}));
    }
-   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
+   const requestDiagnostic=rule==='PROVIDER_REQUEST_REJECTED'?await safeRequestDiagnostic(upstream):{};
+   if(rule==='PROVIDER_REQUEST_REJECTED')console.error('staging_request_rejected',JSON.stringify({provider,step:step.step,model:activeModel,...requestDiagnostic}));
+   return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...requestDiagnostic,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq'){
    let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}
@@ -165,34 +353,42 @@ export default {
    return respond(503,null,'{"error":"staging_not_configured"}');
   }
   if(origin!==ORIGIN||(!paths.has(url.pathname)&&!draftPath.test(url.pathname)))return respond(403,null,'{"error":"forbidden"}');
+  const acknowledgment=url.pathname==='/review/acknowledge';
+  const approval=url.pathname==='/review/approve';
+  if(approval&&env.STAGING_PAGE_APPROVAL_ENABLED!=='true')return respond(403,origin,'{"error":"approval_disabled"}');
+  if(acknowledgment&&env.STAGING_ACKNOWLEDGMENT_ENABLED!=='true')return respond(403,origin,'{"error":"acknowledgment_disabled"}');
   const generation=url.pathname==='/generation/preflight';
+  const lecturePlan=url.pathname==='/generation/lecture-plan';
+  const lectureFile=url.pathname==='/generation/lecture-file-plan';
   const generateOne=url.pathname==='/generation/one';
   const providerCheck=url.pathname==='/generation/provider-check';
   const checkpointCheck=url.pathname==='/generation/checkpoint-readiness';
+  const indexCheck=url.pathname==='/generation/index-readiness';
   const textbookList=url.pathname==='/generation/textbooks';
   const draftWrite=draftPath.test(url.pathname)&&(request.method==='POST'||(request.method==='OPTIONS'&&request.headers.get('Access-Control-Request-Method')==='POST'));
-  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions');
-  const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review');
-    const allowedMethods=(generation||generateOne)?'POST':draftPath.test(url.pathname)?(url.pathname.endsWith('/review')?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
+  const completeOptions=url.pathname.endsWith('/complete-options');
+  const draftPostAllowed=url.pathname==='/generation/drafts'||url.pathname.endsWith('/review')||url.pathname.endsWith('/revisions')||completeOptions;
+  const draftRead=draftPath.test(url.pathname)&&!url.pathname.endsWith('/review')&&!completeOptions;
+    const allowedMethods=(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile)?'POST':draftPath.test(url.pathname)?((url.pathname.endsWith('/review')||completeOptions)?'POST':draftPostAllowed?'GET, POST':'GET'):'GET';
   if(request.method==='OPTIONS'){
    const requestedHeaders=(request.headers.get('Access-Control-Request-Headers')||'').toLowerCase().replace(/\s/g,'');
    if(!allowedMethods.split(', ').includes(request.headers.get('Access-Control-Request-Method'))||
-      !((generation||generateOne||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
+      !((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?['authorization,content-type','content-type,authorization'].includes(requestedHeaders):requestedHeaders==='authorization'))
     return respond(403,origin,'{"error":"forbidden_preflight"}');
    const response=respond(204,origin);
    response.headers.set('Access-Control-Allow-Methods',allowedMethods);
-   response.headers.set('Access-Control-Allow-Headers',(generation||generateOne||draftWrite)?'Authorization, Content-Type':'Authorization');
+   response.headers.set('Access-Control-Allow-Headers',(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'Authorization, Content-Type':'Authorization');
    response.headers.set('Access-Control-Max-Age','300');
    return response;
   }
   if(!allowedMethods.split(', ').includes(request.method))return respond(405,origin,'{"error":"method_not_allowed"}');
-  if((generation||draftRead||providerCheck||checkpointCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
-  if((generation||generateOne||draftWrite)&&Number(request.headers.get('Content-Length')||0)>8192)return respond(413,origin,'{"error":"request_too_large"}');
-  if((generation||generateOne||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
-  if(url.search.length>2048||(!generation&&!generateOne&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
+  if((acknowledgment||approval||generation||draftRead||providerCheck||checkpointCheck||indexCheck||textbookList)&&url.search)return respond(400,origin,'{"error":"invalid_query"}');
+  if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&Number(request.headers.get('Content-Length')||0)>(lectureFile?36*1024*1024:lecturePlan?16384:8192))return respond(413,origin,'{"error":"request_too_large"}');
+  if((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)&&(url.search||!/^application\/json(?:;|$)/i.test(request.headers.get('Content-Type')||'')))return respond(400,origin,'{"error":"invalid_request"}');
+  if(url.search.length>2048||(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request.headers.get('Content-Length'))||request.headers.get('Transfer-Encoding'))
    return respond(400,origin,'{"error":"invalid_request"}');
   const params=[...url.searchParams.keys()];
-  if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
+  if(!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&(params.length!==(url.pathname==='/review/manifest'?1:2)||
      !params.includes('path')||(url.pathname==='/review/page.png'&&!params.includes('page'))||
      new Set(params).size!==params.length))return respond(400,origin,'{"error":"invalid_query"}');
   const token=request.headers.get('Authorization')||'';
@@ -273,6 +469,11 @@ export default {
    if(env.AI_GENERATION_OPT_IN==='true'&&aiKeys.every(key=>typeof env[key]==='string'&&env[key].length>0)){
     envVars.AI_GENERATION_OPT_IN='true';
     for(const key of aiKeys)envVars[key]=env[key];
+    if(env.AI_AUTHORING_PROVIDER!==undefined){
+     envVars.AI_AUTHORING_PROVIDER=env.AI_AUTHORING_PROVIDER;
+     if(env.AI_AUTHORING_PROVIDER==='cloudflare')envVars.AI_CLOUDFLARE_MODEL=env.AI_CLOUDFLARE_MODEL||'';
+    }
+    if(env.AI_SOURCE_DISCOVERY_OPT_IN==='true')envVars.AI_SOURCE_DISCOVERY_OPT_IN='true';
     if(env.AI_REWRITE_OPT_IN==='true')envVars.AI_REWRITE_OPT_IN='true';
     if(env.AI_BLIND_REVIEW_OPT_IN==='true'||env.AI_OPTION_REVIEW_OPT_IN==='true'||env.AI_EXPLANATION_REVIEW_OPT_IN==='true'){
      if(typeof env.AI_REVIEWER_MODEL!=='string'||!env.AI_REVIEWER_MODEL.trim()||env.AI_REVIEWER_MODEL===env.AI_GENERATOR_MODEL)
@@ -281,29 +482,51 @@ export default {
      if(env.AI_OPTION_REVIEW_OPT_IN==='true')envVars.AI_OPTION_REVIEW_OPT_IN='true';
      if(env.AI_EXPLANATION_REVIEW_OPT_IN==='true')envVars.AI_EXPLANATION_REVIEW_OPT_IN='true';
      envVars.AI_REVIEWER_MODEL=env.AI_REVIEWER_MODEL;
+     if(typeof env.AI_EDITORIAL_REVIEWER_MODEL==='string'&&env.AI_EDITORIAL_REVIEWER_MODEL.trim()&&env.AI_EDITORIAL_REVIEWER_MODEL!==env.AI_GENERATOR_MODEL)envVars.AI_EDITORIAL_REVIEWER_MODEL=env.AI_EDITORIAL_REVIEWER_MODEL;
     }
     if(env.AI_GENERATION_CHECKPOINTS_ENABLED==='true')envVars.AI_GENERATION_CHECKPOINTS_ENABLED='true';
+    if(env.AI_SEMANTIC_EMBEDDING_OPT_IN==='true'){
+     envVars.AI_SEMANTIC_EMBEDDING_OPT_IN='true';
+     for(const name of ['SEMANTIC_INDEX_OWNER_UID','SEMANTIC_INDEX_EMBEDDING_MODEL','SEMANTIC_INDEX_INVENTORY_PATH'])envVars[name]=env[name]||'';
+    }
     if(env.AI_HYBRID_ENABLED==='true')envVars.AI_HYBRID_ENABLED='true';
    }
    await container.startAndWaitForPorts({startOptions:{envVars}});
    containerStage='upstream_request';
    let body;
-   if(generation||generateOne||draftWrite){
+   if(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite){
     const reader=request.body?.getReader();
     if(!reader)return respond(400,origin,'{"error":"invalid_request"}');
     const chunks=[];let total=0;
     while(true){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;
-     if(total>8192){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
+     if(total>((acknowledgment||approval)?8192:lectureFile?36*1024*1024:lecturePlan?16384:8192)){await reader.cancel();return respond(413,origin,'{"error":"request_too_large"}');}
      chunks.push(value);
     }
     const bytes=new Uint8Array(total);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
     body=new TextDecoder('utf-8',{fatal:true}).decode(bytes);
+    if(approval){
+     let data;try{data=JSON.parse(body)}catch{return respond(400,origin,'{"error":"invalid_request"}')}
+     if(!data||Array.isArray(data)||typeof data!=='object'||Object.keys(data).sort().join(',')!=='classification,image_sha256,page,path,receipt,review_note,source_sha256'||
+       !Number.isSafeInteger(data.page)||data.page<1||typeof data.path!=='string'||data.path.length>1024||
+       !/^[a-f0-9]{64}$/.test(data.source_sha256)||!/^[a-f0-9]{64}$/.test(data.image_sha256)||
+       typeof data.receipt!=='string'||data.receipt.length<40||data.receipt.length>4096||
+       !['non_content_divider','content_reviewed'].includes(data.classification)||
+       typeof data.review_note!=='string'||data.review_note.trim().length<8||data.review_note.length>1000)
+      return respond(400,origin,'{"error":"invalid_request"}');
+    }
+    if(acknowledgment){
+     let data;try{data=JSON.parse(body)}catch{return respond(400,origin,'{"error":"invalid_request"}')}
+     if(!data||Array.isArray(data)||typeof data!=='object'||Object.keys(data).sort().join(',')!=='acknowledged,challenge,page,path'||
+        data.acknowledged!==true||!Number.isSafeInteger(data.page)||data.page<1||
+        typeof data.path!=='string'||data.path.length>1024||typeof data.challenge!=='string'||data.challenge.length>4096)
+      return respond(400,origin,'{"error":"invalid_request"}');
+    }
    }
    const upstream=await container.fetch(new Request('http://reviewer.internal'+url.pathname+url.search,{
-    method:(generation||generateOne||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((generation||generateOne||draftWrite)?{'Content-Type':'application/json'}:{})},...((generation||generateOne||draftWrite)?{body}:{})
+    method:(acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?'POST':'GET',headers:{Authorization:token,Origin:ORIGIN,...((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{'Content-Type':'application/json'}:{})},...((acknowledgment||approval||generation||generateOne||lecturePlan||lectureFile||draftWrite)?{body}:{})
    }));
    containerStage='upstream_response';
-   if(upstream.status===500 && (generation||generateOne)){
+   if(upstream.status===500 && (generation||generateOne||lecturePlan||lectureFile)){
     // Never log upstream response text: it could contain source excerpts or secrets.
     const contentType=(upstream.headers.get('Content-Type')||'').toLowerCase();
     const body=contentType.startsWith('application/json')?await upstream.clone().json().catch(()=>null):null;
@@ -333,15 +556,73 @@ export default {
    if(upstream.status===409){
     const conflict=await upstream.clone().json().catch(()=>null);
     const category=typeof conflict?.error==='string'&&/^[a-z][a-z0-9_]{0,63}$/.test(conflict.error)?conflict.error:'unclassified';
-    console.error('staging_reviewer_failure',JSON.stringify({stage:'manifest',reason:'upstream_409',category}));
+    // Log only fixed diagnostic codes emitted by the trusted reviewer; never log source paths or raw upstream data.
+    const manifestRules=new Set(['ATTESTATION_MISMATCH','QUEUE_FINGERPRINT_MISMATCH','QUEUE_SOURCE_MISMATCH','QUEUE_PAGE_INVALID','SOURCE_CHANGED','MANIFEST_IDENTITY_MISMATCH','PAGE_OUT_OF_RANGE','PAGE_INTEGRITY_MISMATCH','SOURCE_MISSING','ATTESTATION_MISSING','QUEUE_MISSING','ATTESTATION_SIZE_INVALID','ATTESTATION_JSON_INVALID','QUEUE_SIZE_INVALID','QUEUE_JSON_INVALID','OWNER_SCOPED_KEY_INVALID','STAGING_BUCKET_INVALID','SOURCE_SIZE_LIMIT_EXCEEDED','SOURCE_VERIFICATION_UNKNOWN']);
+    const rule=conflict?.error==='source_or_page_verification_failed'&&manifestRules.has(conflict?.rule)?conflict.rule:'NONE';
+    console.error('staging_reviewer_failure',JSON.stringify({stage:'manifest',reason:'upstream_409',category,rule}));
    }
    const headers=new Headers(common);
    headers.set('Access-Control-Allow-Origin',ORIGIN);headers.set('Vary','Origin');
-   headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256');
+   headers.set('Access-Control-Expose-Headers','X-Review-Approval-Enabled, X-Verified-Source-SHA256, X-Page-Image-SHA256, X-Page-Delivery-Challenge');
    for(const name of ['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256']){
     const value=upstream.headers.get(name);if(value)headers.set(name,value);
    }
-   if(!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   // A challenge is visible only with a successfully verified page response.
+   // Never copy it from errors, manifests, generation responses, or acknowledgments.
+   if(!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&upstream.headers.get('X-Review-Approval-Enabled')!=='false')return respond(502,origin,'{"error":"unsafe_upstream"}');
+   if(upstream.ok&&indexCheck){
+    const data=await upstream.clone().json().catch(()=>null);
+    const counts=['expected_count','indexed_count','missing_count','unexpected_count','stale_count'];
+    const keys=['ready','inventory_digest',...counts];
+    if(!(upstream.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')||
+       !data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).length!==keys.length||
+       Object.keys(data).some(k=>!keys.includes(k))||typeof data.ready!=='boolean'||
+       typeof data.inventory_digest!=='string'||!/^[a-f0-9]{64}$/.test(data.inventory_digest)||
+       counts.some(k=>!Number.isSafeInteger(data[k])||data[k]<0||data[k]>10000)||data.expected_count<1||
+       data.missing_count+data.stale_count>data.expected_count||data.unexpected_count>data.indexed_count||
+       data.expected_count+data.unexpected_count!==data.indexed_count+data.missing_count||
+       data.ready!==(data.missing_count===0&&data.unexpected_count===0&&data.stale_count===0&&data.expected_count===data.indexed_count))
+     return respond(502,origin,'{"error":"unsafe_index_readiness_response"}');
+   }
+   if(upstream.ok&&checkpointCheck){
+    const data=await upstream.clone().json().catch(()=>null);
+    const allowed=['ready','check','generation_performed','database_writes'];
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||data?.ready!==true||
+       data?.check!=='checkpoint_database_readiness'||data?.generation_performed!==false||data?.database_writes!==false||
+       Object.keys(data).some(k=>!allowed.includes(k)))return respond(502,origin,'{"error":"unsafe_checkpoint_response"}');
+   }
+   if(upstream.ok&&lectureFile){
+    const data=await upstream.clone().json().catch(()=>null);
+    const extraction=data?.file_extraction;
+    const held=data?.held_reason==='visual_review_required';
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       !extraction||!['pdf','pptx'].includes(extraction.format)||
+       !Number.isSafeInteger(extraction.page_count)||extraction.page_count<1||
+       !Array.isArray(extraction.review_pages)||
+       (held&&(data.count!==0||data.jobs.length!==0||extraction.requires_visual_review!==true))||
+       (!held&&data.paid_calls_requested!==false)||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_file_plan"}');
+    }
+   }
+   if(upstream.ok&&lecturePlan){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||
+       !data||!Array.isArray(data.jobs)||!Number.isSafeInteger(data.count)||
+       data.count!==data.jobs.length||data.auto_generate!==false||
+       data.auto_publish!==false||data.database_writes!==false||
+       data.paid_calls_requested!==false||
+       data.jobs.some(job=>job?.path!=='/generation/preflight'||!job.body||
+         typeof job.body!=='object'||'execute' in job.body||
+         'confirm_paid_calls' in job.body)){
+      return respond(502,origin,'{"error":"unsafe_lecture_plan"}');
+    }
+   }
    if(upstream.ok&&generation){
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json'))return respond(502,origin,'{"error":"invalid_preflight_type"}');
     const data=await upstream.clone().json().catch(()=>null);
@@ -356,16 +637,20 @@ export default {
     const data=await upstream.clone().json().catch(()=>null);
     if(!data||typeof data!=='object'||data.published!==false&&!(Array.isArray(data.drafts)&&data.drafts.every(x=>x&&typeof x==='object'&&typeof x.draft_id==='string')))return respond(502,origin,'{"error":"unsafe_draft_response"}');
    }
+   if(upstream.ok&&completeOptions){
+    const data=await upstream.clone().json().catch(()=>null);
+    if(!data||data.published!==false||data.can_publish!==false||data.question_modified!==false||data.generation_performed!==false||data.rewrite_performed!==false||data.clinical_review_required!==true||data.database_writes!==true||typeof data.paid_review_performed!=='boolean'||typeof data.automated_checks_passed!=='boolean'||!['pass','pending'].includes(data.option_review_status)||(data.automated_checks_passed&&data.option_review_status!=='pass'))return respond(502,origin,'{"error":"unsafe_option_review_response"}');
+   }
    if(upstream.ok&&draftWrite){
     const data=await upstream.clone().json().catch(()=>null);
     if(!(upstream.headers.get('Content-Type')||'').startsWith('application/json')||!data||typeof data!=='object'||data.published===true||typeof data.draft_id!=='string'||!data.draft_id) return respond(502,origin,'{"error":"unsafe_draft_write"}');
    }
-   if(upstream.ok&&!generation&&!generateOne&&!draftRead&&!draftWrite&&!providerCheck&&!textbookList){
+   if(upstream.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList){
     const digest=upstream.headers.get('X-Verified-Source-SHA256')||'';
     const type=(upstream.headers.get('Content-Type')||'').toLowerCase();
     if(!/^[a-f0-9]{64}$/.test(digest))return respond(502,origin,'{"error":"missing_source_integrity"}');
     if(url.pathname==='/review/page.png'){
-      if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||''))
+      if(!type.startsWith('image/png')||!/^[a-f0-9]{64}$/.test(upstream.headers.get('X-Page-Image-SHA256')||'')||!/^[A-Za-z0-9_-]{20,4096}\.[A-Za-z0-9_-]{40,128}$/.test(upstream.headers.get('X-Page-Delivery-Challenge')||''))
        return respond(502,origin,'{"error":"invalid_page_integrity"}');
     }else{
      if(!type.startsWith('application/json'))return respond(502,origin,'{"error":"invalid_manifest_type"}');
@@ -376,6 +661,25 @@ export default {
         manifest.approval_enabled!==false)
       return respond(502,origin,'{"error":"manifest_integrity_mismatch"}');
     }
+   }
+   if(upstream.ok&&url.pathname==='/review/page.png')
+    headers.set('X-Page-Delivery-Challenge',upstream.headers.get('X-Page-Delivery-Challenge'));
+   if(approval){
+    if(upstream.ok){
+     const data=await upstream.clone().json().catch(()=>null);
+     if(!(upstream.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')||
+       !data||Object.keys(data).sort().join(',')!=='approved,ok'||data.approved!==true||data.ok!==true)
+      return respond(502,origin,'{"error":"unsafe_approval_response"}');
+    }else if(![400,401,403,409,413,415,503].includes(upstream.status))return respond(502,origin,'{"error":"unsafe_approval_status"}');
+   }
+   if(acknowledgment){
+    if(upstream.ok){
+     const data=await upstream.clone().json().catch(()=>null);
+     if(!(upstream.headers.get('Content-Type')||'').toLowerCase().startsWith('application/json')||
+        !data||typeof data!=='object'||Array.isArray(data)||Object.keys(data).sort().join(',')!=='approved,receipt'||
+        data.approved!==false||typeof data.receipt!=='string'||data.receipt.length<40||data.receipt.length>4096)
+      return respond(502,origin,'{"error":"unsafe_acknowledgment_response"}');
+    }else if(![400,401,403,409,413,415,503].includes(upstream.status))return respond(502,origin,'{"error":"unsafe_acknowledgment_status"}');
    }
    if(providerCheck){
     // The private reviewer performs its normal authorization check first. Only then
@@ -396,7 +700,7 @@ export default {
     };
     const providers=await Promise.all([
      probe('groq','https://api.groq.com/openai/v1/models',env.AI_PROVIDER_API_KEY?{Authorization:'Bearer '+env.AI_PROVIDER_API_KEY}:null),
-     env.AI_HYBRID_ENABLED==='true'?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
+     (env.AI_HYBRID_ENABLED==='true'||env.AI_AUTHORING_PROVIDER==='cloudflare')?probe('cloudflare','https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID||'')+'/ai/models/search',env.AI_CLOUDFLARE_API_TOKEN&&env.AI_CLOUDFLARE_ACCOUNT_ID?{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN}:null):Promise.resolve({provider:'cloudflare',state:'DISABLED',generation_performed:false})
     ]);
     const relayRules=new Set(['CONFIGURATION','RELAY_EDGE_403','RELAY_EDGE_WAF_1020','RELAY_EDGE_CLOUDFLARE','RELAY_EDGE_ACCESS_DENIED','RELAY_NETWORK',...([0,400,401,403,404,405,413,429,500,502,503,504].map(n=>'RELAY_HTTP_'+n))]);
     const relayRule=relayRules.has(unavailable?.rule)?unavailable.rule:'UNCLASSIFIED';

@@ -63,7 +63,7 @@ def build_semantic_lookup(conn, *, owner_uid, env, embed):
         raise ValueError("Semantic index owner mismatch")
     model = env.get("SEMANTIC_INDEX_EMBEDDING_MODEL")
     path = env.get("SEMANTIC_INDEX_INVENTORY_PATH")
-    if model != "gemini-embedding-001" or not path:
+    if model not in ("gemini-embedding-001", "@cf/baai/bge-m3") or not path:
         raise ValueError("Semantic index model or inventory unavailable")
     inventory, digest = load_inventory(path)
     result = reconcile(conn, owner_uid=owner_uid, embedding_model=model,
@@ -73,4 +73,5 @@ def build_semantic_lookup(conn, *, owner_uid, env, embed):
         return None
     return lookup(conn, owner_uid=owner_uid, embedding_model=model,
                   embed=embed, index_ready=True,
+                  inventory_digest=digest,
                   expected_item_ids=set(inventory), expected_stem_hashes=inventory)

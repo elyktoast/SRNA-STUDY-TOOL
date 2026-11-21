@@ -231,3 +231,351 @@ test('PDF review routes still require attestation header and source digest',asyn
  assert.equal(response.status,502);
  assert.equal((await response.json()).error,'unsafe_upstream');
 });
+
+test('authenticated checkpoint readiness uses its exact read-only JSON contract without PDF headers',async()=>{
+ const url='https://gateway.example/generation/checkpoint-readiness';
+ const valid={ready:true,check:'checkpoint_database_readiness',generation_performed:false,database_writes:false};
+ const isolated=value=>({...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  assert.equal(req.method,'GET');
+  return Response.json(value);
+ }})}});
+ const req=()=>new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}});
+ const response=await gateway.fetch(req(),isolated(valid));
+ assert.equal(response.status,200);
+ assert.deepEqual(await response.json(),valid);
+ for(const change of [{ready:false},{check:'other'},{generation_performed:true},{database_writes:true},{extra:'private'}]){
+  const rejected=await gateway.fetch(req(),isolated({...valid,...change}));
+  assert.equal(rejected.status,502);
+  assert.equal((await rejected.json()).error,'unsafe_checkpoint_response');
+ }
+ assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:origin}}),isolated(valid))).status,401);
+ assert.equal((await gateway.fetch(new Request(url,{headers:{Origin:'https://srnastudytool.com',Authorization:'Bearer valid'}}),isolated(valid))).status,403);
+});
+
+test('Cloudflare delivery metadata reaches the container without its provider credential',async()=>{
+ const target={...generationEnv,AI_GENERATION_OPT_IN:'true',AI_PROVIDER_ENDPOINT:'https://api.groq.com/openai/v1/chat/completions',
+  AI_ALLOWED_HOSTS:'api.groq.com',AI_PROVIDER_API_KEY:'groq-secret',AI_GENERATOR_MODEL:'openai/gpt-oss-120b',
+  AI_AUTHORING_PROVIDER:'cloudflare',AI_CLOUDFLARE_MODEL:'@cf/openai/gpt-oss-120b',AI_CLOUDFLARE_API_TOKEN:'cf-private'};
+ let observed;
+ target.REVIEWER_CONTAINER={getByName:()=>({startAndWaitForPorts:async options=>{observed=options.startOptions.envVars;},
+  fetch:async()=>Response.json({passage_count:2,dry_run:true,can_publish:false,database_writes:false})})};
+ const response=await gateway.fetch(new Request(generationUrl,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),target);
+ assert.equal(response.status,200);
+ assert.equal(observed.AI_AUTHORING_PROVIDER,'cloudflare');assert.equal(observed.AI_CLOUDFLARE_MODEL,'@cf/openai/gpt-oss-120b');
+ assert.ok(!Object.hasOwn(observed,'AI_CLOUDFLARE_API_TOKEN'));
+});
+
+
+test('lecture planning forwards authenticated POST to private reviewer without generation',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ let forwarded=false;
+ const safe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+  forwarded=true;
+  assert.equal(req.method,'POST');
+  assert.equal(new URL(req.url).pathname,'/generation/lecture-plan');
+  const body=await req.json();
+  assert.equal(body.lecture_text,'Airway management objectives');
+  return Response.json({jobs:[],count:0,auto_generate:false,auto_publish:false,database_writes:false,paid_calls_requested:false});
+ }})}};
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:JSON.stringify({lecture_text:'Airway management objectives',textbook_id:'book-1'})}),safe);
+ assert.equal(res.status,200);
+ assert.equal((await res.json()).auto_generate,false);
+ assert.equal(forwarded,true);
+});
+test('lecture planning enforces POST CORS and 16KiB limit',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const options=await request(endpoint,{method:'OPTIONS',headers:{'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Content-Type, Authorization'}});
+ assert.equal(options.status,204);
+ const get=await request(endpoint,{method:'GET'});
+ assert.equal(get.status,405);
+ const before=calls.container;
+ const oversized=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'x'.repeat(16385)}),generationEnv);
+ assert.equal(oversized.status,413);
+ assert.equal(calls.container,before);
+});
+
+test('lecture planning rejects upstream generation or publishing claims',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const unsafe={...generationEnv,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json({jobs:[{path:'/generation/one',body:{execute:true}}],count:1,auto_generate:true,auto_publish:false,database_writes:false})})}};
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,Authorization:'Bearer valid','Content-Type':'application/json'},body:'{}'}),unsafe);
+ assert.equal(res.status,502);
+ assert.equal((await res.json()).error,'unsafe_lecture_plan');
+});
+
+test('lecture planning rejects unauthenticated requests before contacting reviewer',async()=>{
+ const endpoint='https://gateway.example/generation/lecture-plan';
+ const before=calls.container;
+ const res=await gateway.fetch(new Request(endpoint,{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'}),generationEnv);
+ assert.equal(res.status,401);
+ assert.equal(calls.container,before);
+});
+
+test('lecture panel is mounted in the AI create workspace, not after a detached node',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/create\.append\(evidencePanel,lecturePanel\)/);
+ assert.doesNotMatch(ui,/evidencePanel\.after\(lecturePanel\)/);
+ assert.match(ui,/storage\.planLectureQuestions\(/);
+});
+
+test('lecture planning UI offers optional user-selected blueprint without requiring domain codes',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/id="sl-lecture-use-objective"/);
+ assert.match(ui,/const blueprint=useObjective\?/);
+ assert.match(ui,/const options=\{textbook_id,count,mode,format,\.\.\.blueprint\}/);
+ assert.match(ui,/otherwise suggest automatically/);
+});
+
+test('staging question bank uses existing authenticated review contract and remains unpublished',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ assert.match(ui,/Approved Question Bank \(staging only\)/);
+ assert.match(ui,/renderDraftCollection\('bank'\)/);
+ assert.match(ui,/storage\.reviewGeneratedDraft\(draft\.draft_id,'approved_for_bank',notes\)/);
+ assert.match(ui,/storage\.reviewGeneratedDraft\(draft\.draft_id,'rejected','Rejected by admin'\)/);
+ assert.match(storage,/generationRequest\('\/generation\/drafts\/'\+draftId\+'\/review'/);
+ assert.match(ui,/result\.published!==false/);
+});
+
+test('staging approval UI blocks unresolved current-index validation issues',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/if\(checked\.issues\.length\)throw Error/);
+ assert.match(ui,/unresolved validation issue\(s\)/);
+});
+
+test('AI workspace has a dedicated approved bank tab sharing the draft collection view',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/data-sl-ai-view="bank" aria-pressed="false">Approved bank/);
+ assert.match(ui,/view==='bank'\|\|view==='drafts'/);
+ assert.match(ui,/renderDraftCollection\(view\)/);
+});
+
+test('lecture PDF/PPTX uploader uses authenticated bounded file-plan route',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const storage=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(ui,/id="sl-lecture-file" accept="\.pdf,\.pptx/);
+ assert.match(ui,/storage\.planLectureFile\(lectureFile,options\)/);
+ assert.match(storage,/generationRequest\('\/generation\/lecture-file-plan'/);
+ assert.match(gateway,/const lectureFile=url\.pathname==='\/generation\/lecture-file-plan'/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
+});
+
+test('lecture PDF preview stays local and invalidates old object URLs',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/URL\.createObjectURL\(file\)/);
+ assert.match(ui,/URL\.revokeObjectURL\(lecturePreviewUrl\)/);
+ assert.match(ui,/Local PDF lecture preview/);
+ assert.match(ui,/lectureInput\.addEventListener\('change'/);
+});
+
+test('file plan responses must pass fail-closed gateway schema validation',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&lectureFile\)/);
+ assert.match(gateway,/unsafe_lecture_file_plan/);
+ assert.match(gateway,/data\.paid_calls_requested!==false/);
+ assert.match(gateway,/extraction\.requires_visual_review!==true/);
+});
+
+test('lecture file upload body is not rejected as a forbidden GET payload',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftWrite&&request\.headers\.get\('Content-Length'\)/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
+});
+
+test('lecture job evidence check uses read-only preflight, never generation',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/check\.textContent='Check indexed evidence'/);
+ assert.match(ui,/storage\.generationPreflight\(job\.body\)/);
+ assert.match(ui,/preflight\.dry_run!==true\|\|preflight\.can_publish!==false\|\|preflight\.database_writes!==false/);
+});
+
+test('lecture evidence handoff retains explicit paid-generation confirmation',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/transfer\.textContent='Use this lecture topic in AI Question Studio'/);
+ assert.match(ui,/checkedEvidence=\{topic:body\.topic,mode:body\.mode,format:body\.format,/);
+ assert.match(ui,/if\(!confirm\('Generate one staging AI question\?/);
+ assert.match(ui,/storage\.generateOne\(request,/);
+});
+
+test('lecture transfer rejects missing exam blueprint classification',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/Lecture question classification is incomplete/);
+ assert.match(ui,/body\.objective\.startsWith\(body\.domain\+'\.'\+body\.section\+'\.'\)/);
+});
+
+test('lecture blueprint objective pattern accepts real NCE objective IDs',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const pattern=ui.match(/!\/(\^\(I\|II\|III\|IV\).*?\$)\/\.test\(body\.objective\)/);
+ assert.ok(pattern,'lecture objective validator must exist');
+ const validator=new RegExp(pattern[1]);
+ assert.equal(validator.test('II.A.3'),true);
+ assert.equal(validator.test('IV.C.12.1'),true);
+ assert.equal(validator.test('II.A'),false);
+ assert.equal(validator.test('II/A/3'),false);
+});
+
+test('lecture planning reports skipped blank pages and rejects malformed preflight counts',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/file_extraction\?\.skipped_blank_pages/);
+ assert.match(ui,/Blank pages\/slides skipped:/);
+ assert.match(ui,/!Number\.isSafeInteger\(preflight\.passage_count\)\|\|preflight\.passage_count<0/);
+});
+
+
+test('lecture planning accepts manually entered indexed textbook ID',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/textbook_id=genEl\('sl-gen-book-select'\)\.value\|\|genEl\('sl-gen-book'\)\.value\.trim\(\)/);
+ assert.match(ui,/researchBookSelect\.addEventListener\('change'/);
+});
+
+
+test('generated question auto-saves unpublished draft and preserves manual retry',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/const saved=await storage\.saveGeneratedDraft\(result\.save_payload\)/);
+ assert.match(ui,/result\.draft_id=saved\.draft_id/);
+ assert.match(ui,/Use Save unpublished draft to retry/);
+ assert.match(ui,/generatedForReview\.result\.draft_id=result\.draft_id/);
+ assert.match(ui,/genEl\('sl-save-generated'\)\.disabled=!!result\.draft_id\|\|!result\.save_payload/);
+});
+
+
+test('lecture uploads allow 25 MiB files with base64 transport headroom',()=>{
+ const adapter=readFileSync(new URL('../equipment/assets/source-material-staging-storage.js',import.meta.url),'utf8');
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(adapter,/file\.size>25\*1024\*1024/);
+ assert.match(ui,/max 25 MB/);
+ assert.match(gateway,/lectureFile\?36\*1024\*1024/);
+});
+
+
+test('bulk draft review requires confirmation and per-draft validation; removal preserves audit history',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
+ assert.match(ui,/Select all reviewable drafts/);
+ assert.match(ui,/Approve selected to bank/);
+ assert.match(ui,/Remove selected/);
+ assert.match(ui,/await storage\.revalidateGeneratedDraft\(id\)/);
+ assert.match(ui,/await storage\.reviewGeneratedDraft\(id,status,notes\)/);
+ assert.match(ui,/Records remain in audit history/);
+ assert.match(ui,/response\.status!==status\|\|response\.published!==false/);
+});
+
+
+test('staging admin initializes source workspace config without enabling production',()=>{
+ const ui=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
+ assert.match(ui,/if\(location\.hostname!=='staging\.srnastudytool\.com'\)throw Error\('Staging source workspace is disabled on this page\.'\)/);
+ assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\)window\.MBU_SOURCE_LIBRARY_STAGING=Object\.freeze\(\{enabled:true,apiUrl:'https:\/\/source-library-staging\.srnastudytool\.com'\}\)/);
+ assert.match(ui,/if\(!window\.MBU_SOURCE_LIBRARY_STAGING\.enabled\)throw Error\('Staging source workspace is disabled by configuration\.'\)/);
+});
+
+
+test('lecture file planning bypasses manifest-only upstream approval header guard',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList&&upstream\.headers\.get\('X-Review-Approval-Enabled'\)!=='false'/);
+});
+
+
+test('lecture file planning bypasses review-manifest source integrity guard',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&!acknowledgment&&!approval&&!generation&&!generateOne&&!lecturePlan&&!lectureFile&&!draftRead&&!draftWrite&&!providerCheck&&!checkpointCheck&&!indexCheck&&!textbookList\)/);
+ assert.match(gateway,/if\(!\/\^\[a-f0-9\]\{64\}\$\/\.test\(digest\)\)return respond\(502,origin,'\{"error":"missing_source_integrity"\}'\)/);
+});
+
+test('page delivery challenge is forwarded only for verified successful PNG',()=>{
+ const gateway=readFileSync(new URL('../workers/source-library-staging/reviewer-gateway/src/index.js',import.meta.url),'utf8');
+ assert.match(gateway,/if\(upstream\.ok&&url\.pathname==='\/review\/page\.png'\)/);
+ assert.match(gateway,/headers\.set\('X-Page-Delivery-Challenge',upstream\.headers\.get\('X-Page-Delivery-Challenge'\)\)/);
+ assert.doesNotMatch(gateway,/for\(const name of \['Content-Type','X-Verified-Source-SHA256','X-Page-Image-SHA256','X-Page-Delivery-Challenge'\]\)/);
+});
+
+
+test('semantic readiness forwards authenticated read-only metadata without PDF headers',async()=>{
+ const url='https://gateway.example/generation/index-readiness';
+ const valid={ready:true,inventory_digest:'a'.repeat(64),expected_count:9000,indexed_count:9000,missing_count:0,unexpected_count:0,stale_count:0};
+ const partial={...valid,ready:false,indexed_count:128,missing_count:8872};
+ for(const value of [valid,partial]){
+  let reads=0;
+  const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{
+   reads++;assert.equal(req.method,'GET');assert.equal(new URL(req.url).pathname,'/generation/index-readiness');
+   assert.equal(req.headers.get('Authorization'),'Bearer valid');return Response.json(value);
+  }})}};
+  const response=await gateway.fetch(new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+  assert.equal(response.status,200);assert.deepEqual(await response.json(),value);assert.equal(reads,1);
+ }
+});
+
+test('semantic readiness rejects inconsistent, private, or malformed success payloads',async()=>{
+ const url='https://gateway.example/generation/index-readiness';
+ const valid={ready:true,inventory_digest:'a'.repeat(64),expected_count:9000,indexed_count:9000,missing_count:0,unexpected_count:0,stale_count:0};
+ const malformed=[null,[],{...valid,extra:'private'},{...valid,inventory_digest:'invalid'},
+  {...valid,expected_count:0},{...valid,indexed_count:9001},{...valid,missing_count:1},
+  {...valid,ready:false},{...valid,ready:'true'},{...valid,stale_count:-1},
+  {...valid,indexed_count:'9000'},{...valid,expected_count:10001,indexed_count:10001},
+  {...valid,ready:false,indexed_count:8000,missing_count:1}];
+ for(const value of malformed){
+  const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async()=>Response.json(value)})}};
+  const response=await gateway.fetch(new Request(url,{headers:{Origin:origin,Authorization:'Bearer valid'}}),isolated);
+  assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'unsafe_index_readiness_response'});
+ }
+});
+
+test('semantic readiness rejects unsafe requests before starting the container',async()=>{
+ const url='https://gateway.example/generation/index-readiness';let starts=0;
+ const isolated={...env,REVIEWER_CONTAINER:{getByName:()=>{starts++;throw Error('must not start');}}};
+ for(const [target,method,headers,status] of [
+  [url,'GET',{Origin:origin},401],
+  [url,'GET',{Origin:'https://srnastudytool.com',Authorization:'Bearer valid'},403],
+  [url+'?unsafe=1','GET',{Origin:origin,Authorization:'Bearer valid'},400],
+  [url,'POST',{Origin:origin,Authorization:'Bearer valid'},405],
+ ])assert.equal((await gateway.fetch(new Request(target,{method,headers}),isolated)).status,status);
+ const options=await gateway.fetch(new Request(url,{method:'OPTIONS',headers:{Origin:origin,
+  'Access-Control-Request-Method':'GET','Access-Control-Request-Headers':'Authorization'}}),isolated);
+ assert.equal(options.status,204);assert.equal(starts,0);
+});
+
+test('missing option review is authenticated POST only and rejects question generation or publication claims',async()=>{
+ const endpoint=draftListUrl+'/'+draftId+'/complete-options';let forwarded=0;
+ const result={draft_id:draftId,published:false,can_publish:false,question_modified:false,generation_performed:false,rewrite_performed:false,
+  clinical_review_required:true,database_writes:true,paid_review_performed:true,automated_checks_passed:true,option_review_status:'pass'};
+ const configured=value=>({...env,REVIEWER_CONTAINER:{getByName:()=>({startAndWaitForPorts:async()=>{},fetch:async req=>{forwarded++;assert.equal(req.method,'POST');return Response.json(value);}})}});
+ const make=(method='POST',headers={})=>new Request(endpoint,{method,headers:{Origin:origin,Authorization:'Bearer valid',...(method==='POST'?{'Content-Type':'application/json'}:{}),...headers},...(method==='POST'?{body:JSON.stringify({confirm_paid_calls:true,expected_updated_at:'version'})}:{})});
+ assert.equal((await gateway.fetch(make(),configured(result))).status,200);
+ for(const change of [{published:true},{generation_performed:true},{rewrite_performed:true},{question_modified:true},{clinical_review_required:false},{automated_checks_passed:true,option_review_status:'pending'}]){
+  assert.equal((await gateway.fetch(make(),configured({...result,...change}))).status,502);
+ }
+ const before=forwarded;
+ assert.equal((await gateway.fetch(make('GET'),configured(result))).status,405);
+ assert.equal((await gateway.fetch(make('POST',{Origin:'https://srnastudytool.com'}),configured(result))).status,403);
+ assert.equal((await gateway.fetch(make('POST',{Authorization:''}),configured(result))).status,401);
+ assert.equal(forwarded,before);
+ const preflight=await gateway.fetch(new Request(endpoint,{method:'OPTIONS',headers:{Origin:origin,'Access-Control-Request-Method':'POST','Access-Control-Request-Headers':'Authorization, Content-Type'}}),configured(result));
+ assert.equal(preflight.status,204);assert.equal(preflight.headers.get('Access-Control-Allow-Methods'),'POST');
+});
+
+
+// The deployment workaround must retry only the same read, with a finite budget.
+test('Wrangler uploaded-version retry is bounded, read-only and idempotent',async()=>{
+ const {patchVersionReadback}=await import('../workers/source-library-staging/reviewer-gateway/scripts/patch-wrangler-version-readback.mjs');
+ const source=`async function fetchUploadedVersion(config, accountId, scriptName, versionId) {
+\tfor (let attempt = 0; attempt < 5; attempt++) try {
+\t\treturn await fetchResult$1(config, \`/accounts/\${accountId}/workers/scripts/\${scriptName}/versions/\${versionId}\`);
+\t} catch (error) {
+\t\tif (!isUploadedVersionNotReadyError(error) || attempt === 4) throw error;
+\t\tawait (0, node_timers_promises.setTimeout)(500);
+\t}
+\tthrow new Error("Unable to fetch uploaded Worker version");
+}`;
+ const patched=patchVersionReadback(source);
+ assert.equal(patchVersionReadback(patched),patched);
+ assert.throws(()=>patchVersionReadback('new unknown upstream implementation'));
+ for(const mode of ['becomes-visible','not-ready','forbidden']){
+  const paths=[],delays=[],failure=Object.assign(new Error('Unavailable'),{code:mode==='forbidden'?10000:100146});
+  const read=async(_config,path)=>{paths.push(path);if(mode==='becomes-visible'&&paths.length===3)return {id:'same-version'};throw failure;};
+  const fn=new Function('fetchResult$1','node_timers_promises','isUploadedVersionNotReadyError',patched+'; return fetchUploadedVersion;')(read,{setTimeout:async ms=>delays.push(ms)},e=>e.code===100146);
+  if(mode==='becomes-visible')assert.deepEqual(await fn({},'account','staging-worker','same-version'),{id:'same-version'});
+  else await assert.rejects(fn({},'account','staging-worker','same-version'),e=>e===failure);
+  assert.equal(paths.length,mode==='forbidden'?1:mode==='not-ready'?4:3);
+  assert.deepEqual(delays,mode==='forbidden'?[]:mode==='not-ready'?[10000,20000,30000]:[10000,20000]);
+  assert.ok(paths.every(path=>path==='/accounts/account/workers/scripts/staging-worker/versions/same-version'));
+ }
+});

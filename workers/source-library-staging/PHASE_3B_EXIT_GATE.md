@@ -136,3 +136,37 @@ Source audit confirms `src/index.js` currently serves the **whole PDF** via auth
 Required before enabling approval: a trusted backend fetches the immutable R2 PDF, verifies the current source SHA-256/ETag and owner scope, renders the requested physical PDF page server-side, hashes the actual rendered image, authorizes the live reviewer and private role, returns the page image, and registers a one-time nonce bound to the verified source, reviewer, physical page, and image hash. Issue the signed receipt only after successful image delivery; verify the receipt and atomically consume its nonce with approval. Test replacement races, revoked sessions/roles, cross-owner access, replay, expiry, malformed inputs, and concurrent revocation/import. Browser display does not establish human attention; reviewer must explicitly attest inspection.
 
 Do not deploy a receipt issuer that trusts client-provided page-image bytes, source hash, or PDF page number without server verification. Keep approvals disabled until the trusted backend and privileged DB connection are implemented and tested.
+
+
+## Inspection acknowledgment implementation checkpoint (2026-11-14)
+
+The staging-only Python service now has a short-lived HMAC image-delivery
+challenge and an explicit owner/admin acknowledgment exchange. Both are
+bound to the immutable source SHA-256, owner, reviewer, R2 key, physical PDF
+page and rendered PNG digest. The acknowledgment service delegates nonce
+registration to the existing protected database-backed receipt service.
+This is **library-level code only**; it is NOT connected to HTTP, deployed,
+or enabled in the public gateway.
+
+**Security and operational gates still open:**
+1. The authenticated GET image handler must issue a challenge only with the
+   exact verified image response; never accept a browser-provided image hash
+   or page identity as authoritative.
+2. The POST acknowledgment handler must independently reload and re-render
+   the source from trusted R2, reauthenticate the owner/admin, and require an
+   explicit human inspection attestation. A challenge indicates an image was
+   prepared for delivery, **not** proof of human visual attention.
+3. Add a database-backed **one-time challenge consumption** or an equivalent
+   atomic replay guard before exposing acknowledgment to the gateway. A
+   challenge can currently be exchanged more than once within its TTL,
+   producing distinct one-time approval receipts; the receipt nonce guard
+   alone does not prevent challenge replay.
+4. Test real browser preflight/CORS, session revocation, concurrent challenge
+   consumption, expired challenges, source replacement, and protected
+   approval transactions in disposable staging before enabling routes.
+5. Obtain explicit authorization for the seven Flood protected approval
+   writes and subsequent import. Never interpret this implementation or
+   passing unit tests as permission to approve or import automatically.
+
+No staging database approvals, textbook imports, or production writes are
+performed by this checkpoint.

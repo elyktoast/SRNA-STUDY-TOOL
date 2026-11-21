@@ -31,6 +31,9 @@ def check(item, trusted_passages):
             return [{"rule_id": "R-7.5", "message": "Two distinct near-miss regions required"}]
         required = {"correct_region", "near_miss:0", "near_miss:1"}
     issues = []
+    citations = item.get("evidence")
+    cited_ids = {e.get("passage_id") for e in citations
+                 if isinstance(e, dict) and isinstance(e.get("passage_id"), str)} if isinstance(citations, list) else set()
     if set(mapping) != required:
         issues.append({"rule_id": "R-12.4", "message": "Evidence required for each component"})
     for key in required:
@@ -43,6 +46,8 @@ def check(item, trusted_passages):
             not isinstance(pid, str) or pid not in indexed for pid in refs
         ):
             issues.append({"rule_id": "R-12.4", "message": "Unresolved evidence: " + key})
+        if isinstance(refs, list) and any(not isinstance(pid, str) or pid not in cited_ids for pid in refs):
+            issues.append({"rule_id": "R-12.4", "message": "Component evidence absent from item citations: " + key})
         explanation = entry.get("explanation")
         if not isinstance(explanation, str) or not explanation.strip():
             issues.append({"rule_id": "R-12.4", "message": "Missing justification: " + key})

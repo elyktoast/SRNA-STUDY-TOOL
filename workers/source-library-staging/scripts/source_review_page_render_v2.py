@@ -43,3 +43,28 @@ def render_verified_pdf_page(pdf_bytes, *, expected_source_sha256, pdf_page, sca
             raise ValueError("Rendered page exceeds pixel budget")
         png = pixmap.tobytes("png")
     return png, hashlib.sha256(png).hexdigest()
+
+
+def render_verified_pdf_file_page(verified_pdf_path, *, pdf_page, scale=1.5):
+    """Render from a file already verified by verified_staging_pdf_file.
+
+    This path is trusted only while the verified file context is active.
+    """
+    import fitz
+    if type(pdf_page) is not int or pdf_page < 1:
+        raise ValueError("Invalid physical PDF page")
+    if type(scale) not in (int, float) or not 1 <= scale <= 2:
+        raise ValueError("Invalid render scale")
+    with fitz.open(verified_pdf_path) as document:
+        if document.needs_pass or pdf_page > len(document):
+            raise ValueError("Encrypted PDF or page outside source")
+        page = document[pdf_page - 1]
+        width = round(page.rect.width * scale)
+        height = round(page.rect.height * scale)
+        if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
+            raise ValueError("Page exceeds render budget")
+        pixmap = page.get_pixmap(matrix=fitz.Matrix(scale, scale), alpha=False)
+        if pixmap.width * pixmap.height > MAX_PIXELS:
+            raise ValueError("Rendered page exceeds pixel budget")
+        png = pixmap.tobytes("png")
+    return png, hashlib.sha256(png).hexdigest()

@@ -4,19 +4,23 @@ from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from item_draft_storage_v2 import save, review, list_drafts, get_draft
+from test_item_draft_review_contract_v2 import passed_screening
 
 OWNER="c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK="2a589498-aaa4-410f-b51a-00d3ab99eafd"
 DRAFT="1c05897c-16e8-4d09-9dc5-cf44ad9a4f9d"
 
 class Cursor:
-    def __init__(self, row=None, rows=None):
+    def __init__(self, row=None, rows=None, records=None):
         self.row,self.rows=row,rows or []
+        self.records = list(records) if records is not None else None
+        self.statements = []
         self.sql,self.params=None,None
     def execute(self, sql, params):
         self.sql,self.params=sql,params
+        self.statements.append(sql)
     def fetchone(self):
-        return self.row
+        return self.records.pop(0) if self.records else self.row
     def fetchall(self):
         return self.rows
     def __enter__(self):
@@ -37,6 +41,18 @@ def payload():
                 evidence=[{"passage_id":"p1","textbook_id":BOOK}])
 
 class StorageTests(unittest.TestCase):
+    def test_failed_quality_status_is_persisted_with_unchanged_evidence(self):
+        cur=Cursor(row=(DRAFT,))
+        data=payload()
+        data['screening']={'stages':{'editorial_quality':{'status':'flag'}}}
+        result=save(Conn(cur),data)
+        self.assertEqual(result['status'],'needs_revision')
+        self.assertFalse(result['published'])
+        # This value must reach INSERT, rather than exist only in its response.
+        self.assertEqual(cur.params[-4],'needs_revision')
+        self.assertIn('evidence_json,status)',cur.sql)
+        self.assertEqual(cur.params[-3:-1],(BOOK,OWNER))
+
     def test_save_scopes_textbook_to_owner(self):
         cur=Cursor(row=(DRAFT,))
         result=save(Conn(cur),payload())
@@ -45,20 +61,33 @@ class StorageTests(unittest.TestCase):
         self.assertIn("t.owner_uid=%s::uuid",cur.sql)
         self.assertEqual(cur.params[-3:-1],(BOOK,OWNER))
         self.assertIn("source_library_staging.passages p",cur.sql)
-        self.assertIn("p.textbook_id = t.id",cur.sql)
+        self.assertIn("p.textbook_id::text = ev->>'textbook_id'",cur.sql)
+        self.assertIn("source.owner_uid = t.owner_uid",cur.sql)
+        self.assertIn("source.status='ready'",cur.sql)
 
     def test_save_rejects_unowned_textbook(self):
         with self.assertRaises(ValueError):
             save(Conn(Cursor(row=None)),payload())
 
     def test_review_requires_owner_and_unreviewed_status(self):
-        cur=Cursor(row=(DRAFT,))
+        cur=Cursor(records=[("MC",passed_screening()),(DRAFT,)])
         result=review(Conn(cur),owner_uid=OWNER,reviewer_uid=OWNER,
                       draft_id=DRAFT,status="approved_for_bank",
                       notes="Evidence reviewed")
         self.assertFalse(result["published"])
         self.assertIn("d.status in ('pending_review','needs_revision')",cur.sql)
         self.assertEqual(cur.params[-2:],(OWNER,OWNER))
+        self.assertIn("for update of d",cur.statements[0])
+
+    def test_direct_storage_cannot_approve_failed_pending_or_missing_screening(self):
+        for value in ({}, None, {"stages":{"explanation_evidence":{"status":"flag"}}},
+                      {"stages":{"duplicates":{"status":"pending"}}}):
+            cur=Cursor(row=("MC",value))
+            with self.assertRaisesRegex(ValueError,"verification must pass"):
+                review(Conn(cur),owner_uid=OWNER,reviewer_uid=OWNER,draft_id=DRAFT,
+                       status="approved_for_bank",notes="Citation structure checked")
+            self.assertEqual(len(cur.statements),1)
+            self.assertFalse(any("update source_library" in sql for sql in cur.statements))
 
     def test_get_draft_returns_full_private_record(self):
         now = datetime(2026,11,2,tzinfo=timezone.utc)
@@ -80,12 +109,23 @@ class StorageTests(unittest.TestCase):
 
     def test_list_is_owner_scoped_and_bounded(self):
         cur=Cursor(rows=[(DRAFT,"airway","NCE","MC","pending_review",
-                         datetime(2026,11,2,tzinfo=timezone.utc),BOOK)])
+                         datetime(2026,11,2,tzinfo=timezone.utc),BOOK,{})])
         rows=list_drafts(Conn(cur),owner_uid=OWNER)
         self.assertEqual(rows[0]["draft_id"],DRAFT)
+        self.assertFalse(rows[0]["automated_checks_passed"])
+        self.assertNotIn("screening",rows[0])
         self.assertEqual(cur.params,(OWNER,OWNER,50))
         with self.assertRaises(ValueError):
             list_drafts(Conn(cur),owner_uid=OWNER,limit=101)
+
+    def test_list_readiness_uses_the_same_gate_as_approval(self):
+        for pending in (False,True):
+            screening=passed_screening()
+            if pending: screening['stages']['options_only']['status']='pending'
+            cur=Cursor(rows=[(DRAFT,'airway','NCE','MC','pending_review',
+                             datetime(2026,11,2,tzinfo=timezone.utc),BOOK,screening)])
+            result=list_drafts(Conn(cur),owner_uid=OWNER)[0]
+            self.assertEqual(result['automated_checks_passed'],not pending)
 
 if __name__=="__main__":
     unittest.main()

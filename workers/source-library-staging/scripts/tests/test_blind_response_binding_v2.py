@@ -11,7 +11,7 @@ class BlindResponseBindingTests(unittest.TestCase):
         result=_bind_blind_response(self.request,{'key':['B']})
         self.assertEqual(result,{'item_id':'trusted-id','key':['B']})
         issues=compare({**self.request,'key':['A']},result)
-        self.assertEqual(issues,[{'rule_id':'R-12.1','message':'Blind selection disagrees'}])
+        self.assertEqual(issues,[{'rule_id':'R-12.1','message':'Blind selection disagrees','expected_key':['A'],'independent_key':['B']}])
         self.assertEqual(compare({**self.request,'key':['B']},result),[])
     def test_wrong_explicit_id_and_invalid_choices_are_never_normalized(self):
         for response in ({'item_id':'other-question','key':['A']},{'key':'A'},{'key':['A','A']},{'key':['C']},{}):
@@ -28,6 +28,20 @@ class BlindResponseBindingTests(unittest.TestCase):
         self.assertNotIn('item_id',model_request);self.assertNotIn('key',model_request);self.assertNotIn('rationale',model_request)
         self.assertEqual(payload['item_id'],'trusted-id')
         self.assertEqual(_bind_blind_response(self.request,response),{'item_id':'trusted-id','key':['A']})
+    def test_disagreement_diagnostics_preserve_multiple_answers_but_never_untrusted_text(self):
+        item={**self.request,'key':['A']}
+        for chosen in ([],['B'],['A','B']):
+            result=compare(item,{'item_id':'trusted-id','key':chosen})
+            self.assertEqual(result[0]['expected_key'],['A'])
+            self.assertEqual(result[0]['independent_key'],chosen)
+            self.assertEqual(result[0]['rule_id'],'R-12.1')
+        for chosen in (['A','A'],['C'],['private text'],'B',None):
+            result=compare(item,{'item_id':'trusted-id','key':chosen})
+            self.assertNotIn('independent_key',result[0])
+            self.assertNotIn('private text',json.dumps(result))
+        self.assertNotIn('independent_key',compare(item,{'item_id':'other','key':['B']})[0])
+        self.assertNotIn('independent_key',compare({**item,'format':'MS'},{'item_id':'trusted-id','key':['B']})[0])
+
     def test_other_formats_keep_typed_answer_and_trusted_identity(self):
         for kind,field,value in [('SA','numeric_answer',3.5),('DD','pairs',{'L1':'R2'}),('HS','region','top')]:
             with self.subTest(kind=kind):

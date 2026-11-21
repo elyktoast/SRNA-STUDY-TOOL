@@ -33,6 +33,27 @@ class EvidenceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 build_evidence(object(), OWNER, topic)
 
+    def test_learning_objective_search_omits_only_teaching_prefix_and_preserves_scope(self):
+        topic='Explain the relationship between functional residual capacity and oxygen reserve during apnea.'
+        query='functional residual capacity and oxygen reserve during apnea.'
+        book='8343459f-0595-4375-8ac6-7700e6792abe'
+        section='8343459f-0595-4375-8ac6-7700e6792abf'
+        conn=object()
+        with patch('build_question_evidence.search',return_value=[]) as search:
+            result=build_evidence(conn,OWNER,topic,textbook_id=book,section_id=section,
+                                  include_subsections=True,page_start=10,page_end=20,limit=3)
+        search.assert_called_once_with(conn,query,OWNER,limit=3,textbook_id=book,section_id=section,
+                                       include_subsections=True,page_start=10,page_end=20)
+        self.assertEqual(result['topic'],topic)
+        self.assertFalse(result['can_generate_grounded_questions'])
+
+    def test_topic_terms_and_relations_are_not_silently_broadened(self):
+        for topic in ('functional residual capacity and oxygen reserve during apnea',
+                      'respiratory physiology','unrecognized concept xyz'):
+            with patch('build_question_evidence.search',return_value=[]) as search:
+                build_evidence(object(),OWNER,topic)
+            self.assertEqual(search.call_args.args[1],topic)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -84,6 +84,8 @@ def check(item):
                 if option.get("id") in key:
                     if isinstance(pattern, str) and pattern.strip().lower() in ("correct", "incorrect"):
                         fail("R-6.3", "Key error pattern must not contain a correctness label")
+                elif not isinstance(pattern, str) or not pattern.strip():
+                    fail("R-6.3", "Each distractor needs a specific learner-error description")
                 elif isinstance(pattern, str) and (pattern.strip().lower().startswith(("incorrect:", "correct:")) or pattern.strip().lower() in ("correct", "incorrect")):
                     fail("R-6.3", "Distractor error pattern must describe the misconception, not its correctness")
         # Every answer choice must have a substantive, individually addressable
@@ -108,8 +110,25 @@ def check(item):
             fail("R-7.3", "Numeric entry cannot have choices")
     elif fmt == "DD":
         dd = item.get("dd")
-        if not isinstance(dd, dict) or not all(isinstance(dd.get(k), list) and len(dd[k]) == 4 for k in ("left", "right")) or not isinstance(dd.get("pairs"), dict) or len(dd["pairs"]) != 4 or any(not isinstance(k, str) or not isinstance(v, str) for k, v in dd["pairs"].items()) or len(set(v for v in dd["pairs"].values() if isinstance(v, str))) != 4:
+        def matching_ids(entries):
+            if not isinstance(entries, list) or len(entries) != 4:
+                return None
+            ids, labels = [], []
+            for entry in entries:
+                identifier = entry if isinstance(entry, str) else entry.get("id") if isinstance(entry, dict) else None
+                label = entry if isinstance(entry, str) else entry.get("text") if isinstance(entry, dict) else None
+                if not isinstance(identifier, str) or not identifier.strip() or not isinstance(label, str) or not label.strip():
+                    return None
+                ids.append(identifier)
+                labels.append(" ".join(label.split()).casefold())
+            return set(ids) if len(set(ids)) == 4 and len(set(labels)) == 4 else None
+        left = matching_ids(dd.get("left")) if isinstance(dd, dict) else None
+        right = matching_ids(dd.get("right")) if isinstance(dd, dict) else None
+        pairs = dd.get("pairs") if isinstance(dd, dict) else None
+        if not left or not right or not isinstance(pairs, dict) or any(not isinstance(k, str) or not isinstance(v, str) for k, v in pairs.items()) or set(pairs) != left or set(v for v in pairs.values() if isinstance(v, str)) != right:
             fail("R-7.4.1", "Four unique one-to-one matches required")
+        if opts not in ([], None):
+            fail("R-7.4.1", "Matching cannot contain multiple-choice options")
     elif fmt == "HS":
         hs = item.get("hs")
         if not isinstance(hs, dict) or any(not hs.get(k) for k in ("figure", "license", "correct_region")) or not isinstance(hs.get("near_miss_regions"), list) or len(hs["near_miss_regions"]) != 2:

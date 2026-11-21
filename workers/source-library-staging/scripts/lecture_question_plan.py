@@ -22,6 +22,12 @@ def normalize_topics(lecture_topics):
         result.append({"title": title.strip(), "lecture_locator": topic.get("lecture_locator"),
                        "objective": topic.get("objective"),
                        "importance": topic.get("importance", "standard")})
+        points = topic.get("learning_points", [])
+        if (not isinstance(points, list) or len(points) > 6
+                or any(not isinstance(p, str) or not 12 <= len(p) <= 180 for p in points)):
+            raise ValueError("Invalid lecture learning points")
+        if points:
+            result[-1]["learning_points"] = list(points)
     if len(result) > 100:
         raise ValueError("Too many lecture concepts")
     return result

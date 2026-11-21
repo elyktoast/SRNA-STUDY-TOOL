@@ -72,7 +72,7 @@ export default {async fetch(request,env){
       !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
       return json({error:'Review queue source mismatch'},409,h);
    const seen=new Set();
-   const categories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   const categories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review','visual_blank_candidate_review']);
    for(const item of queue.pages){
      if(!item||!Number.isSafeInteger(item.pdf_page)||item.pdf_page<1||item.pdf_page>queue.pdf_page_count||
         seen.has(item.pdf_page)||!categories.has(item.review_category)||
@@ -114,7 +114,7 @@ export default {async fetch(request,env){
       !Array.isArray(queue.pages)||queue.pages.length>queue.pdf_page_count)
      return json({error:'Review queue source mismatch'},409,h);
    const seenPages=new Set();
-   const reviewCategories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review']);
+   const reviewCategories=new Set(['ocr_error','image_content_review','short_text_review','blank_candidate_review','visual_blank_candidate_review']);
    for(const page of queue.pages){
      if(!page||!Number.isSafeInteger(page.pdf_page)||page.pdf_page<1||
         page.pdf_page>queue.pdf_page_count||seenPages.has(page.pdf_page)||

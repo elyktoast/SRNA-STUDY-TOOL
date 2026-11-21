@@ -14,6 +14,105 @@ EVIDENCE = {"topic": "airway", "evidence_count": 1,
             "can_generate_grounded_questions": True, "sources": [{"passage_id": "p1", "textbook_id": "00000000-0000-4000-8000-000000000002"}]}
 
 class GenerationCliTests(unittest.TestCase):
+    @patch('item_mc_source_discovery_v2.discover')
+    @patch('run_grounded_generation_v2.make_transport')
+    @patch('run_grounded_generation_v2.build_evidence', return_value=EVIDENCE)
+    def test_source_discovery_opt_in_never_spends_during_preflight(self, evidence, transport, discover):
+        result=execute(object(),ARGS,{'STAGING_ONLY':'true','AI_SOURCE_DISCOVERY_OPT_IN':'true'})
+        self.assertTrue(result['dry_run'])
+        self.assertEqual(result['authoring_preparation']['max_added_passages'],4)
+        transport.assert_not_called();discover.assert_not_called()
+
+    @patch('item_mc_source_discovery_v2.discover')
+    @patch('run_grounded_generation_v2.generate_from_index')
+    @patch('run_grounded_generation_v2.make_adapter')
+    @patch('run_grounded_generation_v2.make_transport')
+    @patch('run_grounded_generation_v2.build_evidence', return_value=EVIDENCE)
+    def test_paid_discovery_passes_bounded_sources_to_full_screening(self,evidence,transport,adapter,generate,discover):
+        args=SimpleNamespace(**{**vars(ARGS),'execute':True,'confirm_paid_calls':True,
+                              'textbook_id':'00000000-0000-4000-8000-000000000002'})
+        extra={**EVIDENCE['sources'][0],'passage_id':'p2'}
+        augmented={**EVIDENCE,'sources':EVIDENCE['sources']+[extra],'evidence_count':2}
+        discover.return_value=(augmented,{'model_calls':1,'passage_ids':['p2']})
+        generate.return_value={'item_id':'draft-1','next_state':'needs_source_review',
+            'source_evidence':{},'item':{'stem':'Synthetic'},'generator_issues':[],
+            'screening':{'can_publish':False}}
+        env={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_SOURCE_DISCOVERY_OPT_IN':'true',
+             'AI_PROVIDER_ENDPOINT':'https://provider.example/v1/chat/completions',
+             'AI_ALLOWED_HOSTS':'provider.example','AI_PROVIDER_API_KEY':'fixture',
+             'AI_GENERATOR_MODEL':'author','STAGING_RECEIPT_SIGNING_SECRET':'x'*48}
+        result=execute(object(),args,env)
+        discover.assert_called_once()
+        self.assertEqual(len(generate.call_args.kwargs['evidence_packet']['sources']),2)
+        self.assertEqual(result['screening']['source_discovery']['model_calls'],1)
+        self.assertEqual(result['passage_count'],2)
+        self.assertEqual(len(EVIDENCE['sources']),1)
+        self.assertFalse(result['can_publish'])
+
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_choice_quality_checks_do_not_replace_special_format_validation(self, evidence):
+        args = SimpleNamespace(**{**vars(ARGS), "format":"SA"})
+        env = {"STAGING_ONLY":"true", "AI_GENERATOR_MODEL":"generator", "AI_REVIEWER_MODEL":"reviewer",
+               "AI_BLIND_REVIEW_OPT_IN":"true", "AI_EXPLANATION_REVIEW_OPT_IN":"true"}
+        result = execute(object(), args, env)
+        self.assertEqual(result["review_readiness"]["board_quality_review"],"disabled")
+        self.assertEqual(result["review_readiness"]["blind_review"],"configured")
+        self.assertEqual(result["review_readiness"]["explanation_review"],"configured")
+
+    @patch("run_grounded_generation_v2.fingerprint", return_value="a"*64)
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_cloudflare_delivery_is_explicit_and_changes_checkpoint_identity(self, evidence, fingerprint):
+        base={"STAGING_ONLY":"true", "AI_GENERATOR_MODEL":"test-model"}
+        cf=execute(object(), ARGS, {**base, "AI_AUTHORING_PROVIDER":"cloudflare", "AI_CLOUDFLARE_MODEL":"@cf/test-model"})
+        self.assertEqual(cf["authoring_provider"], "cloudflare")
+        self.assertEqual(cf["authoring_delivery_model"], "@cf/test-model")
+        self.assertEqual(fingerprint.call_args_list[0].args[0]["authoring_provider"], "cloudflare")
+        with self.assertRaisesRegex(ValueError, "must match"):
+            execute(object(), ARGS, {**base, "AI_AUTHORING_PROVIDER":"cloudflare", "AI_CLOUDFLARE_MODEL":"@cf/other-model"})
+
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.build_evidence", return_value=EVIDENCE)
+    def test_cloudflare_provenance_and_mc_plan_requirement(self, evidence, transport, adapter, generate):
+        args=SimpleNamespace(**{**vars(ARGS), "execute":True, "confirm_paid_calls":True,
+                               "textbook_id":"00000000-0000-4000-8000-000000000002"})
+        env={"STAGING_ONLY":"true", "AI_GENERATION_OPT_IN":"true",
+             "AI_PROVIDER_ENDPOINT":"https://provider.example/v1/chat/completions", "AI_ALLOWED_HOSTS":"provider.example",
+             "AI_PROVIDER_API_KEY":"secret", "AI_GENERATOR_MODEL":"test-model",
+             "AI_AUTHORING_PROVIDER":"cloudflare", "AI_CLOUDFLARE_MODEL":"@cf/test-model",
+             "STAGING_RECEIPT_SIGNING_SECRET":"a"*48}
+        generate.return_value={"item_id":"draft-1", "next_state":"needs_editorial_review", "source_evidence":{},
+            "item":{"item_id":"draft-1","stem":"Synthetic"}, "generator_issues":[], "screening":{"can_publish":False}}
+        result=execute(object(), args, env)
+        self.assertEqual(result["save_payload"]["provider"], "api.cloudflare.com")
+        self.assertEqual(result["save_payload"]["model"], "test-model")
+        author=generate.call_args.args[3]
+        adapter.return_value.return_value={"objective":"III.H.4"}
+        with self.assertRaisesRegex(ValueError, "choice plan incomplete"):
+            author({"step":"concept_card","format":"MC"})
+        adapter.return_value.return_value={"choice_plan":{}}
+        self.assertEqual(author({"step":"concept_card","format":"MC"}), {"choice_plan":{}})
+
+    @patch("run_grounded_generation_v2.generate_from_index")
+    @patch("run_grounded_generation_v2.make_adapter")
+    @patch("run_grounded_generation_v2.make_transport")
+    @patch("run_grounded_generation_v2.recover_completed")
+    @patch("run_grounded_generation_v2.build_evidence",return_value=EVIDENCE)
+    def test_completed_only_never_falls_through_when_missing_stale_or_disabled(self,evidence,recover,transport,adapter,generate):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        args=SimpleNamespace(**{**vars(ARGS),"execute":True,"confirm_paid_calls":True,"resume_completed_only":True,"textbook_id":"00000000-0000-4000-8000-000000000002"})
+        env={"STAGING_ONLY":"true","AI_GENERATION_OPT_IN":"true","AI_GENERATOR_MODEL":"generator","AI_GENERATION_CHECKPOINTS_ENABLED":"true"}
+        recover.return_value=None
+        with self.assertRaises(CompletedGenerationUnavailable):execute(object(),args,env)
+        with self.assertRaises(CompletedGenerationUnavailable):execute(object(),args,{**env,"AI_GENERATION_CHECKPOINTS_ENABLED":"false"})
+        transport.assert_not_called();adapter.assert_not_called();generate.assert_not_called()
+        recover.return_value={"item":{"item_id":"draft-1"},"can_publish":False}
+        result=execute(object(),args,env)
+        self.assertEqual(result["item"]["item_id"],"draft-1")
+        self.assertIn("_checkpoint_key",result)
+        transport.assert_not_called();adapter.assert_not_called();generate.assert_not_called()
+
     def test_rate_wait_buffer_never_exceeds_sixty_seconds_or_adds_more_attempts(self):
         from run_grounded_generation_v2 import _call_with_bounded_rate_wait
         from item_ai_https_transport_v2 import TransportError
@@ -162,8 +261,18 @@ class GenerationCliTests(unittest.TestCase):
         adapter.assert_called_once_with(
             endpoint=env["AI_PROVIDER_ENDPOINT"], api_key="secret",
             model="test-model", transport=transport.return_value,
-            owner_opt_in=True, staging=True)
+            owner_opt_in=True, staging=True, max_output_tokens=8192)
         generate.assert_called_once()
+        # Exercise the callback actually supplied to the pipeline, not only the helper.
+        from item_ai_https_transport_v2 import TransportError
+        author = generate.call_args.args[3]
+        adapter.return_value.side_effect = [TransportError('PROVIDER_RATE_LIMIT', retry_after_seconds=25), {"ok": True}] * 3
+        with patch('time.sleep') as sleep:
+            for step in ('concept_card', 'item_draft', 'rationale'):
+                self.assertEqual(author({"step":step}), {"ok":True})
+        self.assertEqual(adapter.return_value.call_count, 6)
+        self.assertEqual(sleep.call_count, 3)
+        self.assertEqual(sleep.call_args.args, (60,))
         self.assertIsNone(generate.call_args.kwargs["checkpoint"])
         self.assertIsNone(generate.call_args.kwargs["on_checkpoint"])
         self.assertEqual(generate.call_args.kwargs["item_id"], "draft-1")
@@ -247,12 +356,21 @@ class GenerationCliTests(unittest.TestCase):
         adapter.return_value.side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2),{"evidence":[]}]
         with patch('time.sleep') as sleep:
             rewrite(request)
-        sleep.assert_called_once_with(5)
+        sleep.assert_called_once_with(60)
         self.assertEqual(adapter.return_value.call_count,2)
         sent=adapter.return_value.call_args.args[0]
         self.assertNotIn('excerpt',sent['item']['evidence'][0])
         self.assertEqual(sent['trusted_evidence'][0]['passage_id'],'p1')
         self.assertEqual(request['item']['evidence'][0]['excerpt'],'Original quote')
+        with patch.dict(EVIDENCE, {"sources": EVIDENCE["sources"] + [
+                {**EVIDENCE["sources"][0], "passage_id": f"p{i}"} for i in range(2, 8)]}):
+            adapter.return_value.side_effect = None
+            adapter.return_value.return_value = {"evidence": []}
+            rewrite({**request, "item": {**request["item"], "format": "MC"},
+                     "issues": [{"rule_id": "R-2.4"}]})
+        sent = adapter.return_value.call_args.args[0]
+        self.assertEqual([p["passage_id"] for p in sent["trusted_evidence"]],
+                         ["p1", "p2", "p3", "p4", "p5"])
         for error in (TransportError('PROVIDER_TIMEOUT'),TransportError('PROVIDER_RATE_LIMIT'),
                       TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=61)):
             adapter.return_value.reset_mock()
@@ -306,3 +424,31 @@ class GenerationCliTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class DurableAttemptWiringTests(unittest.TestCase):
+    def test_claim_and_rewrite_reservation_precede_provider_and_completion(self):
+        from contextlib import contextmanager
+        from unittest.mock import Mock
+        events=[]
+        args=SimpleNamespace(**{**vars(ARGS),'owner_uid':'00000000-0000-4000-8000-000000000001',
+            'item_id':'00000000-0000-4000-8000-000000000003','textbook_id':'00000000-0000-4000-8000-000000000002',
+            'execute':True,'confirm_paid_calls':True})
+        env={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true','AI_GENERATION_CHECKPOINTS_ENABLED':'true',
+             'AI_REWRITE_OPT_IN':'true','AI_GENERATOR_MODEL':'generator','AI_PROVIDER_ENDPOINT':'https://provider.example/v1/chat/completions',
+             'AI_ALLOWED_HOSTS':'provider.example','STAGING_RECEIPT_SIGNING_SECRET':'x'*48}
+        @contextmanager
+        def admission(*args,**kwargs):
+            events.append('claim');yield;events.append('released')
+        def provider(request):events.append('provider');return {'format':'MC','evidence':[]}
+        def generation(*args,**kwargs):
+            kwargs['rewrite']({'item':{'format':'MC','evidence':[],'distractor_evidence':{}}})
+            return {'item_id':'id','item':{'stem':'Synthetic'},'screening':{},'next_state':'needs_editorial_review','source_evidence':{},'generator_issues':[]}
+        with patch('run_grounded_generation_v2.build_evidence',return_value=EVIDENCE),patch('run_grounded_generation_v2.recover_completed',return_value=None),\
+             patch('run_grounded_generation_v2.load',return_value=None),patch('run_grounded_generation_v2.attempt',side_effect=admission),\
+             patch('run_grounded_generation_v2.make_transport'),patch('run_grounded_generation_v2.make_adapter',return_value=provider),\
+             patch('run_grounded_generation_v2.reserve_rewrite',side_effect=lambda *a,**k:events.append('reserve')),\
+             patch('run_grounded_generation_v2.generate_from_index',side_effect=generation),\
+             patch('run_grounded_generation_v2.complete',side_effect=lambda *a,**k:events.append('checkpoint_completed')),\
+             patch('run_grounded_generation_v2.finish',side_effect=lambda *a,**k:events.append('attempt_completed')):
+            execute(object(),args,env)
+        self.assertEqual(events,['claim','reserve','provider','checkpoint_completed','attempt_completed','released'])

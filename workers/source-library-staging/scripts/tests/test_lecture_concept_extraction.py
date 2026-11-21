@@ -7,6 +7,15 @@ from lecture_concept_extraction import extract
 from lecture_to_question_plan import prepare
 
 class LectureExtractionTests(unittest.TestCase):
+    def test_exported_pdf_date_and_page_counter_do_not_replace_the_full_topic(self):
+        text = "Page 14:\n9/19/25\n14\nQuantitative Monitoring: Electromyography\n• Measures the evoked response"
+        result = extract(text)
+        self.assertEqual([c["title"] for c in result["concepts"]],
+                         ["Quantitative Monitoring: Electromyography"])
+        self.assertEqual(result["concepts"][0]["lecture_locator"],"slide/page 14")
+        ratio = extract("Page 2:\n1/4 Train-of-four response")
+        self.assertEqual(ratio["concepts"][0]["title"],"1/4 Train-of-four response")
+
     def test_headings_and_objectives(self):
         text = "Slide 2\n# Airway management\nObjectives:\n- Describe airway assessment\n- Identify aspiration risks\n\n# Airway management"
         result = extract(text)
@@ -14,6 +23,12 @@ class LectureExtractionTests(unittest.TestCase):
                          ["Airway management", "Describe airway assessment", "Identify aspiration risks"])
         self.assertEqual(result["concepts"][0]["lecture_locator"], "slide/page 2")
         self.assertTrue(result["requires_review"])
+    def test_file_planner_page_prefix_with_colon(self):
+        result = extract("Page 1:\nBREATHING CIRCUITS, HUMIDIFICATION/FILTRATION AND CLOSED CIRCUIT\nAdditional notes")
+        self.assertEqual(len(result["concepts"]), 1)
+        self.assertEqual(result["concepts"][0]["lecture_locator"], "slide/page 1")
+        self.assertIn("BREATHING CIRCUITS", result["concepts"][0]["title"])
+
     def test_plain_text_does_not_invent_concepts(self):
         self.assertEqual(extract("This is a narrative lecture with no explicit headings.")["concepts"], [])
     def test_private_retrieval_plans_only_grounded_concepts(self):
@@ -28,6 +43,26 @@ class LectureExtractionTests(unittest.TestCase):
     def test_invalid_input_rejected(self):
         with self.assertRaises(ValueError):
             extract("")
+
+    def test_markdown_and_plain_objective_headers_never_become_clinical_topics(self):
+        title='Compare intrapulmonary shunt and alveolar dead space in terms of alveolar ventilation and pulmonary perfusion.'
+        for heading in ('# Learning objectives','## Learning Objectives:','Learning objectives','Objectives:'):
+            for gap in ('\n','\n\n'):
+                with self.subTest(heading=heading,gap=gap):
+                    result=extract(heading+gap+'- '+title)
+                    self.assertEqual([c['title'] for c in result['concepts']],[title])
+                    self.assertEqual(result['concepts'][0]['importance'],'learning_objective')
+        result=extract('# Learning objectives\n- Identify aspiration risks\n\nNarrative explanation.\n- Unrelated later bullet\n# Respiratory mechanics')
+        self.assertEqual([c['title'] for c in result['concepts']],['Identify aspiration risks','Respiratory mechanics'])
+
+    def test_generic_objective_heading_is_not_retrieved_or_allocated(self):
+        title='Compare shunt and dead space'
+        with patch('lecture_to_question_plan.build_evidence') as lookup:
+            lookup.return_value={'sources':[{'passage_id':'p','textbook_id':'t','excerpt':'Respiratory source'}]}
+            result=prepare(None,'owner','# Learning objectives\n\n- '+title,count=1,prefer_learning_objectives=True)
+        self.assertEqual([c.args[2] for c in lookup.call_args_list],[title])
+        self.assertEqual(result['topics'][0]['title'],title)
+        self.assertEqual(result['topics'][0]['question_count'],1)
 
 if __name__ == "__main__":
     unittest.main()
