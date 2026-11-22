@@ -1,0 +1,86 @@
+name: Recover one held staging MC option review
+on:
+  push:
+    branches: [verify/mc-held-recovery-20261122]
+permissions:
+  contents: read
+concurrency:
+  group: accepted-mc-staging-benchmark
+  cancel-in-progress: false
+jobs:
+  recover:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[mc-held-recovery]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify campaign membership and complete missing option review
+        env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {stagingFetch} from './scripts/staging-http-request.mjs';
+
+          const project = 'https://xqyasyambwdyhsjkftqu.supabase.co';
+          const gateway = 'https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
+          const {STAGING_SUPABASE_ANON_KEY: apikey, STAGING_TEST_ADMIN_EMAIL: email,
+            STAGING_TEST_ADMIN_PASSWORD: password, SRNA_STAGING_REVIEWER_ACCESS_TOKEN: accessToken} = process.env;
+          async function read(url, headers, body) {
+            const response = await stagingFetch(url, {headers, redirect: 'error', signal: AbortSignal.timeout(105000),
+              ...(body ? {method: 'POST', body: JSON.stringify(body)} : {})});
+            const result = await response.json().catch(() => null);
+            return {ok: response.ok, status: response.status, result};
+          }
+          let token = accessToken;
+          if (email && password) {
+            const login = await read(project + '/auth/v1/token?grant_type=password',
+              {apikey, 'Content-Type': 'application/json'}, {email, password});
+            assert.ok(login.ok, 'Staging sign-in failed');
+            token = login.result.access_token;
+          }
+          assert.ok(token, 'Staging sign-in required');
+          const identity = await read(project + '/auth/v1/user', {apikey, Authorization: 'Bearer ' + token});
+          assert.ok(identity.ok && identity.result.id === 'c003287a-10ce-4cc9-926e-ef7c3a162a26',
+            'Unexpected staging account');
+          const headers = {Origin: 'https://staging.srnastudytool.com', Authorization: 'Bearer ' + token,
+            'Content-Type': 'application/json'};
+          const call = (path, body) => read(gateway + path, headers, body);
+          const status = await call('/generation/mc-batch', {action: 'status'});
+          const batch = status.result?.batch;
+          assert.ok(status.ok && batch?.id === 'b323fbe5-bc83-473a-b782-92b642236578' &&
+            batch.status === 'complete' && batch.reason === 'attempt_budget_exhausted' &&
+            batch.acceptedCount === 3 && batch.items.length === 50, 'Benchmark batch changed');
+          const item = batch.items[40];
+          assert.ok(item?.id === '354ee2b3-1acb-47cf-97a0-343d0e41acc9' && item.status === 'held' &&
+            item.draftId === '3e716691-0ed1-4190-b33e-f2c1bd32d1f4', 'Campaign item is no longer held');
+          const path = '/generation/drafts/' + item.draftId;
+          const before = await call(path);
+          assert.ok(before.ok && before.result?.question?.item_id === item.id &&
+            before.result?.status === 'needs_revision', 'Saved draft changed');
+          if (before.result.can_complete_option_review !== true) {
+            console.log(JSON.stringify({retried: 0, recovered: 0, reason: 'option_review_ineligible'}));
+            process.exit(0);
+          }
+          assert.equal(typeof before.result.updated_at, 'string');
+          let response;
+          try {
+            response = await call(path + '/complete-options',
+              {confirm_paid_calls: true, expected_updated_at: before.result.updated_at});
+          } finally {
+            const after = await call(path);
+            assert.ok(after.ok && after.result?.question?.item_id === item.id, 'Could not verify saved result');
+            const rule = response?.result?.rule;
+            const failure = typeof rule === 'string' && /^[A-Z_]{2,64}$/.test(rule) ? rule : undefined;
+            console.log(JSON.stringify({retried: 1, recovered: Number(after.result.status === 'approved_for_bank'),
+              status: after.result.status, optionStatus: after.result.screening?.stages?.independent_option_evidence?.status,
+              http: response?.status, failure}));
+          }
+          JS
