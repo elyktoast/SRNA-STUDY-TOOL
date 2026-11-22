@@ -118,6 +118,8 @@ class ReconcileTests(unittest.TestCase):
             inventory, actual = load_inventory(path)
             self.assertEqual(inventory, {"a": HASH})
             self.assertEqual(actual, digest)
+            inventory.clear()
+            self.assertEqual(load_inventory(path), ({"a": HASH}, digest))
             path.write_text(json.dumps({"schema_version": 1, "item_count": 1,
                                         "inventory_digest": "0" * 64, "entries": entries}))
             with self.assertRaisesRegex(ValueError, "digest mismatch"):

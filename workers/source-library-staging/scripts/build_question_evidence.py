@@ -9,7 +9,7 @@ import json
 import os
 import re
 
-from search_passages import search, UUID_RE
+from search_passages import search, search_many, supports_pipeline, UUID_RE
 from item_source_scope_v2 import source_scope
 
 TEACHING_PREFIX = re.compile(
@@ -26,6 +26,23 @@ def topic_search_query(topic):
     # complete clinical subject/relation and every scope predicate unchanged.
     return TEACHING_PREFIX.sub("", topic.strip(), count=1).strip() or topic.strip()
 
+
+def _source_records(rows):
+    sources = []
+    for row in rows:
+        sources.append({
+            "passage_id": row["passage_id"],
+            "textbook_id": row["textbook_id"],
+            "filename": row["filename"],
+            "pdf_page_start": row["pdf_page_start"],
+            "pdf_page_end": row["pdf_page_end"],
+            "excerpt": row["excerpt"],
+            "section_heading": row.get("section_heading"),
+            "edition": row.get("edition"),
+            "citation_verified": False,
+            "citation_type": "physical_pdf_page_1_based",
+        })
+    return sources
 
 def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
                    section_id=None, include_subsections=False,
@@ -66,8 +83,18 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
             raise ValueError('Passage limit must cover every selected textbook, up to 50')
         # Fair, bounded interleaving prevents one large book monopolizing the
         # packet. Each search independently enforces ownership and ready state.
-        groups = [scoped_search(textbook_id=book)
-                  for book in books]
+        if len(books) > 1 and supports_pipeline(conn):
+            groups = [[] for _ in books]
+            for candidate in queries:
+                missing = [i for i, group in enumerate(groups) if not group]
+                if not missing:
+                    break
+                results = search_many(conn, owner_uid, [
+                    (candidate, {"textbook_id": books[i], "limit": limit}) for i in missing])
+                for i, group in zip(missing, results):
+                    groups[i] = group
+        else:
+            groups = [scoped_search(textbook_id=book) for book in books]
         if balance_books:
             groups.sort(key=lambda group: -group[0].get('rank',0) if group else 0)
         rows = [group[index] for index in range(limit) for group in groups
@@ -78,20 +105,7 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
         rows = scoped_search(textbook_id=textbook_id,
                       section_id=section_id, include_subsections=include_subsections,
                       page_start=page_start, page_end=page_end)
-    sources = []
-    for row in rows:
-        sources.append({
-            "passage_id": row["passage_id"],
-            "textbook_id": row["textbook_id"],
-            "filename": row["filename"],
-            "pdf_page_start": row["pdf_page_start"],
-            "pdf_page_end": row["pdf_page_end"],
-            "excerpt": row["excerpt"],
-            "section_heading": row.get("section_heading"),
-            "edition": row.get("edition"),
-            "citation_verified": False,
-            "citation_type": "physical_pdf_page_1_based",
-        })
+    sources = _source_records(rows)
     return {
         "topic": topic.strip(),
         "evidence_count": len(sources),

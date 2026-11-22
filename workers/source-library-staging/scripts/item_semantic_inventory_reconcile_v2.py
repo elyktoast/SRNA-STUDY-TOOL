@@ -6,18 +6,39 @@ from array import array
 import json
 import hashlib
 import math
+import os
 import re
 from pathlib import Path
 from uuid import UUID
-from item_semantic_duplicates import cosine
 
 HASH = re.compile(r"^[a-f0-9]{64}$")
 PAGE_SIZE = 1000
 MAX_ITEMS = 10000
+_inventory_cache = None
+
+
+def _file_version(source):
+    stat = os.fstat(source.fileno())
+    return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
 
 
 def load_inventory(path):
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    global _inventory_cache
+    with Path(path).open(encoding="utf-8") as source:
+        key = _file_version(source)
+        cached = _inventory_cache
+        if cached is None or cached[0] != key:
+            entries = _validate_inventory(json.load(source))
+            cached = (key, entries)
+        if key != _file_version(source):
+            raise ValueError("Canonical inventory changed during verification")
+        _inventory_cache = cached
+    inventory, digest = cached[1]
+    return dict(inventory), digest
+
+
+def _validate_inventory(data):
+
     if not isinstance(data, dict) or data.get("schema_version") != 1:
         raise ValueError("Unsupported canonical inventory schema")
     entries = data.get("entries")
@@ -63,7 +84,15 @@ def _scan_index(conn, *, owner_uid, embedding_model, inventory, retain_vectors=F
     vectors = {}
     dimensions = None
     last_id = ""
-    with conn.cursor() as cur:
+    # psycopg's binary array decoder avoids converting millions of printed
+    # float literals while preserving the PostgreSQL double values exactly.
+    try:
+        from psycopg import Connection
+        binary = isinstance(conn, Connection)
+    except ImportError:
+        binary = False
+    cursor = conn.cursor(binary=True) if binary else conn.cursor()
+    with cursor as cur:
         while True:
             cur.execute(
                 """select item_id, stem_hash, embedding from source_library_staging.question_semantic_index_v2
@@ -90,14 +119,11 @@ def _scan_index(conn, *, owner_uid, embedding_model, inventory, retain_vectors=F
                 if any(type(v) not in (int, float) or not math.isfinite(v)
                        or abs(v) > 1e100 for v in embedding):
                     raise ValueError("Invalid indexed embedding")
-                # Reject zero, NaN, infinity and nonnumeric vectors using the
-                # same numerical validation as the semantic similarity scorer.
-                try:
-                    similarity = cosine(embedding, embedding)
-                    if not math.isfinite(similarity) or abs(similarity - 1.0) > 1e-9:
-                        raise ValueError("Invalid indexed embedding")
-                except (TypeError, ValueError, OverflowError, ZeroDivisionError):
-                    raise ValueError("Invalid indexed embedding") from None
+                # A row only needs a usable norm here. Calculating cosine
+                # against itself would scan the same components three times.
+                squared_norm = sum(value * value for value in embedding)
+                if not math.isfinite(squared_norm) or squared_norm <= 0:
+                    raise ValueError("Invalid indexed embedding")
                 if dimensions is None:
                     dimensions = len(embedding)
                 elif len(embedding) != dimensions:
