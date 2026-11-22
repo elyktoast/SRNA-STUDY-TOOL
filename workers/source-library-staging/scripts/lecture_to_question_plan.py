@@ -4,7 +4,8 @@ Read-only. Never sends lecture or textbook material to public services.
 """
 from lecture_concept_extraction import PRIORITY, extract
 from lecture_question_plan import plan
-from build_question_evidence import _source_records, build_evidence, topic_search_query
+from build_question_evidence import (_source_records, build_evidence, lecture_focus_queries,
+                                     topic_search_query)
 from search_passages import search, search_many, supports_pipeline
 
 
@@ -54,29 +55,39 @@ def _prepare_grounded_mc_batch(conn, owner_uid, lecture_text, *, textbook_id, co
         title = concept["title"]
         points = concept.get("learning_points") or []
         candidates[title] = [
-            (title + " — " + point, topic_search_query(point)) for point in points
-        ] if points else [(title, topic_search_query(title))]
-    queries = list(dict.fromkeys(query for variants in candidates.values() for _, query in variants))
+            (title + " — " + point, lecture_focus_queries(title, point)) for point in points
+        ] if points else [(title, [topic_search_query(title)])]
+    candidate_rows = [queries for variants in candidates.values() for _, queries in variants]
     scope = {"textbook_id": textbook_id, "limit": 6}
     hits = {}
-    if supports_pipeline(conn):
-        for offset in range(0, len(queries), 32):
-            chunk = queries[offset:offset + 32]
-            results = search_many(conn, owner_uid, [(query, scope) for query in chunk])
-            hits.update((query, _source_records(rows)) for query, rows in zip(chunk, results, strict=True))
-    else:
-        for query in queries:
-            hits[query] = _source_records(search(conn, query, owner_uid, **scope))
+    pipeline = supports_pipeline(conn)
+    # Only search the next, shorter candidate for learning points that
+    # still have no match. Deduplicate queries across headings and slides.
+    def matched(queries):
+        return next((hits[query] for query in queries if hits.get(query)), [])
+
+    for index in range(max((len(queries) for queries in candidate_rows), default=0)):
+        queries = list(dict.fromkeys(options[index] for options in candidate_rows
+                        if index < len(options) and options[index] not in hits and not matched(options)))
+        if pipeline:
+            for offset in range(0, len(queries), 32):
+                chunk = queries[offset:offset + 32]
+                results = search_many(conn, owner_uid, [(query, scope) for query in chunk])
+                hits.update((query, _source_records(rows)) for query, rows in zip(chunk, results, strict=True))
+        else:
+            for query in queries:
+                hits[query] = _source_records(search(conn, query, owner_uid, **scope))
 
     variants_by_title = {}
     seen = set()
     for title, candidates_for_title in candidates.items():
         variants = []
-        for topic, query in candidates_for_title:
+        for topic, queries in candidates_for_title:
             key = " ".join(topic.casefold().split())
-            if hits[query] and key not in seen:
+            evidence = matched(queries)
+            if evidence and key not in seen:
                 seen.add(key)
-                variants.append({"topic": topic, "evidence": hits[query]})
+                variants.append({"topic": topic, "evidence": evidence})
         variants_by_title[title] = variants
     planned = plan(concepts, {title: variants[0]["evidence"] for title, variants in
                               variants_by_title.items() if variants}, count=count)
@@ -98,7 +109,7 @@ def _prepare_grounded_mc_batch(conn, owner_uid, lecture_text, *, textbook_id, co
         topic["question_count"] = len(topic["verified_variants"])
     planned["planned"] = count - remaining
     checked = sum(len(variants) for variants in candidates.values())
-    grounded = sum(bool(hits[query]) for variants in candidates.values() for _, query in variants)
+    grounded = sum(bool(matched(queries)) for queries in candidate_rows)
     planned["focus_preflight"] = {"checked": checked, "grounded": grounded, "held": checked - grounded}
     planned["extraction"] = {"method": extracted["extraction_method"], "requires_review": True,
                              "candidate_count": len(concepts), "no_candidates_found": False}
