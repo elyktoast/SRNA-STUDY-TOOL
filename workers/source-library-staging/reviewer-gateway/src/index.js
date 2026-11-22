@@ -3,6 +3,10 @@ import {batchRoute, isBatchPath} from './mc-batch.js';
 // Staging-only gateway for a private reviewer container binding.
 // Called only after the existing private relay's HMAC authentication.
 export const SEMANTIC_MODEL='@cf/baai/bge-m3';
+const fallbackReviewer='openai/gpt-oss-120b';
+const fallbackReviewSteps=new Set(['blind_review','options_only_review','option_review','explanation_review']);
+// This is a routing hint per Worker isolate. Never cache judgments or source material.
+const reviewerCooldowns=new WeakMap();
 export async function semanticEmbeddings(payload,env){
  const reply=(status,body)=>new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}});
  if(env.STAGING_ONLY!=='true'||env.AI_EMBEDDING_RELAY_OPT_IN!=='true'||!env.SEMANTIC_AI?.run)return reply(503,{error:'relay_disabled'});
@@ -142,7 +146,7 @@ async function relayGroq(request,env){
   const authoring=['retrieval_plan','concept_card','item_draft','rationale','rewrite'].includes(step.step);
   const cloudflareAuthoring=env.AI_AUTHORING_PROVIDER==='cloudflare'&&authoring;
   if(cloudflareAuthoring&&env.AI_CLOUDFLARE_MODEL!=='@cf/'+env.AI_GENERATOR_MODEL)return respond(503,null,'{"error":"relay_disabled"}');
-  const provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
+  let provider=cloudflareAuthoring||(env.AI_AUTHORING_PROVIDER===undefined&&hybrid&&step.step==='concept_card')?'cloudflare':'groq';
   activeProvider=provider;activeModel=provider==='cloudflare'?env.AI_CLOUDFLARE_MODEL||'none':provider==='groq'?payload.model:'none';
   if(provider==='gemini'&&(!env.AI_GEMINI_API_KEY||!/^gemini-[a-zA-Z0-9.-]+$/.test(env.AI_GEMINI_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
   if(provider==='cloudflare'&&(!env.AI_CLOUDFLARE_ACCOUNT_ID||!env.AI_CLOUDFLARE_API_TOKEN||!/^@[a-zA-Z0-9/_.-]+$/.test(env.AI_CLOUDFLARE_MODEL||'')))return respond(503,null,'{"error":"relay_disabled"}');
@@ -274,8 +278,24 @@ async function relayGroq(request,env){
   const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):bytes;
   const cloudflareFormat=step.step==='retrieval_plan'?reviewFormat:cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
+  const useReviewerFallback=provider==='groq'&&!candidateCalibration&&payload.model===fallbackReviewer
+   &&fallbackReviewSteps.has(step.step)&&env.AI_REVIEWER_RATE_LIMIT_FALLBACK==='true'
+   &&env.AI_CLOUDFLARE_ACCOUNT_ID&&env.AI_CLOUDFLARE_API_TOKEN;
+  const fallbackRequest=()=>{
+   provider='cloudflare-review';
+   activeProvider='cloudflare';activeModel='@cf/'+fallbackReviewer;
+   return fetch('https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/v1/chat/completions',{
+    method:'POST',redirect:'manual',signal:controller.signal,
+    headers:{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'},
+    body:JSON.stringify({model:activeModel,messages:payload.messages,max_tokens:payload.max_tokens,
+     temperature:payload.temperature,reasoning_effort:'low',response_format:reviewFormat}),
+   });
+  };
   let upstream;
-  if(provider==='gemini'){
+  let fallbackCooldown;
+  if(useReviewerFallback&&(reviewerCooldowns.get(env)||0)>Date.now()){
+   upstream=await fallbackRequest();
+  }else if(provider==='gemini'){
    // No ListModels calls on the generation hot path. Model IDs must be verified
    // separately with the signed hybrid_models diagnostic before configuration.
    const primary=env.AI_GEMINI_MODEL;
@@ -295,6 +315,14 @@ async function relayGroq(request,env){
    }
   }else{
    upstream=await fetch(target,{method:'POST',headers:providerHeaders,body:providerBody,redirect:'manual',signal:controller.signal});
+   if(useReviewerFallback&&upstream.status===429){
+    // A definite rejection produced no judgment. Do not replay a timeout,
+    // malformed response, or any completed provider call.
+    const limit=await safeRateDiagnostic(upstream);
+    console.log('staging_reviewer_fallback',JSON.stringify({step:step.step,dimension:limit.rate_limit_dimension||'unknown'}));
+    fallbackCooldown=limit.rate_limit_dimension?.endsWith('_per_day')?60000:0;
+    upstream=await fallbackRequest();
+   }
   }
   if(!upstream)return respond(503,null,'{"error":"relay_network"}');
   providerStatus=upstream.status;
@@ -315,13 +343,17 @@ async function relayGroq(request,env){
    if(rule==='PROVIDER_REQUEST_REJECTED')console.error('staging_request_rejected',JSON.stringify({provider,step:step.step,model:activeModel,...requestDiagnostic}));
    return respond(502,null,JSON.stringify({error:'provider_failed',rule,provider_status:providerStatus,...requestDiagnostic,...rateLimit,...(rule==='PROVIDER_RATE_LIMIT'&&seconds!==null?{retry_after_seconds:seconds}:{})}))}
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
-  if(provider==='groq'){
+  if(provider==='groq'||provider==='cloudflare-review'){
    let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}
    const choice=parsed?.choices?.[0];
    const reason=choice?.finish_reason&&choice.finish_reason!=='stop'?'provider_incomplete':choice?.message?.refusal?'provider_refusal':typeof choice?.message?.content!=='string'||!choice.message.content.trim()?'provider_empty_content':null;
    if(reason){
     console.error('staging_relay_output_failure',JSON.stringify({provider,step:step.step,model:activeModel,provider_status:providerStatus,reason}));
     return respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+   }
+   if(provider==='cloudflare-review'){
+    if(fallbackCooldown)reviewerCooldowns.set(env,Date.now()+fallbackCooldown);
+    return respond(200,null,JSON.stringify({choices:[{message:{content:choice.message.content}}]}));
    }
    return new Response(result,{status:200,headers:{'Content-Type':'application/json','Cache-Control':'no-store'}});
   }

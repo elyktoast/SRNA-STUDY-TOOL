@@ -887,3 +887,69 @@ test('Groq size rejection is distinguishable and per-option fallback keeps all c
   assert.equal((await gateway.fetch(request('option_review',model,{...targeted,target_option:'C'}),cfg)).status,400);
  }finally{globalThis.fetch=old;}
 });
+
+const reviewer = 'openai/gpt-oss-120b';
+const fallbackEnv = {...env, AI_REVIEWER_MODEL:reviewer, AI_EXPLANATION_REVIEW_OPT_IN:'true',
+ AI_REVIEWER_RATE_LIMIT_FALLBACK:'true', AI_CLOUDFLARE_ACCOUNT_ID:'test-account',
+ AI_CLOUDFLARE_API_TOKEN:'test-cf-token'};
+
+test('daily reviewer quota uses the same model, blinded payload and schema on Cloudflare',async()=>{
+ const original=globalThis.fetch;
+ const calls=[];
+ const config={...fallbackEnv};
+ globalThis.fetch=async(url,options)=>{
+  const body=JSON.parse(options.body);
+  calls.push({url,body});
+  if(calls.length===1)return Response.json({error:{message:'Tokens per day (TPD) exhausted'}},{status:429});
+  return Response.json({choices:[{message:{content:'{"key":["B"]}'},finish_reason:'stop'}]});
+ };
+ try{
+  for(let i=0;i<2;i++){
+   const response=await gateway.fetch(request('options_only_review',reviewer),config);
+   assert.equal(response.status,200);
+   assert.deepEqual(await response.json(),{choices:[{message:{content:'{"key":["B"]}'}}]});
+  }
+  assert.equal(calls.length,3);
+  assert.equal(new URL(calls[0].url).hostname,'api.groq.com');
+  for(const call of calls.slice(1)){
+   assert.equal(call.url,'https://api.cloudflare.com/client/v4/accounts/test-account/ai/v1/chat/completions');
+   assert.deepEqual(call.body,{...calls[0].body,model:'@cf/'+reviewer});
+  }
+ }finally{globalThis.fetch=original;}
+});
+
+test('an invalid fallback stays closed and does not start a routing cooldown',async()=>{
+ const original=globalThis.fetch;
+ const calls=[];
+ globalThis.fetch=async(url)=>{
+  calls.push(new URL(url).hostname);
+  return calls.at(-1)==='api.groq.com'
+   ? Response.json({error:{message:'Tokens per day (TPD) exhausted'}},{status:429})
+   : Response.json({choices:[{message:{content:'{"key":'},finish_reason:'length'}]});
+ };
+ const config={...fallbackEnv};
+ try{
+  for(let i=0;i<2;i++){
+   const response=await gateway.fetch(request('blind_review',reviewer),config);
+   assert.equal(response.status,502);
+   assert.equal((await response.json()).reason,'provider_incomplete');
+  }
+  assert.deepEqual(calls,['api.groq.com','api.cloudflare.com','api.groq.com','api.cloudflare.com']);
+ }finally{globalThis.fetch=original;}
+});
+
+test('the reviewer fallback never repeats successful, ambiguous or disabled calls',async()=>{
+ const original=globalThis.fetch;
+ try{
+  for(const [status,config] of [[200,fallbackEnv],[503,fallbackEnv],[429,{...fallbackEnv,AI_REVIEWER_RATE_LIMIT_FALLBACK:'false'}]]){
+   const calls=[];
+   globalThis.fetch=async(url)=>{
+    calls.push(new URL(url).hostname);
+    return Response.json({choices:[{message:{content:'{}'},finish_reason:'stop'}]},{status});
+   };
+   const response=await gateway.fetch(request('blind_review',reviewer),config);
+   assert.equal(response.status,status===200?200:502);
+   assert.deepEqual(calls,['api.groq.com']);
+  }
+ }finally{globalThis.fetch=original;}
+});
