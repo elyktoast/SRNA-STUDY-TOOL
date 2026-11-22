@@ -1,0 +1,37 @@
+name: Archive retired SRNA branches
+on:
+  push:
+    branches: [verify/mc-objective-heading-20261118]
+    paths: ['.github/workflows/archive-retired-srna-refs.yml']
+permissions:
+  contents: write
+jobs:
+  archive:
+    if: github.run_attempt == '1' && github.event.head_commit.message == 'Archive six retired SRNA branch tips'
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Preserve exact tips as tags and remove old branch refs
+        shell: bash
+        run: |
+          set -euo pipefail
+          leases=()
+          refspecs=()
+          while read -r branch sha; do
+            test "$(git rev-parse "refs/remotes/origin/$branch")" = "$sha"
+            tag="refs/tags/archive/2026-11-21/$branch"
+            leases+=("--force-with-lease=refs/heads/$branch:$sha" "--force-with-lease=$tag:")
+            refspecs+=("$sha:$tag" ":refs/heads/$branch")
+          done <<'TARGETS'
+          fix/evidence-preflight-limit-label e4b7c0bc4966fd8b822ee4244a7d7084388cd940
+          fix/staging-semantic-index-backfill 0b43d9e417f30f6d7462e2cb634c894c95cf7cbc
+          verify/mc-option-grounding-20261117 1124c62a655f087555679e9771e9ceb6cc24fa67
+          verify/mc-runtime-safety-20261118 d923edbe9b0ceed032e8d141401c4078c4e59e98
+          verify/mc-saved-option-review-20261117 08c517932d506f9cb798cb4d2636f04b1723bbce
+          verify/mc-source-first-20261117b 0a6ae1a9401cad6321eff4f0efd6d37b11800c5c
+          TARGETS
+          test "${#refspecs[@]}" -eq 12
+          git push --atomic "${leases[@]}" origin "${refspecs[@]}"
