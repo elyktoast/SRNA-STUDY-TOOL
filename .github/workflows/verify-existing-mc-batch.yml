@@ -6,7 +6,7 @@ permissions:
   contents: read
   checks: read
 concurrency:
-  group: source-reviewer-staging-deployment
+  group: staging-mc-read-only-verification
   cancel-in-progress: false
 jobs:
   batch:
