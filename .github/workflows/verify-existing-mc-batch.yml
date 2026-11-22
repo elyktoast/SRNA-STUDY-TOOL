@@ -25,4 +25,6 @@ jobs:
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-        run: node scripts/verify-existing-mc-batch.mjs
+        run: |
+          node scripts/verify-authoring-contract-readonly.mjs
+          node scripts/verify-existing-mc-batch.mjs
