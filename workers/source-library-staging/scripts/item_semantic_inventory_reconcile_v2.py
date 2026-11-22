@@ -2,6 +2,7 @@
 
 No provider calls, mutations, or approval/publishing side effects.
 """
+from array import array
 import json
 import hashlib
 import math
@@ -48,7 +49,7 @@ def load_inventory(path):
     return inventory, digest
 
 
-def reconcile(conn, *, owner_uid, embedding_model, inventory):
+def _scan_index(conn, *, owner_uid, embedding_model, inventory, retain_vectors=False):
     owner = str(UUID(owner_uid))
     if (not isinstance(embedding_model, str) or not embedding_model.strip()
             or not isinstance(inventory, dict) or not inventory
@@ -59,6 +60,7 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
            for key, value in inventory.items()):
         raise ValueError("Invalid canonical inventory")
     observed = {}
+    vectors = {}
     dimensions = None
     last_id = ""
     with conn.cursor() as cur:
@@ -101,6 +103,8 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 elif len(embedding) != dimensions:
                     raise ValueError("Inconsistent indexed embedding dimensions")
                 observed[item_id] = stem_hash
+                if retain_vectors:
+                    vectors[item_id] = array("d", embedding)
             if len(observed) > MAX_ITEMS:
                 raise ValueError("Semantic index exceeds inventory cap")
             if len(page) < PAGE_SIZE:
@@ -111,7 +115,7 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
     unexpected = sorted(actual_ids - expected_ids)
     stale = sorted(item_id for item_id in expected_ids & actual_ids
                    if inventory[item_id] != observed[item_id])
-    return {
+    report = {
         "ready": not (missing or unexpected or stale),
         "expected_count": len(expected_ids),
         "indexed_count": len(actual_ids),
@@ -122,3 +126,17 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
         "unexpected_ids": unexpected,
         "stale_ids": stale,
     }
+    return report, vectors
+
+
+def reconcile(conn, *, owner_uid, embedding_model, inventory):
+    report, _ = _scan_index(conn, owner_uid=owner_uid, embedding_model=embedding_model,
+                            inventory=inventory)
+    return report
+
+
+def reconciled_vectors(conn, *, owner_uid, embedding_model, inventory):
+    """Return all validated embeddings from a complete scan, or no snapshot."""
+    report, vectors = _scan_index(conn, owner_uid=owner_uid, embedding_model=embedding_model,
+                                  inventory=inventory, retain_vectors=True)
+    return vectors if report["ready"] else None

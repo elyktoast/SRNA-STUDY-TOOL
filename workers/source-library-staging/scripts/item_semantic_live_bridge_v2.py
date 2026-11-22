@@ -9,8 +9,8 @@ import math
 import urllib.request
 from pathlib import Path
 
-from item_semantic_inventory_reconcile_v2 import load_inventory, reconcile
-from item_semantic_index_db_v2 import lookup
+from item_semantic_inventory_reconcile_v2 import load_inventory, reconciled_vectors
+from item_semantic_duplicates import cosine
 from item_ai_https_transport_v2 import _NoRedirect
 
 
@@ -66,12 +66,30 @@ def build_semantic_lookup(conn, *, owner_uid, env, embed):
     if model not in ("gemini-embedding-001", "@cf/baai/bge-m3") or not path:
         raise ValueError("Semantic index model or inventory unavailable")
     inventory, digest = load_inventory(path)
-    result = reconcile(conn, owner_uid=owner_uid, embedding_model=model,
-                       inventory=inventory)
-    if not result["ready"]:
-        # Do not call embedding provider or falsely report complete coverage.
+    if not callable(embed):
+        raise ValueError("Trusted embedding configuration required")
+    # Keep one owner/model-scoped snapshot for this generation request only.
+    # A rewrite embeds its new stem and compares against the same complete bank.
+    vectors = reconciled_vectors(conn, owner_uid=owner_uid, embedding_model=model,
+                                 inventory=inventory)
+    if vectors is None:
         return None
-    return lookup(conn, owner_uid=owner_uid, embedding_model=model,
-                  embed=embed, index_ready=True,
-                  inventory_digest=digest,
-                  expected_item_ids=set(inventory), expected_stem_hashes=inventory)
+    dimension = len(next(iter(vectors.values())))
+    index_id = "question_semantic_index_v2:" + model + ":" + digest
+
+    def lookup_candidate(item):
+        if not isinstance(item, dict) or not isinstance(item.get("stem"), str) or not item["stem"].strip():
+            raise ValueError("Question stem required")
+        item_id = item.get("item_id")
+        if not isinstance(item_id, str) or not item_id.strip():
+            raise ValueError("Stable candidate item ID required")
+        vector = embed(item["stem"])
+        cosine(vector, vector)
+        if len(vector) != dimension:
+            raise ValueError("Invalid candidate embedding dimensions")
+        neighbors = [{"item_id": prior_id, "embedding": embedding}
+                     for prior_id, embedding in vectors.items() if prior_id != item_id]
+        return {"embedding": vector, "neighbors": neighbors,
+                "search_complete": True, "index_id": index_id}
+
+    return lookup_candidate
