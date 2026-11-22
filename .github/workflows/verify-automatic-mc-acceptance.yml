@@ -1,0 +1,45 @@
+name: Verify automatic staging MC acceptance
+on:
+  push:
+    branches: [verify/mc-objective-heading-20261118]
+permissions:
+  contents: read
+  checks: read
+concurrency:
+  group: source-reviewer-staging-deployment
+  cancel-in-progress: false
+jobs:
+  batch:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-automatic-acceptance-once]')
+    runs-on: ubuntu-latest
+    environment: source-library-staging
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/checkout@v4
+        with:
+          ref: 07ba848024b7bada81a5f253428256165cc690fb
+          path: reviewer-source
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify a completed MC checkpoint with current textbook sources
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          AI_SEMANTIC_EMBEDDING_OPT_IN: 'true'
+          SEMANTIC_INDEX_INVENTORY_PATH: /tmp/verified-mc-inventory.json
+          PYTHONPATH: ${{ github.workspace }}/reviewer-source/workers/source-library-staging/scripts
+        run: |
+          python -m pip install --disable-pip-version-check 'psycopg[binary]>=3.2,<4' boto3
+          (cd reviewer-source && node scripts/audit-canonical-semantic-inventory.mjs --export /tmp/verified-mc-inventory.json)
+          python scripts/accept-verified-staging-mc.py
+      - name: Read the authenticated queue status
+        env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: node scripts/verify-existing-mc-batch.mjs
