@@ -142,7 +142,7 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
                 "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
 
         completed_batches = 0
-        rate_split_used = False
+        rate_split_used = malformed_split_used = False
         work = list(batches)
         while work:
             batch = work.pop(0)
@@ -158,6 +158,17 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
                     rate_split_used = True
                 # Only a rejected request is split. A returned judgment is
                 # never solicited again, and each field retains its sources.
+                middle = len(batch) // 2
+                work[0:0] = (batch[:middle], batch[middle:])
+                continue
+            except ValueError as exc:
+                # A batch with unbound or missing citations cannot establish
+                # support. Retry its fields once in smaller scoped groups.
+                if (not compact_scopes or malformed_split_used or len(batch) < 2
+                        or str(exc) not in ("Missing source support", "Incomplete explanatory review",
+                                            "Invalid explanatory judgments")):
+                    raise
+                malformed_split_used = True
                 middle = len(batch) // 2
                 work[0:0] = (batch[:middle], batch[middle:])
                 continue

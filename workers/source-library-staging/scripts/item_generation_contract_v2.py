@@ -99,6 +99,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             "Separate an instrument's direct input from downstream changes it could observe as a consequence. Source support for the first relationship does not establish that the consequential observation cannot occur. "
             "Choose one answer form before writing the options. If the lead-in asks which device, structure, drug, or class, use four names alone. A name followed by its function, mechanism, or effect gives away what the case is meant to test. If the lead-in asks what happens, use four comparable actions or effects without naming the device or agent responsible. Move shared context into the case. "
             "For each distractor explanation, start with one fact supported by its selected spans and apply it to the case. If the passage establishes what a gauge displays, explain that a pressure display does not perform the requested protective action. Do not add a claim about a different device's mechanism to that explanation unless one of that option's selected passages explicitly supports it. "
+            "All four choices must be literal peers that complete the same grammatical slot. Do not mix two short category labels with a workflow, a policy recommendation, or a composite action. If only two categories are supported, test a narrower source-grounded distinction that has four defensible peers. "
             "Before locking the plan, read the choices without the case: discard any conspicuous throwaway, any uniquely technical or qualified answer, and any option that could be rejected on wording alone. "
             "Use conditions that the excerpts directly describe. If the distinction needs motion to be restricted or a signal to be present, state that condition directly in the stem; do not infer it from posture, equipment placement, or another unstated fact. "
             "Avoid cue words such as always, never, only, and entirely in choices, especially in distractors. "
@@ -154,7 +155,7 @@ def build_step(step, *, mode, domain, section, objective, evidence, format=None,
             instructions[step] = (
                 "Return exactly core_concept, why_key_wins and trap as concise strings. Omit distractor_breakdown: the server attaches the locked option_grounding explanations for all four options. "
                 "Explain only the supported distinction already established in option_grounding. Do not add new device behaviors, receptor mechanisms, alarm behavior, exclusions or absolute claims absent from the supplied excerpts. "
-                "Start trap with the specific incorrect option ID and the learner error that would lead to it. Do not return a counterfactual or modify any draft field. "
+                "Start trap with an incorrect option ID. Describe the learner's mistaken selection using only that choice's grounded explanation and the stem. Do not append a second clinical assertion or add a source-silence claim about what a device cannot measure. Do not return a counterfactual or modify any draft field. "
                 "The planned span references are author-selected evidence, not a clinical pass; independent checks and human review remain required.")
     return {"rules_version": RULES_VERSION, "step": step,
             **({"choice_plan": choice_plan} if choice_plan is not None else {}),

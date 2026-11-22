@@ -1,4 +1,4 @@
-"""Recover a rejected oversized MC review by submitting its evidence per choice."""
+"""Recover a rejected or structurally invalid MC review in per-choice requests."""
 from concurrent.futures import ThreadPoolExecutor
 
 from item_ai_https_transport_v2 import TransportError
@@ -12,7 +12,11 @@ def request_judgments(payload, call, *, parallel=False):
     except TransportError as exc:
         if exc.rule != "PROVIDER_REQUEST_SIZE" or payload.get("format") != "MC":
             raise
-    # A size rejection yields no clinical judgment. Keep the same stem and all
+    except ValueError as exc:
+        if payload.get("format") != "MC" or str(exc) not in {
+                "Independent judgments required", "Invalid independent judgment map"}:
+            raise
+    # A size rejection or unusable map yields no validated clinical judgment. Keep the same stem and all
     # choices visible, but send only the target option's independently found
     # passages. Valid judgments are never retried.
     def judge(audit):

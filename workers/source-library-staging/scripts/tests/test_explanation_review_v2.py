@@ -101,6 +101,22 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertCountEqual(accepted, self.ids)
         self.assertEqual(report["batch_count"], 3)
 
+    def test_missing_quote_rechecks_only_failed_group_and_keeps_citations(self):
+        accepted = []
+        failed = []
+        def reviewer(payload):
+            ids = [field["id"] for field in payload["fields"]]
+            if len(ids) > 3 and not failed:
+                failed.extend(ids)
+                raise ValueError("Missing source support")
+            accepted.extend(ids)
+            return {"supported_groups": [{"field_ids": ids, "quote_refs": [
+                {"passage_id": "p1", "span_id": "q0"}]}], "unsupported": []}
+        report = review(self.item, self.sources, reviewer, batch_size=6, compact_scopes=True)
+        self.assertEqual(report["status"], "pass")
+        self.assertCountEqual(accepted, self.ids)
+        self.assertTrue(failed)
+
     def setUp(self):
         self.item = {"evidence":[{"passage_id":"p1"}],
                      "concept_card":{k:"Classification statement" for k in ("mechanism","relevance","misconception","counterfactual")},

@@ -105,7 +105,10 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
             reviewer_model_id=option_reviewer_model_id, require_quotes=True)
     if format in ("MC", "MS"):
         from item_option_audit_screening_v2 import attach
-        result = attach(result, option_audit, option_adjudication)
+        blockers = [name for name, stage in prior_stages.items()
+                    if name != "human_review" and isinstance(stage, dict) and stage.get("status") != "pass"]
+        result = attach(result, option_audit, option_adjudication,
+                        blocked_by=blockers if format == "MC" and option_reviewer is not None and not can_adjudicate else ())
     return {**result, "independent_option_retrieval": option_audit,
             "independent_option_adjudication": option_adjudication, "source_evidence": {
         "topic": packet["topic"],

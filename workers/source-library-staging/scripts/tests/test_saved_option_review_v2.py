@@ -48,8 +48,7 @@ class SavedOptionReviewTests(unittest.TestCase):
                 'contradiction_found':False} for i in 'ABCD']
         with patch('item_saved_option_review_v2.get_draft',return_value=draft), \
              patch('item_saved_option_review_v2.revalidate',return_value={'issues':validation if validation is not None else [{'field':'screening.stages.independent_option_evidence'}]}), \
-             patch('item_option_retrieval_audit_v2.search',return_value=[SOURCE]), \
-             patch('item_saved_option_review_v2.search',return_value=[SOURCE]):
+             patch('item_option_retrieval_audit_v2.search',return_value=[SOURCE]):
             result=complete_option_review(conn,owner_uid=OWNER,draft_id=DID,
                 expected_updated_at=draft['updated_at'],environment=ENV,reviewer_factory=lambda:reviewer)
         return result,conn,calls
@@ -79,6 +78,16 @@ class SavedOptionReviewTests(unittest.TestCase):
             self.assertFalse(result[key])
         self.assertTrue(result['clinical_review_required'])
 
+    def test_system_held_draft_can_complete_its_only_missing_check(self):
+        draft = saved()
+        draft['status'] = 'needs_revision'
+        result, conn, calls = self.execute(draft)
+        self.assertTrue(result['automated_checks_passed'])
+        self.assertEqual(len(calls), 1)
+        params = conn.cur.calls[-1][1]
+        self.assertEqual(params[1], 'pending_review')
+        self.assertEqual(params[4], 'needs_revision')
+
     def test_flagged_or_edited_or_completed_drafts_do_not_get_a_new_grade(self):
         for change in ('cue','explanations','missing_stage','bad_index','clinical_judgment','format','status','complete','malformed'):
             draft=saved()
@@ -88,7 +97,7 @@ class SavedOptionReviewTests(unittest.TestCase):
             if change=='bad_index':draft['screening']['stages']['duplicates'].pop('index_id')
             if change=='clinical_judgment':draft['screening']['independent_option_adjudication']={'judgments':[{'verdict':'uncertain'}]}
             if change=='format':draft['format']='MS'
-            if change=='status':draft['status']='needs_revision'
+            if change=='status':draft.update(status='needs_revision', reviewed_by=OWNER)
             if change=='complete':draft['screening']['stages']['independent_option_evidence']['status']='pass'
             if change=='malformed':draft['screening']['stages']=None
             with self.subTest(change=change):

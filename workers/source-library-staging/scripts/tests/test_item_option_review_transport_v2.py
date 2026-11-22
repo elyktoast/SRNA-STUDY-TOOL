@@ -30,6 +30,16 @@ class OptionReviewTransportTests(unittest.TestCase):
             self.assertIs(request["blind"], True)
             self.assertNotIn("key", request)
 
+    def test_missing_map_recovers_once_without_disclosing_other_option_sources(self):
+        def adapter(request):
+            target = request.get("target_option")
+            if target is None:
+                raise ValueError("Independent judgments required")
+            self.assertEqual(request["source_passages"], [{"passage_id": target}])
+            return {"judgments": [{"option_id": target}]}
+        self.assertEqual(request_judgments(self.payload, adapter, parallel=True),
+                         {"judgments": [{"option_id": choice} for choice in "ABCD"]})
+
     def test_a_provider_failure_does_not_split_or_repeat_valid_judgments(self):
         adapter = Mock(side_effect=TransportError("PROVIDER_UPSTREAM"))
         with self.assertRaises(TransportError):

@@ -299,6 +299,12 @@ function renderMCReviewSummary(host,screening,format){
   const pass=stage?.status==='pass'&&Array.isArray(stage.issues)&&!stage.issues.length;
   if(pass)passed++;
   const row=document.createElement('li');row.textContent=label+': '+(pass?'Passed':['flag','fail'].includes(stage?.status)?'Needs revision':'Incomplete');
+  if(name==='independent_option_evidence'&&!pass){
+   const gated=Array.isArray(stage?.blocked_by)?stage.blocked_by:stage?.reason==='Independent option search not available'?labels.filter(([key])=>key!==name&&screening?.stages?.[key]&&screening.stages[key].status!=='pass').map(([key])=>key):[];
+   const blockers=labels.filter(([key])=>gated.includes(key)).map(([,name])=>name);
+   if(blockers.length)row.textContent=label+': Waiting for '+blockers.join(', ');
+  }
+  if(name==='explanation_evidence'&&!pass&&stage?.provider_rule)row.textContent+=' (reviewer did not return usable evidence)';
   if(name==='options_only'&&!pass&&Number.isInteger(stage?.completed_trials)&&stage.completed_trials>=0&&stage.completed_trials<=5)row.textContent+=' ('+stage.completed_trials+' of 5 trials completed)';
   list.append(row);
  }
