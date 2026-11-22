@@ -100,8 +100,6 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
             embedding, neighbors = pair["embedding"], pair["neighbors"]
             if embedding is None or not isinstance(neighbors, list):
                 raise ValueError("Incomplete semantic lookup")
-            from item_semantic_duplicates import screen as verify_semantic_vectors
-            verify_semantic_vectors(embedding, neighbors)
         except Exception as exc:
             embedding, neighbors = None, None
             semantic_lookup_failed = True
@@ -129,7 +127,14 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     result = review["draft_reviews"][0]
     screening = result["screening"]
     if semantic_lookup is not None and not semantic_lookup_failed:
-        screening["stages"]["duplicates"].update(search_complete=True,index_id=pair["index_id"])
+        duplicates = screening["stages"].get("duplicates", {})
+        if duplicates.get("status") in ("pass", "flag"):
+            duplicates.update(search_complete=True,index_id=pair["index_id"])
+        elif duplicates.get("status") == "fail":
+            # Intake has already validated and scored these vectors. Preserve
+            # the original pending outcome when the trusted lookup is invalid.
+            semantic_lookup_failed = True
+            semantic_lookup_reason = "Semantic index lookup failed or returned unverified coverage"
     if semantic_lookup_failed or (semantic_lookup is None and embedding is None):
         # A stem-only or absent-index check is not an exhaustive semantic search.
         screening["stages"]["duplicates"] = {

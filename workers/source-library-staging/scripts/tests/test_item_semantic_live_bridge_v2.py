@@ -84,7 +84,7 @@ class LiveBridgeTests(unittest.TestCase):
     def test_cloudflare_native_index_binds_digest_without_implicit_embedding(self):
         vector=[1.0]+[0.0]*1023
         embed=Mock(return_value=vector)
-        self.cur.fetchall.side_effect=[[("prior-1",HASH,vector)],[("prior-1",vector,HASH)]]
+        self.cur.fetchall.return_value=[("prior-1",HASH,vector)]
         callback=build_semantic_lookup(self.conn,owner_uid=OWNER,
             env={**self.env,'SEMANTIC_INDEX_EMBEDDING_MODEL':'@cf/baai/bge-m3'},embed=embed)
         embed.assert_not_called()
@@ -102,16 +102,25 @@ class LiveBridgeTests(unittest.TestCase):
 
     def test_verified_index_wires_candidate_lookup(self):
         embed = Mock(return_value=[1.0, 0.0])
-        self.cur.fetchall.side_effect = [
-            [("prior-1", HASH, [1.0, 0.0])],
-            [("prior-1", [1.0, 0.0], HASH)]
-        ]
+        self.cur.fetchall.return_value = [("prior-1", HASH, [1.0, 0.0])]
         callback = build_semantic_lookup(self.conn, owner_uid=OWNER, env=self.env, embed=embed)
         embed.assert_not_called()
         result = callback({"item_id": "draft-1", "stem": "Example stem"})
         self.assertTrue(result["search_complete"])
         self.assertEqual(len(result["neighbors"]), 1)
         embed.assert_called_once_with("Example stem")
+
+    def test_rewrite_checks_new_embedding_with_no_second_bank_scan(self):
+        embed = Mock(side_effect=[[1.0, 0.0], [0.0, 1.0]])
+        self.cur.fetchall.return_value = [("prior-1", HASH, [1.0, 0.0])]
+        callback = build_semantic_lookup(self.conn, owner_uid=OWNER, env=self.env, embed=embed)
+        first = callback({"item_id": "draft", "stem": "Original stem"})
+        second = callback({"item_id": "draft", "stem": "Rewritten stem"})
+        self.assertNotEqual(first["embedding"], second["embedding"])
+        self.assertEqual(first["neighbors"], second["neighbors"])
+        self.assertEqual(callback({"item_id": "draft", "stem": "Rewritten stem"}), second)
+        self.cur.execute.assert_called_once()
+        self.assertEqual(embed.call_count, 2)
 
     def test_wrong_owner_rejected_before_db_or_paid_call(self):
         embed = Mock()

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_mc_batch_v2 import authenticate, with_draft_neighbors
+from item_mc_batch_v2 import _embed_stems, authenticate, with_draft_neighbors
 
 
 class BatchBoundaryTests(unittest.TestCase):
@@ -46,8 +46,42 @@ class BatchBoundaryTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             with_draft_neighbors(lambda _: canonical, conn, owner, [draft_id], "fixture")
         cursor.fetchall.return_value = [(draft_id, item_id, "Prior stem")]
-        with patch("item_mc_batch_v2._embed_stem", return_value=(1, 0)):
+        with patch("item_mc_batch_v2._embed_stems", return_value={"Prior stem": (1, 0)}):
             lookup = with_draft_neighbors(lambda _: canonical, conn, owner, [draft_id], "fixture")
             self.assertEqual(lookup({"item_id": str(uuid4())})["neighbors"],
                              [{"item_id": item_id, "embedding": (1, 0)}])
         self.assertEqual(cursor.execute.call_args.args[1], (owner, [draft_id]))
+
+    def test_cold_batch_coalesces_unique_stems_and_reuses_only_same_owner_cache(self):
+        owner = str(uuid4())
+        stems = [f"Synthetic stem {i}" for i in range(40)]
+        vector = [1.0] + [0.0] * 1023
+        with patch("item_mc_batch_v2.make_embed_many") as factory:
+            embed = factory.return_value
+            embed.side_effect = lambda texts: [vector for _ in texts]
+            first = _embed_stems(owner, "fixture", stems + stems[:2])
+            self.assertEqual(len(first), 40)
+            self.assertEqual([len(call.args[0]) for call in embed.call_args_list], [32, 8])
+            self.assertEqual(_embed_stems(owner, "fixture", stems[:2]), {s: first[s] for s in stems[:2]})
+            self.assertEqual(embed.call_count, 2)
+            _embed_stems(str(uuid4()), "fixture", stems[:1])
+            self.assertEqual(embed.call_count, 3)
+
+    def test_completed_slot_recovery_uses_reservation_and_rejects_wrong_identity(self):
+        from item_generation_checkpoint_store_v2 import recover_completed_batch_slot
+
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        owner, book, slot = (str(uuid4()) for _ in range(3))
+        scope = {"owner_uid": owner, "textbook_id": book, "item_id": slot}
+        cursor.fetchone.return_value = None
+        self.assertIsNone(recover_completed_batch_slot(conn, **scope))
+        self.assertEqual(cursor.execute.call_args.args[1], (owner, book, slot))
+        result = {"item": {"item_id": slot, "format": "MC"}}
+        cursor.fetchone.return_value = ("a" * 64, "b" * 64, result)
+        recovered = recover_completed_batch_slot(conn, **scope)
+        self.assertEqual(recovered["_checkpoint_key"], {
+            "textbook_id": book, "request_hash": "a" * 64, "evidence_hash": "b" * 64})
+        result["item"]["item_id"] = str(uuid4())
+        with self.assertRaisesRegex(ValueError, "identity mismatch"):
+            recover_completed_batch_slot(conn, **scope)

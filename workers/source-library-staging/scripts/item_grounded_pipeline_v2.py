@@ -71,42 +71,32 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         review_repair=review_repair, topic=topic, explanation_review=explanation_review, quality_review=quality_review)
     # Independent retrieval is diagnostic only: finding a passage is not proof
     # that it supports the key or refutes an alternative.
-    option_audit = None
-    if textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict):
+    option_audit = option_adjudication = None
+    prior_stages = result.get("screening", {}).get("stages", {})
+    can_adjudicate = (option_reviewer is not None and not result.get("generator_issues")
+        and isinstance(prior_stages, dict)
+        and all(isinstance(stage, dict) and stage.get("status") == "pass"
+                for name, stage in prior_stages.items() if name != "human_review")
+        and (explanation_review is None or prior_stages.get("explanation_evidence", {}).get("status") == "pass")
+        and prior_stages.get("schema", {}).get("status") == "pass")
+    passages = {}
+    # Held MC drafts cannot use the audit's passages yet. Preserve the legacy
+    # diagnostic for callers that do not have a reviewer configured.
+    if (textbook_id and format in ("MC", "MS") and isinstance(result.get("item"), dict)
+            and (format != "MC" or option_reviewer is None or can_adjudicate)):
         try:
             from item_option_retrieval_audit_v2 import audit
-            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id, context_query=topic, limit=max(3,len(books or [])),
-                                 **({'textbook_ids': textbook_ids} if textbook_ids else {}))
+            option_audit = audit(conn, owner_uid, result["item"], textbook_id=textbook_id,
+                                 context_query=topic, limit=max(3,len(books or [])),
+                                 **({"matched_passages": passages} if can_adjudicate else {}),
+                                 **({"textbook_ids": textbook_ids} if textbook_ids else {}))
         except (ValueError, KeyError, TypeError, RuntimeError):
             option_audit = {"all_options_searched": False,
                             "clinical_verification_complete": False,
                             "can_publish": False,
                             "error": "option_retrieval_unavailable"}
-    option_adjudication = None
-    prior_stages = result.get("screening", {}).get("stages", {})
-    if (option_reviewer is not None and format in ("MC", "MS")
-            and isinstance(result.get("item"), dict) and isinstance(option_audit, dict)
-            and not result.get("generator_issues")
-            and isinstance(prior_stages, dict)
-            and all(isinstance(stage, dict) and stage.get("status") == "pass"
-                    for name, stage in prior_stages.items() if name != "human_review")
-            and (explanation_review is None or result.get("screening", {}).get("stages", {}).get(
-                "explanation_evidence", {}).get("status") == "pass")
-            and result.get("screening", {}).get("stages", {}).get("schema", {}).get("status") == "pass"):
+    if can_adjudicate and isinstance(option_audit, dict):
         from item_option_adjudication_handoff_v2 import run as review_options
-        from search_passages import search
-        passages = {}
-        try:
-            for entry in option_audit.get("option_audits", []):
-                if entry.get("search_status") != "matches_found":
-                    continue
-                for query in entry.get("search_queries") or [entry["search_query"]]:
-                    for book in textbook_ids or [textbook_id]:
-                        for passage in search(conn, query, owner_uid, limit=5, textbook_id=book):
-                            if passage['passage_id'] in entry['retrieved_passage_ids']:
-                                passages[passage["passage_id"]] = passage
-        except Exception:
-            passages = {}
         option_adjudication = review_options(
             result["item"], option_audit, option_reviewer,
             source_passages=list(passages.values()),

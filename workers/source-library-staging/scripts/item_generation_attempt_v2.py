@@ -15,6 +15,11 @@ import re
 _active = Lock()
 
 
+def generation_is_busy():
+    """Fast advisory before expensive setup; attempt() still claims the lock."""
+    return _active.locked()
+
+
 class GenerationAlreadyStarted(RuntimeError):
     pass
 

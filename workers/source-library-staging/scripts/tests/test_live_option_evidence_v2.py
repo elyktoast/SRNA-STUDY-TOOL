@@ -104,18 +104,23 @@ class LiveOptionEvidenceTests(unittest.TestCase):
         source={**self.sources[0],'textbook_id':'book','pdf_page_start':1,'pdf_page_end':1,'citation_verified':False}
         packet={'can_generate_grounded_questions':True,'topic':'clinical topic','sources':[source]}
         screen.return_value={'item':self.item,'generator_issues':[], 'screening':{'stages':{'schema':{'status':'pass'},'human_review':{'status':'pending'}}}}
-        audit.return_value=self.audit; search.return_value=[source]
+        def retrieve(*args, matched_passages, **kwargs):
+            matched_passages[source['passage_id']] = source
+            return self.audit
+        audit.side_effect = retrieve
         calls=[]
         def reviewer(payload): calls.append(payload); return self.judgments
         kwargs=dict(mode='NCE',domain='III',section='H',objective='III.H.4',item_id='q1',textbook_id='book',evidence_packet=packet,option_reviewer=reviewer,generator_model_id='generator',option_reviewer_model_id='reviewer')
         result=generate_from_index(object(),'owner','clinical topic',lambda r:{},**kwargs)
         self.assertEqual(len(calls),1)
         self.assertEqual(audit.call_args.kwargs['context_query'],'clinical topic')
+        search.assert_not_called()
         self.assertEqual(result['screening']['stages']['independent_option_evidence']['status'],'pass')
         self.assertFalse(result['can_publish'])
         screen.return_value={**screen.return_value,'generator_issues':[{'rule_id':'R-15'}]}
         generate_from_index(object(),'owner','clinical topic',lambda r:{},**kwargs)
         self.assertEqual(len(calls),1)
+        audit.assert_called_once()
 
     def test_adapter_sends_distinct_review_step_with_bounded_output(self):
         calls=[]

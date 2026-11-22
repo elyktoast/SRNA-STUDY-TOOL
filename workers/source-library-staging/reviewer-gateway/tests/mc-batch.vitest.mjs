@@ -27,15 +27,15 @@ it('stores distinct IDs for 25, 50, and 100 attempts and isolates owners', async
  }
 });
 
-it('serializes slots, holds an incomplete review, and resumes only unstarted slots', async () => {
+it('holds an incomplete review and automatically proceeds after provider cooldown', async () => {
  const {stub,start,control} = fixture(25,['first','second','provider outage','last']);
  await start();
  for (let index=0;index<3;index++) expect(await runDurableObjectAlarm(stub)).toBe(true);
  const {batch} = await control('status');
- expect(batch.status).toBe('paused');
+ expect(batch.status).toBe('running');
+ expect(batch.reason).toBe('waiting_to_retry_provider');
+ expect(batch.nextRunAt).toBeGreaterThan(Date.now());
  expect(batch.items.map(item => item.status)).toEqual(['ready','ready','held','queued']);
- expect(await runDurableObjectAlarm(stub)).toBe(false);
- await control('resume');
  await runDurableObjectAlarm(stub);
  expect((await control('status')).batch.status).toBe('complete');
 });
@@ -53,12 +53,59 @@ it('after eviction reads completion for the same ID without another paid attempt
  expect((await control('status')).batch.items[0]).toMatchObject({status:'ready',draftId:initial.items[0].id});
 });
 
-it('bounds completed-only reads and leaves the next item queued when completion is unknown', async () => {
+it('leaves ambiguous work recovery-only, then advances after its deadline', async () => {
  const {stub,start,control} = fixture(25,['unconfirmed','next']);
  await start();
- for (let index=0;index<4;index++) expect(await runDurableObjectAlarm(stub)).toBe(true);
+ await runDurableObjectAlarm(stub);
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.items[0].status).toBe('started');
+ await runInDurableObject(stub, async (_instance,state) => {
+  const batch = await state.storage.get('batch');
+  batch.items[0].startedAt = Date.now() - 18 * 60_000;
+  await state.storage.put('batch',batch);
+ });
+ await runDurableObjectAlarm(stub);
  const {batch} = await control('status');
- expect(batch.status).toBe('paused');
+ expect(batch.status).toBe('running');
  expect(batch.items.map(item => item.status)).toEqual(['unknown','queued']);
- expect(await runDurableObjectAlarm(stub)).toBe(false);
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.status).toBe('complete');
+});
+
+it('requeues an explicit busy refusal before payment without changing the slot ID', async () => {
+ const {stub,start,control} = fixture(25,['busy once']);
+ const {batch:original} = await start();
+ await runDurableObjectAlarm(stub);
+ const {batch} = await control('status');
+ expect(batch.reason).toBe('waiting_for_generator');
+ expect(batch.items[0]).toMatchObject({id:original.items[0].id,status:'queued'});
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.items[0].status).toBe('ready');
+});
+
+it('bounds known provider failures and keeps processing without requiring manual resume', async () => {
+ const {stub,start,control} = fixture(25,['explicit provider failure','next']);
+ await start();
+ for (let i=0;i<3;i++) await runDurableObjectAlarm(stub);
+ const {batch} = await control('status');
+ expect(batch.reason).toBe('waiting_to_retry_provider');
+ expect(batch.nextRunAt - Date.now()).toBeGreaterThan(30_000);
+ expect(batch.items[0]).toMatchObject({status:'unknown',reason:'generation_provider_unavailable'});
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.status).toBe('complete');
+});
+
+it('restores the alarm for a persisted legacy pause on the first status read', async () => {
+ const {stub,start,control} = fixture(25,['next']);
+ await start();
+ await runInDurableObject(stub, async (_instance,state) => {
+  const batch = await state.storage.get('batch');
+  batch.status = 'paused';
+  batch.reason = 'completion_unverified';
+  await state.storage.put('batch',batch);
+  await state.storage.deleteAlarm();
+ });
+ expect((await control('status')).batch.status).toBe('running');
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.status).toBe('complete');
 });

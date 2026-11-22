@@ -2,21 +2,43 @@
 
 No provider calls, mutations, or approval/publishing side effects.
 """
+from array import array
 import json
 import hashlib
 import math
+import os
 import re
 from pathlib import Path
 from uuid import UUID
-from item_semantic_duplicates import cosine
 
 HASH = re.compile(r"^[a-f0-9]{64}$")
 PAGE_SIZE = 1000
 MAX_ITEMS = 10000
+_inventory_cache = None
+
+
+def _file_version(source):
+    stat = os.fstat(source.fileno())
+    return (stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns, stat.st_ctime_ns)
 
 
 def load_inventory(path):
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    global _inventory_cache
+    with Path(path).open(encoding="utf-8") as source:
+        key = _file_version(source)
+        cached = _inventory_cache
+        if cached is None or cached[0] != key:
+            entries = _validate_inventory(json.load(source))
+            cached = (key, entries)
+        if key != _file_version(source):
+            raise ValueError("Canonical inventory changed during verification")
+        _inventory_cache = cached
+    inventory, digest = cached[1]
+    return dict(inventory), digest
+
+
+def _validate_inventory(data):
+
     if not isinstance(data, dict) or data.get("schema_version") != 1:
         raise ValueError("Unsupported canonical inventory schema")
     entries = data.get("entries")
@@ -48,7 +70,7 @@ def load_inventory(path):
     return inventory, digest
 
 
-def reconcile(conn, *, owner_uid, embedding_model, inventory):
+def _scan_index(conn, *, owner_uid, embedding_model, inventory, retain_vectors=False):
     owner = str(UUID(owner_uid))
     if (not isinstance(embedding_model, str) or not embedding_model.strip()
             or not isinstance(inventory, dict) or not inventory
@@ -59,9 +81,18 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
            for key, value in inventory.items()):
         raise ValueError("Invalid canonical inventory")
     observed = {}
+    vectors = {}
     dimensions = None
     last_id = ""
-    with conn.cursor() as cur:
+    # psycopg's binary array decoder avoids converting millions of printed
+    # float literals while preserving the PostgreSQL double values exactly.
+    try:
+        from psycopg import Connection
+        binary = isinstance(conn, Connection)
+    except ImportError:
+        binary = False
+    cursor = conn.cursor(binary=True) if binary else conn.cursor()
+    with cursor as cur:
         while True:
             cur.execute(
                 """select item_id, stem_hash, embedding from source_library_staging.question_semantic_index_v2
@@ -88,19 +119,18 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
                 if any(type(v) not in (int, float) or not math.isfinite(v)
                        or abs(v) > 1e100 for v in embedding):
                     raise ValueError("Invalid indexed embedding")
-                # Reject zero, NaN, infinity and nonnumeric vectors using the
-                # same numerical validation as the semantic similarity scorer.
-                try:
-                    similarity = cosine(embedding, embedding)
-                    if not math.isfinite(similarity) or abs(similarity - 1.0) > 1e-9:
-                        raise ValueError("Invalid indexed embedding")
-                except (TypeError, ValueError, OverflowError, ZeroDivisionError):
-                    raise ValueError("Invalid indexed embedding") from None
+                # A row only needs a usable norm here. Calculating cosine
+                # against itself would scan the same components three times.
+                squared_norm = sum(value * value for value in embedding)
+                if not math.isfinite(squared_norm) or squared_norm <= 0:
+                    raise ValueError("Invalid indexed embedding")
                 if dimensions is None:
                     dimensions = len(embedding)
                 elif len(embedding) != dimensions:
                     raise ValueError("Inconsistent indexed embedding dimensions")
                 observed[item_id] = stem_hash
+                if retain_vectors:
+                    vectors[item_id] = array("d", embedding)
             if len(observed) > MAX_ITEMS:
                 raise ValueError("Semantic index exceeds inventory cap")
             if len(page) < PAGE_SIZE:
@@ -111,7 +141,7 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
     unexpected = sorted(actual_ids - expected_ids)
     stale = sorted(item_id for item_id in expected_ids & actual_ids
                    if inventory[item_id] != observed[item_id])
-    return {
+    report = {
         "ready": not (missing or unexpected or stale),
         "expected_count": len(expected_ids),
         "indexed_count": len(actual_ids),
@@ -122,3 +152,17 @@ def reconcile(conn, *, owner_uid, embedding_model, inventory):
         "unexpected_ids": unexpected,
         "stale_ids": stale,
     }
+    return report, vectors
+
+
+def reconcile(conn, *, owner_uid, embedding_model, inventory):
+    report, _ = _scan_index(conn, owner_uid=owner_uid, embedding_model=embedding_model,
+                            inventory=inventory)
+    return report
+
+
+def reconciled_vectors(conn, *, owner_uid, embedding_model, inventory):
+    """Return all validated embeddings from a complete scan, or no snapshot."""
+    report, vectors = _scan_index(conn, owner_uid=owner_uid, embedding_model=embedding_model,
+                                  inventory=inventory, retain_vectors=True)
+    return vectors if report["ready"] else None

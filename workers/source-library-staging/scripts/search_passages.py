@@ -5,6 +5,7 @@ Requires psycopg[binary]. DATABASE_URL must be a trusted server-side credential.
 Never expose this script or the database credential to student browsers.
 """
 import argparse
+from contextlib import ExitStack
 import json
 import os
 import re
@@ -20,7 +21,7 @@ BACK_MATTER_ORDER_SQL = r"""case when
     then 1 else 0 end"""
 
 
-def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
+def _search_statement(query, owner_uid, limit=10, textbook_id=None, section_id=None,
            include_subsections=False, page_start=None, page_end=None):
     if not query or not query.strip():
         raise ValueError("Search query required")
@@ -80,16 +81,50 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
         params.append(page_end)
     sql += " order by " + BACK_MATTER_ORDER_SQL + ", rank desc, t.id, p.chunk_index limit %s"
     params.append(limit)
+    return sql, params
+
+
+def _passages(rows):
+    return [
+        {"passage_id": r[0], "textbook_id": r[1], "filename": r[2],
+         "chunk_index": r[3], "pdf_page_start": r[4], "pdf_page_end": r[5],
+         "section_id": r[6], "section_heading": r[7],
+         "rank": float(r[8]), "excerpt": r[9],
+         "citation_verified": False, "page_numbering": "physical_pdf_page_1_based"}
+        for r in rows
+    ]
+
+
+def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
+           include_subsections=False, page_start=None, page_end=None):
+    statement = _search_statement(query, owner_uid, limit, textbook_id, section_id,
+                                  include_subsections, page_start, page_end)
     with conn.cursor() as cur:
-        cur.execute(sql, params)
-        return [
-            {"passage_id": r[0], "textbook_id": r[1], "filename": r[2],
-             "chunk_index": r[3], "pdf_page_start": r[4], "pdf_page_end": r[5],
-             "section_id": r[6], "section_heading": r[7],
-             "rank": float(r[8]), "excerpt": r[9],
-             "citation_verified": False, "page_numbering": "physical_pdf_page_1_based"}
-            for r in cur.fetchall()
-        ]
+        cur.execute(*statement)
+        return _passages(cur.fetchall())
+
+
+def supports_pipeline(conn):
+    try:
+        from psycopg import Connection, capabilities
+    except ImportError:
+        return False
+    return isinstance(conn, Connection) and capabilities.has_pipeline()
+
+
+def search_many(conn, owner_uid, requests):
+    """Execute identical read-only searches with one protocol sync."""
+    if not 1 <= len(requests) <= 32:
+        raise ValueError("Expected 1..32 scoped passage searches")
+    statements = [_search_statement(query, owner_uid, **scope) for query, scope in requests]
+    with ExitStack() as cursors:
+        pending = [cursors.enter_context(conn.cursor()) for _ in statements]
+        # Exit the pipeline before fetching: fetching inside the loop would
+        # force each cursor to wait before sending the next request.
+        with conn.pipeline():
+            for cursor, statement in zip(pending, statements):
+                cursor.execute(*statement)
+        return [_passages(cursor.fetchall()) for cursor in pending]
 
 
 def main():

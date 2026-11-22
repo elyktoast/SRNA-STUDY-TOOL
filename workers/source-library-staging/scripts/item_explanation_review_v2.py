@@ -1,5 +1,7 @@
 """Independent source-only checks of explanatory fields; never clinical approval."""
+import json
 import re
+from item_ai_https_transport_v2 import TransportError
 
 
 def _exclusive_clinical_claim(field):
@@ -62,7 +64,32 @@ def fields_for(item):
     return fields
 
 
-def review(item, sources, reviewer, *, batch_size=None):
+def _batches(fields, size, passages, compact):
+    by_sources = {}
+    for field in fields:
+        by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
+    grouped = [group[i:i+size] for group in by_sources.values()
+               for i in range(0, len(group), size)]
+    if not compact:
+        return grouped
+    batches = []
+    for group in grouped:
+        combined = (batches[-1] if batches else []) + group
+        ids = {pid for field in combined for pid in field["passage_ids"]}
+        sources = [passages[pid] for pid in sorted(ids)]
+        # The wire also includes a separate quote enum per field. Count each
+        # allowed quote reference conservatively when estimating packet size.
+        estimate = len(json.dumps([combined, sources], ensure_ascii=False).encode("utf-8"))
+        estimate += sum(18 * len(passages[pid]["quote_spans"])
+                        for field in combined for pid in field["passage_ids"])
+        if batches and len(combined) <= size and estimate <= 5400:
+            batches[-1] = combined
+        else:
+            batches.append(group)
+    return batches
+
+
+def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
     """The caller supplies a distinct authenticated model; outages stay pending."""
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "clinical_truth_verified": False, "human_review_required": True}
@@ -106,19 +133,30 @@ def review(item, sources, reviewer, *, batch_size=None):
         if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
             raise ValueError("Invalid explanatory batch size")
         result = {"supported_groups":[], "unsupported":[]}
-        # A grouped answer may cite only sources allowed by every field in it.
-        # Partition before calling the model; never broaden field citations.
-        by_sources = {}
-        for field in submitted:
-            by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
-        batches = [group[i:i+size] for group in by_sources.values()
-                   for i in range(0, len(group), size)]
-        for batch in batches:
-            batch_ids = {f["id"] for f in batch}
-            source_ids = {pid for f in batch for pid in f["passage_ids"]}
-            part = reviewer({"step": "explanation_review", "rules_version": "2.0",
+        source_by_id = {passage["passage_id"]: passage for passage in packet["source_passages"]}
+        batches = _batches(submitted, size, source_by_id, compact_scopes)
+        def review_part(batch):
+            source_ids = {pid for field in batch for pid in field["passage_ids"]}
+            return reviewer({"step": "explanation_review", "rules_version": "2.0",
                 "auto_publish": False, "independent": True, "fields": batch,
                 "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
+
+        completed_batches = 0
+        work = list(batches)
+        while work:
+            batch = work.pop(0)
+            batch_ids = {f["id"] for f in batch}
+            try:
+                part = review_part(batch)
+            except TransportError as exc:
+                if not compact_scopes or exc.rule != "PROVIDER_REQUEST_SIZE" or len(batch) < 2:
+                    raise
+                # Only a rejected request is split. A returned judgment is
+                # never solicited again, and each field retains its sources.
+                middle = len(batch) // 2
+                work[0:0] = (batch[:middle], batch[middle:])
+                continue
+            completed_batches += 1
             if (not isinstance(part, dict) or set(part) != {"supported_groups", "unsupported"}
                     or not isinstance(part["supported_groups"], list) or not isinstance(part["unsupported"], list)):
                 raise ValueError("Incomplete explanatory review")
@@ -184,11 +222,11 @@ def review(item, sources, reviewer, *, batch_size=None):
         if seen != set(expected):
             raise ValueError("Every explanatory field must be reviewed")
         return {**pending, "status": "flag" if issues else "pass", "issues": issues,
-                "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":len(batches)}
+                "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":completed_batches}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN",
-                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
+                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_REQUEST_SIZE", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
         # Only fixed local validation messages may become diagnostics.
         messages = {"Incomplete explanatory review", "Invalid explanatory judgments",
                     "Invalid supported fields", "Missing source support", "Invalid source span",

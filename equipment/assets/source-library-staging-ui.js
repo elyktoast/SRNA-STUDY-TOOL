@@ -388,7 +388,12 @@ function renderBatch({batch}) {
  const progress = finished + '/' + total + ' finished';
  batchCounter.textContent = progress;
  const shortage = total < batch.requested ? ' (' + batch.requested + ' requested)' : '';
- const reason = batch.reason ? ' · ' + batch.reason.replaceAll('_',' ') : '';
+ const messages = {
+  waiting_to_retry_provider:'Provider delay. The batch will continue automatically.',
+  waiting_for_generator:'Waiting for the generator. The batch will continue automatically.',
+  recovering_current_attempt:'Checking whether the current attempt was saved.',
+ };
+ const reason = batch.reason ? ' · ' + (messages[batch.reason] || batch.reason.replaceAll('_',' ')) : '';
  const message = headline + (shortage || '') + reason;
  if (batchStatus.textContent !== message) batchStatus.textContent = message;
  batchProgress.max = total;
@@ -425,7 +430,7 @@ async function refreshBatch() {
  } catch {
   if (version !== batchVersion) return;
   batchStatus.textContent = 'Could not refresh the checking queue. Use Refresh to try again.';
-  if (batchId && ['running','cancelling'].includes(currentBatch?.status)) batchTimer = setTimeout(refreshBatch,30000);
+  if (!batchQueue.hidden || ['running','cancelling','paused'].includes(currentBatch?.status)) batchTimer = setTimeout(refreshBatch,15000);
  } finally {
   batchRefresh.disabled = false;
  }
@@ -472,6 +477,9 @@ batchStart.onclick = () => {
 };
 batchResume.onclick = () => batchAction({action:'resume',id:batchId});
 batchCancel.onclick = () => batchAction({action:'cancel',id:batchId});
+document.addEventListener('visibilitychange', () => {
+ if (!document.hidden && !batchQueue.hidden) void refreshBatch();
+});
 void refreshBatch();
 
 
