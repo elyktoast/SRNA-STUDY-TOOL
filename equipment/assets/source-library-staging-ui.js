@@ -314,26 +314,43 @@ function selectedEvidenceScope(primary){
 let generatedForReview=null,currentDraftQuestion=null;
 
 const batchPanel = document.createElement('section');
-batchPanel.innerHTML = '<h3>MC batch generation</h3><div class="sl-row"><label>Questions <select><option>25</option><option>50</option><option>100</option></select></label><button type="button">Queue current topic</button><button type="button" hidden>Resume</button><button type="button" hidden>Cancel</button></div><p role="status"></p><details hidden><summary>Question results</summary><ol></ol></details>';
+batchPanel.innerHTML = '<h3>MC batch generation</h3><div class="sl-row"><label>Questions <select><option>25</option><option>50</option><option>100</option></select></label><button type="button">Queue current topic</button><button type="button" data-open-checking-queue>View checking queue</button></div><p data-batch-start-status role="status"></p>';
 evidencePanel.after(batchPanel);
-const [batchStart,batchResume,batchCancel] = batchPanel.querySelectorAll('button');
-const batchStatus = batchPanel.querySelector('[role="status"]');
-const batchResults = batchPanel.querySelector('details');
-let batchTimer, batchId, batchVersion = 0;
-function renderBatch({batch}) {
- clearTimeout(batchTimer);
- batchId = batch?.id;
- batchResume.hidden = batch?.status !== 'paused';
- batchCancel.hidden = !['running','paused'].includes(batch?.status);
- batchStart.disabled = ['running','paused','cancelling'].includes(batch?.status);
- batchResults.hidden = !batch;
- if (!batch) return;
- const counts = {};
- const rows = batch.items.map(item => {
-  counts[item.status] = (counts[item.status] || 0) + 1;
-  const row = document.createElement('li');
+const batchStart = batchPanel.querySelector('button');
+const batchStartStatus = batchPanel.querySelector('[data-batch-start-status]');
+const batchQueue = document.createElement('section');
+batchQueue.className = 'sl-ai-checking';
+batchQueue.hidden = true;
+batchQueue.innerHTML = '<h3>Checking queue</h3><div class="sl-row"><button type="button" data-batch-refresh>Refresh</button><button type="button" data-batch-resume hidden>Resume</button><button type="button" data-batch-cancel hidden>Cancel</button></div><p role="status">Loading batch status…</p><strong data-batch-counter hidden></strong><progress aria-label="Batch processing progress" hidden></progress><div data-batch-results hidden><p data-batch-counts></p><label>Show <select><option value="all">All attempts</option><option value="ready">Ready for clinical review</option><option value="held">Held for revision</option><option value="attention">Failed or unverified</option><option value="pending">Queued or in progress</option></select></label><p data-batch-empty hidden>No attempts match this filter.</p><ol></ol></div>';
+batchPanel.after(batchQueue);
+const batchResume = batchQueue.querySelector('[data-batch-resume]');
+const batchCancel = batchQueue.querySelector('[data-batch-cancel]');
+const batchRefresh = batchQueue.querySelector('[data-batch-refresh]');
+const batchStatus = batchQueue.querySelector('[role="status"]');
+const batchProgress = batchQueue.querySelector('progress');
+const batchCounter = batchQueue.querySelector('[data-batch-counter]');
+const batchResults = batchQueue.querySelector('[data-batch-results]');
+const batchFilter = batchResults.querySelector('select');
+let batchTimer, batchId, currentBatch, batchVersion = 0;
+
+const batchLabels = {
+ queued:'Queued',started:'Drafting and self-checking',ready:'Passed all 10 checks · Ready for clinical review',
+ held:'Held for revision',failed:'Attempt failed',unknown:'Completion unverified',cancelled:'Cancelled',
+};
+function renderBatchRows(batch) {
+ const filter = batchFilter.value;
+ const rows = batch.items.flatMap((item,index) => {
   const status = item.status === 'queued' && batch.status === 'cancelled' ? 'cancelled' : item.status;
-  row.textContent = item.topic + ' — ' + ({ready:'Ready for clinical review',held:'Held for revision',unknown:'Completion unverified',started:'In progress'}[status] || status);
+  const group = ['failed','unknown'].includes(status) ? 'attention' :
+   ['queued','started'].includes(status) ? 'pending' : status;
+  if (filter !== 'all' && filter !== group) return [];
+  const row = document.createElement('li');
+  row.value = index + 1;
+  const label = document.createElement('strong');
+  label.textContent = item.topic;
+  const state = document.createElement('span');
+  state.textContent = batchLabels[status] || 'Status unavailable';
+  row.append(label, document.createElement('br'), state);
   if (item.draftId) {
    const open = document.createElement('button');
    open.type = 'button';
@@ -341,22 +358,76 @@ function renderBatch({batch}) {
    open.onclick = () => openSavedDraft(item.draftId,open);
    row.append(' ',open);
   }
-  return row;
+  return [row];
  });
  batchResults.querySelector('ol').replaceChildren(...rows);
- batchStatus.textContent = 'Batch ' + batch.status + ' · ' + batch.items.length + '/' + batch.requested + ' queued in plan · ' +
-  (counts.ready || 0) + ' ready for clinical review · ' + (counts.held || 0) + ' held · ' +
-  ((counts.failed || 0) + (counts.unknown || 0)) + ' failed or unverified' +
-  (batch.reason ? ' · ' + batch.reason.replaceAll('_',' ') : '');
+ batchResults.querySelector('[data-batch-empty]').hidden = rows.length !== 0;
+}
+function renderBatch({batch}) {
+ clearTimeout(batchTimer);
+ const previous = currentBatch;
+ currentBatch = batch;
+ batchId = batch?.id;
+ batchResume.hidden = batch?.status !== 'paused';
+ batchCancel.hidden = !['running','paused'].includes(batch?.status);
+ batchStart.disabled = ['running','paused','cancelling'].includes(batch?.status);
+ batchResults.hidden = batchProgress.hidden = batchCounter.hidden = !batch;
+ if (!batch) {
+  batchStatus.textContent = 'No question batch has been queued yet.';
+  return;
+ }
+ const count = status => batch.items.filter(item => item.status === status).length;
+ const ready = count('ready'), held = count('held'), failed = count('failed'), unknown = count('unknown');
+ const finished = ready + held + failed + unknown;
+ const pending = count('queued'), checking = count('started');
+ const total = batch.items.length;
+ const headline = {
+  running:'Batch running',paused:'Batch paused',cancelling:'Stopping after the current attempt',
+  cancelled:'Batch cancelled',complete:'Batch complete',
+ }[batch.status] || 'Batch status unavailable';
+ const progress = finished + '/' + total + ' finished';
+ batchCounter.textContent = progress;
+ const shortage = total < batch.requested ? ' (' + batch.requested + ' requested)' : '';
+ const reason = batch.reason ? ' · ' + batch.reason.replaceAll('_',' ') : '';
+ const message = headline + (shortage || '') + reason;
+ if (batchStatus.textContent !== message) batchStatus.textContent = message;
+ batchProgress.max = total;
+ batchProgress.value = finished;
+ batchProgress.setAttribute('aria-valuetext',progress);
+ const cancelled = batch.status === 'cancelled';
+ const counts = ready + ' ready for clinical review · ' + held + ' held · ' + failed + ' failed · ' + unknown + ' unverified · ' +
+  checking + ' in progress · ' + pending + (cancelled ? ' cancelled' : ' queued');
+ batchResults.querySelector('[data-batch-counts]').textContent = counts;
+ if (!previous || previous.id !== batch.id || previous.status !== batch.status ||
+     batch.items.some((item,index) => item.status !== previous.items[index]?.status || item.draftId !== previous.items[index]?.draftId)) {
+  if (previous?.id !== batch.id) batchFilter.value = 'all';
+  renderBatchRows(batch);
+ }
  if (['running','cancelling'].includes(batch.status)) batchTimer = setTimeout(refreshBatch,15000);
 }
+batchFilter.onchange = () => { if (currentBatch) renderBatchRows(currentBatch); };
+batchRefresh.onclick = () => refreshBatch();
+batchPanel.querySelector('[data-open-checking-queue]').onclick = () => {
+ const tab = dialog.querySelector('[data-sl-ai-view="checking"]');
+ if (tab) tab.click();
+ else {
+  batchQueue.hidden = false;
+  void refreshBatch();
+ }
+};
 async function refreshBatch() {
+ clearTimeout(batchTimer);
  const version = ++batchVersion;
+ batchRefresh.disabled = true;
  try {
   const data = await storage.manageMcBatch({action:'status'});
   if (version === batchVersion) renderBatch(data);
  } catch {
-  if (version === batchVersion && batchId) batchTimer = setTimeout(refreshBatch,30000);
+  if (version !== batchVersion) return;
+  batchStatus.textContent = 'Could not refresh the checking queue. Use Refresh to try again.';
+  if (batchId && ['running','cancelling'].includes(currentBatch?.status)) batchTimer = setTimeout(refreshBatch,30000);
+ } finally {
+  batchRefresh.disabled = false;
  }
 }
 async function batchAction(request) {
@@ -365,17 +436,25 @@ async function batchAction(request) {
  try {
   const result = await storage.manageMcBatch(request);
   if (version === batchVersion) renderBatch(result);
+  return true;
  } catch (error) {
   if (version !== batchVersion) return;
-  batchStatus.textContent = error.message;
+  const status = request.action === 'start' ? batchStartStatus : batchStatus;
+  status.textContent = error.message;
   batchTimer = setTimeout(refreshBatch,5000);
+  return false;
  }
 }
 async function submitBatch(count, jobs, button) {
  if (!confirm('Queue ' + jobs.length + ' staging MC generation attempts? Provider charges may apply. Drafts require clinical review.')) return;
  button.disabled = true;
- await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,confirm:true});
- if (button !== batchStart || !batchId) button.disabled = false;
+ batchStartStatus.textContent = 'Queuing batch…';
+ const started = await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,confirm:true});
+ if (button !== batchStart || !started) button.disabled = false;
+ if (started) {
+  batchStartStatus.textContent = '';
+  batchPanel.querySelector('[data-open-checking-queue]').click();
+ }
 }
 batchStart.onclick = () => {
  const current = {
@@ -385,7 +464,7 @@ batchStart.onclick = () => {
   objective:genEl('sl-gen-objective').value.trim(),
  };
  if (!checkedEvidence || current.format !== 'MC' || Object.keys(current).some(key => current[key] !== checkedEvidence[key])) {
-  batchStatus.textContent = 'Select Single best answer and check indexed evidence for the current topic first.';
+  batchStartStatus.textContent = 'Select Single best answer and check indexed evidence for the current topic first.';
   return;
  }
  const count = Number(batchPanel.querySelector('select').value);
@@ -747,12 +826,13 @@ function openLibrary(section){if(!dialog.open && !dialog.dataset.embedded)dialog
 function ensureAICommandCenter(){
  const body=dialog.querySelector('.sl-body');let center=body.querySelector('#sl-ai-command-center');if(center)return center;
  center=document.createElement('div');center.id='sl-ai-command-center';
- center.innerHTML='<nav class="sl-ai-view-nav" aria-label="AI workspace views"><button type="button" data-sl-ai-view="create" aria-pressed="true">Create question</button><button type="button" data-sl-ai-view="drafts" aria-pressed="false">Drafts & review</button><button type="button" data-sl-ai-view="bank" aria-pressed="false">Approved bank</button><button type="button" data-sl-ai-view="providers" aria-pressed="false">Provider diagnostics</button><button type="button" data-sl-ai-view="editor" aria-pressed="false" hidden>Clinical Question Editor</button></nav><section class="sl-ai-workflow" aria-label="AI generation"><div class="sl-ai-panel-title"><span>01 · CREATE</span><h3>Generate a question</h3><p>Choose a verified textbook, check evidence, and generate one unpublished draft.</p></div><div id="sl-ai-create-content"></div></section><section class="sl-ai-drafts" aria-label="Draft review"><div class="sl-ai-panel-title"><span>02 · REVIEW</span><h3>Drafts & clinical review</h3><p>Open saved drafts, inspect answers, and save validated revisions.</p></div><div id="sl-ai-drafts-content"></div></section><aside class="sl-ai-operations" aria-label="AI diagnostics"><div class="sl-ai-panel-title"><span>03 · SYSTEM</span><h3>Provider diagnostics</h3><p>Connection checks do not generate questions.</p></div><div id="sl-ai-operations-content"></div></aside>';
+ center.innerHTML='<nav class="sl-ai-view-nav" aria-label="AI workspace views"><button type="button" data-sl-ai-view="create" aria-pressed="true">Create question</button><button type="button" data-sl-ai-view="checking" aria-pressed="false">Checking queue</button><button type="button" data-sl-ai-view="drafts" aria-pressed="false">Drafts & review</button><button type="button" data-sl-ai-view="bank" aria-pressed="false">Approved bank</button><button type="button" data-sl-ai-view="providers" aria-pressed="false">Provider diagnostics</button><button type="button" data-sl-ai-view="editor" aria-pressed="false" hidden>Clinical Question Editor</button></nav><section class="sl-ai-workflow" aria-label="AI generation"><div class="sl-ai-panel-title"><span>01 · CREATE</span><h3>Generate a question</h3><p>Choose a verified textbook, check evidence, and generate one unpublished draft.</p></div><div id="sl-ai-create-content"></div></section><section class="sl-ai-drafts" aria-label="Draft review"><div class="sl-ai-panel-title"><span>02 · REVIEW</span><h3>Drafts & clinical review</h3><p>Open saved drafts, inspect answers, and save validated revisions.</p></div><div id="sl-ai-drafts-content"></div></section><aside class="sl-ai-operations" aria-label="AI diagnostics"><div class="sl-ai-panel-title"><span>03 · SYSTEM</span><h3>Provider diagnostics</h3><p>Connection checks do not generate questions.</p></div><div id="sl-ai-operations-content"></div></aside>';
  const create=center.querySelector('#sl-ai-create-content'),drafts=center.querySelector('#sl-ai-drafts-content'),ops=center.querySelector('#sl-ai-operations-content');
  const editor=document.createElement('section');editor.id='sl-clinical-editor';editor.className='sl-clinical-editor';editor.hidden=true;editor.innerHTML='<div class="sl-clinical-head"><div><span>CLINICAL REVIEW · UNPUBLISHED</span><h3>Question Editor</h3><p>Review the question, correct its wording, verify source evidence, and save a versioned draft.</p></div><button type="button" id="sl-editor-back">Back to drafts</button></div><div id="sl-clinical-editor-body"></div>';
- const setAIView=view=>{const editing=view==='editor';if(!['create','drafts','bank','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;if(view==='bank'||view==='drafts')renderDraftCollection(view).catch(error=>{genEl('sl-gen-status').textContent=error.message||'Question list unavailable.';});editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers']])if(section)section.hidden=editing||(name==='drafts'?(view!=='drafts'&&view!=='bank'):view!==name);for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
- center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView('drafts');
+ const setAIView=view=>{const editing=view==='editor';if(!['create','checking','drafts','bank','providers','editor'].includes(view))return;if(!editing)lastAIView=view;if(editing&&(!currentDraftQuestion||!center.querySelector('#sl-draft-detail')||center.querySelector('#sl-draft-detail').hidden)){center.querySelector('#sl-ai-drafts-content #sl-list-generated')?.focus({preventScroll:true});return;}center.classList.toggle('sl-ai-editing',editing);center.dataset.activeView=view;if(view==='checking')void refreshBatch();if(view==='bank'||view==='drafts')renderDraftCollection(view).catch(error=>{genEl('sl-gen-status').textContent=error.message||'Question list unavailable.';});editor.hidden=!editing;for(const [section,name] of [[center.querySelector('.sl-ai-workflow'),'create'],[center.querySelector('.sl-ai-drafts'),'drafts'],[center.querySelector('.sl-ai-operations'),'providers'],[batchQueue,'checking']])if(section)section.hidden=editing||(name==='drafts'?(view!=='drafts'&&view!=='bank'):view!==name);for(const btn of center.querySelectorAll('[data-sl-ai-view]'))btn.setAttribute('aria-pressed',String(btn.dataset.slAiView===view));if(editing){editor.querySelector('#sl-edit-stem')?.focus({preventScroll:true});}const scroller=dialog.closest('.admin-main');if(scroller)scroller.scrollTop=0;};
+ center.querySelectorAll('[data-sl-ai-view]').forEach(btn=>btn.onclick=()=>setAIView(btn.dataset.slAiView));editor.querySelector('#sl-editor-back').onclick=()=>setAIView(lastAIView==='checking'?'checking':'drafts');
  create.append(evidencePanel,batchPanel,lecturePanel);
+ center.append(batchQueue);
  const draftControls=generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row');
  const draftDetail=generationPanel.querySelector('#sl-draft-detail');
  const revisionEditor=generationPanel.querySelector('#sl-revision-editor');
@@ -795,7 +875,7 @@ function mountInAdmin(host,section){
  const isAI=section==='generation';
  dialog.classList.toggle('sl-workspace-ai',isAI);
  dialog.classList.toggle('sl-workspace-sources',!isAI);
- if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');const drafts=center.querySelector('#sl-ai-drafts-content');if(drafts)for(const child of [...drafts.children])generationPanel.append(child);const detail=center.querySelector('#sl-draft-detail');if(detail)generationPanel.append(detail);body.append(evidencePanel,providerPanel,generationPanel);center.remove();}
+ if(!isAI&&dialog.querySelector('#sl-ai-command-center')){const center=dialog.querySelector('#sl-ai-command-center');const body=dialog.querySelector('.sl-body');const drafts=center.querySelector('#sl-ai-drafts-content');if(drafts)for(const child of [...drafts.children])generationPanel.append(child);const detail=center.querySelector('#sl-draft-detail');if(detail)generationPanel.append(detail);batchQueue.hidden=true;body.append(evidencePanel,batchPanel,batchQueue,lecturePanel,providerPanel,generationPanel);center.remove();}
  if(isAI&&dialog.querySelector('#sl-research-layout')){const research=dialog.querySelector('#sl-research-layout');const body=dialog.querySelector('.sl-body');body.append(dashboard,librarySearch,list,evidencePanel);research.remove();}
  const body=dialog.querySelector('.sl-body');
  let heading=body.querySelector('.sl-workspace-heading');
@@ -820,6 +900,15 @@ style.textContent+=`#staging-source-dialog.sl-admin-embedded .sl-workspace-headi
 dialog.querySelector('.sl-head')?.classList.add('sl-source-only');dialog.querySelector('.sl-hero')?.classList.add('sl-source-only');dialog.querySelector('#sl-file')?.closest('.sl-row')?.classList.add('sl-source-only');dialog.querySelector('#sl-status')?.classList.add('sl-source-only');dashboard.classList.add('sl-source-only');libraryHeading.classList.add('sl-source-only');librarySearch.classList.add('sl-source-only');list.classList.add('sl-source-only');
 style.textContent+=`#staging-source-dialog.sl-workspace-sources #sl-research-layout{display:grid;grid-template-columns:minmax(230px,0.85fr) minmax(330px,1.6fr) minmax(230px,0.85fr);gap:14px;align-items:stretch;min-height:520px}#staging-source-dialog.sl-workspace-sources #sl-research-layout>section,#staging-source-dialog.sl-workspace-sources #sl-research-layout>aside{min-width:0;border:1px solid #d7e2dc;border-radius:14px;background:white;overflow:hidden}#staging-source-dialog .sl-research-panel-head{padding:16px 18px;border-bottom:1px solid #e4ece7;background:#f7faf7}#staging-source-dialog .sl-research-panel-head h3{font-size:16px;margin:0 0 4px;color:#1d4535}#staging-source-dialog .sl-research-panel-head p{font-size:12px;color:#60766b;margin:0}#staging-source-dialog #sl-research-library-content,#staging-source-dialog #sl-research-tools-content{padding:12px}#staging-source-dialog #sl-research-library-content #sl-list{border:0;padding:0}#staging-source-dialog #sl-research-library-content .sl-item{grid-template-columns:minmax(0,1fr);padding:12px 4px}#staging-source-dialog #sl-research-library-content .sl-actions{justify-content:flex-start;max-width:100%}#staging-source-dialog #sl-research-library-content .sl-actions button{font-size:12px}#staging-source-dialog #sl-research-preview{padding:14px;min-height:420px}#staging-source-dialog .sl-research-empty{display:grid;place-content:center;text-align:center;min-height:420px;color:#6c8177;padding:20px;line-height:1.7}#staging-source-dialog.sl-workspace-sources #sl-preview-frame{height:62vh;min-height:430px}#staging-source-dialog #sl-research-tools-content .sl-row{display:grid;gap:9px}#staging-source-dialog #sl-research-tools-content .sl-row>*{width:100%;min-width:0;box-sizing:border-box}#staging-source-dialog #sl-research-tools-content h3{display:none}@media(max-width:1200px){#staging-source-dialog.sl-workspace-sources #sl-research-layout{grid-template-columns:minmax(230px,1fr) minmax(340px,1.6fr)}#staging-source-dialog.sl-workspace-sources .sl-research-tools{grid-column:1/-1}}@media(max-width:750px){#staging-source-dialog.sl-workspace-sources #sl-research-layout{grid-template-columns:minmax(0,1fr)}#staging-source-dialog.sl-workspace-sources .sl-research-tools{grid-column:auto}#staging-source-dialog #sl-research-preview{min-height:260px}#staging-source-dialog .sl-research-empty{min-height:260px}}`;
 style.textContent+=`#staging-source-dialog.sl-workspace-ai #sl-ai-command-center{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.25fr) minmax(240px,.7fr);gap:16px;align-items:start}#staging-source-dialog.sl-workspace-ai #sl-ai-command-center>section,#staging-source-dialog.sl-workspace-ai #sl-ai-command-center>aside{min-width:0;background:#fff;border:1px solid #d6e1ec;border-radius:16px;overflow:hidden;box-shadow:0 5px 22px rgba(14,38,65,.06)}#staging-source-dialog .sl-ai-panel-title{padding:18px;background:#10273f;color:white}#staging-source-dialog .sl-ai-panel-title span{font-size:10px;letter-spacing:.16em;font-weight:800;color:#7ad1e6}#staging-source-dialog .sl-ai-panel-title h3{margin:7px 0;font-size:19px;color:white}#staging-source-dialog .sl-ai-panel-title p{font-size:12px;color:#c4d8e8;margin:0;line-height:1.5}#staging-source-dialog #sl-ai-create-content,#staging-source-dialog #sl-ai-drafts-content,#staging-source-dialog #sl-ai-operations-content{padding:16px}#staging-source-dialog.sl-workspace-ai .sl-evidence-preflight,#staging-source-dialog.sl-workspace-ai .sl-generation-panel{display:block!important;margin:0 0 14px;background:#f6f9fc;border:1px solid #e0e8f0;border-radius:12px;padding:14px}#staging-source-dialog.sl-workspace-ai .sl-generation-panel>h3,#staging-source-dialog.sl-workspace-ai .sl-evidence-preflight>h3{display:none}#staging-source-dialog.sl-workspace-ai .sl-generation-panel .sl-row,#staging-source-dialog.sl-workspace-ai .sl-evidence-preflight .sl-row{display:flex;flex-wrap:wrap;gap:10px;align-items:end}#staging-source-dialog.sl-workspace-ai .sl-generation-panel label{display:flex;flex-direction:column;gap:4px}#staging-source-dialog.sl-workspace-ai #sl-ai-operations-content .sl-row{display:grid;gap:10px}#staging-source-dialog.sl-workspace-ai #sl-ai-drafts-content>details{margin:10px 0;padding:12px;border:1px solid #dbe5ef;border-radius:10px}#staging-source-dialog.sl-workspace-ai #sl-ai-drafts-content .sl-row{display:flex;flex-wrap:wrap;gap:8px}#staging-source-dialog.sl-workspace-ai #sl-ai-command-center input,#staging-source-dialog.sl-workspace-ai #sl-ai-command-center select{max-width:100%;box-sizing:border-box}#staging-source-dialog.sl-workspace-ai #sl-ai-command-center button{white-space:normal}#staging-source-dialog.sl-workspace-ai #sl-ai-command-center .sl-readable-question{max-width:100%}@media(max-width:1300px){#staging-source-dialog.sl-workspace-ai #sl-ai-command-center{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}#staging-source-dialog.sl-workspace-ai .sl-ai-operations{grid-column:1/-1}}@media(max-width:760px){#staging-source-dialog.sl-workspace-ai #sl-ai-command-center{grid-template-columns:minmax(0,1fr)}#staging-source-dialog.sl-workspace-ai .sl-ai-operations{grid-column:auto}}`;
+style.textContent+=`
+#staging-source-dialog .sl-ai-checking {grid-column:1/-1;padding:18px}
+#staging-source-dialog .sl-ai-checking [data-batch-counter]:not([hidden]) {display:block;font-size:1.5rem;margin-bottom:.4rem}
+#staging-source-dialog .sl-ai-checking progress {width:100%;accent-color:#167487}
+#staging-source-dialog .sl-ai-checking li {padding:.55rem 0;border-bottom:1px solid #dbe5ee}
+#staging-source-dialog .sl-ai-checking li span {color:#36546b}
+#staging-source-dialog .sl-ai-checking li button {margin-left:.5rem}
+#staging-source-dialog .sl-ai-view-nav {flex-wrap:wrap}
+`;
 style.textContent+=`#staging-source-dialog.sl-workspace-ai #sl-ai-command-center .sl-ai-view-nav{grid-column:1/-1;display:flex;gap:8px;border-bottom:1px solid #d8e2ec;padding:0 0 12px}#staging-source-dialog.sl-workspace-ai .sl-ai-view-nav button{border-radius:10px;padding:11px 17px;background:#eef3f8;color:#23435c;border:1px solid #d7e3ee;font-weight:700}#staging-source-dialog.sl-workspace-ai .sl-ai-view-nav button[aria-pressed=true]{background:#10273f;color:white;border-color:#10273f}#staging-source-dialog.sl-workspace-ai #sl-clinical-editor{grid-column:1/-1;min-width:0;background:#fff;border:1px solid #dbe5ee;border-radius:16px;overflow:hidden}#staging-source-dialog.sl-workspace-ai #sl-clinical-editor[hidden]{display:none!important}#staging-source-dialog.sl-workspace-ai .sl-ai-editing .sl-ai-workflow,#staging-source-dialog.sl-workspace-ai .sl-ai-editing .sl-ai-drafts,#staging-source-dialog.sl-workspace-ai .sl-ai-editing .sl-ai-operations{display:none!important}#staging-source-dialog .sl-clinical-head{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 24px;background:#f3f7fa;border-bottom:1px solid #dce7ee}#staging-source-dialog .sl-clinical-head span{font-size:11px;letter-spacing:.13em;font-weight:800;color:#51768d}#staging-source-dialog .sl-clinical-head h3{font-size:24px;color:#17374d;margin:5px 0}#staging-source-dialog .sl-clinical-head p{margin:0;color:#597387}#staging-source-dialog #sl-clinical-editor-body{max-width:1100px;margin:auto;padding:24px}#staging-source-dialog #sl-clinical-editor-body #sl-draft-detail{min-width:0}#staging-source-dialog #sl-clinical-editor-body #sl-draft-detail[hidden]{display:none!important}#staging-source-dialog #sl-clinical-editor-body #sl-revision-editor{border:1px solid #d6e3ed;border-radius:12px;padding:16px;margin:18px 0;background:#fff}#staging-source-dialog #sl-clinical-editor-body .sl-editor-group{background:#f9fbfd;border:1px solid #e4ebf1;border-radius:12px;padding:16px;margin:14px 0}#staging-source-dialog #sl-clinical-editor-body #sl-edit-stem,#staging-source-dialog #sl-clinical-editor-body #sl-edit-options textarea{font-size:15px;line-height:1.55;min-height:74px}#staging-source-dialog #sl-clinical-editor-body #sl-save-revision{background:#173c56;color:white;border-radius:10px;padding:12px 18px}@media(max-width:650px){#staging-source-dialog .sl-clinical-head{flex-direction:column;align-items:stretch;padding:15px}#staging-source-dialog #sl-clinical-editor-body{padding:12px}#staging-source-dialog.sl-workspace-ai .sl-ai-view-nav{flex-wrap:wrap}}`;
 launch.onclick=()=>openLibrary();
 window.MBUStagingSourceWorkbench={mount:mountInAdmin,unmount:unmountFromAdmin};
