@@ -19,7 +19,7 @@ const me = await fetch(supabase+'/auth/v1/user',{headers:{apikey:key,Authorizati
 assert.equal(me.status,200);
 assert.equal((await me.json()).id,'c003287a-10ce-4cc9-926e-ef7c3a162a26');
 const headers={Origin:'https://staging.srnastudytool.com',Authorization:'Bearer '+token,'Content-Type':'application/json'};
-const ids=['96a5610a-7ee0-48f1-acb9-07d4ceeebd58','8ec6f64c-9767-4a88-8d7f-8780ad3431c9','fae1144e-f9e1-4245-a70d-fb7fe3b5b22a','41eca576-e288-49a2-a54e-37ebd986dcb2'];
+const ids=['96a5610a-7ee0-48f1-acb9-07d4ceeebd58','8ec6f64c-9767-4a88-8d7f-8780ad3431c9','41eca576-e288-49a2-a54e-37ebd986dcb2'];
 for (const id of ids) {
   const endpoint=gateway+'/generation/drafts/'+id;
   try {

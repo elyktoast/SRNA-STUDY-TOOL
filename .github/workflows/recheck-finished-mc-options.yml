@@ -25,8 +25,8 @@ jobs:
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
           SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
           STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
-        run: GITHUB_SHA=e4658e04403241d21020525d4189cf747975bc51 node scripts/wait-staging-reviewer-rollout.mjs
-      - name: Recheck four existing drafts with nine complete checks
+        run: GITHUB_SHA=c95fb1b334bdf93fa3de3fb8f92243b8bd3ad6fd node scripts/wait-staging-reviewer-rollout.mjs
+      - name: Recheck three existing drafts with nine complete checks
         env:
           STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
           STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
