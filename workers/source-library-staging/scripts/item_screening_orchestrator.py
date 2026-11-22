@@ -23,7 +23,7 @@ def screen(item, *, known_stems=(), source_texts=(), passages=None,
     if embedding is not None and neighbors is not None:
         try:
             matches = semantic_screen(embedding, neighbors)
-        except (ValueError, KeyError, TypeError) as exc:
+        except (ValueError, KeyError, TypeError, OverflowError) as exc:
             stages["duplicates"] = {"status": "fail", "issues": [
                 {"rule_id": "R-12.9", "message": "Embedding screening invalid: " + str(exc)}]}
         else:

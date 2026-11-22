@@ -7,10 +7,14 @@ Never expose signing secrets or direct database credentials to the Worker.
 from source_review_auth_supabase_v2 import SupabaseAuthProvider
 from source_review_roles_supabase_v2 import ProtectedReviewerRoleStore
 from source_review_manifest_r2_v2 import load_staging_review_manifest
-from source_review_r2_loader_v2 import fetch_verified_staging_pdf
+from source_review_r2_loader_v2 import fetch_verified_staging_pdf, verified_staging_pdf_file
+from source_review_page_render_v2 import render_verified_pdf_file_page
 from source_review_inspection_service_v2 import inspect_and_register_page
 from source_review_approval_service_v2 import approve_inspected_page
 from source_review_identity_v2 import resolve_admin_reviewer
+from source_review_page_loader_v2 import load_verified_review_page
+from source_review_receipt_service_v2 import (register_delivery_challenge,
+                                              register_acknowledged_page_receipt)
 
 
 class StagingReviewRuntime:
@@ -24,7 +28,7 @@ class StagingReviewRuntime:
         self.r2 = r2_client
         self.auth = auth_provider or SupabaseAuthProvider(supabase_url, supabase_api_key)
         self.roles = role_store or ProtectedReviewerRoleStore(conn)
-        self.secret = signing_secret
+        self.secret = signing_secret.encode("utf-8") if isinstance(signing_secret, str) else signing_secret
 
     def _reviewer(self, token):
         return resolve_admin_reviewer(token, auth_provider=self.auth,
@@ -52,13 +56,45 @@ class StagingReviewRuntime:
             source_loader=source_loader, write_image=write_image,
             signing_secret=self.secret)
 
+
+    def verified_page(self, *, token, r2_key, pdf_page):
+        """Re-fetch immutable source bytes and render a trusted physical page."""
+        reviewer = self._reviewer(token)
+        manifest = load_staging_review_manifest(self.r2, owner_uid=reviewer.uid, r2_key=r2_key)
+        if type(pdf_page) is not int or not 1 <= pdf_page <= manifest["pdf_page_count"]:
+            raise ValueError("Page outside verified manifest")
+        with verified_staging_pdf_file(
+                self.r2, owner_uid=reviewer.uid, r2_key=r2_key,
+                expected_sha256=manifest["sha256"]) as verified_path:
+            png, image_sha256 = render_verified_pdf_file_page(
+                verified_path, pdf_page=pdf_page)
+        return {"png": png, "image_sha256": image_sha256,
+                "source_sha256": manifest["sha256"], "owner_uid": reviewer.uid,
+                "r2_key": r2_key, "pdf_page": pdf_page}
+
+    def delivery_challenge(self, *, token, page):
+        return register_delivery_challenge(
+            self.conn, page=page, access_token=token,
+            auth_provider=self.auth, protected_role_store=self.roles,
+            signing_secret=self.secret)
+
+    def acknowledge(self, *, token, r2_key, pdf_page, challenge, acknowledged):
+        """No approval write: exchange a one-time challenge for an inspection receipt."""
+        page = self.verified_page(token=token, r2_key=r2_key, pdf_page=pdf_page)
+        return register_acknowledged_page_receipt(
+            self.conn, page=page, access_token=token,
+            auth_provider=self.auth, protected_role_store=self.roles,
+            signing_secret=self.secret, delivery_challenge=challenge,
+            acknowledged=acknowledged)
+
     def approve(self, *, token, r2_key, pdf_page, review_note, receipt,
                 image_sha256):
         manifest = self.manifest(token=token, r2_key=r2_key)
         # Re-check source bytes before consuming a one-time receipt.
-        fetch_verified_staging_pdf(
-            self.r2, owner_uid=manifest["owner_uid"], r2_key=r2_key,
-            expected_sha256=manifest["sha256"])
+        with verified_staging_pdf_file(
+                self.r2, owner_uid=manifest["owner_uid"], r2_key=r2_key,
+                expected_sha256=manifest["sha256"]):
+            pass
         return approve_inspected_page(
             self.conn, manifest, pdf_page=pdf_page, review_note=review_note,
             receipt=receipt, image_sha256=image_sha256,

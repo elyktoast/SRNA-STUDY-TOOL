@@ -29,6 +29,23 @@ class RuntimeTests(unittest.TestCase):
             supabase_api_key="unused", signing_secret="s" * 64,
             auth_provider=Auth(), role_store=Roles())
 
+    def test_signing_secret_is_normalized_for_cryptographic_receipts(self):
+        self.assertEqual(self.runtime.secret, b"s" * 64)
+        from source_review_receipts_v2 import issue_receipt, verify_receipt
+        receipt = issue_receipt(
+            self.runtime.secret, reviewer_uid=UID, owner_uid=UID,
+            source_sha256=MANIFEST["sha256"], r2_key=KEY,
+            pdf_page=1, image_sha256="b" * 64, now=1000)
+        self.assertEqual(len(verify_receipt(
+            self.runtime.secret, receipt, reviewer_uid=UID, owner_uid=UID,
+            source_sha256=MANIFEST["sha256"], r2_key=KEY,
+            pdf_page=1, image_sha256="b" * 64, now=1001)), 32)
+        binary_runtime = StagingReviewRuntime(
+            conn=self.conn, r2_client=self.r2, supabase_url="unused",
+            supabase_api_key="unused", signing_secret=b"z" * 64,
+            auth_provider=Auth(), role_store=Roles())
+        self.assertEqual(binary_runtime.secret, b"z" * 64)
+
     def test_requires_privileged_adapters(self):
         with self.assertRaisesRegex(ValueError, "connections"):
             StagingReviewRuntime(conn=None, r2_client=self.r2, supabase_url="",
@@ -62,7 +79,7 @@ class RuntimeTests(unittest.TestCase):
 
     @patch("source_review_runtime_v2.approve_inspected_page", return_value=1)
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", return_value=b"%PDF-test")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     def test_approval_rechecks_original_source_before_nonce_consumption(self, fetch, manifest, approve):
         self.assertEqual(self.runtime.approve(token="valid", r2_key=KEY, pdf_page=1,
                          review_note="inspected", receipt="receipt", image_sha256="b" * 64), 1)
@@ -71,12 +88,57 @@ class RuntimeTests(unittest.TestCase):
 
     @patch("source_review_runtime_v2.approve_inspected_page")
     @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
-    @patch("source_review_runtime_v2.fetch_verified_staging_pdf", side_effect=ValueError("Source changed"))
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
     def test_changed_source_blocks_approval_before_nonce(self, fetch, manifest, approve):
+        fetch.return_value.__enter__.side_effect = ValueError("Source changed")
         with self.assertRaisesRegex(ValueError, "Source changed"):
             self.runtime.approve(token="valid", r2_key=KEY, pdf_page=1,
                                  review_note="inspected", receipt="receipt", image_sha256="b" * 64)
         approve.assert_not_called()
+
+    @patch("source_review_runtime_v2.register_acknowledged_page_receipt", return_value="signed-receipt")
+    @patch("source_review_runtime_v2.render_verified_pdf_file_page")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
+    @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
+    def test_acknowledgment_rerenders_trusted_original_before_receipt(
+            self, manifest, fetch, render, register):
+        fetch.return_value.__enter__.return_value = "/tmp/verified.pdf"
+        render.return_value = (b"png", "b" * 64)
+        page = {"owner_uid": UID, "r2_key": KEY, "pdf_page": 1,
+                "source_sha256": "a" * 64, "image_sha256": "b" * 64, "png": b"png"}
+        self.assertEqual(self.runtime.acknowledge(
+            token="valid", r2_key=KEY, pdf_page=1,
+            challenge="signed-challenge", acknowledged=True), "signed-receipt")
+        render.assert_called_once_with("/tmp/verified.pdf", pdf_page=1)
+        register.assert_called_once_with(
+            self.conn, page=page, access_token="valid",
+            auth_provider=self.runtime.auth, protected_role_store=self.runtime.roles,
+            signing_secret=self.runtime.secret, delivery_challenge="signed-challenge",
+            acknowledged=True)
+
+    @patch("source_review_runtime_v2.register_acknowledged_page_receipt")
+    @patch("source_review_runtime_v2.render_verified_pdf_file_page")
+    @patch("source_review_runtime_v2.verified_staging_pdf_file")
+    @patch("source_review_runtime_v2.load_staging_review_manifest", return_value=MANIFEST)
+    def test_changed_original_blocks_acknowledgment_before_nonce_consumption(
+            self, manifest, fetch, render, register):
+        fetch.return_value.__enter__.side_effect = ValueError("Original PDF fingerprint changed")
+        with self.assertRaisesRegex(ValueError, "fingerprint changed"):
+            self.runtime.acknowledge(
+                token="valid", r2_key=KEY, pdf_page=1,
+                challenge="signed-challenge", acknowledged=True)
+        register.assert_not_called()
+
+    @patch("source_review_runtime_v2.register_delivery_challenge", return_value="signed-challenge")
+    def test_delivery_challenge_reauthenticates_via_receipt_service(self, register):
+        page = {"owner_uid": UID, "r2_key": KEY, "pdf_page": 1,
+                "source_sha256": "a" * 64, "image_sha256": "b" * 64}
+        self.assertEqual(self.runtime.delivery_challenge(token="valid", page=page),
+                         "signed-challenge")
+        register.assert_called_once_with(
+            self.conn, page=page, access_token="valid",
+            auth_provider=self.runtime.auth, protected_role_store=self.runtime.roles,
+            signing_secret=self.runtime.secret)
 
 
 if __name__ == "__main__":

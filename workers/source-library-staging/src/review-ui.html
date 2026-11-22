@@ -9,30 +9,122 @@ button{padding:.6rem 1rem;cursor:pointer}iframe{width:100%;height:min(75vh,900px
 #status{min-height:1.5rem}main{margin-top:1rem}
 </style>
 <header><h1>Textbook PDF review — staging</h1></header>
-<p class="notice"><strong>Read-only reviewer preview.</strong> This page does not record an inspection, issue approval receipts, or approve passages. Only use staging textbooks.</p>
+<p class="notice"><strong>Reviewer preview.</strong> The optional verified-image acknowledgment can issue a one-time receipt when the protected staging gateway enables it. A receipt is not a page approval; final approval remains private. Only use staging textbooks.</p>
 <form id="form"><label>Staging API URL <input id="api" type="url" required placeholder="https://your-staging-worker.example"></label>
-<label>Supabase access token <input id="token" type="password" required autocomplete="off"></label>
+<label>Reviewer gateway URL <input id="gateway" type="url" required placeholder="https://your-staging-reviewer-gateway.example"></label>
+<p id="auth-status" role="status">Checking SRNA Study Tool session… <a href="/">Sign in through the main app</a></p>
 <label>Owner-scoped PDF path <input id="path" required placeholder="your-uid/document.pdf"></label>
 <label>Physical PDF page <input id="page" type="number" min="1" step="1" value="1" required></label>
 <button type="submit">Open PDF page</button><button type="button" id="clear">Clear preview</button></form>
-<p id="status" role="status" aria-live="polite"></p>
+<section class="notice" aria-label="Verified page inspection">
+<h2>Verified page inspection (staging only)</h2>
+<p>Use the separate reviewer gateway URL above. This loads a freshly rendered, source-verified page rather than the full PDF preview. Review the actual image before acknowledging.</p>
+<div class="toolbar"><button type="button" id="verified">Load verified page image</button>
+<label><input id="inspected" type="checkbox" disabled> I personally inspected this rendered page</label>
+<button type="button" id="acknowledge" disabled>Record inspection acknowledgment</button></div>
+<div class="toolbar"><label>Classification <select id="classification"><option value="non_content_divider">Non-content divider/header</option><option value="content_reviewed">Content reviewed</option></select></label>
+<label>Reason <input id="reason" value="Reviewed original rendered page; non-content divider or header." maxlength="1000"></label>
+<button type="button" id="approve" disabled>Approve verified page</button></div>
+<p id="inspection-status" role="status" aria-live="polite"></p>
+<img id="page-image" alt="Verified physical PDF page for human inspection" style="display:none;max-width:100%;height:auto;border:1px solid #888">
+</section><p id="status" role="status" aria-live="polite"></p>
 <main><iframe id="viewer" title="Original textbook PDF preview" referrerpolicy="no-referrer"></iframe></main>
 <script>
 (()=>{'use strict';
 const el=id=>document.getElementById(id);
-let objectUrl=null;
-function clear(){if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}el('viewer').removeAttribute('src')}
-el('clear').onclick=()=>{clear();el('token').value='';el('status').textContent='Preview cleared'};
+const SESSION_KEY='mbu_supabase_session_v1';
+const GATEWAY='https://srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev';
+const API='https://source-library-staging.srnastudytool.com';
+function token(){
+ let session=null;try{session=JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch{}
+ if(!session?.access_token||!session?.user?.id||Number(session.expires_at||0)*1000<=Date.now()+30000)
+  throw Error('Your SRNA Study Tool session is missing or expired. Sign in at https://staging.srnastudytool.com/ and return here.');
+ return session.access_token;
+}
+function authStatus(){
+ try{token();el('auth-status').textContent='Using your existing SRNA Study Tool session. Authorization is checked by the reviewer gateway.'}
+ catch(e){el('auth-status').textContent=e.message}
+}
+el('gateway').value=GATEWAY;el('api').value=API;
+el('gateway').readOnly=true;el('api').readOnly=true;
+authStatus();window.addEventListener('storage',authStatus);window.addEventListener('focus',authStatus);
+let objectUrl=null,imageUrl=null,challenge=null,loadedKey=null,sourceDigest=null,imageDigest=null,receipt=null;
+function clearInspection(){if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=null;challenge=null;loadedKey=null;sourceDigest=null;imageDigest=null;receipt=null;el('page-image').removeAttribute('src');el('page-image').style.display='none';el('inspected').checked=false;el('inspected').disabled=true;el('acknowledge').disabled=true;el('approve').disabled=true}
+function clear(){clearInspection();if(objectUrl){URL.revokeObjectURL(objectUrl);objectUrl=null}el('viewer').removeAttribute('src')}
+el('clear').onclick=()=>{clear();el('status').textContent='Preview cleared'};
+el('inspected').onchange=()=>{el('acknowledge').disabled=!(challenge&&el('inspected').checked)};
+for(const id of ['api','gateway','path','page'])el(id).addEventListener('input',clearInspection);
+el('verified').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
+ clearInspection();const api=el('gateway').value.trim().replace(/\/$/,'');
+ const path=el('path').value.trim(),page=Number(el('page').value);
+ if(!/^https:\/\//.test(api)||!path||!Number.isSafeInteger(page)||page<1||!jwt){
+  el('inspection-status').textContent='Enter a valid HTTPS gateway URL, token, source path and page';return;
+ }
+ el('inspection-status').textContent='Loading verified rendered image…';
+ try{
+  const res=await fetch(api+'/review/page.png?path='+encodeURIComponent(path)+'&page='+page,{
+   headers:{Authorization:'Bearer '+jwt},cache:'no-store'});
+  if(!res.ok)throw new Error('Verified image unavailable (HTTP '+res.status+')');
+  const proof=res.headers.get('X-Page-Delivery-Challenge');
+  const blob=await res.blob();
+  if(!blob.type.startsWith('image/png')||!proof)throw new Error('Missing verified PNG or delivery challenge');
+  sourceDigest=res.headers.get("X-Verified-Source-SHA256");imageDigest=res.headers.get("X-Page-Image-SHA256");
+  if(!/^[a-f0-9]{64}$/.test(sourceDigest||"")||!/^[a-f0-9]{64}$/.test(imageDigest||""))throw new Error("Missing verified page digests");
+  imageUrl=URL.createObjectURL(blob);challenge=proof;loadedKey=JSON.stringify([api,path,page]);
+  el('page-image').src=imageUrl;el('page-image').style.display='block';el('inspected').disabled=false;
+  el('inspection-status').textContent='Inspect the rendered image, then explicitly acknowledge it. This does not approve the page.';
+ }catch(e){clearInspection();el('inspection-status').textContent=e.message}
+};
+el('acknowledge').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
+ const api=el('gateway').value.trim().replace(/\/$/,'');
+ const path=el('path').value.trim(),page=Number(el('page').value);
+ if(!challenge||!el('inspected').checked||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
+ const proof=challenge;challenge=null;el('acknowledge').disabled=true;el('inspected').disabled=true;
+ el('inspection-status').textContent='Submitting one-time inspection acknowledgment…';
+ try{
+  const res=await fetch(api+'/review/acknowledge',{method:'POST',cache:'no-store',
+   headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},
+   body:JSON.stringify({path,page,challenge:proof,acknowledged:true})});
+  if(!res.ok)throw new Error('Acknowledgment rejected (HTTP '+res.status+')');
+  const result=await res.json();
+  if(result?.approved!==false||typeof result.receipt!=='string'||!result.receipt)
+   throw new Error('Unexpected acknowledgment response');
+  receipt=result.receipt;el('approve').disabled=false;
+  el('inspection-status').textContent='Inspection acknowledged. Review the classification and reason, then approve this page.';
+  // Never persist or expose the one-time receipt in a URL, global variable, or storage.
+ }catch(e){el('inspection-status').textContent=e.message+'; reload the image to retry'}
+};
+el('approve').onclick=async()=>{
+ let jwt;try{jwt=token()}catch(e){el('inspection-status').textContent=e.message;return}
+ const api=el('gateway').value.trim().replace(/\/$/,'');
+ const path=el('path').value.trim(),page=Number(el('page').value);
+ if(!receipt||!sourceDigest||!imageDigest||loadedKey!==JSON.stringify([api,path,page])){clearInspection();return}
+ const note=el('reason').value.trim();
+ if(note.length<8||note.length>1000){el('inspection-status').textContent='A reason of 8–1000 characters is required';return}
+ const payload={path,page,source_sha256:sourceDigest,image_sha256:imageDigest,receipt,classification:el('classification').value,review_note:note};
+ el('approve').disabled=true;receipt=null;
+ el('inspection-status').textContent='Submitting authenticated approval…';
+ try{
+  const res=await fetch(api+'/review/approve',{method:'POST',cache:'no-store',
+   headers:{Authorization:'Bearer '+jwt,'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  const data=await res.json().catch(()=>null);
+  if(!res.ok||data?.approved!==true||data?.ok!==true)throw new Error('Approval not recorded (HTTP '+res.status+'); check approval feature activation');
+  el('inspection-status').textContent='Page '+page+' approved and recorded successfully.';
+ }catch(e){el('inspection-status').textContent=e.message+'; reload the verified image for a new receipt'}
+};
 el('form').onsubmit=async event=>{
  event.preventDefault();clear();
+ try{token()}catch(e){el('status').textContent=e.message;return}
  const api=el('api').value.trim().replace(/\/$/,'');
  const page=Number(el('page').value),path=el('path').value.trim();
  if(!Number.isSafeInteger(page)||page<1){el('status').textContent='Invalid physical PDF page';return}
  if(!/^https:\/\//.test(api)){el('status').textContent='HTTPS staging API required';return}
  el('status').textContent='Loading authenticated PDF…';
  try{
-  const response=await fetch(api+'/materials/review-pdf?path='+encodeURIComponent(path),{
-   headers:{authorization:'Bearer '+el('token').value},cache:'no-store'});
+  const response=await fetch(api+'/materials/verified-review-pdf?path='+encodeURIComponent(path),{
+   headers:{authorization:'Bearer '+token()},cache:'no-store'});
   if(!response.ok)throw new Error('Preview unavailable (HTTP '+response.status+')');
   const blob=await response.blob();
   if(blob.type!=='application/pdf')throw new Error('Server did not return a PDF');

@@ -82,10 +82,13 @@ class ScreenedGenerationTests(unittest.TestCase):
         revised = {"item_id": "new-1", "status": "draft", "stem": "repaired"}
         generate.return_value = {"item": original, "schema_issues": []}
         failure = {"rule_id": "R-12.4", "message": "Ambiguous distractor"}
+        proof = {"status":"pass", "stem_change":{"from_text":"Original condition.", "to_text":"Alternate condition."},
+                 "expected_key":["B"], "independent_key":["B"]}
         intake.side_effect = [
             {"draft_reviews": [{"status": "needs_editorial_review",
                                 "screening": {"stages": {
                                     "evidence": {"status": "fail", "issues": [failure]},
+                                    "editorial_quality": {"status":"pass", "issues":[], "counterfactual_verification":proof},
                                     "duplicates": {"status": "pending", "issues": []},
                                     "blind_model": {"status": "pending", "issues": []}}}}]},
             {"draft_reviews": [{"status": "draft", "screening": {"stages": {
@@ -101,7 +104,54 @@ class ScreenedGenerationTests(unittest.TestCase):
         self.assertEqual(intake.call_count, 2)
         generate.assert_called_once()
         repair.assert_called_once()
+        self.assertEqual(repair.call_args.kwargs["counterfactual_proof"],proof)
         self.assertFalse(result["can_publish"])
+
+    @patch("item_generation_screened_v2.attempt_once")
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_rewrite_reembeds_revised_stem_instead_of_reusing_original_vectors(self,generate,intake,repair):
+        original={'item_id':'new-1','status':'draft','stem':'Original synthetic case'}
+        revised={**original,'stem':'Revised synthetic case'}
+        generate.return_value={'item':original,'schema_issues':[]}
+        failure={'rule_id':'R-12.4','message':'Ambiguous distractor'}
+        intake.side_effect=[{'draft_reviews':[{'status':'needs_editorial_review','screening':{'stages':{
+            'evidence':{'status':'fail','issues':[failure]},'duplicates':{'status':'pass','issues':[]}}}}]},
+            {'draft_reviews':[{'status':'draft','screening':{'stages':{
+            'evidence':{'status':'pass','issues':[]},'duplicates':{'status':'pass','issues':[]}}}}]}]
+        repair.return_value={'item':revised,'issues':[],'rewrite_attempts':1}
+        seen=[]
+        def lookup(item):
+            seen.append(item['stem'])
+            return {'embedding':[1.0,0.0] if len(seen)==1 else [0.0,1.0],
+                    'neighbors':[],'search_complete':True,'index_id':'trusted-index'}
+        result=generate_and_screen(None,**ARGS,semantic_lookup=lookup,review_repair=lambda request:revised)
+        self.assertEqual(seen,[original['stem'],revised['stem']])
+        self.assertEqual(intake.call_args_list[0].kwargs['embeddings']['new-1'],[1.0,0.0])
+        self.assertEqual(intake.call_args_list[1].kwargs['embeddings']['new-1'],[0.0,1.0])
+        self.assertEqual(result['rewrite_attempts_used'],1)
+        self.assertEqual(result['screening']['rewrite_attempts_allowed'],0)
+        repair.assert_called_once();generate.assert_called_once()
+        self.assertFalse(result['can_publish'])
+
+    @patch("item_generation_screened_v2.attempt_once")
+    @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_rewrite_cannot_inherit_supplied_vectors_without_a_fresh_lookup(self,generate,intake,repair):
+        original={'item_id':'new-1','status':'draft','stem':'Original synthetic case'}
+        revised={**original,'stem':'Revised synthetic case'}
+        generate.return_value={'item':original,'schema_issues':[]}
+        failure={'rule_id':'R-12.4','message':'Ambiguous distractor'}
+        intake.side_effect=[{'draft_reviews':[{'status':'needs_editorial_review','screening':{'stages':{
+            'evidence':{'status':'fail','issues':[failure]},'duplicates':{'status':'pass','issues':[]}}}}]},
+            {'draft_reviews':[{'status':'draft','screening':{'stages':{
+            'evidence':{'status':'pass','issues':[]},'duplicates':{'status':'pass','issues':[]}}}}]}]
+        repair.return_value={'item':revised,'issues':[],'rewrite_attempts':1}
+        result=generate_and_screen(None,**ARGS,embedding=[1.0,0.0],neighbors=[],review_repair=lambda request:revised)
+        self.assertIsNone(intake.call_args_list[1].kwargs['embeddings'])
+        self.assertIsNone(intake.call_args_list[1].kwargs['neighbors'])
+        self.assertEqual(result['screening']['stages']['duplicates']['status'],'pending')
+        self.assertFalse(result['can_publish'])
 
     @patch("item_generation_screened_v2.attempt_once")
     @patch("item_generation_screened_v2.intake")

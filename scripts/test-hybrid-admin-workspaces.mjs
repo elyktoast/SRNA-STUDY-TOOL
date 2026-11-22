@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {test} from 'node:test';
+import {runInNewContext} from 'node:vm';
 const ui=readFileSync(new URL('../equipment/assets/source-library-staging-ui.js',import.meta.url),'utf8');
 const admin=readFileSync(new URL('../equipment/assets/admin-panel.js',import.meta.url),'utf8');
 test('PDF filtering uses storage key, never display name from sidecar metadata',()=>{
@@ -157,7 +158,7 @@ test('missing staging workspace retries loading without blank screen or stale na
 
 test('Sources and AI initialization and remount safety',()=>{
  const generationDeclaration=ui.indexOf('const generationPanel=document.createElement');
- const generationListeners=ui.indexOf("for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective'])");
+ const generationListeners=ui.indexOf("for(const id of ['sl-gen-book-select','sl-gen-book','sl-gen-domain','sl-gen-section','sl-gen-objective','sl-multi-source'])");
  assert.ok(generationDeclaration>=0&&generationListeners>generationDeclaration,'generationPanel must exist before listeners are attached');
  assert.ok(ui.includes("generationPanel.querySelector('#sl-list-generated')?.closest('.sl-row')"),'drafts row must remain locatable after Save button moves');
  assert.ok(ui.includes("if(drafts)for(const child of [...drafts.children])"),'safe draft teardown');
@@ -185,7 +186,7 @@ test('checkpoint readiness is a private read-only staging diagnostic, not genera
 
 
 test('generator labels retain canonical five formats and evidence count follows pipeline shape',()=>{
- for(const [code,label] of [['MC','Single best answer'],['MS','Select all that apply'],['SA','Short answer'],['DD','Drag and drop'],['HS','Hotspot']]){
+ for(const [code,label] of [['MC','Single best answer'],['MS','Multiple response (select 2 or 3)'],['SA','Short answer'],['DD','Drag and drop'],['HS','Hotspot']]){
   assert.ok(ui.includes('<option value="'+code+'">'+label+'</option>'),code);
  }
  assert.ok(ui.includes('result.source_evidence.passage_ids.length'));
@@ -226,4 +227,69 @@ test('evidence screening uses 20 passages and generation defaults to 8',()=>{
  const backend=readFileSync(new URL('../workers/source-library-staging/scripts/item_generation_http_v2.py',import.meta.url),'utf8');
  assert.match(backend,/"limit": \(8 if live else 20\)/);
  assert.match(ui,/up to 20 per evidence check/);
+});
+
+test('explicit objective selection sets matching tags and invalidates previous evidence',async()=>{
+ assert.ok(!ui.includes('value="III.H.4"'));
+ const data=JSON.parse(readFileSync(new URL('../equipment/assets/nbcrna-objectives-v2.json',import.meta.url),'utf8'));
+ assert.equal(data.objectives.find(o=>o.objective==='III.H.4').label,'Airway management · Difficult airway management');
+ assert.equal(new Set(data.objectives.map(o=>o.objective)).size,data.objectives.length);
+ const nodes=new Map();
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',listeners:{},choices:[],addEventListener(event,fn){this.listeners[event]=fn;},append(choice){this.choices.push(choice);}});return nodes.get(id);};
+ const context={generationPanel:{querySelector:selector=>node(selector.slice(1))},
+  evidencePanel:{querySelector:selector=>node(selector.slice(1))},genEl:node,
+  checkedEvidence:{topic:'previous'},document:{createElement:()=>({})},
+  fetch:async()=>({ok:true,json:async()=>data})};
+ const start=ui.indexOf("const objectiveSelect=generationPanel.querySelector('#sl-objective-select');");
+ const end=ui.indexOf("generationPanel.querySelector('#sl-gen-book-select').addEventListener",start);
+ assert.ok(start>=0&&end>start);
+ runInNewContext(ui.slice(start,end),context);
+ await new Promise(resolve=>setImmediate(resolve));
+ const select=node('sl-objective-select');
+ assert.equal(select.choices.length,data.objectives.length);
+ assert.equal(node('sl-gen-objective').value,'');
+ select.value='IV.B.4';select.listeners.change();
+ assert.equal(node('sl-gen-domain').value,'IV');assert.equal(node('sl-gen-section').value,'B');
+ assert.equal(node('sl-gen-objective').value,'IV.B.4');assert.equal(context.checkedEvidence,null);
+ context.checkedEvidence={topic:'previous'};select.value='invalid';select.listeners.change();
+ assert.equal(node('sl-gen-objective').value,'');assert.equal(node('sl-gen-domain').value,'');
+ assert.equal(context.checkedEvidence,null);
+});
+
+test('generated numeric, matching and hotspot previews preserve their actual formats safely',()=>{
+ class Element{
+  constructor(tag){this.tag=tag;this.children=[];this.textContent='';}
+  append(...children){this.children.push(...children);}
+  replaceChildren(...children){this.children=children;this.textContent='';}
+ }
+ const begin=ui.indexOf('function renderReadableQuestion('),end=ui.indexOf('function currentSourceTitles(',begin);
+ const render=runInNewContext('('+ui.slice(begin,end).trim()+')',{document:{createElement:tag=>new Element(tag)}});
+ const descendants=node=>[node,...node.children.flatMap(descendants)];
+ const text=node=>descendants(node).map(n=>n.textContent).join('\n');
+ let host=new Element('section');
+ render(host,{format:'SA',stem:'A numeric task',sa:{answer:5,unit:'mL',rounding:'whole number',tolerance:0,worked_solution:'100 / 20 = 5'},key:[]});
+ assert.match(text(host),/5 mL/);assert.match(text(host),/100 \/ 20 = 5/);
+ assert.match(text(host),/original source page/);assert.doesNotMatch(text(host),/Answer key: \[\]/);
+ host=new Element('section');
+ render(host,{format:'DD',stem:'Match these',dd:{left:[{id:'L1',text:'Prompt one'}],right:[{id:'R1',text:'Target one'}],pairs:{L1:'R1'}}});
+ assert.equal(descendants(host).filter(n=>n.tag==='table').length,1);
+ assert.match(text(host),/Prompt one/);assert.match(text(host),/Target one/);
+ host=new Element('section');
+ const unsafe='<img src=x onerror=alert(1)>';
+ render(host,{format:'HS',stem:'Click on the target',hs:{figure:{url:'https://untrusted.example/image',alt:unsafe},correct_region:'r1',near_miss_regions:['r2','r3'],license:'Unverified'}});
+ assert.ok(text(host).includes(unsafe),'untrusted authored text remains text');
+ assert.equal(descendants(host).filter(n=>['img','script','iframe'].includes(n.tag)).length,0,'a declared figure does not load an unverified URL');
+ assert.match(text(host),/Correct region: r1/);assert.match(text(host),/Near-miss region: r2/);
+ assert.match(text(host),/Verify the licensed figure/);
+});
+
+test('late dashboard initialization preserves the AI view selected while data loads',async()=>{
+ const start=admin.indexOf('async function refresh('),end=admin.indexOf('async function mount(',start);
+ const host={dataset:{},innerHTML:''},root={querySelector:()=>host};
+ let release;const loading=new Promise(resolve=>{release=resolve}),shown=[];
+ const context={cache:null,reportStates:new Map(),rpc:async()=>{await loading;return []},show:(host,view)=>shown.push(view),shell:()=>host,reportCurrentQuestion:async()=>({})};
+ const refresh=runInNewContext(admin.slice(start,end)+'\nrefresh',context);
+ const pending=refresh(root,null,true);host.dataset.view='ai-generation';release();await pending;
+ assert.deepEqual(shown,[],'background overview load must not replace the active generator');
+ host.dataset.view='overview';await refresh(root,null,false);assert.deepEqual(shown,['overview']);
 });

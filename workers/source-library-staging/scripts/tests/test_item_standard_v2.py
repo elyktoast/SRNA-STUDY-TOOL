@@ -23,6 +23,42 @@ def sample():
         status="draft", audit=[], stats=dict(n_responses=0, p_value=None, point_biserial=None, distractor_pct={}))
 
 class StandardTests(unittest.TestCase):
+    def matching(self):
+        item = sample()
+        item.update(format="DD", options=[], key=[], dd={
+            "left": [{"id": k, "text": "Left " + k} for k in "ABCD"],
+            "right": [{"id": k, "text": "Right " + k} for k in "1234"],
+            "pairs": dict(zip("ABCD", "1234"))})
+        return item
+
+    def test_matching_pairs_resolve_to_visible_unique_labels(self):
+        item = self.matching()
+        self.assertEqual(check(item), [])
+        item["dd"]["left"] = list("ABCD")
+        item["dd"]["right"] = list("1234")
+        self.assertEqual(check(item), [])
+        for side in ("left", "right"):
+            for field, value in (("id", "missing"), ("id", ""), ("text", ""), ("text", None)):
+                item = self.matching()
+                item["dd"][side][0][field] = value
+                self.assertIn("R-7.4.1", {e["rule_id"] for e in check(item)})
+
+    def test_matching_rejects_nonexistent_pairs_duplicates_and_mc_options(self):
+        for mutate in (
+            lambda d: d["pairs"].update(A="5"),
+            lambda d: d["pairs"].update(E=d["pairs"].pop("A")),
+            lambda d: d["pairs"].update(A="2"),
+            lambda d: d["left"][0].update(id="B"),
+            lambda d: d["left"][0].update(text="  LEFT   B "),
+            lambda d: d["right"].__setitem__(0, None),
+        ):
+            item = self.matching()
+            mutate(item["dd"])
+            self.assertIn("R-7.4.1", {e["rule_id"] for e in check(item)})
+        item = self.matching()
+        item["options"] = sample()["options"]
+        self.assertIn("R-7.4.1", {e["rule_id"] for e in check(item)})
+
     def test_valid_structural_item_is_not_approved(self):
         item = sample()
         self.assertEqual(check(item), [])
@@ -49,6 +85,15 @@ class StandardTests(unittest.TestCase):
         rules = {issue["rule_id"] for issue in check(item)}
         self.assertNotIn("R-6.8", rules)  # Length imbalance is an editorial flag, not a schema failure
         self.assertIn("R-6.3", rules)
+
+    def test_missing_or_empty_distractor_error_tags_are_rejected(self):
+        for value in (None, "", "  ", {}, 12):
+            item=sample()
+            item["options"][1]["error_pattern"]=value
+            self.assertIn("R-6.3", {e["rule_id"] for e in check(item)})
+        item=sample()
+        self.assertIsNone(item["options"][0]["error_pattern"])
+        self.assertEqual(check(item), [])
 
     def test_malformed_option_text_returns_diagnostics_not_exception(self):
         for bad in (None, 17, [], {"unexpected": True}):

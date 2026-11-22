@@ -47,7 +47,7 @@ def hydrate(response, request, lookup):
         if "quote_refs" not in judgment:
             continue
         refs = judgment.pop("quote_refs")
-        if ("quotes" in judgment or not isinstance(refs, list) or not 1 <= len(refs) <= 8):
+        if ("quotes" in judgment or not isinstance(refs, list) or not (0 if judgment.get("verdict") == "uncertain" else 1) <= len(refs) <= 8):
             raise ValueError("Invalid source quote references")
         quotes = []
         for ref in refs:

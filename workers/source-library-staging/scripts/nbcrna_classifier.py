@@ -8,6 +8,8 @@ from nbcrna_taxonomy import SECTIONS, OBJECTIVES
 
 # High-specificity synonyms for a useful first pass. These are *candidate* labels.
 PHRASES = {
+ ("basic_sciences", "A", "Respiratory"): ("respiratory physiology", "functional residual capacity", "oxygen reserve"),
+ ("basic_sciences", "B", "Musculoskeletal"): ("malignant hyperthermia",),
  ("basic_sciences", "C", "Local anesthetics"): ("local anesthetic pharmacology", "lidocaine toxicity", "bupivacaine toxicity"),
  ("basic_sciences", "C", "Inhalation anesthetics"): ("minimum alveolar concentration", "volatile anesthetic uptake"),
  ("basic_sciences", "C", "Depolarizing and nondepolarizing neuromuscular relaxants and antagonists"): ("neuromuscular blocking agent", "succinylcholine", "rocuronium", "sugammadex"),

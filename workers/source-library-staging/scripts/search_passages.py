@@ -5,14 +5,23 @@ Requires psycopg[binary]. DATABASE_URL must be a trusted server-side credential.
 Never expose this script or the database credential to student browsers.
 """
 import argparse
+from contextlib import ExitStack
 import json
 import os
 import re
 
 UUID_RE = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.I)
 
+# Dense keyword lists can outrank explanatory text with cover-density ranking.
+# Demote explicitly labelled back matter, without deleting it or guessing that
+# every numbered list is a bibliography. Keep all scope/page predicates intact.
+BACK_MATTER_ORDER_SQL = r"""case when
+    coalesce(s.heading, '') ~* '^[[:space:]]*(index|references|bibliography)[[:space:]]*$'
+    or p.content ~* '^[[:space:]]*(references|bibliography)([[:space:]]|$)'
+    then 1 else 0 end"""
 
-def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
+
+def _search_statement(query, owner_uid, limit=10, textbook_id=None, section_id=None,
            include_subsections=False, page_start=None, page_end=None):
     if not query or not query.strip():
         raise ValueError("Search query required")
@@ -34,7 +43,7 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
       select p.id::text, t.id::text, t.filename, p.chunk_index,
              p.page_start, p.page_end, s.id::text, s.heading,
              ts_rank_cd(p.content_search, websearch_to_tsquery('english', %s)) as rank,
-             left(p.content, 1200) as excerpt
+             left(p.content, 1600) as excerpt
         from source_library_staging.passages p
         join source_library_staging.textbooks t on t.id=p.textbook_id
         left join source_library_staging.sections s on s.id=p.section_id
@@ -70,18 +79,52 @@ def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
     if page_end is not None:
         sql += " and p.page_start <= %s"
         params.append(page_end)
-    sql += " order by rank desc, t.id, p.chunk_index limit %s"
+    sql += " order by " + BACK_MATTER_ORDER_SQL + ", rank desc, t.id, p.chunk_index limit %s"
     params.append(limit)
+    return sql, params
+
+
+def _passages(rows):
+    return [
+        {"passage_id": r[0], "textbook_id": r[1], "filename": r[2],
+         "chunk_index": r[3], "pdf_page_start": r[4], "pdf_page_end": r[5],
+         "section_id": r[6], "section_heading": r[7],
+         "rank": float(r[8]), "excerpt": r[9],
+         "citation_verified": False, "page_numbering": "physical_pdf_page_1_based"}
+        for r in rows
+    ]
+
+
+def search(conn, query, owner_uid, limit=10, textbook_id=None, section_id=None,
+           include_subsections=False, page_start=None, page_end=None):
+    statement = _search_statement(query, owner_uid, limit, textbook_id, section_id,
+                                  include_subsections, page_start, page_end)
     with conn.cursor() as cur:
-        cur.execute(sql, params)
-        return [
-            {"passage_id": r[0], "textbook_id": r[1], "filename": r[2],
-             "chunk_index": r[3], "pdf_page_start": r[4], "pdf_page_end": r[5],
-             "section_id": r[6], "section_heading": r[7],
-             "rank": float(r[8]), "excerpt": r[9],
-             "citation_verified": False, "page_numbering": "physical_pdf_page_1_based"}
-            for r in cur.fetchall()
-        ]
+        cur.execute(*statement)
+        return _passages(cur.fetchall())
+
+
+def supports_pipeline(conn):
+    try:
+        from psycopg import Connection, capabilities
+    except ImportError:
+        return False
+    return isinstance(conn, Connection) and capabilities.has_pipeline()
+
+
+def search_many(conn, owner_uid, requests):
+    """Execute identical read-only searches with one protocol sync."""
+    if not 1 <= len(requests) <= 32:
+        raise ValueError("Expected 1..32 scoped passage searches")
+    statements = [_search_statement(query, owner_uid, **scope) for query, scope in requests]
+    with ExitStack() as cursors:
+        pending = [cursors.enter_context(conn.cursor()) for _ in statements]
+        # Exit the pipeline before fetching: fetching inside the loop would
+        # force each cursor to wait before sending the next request.
+        with conn.pipeline():
+            for cursor, statement in zip(pending, statements):
+                cursor.execute(*statement)
+        return [_passages(cursor.fetchall()) for cursor in pending]
 
 
 def main():

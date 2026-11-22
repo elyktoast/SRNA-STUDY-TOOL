@@ -1,9 +1,25 @@
 // Wrangler returns before container replacement finishes. Do not spend AI tokens
 // while an old image can still be terminated by the asynchronous rollout.
 import {pathToFileURL} from 'node:url';
-export function settled(app,instances,now,started){
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+export function needsReadOnlyWarmup(app,instances,now,buildCompleted){
+ return Number.isFinite(buildCompleted)&&now-buildCompleted>=90000
+  && Boolean(app.active_rollout_id)&&Array.isArray(app.health?.errors)&&app.health.errors.length===0
+  && Array.isArray(instances)&&instances.length>0
+  && instances.every(i=>['inactive','stopped'].includes(i.status?.state));
+}
+export function completedWorkerBuild(checks,sha){
+ if(!/^[a-f0-9]{40}$/.test(sha||'')||!Array.isArray(checks))return null;
+ const matching=checks.filter(c=>c.head_sha===sha&&c.app?.slug==='cloudflare-workers-and-pages'
+  &&c.name==='Workers Builds: srna-source-reviewer-gateway-staging').sort((a,b)=>b.id-a.id);
+ const latest=matching[0],completed=Date.parse(latest?.completed_at);
+ return latest?.status==='completed'&&latest?.conclusion==='success'&&Number.isFinite(completed)?completed:null;
+}
+export function settled(app,instances,now,started,buildCompleted=0){
  const updated=Date.parse(app?.updated_at);
  return now-started>=90000 && Number.isFinite(updated) && now-updated>=60000
+  && Number.isFinite(buildCompleted) && now-buildCompleted>=90000
   && !app.active_rollout_id && typeof app.configuration?.image==='string'
   && Array.isArray(app.health?.errors) && app.health.errors.length===0
   && Array.isArray(instances) && instances.every(i=>
@@ -20,9 +36,33 @@ async function main(){
   const body=await r.json();if(!body.success)throw Error('Container rollout metadata unavailable');return body.result;
  };
  const started=Date.now();
- while(Date.now()-started<240000){
-  const [app,instances]=await Promise.all([read(''),read('/instances-v2')]);
-  if(settled(app,instances,Date.now(),started)){console.log('Staging container configuration settled; authenticated smoke may begin');return;}
+ let warmups=0,lastWarmup=0;
+ const direct=process.env.STAGING_DEPLOYMENT_JUST_COMPLETED==='true';
+ const sha=process.env.GITHUB_SHA,githubToken=process.env.GITHUB_TOKEN;
+ if(!direct&&(!/^[a-f0-9]{40}$/.test(sha||'')||!githubToken))throw Error('Exact staging build identity required');
+ const readBuild=async()=>{
+  if(direct)return started; // This job has just completed its own explicit deploy.
+  const r=await fetch(`https://api.github.com/repos/elyktoast/SRNA-STUDY-TOOL/commits/${sha}/check-runs?per_page=100`,{
+   headers:{Authorization:'Bearer '+githubToken,Accept:'application/vnd.github+json'},redirect:'error',signal:AbortSignal.timeout(8000)});
+  if(!r.ok)throw Error('Staging build status unavailable: HTTP '+r.status);
+  return completedWorkerBuild((await r.json()).check_runs,sha);
+ };
+ // The observed staging replacement exceeded four minutes even with no health
+ // errors. Allow ten minutes; never waive image, health or quiet-period checks.
+ while(Date.now()-started<600000){
+  const [app,instances,completed]=await Promise.all([read(''),read('/instances-v2'),readBuild()]);
+  if(completed!==null&&warmups<3&&Date.now()-lastWarmup>=60000&&needsReadOnlyWarmup(app,instances,Date.now(),completed)){
+   warmups++;lastWarmup=Date.now();
+   // Idle containers can leave a rollout waiting for traffic. Warm only the
+   // authenticated textbook listing after the exact build's quiet period.
+   // The child exits before planning, AI calls or draft persistence.
+   try{
+    await promisify(execFile)(process.execPath,['scripts/verify-one-staging-question.mjs','--warmup-only'],{timeout:45000,maxBuffer:65536});
+    console.log('Read-only staging warm-up completed; rollout checks continue');
+   }catch{console.log('Read-only staging warm-up unavailable; rollout checks continue');}
+   continue;
+  }
+  if(completed!==null&&settled(app,instances,Date.now(),started,completed)){console.log('Exact staging build and container rollout settled; authenticated smoke may begin');return;}
   console.log('Waiting for staging container rollout; no AI calls performed');
   await new Promise(resolve=>setTimeout(resolve,10000));
  }

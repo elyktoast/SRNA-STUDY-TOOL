@@ -1,15 +1,34 @@
 """Independent source-only checks of explanatory fields; never clinical approval."""
+import json
 import re
+from item_ai_https_transport_v2 import TransportError
 
 
 def _exclusive_clinical_claim(field):
     label = field["label"]
+    # A named example does not establish the sole cause of an effect. This
+    # applies to physiology as well as drug lists, including the key rationale.
+    if label != "concept_card.misconception" and re.search(
+            r"\b(?:increas(?:e[sd]?|ing)|decreas(?:e[sd]?|ing)|reduc(?:e[sd]?|ing)|"
+            r"rais(?:e[sd]?|ing)|caus(?:e[sd]?|ing)|trigger(?:s|ed)?|occur(?:s|red)?)"
+            r"\s+(?:only|exclusively)\s+(?:by|with|for|when|in|from|due\s+to)\b",
+            field["text"], re.I):
+        return True
     if label not in ("concept_card.mechanism", "rationale.core_concept") and not label.startswith(
             ("rationale.distractor_breakdown.", "distractor_evidence.")):
         return False
     return bool(re.search(r"\b(?:are|is)\s+(?:the\s+)?(?:only|sole)\s+(?:[A-Za-z-]+\s+){0,3}"
                           r"(?:agents?|drugs?|causes?|mechanisms?|triggers?|treatments?|pathways?)\b",
                           field["text"], re.I) or re.match(r"\s*Only\b", field["text"], re.I))
+
+
+def _source_silence_claim(field):
+    if not field["label"].startswith(("rationale.distractor_breakdown.", "distractor_evidence.")):
+        return False
+    return bool(re.search(
+        r"\bwithout mentioning\b|\bno statement about\b|"
+        r"\b(?:source|passage|textbook|excerpt)\s+(?:does not|doesn't|do not|never)\s+(?:mention|state|describe|support)\b",
+        field["text"], re.I))
 
 
 def fields_for(item):
@@ -20,6 +39,14 @@ def fields_for(item):
             text = item.get(section, {}).get(name)
             if not isinstance(text, str) or not text.strip():
                 raise ValueError("Complete explanatory text required")
+            if section == "concept_card" and name == "counterfactual":
+                # The separate changed-stem blind test grades the option mapping.
+                # Here check both clinical premises, not whether a textbook names
+                # our answer letters. Match only the complete server-rendered form;
+                # never trim arbitrary appended claims from teaching text.
+                match = re.fullmatch(r'If "(.{1,200})" is replaced by "(.{1,200})", the best response changes to option(?:\(s\))? [A-F](?:, [A-F])*\.', text)
+                if match:
+                    text = f'Original clinical condition: {match[1]}. Replacement clinical condition: {match[2]}.'
             fields.append({"id": "e" + str(len(fields)), "label": section + "." + name, "text": text})
     for oid, text in item.get("rationale", {}).get("distractor_breakdown", {}).items():
         if not isinstance(text, str) or not text.strip():
@@ -37,7 +64,32 @@ def fields_for(item):
     return fields
 
 
-def review(item, sources, reviewer):
+def _batches(fields, size, passages, compact):
+    by_sources = {}
+    for field in fields:
+        by_sources.setdefault(tuple(field["passage_ids"]), []).append(field)
+    grouped = [group[i:i+size] for group in by_sources.values()
+               for i in range(0, len(group), size)]
+    if not compact:
+        return grouped
+    batches = []
+    for group in grouped:
+        combined = (batches[-1] if batches else []) + group
+        ids = {pid for field in combined for pid in field["passage_ids"]}
+        sources = [passages[pid] for pid in sorted(ids)]
+        # The wire also includes a separate quote enum per field. Count each
+        # allowed quote reference conservatively when estimating packet size.
+        estimate = len(json.dumps([combined, sources], ensure_ascii=False).encode("utf-8"))
+        estimate += sum(18 * len(passages[pid]["quote_spans"])
+                        for field in combined for pid in field["passage_ids"])
+        if batches and len(combined) <= size and estimate <= 5400:
+            batches[-1] = combined
+        else:
+            batches.append(group)
+    return batches
+
+
+def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
     """The caller supplies a distinct authenticated model; outages stay pending."""
     pending = {"status": "pending", "issues": [], "can_publish": False,
                "clinical_truth_verified": False, "human_review_required": True}
@@ -60,16 +112,78 @@ def review(item, sources, reviewer):
             allowed[field["id"]] = set(ids)
         for field in fields:
             field["passage_ids"] = sorted(allowed[field["id"]] & cited)
-        result = reviewer({"step": "explanation_review", "rules_version": "2.0",
-                           "auto_publish": False, "independent": True,
-                           "fields": fields, "source_passages": packet["source_passages"]})
+        # The locked MC plan stores the same option explanation in the
+        # rationale and the evidence map. Review an exact matching pair once
+        # and carry its verdict back to both fields for the audit.
+        submitted = []
+        represented = {}
+        rationale_prefix = "rationale.distractor_breakdown."
+        evidence_prefix = "distractor_evidence."
+        rationale_fields = {f["label"]: f for f in fields}
+        for field in fields:
+            label = field["label"]
+            paired = (rationale_fields.get(rationale_prefix + label[len(evidence_prefix):])
+                      if item.get("format") == "MC" and label.startswith(evidence_prefix) else None)
+            if paired and all(paired[k] == field[k] for k in ("text", "assessment", "passage_ids")):
+                represented[paired["id"]].append(field["id"])
+            else:
+                submitted.append(field)
+                represented[field["id"]] = [field["id"]]
+        size = len(fields) if batch_size is None else batch_size
+        if type(size) is not int or size < 1 or (batch_size is not None and size > 50):
+            raise ValueError("Invalid explanatory batch size")
+        result = {"supported_groups":[], "unsupported":[]}
+        source_by_id = {passage["passage_id"]: passage for passage in packet["source_passages"]}
+        batches = _batches(submitted, size, source_by_id, compact_scopes)
+        def review_part(batch):
+            source_ids = {pid for field in batch for pid in field["passage_ids"]}
+            return reviewer({"step": "explanation_review", "rules_version": "2.0",
+                "auto_publish": False, "independent": True, "fields": batch,
+                "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
+
+        completed_batches = 0
+        rate_split_used = False
+        work = list(batches)
+        while work:
+            batch = work.pop(0)
+            batch_ids = {f["id"] for f in batch}
+            try:
+                part = review_part(batch)
+            except TransportError as exc:
+                if not compact_scopes or exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_RATE_LIMIT") or len(batch) < 2:
+                    raise
+                if exc.rule == "PROVIDER_RATE_LIMIT":
+                    if rate_split_used:
+                        raise
+                    rate_split_used = True
+                # Only a rejected request is split. A returned judgment is
+                # never solicited again, and each field retains its sources.
+                middle = len(batch) // 2
+                work[0:0] = (batch[:middle], batch[middle:])
+                continue
+            completed_batches += 1
+            if (not isinstance(part, dict) or set(part) != {"supported_groups", "unsupported"}
+                    or not isinstance(part["supported_groups"], list) or not isinstance(part["unsupported"], list)):
+                raise ValueError("Incomplete explanatory review")
+            returned = [fid for g in part["supported_groups"] for fid in g["field_ids"]] + [f["field_id"] for f in part["unsupported"]]
+            if len(returned) != len(batch_ids) or set(returned) != batch_ids:
+                raise ValueError("Every explanatory field must be reviewed")
+            result["supported_groups"].extend(
+                {**group, "field_ids": [alias for fid in group["field_ids"] for alias in represented[fid]]}
+                for group in part["supported_groups"])
+            result["unsupported"].extend(
+                {**finding, "field_id": alias}
+                for finding in part["unsupported"] for alias in represented[finding["field_id"]])
         if not isinstance(result, dict) or set(result) != {"supported_groups", "unsupported"}:
             raise ValueError("Incomplete explanatory review")
         if not isinstance(result["supported_groups"], list) or not isinstance(result["unsupported"], list):
             raise ValueError("Invalid explanatory judgments")
         expected = {f["id"]: f["label"] for f in fields}
         exclusive = {f["id"] for f in fields if _exclusive_clinical_claim(f)}
-        seen, evidence, issues = set(), [], []
+        seen, evidence = set(), []
+        issues = [{"rule_id":"R-2.4", "field":f["label"],
+                   "message":"Source silence cannot establish that this option is false; affirmative contradiction is required"}
+                  for f in fields if _source_silence_claim(f)]
         for group in result["supported_groups"]:
             if not isinstance(group, dict) or set(group) != {"field_ids", "quote_refs"}:
                 raise ValueError("Invalid supported fields")
@@ -113,16 +227,25 @@ def review(item, sources, reviewer):
         if seen != set(expected):
             raise ValueError("Every explanatory field must be reviewed")
         return {**pending, "status": "flag" if issues else "pass", "issues": issues,
-                "checked_fields": list(expected.values()), "source_support": evidence}
+                "checked_fields": list(expected.values()), "source_support": evidence, "batch_count":completed_batches}
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
-        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN"}
+        allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN",
+                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_REQUEST_SIZE", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
         # Only fixed local validation messages may become diagnostics.
         messages = {"Incomplete explanatory review", "Invalid explanatory judgments",
                     "Invalid supported fields", "Missing source support", "Invalid source span",
                     "Unknown source span", "Source quote outside bounds",
                     "Missing, repeated or unknown explanatory field",
                     "Support not cited for this explanatory field", "Invalid unsupported finding",
-                    "Invalid unsupported field", "Every explanatory field must be reviewed"}
+                    "Invalid unsupported field", "Every explanatory field must be reviewed",
+                    "Complete explanatory text required", "Complete option explanations required",
+                    "Complete option evidence explanations required", "Cited indexed explanatory evidence unavailable",
+                    "Invalid explanatory batch size", "Invalid independent explanatory review request",
+                    "Invalid explanatory source alias", "Unknown explanatory source alias",
+                    "Provider response must be an object", "Provider did not return a valid JSON object",
+                    "Provider output must be a JSON object"}
         return {**pending, "provider_rule": rule if rule in allowed else "REVIEW_RESPONSE_INVALID",
-                "review_error": str(exc) if type(exc) is ValueError and str(exc) in messages else None}
+                "review_error": str(exc) if str(exc) in messages else None,
+                "exception_type": type(exc).__name__ if type(exc).__name__ in
+                    ("ValueError","TypeError","KeyError","ProviderError","TransportError","RuntimeError") else "Other"}

@@ -47,6 +47,22 @@ class SemanticIndexTests(unittest.TestCase):
         self.assertEqual(cur.execute.call_count, 8)
         self.assertEqual(cur.execute.call_args.args[1][3], ids[-1])
 
+    def test_mixed_case_search_preserves_exhaustive_pagination(self):
+        from unittest.mock import patch
+        ids=['A','B','a','b']
+        conn,cur=self.connection([])
+        def execute(query,params):
+            order=ids if query.count('COLLATE "C"')==2 else ['a','A','b','B']
+            cur.fetchall.return_value=[(i,[1.0,0.0],'a'*64) for i in order if i>params[3]][:params[4]]
+        cur.execute.side_effect=execute
+        callback=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],
+                        index_ready=True,expected_item_ids=set(ids),expected_stem_hashes=self.hashes(ids))
+        with patch('item_semantic_index_db_v2.PAGE_SIZE',2):
+            result=callback({'stem':'Synthetic candidate','item_id':'draft'})
+        self.assertTrue(result['search_complete'])
+        self.assertEqual([n['item_id'] for n in result['neighbors']],ids)
+        self.assertEqual(cur.execute.call_count,3)
+
     def test_multi_page_missing_item_fails_closed(self):
         ids = ["prior-" + str(i).zfill(5) for i in range(PAGE_SIZE)]
         conn, cur = self.connection([])
@@ -169,6 +185,27 @@ class SemanticIndexTests(unittest.TestCase):
                           embed=lambda stem: [1.0, 0.0], index_ready=True, expected_item_ids={"prior-1"}, expected_stem_hashes=self.hashes({"prior-1"}))
         with self.assertRaisesRegex(ValueError, "page size"):
             callback({"stem": "Clinical stem", "item_id": "draft-1"})
+
+    def test_compact_vectors_preserve_every_similarity_without_float32_rounding(self):
+        from array import array
+        from item_semantic_duplicates import screen, cosine
+        vectors=sorted([('near',[0.850000000001,0.52678268764]),('far',[-1.0,0.0]),('exact',[1.0,0.0])])
+        conn,_=self.connection(vectors)
+        fn=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],index_ready=True,
+                  expected_item_ids={k for k,_ in vectors},expected_stem_hashes=self.hashes(k for k,_ in vectors))
+        packed=fn({'stem':'Synthetic','item_id':'new'})['neighbors']
+        ordinary=[{'item_id':k,'embedding':v} for k,v in vectors]
+        self.assertTrue(all(isinstance(n['embedding'],array) and n['embedding'].typecode=='d' for n in packed))
+        self.assertEqual(screen([1.0,0.0],packed),screen([1.0,0.0],ordinary))
+        for packed_neighbor,ordinary_neighbor in zip(packed,ordinary):
+            self.assertEqual(cosine([1.0,0.0],packed_neighbor['embedding']),cosine([1.0,0.0],ordinary_neighbor['embedding']))
+
+    def test_packing_never_coerces_invalid_source_values(self):
+        for vector in ([True,0.0],['1.0',0.0],[float('nan'),0.0],[1.0]):
+            conn,_=self.connection([('prior',vector)])
+            fn=lookup(conn,owner_uid=OWNER,embedding_model='test',embed=lambda stem:[1.0,0.0],index_ready=True,
+                      expected_item_ids={'prior'},expected_stem_hashes=self.hashes(['prior']))
+            with self.subTest(vector=vector),self.assertRaises(ValueError):fn({'stem':'Synthetic','item_id':'new'})
 
 if __name__ == "__main__":
     unittest.main()

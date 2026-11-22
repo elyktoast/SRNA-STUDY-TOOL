@@ -1,4 +1,5 @@
 """Unit tests for chapter-filtered search query construction without a database."""
+from contextlib import contextmanager
 import importlib.util
 import unittest
 from pathlib import Path
@@ -37,6 +38,37 @@ class FakeConnection:
 
 
 class SearchTests(unittest.TestCase):
+    def test_pipeline_sends_all_scoped_statements_before_read_and_preserves_order(self):
+        owner = "895ed357-27c3-4d4b-a98a-77b0de20760c"
+        requests = [("airway", {"page_start": 3}), ("ventilation", {"limit": 2})]
+        expected = []
+        statements = []
+        for query, scope in requests:
+            single = FakeConnection()
+            expected.append(module.search(single, query, owner, **scope))
+            statements.append((single.cur.sql, single.cur.params))
+
+        events = []
+        class PipelineCursor(FakeCursor):
+            def execute(self, sql, params):
+                super().execute(sql, params)
+                events.append(("send", sql, params))
+            def fetchall(self):
+                events.append(("fetch", self.params[0]))
+                return super().fetchall()
+
+        class PipelineConnection:
+            def cursor(self):
+                return PipelineCursor()
+            @contextmanager
+            def pipeline(self):
+                yield
+                events.append(("sync",))
+
+        self.assertEqual(module.search_many(PipelineConnection(), owner, requests), expected)
+        self.assertEqual(events, [("send", *statement) for statement in statements]
+                         + [("sync",), ("fetch", "airway"), ("fetch", "ventilation")])
+
     def test_section_filter_and_result_metadata(self):
         conn = FakeConnection()
         rows = module.search(conn, "intubation", "895ed357-27c3-4d4b-a98a-77b0de20760c", section_id="295ed357-27c3-4d4b-a98a-77b0de20760c")

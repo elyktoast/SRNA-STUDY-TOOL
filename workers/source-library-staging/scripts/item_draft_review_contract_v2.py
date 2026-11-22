@@ -1,5 +1,46 @@
 """Validation contract for private staging question drafts; no network or database writes."""
 from uuid import UUID
+from item_source_scope_v2 import source_scope
+import os
+import re
+
+def approval_issues(screening, format):
+    """Saved independent failures cannot be cleared by citation-only validation."""
+    required = {"schema", "deterministic_text", "math", "evidence", "duplicates",
+                "blind_model", "explanation_evidence"}
+    if format in ("MC", "MS"):
+        required.update(("editorial_quality", "options_only", "independent_option_evidence"))
+    elif format == "SA":
+        required.add("page_image_verification")
+    elif format == "HS":
+        required.add("figure_verification")
+    elif format != "DD":
+        return [{"rule_id":"R-7.6", "message":"Unsupported question format cannot be approved"}]
+    stages = screening.get("stages") if isinstance(screening, dict) else None
+    stages = stages if isinstance(stages, dict) else {}
+    names = required | (set(stages) - {"human_review"})
+    issues = []
+    for name in sorted(names):
+        stage = stages.get(name)
+        if (not isinstance(stage, dict) or stage.get("status") != "pass"
+                or stage.get("issues", []) != []):
+            issues.append({"rule_id":"R-12.10", "field":"screening.stages." + name,
+                           "message":"Automated verification must pass before approval: " + name})
+    duplicate = stages.get('duplicates')
+    identifier = duplicate.get('index_id') if isinstance(duplicate,dict) else None
+    expected_prefix = 'question_semantic_index_v2:@cf/baai/bge-m3:'
+    if (not isinstance(duplicate,dict) or duplicate.get('search_complete') is not True
+            or not isinstance(identifier,str) or not identifier.startswith(expected_prefix)
+            or re.fullmatch('[a-f0-9]{64}',identifier[len(expected_prefix):]) is None):
+        issues.append({'rule_id':'R-12.10','field':'screening.stages.duplicates',
+                       'message':'Complete versioned canonical semantic search required before approval'})
+    elif os.environ.get('AI_SEMANTIC_EMBEDDING_OPT_IN') == 'true':
+        from item_semantic_inventory_reconcile_v2 import load_inventory
+        _,current_digest=load_inventory(os.environ.get('SEMANTIC_INDEX_INVENTORY_PATH',''))
+        if identifier != expected_prefix+current_digest:
+            issues.append({'rule_id':'R-12.10','field':'screening.stages.duplicates',
+                           'message':'Canonical bank changed; semantic review must be repeated'})
+    return issues
 
 def validate_draft(payload):
     if not isinstance(payload, dict):
@@ -20,11 +61,18 @@ def validate_draft(payload):
     evidence = payload.get("evidence")
     if not isinstance(evidence, list) or not evidence:
         raise ValueError("Indexed evidence required")
+    books = source_scope(payload['textbook_id'], payload.get('textbook_ids')) or [str(payload['textbook_id'])]
     if any(not isinstance(x, dict) or not x.get("passage_id")
-           or str(x.get("textbook_id")) != str(payload["textbook_id"])
+           or str(x.get("textbook_id")) not in books
            for x in evidence):
         raise ValueError("Evidence must match textbook")
-    return {"status": "pending_review", "requires_human_review": True,
+    if str(payload['textbook_id']) not in {str(x['textbook_id']) for x in evidence}:
+        raise ValueError('Primary textbook must supply indexed evidence')
+    stages = payload["screening"].get("stages", {})
+    needs_revision = isinstance(stages, dict) and any(
+        isinstance(stage, dict) and stage.get("status") != "pass"
+        for name, stage in stages.items() if name != "human_review")
+    return {"status": "needs_revision" if needs_revision else "pending_review", "requires_human_review": True,
             "published": False}
 
 def validate_review(status, reviewer_uid, notes):

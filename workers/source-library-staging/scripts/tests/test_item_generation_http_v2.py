@@ -53,6 +53,28 @@ class DraftRevalidationHttpTests(unittest.TestCase):
         status,_=self.call("/generation/drafts/not-a-uuid/revalidate")
         self.assertEqual(status,"404 Not Found")
 
+    @patch("item_generation_http_v2.review")
+    @patch("item_generation_http_v2.revalidate")
+    def test_approval_returns_422_for_failed_or_pending_automated_reviews(self,validator,reviewer):
+        from item_draft_review_contract_v2 import approval_issues
+        from test_item_draft_review_contract_v2 import passed_screening
+        for name,state in (("explanation_evidence","flag"),("editorial_quality","fail"),
+                           ("duplicates","pending"),("independent_option_evidence","pending")):
+            screening=passed_screening()
+            screening["stages"][name]["status"]=state
+            validator.return_value={"published":False,"clinical_review_required":True,
+                                    "issues":approval_issues(screening,"MC")}
+            raw=json.dumps({"status":"approved_for_bank","notes":"Reviewed citations"}).encode()
+            env={"PATH_INFO":"/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/review",
+                 "REQUEST_METHOD":"POST","HTTP_ORIGIN":"https://staging.srnastudytool.com",
+                 "HTTP_AUTHORIZATION":"Bearer valid","CONTENT_LENGTH":str(len(raw)),
+                 "wsgi.input":io.BytesIO(raw)}
+            statuses=[]
+            result=json.loads(b"".join(self.app(env,lambda status,headers:statuses.append(status))))
+            self.assertEqual(statuses,["422 Unprocessable Entity"])
+            self.assertEqual(result["error"],"draft_validation_required")
+            reviewer.assert_not_called()
+
 class DraftRevisionHttpTests(unittest.TestCase):
     PATH="/generation/drafts/abc90a93-41f8-4d7c-8e27-94a609135572/revisions"
     def setUp(self):
@@ -120,11 +142,11 @@ class DraftRevisionHttpTests(unittest.TestCase):
         saver.assert_not_called()
 
 class LiveDraftPersistenceTests(unittest.TestCase):
-    def request(self, *, token="valid"):
+    def request(self, *, token="valid", extra=None):
         app = create_app(conn_factory=Connection,
             resolve_admin=lambda bearer: UID if bearer == "valid" else None,
             environment={"STAGING_ONLY": "true", "AI_GENERATION_OPT_IN": "true"})
-        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002"}).encode()
+        raw = json.dumps({**PAYLOAD, "textbook_id": "00000000-0000-4000-8000-000000000002", **(extra or {})}).encode()
         env = {"PATH_INFO": "/generation/one", "REQUEST_METHOD": "POST",
                "HTTP_ORIGIN": "https://staging.srnastudytool.com",
                "HTTP_AUTHORIZATION": "Bearer " + token,
@@ -132,6 +154,23 @@ class LiveDraftPersistenceTests(unittest.TestCase):
         statuses = []
         body = b"".join(app(env, lambda status, headers: statuses.append(status)))
         return statuses[0], json.loads(body)
+
+    @patch("item_generation_http_v2.save")
+    @patch("item_generation_http_v2.execute")
+    def test_completed_only_pending_is_an_explicit_conflict_without_saving(self,execute,saver):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        execute.side_effect=CompletedGenerationUnavailable()
+        status,data=self.request(extra={"resume_completed_only":True})
+        self.assertEqual(status,"409 Conflict")
+        self.assertEqual(data["rule"],"CHECKPOINT_NOT_COMPLETE")
+        self.assertTrue(execute.call_args.args[1].resume_completed_only)
+        saver.assert_not_called()
+        execute.reset_mock()
+        self.assertEqual(self.request(token="invalid",extra={"resume_completed_only":True})[0],"403 Forbidden")
+        execute.assert_not_called()
+        for value in ("true",1,None):
+            self.assertEqual(self.request(extra={"resume_completed_only":value})[0],"400 Bad Request")
+        execute.assert_not_called()
 
     @patch("item_generation_http_v2.save", return_value={
         "draft_id": "00000000-0000-4000-8000-000000000003", "status": "pending_review"})
@@ -284,6 +323,30 @@ class HttpPreflightTests(unittest.TestCase):
         self.assertEqual(calls, [(UID, textbook)])
         self.assertIs(execute.call_args.kwargs["semantic_lookup"], callback)
 
+    @patch("item_generation_http_v2.save", return_value={
+        "draft_id":"00000000-0000-4000-8000-000000000003","status":"pending_review"})
+    @patch("item_generation_http_v2.execute")
+    def test_completed_only_recovery_skips_semantic_index_factory(self,execute,saver):
+        from run_grounded_generation_v2 import CompletedGenerationUnavailable
+        textbook="00000000-0000-4000-8000-000000000002"
+        completed={"item":{"stem":"Synthetic"},"save_payload":{"textbook_id":textbook}}
+        execute.side_effect=[CompletedGenerationUnavailable(),completed]
+        def forbidden_factory(*args):
+            raise AssertionError("Recovery must not scan or embed a new candidate")
+        app=create_app(conn_factory=Connection,resolve_admin=lambda token:UID,
+                       environment={"STAGING_ONLY":"true","AI_GENERATION_OPT_IN":"true"},
+                       semantic_lookup_factory=forbidden_factory)
+        for expected in ("409 Conflict","200 OK"):
+            raw=json.dumps({**PAYLOAD,"textbook_id":textbook,"resume_completed_only":True}).encode()
+            environ={"PATH_INFO":"/generation/one","REQUEST_METHOD":"POST",
+                     "HTTP_ORIGIN":"https://staging.srnastudytool.com","HTTP_AUTHORIZATION":"Bearer valid",
+                     "CONTENT_LENGTH":str(len(raw)),"wsgi.input":io.BytesIO(raw)}
+            seen=[];app(environ,lambda status,headers:seen.append(status))
+            self.assertEqual(seen[0],expected)
+            self.assertIsNone(execute.call_args.kwargs['semantic_lookup'])
+            self.assertTrue(execute.call_args.args[1].resume_completed_only)
+        saver.assert_called_once()
+
     @patch("item_generation_http_v2.execute", return_value={
         "dry_run": True, "passage_count": 1, "can_publish": False,
         "database_writes": False})
@@ -302,6 +365,21 @@ class HttpPreflightTests(unittest.TestCase):
         seen = []
         app(env, lambda status, headers: seen.append(status))
         self.assertEqual(seen[0], "200 OK")
+
+    @patch("item_generation_http_v2.execute")
+    def test_planning_diagnostics_are_allowlisted_and_never_echo_model_text(self, execute):
+        for message, detail in [
+            ("Concept card choice plan response invalid", "PLAN_RESPONSE_FIELDS"),
+            ("Concept card choice plan repeats a response pattern", "PLAN_REPEATED_PATTERN"),
+            ("Concept card references unknown passages", "CONCEPT_UNKNOWN_SOURCE"),
+            ("Concept card private source text and secret", None),
+        ]:
+            execute.side_effect = ValueError(message)
+            status, data = self.call()
+            self.assertEqual(status, "422 Unprocessable Entity")
+            self.assertEqual(data.get("validation_detail"), detail)
+            self.assertEqual(data["validation_contract"], "2026-11-10-v1")
+            self.assertNotIn(message, json.dumps(data))
 
     @patch("item_generation_http_v2.execute")
     def test_no_model_execution_from_http(self, execute):
@@ -409,3 +487,65 @@ class DraftBasketHttpTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class LecturePlanningHttpTests(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(conn_factory=Connection,
+            resolve_admin=lambda token: UID if token == "valid" else None,
+            environment={"STAGING_ONLY": "true"})
+
+    def call(self, payload, *, token="valid", origin="https://staging.srnastudytool.com",
+             method="POST"):
+        raw = json.dumps(payload).encode()
+        env = {"PATH_INFO": "/generation/lecture-plan", "REQUEST_METHOD": method,
+               "HTTP_ORIGIN": origin, "HTTP_AUTHORIZATION": "Bearer " + token,
+               "CONTENT_LENGTH": str(len(raw)), "wsgi.input": io.BytesIO(raw)}
+        seen = []
+        result = b"".join(self.app(env, lambda status, headers: seen.append(status)))
+        return seen[0], json.loads(result)
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs",
+           return_value={"jobs": [], "count": 0, "auto_publish": False})
+    def test_owner_scoped_plan_no_generation(self, planner):
+        status, body = self.call({"lecture_text": "Learning objective: Airway",
+                                  "textbook_id": "book-1"})
+        self.assertEqual(status, "200 OK")
+        self.assertEqual(body["count"], 0)
+        self.assertEqual(planner.call_args.args[1], UID)
+        self.assertEqual(planner.call_args.kwargs["textbook_id"], "book-1")
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_unauthorized_or_wrong_origin(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload, token="invalid")[0], "403 Forbidden")
+        self.assertEqual(self.call(payload, origin="https://example.org")[0], "403 Forbidden")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_client_identity_and_oversize(self, planner):
+        payload = {"lecture_text": "Airway", "textbook_id": "book-1",
+                   "owner_uid": UID}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        payload = {"lecture_text": "a" * 12001, "textbook_id": "book-1"}
+        self.assertEqual(self.call(payload)[0], "400 Bad Request")
+        planner.assert_not_called()
+
+    @patch("lecture_to_question_plan.prepare_staging_jobs")
+    def test_rejects_non_post(self, planner):
+        self.assertEqual(self.call({"lecture_text": "Airway", "textbook_id": "book-1"},
+                                   method="GET")[0], "405 Method Not Allowed")
+        planner.assert_not_called()
+
+
+class AttemptBoundaryHttpTests(unittest.TestCase):
+    def test_busy_or_started_attempt_is_409_and_never_saves(self):
+        from item_generation_attempt_v2 import GenerationBusy,GenerationAlreadyStarted
+        for error,rule in [(GenerationBusy(),'GENERATION_BUSY'),(GenerationAlreadyStarted(),'GENERATION_ALREADY_STARTED')]:
+            app=create_app(conn_factory=Connection,resolve_admin=lambda token:UID,
+                           environment={'STAGING_ONLY':'true','AI_GENERATION_OPT_IN':'true'})
+            payload=json.dumps({**PAYLOAD,'textbook_id':'book'}).encode();seen=[]
+            env={'PATH_INFO':'/generation/one','REQUEST_METHOD':'POST','HTTP_ORIGIN':'https://staging.srnastudytool.com',
+                 'HTTP_AUTHORIZATION':'Bearer valid','CONTENT_LENGTH':str(len(payload)),'wsgi.input':io.BytesIO(payload)}
+            with patch('item_generation_http_v2.execute',side_effect=error),patch('item_generation_http_v2.save') as save:
+                result=json.loads(b''.join(app(env,lambda status,headers:seen.append(status))))
+            self.assertEqual(seen,['409 Conflict']);self.assertEqual(result['rule'],rule);save.assert_not_called()

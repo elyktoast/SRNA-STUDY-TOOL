@@ -8,7 +8,9 @@ assert.equal(root.pathname,'/');
 assert.ok(root.hostname.endsWith('.srnastudytool.com') || root.hostname==='srna-source-reviewer-gateway-staging.dalley-kyle.workers.dev');
 const request=async(path,init={})=>fetch(new URL(path,root),{redirect:'error',...init});
 const tests=[
- ['/review/approve',{method:'POST',headers:{Origin:origin}},[403,404,405]],
+ // A well-formed anonymous request must fail authorization even when page
+ // approval is enabled. Missing JSON previously tested only request parsing.
+ ['/review/approve',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:'{}'},[401,403]],
  ['/review/manifest?path=invalid.pdf',{headers:{Origin:origin}},[401,403]],
  ['/review/page.png?path=invalid.pdf&page=1',{headers:{Origin:origin}},[401,403]],
  ['/review/manifest?path=invalid.pdf',{headers:{Origin:'https://example.com'}},[403]],

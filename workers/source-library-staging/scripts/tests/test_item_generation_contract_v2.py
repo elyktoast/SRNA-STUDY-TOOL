@@ -36,8 +36,8 @@ class ContractTests(unittest.TestCase):
                              concept_card={"objective": "III.H.4"})
         instructions = request["instructions"]
         for requirement in (
-            "Omit excerpt", "verifying all three source identifiers",
-            "OBJECTS ONLY", "do not guess a pdf_page",
+            "Omit excerpt, textbook_id and pdf_page", "containing ONLY passage_id",
+            "Do not add fields, fabricated IDs", "source identity from that ID",
             "same item_draft response", "keys exactly match the option IDs",
             "affirmative support or contradiction", "negatively worded NOT/EXCEPT",
         ):

@@ -23,6 +23,12 @@ def connection(pages):
 
 
 class ReconcileTests(unittest.TestCase):
+    def test_cloudflare_index_requires_model_specific_dimensions(self):
+        conn,_=connection([[('a',HASH,[1.0,0.0])]])
+        with self.assertRaisesRegex(ValueError,'Cloudflare embedding dimensions'):
+            reconcile(conn,owner_uid=OWNER,embedding_model='@cf/baai/bge-m3',inventory={'a':HASH})
+        conn,_=connection([[('a',HASH,[1.0]+[0.0]*1023)]])
+        self.assertTrue(reconcile(conn,owner_uid=OWNER,embedding_model='@cf/baai/bge-m3',inventory={'a':HASH})['ready'])
     def test_complete_index(self):
         conn, cur = connection([[("a", HASH, [1.0, 0.0]), ("b", HASH, [1.0, 0.0])]])
         result = reconcile(conn, owner_uid=OWNER, embedding_model="test",
@@ -31,6 +37,21 @@ class ReconcileTests(unittest.TestCase):
         self.assertEqual(result["expected_count"], 2)
         self.assertEqual(result["missing_count"], 0)
         self.assertEqual(cur.execute.call_args.args[1], (OWNER, "test", "", 1000))
+
+    def test_mixed_case_identifiers_use_python_order_across_page_boundaries(self):
+        from unittest.mock import patch
+        ids=['A','B','a','b']
+        conn,cur=connection([])
+        def execute(query,params):
+            # en_US puts lower case first; C ordering agrees with Python.
+            order=ids if query.count('COLLATE "C"')==2 else ['a','A','b','B']
+            cur.fetchall.return_value=[(i,HASH,[1.0,0.0]) for i in order if i>params[2]][:params[3]]
+            cur.fetchall.side_effect=None
+        cur.execute.side_effect=execute
+        with patch('item_semantic_inventory_reconcile_v2.PAGE_SIZE',2):
+            result=reconcile(conn,owner_uid=OWNER,embedding_model='test',inventory={i:HASH for i in ids})
+        self.assertTrue(result['ready']);self.assertEqual(result['indexed_count'],4)
+        self.assertEqual(cur.execute.call_count,3)
 
     def test_missing_extra_and_stale_fail_closed(self):
         conn, _ = connection([[("a", "b" * 64, [1.0, 0.0]), ("extra", HASH, [1.0, 0.0])]])
@@ -97,6 +118,8 @@ class ReconcileTests(unittest.TestCase):
             inventory, actual = load_inventory(path)
             self.assertEqual(inventory, {"a": HASH})
             self.assertEqual(actual, digest)
+            inventory.clear()
+            self.assertEqual(load_inventory(path), ({"a": HASH}, digest))
             path.write_text(json.dumps({"schema_version": 1, "item_count": 1,
                                         "inventory_digest": "0" * 64, "entries": entries}))
             with self.assertRaisesRegex(ValueError, "digest mismatch"):

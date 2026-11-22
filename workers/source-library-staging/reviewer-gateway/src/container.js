@@ -9,6 +9,7 @@ export class ReviewerContainer extends Container {
    if(!this.env[name])throw new Error('Missing staging secret: '+name);
    result[name]=this.env[name];
   }
+  if(this.env.AI_MC_BATCH_ENABLED==='true')result.AI_MC_BATCH_ENABLED='true';
   // Checkpoint access is private to this staging container; never expose it to browser configuration.
   if (this.env.AI_GENERATION_CHECKPOINTS_ENABLED === 'true') {
    if (this.env.AI_GENERATION_OPT_IN !== 'true') throw new Error('Checkpointing requires staging AI opt-in');
@@ -21,6 +22,11 @@ export class ReviewerContainer extends Container {
     result[key] = this.env[key];
    }
    result.AI_GENERATION_OPT_IN = 'true';
+   if(this.env.AI_SOURCE_DISCOVERY_OPT_IN==='true')result.AI_SOURCE_DISCOVERY_OPT_IN='true';
+   if (this.env.AI_AUTHORING_PROVIDER !== undefined) {
+    result.AI_AUTHORING_PROVIDER = this.env.AI_AUTHORING_PROVIDER;
+    if (this.env.AI_AUTHORING_PROVIDER === 'cloudflare') result.AI_CLOUDFLARE_MODEL = this.env.AI_CLOUDFLARE_MODEL || '';
+   }
    if (this.env.AI_HYBRID_ENABLED === 'true') {
     const hybridKeys = ['AI_CLOUDFLARE_ACCOUNT_ID', 'AI_CLOUDFLARE_API_TOKEN', 'AI_CLOUDFLARE_MODEL'];
     for (const key of hybridKeys) {

@@ -1,12 +1,12 @@
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from run_grounded_generation_v2 import _call_with_bounded_rate_wait
 from item_ai_https_transport_v2 import TransportError
 from item_option_retrieval_audit_v2 import audit
 
 class ReviewRateAndContextTests(unittest.TestCase):
     @patch('time.sleep')
-    def test_only_explicit_bounded_429_can_wait_and_retry_once(self, sleep):
+    def test_review_uses_bounded_provider_delay(self, sleep):
         request={'step':'option_review'}
         adapter=Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=3), {'judgments':[]}])
         self.assertEqual(_call_with_bounded_rate_wait(adapter,request),{'judgments':[]})
@@ -21,11 +21,31 @@ class ReviewRateAndContextTests(unittest.TestCase):
     def test_second_429_is_not_retried(self,sleep):
         adapter=Mock(side_effect=TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2))
         with self.assertRaises(TransportError):_call_with_bounded_rate_wait(adapter,{})
-        sleep.assert_called_once_with(5);self.assertEqual(adapter.call_count,2)
+        sleep.assert_called_once_with(60);self.assertEqual(adapter.call_count,2)
+    @patch('time.sleep')
+    def test_early_retry_retains_full_window_fallback_and_never_replays_success(self, sleep):
+        limited = TransportError('PROVIDER_RATE_LIMIT', retry_after_seconds=9)
+        adapter = Mock(side_effect=[limited, limited, {'judgments':[]}])
+        self.assertEqual(_call_with_bounded_rate_wait(adapter, {'step':'explanation_review'}), {'judgments':[]})
+        self.assertEqual(sleep.call_args_list, [call(12), call(48)])
+        self.assertEqual(adapter.call_count, 3)
+
+    @patch('time.sleep')
+    def test_unaffordable_or_unknown_retry_delay_leaves_review_unavailable(self, sleep):
+        for delay in (None, 59):
+            with self.subTest(delay=delay):
+                sleep.reset_mock()
+                adapter = Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT', 9),
+                                            TransportError('PROVIDER_RATE_LIMIT', delay)])
+                with self.assertRaises(TransportError):
+                    _call_with_bounded_rate_wait(adapter, {'step':'explanation_review'})
+                sleep.assert_called_once_with(12)
+                self.assertEqual(adapter.call_count, 2)
+
     @patch('item_option_retrieval_audit_v2.search')
     def test_topic_and_classification_retrieved_once_without_answer_or_citation_seeding(self,search):
         def lookup(conn,query,owner,**kwargs):
-            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':1,'textbook_id':'book'})
+            self.assertEqual(owner,'owner');self.assertEqual(kwargs,{'limit':2 if query=='topic' else 1,'textbook_id':'book'})
             return [{'passage_id':'topic-source' if query=='topic' else query+'-class-source'}]
         search.side_effect=lookup
         item={'format':'MC','stem':'Which?', 'options':[{'id':'A','text':'Drug A'},{'id':'B','text':'Drug B'}], 'key':['A'], 'evidence':[{'passage_id':'forged-generator-source'}]}

@@ -56,12 +56,12 @@ def save_revision(conn, *, owner_uid, draft_id, expected_parent_sha256,
     if not ids or len(ids)>50 or any(not isinstance(x,str) for x in ids):
         raise ValueError("Invalid indexed passage references")
     with conn.cursor() as cur:
-        cur.execute("""select p.id::text,p.textbook_id::text,p.page_start,left(p.content,1200)
+        cur.execute("""select p.id::text,p.textbook_id::text,p.page_start,left(p.content,1600)
           from source_library_staging.passages p
           join source_library_staging.textbooks t on t.id=p.textbook_id
-          where p.id::text = any(%s::text[]) and t.id=%s::uuid
+          where p.id::text = any(%s::text[])
             and t.owner_uid=%s::uuid and t.status='ready'""",
-          (sorted(ids),parent["textbook_id"],owner))
+          (sorted(ids),owner))
         rows=cur.fetchall()
     trusted_passages=[{"passage_id":r[0],"textbook_id":r[1],
                       "pdf_page_start":r[2],"excerpt":r[3]} for r in rows]

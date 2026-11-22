@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_draft_revalidation_v2 import revalidate
+from test_item_draft_review_contract_v2 import passed_screening
 
 OWNER="c003287a-10ce-4cc9-926e-ef7c3a162a26"
 BOOK="2a589498-aaa4-410f-b51a-00d3ab99eafd"
@@ -40,6 +41,21 @@ def draft(question=None, status="pending_review"):
                 "textbook_id":BOOK,"pdf_page":197}]}}
 
 class RevalidationTests(unittest.TestCase):
+    @patch("item_draft_revalidation_v2.check_answers",return_value=[])
+    @patch("item_draft_revalidation_v2.reconcile",return_value=[])
+    @patch("item_draft_revalidation_v2.validate_complete_item",side_effect=lambda item:[])
+    @patch("item_draft_revalidation_v2.get_draft")
+    def test_structurally_clean_citations_cannot_erase_saved_independent_failure(self,get_draft,*checks):
+        value=draft()
+        value["screening"]=passed_screening()
+        value["screening"]["stages"]["explanation_evidence"]={"status":"flag","issues":[{"rule_id":"R-2.4"}]}
+        get_draft.return_value=value
+        result=revalidate(Conn([(PASSAGE,BOOK,197,"Trusted source.")]),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertTrue(any(x["field"]=="screening.stages.explanation_evidence" for x in result["issues"]))
+        self.assertFalse(result["database_writes"])
+        value["screening"]=passed_screening()
+        result=revalidate(Conn([(PASSAGE,BOOK,197,"Trusted source.")]),owner_uid=OWNER,draft_id=DRAFT)
+        self.assertEqual(result["issues"],[])
     @patch("item_draft_revalidation_v2.get_draft")
     def test_reports_missing_excerpt_and_option_map_without_writing(self, get_draft):
         get_draft.return_value=draft()
@@ -52,7 +68,7 @@ class RevalidationTests(unittest.TestCase):
         self.assertTrue(any(x["message"]=="Excerpt mismatch at index 0" for x in result["issues"]))
         self.assertTrue(any("option evidence map" in x["message"] for x in result["issues"]))
         self.assertIn("t.owner_uid=%s::uuid",conn.cur.sql)
-        self.assertEqual(conn.cur.params[1:],(BOOK,OWNER))
+        self.assertEqual(conn.cur.params[1:],(OWNER,))
 
     @patch("item_draft_revalidation_v2.get_draft")
     def test_option_worksheet_is_read_only_and_does_not_invent_evidence(self,get_draft):

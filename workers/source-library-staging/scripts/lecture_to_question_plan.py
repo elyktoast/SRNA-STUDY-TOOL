@@ -2,19 +2,26 @@
 
 Read-only. Never sends lecture or textbook material to public services.
 """
-from lecture_concept_extraction import extract
+from lecture_concept_extraction import PRIORITY, extract
 from lecture_question_plan import plan
 from build_question_evidence import build_evidence
 
 
+def valid_staging_count(count, format):
+    return type(count) is int and (1 <= count <= 5 or (format == "MC" and count in (25, 50, 100)))
+
+
 def prepare(conn, owner_uid, lecture_text, *, textbook_id=None, count=20,
-            max_concepts=30, passage_limit=6):
+            max_concepts=30, passage_limit=6, prefer_learning_objectives=False):
     extracted = extract(lecture_text, max_concepts=max_concepts)
     concepts = extracted["concepts"]
+    if prefer_learning_objectives:
+        concepts = sorted(concepts, key=lambda topic: PRIORITY[topic["importance"]])
     evidence = {}
     for topic in concepts:
         result = build_evidence(conn, owner_uid, topic["title"],
-                                textbook_id=textbook_id, limit=passage_limit)
+                                textbook_id=textbook_id, limit=passage_limit,
+                                **({'balance_books':True} if textbook_id is None else {}))
         evidence[topic["title"]] = result["sources"]
     planned = plan(concepts, evidence, count=count) if concepts else {
         "requested": count, "planned": 0, "topics": [],
@@ -28,3 +35,48 @@ def prepare(conn, owner_uid, lecture_text, *, textbook_id=None, count=20,
         "candidate_count": len(concepts),
         "no_candidates_found": not bool(concepts),
     }, "lecture_text_stored": False}
+
+
+def prepare_staging_jobs(conn, owner_uid, lecture_text, *, textbook_id,
+                         item_id_factory, mode="NCE", format="MC", count=1,
+                         domain=None, section=None, objective=None):
+    """Compose extraction, indexed retrieval, blueprint selection and v2 handoff.
+
+    Produces preflight requests only. No network calls, paid AI generation,
+    draft persistence, or publication. The trusted authenticated service must
+    execute any generated jobs separately after explicit owner authorization.
+    """
+    if textbook_id is not None and (not isinstance(textbook_id, str) or not textbook_id.strip()):
+        raise ValueError("Invalid textbook selection")
+    if not valid_staging_count(count, format):
+        raise ValueError("Unsupported staging question count")
+    from lecture_generation_requests import requests, staging_http_jobs
+    planned = prepare(conn, owner_uid, lecture_text, textbook_id=textbook_id,
+                      count=count, prefer_learning_objectives=format == "MC")
+    selected = requests(planned, mode=mode, domain=domain,
+                        section=section, objective=objective, format=format)
+    handoff = staging_http_jobs(selected, textbook_id=textbook_id,
+                                item_id_factory=item_id_factory, execute=False)
+    # Return derived question topics/focus only, never textbook excerpts or the
+    # full lecture text. Unselected bullet collections stay internal.
+    public_plan = {
+        "requested": planned["requested"],
+        "planned": planned["planned"],
+        "coverage": planned["coverage"],
+        "extraction": planned["extraction"],
+        "lecture_text_stored": False,
+        "topics": [
+            {"title": topic["title"],
+             "question_count": topic["question_count"],
+             "importance": topic.get("importance", "standard"),
+             "lecture_locator": topic.get("lecture_locator")}
+            for topic in planned["topics"]
+        ],
+        "missing_textbook_support": [{k:v for k,v in t.items() if k != "learning_points"}
+                                     for t in planned["missing_textbook_support"]],
+    }
+    return {"lecture_plan": public_plan, "classification": {
+                "held_for_classification": selected["held_for_classification"],
+                "held_count": selected["held_count"]},
+            **handoff, "auto_generate": False, "auto_publish": False,
+            "database_writes": False}

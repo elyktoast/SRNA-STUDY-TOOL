@@ -6,6 +6,11 @@
     "@cloudflare/containers": "^0.2.0"
   },
   "devDependencies": {
-    "wrangler": "^4.0.0"
+    "@cloudflare/vitest-plugin": "^1.9.0",
+    "vitest": "^4.1.12",
+    "wrangler": "4.165.0"
+  },
+  "scripts": {
+    "postinstall": "node scripts/patch-wrangler-version-readback.mjs"
   }
 }

@@ -5,7 +5,13 @@ The caller owns the transaction and must verify reviewer identity.
 """
 import json
 from uuid import UUID
-from item_draft_review_contract_v2 import validate_draft, validate_review
+from item_draft_review_contract_v2 import validate_draft, validate_review, approval_issues
+
+# Shared with a read-only PostgreSQL regression: a passage must match the
+# claimed book, and that book must be ready and owned by the primary's owner.
+SOURCE_EVIDENCE_MATCH_SQL = """p.id::text = ev->>'passage_id'
+                  and p.textbook_id::text = ev->>'textbook_id'
+                  and source.owner_uid = t.owner_uid and source.status='ready'"""
 
 def save(conn, payload):
     outcome = validate_draft(payload)
@@ -20,17 +26,17 @@ def save(conn, payload):
           insert into source_library_staging.generated_question_drafts_v2
           (owner_uid,textbook_id,topic,exam_mode,question_format,
            blueprint_domain,blueprint_section,blueprint_objective,
-           provider,model,question_json,screening_json,evidence_json)
+           provider,model,question_json,screening_json,evidence_json,status)
           select t.owner_uid,t.id,%s,%s,%s,%s,%s,%s,%s,%s,
-                 %s::jsonb,%s::jsonb,%s::jsonb
+                 %s::jsonb,%s::jsonb,%s::jsonb,%s
           from source_library_staging.textbooks t
           where t.id=%s::uuid and t.owner_uid=%s::uuid and t.status='ready'
             and not exists (
               select 1 from jsonb_array_elements(%s::jsonb) ev
               where not exists (
                 select 1 from source_library_staging.passages p
-                where p.id::text = ev->>'passage_id'
-                  and p.textbook_id = t.id
+                join source_library_staging.textbooks source on source.id=p.textbook_id
+                where """ + SOURCE_EVIDENCE_MATCH_SQL + """
               )
             )
           returning id::text
@@ -38,7 +44,7 @@ def save(conn, payload):
               payload["domain"],payload["section"],payload["objective"],
               payload["provider"],payload["model"],
               json.dumps(payload["question"]),json.dumps(payload["screening"]),
-              json.dumps(payload["evidence"]),book,owner,json.dumps(payload["evidence"])))
+              json.dumps(payload["evidence"]),outcome["status"],book,owner,json.dumps(payload["evidence"])))
         record = cur.fetchone()
     if not record:
         raise ValueError("Textbook not ready, not owned by admin, or evidence not indexed in this textbook")
@@ -49,6 +55,21 @@ def review(conn, *, owner_uid, reviewer_uid, draft_id, status, notes):
     owner, reviewer, draft = (str(UUID(str(x))) for x in
                               (owner_uid, reviewer_uid, draft_id))
     with conn.cursor() as cur:
+        if status == "approved_for_bank":
+            # Serialize with any concurrent revision/review. Recheck the saved
+            # automated reports here, even if an HTTP caller omitted validation.
+            cur.execute("""
+              select d.question_format,d.screening_json
+              from source_library_staging.generated_question_drafts_v2 d
+              join source_library_staging.textbooks t on t.id=d.textbook_id
+              where d.id=%s::uuid and d.owner_uid=%s::uuid
+                and t.owner_uid=%s::uuid and t.status='ready'
+                and d.status in ('pending_review','needs_revision')
+              for update of d
+            """, (draft,owner,owner))
+            saved = cur.fetchone()
+            if saved is None or approval_issues(saved[1], saved[0]):
+                raise ValueError("Automated verification must pass before approval")
         cur.execute("""
           update source_library_staging.generated_question_drafts_v2 d
           set status=%s,reviewer_notes=%s,reviewed_by=%s::uuid,
@@ -71,7 +92,7 @@ def list_drafts(conn, *, owner_uid, limit=50):
     with conn.cursor() as cur:
         cur.execute("""
           select d.id::text,d.topic,d.exam_mode,d.question_format,
-                 d.status,d.created_at,d.textbook_id::text
+                 d.status,d.created_at,d.textbook_id::text,d.screening_json
           from source_library_staging.generated_question_drafts_v2 d
           join source_library_staging.textbooks t on t.id=d.textbook_id
           where d.owner_uid=%s::uuid and t.owner_uid=%s::uuid
@@ -80,7 +101,8 @@ def list_drafts(conn, *, owner_uid, limit=50):
         rows = cur.fetchall()
     return [{"draft_id":x[0],"topic":x[1],"mode":x[2],
              "format":x[3],"status":x[4],"created_at":x[5].isoformat(),
-             "textbook_id":x[6]} for x in rows]
+             "textbook_id":x[6],
+             "automated_checks_passed":not approval_issues(x[7],x[3])} for x in rows]
 
 
 def get_draft(conn, *, owner_uid, draft_id):
@@ -115,4 +137,6 @@ def get_draft(conn, *, owner_uid, draft_id):
         if result[key] is not None:
             result[key] = result[key].isoformat()
     result["published"] = False
+    from item_saved_option_review_v2 import eligible
+    result["can_complete_option_review"] = eligible(result)
     return result

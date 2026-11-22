@@ -3,6 +3,7 @@
 No writes or provider calls. Caller supplies a trusted embedding function;
 a partial or absent index is never reported as a completed search.
 """
+from array import array
 from uuid import UUID
 import re
 from item_semantic_duplicates import cosine
@@ -10,9 +11,11 @@ from item_semantic_duplicates import cosine
 MAX_ROWS = 10000
 PAGE_SIZE = 1000
 
-def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None, expected_stem_hashes=None):
+def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_item_ids=None, expected_stem_hashes=None, inventory_digest=None):
     if index_ready is not True:
         raise ValueError("Semantic index not verified")
+    if inventory_digest is not None and (not isinstance(inventory_digest,str) or re.fullmatch('[a-f0-9]{64}',inventory_digest) is None):
+        raise ValueError("Invalid semantic inventory digest")
     if (not isinstance(expected_item_ids, (set, frozenset)) or not expected_item_ids
             or not all(isinstance(x, str) and x.strip() for x in expected_item_ids)
             or len(expected_item_ids) > MAX_ROWS):
@@ -42,15 +45,16 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
         # Keyset pagination avoids truncating full-bank inventories and keeps
         # each database fetch bounded. Never report completion on a short,
         # inconsistent or oversized result.
-        rows = []
+        neighbors = []
+        returned_ids = set()
         last_id = ""
         with conn.cursor() as cur:
             while True:
                 cur.execute(
                     """select item_id, embedding, stem_hash from source_library_staging.question_semantic_index_v2
                        where owner_uid=%s and embedding_model=%s and item_id<>%s
-                         and item_id>%s
-                       order by item_id limit %s""",
+                         and item_id COLLATE "C">%s
+                       order by item_id COLLATE "C" limit %s""",
                     (owner, embedding_model, candidate_id, last_id, PAGE_SIZE))
                 page = cur.fetchall()
                 if len(page) > PAGE_SIZE:
@@ -60,26 +64,27 @@ def lookup(conn, *, owner_uid, embedding_model, embed, index_ready, expected_ite
                              or any(page[i][0] >= page[i + 1][0]
                                     for i in range(len(page) - 1))):
                     raise ValueError("Semantic index pagination order invalid")
-                rows.extend(page)
-                if len(rows) > MAX_ROWS:
-                    raise ValueError("Semantic index exceeds exhaustive search cap")
+                for item_id, embedding, stem_hash in page:
+                    if item_id in returned_ids or item_id not in expected_item_ids or item_id == candidate_id:
+                        raise ValueError("Semantic index coverage does not match canonical item inventory")
+                    if expected_stem_hashes[item_id] != stem_hash:
+                        raise ValueError("Stale semantic index stem hash")
+                    if not isinstance(embedding, (list, tuple)):
+                        raise ValueError("Invalid indexed embedding")
+                    # Validate original values before packing: array('d') must
+                    # not coerce booleans/strings into apparently valid vectors.
+                    cosine(vector, embedding)
+                    neighbor = array('d', embedding)
+                    returned_ids.add(item_id)
+                    neighbors.append({"item_id": item_id, "embedding": neighbor})
+                    if len(returned_ids) > MAX_ROWS:
+                        raise ValueError("Semantic index exceeds exhaustive search cap")
                 if len(page) < PAGE_SIZE:
                     break
                 last_id = page[-1][0]
-        returned_ids = [item_id for item_id, _, _ in rows]
         required_ids = expected_item_ids - {candidate_id}
-        if (len(returned_ids) != len(set(returned_ids))
-                or set(returned_ids) != required_ids):
+        if returned_ids != required_ids:
             raise ValueError("Semantic index coverage does not match canonical item inventory")
-        neighbors = []
-        for item_id, embedding, stem_hash in rows:
-            if expected_stem_hashes[item_id] != stem_hash:
-                raise ValueError("Stale semantic index stem hash")
-            if not isinstance(embedding, (list, tuple)):
-                raise ValueError("Invalid indexed embedding")
-            neighbor = list(embedding)
-            cosine(vector, neighbor)
-            neighbors.append({"item_id": item_id, "embedding": neighbor})
         return {"embedding": vector, "neighbors": neighbors,
-                "search_complete": True, "index_id": "question_semantic_index_v2:" + embedding_model}
+                "search_complete": True, "index_id": "question_semantic_index_v2:" + embedding_model + (":" + inventory_digest if inventory_digest else "")}
     return semantic_lookup

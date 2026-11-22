@@ -1,0 +1,18 @@
+{
+ "name":"mc-batch-test",
+ "main":"mc-batch-worker.mjs",
+ "compatibility_date":"2026-11-18",
+ "durable_objects":{"bindings":[
+  {"name":"MC_BATCH","class_name":"McBatch"},
+  {"name":"REVIEWER_CONTAINER","class_name":"FakeReviewer"}
+ ]},
+ "migrations":[{"tag":"v1","new_sqlite_classes":["McBatch","FakeReviewer"]}],
+ "vars":{
+  "STAGING_DATABASE_URL":"fixture",
+  "STAGING_R2_ACCOUNT_ID":"fixture",
+  "STAGING_R2_ACCESS_KEY_ID":"fixture",
+  "STAGING_R2_SECRET_ACCESS_KEY":"fixture",
+  "SUPABASE_ANON_KEY":"fixture",
+  "STAGING_RECEIPT_SIGNING_SECRET":"fixture-signing-secret-for-tests-only"
+ }
+}
