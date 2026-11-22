@@ -20,7 +20,7 @@ def _definition_rank(row, label):
     return max((max(0, 201-abs(v.start()-n.end())) for n in names for v in verbs), default=0)
 
 
-def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, textbook_ids=None):
+def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, textbook_ids=None, matched_passages=None):
     if not isinstance(item, dict) or item.get("format") not in ("MC", "MS"):
         raise ValueError("MC/MS item required")
     if not isinstance(textbook_id, str) or not textbook_id:
@@ -44,8 +44,14 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, te
         context_query = topic_search_query(context_query)
     from item_source_scope_v2 import source_scope
     books = source_scope(textbook_id, textbook_ids) or [textbook_id]
+    searches = {}
     def retrieve(query, count, definition_label=None):
-        groups = [search(conn, query, owner_uid, limit=count, textbook_id=book) for book in books]
+        groups = []
+        for book in books:
+            key = (book, query, count)
+            if key not in searches:
+                searches[key] = search(conn, query, owner_uid, limit=count, textbook_id=book)
+            groups.append(list(searches[key]))
         if definition_label:
             for group in groups:
                 group.sort(key=lambda row: -_definition_rank(row, definition_label))
@@ -88,6 +94,8 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, te
         search_status = "failed" if option_failed or context_failed else "matches_found" if rows else "no_matches"
         if not rows:
             missing_evidence = True
+        if matched_passages is not None and search_status == "matches_found":
+            matched_passages.update((row["passage_id"], row) for row in rows)
         results.append({
             "option_id": option_id,
             "question_context": stem[:180],

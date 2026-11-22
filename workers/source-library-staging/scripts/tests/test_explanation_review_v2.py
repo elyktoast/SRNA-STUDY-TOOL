@@ -56,6 +56,51 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertGreater(len(calls),1)
         self.assertFalse(report["can_publish"])
 
+    def test_compact_scopes_reduce_calls_and_preserve_citation_boundaries(self):
+        self.item["evidence"].append({"passage_id": "p2"})
+        self.sources.append({"passage_id": "p2", "excerpt": "Another source."})
+        self.item["concept_card"]["evidence_ids"] = ["p1"]
+        self.item["distractor_evidence"] = {"A": {"explanation": "Option claim", "passage_ids": ["p2"]}}
+        calls = []
+
+        def reviewer(payload):
+            calls.append(payload)
+            return {"supported_groups": [
+                {"field_ids": [field["id"]], "quote_refs": [
+                    {"passage_id": field["passage_ids"][0], "span_id": "q0"}]}
+                for field in payload["fields"]], "unsupported": []}
+
+        sequential = review(self.item, self.sources, reviewer, batch_size=6)
+        calls.clear()
+        compact = review(self.item, self.sources, reviewer, batch_size=6, compact_scopes=True)
+        self.assertEqual((sequential["batch_count"], compact["batch_count"]), (3, 2))
+        self.assertEqual(compact["status"], "pass")
+        self.assertEqual(compact["source_support"], sequential["source_support"])
+        self.assertTrue(any(len({tuple(f["passage_ids"]) for f in p["fields"]}) > 1 for p in calls))
+
+        def wrong_source(payload):
+            answer = reviewer(payload)
+            for group in answer["supported_groups"]:
+                group["quote_refs"][0]["passage_id"] = "p1"
+            return answer
+        self.assertEqual(review(self.item, self.sources, wrong_source, batch_size=6,
+                                compact_scopes=True)["status"], "pending")
+
+    def test_explicit_size_rejection_splits_without_repeating_accepted_fields(self):
+        from item_ai_https_transport_v2 import TransportError
+        accepted = []
+        def reviewer(payload):
+            fields = [field["id"] for field in payload["fields"]]
+            if len(fields) > 3:
+                raise TransportError("PROVIDER_REQUEST_SIZE")
+            accepted.extend(fields)
+            return {"supported_groups": [{"field_ids": fields, "quote_refs": [
+                {"passage_id": "p1", "span_id": "q0"}]}], "unsupported": []}
+        report = review(self.item, self.sources, reviewer, batch_size=6, compact_scopes=True)
+        self.assertEqual(report["status"], "pass")
+        self.assertCountEqual(accepted, self.ids)
+        self.assertEqual(report["batch_count"], 3)
+
     def setUp(self):
         self.item = {"evidence":[{"passage_id":"p1"}],
                      "concept_card":{k:"Classification statement" for k in ("mechanism","relevance","misconception","counterfactual")},

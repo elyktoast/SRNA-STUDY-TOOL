@@ -118,6 +118,7 @@ class LiveBridgeTests(unittest.TestCase):
         second = callback({"item_id": "draft", "stem": "Rewritten stem"})
         self.assertNotEqual(first["embedding"], second["embedding"])
         self.assertEqual(first["neighbors"], second["neighbors"])
+        self.assertEqual(callback({"item_id": "draft", "stem": "Rewritten stem"}), second)
         self.cur.execute.assert_called_once()
         self.assertEqual(embed.call_count, 2)
 

@@ -7,6 +7,7 @@ No import, publication or provider call happens during factory construction.
 import json
 import math
 import urllib.request
+from functools import lru_cache
 from pathlib import Path
 
 from item_semantic_inventory_reconcile_v2 import load_inventory, reconciled_vectors
@@ -77,16 +78,21 @@ def build_semantic_lookup(conn, *, owner_uid, env, embed):
     dimension = len(next(iter(vectors.values())))
     index_id = "question_semantic_index_v2:" + model + ":" + digest
 
+    @lru_cache(maxsize=2)
+    def embed_stem(stem):
+        vector = embed(stem)
+        cosine(vector, vector)
+        if len(vector) != dimension:
+            raise ValueError("Invalid candidate embedding dimensions")
+        return tuple(vector)
+
     def lookup_candidate(item):
         if not isinstance(item, dict) or not isinstance(item.get("stem"), str) or not item["stem"].strip():
             raise ValueError("Question stem required")
         item_id = item.get("item_id")
         if not isinstance(item_id, str) or not item_id.strip():
             raise ValueError("Stable candidate item ID required")
-        vector = embed(item["stem"])
-        cosine(vector, vector)
-        if len(vector) != dimension:
-            raise ValueError("Invalid candidate embedding dimensions")
+        vector = list(embed_stem(item["stem"]))
         neighbors = [{"item_id": prior_id, "embedding": embedding}
                      for prior_id, embedding in vectors.items() if prior_id != item_id]
         return {"embedding": vector, "neighbors": neighbors,

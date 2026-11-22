@@ -3,10 +3,11 @@ import hashlib
 import hmac
 import json
 import time
-from functools import lru_cache
+from collections import OrderedDict
+from threading import Lock
 from uuid import UUID
 
-from item_cloudflare_embeddings_v2 import make_embed_many
+from item_cloudflare_embeddings_v2 import batch_fits, make_embed_many, valid_vector
 from source_review_roles_supabase_v2 import ProtectedReviewerRoleStore
 
 
@@ -40,9 +41,45 @@ def prior_ids(values):
     return ids
 
 
-@lru_cache(maxsize=256)
-def _embed_stem(secret, stem):
-    return tuple(make_embed_many(enabled=True, relay_secret=secret)([stem])[0])
+_vector_cache = OrderedDict()
+_vector_cache_lock = Lock()
+_VECTOR_CACHE_LIMIT = 256
+
+
+def _embed_stems(owner, secret, stems):
+    """Fetch unique cache misses in bounded provider requests."""
+    vectors = {}
+    missing = []
+    with _vector_cache_lock:
+        for stem in dict.fromkeys(stems):
+            key = (owner, stem)
+            if key in _vector_cache:
+                vectors[stem] = _vector_cache[key]
+                _vector_cache.move_to_end(key)
+            else:
+                if not batch_fits([stem]):
+                    raise ValueError("Invalid batch draft stem")
+                missing.append(stem)
+    if not missing:
+        return vectors
+    embed = make_embed_many(enabled=True, relay_secret=secret)
+    start = 0
+    while start < len(missing):
+        end = start + 1
+        while end < len(missing) and batch_fits(missing[start:end + 1]):
+            end += 1
+        texts = missing[start:end]
+        result = embed(texts)
+        if len(result) != len(texts) or any(not valid_vector(vector) for vector in result):
+            raise ValueError("Invalid batch draft embeddings")
+        with _vector_cache_lock:
+            for stem, vector in zip(texts, result):
+                vectors[stem] = _vector_cache[owner, stem] = tuple(vector)
+                _vector_cache.move_to_end((owner, stem))
+            while len(_vector_cache) > _VECTOR_CACHE_LIMIT:
+                _vector_cache.popitem(last=False)
+        start = end
+    return vectors
 
 
 def with_draft_neighbors(lookup, conn, owner, ids, secret):
@@ -62,9 +99,10 @@ def with_draft_neighbors(lookup, conn, owner, ids, secret):
 
     def compare(item):
         result = lookup(item)
+        prior = [(item_id, stem) for _, item_id, stem in rows if item_id != item["item_id"]]
+        vectors = _embed_stems(owner, secret, [stem for _, stem in prior])
         return {**result, "neighbors": [
             *result["neighbors"],
-            *({"item_id": item_id, "embedding": _embed_stem(secret, stem)}
-              for _, item_id, stem in rows if item_id != item["item_id"]),
+            *({"item_id": item_id, "embedding": vectors[stem]} for item_id, stem in prior),
         ]}
     return compare
