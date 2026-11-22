@@ -66,3 +66,22 @@ class BatchBoundaryTests(unittest.TestCase):
             self.assertEqual(embed.call_count, 2)
             _embed_stems(str(uuid4()), "fixture", stems[:1])
             self.assertEqual(embed.call_count, 3)
+
+    def test_completed_slot_recovery_uses_reservation_and_rejects_wrong_identity(self):
+        from item_generation_checkpoint_store_v2 import recover_completed_batch_slot
+
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        owner, book, slot = (str(uuid4()) for _ in range(3))
+        scope = {"owner_uid": owner, "textbook_id": book, "item_id": slot}
+        cursor.fetchone.return_value = None
+        self.assertIsNone(recover_completed_batch_slot(conn, **scope))
+        self.assertEqual(cursor.execute.call_args.args[1], (owner, book, slot))
+        result = {"item": {"item_id": slot, "format": "MC"}}
+        cursor.fetchone.return_value = ("a" * 64, "b" * 64, result)
+        recovered = recover_completed_batch_slot(conn, **scope)
+        self.assertEqual(recovered["_checkpoint_key"], {
+            "textbook_id": book, "request_hash": "a" * 64, "evidence_hash": "b" * 64})
+        result["item"]["item_id"] = str(uuid4())
+        with self.assertRaisesRegex(ValueError, "identity mismatch"):
+            recover_completed_batch_slot(conn, **scope)

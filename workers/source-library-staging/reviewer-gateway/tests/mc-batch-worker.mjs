@@ -5,6 +5,15 @@ export class FakeReviewer extends DurableObject {
  async startAndWaitForPorts() {}
  async fetch(request) {
   const {request:slot,prior} = await request.json();
+  if (slot.topic === 'busy once' && !slot.resume_completed_only && !await this.ctx.storage.get(slot.item_id)) {
+   await this.ctx.storage.put(slot.item_id,true);
+   return Response.json({rule:'GENERATION_BUSY'},{status:409});
+  }
+  if (slot.topic === 'explicit provider failure') {
+   return slot.resume_completed_only
+    ? Response.json({rule:'CHECKPOINT_NOT_COMPLETE'},{status:409})
+    : Response.json({rule:'PROVIDER_RATE_LIMIT',retry_after_seconds:40},{status:429});
+  }
   if (slot.topic === 'unconfirmed') return new Response(null,{status:503});
   if (slot.topic === 'disconnect' && !slot.resume_completed_only) return new Response(null,{status:503});
   const stages = Object.fromEntries(['schema','deterministic_text','math','evidence','duplicates','blind_model',

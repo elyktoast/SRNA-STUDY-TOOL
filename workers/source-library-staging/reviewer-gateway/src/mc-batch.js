@@ -56,7 +56,7 @@ export async function batchRoute(request, env, owner) {
 
 export function snapshot(batch) {
  if (!batch) return {batch:null};
- return {batch:{id:batch.id, requested:batch.requested, status:batch.status, reason:batch.reason,
+ return {batch:{id:batch.id, requested:batch.requested, status:batch.status, reason:batch.reason, nextRunAt:batch.nextRunAt,
   items:batch.items.map(({id,request,status,draftId,reason}) => ({id,topic:request.topic,status,draftId,reason}))}};
 }
 
@@ -75,7 +75,15 @@ export async function executeSlot(env, batch, slot, recover) {
   request:{...slot.request,item_id:slot.id,resume_completed_only:recover},prior,
  });
  if (!response.ok) {
-  if (response.status >= 500 || response.status === 429 || response.status === 409) throw Error('generation_interrupted');
+  const body = await response.json().catch(() => null);
+  if (response.status === 409 && body?.rule === 'GENERATION_BUSY' && !recover) return {status:'busy'};
+  if (recover && response.status === 409 && body?.rule === 'CHECKPOINT_NOT_COMPLETE') return {status:'checkpoint_missing'};
+  if (!recover && [429,503].includes(response.status) && /^PROVIDER_[A-Z_]+$/.test(body?.rule || '')) {
+   const retryAfter = Number.isInteger(body.retry_after_seconds) && body.retry_after_seconds > 0 &&
+    body.retry_after_seconds <= 3600 ? body.retry_after_seconds : undefined;
+   return {status:'provider_failed',retryAfter};
+  }
+  if (response.status >= 500 || response.status === 429 || response.status === 409 || recover) return {status:'interrupted'};
   return {status:'failed',reason:response.status === 403 ? 'batch_access_denied' : 'generation_rejected'};
  }
  const result = await response.json();
@@ -84,6 +92,6 @@ export async function executeSlot(env, batch, slot, recover) {
  const stages = names.map(name => result.screening?.stages?.[name]);
  const ready = result.draft_status === 'pending_review' && stages.every(stage => stage?.status === 'pass' && stage.issues?.length === 0);
  const reviewReports = [...stages, result.screening?.independent_option_adjudication];
- const unavailable = reviewReports.some(report => /^(PROVIDER_|RELAY_)/.test(report?.provider_rule || ''));
+ const unavailable = reviewReports.some(report => /^(PROVIDER_|RELAY_)/.test(report?.provider_rule || report?.review_error || ''));
  return {status:ready?'ready':'held',draftId:result.draft_id,...(unavailable?{reason:'review_provider_unavailable'}:{})};
 }
