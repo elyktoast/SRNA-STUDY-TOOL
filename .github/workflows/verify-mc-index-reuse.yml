@@ -1,0 +1,60 @@
+name: Benchmark staging MC index reuse
+on:
+  push:
+    branches: [verify/mc-objective-heading-20261118]
+permissions:
+  contents: read
+jobs:
+  benchmark:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[verify-mc-index-reuse]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 639f7ed3bad34933ef5318cbbbd66e876ca485a8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Export canonical inventory and install the database client
+        run: |
+          node scripts/audit-canonical-semantic-inventory.mjs --export /tmp/mc-index-input.json
+          python -m pip install 'psycopg[binary]>=3.2,<4'
+      - name: Compare full and warm staging index reads without model calls
+        env:
+          STAGING_DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+          PYTHONPATH: workers/source-library-staging/scripts
+        run: |
+          python - <<'PY'
+          import json, os, statistics, time
+          import psycopg
+          from item_semantic_inventory_reconcile_v2 import load_inventory, reconciled_vectors, live_reconciled_vectors
+          owner = "c003287a-10ce-4cc9-926e-ef7c3a162a26"
+          model = "@cf/baai/bge-m3"
+          inventory,digest = load_inventory("/tmp/mc-index-input.json")
+          dsn = os.environ["STAGING_DATABASE_URL"]
+          assert "xqyasyambwdyhsjkftqu" in dsn
+          args = dict(owner_uid=owner, embedding_model=model, inventory=inventory)
+          with psycopg.connect(dsn, sslmode="require", connect_timeout=8) as conn:
+              with conn.transaction():
+                  conn.execute("set transaction read only")
+                  start = time.monotonic()
+                  original = reconciled_vectors(conn, **args)
+                  full = time.monotonic() - start
+                  start = time.monotonic()
+                  cold = live_reconciled_vectors(conn, digest=digest, **args)
+                  refreshed = time.monotonic() - start
+                  assert original and cold == original
+                  times = []
+                  for _ in range(5):
+                      start = time.monotonic()
+                      assert live_reconciled_vectors(conn, digest=digest, **args) is cold
+                      times.append(time.monotonic() - start)
+          print(json.dumps(dict(indexed=len(inventory), full_ms=round(full*1000),
+              cold_ms=round(refreshed*1000), warm_median_ms=round(statistics.median(times)*1000),
+              same_vectors=True, model_calls=0, database_writes=0)))
+          PY
