@@ -10,11 +10,13 @@ def request_judgments(payload, call, *, parallel=False):
     try:
         return call(request)
     except TransportError as exc:
-        if exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_OUTPUT_TRUNCATED") or payload.get("format") != "MC":
+        if (payload.get("format") != "MC" or exc.rule not in
+                ("PROVIDER_REQUEST_SIZE", "PROVIDER_OUTPUT_TRUNCATED", "PROVIDER_REQUEST_REJECTED")):
             raise
     except ValueError as exc:
         if payload.get("format") != "MC" or str(exc) not in {
-                "Independent judgments required", "Invalid independent judgment map"}:
+                "Independent judgments required", "Invalid independent judgment map",
+                "Unknown or unauthorized source quote reference"}:
             raise
     # A size rejection or unusable map yields no validated clinical judgment. Keep the same stem and all
     # choices visible, but send only the target option's independently found

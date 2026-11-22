@@ -40,6 +40,16 @@ class OptionReviewTransportTests(unittest.TestCase):
         self.assertEqual(request_judgments(self.payload, adapter, parallel=True),
                          {"judgments": [{"option_id": choice} for choice in "ABCD"]})
 
+    def test_rejected_packet_or_bad_quote_scope_isolated_by_choice(self):
+        for error in (TransportError("PROVIDER_REQUEST_REJECTED"),
+                      ValueError("Unknown or unauthorized source quote reference")):
+            with self.subTest(error=error):
+                adapter = Mock(side_effect=[error, *[
+                    {"judgments": [{"option_id": choice}]} for choice in "ABCD"]])
+                result = request_judgments(self.payload, adapter)
+                self.assertEqual(result, {"judgments": [{"option_id": choice} for choice in "ABCD"]})
+                self.assertEqual(adapter.call_count, 5)
+
     def test_a_provider_failure_does_not_split_or_repeat_valid_judgments(self):
         adapter = Mock(side_effect=TransportError("PROVIDER_UPSTREAM"))
         with self.assertRaises(TransportError):
