@@ -1,0 +1,24 @@
+name: Recover incomplete option checks from the finished staging batch
+on:
+  push:
+    branches: [verify/mc-objective-heading-20261118]
+permissions:
+  contents: read
+jobs:
+  recheck:
+    if: github.run_attempt == '1' && contains(github.event.head_commit.message, '[recheck-finished-mc-options]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    environment: source-library-staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Recheck four existing drafts with nine complete checks
+        env:
+          STAGING_TEST_ADMIN_EMAIL: ${{ secrets.STAGING_TEST_ADMIN_EMAIL }}
+          STAGING_TEST_ADMIN_PASSWORD: ${{ secrets.STAGING_TEST_ADMIN_PASSWORD }}
+          SRNA_STAGING_REVIEWER_ACCESS_TOKEN: ${{ secrets.STAGING_REVIEWER_ACCESS_TOKEN }}
+          STAGING_SUPABASE_ANON_KEY: ${{ secrets.STAGING_SUPABASE_ANON_KEY }}
+        run: node scripts/recheck-finished-mc-options.mjs
