@@ -13,6 +13,16 @@ def _measurement_query(label):
     return " OR ".join('"' + label + '" ' + verb for verb in ("records", "measures", "detects", "quantifies"))
 
 
+def _phrase_fallback(label):
+    """Search three overlapping label phrases when the complete text has no match."""
+    words = re.findall(r"[^\W_]+", label)
+    if len(words) < 4:
+        return None
+    positions = (0, (len(words) - 2) // 2, len(words) - 2)
+    pairs = dict.fromkeys(" ".join(words[i:i+2]) for i in positions)
+    return " OR ".join('"' + pair + '"' for pair in pairs)
+
+
 def _definition_rank(row, label):
     text = row.get("excerpt", "").casefold()
     names = list(re.finditer(re.escape(label.casefold()), text))
@@ -106,6 +116,11 @@ def audit(conn, owner_uid, item, *, textbook_id, limit=5, context_query=None, te
             definitions = retrieve(definition_query, budget, query) if definition_query else []
             ordinary = retrieve(query, budget)
             option_rows = list({row["passage_id"]: row for row in definitions + ordinary}.values())[:budget]
+            if not option_rows and not context_rows and item["format"] == "MC":
+                fallback = _phrase_fallback(query)
+                if fallback:
+                    queries.append(fallback)
+                    option_rows = retrieve(fallback, budget)
         except Exception:
             option_rows = []
             search_failed = True

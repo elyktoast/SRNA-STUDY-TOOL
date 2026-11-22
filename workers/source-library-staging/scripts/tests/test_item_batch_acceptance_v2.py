@@ -2,7 +2,9 @@ import unittest
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
-from item_batch_acceptance_v2 import accept_generated_batch_draft
+from item_batch_acceptance_v2 import accept_generated_batch_draft, recovered_screening
+from item_generation_checkpoint_store_v2 import fingerprint
+from copy import deepcopy
 from item_explanation_review_v2 import fields_for
 
 
@@ -35,9 +37,22 @@ class BatchAcceptanceTests(unittest.TestCase):
         self.cursor.fetchall.return_value = [(self.passage,"Synthetic source phrase")]
         self.saved = {"draft_id":self.draft, "status":"pending_review"}
 
-    def accept(self):
+    def accept(self, duplicate_check=lambda *_: False):
         return accept_generated_batch_draft(self.conn, owner_uid=self.owner, saved=self.saved,
-            result={"item":self.question,"screening":self.screening})
+            result={"item":self.question,"screening":self.screening}, duplicate_check=duplicate_check)
+
+    def test_recovered_report_matches_original_draft_and_preserves_other_checks(self):
+        original = deepcopy(self.screening)
+        original.pop("independent_option_adjudication")
+        original["stages"]["independent_option_evidence"] = {"status":"pending","issues":[]}
+        checkpoint = {"item":self.question,"screening":original,"saved_draft":{"draft_id":self.draft}}
+        current = deepcopy(self.screening)
+        current["saved_option_review"] = {"recorded_by":"trusted_saved_option_review",
+                                          "question_sha256":fingerprint(self.question)}
+        draft = {"draft_id":self.draft,"question":self.question,"screening":current}
+        self.assertEqual(recovered_screening(draft,checkpoint), current)
+        current["stages"]["blind_model"]["status"] = "pending"
+        self.assertIsNone(recovered_screening(draft,checkpoint))
 
     @patch("item_batch_acceptance_v2.review", return_value={"status":"approved_for_bank","published":False})
     @patch("item_batch_acceptance_v2.revalidate", return_value={"issues":[]})
@@ -45,6 +60,12 @@ class BatchAcceptanceTests(unittest.TestCase):
         self.assertEqual(self.accept()["status"], "approved_for_bank")
         self.assertIn("No human review recorded",review.call_args.kwargs["notes"])
         validate.assert_called_once()
+
+    @patch("item_batch_acceptance_v2.review")
+    @patch("item_batch_acceptance_v2.revalidate", return_value={"issues":[]})
+    def test_final_duplicate_blocks_private_acceptance(self, validate, review):
+        self.assertEqual(self.accept(lambda *_: True), self.saved)
+        review.assert_not_called()
 
     @patch("item_batch_acceptance_v2.review")
     def test_held_and_changed_sources_cannot_auto_accept(self, review):

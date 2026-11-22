@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_mc_batch_v2 import _embed_stems, authenticate, with_draft_neighbors
+from item_mc_batch_v2 import _embed_stems, authenticate, prior_ids, with_draft_neighbors
 
 
 class BatchBoundaryTests(unittest.TestCase):
@@ -36,6 +36,12 @@ class BatchBoundaryTests(unittest.TestCase):
             roles.return_value.is_active_admin.return_value = False
             with self.assertRaises(ValueError):
                 authenticate({**headers, "wsgi.input": io.BytesIO(payload)}, "run", secret, conn_factory)
+
+    def test_accepted_target_keeps_all_prior_drafts_within_the_signed_limit(self):
+        ids = [str(uuid4()) for _ in range(200)]
+        self.assertEqual(prior_ids(ids[:-1]), ids[:-1])
+        with self.assertRaises(ValueError):
+            prior_ids(ids)
 
     def test_batch_draft_neighbors_require_complete_owner_scoped_lookup(self):
         conn = MagicMock()
@@ -68,16 +74,16 @@ class BatchBoundaryTests(unittest.TestCase):
             self.assertEqual(embed.call_count, 3)
 
     def test_attempt_start_time_uses_the_original_owner_book_and_slot(self):
-        from item_generation_checkpoint_store_v2 import batch_attempt_started_at_ms
+        from item_generation_checkpoint_store_v2 import lookup_batch_slot
 
         conn = MagicMock()
         cursor = conn.cursor.return_value.__enter__.return_value
         owner, book, item = (str(uuid4()) for _ in range(3))
         scope = {"owner_uid": owner, "textbook_id": book, "item_id": item}
         cursor.fetchone.return_value = None
-        self.assertIsNone(batch_attempt_started_at_ms(conn, **scope))
-        cursor.fetchone.return_value = (1795312217377,)
-        self.assertEqual(batch_attempt_started_at_ms(conn, **scope), 1795312217377)
+        self.assertEqual(lookup_batch_slot(conn, **scope), (None, None))
+        cursor.fetchone.return_value = ("a" * 64, "b" * 64, None, 1795312217377)
+        self.assertEqual(lookup_batch_slot(conn, **scope), (None, 1795312217377))
         self.assertEqual(cursor.execute.call_args.args[1], (owner, book, item))
 
     def test_completed_slot_recovery_uses_reservation_and_rejects_wrong_identity(self):
@@ -91,7 +97,7 @@ class BatchBoundaryTests(unittest.TestCase):
         self.assertIsNone(recover_completed_batch_slot(conn, **scope))
         self.assertEqual(cursor.execute.call_args.args[1], (owner, book, slot))
         result = {"item": {"item_id": slot, "format": "MC"}}
-        cursor.fetchone.return_value = ("a" * 64, "b" * 64, result)
+        cursor.fetchone.return_value = ("a" * 64, "b" * 64, result, 1795312217377)
         recovered = recover_completed_batch_slot(conn, **scope)
         self.assertEqual(recovered["_checkpoint_key"], {
             "textbook_id": book, "request_hash": "a" * 64, "evidence_hash": "b" * 64})

@@ -5,19 +5,22 @@ recovery path. Receipts contain identifiers/hashes, never question/source text.
 """
 from contextlib import contextmanager
 from uuid import UUID
-from threading import Lock
+from threading import BoundedSemaphore
 import re
 
 
 # Staging deploys one Gunicorn worker in one container. This nonblocking lock
-# serializes paid work across its HTTP threads, without relying on session-level
+# bounds paid work across its HTTP threads, without relying on session-level
 # database locks (which are unsafe with transaction-pooling connections).
-_active = Lock()
+_active = BoundedSemaphore(2)
 
 
 def generation_is_busy():
     """Fast advisory before expensive setup; attempt() still claims the lock."""
-    return _active.locked()
+    if not _active.acquire(blocking=False):
+        return True
+    _active.release()
+    return False
 
 
 class GenerationAlreadyStarted(RuntimeError):

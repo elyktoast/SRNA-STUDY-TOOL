@@ -25,7 +25,8 @@
     "SEMANTIC_INDEX_INVENTORY_PATH": "/app/canonical-semantic-inventory.json",
     "AI_REVIEWER_CALIBRATION_OPT_IN": "true",
     "AI_REVIEWER_CALIBRATION_MODEL": "openai/gpt-oss-120b",
-    "AI_MC_BATCH_ENABLED": "true"
+    "AI_MC_BATCH_ENABLED": "true",
+    "AI_REVIEWER_RATE_LIMIT_FALLBACK": "true"
   },
   "containers": [
     {

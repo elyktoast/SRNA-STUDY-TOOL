@@ -17,7 +17,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                         embedding=None, neighbors=None, blind_reviewer=None,
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, rewrite=None,
-                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None, explanation_review=None, quality_review=None):
+                        semantic_lookup=None, review_repair=None, _verified_candidate=None, topic=None, explanation_review=None, quality_review=None, review_executor=None):
     if blind_reviewer is not None and (not callable(blind_reviewer) or not isinstance(generator_model_id, str) or not isinstance(reviewer_model_id, str) or not generator_model_id.strip() or not reviewer_model_id.strip() or generator_model_id.strip() == reviewer_model_id.strip()):
         raise ValueError("Independent reviewer requires distinct verified model identities")
     if semantic_lookup is not None and (not callable(semantic_lookup) or embedding is not None or neighbors is not None):
@@ -88,6 +88,18 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                               "rewrite_revised_issues": issues if rewrite_attempts else []}, "next_state": state,
                 "requires_human_review": True, "can_publish": False,
                 "database_writes": False, "rewrite_attempts_used": rewrite_attempts}
+    # Each reviewer sees the same immutable candidate with its existing blind
+    # projection. Keep database-backed duplicate processing on this thread.
+    def solve():
+        return blind_review(generated["item"], blind_reviewer,
+                            generator_model_id=generator_model_id,
+                            reviewer_model_id=reviewer_model_id)
+
+    blind_task = review_executor.submit(solve) if review_executor and blind_reviewer else None
+    explanation_task = (review_executor.submit(explanation_review, generated["item"])
+                        if review_executor and explanation_review else None)
+    quality_task = (review_executor.submit(quality_review, generated["item"])
+                    if review_executor and quality_review else None)
     semantic_lookup_failed = False
     semantic_lookup_reason = None
     if semantic_lookup is not None:
@@ -155,9 +167,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
         screening["pending_verifications"] = pending
     if blind_reviewer is not None:
         try:
-            blind = blind_review(generated["item"], blind_reviewer,
-                                 generator_model_id=generator_model_id,
-                                 reviewer_model_id=reviewer_model_id)
+            blind = blind_task.result() if blind_task is not None else solve()
         except Exception:
             # A provider outage must not discard the generated draft or
             # incorrectly mark independent verification as complete.
@@ -188,7 +198,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     explanation_report = None
     if explanation_review is not None:
         try:
-            explanation_report = explanation_review(generated["item"])
+            explanation_report = (explanation_task.result() if explanation_task is not None
+                                  else explanation_review(generated["item"]))
             if (not isinstance(explanation_report, dict)
                     or explanation_report.get("status") not in ("pass", "flag", "pending")
                     or not isinstance(explanation_report.get("issues"), list)
@@ -210,7 +221,7 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
     if quality_review is not None:
         names = ("editorial_quality", "options_only")
         try:
-            reports = quality_review(generated["item"])
+            reports = quality_task.result() if quality_task is not None else quality_review(generated["item"])
             if not isinstance(reports, dict) or set(reports) != set(names):
                 raise ValueError("Incomplete board quality review")
             for name, report in reports.items():
@@ -269,7 +280,8 @@ def generate_and_screen(adapter, *, mode, domain, section, objective, evidence,
                     generator_model_id=generator_model_id,
                     reviewer_model_id=reviewer_model_id,
                     semantic_lookup=semantic_lookup,
-                    _verified_candidate=repaired["item"], topic=topic, explanation_review=explanation_review, quality_review=quality_review)
+                    _verified_candidate=repaired["item"], topic=topic, explanation_review=explanation_review, quality_review=quality_review,
+                    review_executor=review_executor)
                 rerun["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_used"] = 1
                 rerun["screening"]["rewrite_attempts_allowed"] = 0

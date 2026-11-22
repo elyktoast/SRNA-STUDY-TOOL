@@ -21,4 +21,4 @@ USER reviewer
 RUN python -c 'from item_semantic_inventory_reconcile_v2 import load_inventory; inventory,digest=load_inventory("/app/canonical-semantic-inventory.json"); assert inventory'
 # Internal Cloudflare Container listener. No public port mapping or public route.
 # The staging Worker authenticates and forwards only read-only requests.
-CMD ["gunicorn","--bind","0.0.0.0:8789","--workers","1","--threads","2","--timeout","120","source_review_wsgi_v2:app"]
+CMD ["gunicorn","--bind","0.0.0.0:8789","--workers","1","--threads","4","--timeout","120","source_review_wsgi_v2:app"]

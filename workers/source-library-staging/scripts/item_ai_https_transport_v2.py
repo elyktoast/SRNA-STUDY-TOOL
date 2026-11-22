@@ -25,7 +25,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=262144,
-                   relay_url=None, relay_secret=None):
+                   relay_url=None, relay_secret=None, item_id=None):
     hosts = frozenset(allowed_hosts)
     if not hosts or any(not isinstance(h, str) or not h or "/" in h or ":" in h for h in hosts):
         raise ValueError("Explicit provider host allowlist required")
@@ -51,7 +51,8 @@ def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=2621
             raise TransportError("PROVIDER_ENDPOINT")
         if not isinstance(headers, dict) or not isinstance(body, dict):
             raise TransportError("PROVIDER_REQUEST")
-        encoded = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        wire_body = {**body, "srna_item_id": item_id} if relay_url is not None and item_id else body
+        encoded = json.dumps(wire_body, ensure_ascii=False).encode("utf-8")
         if len(encoded) > 524288:
             raise TransportError("PROVIDER_REQUEST_SIZE")
         if relay_url is not None:
@@ -92,7 +93,7 @@ def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=2621
                 if diagnostic.get('error') == 'forbidden':
                     raise TransportError('RELAY_AUTH') from None
                 if diagnostic.get('error') == 'provider_failed':
-                    allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM', 'PROVIDER_REQUEST_REJECTED', 'PROVIDER_MODEL_UNAVAILABLE', 'PROVIDER_REQUEST_SIZE'}
+                    allowed = {'PROVIDER_AUTH', 'PROVIDER_FORBIDDEN', 'PROVIDER_RATE_LIMIT', 'PROVIDER_UPSTREAM', 'PROVIDER_REQUEST_REJECTED', 'PROVIDER_MODEL_UNAVAILABLE', 'PROVIDER_REQUEST_SIZE', 'PROVIDER_OUTPUT_TRUNCATED'}
                     raise TransportError(diagnostic.get('rule') if diagnostic.get('rule') in allowed else 'RELAY_UPSTREAM', diagnostic.get('retry_after_seconds'), diagnostic.get('remaining_requests'), diagnostic.get('remaining_tokens')) from None
                 if diagnostic.get('error') == 'relay_timeout':
                     raise TransportError('PROVIDER_TIMEOUT') from None

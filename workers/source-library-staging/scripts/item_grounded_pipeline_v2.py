@@ -16,7 +16,7 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
                         generator_model_id=None, reviewer_model_id=None,
                         checkpoint=None, on_checkpoint=None, evidence_packet=None,
                         rewrite=None, semantic_lookup=None, review_repair=None,
-                        option_reviewer=None, option_reviewer_model_id=None, explanation_review=None, quality_review=None):
+                        option_reviewer=None, option_reviewer_model_id=None, explanation_review=None, quality_review=None, review_executor=None):
     if not isinstance(owner_uid, str) or not owner_uid.strip():
         raise ValueError("Authenticated source owner required")
     if not callable(adapter):
@@ -68,7 +68,8 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
         generator_model_id=generator_model_id, reviewer_model_id=reviewer_model_id,
         checkpoint=checkpoint, on_checkpoint=on_checkpoint,
         rewrite=rewrite, semantic_lookup=semantic_lookup,
-        review_repair=review_repair, topic=topic, explanation_review=explanation_review, quality_review=quality_review)
+        review_repair=review_repair, topic=topic, explanation_review=explanation_review, quality_review=quality_review,
+        review_executor=review_executor)
     # Independent retrieval is diagnostic only: finding a passage is not proof
     # that it supports the key or refutes an alternative.
     option_audit = option_adjudication = None
@@ -104,7 +105,10 @@ def generate_from_index(conn, owner_uid, topic, adapter, *, mode, domain, sectio
             reviewer_model_id=option_reviewer_model_id, require_quotes=True)
     if format in ("MC", "MS"):
         from item_option_audit_screening_v2 import attach
-        result = attach(result, option_audit, option_adjudication)
+        blockers = [name for name, stage in prior_stages.items()
+                    if name != "human_review" and isinstance(stage, dict) and stage.get("status") != "pass"]
+        result = attach(result, option_audit, option_adjudication,
+                        blocked_by=blockers if format == "MC" and option_reviewer is not None and not can_adjudicate else ())
     return {**result, "independent_option_retrieval": option_audit,
             "independent_option_adjudication": option_adjudication, "source_evidence": {
         "topic": packet["topic"],

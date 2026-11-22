@@ -280,6 +280,41 @@ class BoardQualityTests(unittest.TestCase):
         self.assertTrue(q["self_check"]["human_approved"])
 
     @patch("item_generation_screened_v2.intake")
+    @patch("item_generation_screened_v2.generate_one")
+    def test_live_review_overlaps_duplicate_lookup_and_keeps_all_reports(self, generate, intake):
+        from concurrent.futures import ThreadPoolExecutor
+        from threading import Barrier
+        item = {"item_id": "new", "format": "MC", "status": "draft"}
+        generate.return_value = {"item": item, "schema_issues": []}
+        intake.return_value = {"draft_reviews": [{"status": "draft", "screening": {"stages": {}}}]}
+        ready = Barrier(3, timeout=3)
+        report = {"status": "pass", "issues": [], "can_publish": False,
+                  "human_review_required": True, "clinical_truth_verified": False}
+
+        def source_review(candidate):
+            ready.wait()
+            return dict(report)
+
+        def editorial_review(candidate):
+            ready.wait()
+            return {"editorial_quality": dict(report), "options_only": dict(report)}
+
+        def semantic_lookup(candidate):
+            ready.wait()
+            return {"embedding": [1.0], "neighbors": [], "search_complete": True, "index_id": "test"}
+
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            result = generate_and_screen(lambda payload: {}, mode="NCE", domain="III", section="H",
+                objective="III.H.4", item_id="new", evidence=[{"passage_id": "p1",
+                "textbook_id": "t1", "excerpt": "Source"}], semantic_lookup=semantic_lookup,
+                explanation_review=source_review, quality_review=editorial_review,
+                review_executor=executor)
+        stages = result["screening"]["stages"]
+        self.assertTrue(all(stages[key]["status"] == "pass" for key in
+                            ("explanation_evidence", "editorial_quality", "options_only")))
+        self.assertFalse(result["can_publish"])
+
+    @patch("item_generation_screened_v2.intake")
     @patch("item_generation_screened_v2.attempt_once")
     @patch("item_generation_screened_v2.generate_one")
     def test_quality_failure_uses_one_repair_and_fresh_quality_recheck(self,generate,repair,intake):

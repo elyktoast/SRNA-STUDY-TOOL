@@ -27,6 +27,28 @@ def topic_search_query(topic):
     return TEACHING_PREFIX.sub("", topic.strip(), count=1).strip() or topic.strip()
 
 
+_FOCUS_FILLER = frozenset("""
+about above according across additional after also among and are based before between
+compare describe determine differences distinguish during explain identify impact into
+limitations measured measurement measures other patterns reason relationship role
+signals signal specific study their these those through under understanding used using what
+when where which with
+""".split())
+
+
+def lecture_focus_queries(heading, point):
+    """Shorter scoped searches retain two focus terms beyond the heading."""
+    focus = topic_search_query(point)
+    title_terms = list(dict.fromkeys(re.findall(r"[^\W_]+", heading.rsplit(":", 1)[-1].casefold())))
+    terms = list(dict.fromkeys(re.findall(r"[^\W_]+", focus.casefold())))
+    terms = [word for word in terms if len(word) >= 4 and word not in _FOCUS_FILLER and word not in title_terms]
+    anchor = [word for word in title_terms if len(word) >= 4 and word not in _FOCUS_FILLER][-2:]
+    if len(terms) < 2 or not anchor:
+        return [focus]
+    starts = dict.fromkeys((0, (len(terms)-2)//2, len(terms)-2))
+    return list(dict.fromkeys([focus, *(" ".join(anchor + terms[i:i+2]) for i in starts)]))
+
+
 def _source_records(rows):
     sources = []
     for row in rows:
@@ -54,8 +76,8 @@ def build_evidence(conn, owner_uid, topic, *, textbook_id=None, limit=8,
         # A derived slide focus can contain teaching verbs or a synonym absent
         # from a particular book. Fall back within the SAME authorized scope;
         # the full focused topic still governs authoring and source validation.
-        for value in (focus, heading.rsplit(":", 1)[-1].strip()):
-            candidate = topic_search_query(value)
+        for candidate in (*lecture_focus_queries(heading, focus),
+                          topic_search_query(heading.rsplit(":", 1)[-1].strip())):
             if len(candidate) >= 5 and candidate not in queries:
                 queries.append(candidate)
     def scoped_search(**scope):

@@ -69,9 +69,14 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
             if (not isinstance(points, list) or len(points) > 6
                     or any(not isinstance(p, str) or not 12 <= len(p) <= 180 for p in points)):
                 raise ValueError("Invalid lecture learning points")
-            scoped_topic = topic["title"] + (" — " + points[index % len(points)] if points else "")
+            variants = topic.get("verified_variants")
+            if variants is None:
+                scoped_topic = topic["title"] + (" — " + points[index % len(points)] if points else "")
+                evidence = topic["evidence"]
+            else:
+                scoped_topic, evidence = variants[index]["topic"], variants[index]["evidence"]
             step = build_step("concept_card", mode=mode, **target,
-                              evidence=topic["evidence"], topic=scoped_topic,
+                              evidence=evidence, topic=scoped_topic,
                               format=format)
             result.append({"topic": scoped_topic,
                            "lecture_locator": topic.get("lecture_locator"),
@@ -81,7 +86,7 @@ def requests(plan, *, mode, domain=None, section=None, objective=None, format="M
                                               "verified": False},
                            "concept_request": step,
                            "status": "awaiting_concept_generation"})
-            if points:
+            if scoped_topic != topic["title"]:
                 result[-1]["lecture_topic"] = topic["title"]
     return {"requests": result, "count": len(result),
             "held_for_classification": held,

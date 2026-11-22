@@ -1,10 +1,27 @@
 import {DurableObject} from 'cloudflare:workers';
-import {executeSlot, prepare, snapshot} from './mc-batch.js';
+import {acceptedCount, executeSlot, newSlot, prepare, snapshot} from './mc-batch.js';
 
 const recoveryDeadline = 17 * 60_000;
 const recoveryInterval = 60_000;
 const earlyRecovery = 5000;
 const accessRetry = 60_000;
+const targetWindow = 12 * 60 * 60_000;
+
+function targetStop(batch) {
+ if (batch.goal !== 'accepted') return;
+ if (acceptedCount(batch) >= batch.requested) return 'target_reached';
+ if (Date.now() >= batch.deadlineAt) return 'time_budget_exhausted';
+ if (batch.items.length >= batch.attemptLimit && !batch.items.some(item => item.status === 'queued')) {
+  return 'attempt_budget_exhausted';
+ }
+}
+
+function finish(batch, reason) {
+ batch.status = 'complete';
+ if (reason) batch.reason = reason;
+ else delete batch.reason;
+ delete batch.nextRunAt;
+}
 
 function continuationDelay(batch, result) {
  if (result.reason === 'batch_access_denied') return accessRetry;
@@ -22,6 +39,39 @@ function schedule(txn, batch, delay) {
  return txn.setAlarm(batch.nextRunAt);
 }
 
+function scheduleNext(txn, batch, delay) {
+ const remaining = batch.goal === 'accepted' ? batch.deadlineAt - Date.now() : delay;
+ return schedule(txn,batch,Math.max(1,Math.min(delay,remaining)));
+}
+
+function settleSlot(slot,result,recover) {
+ if (result.status === 'busy' && !recover) {
+  slot.status = 'queued';
+  delete slot.startedAt;
+  delete slot.recoveryChecks;
+  delete slot.endedRequest;
+  return {waiting:true,delay:5000};
+ }
+ if (['interrupted','checkpoint_missing','provider_failed'].includes(result.status)) {
+  if (!recover && result.status === 'provider_failed') {
+   slot.endedRequest = true;
+   slot.providerRetryAfter = result.retryAfter;
+  }
+  if (result.attemptedAt !== undefined) slot.startedAt = Math.min(slot.startedAt,result.attemptedAt);
+  const expired = Date.now() - slot.startedAt >= recoveryDeadline;
+  if (!recover || (!expired && !(slot.endedRequest && slot.recoveryChecks >= 2))) {
+   return {recovery:true,delay:recover && !slot.endedRequest ? recoveryInterval : earlyRecovery};
+  }
+  const knownFailure = slot.endedRequest && result.status === 'checkpoint_missing';
+  result = {status:knownFailure ? 'failed' : 'unknown',
+            reason:slot.endedRequest ? 'generation_provider_unavailable' : 'completion_unverified',
+            retryAfter:slot.providerRetryAfter};
+ }
+ Object.assign(slot,{status:result.status,...(result.reason ? {reason:result.reason} : {}),
+                      ...(result.draftId ? {draftId:result.draftId,accepted:result.accepted === true} : {})});
+ return result;
+}
+
 export class McBatch extends DurableObject {
  async control(owner,data) {
   const storage = this.ctx.storage;
@@ -35,6 +85,10 @@ export class McBatch extends DurableObject {
     const items = prepare(data);
     if (!items) return {error:'invalid_batch'};
     const next = {id:data.id, owner, requested:data.count, status:'running',items};
+    if (data.goal === 'accepted') {
+     Object.assign(next,{goal:'accepted',attemptLimit:data.count * 2,deadlineAt:Date.now() + targetWindow,
+                         initialJobCount:items.length});
+    }
     await schedule(txn,next,1000);
     await txn.put({batch:next,['started:' + data.id]:true});
     return snapshot(next);
@@ -66,7 +120,8 @@ export class McBatch extends DurableObject {
  }
 
  async resume(txn,batch) {
-  batch.status = batch.items.some(item => item.status === 'queued' || item.status === 'started') ? 'running' : 'complete';
+  batch.status = batch.goal === 'accepted' || batch.items.some(item => item.status === 'queued' || item.status === 'started')
+   ? 'running' : 'complete';
   delete batch.reason;
   if (batch.status === 'running') await schedule(txn,batch,1000);
   await txn.put('batch',batch);
@@ -77,81 +132,86 @@ export class McBatch extends DurableObject {
   const work = await storage.transaction(async txn => {
    const batch = await txn.get('batch');
    if (!batch || !['running','cancelling'].includes(batch.status)) return null;
-   const started = batch.items.find(item => item.status === 'started');
-   const slot = started || (batch.status === 'running' && batch.items.find(item => item.status === 'queued'));
-   if (!slot) {
-    batch.status = batch.status === 'cancelling' ? 'cancelled' : 'complete';
+   let slots = batch.items.filter(item => item.status === 'started');
+   const recover = slots.length > 0;
+   if (!recover && batch.status === 'running') {
+    const stop = targetStop(batch);
+    if (stop) {
+     finish(batch,stop);
+     await txn.put('batch',batch);
+     return null;
+    }
+    const width = batch.goal === 'accepted' ? Math.min(2,batch.requested-acceptedCount(batch)) : 1;
+    slots = batch.items.filter(item => item.status === 'queued').slice(0,width);
+    // Fill available lanes without exceeding the confirmed attempt budget.
+    while (batch.goal === 'accepted' && slots.length < width && batch.items.length < batch.attemptLimit) {
+     const index = (batch.items.length - batch.initialJobCount) % batch.initialJobCount;
+     const slot = newSlot(batch.items[index].request);
+     batch.items.push(slot);
+     slots.push(slot);
+    }
+   }
+   if (!slots.length) {
+    if (batch.status === 'cancelling') batch.status = 'cancelled';
+    else finish(batch);
     delete batch.nextRunAt;
     await txn.put('batch',batch);
     return null;
    }
-   slot.status = 'started';
-   slot.startedAt ??= Date.now();
-   if (started) slot.recoveryChecks = (slot.recoveryChecks || 0) + 1;
-   // Persist a watchdog before sending any request. On a crash the next
-   // invocation is recovery-only and cannot issue another paid generation.
-   await schedule(txn,batch,started ? recoveryInterval : recoveryDeadline);
+   for (const slot of slots) {
+    slot.status = 'started';
+    slot.startedAt ??= Date.now();
+    if (recover) slot.recoveryChecks = (slot.recoveryChecks || 0) + 1;
+   }
+   // Durable before sending paid requests. An interrupted wave is recovered
+   // by its original checkpoint IDs and never replayed.
+   await schedule(txn,batch,recover ? recoveryInterval : recoveryDeadline);
    await txn.put('batch',batch);
-   return {batch,slot,recover:!!started};
+   return {batch,slots,recover};
   });
   if (!work) return;
-  let result;
-  try {
-   result = await executeSlot(this.env,work.batch,work.slot,work.recover);
-  } catch {
-   result = {status:'interrupted'};
-  }
+  const outcomes = await Promise.all(work.slots.map(async slot => {
+   try { return await executeSlot(this.env,work.batch,slot,work.recover); }
+   catch { return {status:'interrupted'}; }
+  }));
   await storage.transaction(async txn => {
    const batch = await txn.get('batch');
    if (batch?.id !== work.batch.id) return;
-   const slot = batch.items.find(item => item.id === work.slot.id);
-   if (slot?.status !== 'started') return;
-
-   if (result.status === 'busy' && !work.recover) {
-    // A trusted admission rejection happened before this slot was claimed.
-    slot.status = 'queued';
-    delete slot.startedAt;
-    delete slot.recoveryChecks;
-    delete slot.endedRequest;
-    if (batch.status === 'cancelling') batch.status = 'cancelled';
-    else {
-     batch.reason = 'waiting_for_generator';
-     await schedule(txn,batch,5000);
-    }
-   } else if (['interrupted','checkpoint_missing','provider_failed'].includes(result.status)) {
-    if (!work.recover && result.status === 'provider_failed') {
-     slot.endedRequest = true;
-     slot.providerRetryAfter = result.retryAfter;
-    }
-    if (result.attemptedAt !== undefined) slot.startedAt = Math.min(slot.startedAt,result.attemptedAt);
-    // A dropped reply could still belong to a running attempt. Read its
-    // checkpoint early, but leave the original recovery window intact.
-    const expired = Date.now() - slot.startedAt >= recoveryDeadline;
-    const exhausted = work.recover && (expired || (slot.endedRequest && slot.recoveryChecks >= 2));
-    if (!exhausted) {
-     batch.reason = 'recovering_current_attempt';
-     await schedule(txn,batch,work.recover && !slot.endedRequest ? recoveryInterval : earlyRecovery);
-     await txn.put('batch',batch);
-     return;
-    }
-    const knownFailure = slot.endedRequest && result.status === 'checkpoint_missing';
-    result = {status:knownFailure ? 'failed' : 'unknown',
-              reason:slot.endedRequest ? 'generation_provider_unavailable' : 'completion_unverified',
-              retryAfter:slot.providerRetryAfter};
+   const recoveries = [], continuations = [];
+   for(const [index,original] of work.slots.entries()){
+    const slot=batch.items.find(item=>item.id===original.id);
+    if(slot?.status!=='started')continue;
+    const next=settleSlot(slot,outcomes[index],work.recover);
+    if(next.recovery) recoveries.push(next.delay);
+    else continuations.push(next);
    }
-   if (result.status !== 'busy' || work.recover) {
-    Object.assign(slot,{status:result.status,...(result.reason ? {reason:result.reason} : {}),
-                         ...(result.draftId ? {draftId:result.draftId,accepted:result.accepted === true} : {})});
+   delete batch.reason;
+   for(const next of continuations){
+    if(next.retryAfter)batch.providerReadyAt=Math.max(batch.providerReadyAt||0,Date.now()+next.retryAfter*1000);
+   }
+   if (recoveries.length) {
+    batch.reason = 'recovering_current_attempt';
+    await schedule(txn,batch,Math.min(...recoveries));
+   } else {
+    const stop = targetStop(batch);
     if (batch.status === 'cancelling') batch.status = 'cancelled';
-    else if (!batch.items.some(item => item.status === 'queued')) batch.status = 'complete';
-    delete batch.reason;
+    else if (stop) finish(batch,stop);
+    else if (batch.goal !== 'accepted' && !batch.items.some(item => item.status === 'queued')) finish(batch);
     if (batch.status === 'running') {
-     const delay = continuationDelay(batch,result);
-     if (delay > 1000) batch.reason = 'waiting_to_retry_provider';
-     await schedule(txn,batch,delay);
+     // Treat consecutive provider cooldowns by wave, and never let a
+     // successful sibling cancel another request's Retry-After.
+     const provider = continuations.filter(x=>x.reason==='generation_provider_unavailable'||x.reason==='review_provider_unavailable');
+     let delay = provider.length
+      ? continuationDelay(batch,{reason:provider[0].reason,retryAfter:Math.max(...provider.map(x=>x.retryAfter||0))})
+      : continuationDelay(batch,{});
+     delay = Math.max(delay,(batch.providerReadyAt||0)-Date.now());
+     for (const next of continuations) delay = Math.max(delay,next.delay||0,next.reason==='batch_access_denied'?accessRetry:0);
+     if (delay > 1000) batch.reason = continuations.some(x=>x.waiting) && delay===5000
+      ? 'waiting_for_generator' : 'waiting_to_retry_provider';
+     await scheduleNext(txn,batch,delay);
     }
    }
-   if (batch.status !== 'running') {
+   if (batch.status !== 'running' && !recoveries.length) {
     delete batch.nextRunAt;
     await txn.deleteAlarm();
    }

@@ -67,6 +67,17 @@ class OptionContextEvidenceTests(unittest.TestCase):
         self.assertFalse(report['all_options_have_matches'])
         self.assertFalse(report['clinical_verification_complete'])
 
+    def test_long_unmatched_choice_retries_with_scoped_phrases(self):
+        item = {"format":"MC", "stem":"Which response?", "key":["A"],
+                "options":[{"id":"A", "text":"Combined measurements with clinical signs"}]}
+        def search(conn, query, owner, *, limit, textbook_id):
+            self.assertEqual((owner, textbook_id, limit), ("owner", "book", 3))
+            return [{"passage_id":"measurement"}] if '"clinical signs"' in query else []
+        with patch("item_option_retrieval_audit_v2.search", side_effect=search):
+            report = audit(None, "owner", item, textbook_id="book", limit=3)
+        self.assertEqual(report["option_audits"][0]["retrieved_passage_ids"], ["measurement"])
+        self.assertFalse(report["clinical_verification_complete"])
+
     def test_mc_context_normalization_does_not_change_ms_contract(self):
         item={'format':'MS','stem':'Which responses?', 'options':[{'id':'A','text':'response'}],'key':['A']}
         with patch('item_option_retrieval_audit_v2.search',return_value=[]) as search:

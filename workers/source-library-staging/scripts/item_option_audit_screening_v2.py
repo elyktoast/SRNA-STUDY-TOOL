@@ -2,13 +2,15 @@
 
 Retrieval is not entailment, refutation, or contradiction adjudication.
 """
-def attach(result, audit, adjudication=None):
+def attach(result, audit, adjudication=None, *, blocked_by=()):
     if not isinstance(result, dict):
         raise ValueError("Screening result required")
     screening = result.get("screening")
     if not isinstance(screening, dict) or not isinstance(screening.get("stages"), dict):
         return result
-    if not isinstance(audit, dict):
+    if blocked_by:
+        reason = "Waiting for prerequisite automated checks"
+    elif not isinstance(audit, dict):
         reason = "Independent option search not available"
     elif audit.get("all_options_searched") is False:
         reason = "One or more independent option searches failed"
@@ -29,6 +31,9 @@ def attach(result, audit, adjudication=None):
     stages["independent_option_evidence"] = {
         "status": "pass" if reviewed else "pending",
         "issues": adjudication.get("issues", []) if isinstance(adjudication, dict) else [],
+        **({"blocked_by": list(blocked_by)} if blocked_by else {}),
+        **({"provider_rule": adjudication["provider_rule"]} if isinstance(adjudication, dict)
+           and adjudication.get("provider_rule") else {}),
         "reason": "Independent source-grounded model adjudication completed; human clinical review remains required" if reviewed else reason}
     if isinstance(adjudication, dict):
         screening = {**screening, "independent_option_adjudication": adjudication}

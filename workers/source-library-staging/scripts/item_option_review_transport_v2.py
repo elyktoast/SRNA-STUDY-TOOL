@@ -1,20 +1,27 @@
-"""Recover a rejected oversized MC review by submitting its evidence per choice."""
+"""Recover a rejected or structurally invalid MC review in per-choice requests."""
+from concurrent.futures import ThreadPoolExecutor
+
 from item_ai_https_transport_v2 import TransportError
 
 
-def request_judgments(payload, call):
+def request_judgments(payload, call, *, parallel=False):
     request = {**payload, "step": "option_review", "blind": True,
                "rules_version": "2.0", "auto_publish": False}
     try:
         return call(request)
     except TransportError as exc:
-        if exc.rule != "PROVIDER_REQUEST_SIZE" or payload.get("format") != "MC":
+        if (payload.get("format") != "MC" or exc.rule not in
+                ("PROVIDER_REQUEST_SIZE", "PROVIDER_OUTPUT_TRUNCATED", "PROVIDER_REQUEST_REJECTED")):
             raise
-    # A size rejection yields no clinical judgment. Keep the same stem and all
+    except ValueError as exc:
+        if payload.get("format") != "MC" or str(exc) not in {
+                "Independent judgments required", "Invalid independent judgment map",
+                "Unknown or unauthorized source quote reference"}:
+            raise
+    # A size rejection or unusable map yields no validated clinical judgment. Keep the same stem and all
     # choices visible, but send only the target option's independently found
     # passages. Valid judgments are never retried.
-    judgments = []
-    for audit in payload["retrieval"]["option_audits"]:
+    def judge(audit):
         target = audit["option_id"]
         allowed = set(audit["retrieved_passage_ids"])
         result = call({**request, "target_option": target,
@@ -25,5 +32,14 @@ def request_judgments(payload, call):
                 or len(result["judgments"]) != 1
                 or result["judgments"][0].get("option_id") != target):
             raise ValueError("Invalid independent judgment map")
-        judgments.extend(result["judgments"])
+        return result["judgments"][0]
+
+    audits = payload["retrieval"]["option_audits"]
+    if parallel:
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            judgments = []
+            for start in range(0, len(audits), 2):
+                judgments.extend(pool.map(judge, audits[start:start + 2]))
+    else:
+        judgments = [judge(audit) for audit in audits]
     return {"judgments": judgments}

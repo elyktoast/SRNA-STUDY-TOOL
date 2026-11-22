@@ -12,7 +12,7 @@ from item_option_adjudication_handoff_v2 import run
 from item_option_audit_screening_v2 import attach
 from item_ai_provider_v2 import make_adapter
 from item_ai_https_transport_v2 import make_transport
-from search_passages import search
+from item_option_review_transport_v2 import request_judgments
 
 
 class OptionReviewConflict(ValueError):
@@ -21,7 +21,9 @@ class OptionReviewConflict(ValueError):
 
 def eligible(draft):
     if (not isinstance(draft, dict) or draft.get('format') != 'MC'
-            or draft.get('status') != 'pending_review' or draft.get('published') is not False):
+            or draft.get('status') not in ('pending_review', 'needs_revision')
+            or (draft.get('status') == 'needs_revision' and draft.get('reviewed_by'))
+            or draft.get('published') is not False):
         return False
     screening = draft.get('screening')
     if not isinstance(screening, dict):
@@ -59,8 +61,7 @@ def configured_reviewer(env):
         model=env['AI_REVIEWER_MODEL'], transport=transport, owner_opt_in=True, staging=True)
     def reviewer(payload):
         from run_grounded_generation_v2 import _call_with_bounded_rate_wait
-        response = _call_with_bounded_rate_wait(adapter, {**payload, 'step':'option_review',
-            'blind':True, 'rules_version':'2.0', 'auto_publish':False})
+        response = request_judgments(payload, lambda request: _call_with_bounded_rate_wait(adapter, request))
         if (set(response) != {'judgments'} or not isinstance(response['judgments'], list)
                 or any(not isinstance(j, dict) or type(j.get('source_conflict_found')) is not bool
                        for j in response['judgments'])):
@@ -99,17 +100,9 @@ def complete_option_review(conn, *, owner_uid, draft_id, expected_updated_at, en
     primary = draft['textbook_id']
     books = [primary] + sorted({x['textbook_id'] for x in refs if isinstance(x,dict) and isinstance(x.get('textbook_id'),str)} - {primary})
     budget = max(3,len(books))
-    retrieval = audit(conn, owner, item, textbook_id=primary, textbook_ids=books,
-                      context_query=draft['topic'], limit=budget)
     passages = {}
-    for entry in retrieval['option_audits']:
-        if entry['search_status'] != 'matches_found':
-            continue
-        for query in entry['search_queries']:
-            for book in books:
-                for passage in search(conn,query,owner,limit=max(5,budget),textbook_id=book):
-                    if passage['passage_id'] in entry['retrieved_passage_ids']:
-                        passages[passage['passage_id']] = passage
+    retrieval = audit(conn, owner, item, textbook_id=primary, textbook_ids=books,
+                      context_query=draft['topic'], limit=budget, matched_passages=passages)
     factory = reviewer_factory or (lambda: configured_reviewer(environment))
     calls = []
     def reviewer(payload):
@@ -128,11 +121,13 @@ def complete_option_review(conn, *, owner_uid, draft_id, expected_updated_at, en
         'question_sha256':fingerprint(item),'source_packet_sha256':fingerprint(snapshots),
         'generator_model_id':author_model,'reviewer_model_id':environment.get('AI_REVIEWER_MODEL'),
         'generation_performed':False,'rewrite_performed':False,'paid_review_performed':bool(calls)}
+    checks_passed = not approval_issues(updated, 'MC')
+    next_status = 'pending_review' if checks_passed else draft['status']
     # Compare-and-swap protects concurrent edits, reviews, revisions and source changes.
     with conn.cursor() as cur:
         cur.execute('''update source_library_staging.generated_question_drafts_v2 d
-          set screening_json=%s::jsonb,updated_at=now()
-          where d.id=%s::uuid and d.owner_uid=%s::uuid and d.status='pending_review'
+          set screening_json=%s::jsonb,status=%s,updated_at=now()
+          where d.id=%s::uuid and d.owner_uid=%s::uuid and d.status=%s
             and d.updated_at=%s::timestamptz and d.question_json=%s::jsonb and d.screening_json=%s::jsonb
             and not exists(select 1 from source_library_staging.generated_draft_revisions_v2 r where r.draft_id=d.id and r.owner_uid=d.owner_uid)
             and not exists(select 1 from jsonb_array_elements(%s::jsonb) s where not exists(
@@ -140,12 +135,12 @@ def complete_option_review(conn, *, owner_uid, draft_id, expected_updated_at, en
               where p.id::text=s->>'passage_id' and t.id::text=s->>'textbook_id'
                 and t.owner_uid=d.owner_uid and t.status='ready'
                 and p.page_start=(s->>'pdf_page_start')::integer and left(p.content,1600)=s->>'excerpt'))
-          returning d.id::text''', (json.dumps(updated),did,owner,expected_updated_at,
+          returning d.id::text''', (json.dumps(updated),next_status,did,owner,draft['status'],expected_updated_at,
             json.dumps(item),json.dumps(original),json.dumps(snapshots)))
         if cur.fetchone() is None:
             raise OptionReviewConflict('Draft or indexed evidence changed during review')
     return {'draft_id':did,'option_review_status':updated['stages']['independent_option_evidence']['status'],
-            'automated_checks_passed':not approval_issues(updated,'MC'),
+            'automated_checks_passed':checks_passed,
             'question_modified':False,'generation_performed':False,'rewrite_performed':False,
             'paid_review_performed':bool(calls),'database_writes':True,
             'published':False,'can_publish':False,'clinical_review_required':True}

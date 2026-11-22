@@ -122,11 +122,15 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   }else{
    out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
   }
+  if (diag?.focus_preflight) {
+   out.textContent += ' ' + diag.focus_preflight.grounded + ' lecture focuses matched indexed passages. ' +
+    diag.focus_preflight.held + ' had no focused match.';
+  }
   out.textContent+=emphasisNote;
   if (count > 5 && jobs.length) {
    const queue = document.createElement('button');
    queue.type = 'button';
-   queue.textContent = 'Queue ' + jobs.length + ' grounded questions';
+   queue.textContent = 'Aim for ' + count + ' verified questions';
    queue.onclick = () => submitBatch(count, jobs.map(job => job.body), queue);
    results.append(queue);
   }
@@ -299,6 +303,12 @@ function renderMCReviewSummary(host,screening,format){
   const pass=stage?.status==='pass'&&Array.isArray(stage.issues)&&!stage.issues.length;
   if(pass)passed++;
   const row=document.createElement('li');row.textContent=label+': '+(pass?'Passed':['flag','fail'].includes(stage?.status)?'Needs revision':'Incomplete');
+  if(name==='independent_option_evidence'&&!pass){
+   const gated=Array.isArray(stage?.blocked_by)?stage.blocked_by:stage?.reason==='Independent option search not available'?labels.filter(([key])=>key!==name&&screening?.stages?.[key]&&screening.stages[key].status!=='pass').map(([key])=>key):[];
+   const blockers=labels.filter(([key])=>gated.includes(key)).map(([,name])=>name);
+   if(blockers.length)row.textContent=label+': Waiting for '+blockers.join(', ');
+  }
+  if(name==='explanation_evidence'&&!pass&&stage?.provider_rule)row.textContent+=' (reviewer did not return usable evidence)';
   if(name==='options_only'&&!pass&&Number.isInteger(stage?.completed_trials)&&stage.completed_trials>=0&&stage.completed_trials<=5)row.textContent+=' ('+stage.completed_trials+' of 5 trials completed)';
   list.append(row);
  }
@@ -340,7 +350,8 @@ const batchLabels = {
 function renderBatchRows(batch) {
  const filter = batchFilter.value;
  const rows = batch.items.flatMap((item,index) => {
-  const status = item.status === 'queued' && batch.status === 'cancelled' ? 'cancelled' : item.status;
+  const stopped = batch.status === 'cancelled' || (batch.goal === 'accepted' && batch.status === 'complete');
+  const status = item.status === 'queued' && stopped ? 'cancelled' : item.status;
   const group = ['failed','unknown'].includes(status) ? 'attention' :
    ['queued','started'].includes(status) ? 'pending' : status;
   if (filter !== 'all' && filter !== group) return [];
@@ -385,24 +396,29 @@ function renderBatch({batch}) {
   running:'Batch running',paused:'Batch paused',cancelling:'Stopping after the current attempt',
   cancelled:'Batch cancelled',complete:'Batch complete',
  }[batch.status] || 'Batch status unavailable';
- const progress = finished + '/' + total + ' finished';
+ const targetMode = batch.goal === 'accepted';
+ const shortfall = targetMode ? Math.max(0,batch.requested-batch.acceptedCount) : 0;
+ const progress = targetMode ? batch.acceptedCount + '/' + batch.requested + ' accepted' : finished + '/' + total + ' finished';
  batchCounter.textContent = progress;
- const shortage = total < batch.requested ? ' (' + batch.requested + ' requested)' : '';
+ const shortage = !targetMode && total < batch.requested ? ' (' + batch.requested + ' requested)' : '';
  const messages = {
   waiting_to_retry_provider:'Provider delay. The batch will continue automatically.',
   waiting_for_generator:'Waiting for the generator. The batch will continue automatically.',
   recovering_current_attempt:'Checking whether the current attempt was saved.',
+  target_reached:'Verified question target reached.',
+  attempt_budget_exhausted:'Attempt limit reached. ' + shortfall + ' more verified questions needed.',
+  time_budget_exhausted:'Time limit reached. ' + shortfall + ' more verified questions needed.',
  };
  const reason = batch.reason ? ' · ' + (messages[batch.reason] || batch.reason.replaceAll('_',' ')) : '';
  const message = headline + (shortage || '') + reason;
  if (batchStatus.textContent !== message) batchStatus.textContent = message;
- batchProgress.max = total;
- batchProgress.value = finished;
+ batchProgress.max = targetMode ? batch.requested : total;
+ batchProgress.value = targetMode ? batch.acceptedCount : finished;
  batchProgress.setAttribute('aria-valuetext',progress);
- const cancelled = batch.status === 'cancelled';
+ const cancelled = batch.status === 'cancelled' || (targetMode && batch.status === 'complete');
  const counts = ready + ' passed · ' + held + ' held · ' + failed + ' failed · ' + unknown + ' unverified · ' +
   checking + ' in progress · ' + pending + (cancelled ? ' cancelled' : ' queued');
- batchResults.querySelector('[data-batch-counts]').textContent = counts;
+ batchResults.querySelector('[data-batch-counts]').textContent = targetMode ? finished + '/' + batch.attemptLimit + ' attempts resolved · ' + counts : counts;
  if (!previous || previous.id !== batch.id || previous.status !== batch.status ||
      batch.items.some((item,index) => item.status !== previous.items[index]?.status || item.draftId !== previous.items[index]?.draftId)) {
   if (previous?.id !== batch.id) batchFilter.value = 'all';
@@ -451,29 +467,58 @@ async function batchAction(request) {
  }
 }
 async function submitBatch(count, jobs, button) {
- if (!confirm('Queue ' + jobs.length + ' staging MC generation attempts? Provider charges may apply. Passing drafts go to the private staging bank.')) return;
+ if (!confirm('Aim for ' + count + ' verified MC questions in the private staging bank? The batch can use up to ' + count * 2 + ' attempts and starts them within 12 hours. Provider charges may apply.')) return;
  button.disabled = true;
  batchStartStatus.textContent = 'Queuing batch…';
- const started = await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,confirm:true});
+ const started = await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,goal:'accepted',confirm:true});
  if (button !== batchStart || !started) button.disabled = false;
  if (started) {
   batchStartStatus.textContent = '';
   batchPanel.querySelector('[data-open-checking-queue]').click();
  }
 }
-batchStart.onclick = () => {
- const current = {
+function currentBatchRequest() {
+ const textbook_id=genEl('sl-gen-book-select').value || genEl('sl-gen-book').value.trim();
+ return {
   topic:el('sl-topic').value.trim(), format:el('sl-format').value, mode:el('sl-mode').value,
-  textbook_id:genEl('sl-gen-book-select').value || genEl('sl-gen-book').value.trim(),
+  textbook_id,...selectedEvidenceScope(textbook_id),
   domain:genEl('sl-gen-domain').value, section:genEl('sl-gen-section').value.trim().toUpperCase(),
   objective:genEl('sl-gen-objective').value.trim(),
  };
- if (!checkedEvidence || current.format !== 'MC' || Object.keys(current).some(key => current[key] !== checkedEvidence[key])) {
-  batchStartStatus.textContent = 'Select Single best answer and check indexed evidence for the current topic first.';
+}
+batchStart.onclick = async () => {
+ let request;
+ try { request = currentBatchRequest(); }
+ catch (error) { batchStartStatus.textContent = error.message; return; }
+ if (!request.topic || !request.textbook_id || !request.objective || request.format !== 'MC') {
+  batchStartStatus.textContent = 'Choose a topic, textbook and learning objective with Single best answer.';
   return;
  }
  const count = Number(batchPanel.querySelector('select').value);
- submitBatch(count, Array.from({length:count}, () => checkedEvidence), batchStart);
+ const evidenceMatches = () => checkedEvidence && Object.entries(request)
+  .every(([key,value]) => JSON.stringify(checkedEvidence[key]) === JSON.stringify(value))
+  && JSON.stringify(checkedEvidence.textbook_ids) === JSON.stringify(request.textbook_ids);
+ batchStart.disabled = true;
+ try {
+  if (!evidenceMatches()) {
+   const check = genEl('sl-evidence-check');
+   if (check.disabled) {
+    batchStartStatus.textContent = 'Evidence checking is currently unavailable.';
+    return;
+   }
+   batchStartStatus.textContent = 'Checking indexed evidence…';
+   await check.onclick();
+  }
+  if (!evidenceMatches() || JSON.stringify(request) !== JSON.stringify(currentBatchRequest())) {
+   batchStartStatus.textContent = 'Indexed evidence could not be confirmed for the current selection.';
+   return;
+  }
+  await submitBatch(count,Array.from({length:count},()=>request),batchStart);
+ } catch (error) {
+  batchStartStatus.textContent = error.message;
+ } finally {
+  batchStart.disabled = ['running','paused','cancelling'].includes(currentBatch?.status);
+ }
 };
 batchResume.onclick = () => batchAction({action:'resume',id:batchId});
 batchCancel.onclick = () => batchAction({action:'cancel',id:batchId});
@@ -654,7 +699,7 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 genEl('sl-complete-option-review').onclick=async()=>{
  const btn=genEl('sl-complete-option-review'),out=genEl('sl-draft-validation');
  const draftId=btn.dataset.draftId,updatedAt=btn.dataset.updatedAt;
- if(!draftId||!updatedAt||!confirm('Run one paid independent option review on this saved question? It will not generate or rewrite a question, approve it, or publish it.'))return;
+ if(!draftId||!updatedAt||!confirm('Run one paid independent option review on this saved question? It can accept this draft into your private staging bank if every check passes.'))return;
  btn.disabled=true;out.hidden=false;out.textContent='Completing the missing option review. The saved question stays unchanged…';
  try{const result=await storage.completeGeneratedOptionReview(draftId,updatedAt);btn.disabled=false;await openSavedDraft(draftId,btn);out.hidden=false;out.textContent=JSON.stringify(result,null,2);}
  catch(error){out.textContent=error.status===409?'The draft changed or another review is running. Reopen it before continuing.':'Option review unavailable: '+(error.message||'Unknown error');}
