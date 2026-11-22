@@ -122,6 +122,10 @@ lecturePanel.querySelector('#sl-lecture-plan').addEventListener('click',async()=
   }else{
    out.textContent=jobs.length+' grounded preflight job(s) prepared; '+held+' question(s) held for classification. No generation performed.'+blankNote;
   }
+  if (diag?.focus_preflight) {
+   out.textContent += ' ' + diag.focus_preflight.grounded + ' lecture focuses matched indexed passages. ' +
+    diag.focus_preflight.held + ' had no focused match.';
+  }
   out.textContent+=emphasisNote;
   if (count > 5 && jobs.length) {
    const queue = document.createElement('button');

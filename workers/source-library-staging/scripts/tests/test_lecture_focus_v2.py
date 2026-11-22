@@ -41,6 +41,33 @@ class LectureFocusTests(unittest.TestCase):
         self.assertFalse(result['database_writes'])
         self.assertNotIn('learning_points', result['lecture_plan']['topics'][0])
 
+    def test_large_mc_plan_checks_focuses_directly_and_queues_each_supported_focus_once(self):
+        book = str(uuid4())
+        owner = str(uuid4())
+        row = {"passage_id": "p1", "textbook_id": book, "filename": "example.pdf",
+               "pdf_page_start": 1, "pdf_page_end": 1, "excerpt": "Indexed fixture."}
+        lecture = ("# Monitoring: Electrical\n• Record the evoked muscle action potential\n"
+                   "• Use additional recording electrodes\n"
+                   "Lecture highlighted: Monitoring: Electrical\n"
+                   "# Monitoring: Motion\n• Measure acceleration of the thumb")
+        calls = []
+        def lookup(conn, uid, requests):
+            self.assertEqual(uid, owner)
+            calls.extend(requests)
+            return [[] if "electrodes" in term else [row] for term, _ in requests]
+        with patch("lecture_to_question_plan.supports_pipeline", return_value=True), \
+             patch("lecture_to_question_plan.search_many", side_effect=lookup):
+            result = prepare_staging_jobs(None, owner, lecture, textbook_id=book, count=25,
+                item_id_factory=lambda:str(uuid4()), domain="II", section="C", objective="II.C.4")
+        self.assertEqual(len(calls), 3)
+        self.assertTrue(all(scope == {"textbook_id": book, "limit": 6} for _, scope in calls))
+        self.assertEqual(result["lecture_plan"]["focus_preflight"], {"checked": 3, "grounded": 2, "held": 1})
+        jobs = result["jobs"]
+        self.assertEqual(len(jobs), 2)
+        self.assertTrue(jobs[0]["body"]["topic"].startswith("Monitoring: Electrical — "))
+        self.assertTrue(all("electrodes" not in job["body"]["topic"] for job in jobs))
+        self.assertTrue(all("evidence" not in job["body"] for job in jobs))
+
     def test_fallback_preserves_owner_book_section_and_pages(self):
         topic = 'Quantitative Monitoring: Electromyography — Record the evoked muscle action potential'
         scope = dict(textbook_id='8343459f-0595-4375-8ac6-7700e6792abe', section_id='section',

@@ -121,6 +121,13 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
                 rank = PRIORITY.get(topic.get("importance"), PRIORITY["standard"])
                 priorities[title] = min(priorities.get(title, rank), rank)
         jobs.sort(key=lambda job: priorities.get(job.get("lecture_topic") or job.get("body", {}).get("topic"), PRIORITY["standard"]))
+        if count >= 25:
+            unique = {}
+            for job in jobs:
+                body = job["body"]
+                key = (" ".join(body["topic"].casefold().split()), body["objective"])
+                unique.setdefault(key, job)
+            jobs = list(unique.values())
     result["jobs"] = jobs[:count]
     result["count"] = len(result["jobs"])
     result["auto_generate"] = False
@@ -144,6 +151,11 @@ def prepare_lecture_file_jobs(conn, owner_uid, data, filename, *, textbook_id,
         "processed_chunks": len(processed),
         "remaining_chunks": len(chunks) - len(processed),
     }
+    if format == "MC" and count >= 25:
+        result["planning_diagnostics"]["focus_preflight"] = {
+            key: sum(p.get("focus_preflight", {}).get(key, 0) for p in plans)
+            for key in ("checked", "grounded", "held")
+        }
     result["file_extraction"] = {"filename": filename, "format": extracted["format"],
                                  "page_count": extracted["page_count"],
                                  "selected_pages": [p["page"] for p in selected],
