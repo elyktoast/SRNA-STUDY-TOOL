@@ -23,19 +23,26 @@ class CompletedGenerationUnavailable(ValueError):
 
 
 def _call_with_bounded_rate_wait(adapter, payload):
-    """Retry once only after an explicit 429 with a bounded server delay."""
+    """Retry explicit rate limits within a single minute of sleep."""
     import time
     from item_ai_https_transport_v2 import TransportError
-    try:
-        return adapter(payload)
-    except TransportError as exc:
-        delay = exc.retry_after_seconds
-        if exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int or not 1 <= delay <= 60:
-            raise
-        # The provider can increase its token estimate between identical attempts.
-        # Let one full TPM window drain, still with exactly one bounded retry.
-        time.sleep(60)
-        return adapter(payload)
+    # Review requests can retry near the provider's reset time. Keep one
+    # final retry available because the provider can revise its token estimate.
+    paced_review = payload.get("step") in ("explanation_review", "options_only_review", "option_review")
+    waited = 0
+    for attempt in range(3 if paced_review else 2):
+        try:
+            return adapter(payload)
+        except TransportError as exc:
+            delay = exc.retry_after_seconds
+            remaining = 60 - waited
+            if (exc.rule != "PROVIDER_RATE_LIMIT" or type(delay) is not int
+                    or not 1 <= delay <= remaining
+                    or attempt == (2 if paced_review else 1)):
+                raise
+            wait = min(remaining, delay + 3) if paced_review and attempt == 0 else remaining
+            time.sleep(wait)
+            waited += wait
 
 
 def execute(conn, args, environ=None, *, semantic_lookup=None):

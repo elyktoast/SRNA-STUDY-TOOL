@@ -1,16 +1,16 @@
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 from run_grounded_generation_v2 import _call_with_bounded_rate_wait
 from item_ai_https_transport_v2 import TransportError
 from item_option_retrieval_audit_v2 import audit
 
 class ReviewRateAndContextTests(unittest.TestCase):
     @patch('time.sleep')
-    def test_only_explicit_bounded_429_can_wait_and_retry_once(self, sleep):
+    def test_review_uses_bounded_provider_delay(self, sleep):
         request={'step':'option_review'}
         adapter=Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=3), {'judgments':[]}])
         self.assertEqual(_call_with_bounded_rate_wait(adapter,request),{'judgments':[]})
-        sleep.assert_called_once_with(60); self.assertEqual(adapter.call_count,2)
+        sleep.assert_called_once_with(6); self.assertEqual(adapter.call_count,2)
         self.assertIs(adapter.call_args.args[0],request)
         for error in (TransportError('PROVIDER_TIMEOUT'),TransportError('PROVIDER_RATE_LIMIT'),TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=61)):
             with self.subTest(rule=error.rule):
@@ -22,6 +22,26 @@ class ReviewRateAndContextTests(unittest.TestCase):
         adapter=Mock(side_effect=TransportError('PROVIDER_RATE_LIMIT',retry_after_seconds=2))
         with self.assertRaises(TransportError):_call_with_bounded_rate_wait(adapter,{})
         sleep.assert_called_once_with(60);self.assertEqual(adapter.call_count,2)
+    @patch('time.sleep')
+    def test_early_retry_retains_full_window_fallback_and_never_replays_success(self, sleep):
+        limited = TransportError('PROVIDER_RATE_LIMIT', retry_after_seconds=9)
+        adapter = Mock(side_effect=[limited, limited, {'judgments':[]}])
+        self.assertEqual(_call_with_bounded_rate_wait(adapter, {'step':'explanation_review'}), {'judgments':[]})
+        self.assertEqual(sleep.call_args_list, [call(12), call(48)])
+        self.assertEqual(adapter.call_count, 3)
+
+    @patch('time.sleep')
+    def test_unaffordable_or_unknown_retry_delay_leaves_review_unavailable(self, sleep):
+        for delay in (None, 59):
+            with self.subTest(delay=delay):
+                sleep.reset_mock()
+                adapter = Mock(side_effect=[TransportError('PROVIDER_RATE_LIMIT', 9),
+                                            TransportError('PROVIDER_RATE_LIMIT', delay)])
+                with self.assertRaises(TransportError):
+                    _call_with_bounded_rate_wait(adapter, {'step':'explanation_review'})
+                sleep.assert_called_once_with(12)
+                self.assertEqual(adapter.call_count, 2)
+
     @patch('item_option_retrieval_audit_v2.search')
     def test_topic_and_classification_retrieved_once_without_answer_or_citation_seeding(self,search):
         def lookup(conn,query,owner,**kwargs):
