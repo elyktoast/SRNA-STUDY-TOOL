@@ -77,7 +77,12 @@ export async function executeSlot(env, batch, slot, recover) {
  if (!response.ok) {
   const body = await response.json().catch(() => null);
   if (response.status === 409 && body?.rule === 'GENERATION_BUSY' && !recover) return {status:'busy'};
-  if (recover && response.status === 409 && body?.rule === 'CHECKPOINT_NOT_COMPLETE') return {status:'checkpoint_missing'};
+  if (recover && response.status === 409 && body?.rule === 'CHECKPOINT_NOT_COMPLETE') {
+   const startedAt = body.attempt_started_at_ms;
+   const attemptedAt = Number.isSafeInteger(startedAt) && startedAt > 0 && startedAt <= Date.now()
+    ? startedAt : undefined;
+   return {status:'checkpoint_missing',attemptedAt};
+  }
   if (!recover && [429,503].includes(response.status) && /^PROVIDER_[A-Z_]+$/.test(body?.rule || '')) {
    const retryAfter = Number.isInteger(body.retry_after_seconds) && body.retry_after_seconds > 0 &&
     body.retry_after_seconds <= 3600 ? body.retry_after_seconds : undefined;

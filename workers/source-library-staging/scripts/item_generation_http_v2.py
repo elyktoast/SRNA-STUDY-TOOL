@@ -10,7 +10,9 @@ from uuid import UUID, uuid4
 
 from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
-from item_generation_checkpoint_store_v2 import recover_completed_batch_slot, save_once
+from item_generation_checkpoint_store_v2 import (
+    batch_attempt_started_at_ms, recover_completed_batch_slot, save_once,
+)
 from item_generation_attempt_v2 import GenerationAlreadyStarted, GenerationBusy
 from item_saved_option_review_v2 import complete_option_review, OptionReviewConflict
 from item_draft_revalidation_v2 import revalidate
@@ -436,7 +438,12 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     result = recover_completed_batch_slot(conn, owner_uid=owner,
                         textbook_id=args.textbook_id, item_id=args.item_id)
                     if result is None:
-                        raise CompletedGenerationUnavailable()
+                        started_at = batch_attempt_started_at_ms(conn, owner_uid=owner,
+                            textbook_id=args.textbook_id, item_id=args.item_id)
+                        missing = {"error": "completed_generation_unavailable", "rule": "CHECKPOINT_NOT_COMPLETE"}
+                        if started_at is not None:
+                            missing["attempt_started_at_ms"] = started_at
+                        return respond("409 Conflict", missing)
                     if any(result["item"].get(field) != getattr(args, field)
                            for field in ("mode", "domain", "section", "objective")):
                         raise ValueError("Completed batch slot classification mismatch")

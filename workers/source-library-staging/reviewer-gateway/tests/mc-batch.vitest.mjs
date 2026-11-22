@@ -72,6 +72,22 @@ it('leaves ambiguous work recovery-only, then advances after its deadline', asyn
  expect((await control('status')).batch.status).toBe('complete');
 });
 
+it('uses the original attempt time when a persisted slot has no start timestamp', async () => {
+ const {stub,start,control} = fixture(25,['legacy interruption','next']);
+ await start();
+ await runDurableObjectAlarm(stub);
+ await runInDurableObject(stub, async (_instance,state) => {
+  const batch = await state.storage.get('batch');
+  delete batch.items[0].startedAt;
+  await state.storage.put('batch',batch);
+ });
+ await runDurableObjectAlarm(stub);
+ const {batch} = await control('status');
+ expect(batch.items.map(item => item.status)).toEqual(['unknown','queued']);
+ await runDurableObjectAlarm(stub);
+ expect((await control('status')).batch.items.map(item => item.status)).toEqual(['unknown','ready']);
+});
+
 it('requeues an explicit busy refusal before payment without changing the slot ID', async () => {
  const {stub,start,control} = fixture(25,['busy once']);
  const {batch:original} = await start();

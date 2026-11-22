@@ -14,7 +14,10 @@ export class FakeReviewer extends DurableObject {
     ? Response.json({rule:'CHECKPOINT_NOT_COMPLETE'},{status:409})
     : Response.json({rule:'PROVIDER_RATE_LIMIT',retry_after_seconds:40},{status:429});
   }
-  if (slot.topic === 'unconfirmed') return new Response(null,{status:503});
+  if (slot.topic === 'legacy interruption' && slot.resume_completed_only) {
+   return Response.json({rule:'CHECKPOINT_NOT_COMPLETE',attempt_started_at_ms:Date.now() - 18 * 60_000},{status:409});
+  }
+  if (['unconfirmed','legacy interruption'].includes(slot.topic)) return new Response(null,{status:503});
   if (slot.topic === 'disconnect' && !slot.resume_completed_only) return new Response(null,{status:503});
   const stages = Object.fromEntries(['schema','deterministic_text','math','evidence','duplicates','blind_model',
    'editorial_quality','explanation_evidence','independent_option_evidence','options_only'].map(name => [name,{status:'pass',issues:[]}]));

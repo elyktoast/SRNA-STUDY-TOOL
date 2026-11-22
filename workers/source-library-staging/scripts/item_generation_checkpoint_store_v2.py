@@ -198,6 +198,21 @@ def recover_completed_batch_slot(conn, *, owner_uid, textbook_id, item_id):
                                          "evidence_hash": evidence_hash}}
 
 
+def batch_attempt_started_at_ms(conn, *, owner_uid, textbook_id, item_id):
+    """Return the original signed slot's start time, including after a queue upgrade."""
+    owner, book, item = (str(UUID(str(value))) for value in (owner_uid, textbook_id, item_id))
+    with conn.cursor() as cur:
+        cur.execute("""
+          select floor(extract(epoch from a.started_at) * 1000)::bigint
+          from source_library_staging.generation_attempts_v2 a
+          join source_library_staging.textbooks t on t.id=a.textbook_id
+          where a.owner_uid=%s::uuid and a.textbook_id=%s::uuid and a.item_id=%s::uuid
+            and t.owner_uid=a.owner_uid and t.status='ready'
+        """, (owner, book, item))
+        row = cur.fetchone()
+    return row[0] if row is not None else None
+
+
 def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):
     """Serialize persistence per completed checkpoint and return its existing draft.
 

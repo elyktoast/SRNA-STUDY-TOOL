@@ -67,6 +67,19 @@ class BatchBoundaryTests(unittest.TestCase):
             _embed_stems(str(uuid4()), "fixture", stems[:1])
             self.assertEqual(embed.call_count, 3)
 
+    def test_attempt_start_time_uses_the_original_owner_book_and_slot(self):
+        from item_generation_checkpoint_store_v2 import batch_attempt_started_at_ms
+
+        conn = MagicMock()
+        cursor = conn.cursor.return_value.__enter__.return_value
+        owner, book, item = (str(uuid4()) for _ in range(3))
+        scope = {"owner_uid": owner, "textbook_id": book, "item_id": item}
+        cursor.fetchone.return_value = None
+        self.assertIsNone(batch_attempt_started_at_ms(conn, **scope))
+        cursor.fetchone.return_value = (1795312217377,)
+        self.assertEqual(batch_attempt_started_at_ms(conn, **scope), 1795312217377)
+        self.assertEqual(cursor.execute.call_args.args[1], (owner, book, item))
+
     def test_completed_slot_recovery_uses_reservation_and_rejects_wrong_identity(self):
         from item_generation_checkpoint_store_v2 import recover_completed_batch_slot
 

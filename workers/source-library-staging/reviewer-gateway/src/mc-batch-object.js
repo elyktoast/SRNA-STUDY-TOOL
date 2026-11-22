@@ -123,6 +123,7 @@ export class McBatch extends DurableObject {
      slot.endedRequest = true;
      slot.providerRetryAfter = result.retryAfter;
     }
+    if (result.attemptedAt !== undefined) slot.startedAt = Math.min(slot.startedAt,result.attemptedAt);
     // A dropped reply could still belong to a running attempt. Read its
     // checkpoint early, but leave the original recovery window intact.
     const expired = Date.now() - slot.startedAt >= recoveryDeadline;
