@@ -54,23 +54,35 @@ export async function batchRoute(request, env, owner) {
  }
 }
 
+export function acceptedCount(batch) {
+ return new Set(batch.items.filter(item => item.status === 'ready' && item.accepted === true && uuid.test(item.draftId))
+  .map(item => item.draftId)).size;
+}
+
+export function newSlot(request) {
+ return {id:crypto.randomUUID(),request,status:'queued'};
+}
+
 export function snapshot(batch) {
  if (!batch) return {batch:null};
  return {batch:{id:batch.id, requested:batch.requested, status:batch.status, reason:batch.reason, nextRunAt:batch.nextRunAt,
+  ...(batch.goal === 'accepted' ? {goal:batch.goal,attemptLimit:batch.attemptLimit,
+   deadlineAt:batch.deadlineAt,acceptedCount:acceptedCount(batch)} : {}),
   items:batch.items.map(({id,request,status,draftId,reason,accepted}) => ({id,topic:request.topic,status,draftId,reason,accepted}))}};
 }
 
 export function prepare(data) {
  if (!uuid.test(data.id) || ![25,50,100].includes(data.count) || data.confirm !== true ||
+     (data.goal !== undefined && data.goal !== 'accepted') ||
      !Array.isArray(data.jobs) || !data.jobs.length || data.jobs.length > data.count) return null;
  if (data.jobs.some(job => !job || Object.keys(job).some(key => !fields.has(key)) ||
      job.format !== 'MC' || typeof job.topic !== 'string' || !job.topic.trim() ||
      typeof job.textbook_id !== 'string' || JSON.stringify(job).length > 1200)) return null;
- return data.jobs.map(({item_id:ignored,...request}) => ({id:crypto.randomUUID(),request,status:'queued'}));
+ return data.jobs.map(({item_id:ignored,...request}) => newSlot(request));
 }
 
 export async function executeSlot(env, batch, slot, recover) {
- const prior = batch.items.filter(item => item.draftId).map(item => item.draftId);
+ const prior = [...new Set(batch.items.filter(item => item.draftId).map(item => item.draftId))];
  const response = await internal(env,batch.owner,'run',{
   request:{...slot.request,item_id:slot.id,resume_completed_only:recover},prior,
  });

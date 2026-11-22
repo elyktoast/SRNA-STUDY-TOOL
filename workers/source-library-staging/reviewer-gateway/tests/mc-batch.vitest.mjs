@@ -125,3 +125,43 @@ it('restores the alarm for a persisted legacy pause on the first status read', a
  await runDurableObjectAlarm(stub);
  expect((await control('status')).batch.status).toBe('complete');
 });
+
+it('replaces held attempts and stops only after accepting the target', async () => {
+ const {stub,control} = fixture(25,[]);
+ const jobs = [...Array(24).fill('topic'), 'provider outage'].map(topic=>({topic,format:'MC',textbook_id:'book'}));
+ const {batch:started} = await control('start',{count:25,confirm:true,goal:'accepted',jobs});
+ expect(started).toMatchObject({acceptedCount:0,attemptLimit:50});
+ for (let i=0;i<25;i++) await runDurableObjectAlarm(stub);
+ const {batch:partial} = await control('status');
+ expect(partial).toMatchObject({status:'running',acceptedCount:24});
+ await evictDurableObject(stub);
+ await runDurableObjectAlarm(stub);
+ const {batch} = await control('status');
+ expect(batch).toMatchObject({status:'complete',reason:'target_reached',acceptedCount:25});
+ expect(batch.items).toHaveLength(26);
+ expect(batch.items[25].id).not.toBe(started.items[0].id);
+ expect(batch.items[25]).toMatchObject({accepted:true,topic:'topic'});
+ expect(await runDurableObjectAlarm(stub)).toBe(false);
+});
+
+it('reports a shortfall at the attempt cap and cancels time-expired work before admission', async () => {
+ const {stub,control} = fixture(25,[]);
+ const jobs = [{topic:'provider outage',format:'MC',textbook_id:'book'}];
+ await control('start',{count:25,confirm:true,goal:'accepted',jobs});
+ for (let i=0;i<50;i++) await runDurableObjectAlarm(stub);
+ const {batch:capped} = await control('status');
+ expect(capped).toMatchObject({status:'complete',reason:'attempt_budget_exhausted',acceptedCount:0,attemptLimit:50});
+ expect(capped.items).toHaveLength(50);
+ expect(capped.items.every(item=>item.status==='held')).toBe(true);
+ const id = crypto.randomUUID();
+ await control('start',{id,count:25,confirm:true,goal:'accepted',jobs});
+ await runInDurableObject(stub,async (_instance,state)=>{
+  const batch = await state.storage.get('batch');
+  batch.deadlineAt = Date.now()-1000;
+  await state.storage.put('batch',batch);
+ });
+ await runDurableObjectAlarm(stub);
+ const {batch:expired} = await control('status');
+ expect(expired).toMatchObject({status:'complete',reason:'time_budget_exhausted',acceptedCount:0});
+ expect(expired.items[0].status).toBe('queued');
+});

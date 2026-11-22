@@ -1,10 +1,27 @@
 import {DurableObject} from 'cloudflare:workers';
-import {executeSlot, prepare, snapshot} from './mc-batch.js';
+import {acceptedCount, executeSlot, newSlot, prepare, snapshot} from './mc-batch.js';
 
 const recoveryDeadline = 17 * 60_000;
 const recoveryInterval = 60_000;
 const earlyRecovery = 5000;
 const accessRetry = 60_000;
+const targetWindow = 12 * 60 * 60_000;
+
+function targetStop(batch) {
+ if (batch.goal !== 'accepted') return;
+ if (acceptedCount(batch) >= batch.requested) return 'target_reached';
+ if (Date.now() >= batch.deadlineAt) return 'time_budget_exhausted';
+ if (batch.items.length >= batch.attemptLimit && !batch.items.some(item => item.status === 'queued')) {
+  return 'attempt_budget_exhausted';
+ }
+}
+
+function finish(batch, reason) {
+ batch.status = 'complete';
+ if (reason) batch.reason = reason;
+ else delete batch.reason;
+ delete batch.nextRunAt;
+}
 
 function continuationDelay(batch, result) {
  if (result.reason === 'batch_access_denied') return accessRetry;
@@ -22,6 +39,11 @@ function schedule(txn, batch, delay) {
  return txn.setAlarm(batch.nextRunAt);
 }
 
+function scheduleNext(txn, batch, delay) {
+ const remaining = batch.goal === 'accepted' ? batch.deadlineAt - Date.now() : delay;
+ return schedule(txn,batch,Math.max(1,Math.min(delay,remaining)));
+}
+
 export class McBatch extends DurableObject {
  async control(owner,data) {
   const storage = this.ctx.storage;
@@ -35,6 +57,10 @@ export class McBatch extends DurableObject {
     const items = prepare(data);
     if (!items) return {error:'invalid_batch'};
     const next = {id:data.id, owner, requested:data.count, status:'running',items};
+    if (data.goal === 'accepted') {
+     Object.assign(next,{goal:'accepted',attemptLimit:data.count * 2,deadlineAt:Date.now() + targetWindow,
+                         initialJobCount:items.length});
+    }
     await schedule(txn,next,1000);
     await txn.put({batch:next,['started:' + data.id]:true});
     return snapshot(next);
@@ -66,7 +92,8 @@ export class McBatch extends DurableObject {
  }
 
  async resume(txn,batch) {
-  batch.status = batch.items.some(item => item.status === 'queued' || item.status === 'started') ? 'running' : 'complete';
+  batch.status = batch.goal === 'accepted' || batch.items.some(item => item.status === 'queued' || item.status === 'started')
+   ? 'running' : 'complete';
   delete batch.reason;
   if (batch.status === 'running') await schedule(txn,batch,1000);
   await txn.put('batch',batch);
@@ -78,9 +105,26 @@ export class McBatch extends DurableObject {
    const batch = await txn.get('batch');
    if (!batch || !['running','cancelling'].includes(batch.status)) return null;
    const started = batch.items.find(item => item.status === 'started');
-   const slot = started || (batch.status === 'running' && batch.items.find(item => item.status === 'queued'));
+   let slot = started;
+   if (!slot && batch.status === 'running') {
+    const stop = targetStop(batch);
+    if (stop) {
+     finish(batch,stop);
+     await txn.put('batch',batch);
+     return null;
+    }
+    slot = batch.items.find(item => item.status === 'queued');
+    if (!slot && batch.goal === 'accepted') {
+     // Reuse the grounded task, with a new identity and the full set of
+     // previous drafts as duplicate checks. Rotate through all planned topics.
+     const index = (batch.items.length - batch.initialJobCount) % batch.initialJobCount;
+     slot = newSlot(batch.items[index].request);
+     batch.items.push(slot);
+    }
+   }
    if (!slot) {
-    batch.status = batch.status === 'cancelling' ? 'cancelled' : 'complete';
+    if (batch.status === 'cancelling') batch.status = 'cancelled';
+    else finish(batch);
     delete batch.nextRunAt;
     await txn.put('batch',batch);
     return null;
@@ -116,7 +160,7 @@ export class McBatch extends DurableObject {
     if (batch.status === 'cancelling') batch.status = 'cancelled';
     else {
      batch.reason = 'waiting_for_generator';
-     await schedule(txn,batch,5000);
+     await scheduleNext(txn,batch,5000);
     }
    } else if (['interrupted','checkpoint_missing','provider_failed'].includes(result.status)) {
     if (!work.recover && result.status === 'provider_failed') {
@@ -142,13 +186,15 @@ export class McBatch extends DurableObject {
    if (result.status !== 'busy' || work.recover) {
     Object.assign(slot,{status:result.status,...(result.reason ? {reason:result.reason} : {}),
                          ...(result.draftId ? {draftId:result.draftId,accepted:result.accepted === true} : {})});
-    if (batch.status === 'cancelling') batch.status = 'cancelled';
-    else if (!batch.items.some(item => item.status === 'queued')) batch.status = 'complete';
     delete batch.reason;
+    const stop = targetStop(batch);
+    if (batch.status === 'cancelling') batch.status = 'cancelled';
+    else if (stop) finish(batch,stop);
+    else if (batch.goal !== 'accepted' && !batch.items.some(item => item.status === 'queued')) finish(batch);
     if (batch.status === 'running') {
      const delay = continuationDelay(batch,result);
      if (delay > 1000) batch.reason = 'waiting_to_retry_provider';
-     await schedule(txn,batch,delay);
+     await scheduleNext(txn,batch,delay);
     }
    }
    if (batch.status !== 'running') {

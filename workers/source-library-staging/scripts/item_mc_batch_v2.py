@@ -33,7 +33,7 @@ def authenticate(environ, action, secret, conn_factory):
 
 
 def prior_ids(values):
-    if not isinstance(values, list) or len(values) > 99:
+    if not isinstance(values, list) or len(values) > 199:
         raise ValueError("Invalid prior drafts")
     ids = [str(UUID(value)) for value in values]
     if len(ids) != len(set(ids)):

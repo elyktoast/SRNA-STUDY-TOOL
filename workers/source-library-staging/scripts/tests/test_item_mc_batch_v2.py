@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from item_mc_batch_v2 import _embed_stems, authenticate, with_draft_neighbors
+from item_mc_batch_v2 import _embed_stems, authenticate, prior_ids, with_draft_neighbors
 
 
 class BatchBoundaryTests(unittest.TestCase):
@@ -36,6 +36,12 @@ class BatchBoundaryTests(unittest.TestCase):
             roles.return_value.is_active_admin.return_value = False
             with self.assertRaises(ValueError):
                 authenticate({**headers, "wsgi.input": io.BytesIO(payload)}, "run", secret, conn_factory)
+
+    def test_accepted_target_keeps_all_prior_drafts_within_the_signed_limit(self):
+        ids = [str(uuid4()) for _ in range(200)]
+        self.assertEqual(prior_ids(ids[:-1]), ids[:-1])
+        with self.assertRaises(ValueError):
+            prior_ids(ids)
 
     def test_batch_draft_neighbors_require_complete_owner_scoped_lookup(self):
         conn = MagicMock()
