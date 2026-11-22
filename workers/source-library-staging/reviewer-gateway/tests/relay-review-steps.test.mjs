@@ -953,3 +953,19 @@ test('the reviewer fallback never repeats successful, ambiguous or disabled call
   }
  }finally{globalThis.fetch=original;}
 });
+
+test('fallback evidence reviews keep the source scope and use portable JSON output',async()=>{
+ const original=globalThis.fetch;
+ const calls=[];
+ globalThis.fetch=async(_url,options)=>{
+  calls.push(JSON.parse(options.body));
+  return calls.length===1?new Response(null,{status:429}):
+   Response.json({choices:[{message:{content:'{"judgments":{"e0":{"supported":true,"quote_refs":["s0:q0"],"reason":""}}}'},finish_reason:'stop'}]});
+ };
+ try{
+  const response=await gateway.fetch(request('explanation_review',reviewer),{...fallbackEnv});
+  assert.equal(response.status,200);
+  assert.equal(calls[0].response_format.type,'json_schema');
+  assert.deepEqual(calls[1],{...calls[0],model:'@cf/'+reviewer,response_format:{type:'json_object'}});
+ }finally{globalThis.fetch=original;}
+});

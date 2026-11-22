@@ -282,13 +282,16 @@ async function relayGroq(request,env){
    &&fallbackReviewSteps.has(step.step)&&env.AI_REVIEWER_RATE_LIMIT_FALLBACK==='true'
    &&env.AI_CLOUDFLARE_ACCOUNT_ID&&env.AI_CLOUDFLARE_API_TOKEN;
   const fallbackRequest=()=>{
+   // Cloudflare's constrained decoder can stall on nullable citation fields.
+   // The trusted backend still requires every judgment and validates its quote scope.
+   const format=['option_review','explanation_review'].includes(step.step)?{type:'json_object'}:reviewFormat;
    provider='cloudflare-review';
    activeProvider='cloudflare';activeModel='@cf/'+fallbackReviewer;
    return fetch('https://api.cloudflare.com/client/v4/accounts/'+encodeURIComponent(env.AI_CLOUDFLARE_ACCOUNT_ID)+'/ai/v1/chat/completions',{
     method:'POST',redirect:'manual',signal:controller.signal,
     headers:{Authorization:'Bearer '+env.AI_CLOUDFLARE_API_TOKEN,'Content-Type':'application/json'},
     body:JSON.stringify({model:activeModel,messages:payload.messages,max_tokens:payload.max_tokens,
-     temperature:payload.temperature,reasoning_effort:'low',response_format:reviewFormat}),
+     temperature:payload.temperature,reasoning_effort:'low',response_format:format}),
    });
   };
   let upstream;
