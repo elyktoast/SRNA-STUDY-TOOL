@@ -101,6 +101,25 @@ class ExplanationReviewTests(unittest.TestCase):
         self.assertCountEqual(accepted, self.ids)
         self.assertEqual(report["batch_count"], 3)
 
+    def test_truncated_review_is_split_and_invalid_single_field_is_held(self):
+        from item_ai_https_transport_v2 import TransportError
+        sizes = []
+        def reviewer(payload):
+            ids = [field["id"] for field in payload["fields"]]
+            sizes.append(len(ids))
+            if len(sizes) == 1:
+                raise TransportError("PROVIDER_OUTPUT_TRUNCATED")
+            return {"supported_groups": [{"field_ids": ids, "quote_refs": [
+                {"passage_id": "p1", "span_id": "q0"}]}], "unsupported": []}
+        report = review(self.item, self.sources, reviewer, batch_size=6, compact_scopes=True)
+        self.assertEqual(report["status"], "pass")
+        self.assertEqual(sizes[:3], [6, 3, 3])
+        def truncated(payload):
+            raise TransportError("PROVIDER_OUTPUT_TRUNCATED")
+        report = review(self.item, self.sources, truncated, batch_size=1, compact_scopes=True)
+        self.assertEqual(report["status"], "pending")
+        self.assertEqual(report["provider_rule"], "PROVIDER_OUTPUT_TRUNCATED")
+
     def test_missing_quote_rechecks_only_failed_group_and_keeps_citations(self):
         accepted = []
         failed = []

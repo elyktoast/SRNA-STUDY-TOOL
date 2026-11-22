@@ -969,3 +969,13 @@ test('fallback evidence reviews keep the source scope and use portable JSON outp
   assert.deepEqual(calls[1],{...calls[0],model:'@cf/'+reviewer,response_format:{type:'json_object'}});
  }finally{globalThis.fetch=original;}
 });
+
+test('truncated evidence review reports a distinct bounded recovery signal',async()=>{
+ const original=globalThis.fetch;
+ globalThis.fetch=async()=>Response.json({choices:[{message:{content:'{"judgments":'},finish_reason:'length'}]});
+ try{
+  const response=await gateway.fetch(request('explanation_review',reviewer),fallbackEnv);
+  assert.equal(response.status,502);
+  assert.equal((await response.json()).rule,'PROVIDER_OUTPUT_TRUNCATED');
+ }finally{globalThis.fetch=original;}
+});

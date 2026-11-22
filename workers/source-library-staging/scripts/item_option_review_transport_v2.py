@@ -10,7 +10,7 @@ def request_judgments(payload, call, *, parallel=False):
     try:
         return call(request)
     except TransportError as exc:
-        if exc.rule != "PROVIDER_REQUEST_SIZE" or payload.get("format") != "MC":
+        if exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_OUTPUT_TRUNCATED") or payload.get("format") != "MC":
             raise
     except ValueError as exc:
         if payload.get("format") != "MC" or str(exc) not in {

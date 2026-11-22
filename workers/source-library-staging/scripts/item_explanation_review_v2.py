@@ -150,13 +150,17 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
             try:
                 part = review_part(batch)
             except TransportError as exc:
-                if not compact_scopes or exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_RATE_LIMIT") or len(batch) < 2:
+                if not compact_scopes or exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_RATE_LIMIT", "PROVIDER_OUTPUT_TRUNCATED") or len(batch) < 2:
                     raise
                 if exc.rule == "PROVIDER_RATE_LIMIT":
                     if rate_split_used:
                         raise
                     rate_split_used = True
-                # Only a rejected request is split. A returned judgment is
+                if exc.rule == "PROVIDER_OUTPUT_TRUNCATED":
+                    if malformed_split_used:
+                        raise
+                    malformed_split_used = True
+                # Only an incomplete or rejected request is split. A returned judgment is
                 # never solicited again, and each field retains its sources.
                 middle = len(batch) // 2
                 work[0:0] = (batch[:middle], batch[middle:])
@@ -242,7 +246,7 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
     except Exception as exc:
         rule = getattr(exc, "rule", "REVIEW_RESPONSE_INVALID")
         allowed = {"PROVIDER_RATE_LIMIT", "PROVIDER_TIMEOUT", "PROVIDER_UPSTREAM", "PROVIDER_AUTH", "PROVIDER_FORBIDDEN",
-                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_REQUEST_SIZE", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
+                   "PROVIDER_REQUEST_REJECTED", "PROVIDER_REQUEST_SIZE", "PROVIDER_OUTPUT_TRUNCATED", "PROVIDER_NETWORK", "PROVIDER_RESPONSE", "PROVIDER_MODEL_UNAVAILABLE"}
         # Only fixed local validation messages may become diagnostics.
         messages = {"Incomplete explanatory review", "Invalid explanatory judgments",
                     "Invalid supported fields", "Missing source support", "Invalid source span",

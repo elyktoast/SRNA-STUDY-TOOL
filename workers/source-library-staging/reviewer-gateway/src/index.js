@@ -352,7 +352,8 @@ async function relayGroq(request,env){
    const reason=choice?.finish_reason&&choice.finish_reason!=='stop'?'provider_incomplete':choice?.message?.refusal?'provider_refusal':typeof choice?.message?.content!=='string'||!choice.message.content.trim()?'provider_empty_content':null;
    if(reason){
     console.error('staging_relay_output_failure',JSON.stringify({provider,step:step.step,model:activeModel,provider_status:providerStatus,reason}));
-    return respond(502,null,JSON.stringify({error:'provider_failed',rule:'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
+    const evidenceTruncated=choice?.finish_reason==='length'&&['explanation_review','option_review'].includes(step.step);
+    return respond(502,null,JSON.stringify({error:'provider_failed',rule:evidenceTruncated?'PROVIDER_OUTPUT_TRUNCATED':'PROVIDER_UPSTREAM',provider_status:providerStatus,reason}));
    }
    if(provider==='cloudflare-review'){
     if(fallbackCooldown)reviewerCooldowns.set(env,Date.now()+fallbackCooldown);
