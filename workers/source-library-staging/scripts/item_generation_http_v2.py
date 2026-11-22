@@ -10,9 +10,7 @@ from uuid import UUID, uuid4
 
 from run_grounded_generation_v2 import execute, CompletedGenerationUnavailable
 from item_draft_storage_v2 import save, list_drafts, get_draft, review
-from item_generation_checkpoint_store_v2 import (
-    batch_attempt_started_at_ms, recover_completed_batch_slot, save_once,
-)
+from item_generation_checkpoint_store_v2 import lookup_batch_slot, save_once
 from item_generation_attempt_v2 import GenerationAlreadyStarted, GenerationBusy
 from item_saved_option_review_v2 import complete_option_review, OptionReviewConflict
 from item_draft_revalidation_v2 import revalidate
@@ -435,11 +433,9 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     from item_mc_batch_v2 import with_draft_neighbors
                     semantic_lookup = with_draft_neighbors(semantic_lookup, conn, owner, previous_drafts, secret)
                 if batch_owner is not None and getattr(args, "resume_completed_only", False):
-                    result = recover_completed_batch_slot(conn, owner_uid=owner,
+                    result, started_at = lookup_batch_slot(conn, owner_uid=owner,
                         textbook_id=args.textbook_id, item_id=args.item_id)
                     if result is None:
-                        started_at = batch_attempt_started_at_ms(conn, owner_uid=owner,
-                            textbook_id=args.textbook_id, item_id=args.item_id)
                         missing = {"error": "completed_generation_unavailable", "rule": "CHECKPOINT_NOT_COMPLETE"}
                         if started_at is not None:
                             missing["attempt_started_at_ms"] = started_at

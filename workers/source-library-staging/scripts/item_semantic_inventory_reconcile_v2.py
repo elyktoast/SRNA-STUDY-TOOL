@@ -2,7 +2,7 @@
 
 No provider calls, mutations, or approval/publishing side effects.
 """
-from array import array
+from item_semantic_duplicates import IndexedEmbedding
 import json
 import hashlib
 import math
@@ -130,7 +130,7 @@ def _scan_index(conn, *, owner_uid, embedding_model, inventory, retain_vectors=F
                     raise ValueError("Inconsistent indexed embedding dimensions")
                 observed[item_id] = stem_hash
                 if retain_vectors:
-                    vectors[item_id] = array("d", embedding)
+                    vectors[item_id] = IndexedEmbedding(embedding, squared_norm)
             if len(observed) > MAX_ITEMS:
                 raise ValueError("Semantic index exceeds inventory cap")
             if len(page) < PAGE_SIZE:
@@ -166,3 +166,50 @@ def reconciled_vectors(conn, *, owner_uid, embedding_model, inventory):
     report, vectors = _scan_index(conn, owner_uid=owner_uid, embedding_model=embedding_model,
                                   inventory=inventory, retain_vectors=True)
     return vectors if report["ready"] else None
+
+
+# The staging process serves one inventory. Cache only a complete verified
+# snapshot, and prove its database row versions are still current on each use.
+_live_snapshot = None
+
+
+def _index_revision(conn, owner, model):
+    with conn.cursor() as cur:
+        cur.execute("""
+            select count(*), encode(sha256(convert_to(coalesce(string_agg(
+                jsonb_build_array(item_id, stem_hash, tableoid, xmin::text, ctid::text)::text,
+                E'\n' order by item_id COLLATE "C"), ''), 'UTF8')), 'hex')
+            from source_library_staging.question_semantic_index_v2
+            where owner_uid=%s and embedding_model=%s
+        """, (owner, model))
+        return cur.fetchone()
+
+
+def live_reconciled_vectors(conn, *, owner_uid, embedding_model, inventory, digest):
+    try:
+        from psycopg import Connection
+        real_connection = isinstance(conn, Connection)
+    except ImportError:
+        real_connection = False
+    if not real_connection:
+        return reconciled_vectors(conn, owner_uid=owner_uid,
+                                  embedding_model=embedding_model, inventory=inventory)
+    identity = (conn.info.host, conn.info.port, conn.info.dbname, conn.info.user,
+                owner_uid, embedding_model, digest)
+    return _versioned_vectors(conn, identity, owner_uid, embedding_model, inventory)
+
+
+def _versioned_vectors(conn, identity, owner, model, inventory):
+    global _live_snapshot
+    revision = _index_revision(conn, owner, model)
+    if not revision or revision[0] != len(inventory):
+        return None
+    key = (identity, revision)
+    cached = _live_snapshot
+    if cached is not None and cached[0] == key:
+        return cached[1]
+    vectors = reconciled_vectors(conn, owner_uid=owner, embedding_model=model, inventory=inventory)
+    if vectors is None or _index_revision(conn, owner, model) != revision:
+        return None
+    _live_snapshot = key, vectors
+    return vectors

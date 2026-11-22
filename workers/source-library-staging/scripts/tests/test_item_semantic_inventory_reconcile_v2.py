@@ -4,7 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from item_semantic_inventory_reconcile_v2 import load_inventory, reconcile
@@ -23,6 +23,22 @@ def connection(pages):
 
 
 class ReconcileTests(unittest.TestCase):
+    def test_reuse_requires_same_revision_and_discards_a_racing_refresh(self):
+        import item_semantic_inventory_reconcile_v2 as module
+        vectors = {"a": [1.0, 0.0]}
+        with (patch.object(module, "_live_snapshot", None),
+              patch.object(module, "reconciled_vectors", return_value=vectors) as scan,
+              patch.object(module, "_index_revision",
+                           side_effect=[(1, "old"), (1, "old"), (1, "old"),
+                                        (1, "new"), (1, "changed-again"), (0, "empty")])):
+            lookup = lambda: module._versioned_vectors(None, "scope", OWNER, "test", {"a": HASH})
+            self.assertIs(lookup(), vectors)
+            self.assertIs(lookup(), vectors)
+            scan.assert_called_once()
+            self.assertIsNone(lookup())
+            self.assertIsNone(lookup())
+            self.assertEqual(scan.call_count, 2)
+
     def test_cloudflare_index_requires_model_specific_dimensions(self):
         conn,_=connection([[('a',HASH,[1.0,0.0])]])
         with self.assertRaisesRegex(ValueError,'Cloudflare embedding dimensions'):

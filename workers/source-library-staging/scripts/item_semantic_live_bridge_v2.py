@@ -10,7 +10,7 @@ import urllib.request
 from functools import lru_cache
 from pathlib import Path
 
-from item_semantic_inventory_reconcile_v2 import load_inventory, reconciled_vectors
+from item_semantic_inventory_reconcile_v2 import load_inventory, live_reconciled_vectors
 from item_semantic_duplicates import cosine
 from item_ai_https_transport_v2 import _NoRedirect
 
@@ -71,8 +71,8 @@ def build_semantic_lookup(conn, *, owner_uid, env, embed):
         raise ValueError("Trusted embedding configuration required")
     # Keep one owner/model-scoped snapshot for this generation request only.
     # A rewrite embeds its new stem and compares against the same complete bank.
-    vectors = reconciled_vectors(conn, owner_uid=owner_uid, embedding_model=model,
-                                 inventory=inventory)
+    vectors = live_reconciled_vectors(conn, owner_uid=owner_uid, embedding_model=model,
+                                      inventory=inventory, digest=digest)
     if vectors is None:
         return None
     dimension = len(next(iter(vectors.values())))

@@ -3,6 +3,8 @@
 Uses the saved question and the *current* indexed passage text. No mutation,
 approval, publication, paid model call, or inferred clinical verification.
 """
+from uuid import UUID
+
 from item_draft_storage_v2 import get_draft
 from item_generation_contract_v2 import validate_complete_item
 from item_source_reconciliation_v2 import reconcile
@@ -31,14 +33,21 @@ def revalidate(conn, *, owner_uid, draft_id):
     ids.update(e.get("passage_id") for e in citations if isinstance(e, dict))
     if not ids or len(ids) > 50 or any(not isinstance(x, str) for x in ids):
         raise ValueError("Invalid saved evidence references")
+    try:
+        lookup_ids = sorted({str(UUID(value)) for value in ids})
+    except ValueError:
+        # Retain legacy diagnostics for pre-UUID references.
+        predicate, lookup_ids = "p.id::text = any(%s::text[])", sorted(ids)
+    else:
+        predicate = "p.id = any(%s::uuid[])"
     with conn.cursor() as cur:
-        cur.execute("""
+        cur.execute(f"""
           select p.id::text,p.textbook_id::text,p.page_start,p.content
           from source_library_staging.passages p
           join source_library_staging.textbooks t on t.id=p.textbook_id
-          where p.id::text = any(%s::text[])
+          where {predicate}
             and t.owner_uid=%s::uuid and t.status='ready'
-        """, (sorted(ids), owner_uid))
+        """, (lookup_ids, owner_uid))
         rows = cur.fetchall()
     # Never treat a truncated passage as proof that a valid quotation is absent.
     # Fail closed on unusually large indexed passages rather than silently clipping them.

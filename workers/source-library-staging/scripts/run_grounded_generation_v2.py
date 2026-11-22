@@ -4,6 +4,9 @@
 Runs on a trusted backend, never in the browser. Defaults to a no-cost preflight.
 Does not persist drafts, print source excerpts, or approve publication.
 """
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
+from threading import BoundedSemaphore
 import argparse
 import json
 import os
@@ -191,7 +194,6 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 "request_hash": request_hash, "evidence_hash": evidence_hash}}
     if getattr(args, "resume_completed_only", False):
         raise CompletedGenerationUnavailable()
-    from contextlib import nullcontext
     attempt_key = dict(owner_uid=args.owner_uid, textbook_id=args.textbook_id,
                        item_id=args.item_id, request_hash=request_hash, evidence_hash=evidence_hash)
     with attempt(conn, **attempt_key) if checkpoint_enabled else nullcontext():
@@ -209,6 +211,15 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                                model=env.get("AI_GENERATOR_MODEL", ""),
                                transport=transport, owner_opt_in=True, staging=True,
                                max_output_tokens=8192)
+        # Bound concurrent provider requests across all live MC reviewer stages,
+        # including subdivided judgments. Sleep/retry does not hold a permit.
+        parallel_reviews = args.format == "MC"
+        review_permits = BoundedSemaphore(3)
+        def bounded(adapter):
+            def call(payload):
+                with review_permits:
+                    return adapter(payload)
+            return call
         reviewer_enabled = env.get("AI_BLIND_REVIEW_OPT_IN") == "true" or option_requested or explanation_requested
         reviewer_model_id = env.get("AI_REVIEWER_MODEL", "").strip()
         if reviewer_enabled:
@@ -218,6 +229,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                 model=reviewer_model_id, transport=transport,
                 owner_opt_in=True, staging=True)
+            if parallel_reviews:
+                reviewer_adapter = bounded(reviewer_adapter)
             def blind_reviewer(payload):
                 return _call_with_bounded_rate_wait(reviewer_adapter, {**payload, "step": "blind_review",
                                          "blind": True, "rules_version": "2.0",
@@ -244,7 +257,8 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 stage=stage, value=value)
         def option_reviewer(payload):
             from item_option_review_transport_v2 import request_judgments
-            response = request_judgments(payload, lambda request: _call_with_bounded_rate_wait(reviewer_adapter, request))
+            response = request_judgments(payload, lambda request: _call_with_bounded_rate_wait(reviewer_adapter, request),
+                                         parallel=parallel_reviews)
             if set(response) != {"judgments"} or not isinstance(response["judgments"], list):
                 raise ValueError("Independent option reviewer returned invalid judgments")
             judgments = response["judgments"]
@@ -262,9 +276,12 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
             from item_board_quality_v2 import editorial, options_only
             editorial_adapter = make_adapter(endpoint=endpoint, api_key=env.get("AI_PROVIDER_API_KEY", ""),
                 model=editorial_model, transport=transport, owner_opt_in=True, staging=True)
+            if parallel_reviews:
+                editorial_adapter = bounded(editorial_adapter)
             reports = {"editorial_quality": editorial(item, lambda payload: _call_with_bounded_rate_wait(editorial_adapter, payload),
                     counterfactual_reviewer=blind_reviewer, selected_topic=args.topic),
-                       "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload))}
+                       "options_only": options_only(item, lambda payload: _call_with_bounded_rate_wait(reviewer_adapter, payload),
+                                                    parallel=parallel_reviews)}
             return {name: {**report, "generator_model_id": generator_id,
                           "reviewer_model_id": editorial_model if name == "editorial_quality" else reviewer_model_id}
                     for name, report in reports.items()}
@@ -321,28 +338,30 @@ def execute(conn, args, environ=None, *, semantic_lookup=None):
                 if not isinstance(concept, dict) or not isinstance(concept.get("choice_plan"), dict):
                     raise ValueError("Concept card choice plan incomplete")
             return value
-        result = generate_from_index(conn, args.owner_uid, args.topic, author,
-                                     mode=args.mode, domain=args.domain,
-                                     section=args.section, objective=args.objective,
-                                     item_id=args.item_id, format=args.format,
-                                     textbook_id=args.textbook_id, limit=args.limit,
-                                     textbook_ids=books,
-                                     section_id=args.section_id,
-                                     include_subsections=args.include_subsections,
-                                     page_start=args.page_start, page_end=args.page_end,
-                                     checkpoint=checkpoint,
-                                     generator_model_id=env["AI_GENERATOR_MODEL"],
-                                     on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
-                                     evidence_packet=evidence,
-                                     rewrite=rewrite if rewrite_enabled else None,
-                                     review_repair=rewrite if rewrite_enabled else None,
-                                     blind_reviewer=blind_reviewer if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None,
-                                     reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
-                                     semantic_lookup=semantic_lookup,
-                                     option_reviewer=option_reviewer if option_requested else None,
-                                     option_reviewer_model_id=reviewer_model_id if option_requested else None,
-                                     explanation_review=explanation_review if explanation_requested else None,
-                                     quality_review=quality_review if quality_requested else None)
+        with ThreadPoolExecutor(max_workers=3) if parallel_reviews else nullcontext() as review_executor:
+            result = generate_from_index(conn, args.owner_uid, args.topic, author,
+                                         mode=args.mode, domain=args.domain,
+                                         section=args.section, objective=args.objective,
+                                         item_id=args.item_id, format=args.format,
+                                         textbook_id=args.textbook_id, limit=args.limit,
+                                         textbook_ids=books,
+                                         section_id=args.section_id,
+                                         include_subsections=args.include_subsections,
+                                         page_start=args.page_start, page_end=args.page_end,
+                                         checkpoint=checkpoint,
+                                         generator_model_id=env["AI_GENERATOR_MODEL"],
+                                         on_checkpoint=checkpoint_writer if checkpoint_enabled else None,
+                                         evidence_packet=evidence,
+                                         rewrite=rewrite if rewrite_enabled else None,
+                                         review_repair=rewrite if rewrite_enabled else None,
+                                         blind_reviewer=blind_reviewer if env.get("AI_BLIND_REVIEW_OPT_IN") == "true" else None,
+                                         reviewer_model_id=reviewer_model_id if reviewer_enabled else None,
+                                         semantic_lookup=semantic_lookup,
+                                         option_reviewer=option_reviewer if option_requested else None,
+                                         option_reviewer_model_id=reviewer_model_id if option_requested else None,
+                                         explanation_review=explanation_review if explanation_requested else None,
+                                         quality_review=quality_review if quality_requested else None,
+                                         review_executor=review_executor)
         if discovery is not None:
             result["screening"]["source_discovery"] = discovery
         if repair_sources:

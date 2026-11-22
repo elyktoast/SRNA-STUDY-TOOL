@@ -172,45 +172,38 @@ def recover_completed(conn, *, owner_uid, textbook_id, request_hash, evidence_ha
     return row[0]
 
 
-def recover_completed_batch_slot(conn, *, owner_uid, textbook_id, item_id):
-    """Read a signed queue slot by its durable reservation, without searching sources again."""
+def lookup_batch_slot(conn, *, owner_uid, textbook_id, item_id):
+    """Read completion and the original start from one owner-scoped snapshot."""
     owner, book, item = (str(UUID(str(value))) for value in (owner_uid, textbook_id, item_id))
     with conn.cursor() as cur:
         cur.execute("""
-          select a.request_hash, a.evidence_hash, c.completed_result
+          select a.request_hash, a.evidence_hash, c.completed_result,
+                 floor(extract(epoch from a.started_at) * 1000)::bigint
           from source_library_staging.generation_attempts_v2 a
-          join source_library_staging.generation_checkpoints_v2 c
+          join source_library_staging.textbooks t on t.id=a.textbook_id
+          left join source_library_staging.generation_checkpoints_v2 c
             on (c.owner_uid,c.textbook_id,c.request_hash,c.evidence_hash)
              = (a.owner_uid,a.textbook_id,a.request_hash,a.evidence_hash)
-          join source_library_staging.textbooks t on t.id=a.textbook_id
+            and c.status='completed' and c.expires_at>now()
           where a.owner_uid=%s::uuid and a.textbook_id=%s::uuid and a.item_id=%s::uuid
             and t.owner_uid=a.owner_uid and t.status='ready'
-            and c.status='completed' and c.expires_at>now()
         """, (owner, book, item))
         row = cur.fetchone()
     if row is None:
-        return None
-    request_hash, evidence_hash, result = row
+        return None, None
+    request_hash, evidence_hash, result, started_at = row
+    if result is None:
+        return None, started_at
     question = result.get("item") if isinstance(result, dict) else None
     if not isinstance(question, dict) or question.get("item_id") != item or question.get("format") != "MC":
         raise ValueError("Completed batch slot identity mismatch")
-    return {**result, "_checkpoint_key": {"textbook_id": book, "request_hash": request_hash,
-                                         "evidence_hash": evidence_hash}}
+    return ({**result, "_checkpoint_key": {"textbook_id": book, "request_hash": request_hash,
+                                          "evidence_hash": evidence_hash}}, started_at)
 
 
-def batch_attempt_started_at_ms(conn, *, owner_uid, textbook_id, item_id):
-    """Return the original signed slot's start time, including after a queue upgrade."""
-    owner, book, item = (str(UUID(str(value))) for value in (owner_uid, textbook_id, item_id))
-    with conn.cursor() as cur:
-        cur.execute("""
-          select floor(extract(epoch from a.started_at) * 1000)::bigint
-          from source_library_staging.generation_attempts_v2 a
-          join source_library_staging.textbooks t on t.id=a.textbook_id
-          where a.owner_uid=%s::uuid and a.textbook_id=%s::uuid and a.item_id=%s::uuid
-            and t.owner_uid=a.owner_uid and t.status='ready'
-        """, (owner, book, item))
-        row = cur.fetchone()
-    return row[0] if row is not None else None
+def recover_completed_batch_slot(conn, *, owner_uid, textbook_id, item_id):
+    result, _ = lookup_batch_slot(conn, owner_uid=owner_uid, textbook_id=textbook_id, item_id=item_id)
+    return result
 
 
 def save_once(conn, *, owner_uid, save_payload, checkpoint_key, saver):

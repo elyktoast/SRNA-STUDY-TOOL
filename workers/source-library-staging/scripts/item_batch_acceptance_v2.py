@@ -90,8 +90,9 @@ def accept_generated_batch_draft(conn, *, owner_uid, saved, result):
           where p.id=any(%s::uuid[]) and b.owner_uid=%s::uuid and b.status='ready'
         """, (ids, owner_uid))
         sources = {pid: _format_normalized(text) for pid, text in cur.fetchall()}
+    normalized_quotes = {quote: _format_normalized(quote) for quote in {quote for _, quote in proofs}}
     if set(sources) != set(ids) or any(
-            not _format_normalized(quote) or not any(_format_normalized(quote) in sources.get(pid, "") for pid in refs)
+            not normalized_quotes[quote] or not any(normalized_quotes[quote] in sources.get(pid, "") for pid in refs)
             for refs, quote in proofs):
         return saved
     validation = revalidate(conn, owner_uid=owner_uid, draft_id=saved["draft_id"])

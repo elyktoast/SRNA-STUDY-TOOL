@@ -136,13 +136,14 @@ def build_app():
                 or os.environ.get("AI_SEMANTIC_EMBEDDING_OPT_IN") != "true"):
             return None
         from item_semantic_live_bridge_v2 import build_semantic_lookup
-        from item_cloudflare_embeddings_v2 import MODEL, make_embed_many
+        from item_cloudflare_embeddings_v2 import MODEL
+        from item_mc_batch_v2 import _embed_stems
         if os.environ.get("SEMANTIC_INDEX_EMBEDDING_MODEL") != MODEL:
             raise ValueError("Cloudflare semantic embedding model required")
-        embed_many = make_embed_many(enabled=True,
-            relay_secret=os.environ.get("STAGING_RECEIPT_SIGNING_SECRET"))
+        secret = os.environ.get("STAGING_RECEIPT_SIGNING_SECRET")
         return build_semantic_lookup(
-            db_conn, owner_uid=owner, env=os.environ, embed=lambda stem:embed_many([stem])[0])
+            db_conn, owner_uid=owner, env=os.environ,
+            embed=lambda stem: _embed_stems(owner, secret, [stem])[stem])
 
     generation = generation_app(
         conn_factory=lambda: psycopg.connect(os.environ["STAGING_DATABASE_URL"],

@@ -7,6 +7,15 @@ from array import array
 import math
 
 
+class IndexedEmbedding(array):
+    """An owned snapshot vector whose norm was validated during reconciliation."""
+
+    def __new__(cls, values, squared_norm):
+        vector = super().__new__(cls, "d", values)
+        vector.norm = math.sqrt(squared_norm)
+        return vector
+
+
 def _norm(vector):
     if (not isinstance(vector, (list, tuple, array)) or not vector
             or any(type(value) not in (int, float) or not math.isfinite(value) for value in vector)):
@@ -47,7 +56,7 @@ def screen(candidate_vector, neighbors, threshold=0.85):
             raise ValueError("Duplicate semantic neighbor ID")
         seen.add(neighbor["item_id"])
         vector = neighbor.get("embedding")
-        norm = _norm(vector)
+        norm = vector.norm if isinstance(vector, IndexedEmbedding) else _norm(vector)
         if len(candidate_vector) != len(vector):
             raise ValueError("Embedding vectors must have equal nonzero dimensions")
         similarity = _similarity(candidate_vector, vector, candidate_norm, norm)

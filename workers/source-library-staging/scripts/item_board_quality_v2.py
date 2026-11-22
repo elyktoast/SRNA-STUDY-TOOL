@@ -237,7 +237,7 @@ def editorial(item, reviewer, *, counterfactual_reviewer=None, selected_topic=No
                 "review_error": str(exc) if type(exc) is ValueError and str(exc) in messages else None}
 
 
-def options_only(item, reviewer, *, shuffle=None):
+def options_only(item, reviewer, *, shuffle=None, parallel=False):
     """Five fresh, independently shuffled, stem/key-free trials; p <= .05 flags.
 
     Chance is 1/C(n,k). A non-significant result is screening, not a claim that
@@ -254,21 +254,39 @@ def options_only(item, reviewer, *, shuffle=None):
     try:
         original = item["options"]
         key = set(item["key"])
-        for _ in range(total):
+        def create_trial():
             permuted = copy.deepcopy(original)
             shuffle(permuted)
             binding = {chr(65 + i): option["id"] for i, option in enumerate(permuted)}
-            response = reviewer({"step": "options_only_review", "rules_version": "2.0",
+            return binding, {"step": "options_only_review", "rules_version": "2.0",
                 "auto_publish": False, "independent": True, "format": item["format"],
                 "select_count": len(key),
-                "options": [{"id": chr(65 + i), "text": o["text"]} for i, o in enumerate(permuted)]})
+                "options": [{"id": chr(65 + i), "text": o["text"]} for i, o in enumerate(permuted)]}
+
+        def score(trial, response):
+            binding, _ = trial
             answer = response.get("key") if isinstance(response, dict) and set(response) == {"key"} else None
             if (not isinstance(answer, list) or len(answer) != len(key)
                     or any(not isinstance(k, str) or k not in binding for k in answer)
                     or len(set(answer)) != len(answer)):
                 raise ValueError("Incomplete options-only trial")
-            completed += 1
-            hits += {binding[k] for k in answer} == key
+            return {binding[k] for k in answer} == key
+
+        from concurrent.futures import ThreadPoolExecutor
+        from contextlib import nullcontext
+        width = 2 if parallel else 1
+        with ThreadPoolExecutor(max_workers=width) if parallel else nullcontext() as pool:
+            for start in range(0, total, width):
+                trials = [create_trial() for _ in range(min(width, total - start))]
+                if pool is None:
+                    trial = trials[0]
+                    hits += score(trial, reviewer(trial[1]))
+                    completed += 1
+                else:
+                    futures = [pool.submit(reviewer, trial[1]) for trial in trials]
+                    for trial, future in zip(trials, futures):
+                        hits += score(trial, future.result())
+                        completed += 1
         chance = 1 / math.comb(len(original), len(key))
         probability = sum(math.comb(total, k) * chance ** k * (1 - chance) ** (total - k)
                           for k in range(hits, total + 1))
