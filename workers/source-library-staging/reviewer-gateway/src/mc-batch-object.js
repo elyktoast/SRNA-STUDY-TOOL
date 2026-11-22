@@ -133,12 +133,14 @@ export class McBatch extends DurableObject {
      await txn.put('batch',batch);
      return;
     }
-    result = {status:'unknown',reason:slot.endedRequest ? 'generation_provider_unavailable' : 'completion_unverified',
+    const knownFailure = slot.endedRequest && result.status === 'checkpoint_missing';
+    result = {status:knownFailure ? 'failed' : 'unknown',
+              reason:slot.endedRequest ? 'generation_provider_unavailable' : 'completion_unverified',
               retryAfter:slot.providerRetryAfter};
    }
    if (result.status !== 'busy' || work.recover) {
     Object.assign(slot,{status:result.status,...(result.reason ? {reason:result.reason} : {}),
-                         ...(result.draftId ? {draftId:result.draftId} : {})});
+                         ...(result.draftId ? {draftId:result.draftId,accepted:result.accepted === true} : {})});
     if (batch.status === 'cancelling') batch.status = 'cancelled';
     else if (!batch.items.some(item => item.status === 'queued')) batch.status = 'complete';
     delete batch.reason;

@@ -57,7 +57,7 @@ export async function batchRoute(request, env, owner) {
 export function snapshot(batch) {
  if (!batch) return {batch:null};
  return {batch:{id:batch.id, requested:batch.requested, status:batch.status, reason:batch.reason, nextRunAt:batch.nextRunAt,
-  items:batch.items.map(({id,request,status,draftId,reason}) => ({id,topic:request.topic,status,draftId,reason}))}};
+  items:batch.items.map(({id,request,status,draftId,reason,accepted}) => ({id,topic:request.topic,status,draftId,reason,accepted}))}};
 }
 
 export function prepare(data) {
@@ -87,11 +87,13 @@ export async function executeSlot(env, batch, slot, recover) {
   return {status:'failed',reason:response.status === 403 ? 'batch_access_denied' : 'generation_rejected'};
  }
  const result = await response.json();
- if (!uuid.test(result.draft_id) || result.published !== false || result.requires_human_review !== true) throw Error('invalid_generation_result');
+ if (!uuid.test(result.draft_id) || result.published !== false || typeof result.requires_human_review !== 'boolean') throw Error('invalid_generation_result');
  const names = ['schema','deterministic_text','math','evidence','duplicates','blind_model','editorial_quality','explanation_evidence','independent_option_evidence','options_only'];
  const stages = names.map(name => result.screening?.stages?.[name]);
- const ready = result.draft_status === 'pending_review' && stages.every(stage => stage?.status === 'pass' && stage.issues?.length === 0);
+ const passed = stages.every(stage => stage?.status === 'pass' && stage.issues?.length === 0);
+ const ready = result.draft_status === 'approved_for_bank' && result.requires_human_review === false && passed;
+ if (result.requires_human_review === false && !ready) throw Error('invalid_automatic_acceptance');
  const reviewReports = [...stages, result.screening?.independent_option_adjudication];
  const unavailable = reviewReports.some(report => /^(PROVIDER_|RELAY_)/.test(report?.provider_rule || report?.review_error || ''));
- return {status:ready?'ready':'held',draftId:result.draft_id,...(unavailable?{reason:'review_provider_unavailable'}:{})};
+ return {status:ready?'ready':'held',draftId:result.draft_id,accepted:ready,...(unavailable?{reason:'review_provider_unavailable'}:{})};
 }

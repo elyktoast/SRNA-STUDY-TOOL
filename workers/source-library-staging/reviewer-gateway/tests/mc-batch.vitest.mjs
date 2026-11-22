@@ -90,7 +90,7 @@ it('bounds known provider failures and keeps processing without requiring manual
  const {batch} = await control('status');
  expect(batch.reason).toBe('waiting_to_retry_provider');
  expect(batch.nextRunAt - Date.now()).toBeGreaterThan(30_000);
- expect(batch.items[0]).toMatchObject({status:'unknown',reason:'generation_provider_unavailable'});
+ expect(batch.items[0]).toMatchObject({status:'failed',reason:'generation_provider_unavailable'});
  await runDurableObjectAlarm(stub);
  expect((await control('status')).batch.status).toBe('complete');
 });

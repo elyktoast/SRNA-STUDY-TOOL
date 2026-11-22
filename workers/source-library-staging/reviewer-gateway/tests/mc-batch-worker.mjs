@@ -20,8 +20,8 @@ export class FakeReviewer extends DurableObject {
    'editorial_quality','explanation_evidence','independent_option_evidence','options_only'].map(name => [name,{status:'pass',issues:[]}]));
   if (slot.topic === 'provider outage') stages.independent_option_evidence = {status:'pending',issues:[{rule_id:'R-12.4'}]};
   if (slot.topic === 'second' && prior.length !== 1) return new Response(null,{status:400});
-  return Response.json({draft_id:slot.item_id,published:false,requires_human_review:true,
-   draft_status:slot.topic === 'provider outage'?'needs_revision':'pending_review',screening:{stages,...(slot.topic === 'provider outage' ? {independent_option_adjudication:{provider_rule:'PROVIDER_UPSTREAM'}} : {})}});
+  return Response.json({draft_id:slot.item_id,published:false,requires_human_review:slot.topic === 'provider outage',
+   draft_status:slot.topic === 'provider outage'?'needs_revision':'approved_for_bank',screening:{stages,...(slot.topic === 'provider outage' ? {independent_option_adjudication:{provider_rule:'PROVIDER_UPSTREAM'}} : {})}});
  }
 }
 export default {fetch:() => new Response(null,{status:404})};

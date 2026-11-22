@@ -452,9 +452,26 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                                           checkpoint_key=key, saver=save)
                     else:
                         saved = save(conn, {**result["save_payload"], "owner_uid": owner})
+                    if batch_owner is not None and saved["status"] == "pending_review":
+                        from item_batch_acceptance_v2 import accept_generated_batch_draft
+                        saved = accept_generated_batch_draft(conn, owner_uid=owner, saved=saved, result=result)
                     result = {**result, "draft_id": saved["draft_id"],
                               "draft_status": saved["status"], "published": False,
-                              "requires_human_review": True}
+                              "requires_human_review": saved["status"] != "approved_for_bank" or batch_owner is None}
+            if batch_owner is not None:
+                # The queue consumes the outcome, never the textbook excerpts
+                # or full model reports. Keep recovery and generation replies small.
+                screening = result.get("screening") or {}
+                slim = {name: {key: report.get(key) for key in ("status", "issues", "provider_rule", "review_error")}
+                        for name, report in screening.get("stages", {}).items()
+                        if isinstance(report, dict)}
+                for report in slim.values():
+                    if isinstance(report["issues"], list):
+                        report["issues"] = [None] * len(report["issues"])
+                option = screening.get("independent_option_adjudication") or {}
+                result = {key: result[key] for key in ("draft_id", "draft_status", "published", "requires_human_review")}
+                result["screening"] = {"stages": slim,
+                    "independent_option_adjudication": {"provider_rule": option.get("provider_rule")}}
             return respond("200 OK", result)
         except GenerationBusy:
             return respond("409 Conflict", {"error":"generation_already_active", "rule":"GENERATION_BUSY"})

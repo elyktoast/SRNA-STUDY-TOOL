@@ -142,6 +142,7 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
                 "source_passages": [p for p in packet["source_passages"] if p["passage_id"] in source_ids]})
 
         completed_batches = 0
+        rate_split_used = False
         work = list(batches)
         while work:
             batch = work.pop(0)
@@ -149,8 +150,12 @@ def review(item, sources, reviewer, *, batch_size=None, compact_scopes=False):
             try:
                 part = review_part(batch)
             except TransportError as exc:
-                if not compact_scopes or exc.rule != "PROVIDER_REQUEST_SIZE" or len(batch) < 2:
+                if not compact_scopes or exc.rule not in ("PROVIDER_REQUEST_SIZE", "PROVIDER_RATE_LIMIT") or len(batch) < 2:
                     raise
+                if exc.rule == "PROVIDER_RATE_LIMIT":
+                    if rate_split_used:
+                        raise
+                    rate_split_used = True
                 # Only a rejected request is split. A returned judgment is
                 # never solicited again, and each field retains its sources.
                 middle = len(batch) // 2

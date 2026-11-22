@@ -321,7 +321,7 @@ const batchStartStatus = batchPanel.querySelector('[data-batch-start-status]');
 const batchQueue = document.createElement('section');
 batchQueue.className = 'sl-ai-checking';
 batchQueue.hidden = true;
-batchQueue.innerHTML = '<h3>Checking queue</h3><div class="sl-row"><button type="button" data-batch-refresh>Refresh</button><button type="button" data-batch-resume hidden>Resume</button><button type="button" data-batch-cancel hidden>Cancel</button></div><p role="status">Loading batch status…</p><strong data-batch-counter hidden></strong><progress aria-label="Batch processing progress" hidden></progress><div data-batch-results hidden><p data-batch-counts></p><label>Show <select><option value="all">All attempts</option><option value="ready">Ready for clinical review</option><option value="held">Held for revision</option><option value="attention">Failed or unverified</option><option value="pending">Queued or in progress</option></select></label><p data-batch-empty hidden>No attempts match this filter.</p><ol></ol></div>';
+batchQueue.innerHTML = '<h3>Checking queue</h3><div class="sl-row"><button type="button" data-batch-refresh>Refresh</button><button type="button" data-batch-resume hidden>Resume</button><button type="button" data-batch-cancel hidden>Cancel</button></div><p role="status">Loading batch status…</p><strong data-batch-counter hidden></strong><progress aria-label="Batch processing progress" hidden></progress><div data-batch-results hidden><p data-batch-counts></p><label>Show <select><option value="all">All attempts</option><option value="ready">Passed · Bank or saved drafts</option><option value="held">Held for revision</option><option value="attention">Failed or unverified</option><option value="pending">Queued or in progress</option></select></label><p data-batch-empty hidden>No attempts match this filter.</p><ol></ol></div>';
 batchPanel.after(batchQueue);
 const batchResume = batchQueue.querySelector('[data-batch-resume]');
 const batchCancel = batchQueue.querySelector('[data-batch-cancel]');
@@ -334,7 +334,7 @@ const batchFilter = batchResults.querySelector('select');
 let batchTimer, batchId, currentBatch, batchVersion = 0;
 
 const batchLabels = {
- queued:'Queued',started:'Drafting and self-checking',ready:'Passed all 10 checks · Ready for clinical review',
+ queued:'Queued',started:'Drafting and self-checking',ready:'Passed all 10 checks · Saved draft',
  held:'Held for revision',failed:'Attempt failed',unknown:'Completion unverified',cancelled:'Cancelled',
 };
 function renderBatchRows(batch) {
@@ -349,7 +349,7 @@ function renderBatchRows(batch) {
   const label = document.createElement('strong');
   label.textContent = item.topic;
   const state = document.createElement('span');
-  state.textContent = batchLabels[status] || 'Status unavailable';
+  state.textContent = item.accepted === true ? 'Accepted into staging bank' : (batchLabels[status] || 'Status unavailable');
   row.append(label, document.createElement('br'), state);
   if (item.draftId) {
    const open = document.createElement('button');
@@ -400,7 +400,7 @@ function renderBatch({batch}) {
  batchProgress.value = finished;
  batchProgress.setAttribute('aria-valuetext',progress);
  const cancelled = batch.status === 'cancelled';
- const counts = ready + ' ready for clinical review · ' + held + ' held · ' + failed + ' failed · ' + unknown + ' unverified · ' +
+ const counts = ready + ' passed · ' + held + ' held · ' + failed + ' failed · ' + unknown + ' unverified · ' +
   checking + ' in progress · ' + pending + (cancelled ? ' cancelled' : ' queued');
  batchResults.querySelector('[data-batch-counts]').textContent = counts;
  if (!previous || previous.id !== batch.id || previous.status !== batch.status ||
@@ -451,7 +451,7 @@ async function batchAction(request) {
  }
 }
 async function submitBatch(count, jobs, button) {
- if (!confirm('Queue ' + jobs.length + ' staging MC generation attempts? Provider charges may apply. Drafts require clinical review.')) return;
+ if (!confirm('Queue ' + jobs.length + ' staging MC generation attempts? Provider charges may apply. Passing drafts go to the private staging bank.')) return;
  button.disabled = true;
  batchStartStatus.textContent = 'Queuing batch…';
  const started = await batchAction({action:'start',id:crypto.randomUUID(),count,jobs,confirm:true});
