@@ -138,6 +138,18 @@ async function relayGroq(request,env){
  delete payload.srna_reviewer_calibration;
  if(!['retrieval_plan','concept_card','item_draft','rationale','rewrite','blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step?.step)||step.rules_version!=='2.0'||step.auto_publish!==false||(step.step==='rewrite'&&env.AI_REWRITE_OPT_IN!=='true')||(['blind_review','options_only_review'].includes(step.step)&&env.AI_BLIND_REVIEW_OPT_IN!=='true')||(step.step==='option_review'&&env.AI_OPTION_REVIEW_OPT_IN!=='true')||(step.step==='explanation_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL))||(step.step==='editorial_review'&&(env.AI_EXPLANATION_REVIEW_OPT_IN!=='true'||step.independent!==true||payload.model!==env.AI_EDITORIAL_REVIEWER_MODEL||payload.model===env.AI_GENERATOR_MODEL))||(['blind_review','option_review','options_only_review'].includes(step.step)&&(payload.model!==activeReviewerModel||payload.model===env.AI_GENERATOR_MODEL||(step.step==='options_only_review'?step.independent!==true:step.blind!==true)))||(!['blind_review','option_review','explanation_review','editorial_review','options_only_review'].includes(step.step)&&payload.model!==env.AI_GENERATOR_MODEL))return respond(400,null,'{"error":"invalid_step"}');
  if(step.step==='retrieval_plan'&&(env.AI_SOURCE_DISCOVERY_OPT_IN!=='true'||step.format!=='MC'||typeof step.topic!=='string'||(!step.topic.trim()||step.topic.length>500)||payload.max_tokens>512||Object.keys(step).sort().join(',')!=='auto_publish,format,rules_version,step,topic'))return respond(400,null,'{"error":"invalid_step"}');
+ const tagged=Object.hasOwn(payload,'srna_item_id');
+ const itemId=/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(payload.srna_item_id||'') ? payload.srna_item_id : undefined;
+ delete payload.srna_item_id;
+ let usage;
+ const recordUsage=value=>{
+  const metrics={};
+  for(const name of ['prompt_tokens','completion_tokens','total_tokens']){
+   const count=value?.[name];
+   if(Number.isSafeInteger(count)&&count>=0&&count<=1_000_000)metrics[name]=count;
+  }
+  if(Object.keys(metrics).length)usage=metrics;
+ };
  const started=Date.now();const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),55000);
  let activeProvider='unknown';let activeModel='none';let providerStatus=0;
  try{
@@ -275,7 +287,7 @@ async function relayGroq(request,env){
     schema:{type:'object',properties:{judgments:{type:'object',properties,required:fields.map(f=>f.id),additionalProperties:false}},
      required:['judgments'],additionalProperties:false}}};
   }
-  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):bytes;
+  const groqBody=groqOss||groqQwen?JSON.stringify({...payload,response_format:reviewFormat,...(groqOss?{reasoning_effort:payload.model===env.AI_GENERATOR_MODEL&&['concept_card','item_draft','rationale','rewrite'].includes(step.step)?'medium':'low'}:{}),...(groqQwen&&step.step==='options_only_review'?{reasoning_effort:'none',reasoning_format:'hidden'}:{})}):(tagged?JSON.stringify(payload):bytes);
   const cloudflareFormat=step.step==='retrieval_plan'?reviewFormat:cloudflareGlm?rationaleFormat:cloudflareAuthoring&&rationaleFormat.type==='json_schema'?{type:'json_schema',json_schema:rationaleFormat.json_schema.schema}:{type:'json_object'};
   const providerBody=provider==='gemini'?JSON.stringify({contents:[{parts:[{text:input}]}],generationConfig:{temperature:0.2,maxOutputTokens:payload.max_tokens,responseMimeType:'application/json',thinkingConfig:{thinkingBudget:0}}}):provider==='cloudflare'?JSON.stringify({messages:payload.messages,max_tokens:payload.max_tokens,temperature:0.2,...((qwenJson||cloudflareAuthoring)?{response_format:cloudflareFormat}:{}),...(cloudflareOss?{reasoning_effort:'medium'}:cloudflareGlm?{reasoning_effort:'low'}:{}),...(qwenJson?{chat_template_kwargs:{enable_thinking:false}}:{})}):groqBody;
   const useReviewerFallback=provider==='groq'&&!candidateCalibration&&payload.model===fallbackReviewer
@@ -348,6 +360,7 @@ async function relayGroq(request,env){
   const result=await upstream.arrayBuffer();if(result.byteLength>262144)return respond(502,null,'{"error":"provider_response_too_large"}');
   if(provider==='groq'||provider==='cloudflare-review'){
    let parsed;try{parsed=JSON.parse(new TextDecoder().decode(result))}catch{return respond(502,null,'{"error":"provider_failed","rule":"PROVIDER_UPSTREAM","reason":"provider_invalid_json"}')}
+   recordUsage(parsed?.usage);
    const choice=parsed?.choices?.[0];
    const reason=choice?.finish_reason&&choice.finish_reason!=='stop'?'provider_incomplete':choice?.message?.refusal?'provider_refusal':typeof choice?.message?.content!=='string'||!choice.message.content.trim()?'provider_empty_content':null;
    if(reason){
@@ -366,6 +379,7 @@ async function relayGroq(request,env){
   // Older Workers AI models use result.response. Do not forward reasoning or
   // partial/refused generations as a clinically reviewable question.
   const cloudflareResult=data?.result;
+  recordUsage(cloudflareResult?.usage);
   const choice=Array.isArray(cloudflareResult?.choices)?cloudflareResult.choices[0]:null;
   const finish=choice?.finish_reason;
   const rawContent=provider==='gemini'
@@ -383,7 +397,7 @@ async function relayGroq(request,env){
   if(content.length>262144)return failure('provider_response_too_large');
   return respond(200,null,JSON.stringify({choices:[{message:{content}}]}));
  }catch(error){return relayFailure(error,activeProvider,typeof step?.step==='string'?step.step:'unknown')}
- finally{clearTimeout(timeout);console.log('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,model:activeModel,provider_status:providerStatus,elapsed_ms:Math.min(60000,Date.now()-started)}))}
+ finally{clearTimeout(timeout);console.log('staging_relay_timing',JSON.stringify({provider:activeProvider,step:step.step,model:activeModel,provider_status:providerStatus,elapsed_ms:Math.min(60000,Date.now()-started),item_id:itemId,usage}))}
 }
 export default {
  async fetch(request,env){
@@ -634,7 +648,7 @@ export default {
    }
    if(upstream.ok&&completeOptions){
     const data=await upstream.clone().json().catch(()=>null);
-    if(!data||data.published!==false||data.can_publish!==false||data.question_modified!==false||data.generation_performed!==false||data.rewrite_performed!==false||data.clinical_review_required!==true||data.database_writes!==true||typeof data.paid_review_performed!=='boolean'||typeof data.automated_checks_passed!=='boolean'||!['pass','pending'].includes(data.option_review_status)||(data.automated_checks_passed&&data.option_review_status!=='pass'))return respond(502,origin,'{"error":"unsafe_option_review_response"}');
+    if(!data||data.published!==false||data.can_publish!==false||data.question_modified!==false||data.generation_performed!==false||data.rewrite_performed!==false||(data.clinical_review_required!==true&&!(data.clinical_review_required===false&&data.draft_status==='approved_for_bank'&&data.automated_checks_passed===true))||data.database_writes!==true||typeof data.paid_review_performed!=='boolean'||typeof data.automated_checks_passed!=='boolean'||!['pass','pending'].includes(data.option_review_status)||(data.automated_checks_passed&&data.option_review_status!=='pass'))return respond(502,origin,'{"error":"unsafe_option_review_response"}');
    }
    if(upstream.ok&&draftWrite){
     const data=await upstream.clone().json().catch(()=>null);

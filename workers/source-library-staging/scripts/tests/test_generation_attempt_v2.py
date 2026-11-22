@@ -41,7 +41,7 @@ class AttemptTests(unittest.TestCase):
             with attempt(conn,**KEY):raise RuntimeError('interrupted')
         statements=[c.args[0].lower() for c in cur.execute.call_args_list]
         self.assertFalse(any('delete ' in s for s in statements))
-        self.assertFalse(__import__('item_generation_attempt_v2')._active.locked())
+        self.assertFalse(__import__('item_generation_attempt_v2').generation_is_busy())
 
     def test_rewrite_reserved_once_and_committed_before_provider(self):
         conn,cur=self.connection([('id',),None])
@@ -63,7 +63,7 @@ class AttemptTests(unittest.TestCase):
         conn.commit.side_effect=OSError('socket unavailable')
         with self.assertRaisesRegex(OSError,'socket unavailable'):
             with attempt(conn,**KEY):self.fail('paid body reached')
-        self.assertFalse(__import__('item_generation_attempt_v2')._active.locked())
+        self.assertFalse(__import__('item_generation_attempt_v2').generation_is_busy())
 
     def test_finish_only_changes_started_attempt(self):
         conn,cur=self.connection([('id',),None])

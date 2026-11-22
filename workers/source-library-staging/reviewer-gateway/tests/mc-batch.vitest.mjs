@@ -131,10 +131,11 @@ it('replaces held attempts and stops only after accepting the target', async () 
  const jobs = [...Array(24).fill('topic'), 'provider outage'].map(topic=>({topic,format:'MC',textbook_id:'book'}));
  const {batch:started} = await control('start',{count:25,confirm:true,goal:'accepted',jobs});
  expect(started).toMatchObject({acceptedCount:0,attemptLimit:50});
- for (let i=0;i<25;i++) await runDurableObjectAlarm(stub);
+ for (let i=0;i<12;i++) await runDurableObjectAlarm(stub);
  const {batch:partial} = await control('status');
  expect(partial).toMatchObject({status:'running',acceptedCount:24});
  await evictDurableObject(stub);
+ await runDurableObjectAlarm(stub);
  await runDurableObjectAlarm(stub);
  const {batch} = await control('status');
  expect(batch).toMatchObject({status:'complete',reason:'target_reached',acceptedCount:25});
@@ -164,4 +165,21 @@ it('reports a shortfall at the attempt cap and cancels time-expired work before 
  const {batch:expired} = await control('status');
  expect(expired).toMatchObject({status:'complete',reason:'time_budget_exhausted',acceptedCount:0});
  expect(expired.items[0].status).toBe('queued');
+});
+
+it('fills 50 and 100 accepted targets two at a time and keeps every slot distinct', async () => {
+ for(const count of [50,100]){
+  const {stub,control}=fixture(count,[]);
+  await control('start',{count,confirm:true,goal:'accepted',jobs:[
+   {topic:'supported topic',format:'MC',textbook_id:'book'},
+  ]});
+  await runDurableObjectAlarm(stub);
+  const {batch:wave}=await control('status');
+  expect(wave.acceptedCount).toBe(2);
+  await evictDurableObject(stub);
+  for(let index=1;index<count/2;index++)await runDurableObjectAlarm(stub);
+  const {batch}=await control('status');
+  expect(batch).toMatchObject({status:'complete',reason:'target_reached',acceptedCount:count});
+  expect(new Set(batch.items.map(item=>item.id)).size).toBe(count);
+ }
 });

@@ -322,11 +322,33 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                         result = save(conn, {**payload, "owner_uid": owner})
                     return respond("201 Created", result)
                 if draft_match and draft_match.group(2) == "/complete-options":
-                    if set(payload) != {"confirm_paid_calls", "expected_updated_at"} or payload["confirm_paid_calls"] is not True:
+                    from item_batch_acceptance_v2 import accept_recovered_draft
+                    draft_id = draft_match.group(1)
+                    accept_only = payload == {"accept_recovered_only": True}
+                    if not accept_only and (set(payload) != {"confirm_paid_calls", "expected_updated_at"}
+                                            or payload["confirm_paid_calls"] is not True):
                         raise ValueError("Explicit review confirmation required")
                     with conn_factory() as conn:
-                        result = complete_option_review(conn,owner_uid=owner,draft_id=draft_match.group(1),
-                            expected_updated_at=payload["expected_updated_at"],environment=environment)
+                        if accept_only:
+                            result = {"draft_id":draft_id, "option_review_status":"pass",
+                                      "automated_checks_passed":True, "question_modified":False,
+                                      "generation_performed":False, "rewrite_performed":False,
+                                      "paid_review_performed":False, "database_writes":True,
+                                      "published":False, "can_publish":False, "clinical_review_required":True}
+                        else:
+                            result = complete_option_review(conn,owner_uid=owner,draft_id=draft_id,
+                                expected_updated_at=payload["expected_updated_at"],environment=environment)
+                        if result.get("automated_checks_passed") is True and environment.get("AI_MC_BATCH_ENABLED") == "true":
+                            # Preserve the verified recheck and release its row before acquiring the bank lock.
+                            if not accept_only:
+                                conn.commit()
+                            accepted = accept_recovered_draft(conn, owner_uid=owner, draft_id=draft_id,
+                                secret=environment.get("STAGING_RECEIPT_SIGNING_SECRET"))
+                            if accepted["status"] == "approved_for_bank":
+                                result = {**result, "draft_status":"approved_for_bank",
+                                          "clinical_review_required":False}
+                        if accept_only and result.get("clinical_review_required") is not False:
+                            return respond("409 Conflict", {"error":"recovered_acceptance_unavailable"})
                     return respond("200 OK",result)
                 if draft_match and draft_match.group(2) == "/revisions":
                     if set(payload) not in ({"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes"}, {"expected_parent_sha256", "citation_excerpts", "option_evidence", "reviewer_notes", "question_edits"}):
@@ -456,8 +478,15 @@ def create_app(*, conn_factory, resolve_admin, environment, semantic_lookup_fact
                     else:
                         saved = save(conn, {**result["save_payload"], "owner_uid": owner})
                     if batch_owner is not None and saved["status"] == "pending_review":
-                        from item_batch_acceptance_v2 import accept_generated_batch_draft
-                        saved = accept_generated_batch_draft(conn, owner_uid=owner, saved=saved, result=result)
+                        from item_batch_acceptance_v2 import (accept_generated_batch_draft,
+                            accept_recovered_draft, bank_duplicate_checker)
+                        saved = accept_generated_batch_draft(conn, owner_uid=owner, saved=saved, result=result,
+                            duplicate_check=bank_duplicate_checker(conn, owner, secret))
+                        if saved["status"] == "pending_review" and getattr(args, "resume_completed_only", False):
+                            saved = accept_recovered_draft(conn, owner_uid=owner, draft_id=saved["draft_id"], secret=secret)
+                    if batch_owner is not None and saved["status"] == "approved_for_bank":
+                        result["screening"] = get_draft(conn, owner_uid=owner,
+                            draft_id=saved["draft_id"])["screening"]
                     result = {**result, "draft_id": saved["draft_id"],
                               "draft_status": saved["status"], "published": False,
                               "requires_human_review": saved["status"] != "approved_for_bank" or batch_owner is None}

@@ -25,7 +25,7 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=262144,
-                   relay_url=None, relay_secret=None):
+                   relay_url=None, relay_secret=None, item_id=None):
     hosts = frozenset(allowed_hosts)
     if not hosts or any(not isinstance(h, str) or not h or "/" in h or ":" in h for h in hosts):
         raise ValueError("Explicit provider host allowlist required")
@@ -51,7 +51,8 @@ def make_transport(*, allowed_hosts, timeout_seconds=50, max_response_bytes=2621
             raise TransportError("PROVIDER_ENDPOINT")
         if not isinstance(headers, dict) or not isinstance(body, dict):
             raise TransportError("PROVIDER_REQUEST")
-        encoded = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        wire_body = {**body, "srna_item_id": item_id} if relay_url is not None and item_id else body
+        encoded = json.dumps(wire_body, ensure_ascii=False).encode("utf-8")
         if len(encoded) > 524288:
             raise TransportError("PROVIDER_REQUEST_SIZE")
         if relay_url is not None:

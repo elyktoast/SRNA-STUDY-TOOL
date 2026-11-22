@@ -699,7 +699,7 @@ genEl('sl-draft-revalidate').onclick=async()=>{
 genEl('sl-complete-option-review').onclick=async()=>{
  const btn=genEl('sl-complete-option-review'),out=genEl('sl-draft-validation');
  const draftId=btn.dataset.draftId,updatedAt=btn.dataset.updatedAt;
- if(!draftId||!updatedAt||!confirm('Run one paid independent option review on this saved question? It will not generate or rewrite a question, approve it, or publish it.'))return;
+ if(!draftId||!updatedAt||!confirm('Run one paid independent option review on this saved question? It can accept this draft into your private staging bank if every check passes.'))return;
  btn.disabled=true;out.hidden=false;out.textContent='Completing the missing option review. The saved question stays unchanged…';
  try{const result=await storage.completeGeneratedOptionReview(draftId,updatedAt);btn.disabled=false;await openSavedDraft(draftId,btn);out.hidden=false;out.textContent=JSON.stringify(result,null,2);}
  catch(error){out.textContent=error.status===409?'The draft changed or another review is running. Reopen it before continuing.':'Option review unavailable: '+(error.message||'Unknown error');}
